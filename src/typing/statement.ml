@@ -286,6 +286,15 @@ module Func_stmt_params = Func_params.Make (Func_stmt_config)
 module Func_stmt_sig = Func_sig.Make (Func_stmt_params)
 module Class_stmt_sig = Class_sig.Make (Func_stmt_sig)
 
+module Class_property = struct
+  type t =
+    | Public of string
+    | Private of string
+
+  let compare = compare
+end
+module Class_property_map = Map.Make(Class_property)
+
 (************)
 (* Visitors *)
 (************)
@@ -6216,7 +6225,7 @@ and check_properties_initialized_before_use cx class_ast: unit =
   let (_, body) = class_ast.Ast.Class.body in
   let elements = body.Ast.Class.Body.body in
 
-  let uninitialized: ALoc.t SMap.t =
+  let uninitialized: ALoc.t Class_property_map.t =
     List.fold_left (fun uninited -> Ast.Class.(function
       | Body.Property (_, {
           Property.key = Ast.Expression.Object.Property.Identifier (
@@ -6225,14 +6234,20 @@ and check_properties_initialized_before_use cx class_ast: unit =
           Property.value = None;
           Property.static = false;
           _
-        }) -> SMap.add name loc uninited
+        }) -> Class_property_map.add (Class_property.Public name) loc uninited
+      | Body.PrivateField (_, {
+          PrivateField.key = (loc, ident);
+          PrivateField.value = None;
+          PrivateField.static = false;
+          _
+        }) -> Class_property_map.add (Class_property.Private (ident_name ident)) loc uninited
       | _ -> uninited
       )
-    ) SMap.empty elements
+    ) Class_property_map.empty elements
   in
 
   uninitialized
-  |> SMap.iter (fun _ loc ->
+  |> Class_property_map.iter (fun _ loc ->
     Flow.add_output cx Error_message.(EUninitializedInstanceProperty loc)
   )
 

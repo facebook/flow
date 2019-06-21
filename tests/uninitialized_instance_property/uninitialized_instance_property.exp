@@ -25,5 +25,14 @@ All instance properties should be initialized before use to avoid potential runt
          ^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:19:3
 
-Found 3 errors
+All instance properties should be initialized before use to avoid potential runtime exceptions.
+(`uninitialized-instance-property`)
+
+   19|   #priv;
+         ^^^^^
+
+
+
+Found 4 errors
