@@ -713,4 +713,18 @@ let tests = "signature_generator" >::: ([
      "declare function bar(x: mixed): boolean %checks(obj.foo(x));";
      "declare module.exports: typeof bar;"];
 
+  "destructure_annot" >:: mk_signature_generator_test
+     ["var { a }: { a: number } = { a: 0 };";
+      "module.exports = a"]
+     ["declare var a: typeof $1.a;";
+      "declare var $1: {a: number};";
+      "declare module.exports: typeof a;"];
+
+  "destructure_annot2" >:: mk_signature_generator_test
+     ["var { a: x }: { a: number } = { a: 0 };";
+      "module.exports = x"]
+     ["declare var x: typeof $1.a;";
+      "declare var $1: {a: number};";
+      "declare module.exports: typeof x;"];
+
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)
