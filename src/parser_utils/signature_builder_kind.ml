@@ -12,16 +12,16 @@ module Ast = Flow_ast
 module Annot_path = struct
   type t =
     | Annot of (Loc.t, Loc.t) Ast.Type.annotation
-    | Object of t * string
+    | Object of Loc.t * (t * (Loc.t * string))
 
   let mk_annot ?annot_path = function
     | Ast.Type.Missing _ -> annot_path
     | Ast.Type.Available annot -> Some (Annot (annot))
 
-  let mk_object ?annot_path x =
+  let mk_object prop_loc ?annot_path (loc, x) =
     match annot_path with
       | None -> None
-      | Some annot_path -> Some (Object (annot_path, x))
+      | Some annot_path -> Some (Object (prop_loc, (annot_path, (loc, x))))
 end
 
 module Init_path = struct

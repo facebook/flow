@@ -105,7 +105,7 @@ module T = struct
 
     | Outline of outlinable_t
 
-    | ObjectDestruct of (Loc.t * expr_type) * (Loc.t * string)
+    | ObjectDestruct of little_annotation * (Loc.t * string)
 
     | FixMe
 
@@ -381,9 +381,9 @@ module T = struct
         targs = None;
       }))
 
-    | loc, ObjectDestruct (expr_type, prop) ->
-      let t = type_of_expr_type outlined expr_type in
-      let f id = None, (fst expr_type, Ast.Statement.DeclareVariable {
+    | loc, ObjectDestruct (annot_or_init, prop) ->
+      let t = type_of_little_annotation outlined annot_or_init in
+      let f id = None, (fst t, Ast.Statement.DeclareVariable {
         Ast.Statement.DeclareVariable.id = Flow_ast_utils.ident_of_source id;
         annot = Ast.Type.Available (fst t, t);
       }) in
@@ -776,8 +776,10 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     | Some (loc, ts) -> Some (loc, Core_list.map ~f:(type_) ts)
 
   let rec annot_path = function
-    | Kind.Annot_path.Annot (_, t) -> type_ t
-    | Kind.Annot_path.Object (path, _) -> annot_path path
+    | Kind.Annot_path.Annot (_, t) -> T.TYPE (type_ t)
+    | Kind.Annot_path.Object (prop_loc, (path, (loc, x))) ->
+      let annot = annot_path path in
+      T.EXPR (prop_loc, T.ObjectDestruct (annot, (loc, x)))
 
   let rec init_path = function
     | Kind.Init_path.Init expr -> literal_expr expr
@@ -785,11 +787,11 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       let expr_type = init_path path in
       prop_loc, match expr_type with
         | path_loc, T.ValueRef reference -> T.ValueRef (T.RPath (path_loc, reference, (loc, x)))
-        | _ -> T.ObjectDestruct (expr_type, (loc, x))
+        | _ -> T.ObjectDestruct (T.EXPR expr_type, (loc, x))
 
   and annotation loc ?init annot =
     match annot with
-      | Some path -> T.TYPE (annot_path path)
+      | Some path -> annot_path path
       | None ->
         begin match init with
           | Some path -> T.EXPR (init_path path)

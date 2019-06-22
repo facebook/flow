@@ -301,7 +301,7 @@ module Eval(Env: EvalEnv) = struct
 
   let rec annot_path tps = function
     | Kind.Annot_path.Annot (_, t) -> type_ tps t
-    | Kind.Annot_path.Object (path, _) -> annot_path tps path
+    | Kind.Annot_path.Object (_, (path, _)) -> annot_path tps path
 
   let rec init_path tps = function
     | Kind.Init_path.Init expr -> literal_expr tps expr
