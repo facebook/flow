@@ -509,17 +509,17 @@ let rec convert cx tparams_map = Ast.Type.(function
       let ts, targs = convert_type_params () in
       match ts with
       | [annot; assign] ->
-        begin match annot with
-        | DefT (r, trust, FunT (statics, proto, ft)) ->
+        begin match annot, assign with
+        | DefT (r, trust, FunT (statics, proto, ft)), DefT (_, objtrust, ObjT objtype) ->
           let reason = reason_of_t statics in
-          let statics' = mod_reason_of_t (fun _ -> reason) assign in
+          let statics' = DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason }) in
           let t = DefT (r, trust, FunT (statics', proto, ft)) in
           reconstruct_ast t targs
         | DefT (poly_r, poly_trust, PolyT (tparams_loc, tparams,
             DefT (r, trust, FunT (statics, proto, ft)),
-          id)) ->
+          id)), DefT (_, objtrust, ObjT objtype) ->
           let reason = reason_of_t statics in
-          let statics' = mod_reason_of_t (fun _ -> reason) assign in
+          let statics' = DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason }) in
           let t = DefT (poly_r, poly_trust, PolyT (tparams_loc, tparams,
             DefT (r, trust, FunT (statics', proto, ft)),
           id)) in
