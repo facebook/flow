@@ -5,11 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val regenerate:
-  options:Options.t ->
-  ServerEnv.env ->
-  ServerEnv.collated_errors
-
 val get_with_separate_warnings:
   options:Options.t ->
   ServerEnv.env ->
