@@ -398,12 +398,26 @@ let add_loc state loc =
   add_int state loc._end.column
 
 let add_aloc state aloc =
-  add_loc state (ALoc.to_loc_exn aloc)
+  (* When abstract locations (and types-first) are enabled, this should always be true. This is
+   * because the sig AST contains only abstract locations, and the sig context, under types-first,
+   * is built from the sig AST.
+   *
+   * When they are not enabled, this should always be false.
+   *
+   * TODO assert this based on config flags rather than checking it.
+   *)
+  if ALoc.ALocRepresentationDoNotUse.is_abstract aloc then
+    let source = ALoc.source aloc in
+    let key = ALoc.ALocRepresentationDoNotUse.get_key_exn aloc in
+    add_option state add_file_key source;
+    add_int state key
+  else
+    add_loc state (ALoc.to_loc_exn aloc)
 
 let add_reason state r =
   let open Reason in
-  add_loc state (aloc_of_reason r |> ALoc.to_loc_exn);
-  add_loc state (def_aloc_of_reason r |> ALoc.to_loc_exn)
+  add_aloc state (aloc_of_reason r);
+  add_aloc state (def_aloc_of_reason r)
 
 let add_polarity = add_int
 
