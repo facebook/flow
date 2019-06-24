@@ -427,7 +427,19 @@ let merge_strict = merge_runner ~job:merge_strict_component
 
 let check options ~reader file =
   let result =
-    try Ok (check_file options ~reader file)
+    let check_timeout = Options.merge_timeout options in (* TODO: add new option *)
+    let interval = Option.value_map ~f:(min 15.0) ~default:15.0 check_timeout in
+    let file_str = File_key.to_string file in
+
+    try with_async_logging_timer
+      ~interval
+      ~on_timer:(fun run_time ->
+        Hh_logger.info "[%d] Slow CHECK (%f seconds so far): %s" (Unix.getpid()) run_time file_str;
+        Option.iter check_timeout ~f:(fun check_timeout ->
+          if run_time >= check_timeout then raise (Error_message.ECheckTimeout run_time)
+        )
+      )
+      ~f:(fun () -> Ok (check_file options ~reader file))
     with
     | SharedMem_js.Out_of_shared_memory
     | SharedMem_js.Heap_full
@@ -447,7 +459,7 @@ let check options ~reader file =
          an error result. *)
       Error Error_message.(match unwrapped_exc with
       | EDebugThrow loc -> EInternal (loc, DebugThrow)
-      | ECheckTimeout s -> EInternal (file_loc, CheckTimeout s) (* TODO: can't happen yet *)
+      | ECheckTimeout s -> EInternal (file_loc, CheckTimeout s)
       | _ -> EInternal (file_loc, CheckJobException exc))
   in
   (file, result)
