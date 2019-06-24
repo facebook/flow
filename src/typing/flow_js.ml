@@ -11341,7 +11341,7 @@ and object_kit =
         match options with
         | Annot { make_exact } when make_exact && not exact ->
           add_output cx ~trace (Error_message.
-            EIncompatibleWithExact ((r, reason), unknown_use))
+            EIncompatibleWithExact ((r, reason), use_op))
         | _ -> ()
       ) x;
       match todo_rev with
