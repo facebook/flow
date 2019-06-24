@@ -3082,20 +3082,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
     | IntersectionT (_, rep),
-      ObjAssignFromT (op, reason_op, proto, tout, kind) ->
+      ObjAssignFromT (use_op, reason_op, proto, tout, kind) ->
       let tvar = List.fold_left (fun tout t ->
         let tvar = match Cache.Fix.find reason_op t with
         | Some tvar -> tvar
         | None ->
           Tvar.mk_where cx reason_op (fun tvar ->
             Cache.Fix.add reason_op t tvar;
-            rec_flow cx trace (t, ObjAssignFromT (op, reason_op, proto, tvar, kind))
+            rec_flow cx trace (t, ObjAssignFromT (use_op, reason_op, proto, tvar, kind))
           )
         in
-        rec_flow_t cx trace (tvar, tout);
+        rec_flow_t cx ~use_op trace (tvar, tout);
         tvar
       ) (Tvar.mk cx reason_op) (InterRep.members rep) in
-      rec_flow_t cx trace (tvar, tout)
+      rec_flow_t cx ~use_op trace (tvar, tout)
 
     (** This duplicates the (_, ReposLowerT u) near the end of this pattern
         match but has to appear here to preempt the (IntersectionT, _) in
@@ -4928,8 +4928,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Special case any. Otherwise this will lead to confusing errors when any tranforms to an
        object type. *)
-    | AnyT _, ObjAssignToT (_, _, _, t, _) ->
-      rec_flow_t cx trace (l, t)
+    | AnyT _, ObjAssignToT (use_op, _, _, t, _) ->
+      rec_flow_t cx ~use_op trace (l, t)
 
     | to_obj, ObjAssignToT (use_op, reason, from_obj, t, kind) ->
       rec_flow cx trace (from_obj, ObjAssignFromT (use_op, reason, to_obj, t, kind))
@@ -4978,7 +4978,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (lreason, _, InstanceT (_, _, _, { own_props; proto_props; _ })),
-      ObjAssignFromT (_, reason_op, to_obj, t, ObjAssign _) ->
+      ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _) ->
       let own_props = Context.find_props cx own_props in
       let proto_props = Context.find_props cx proto_props in
       let props = SMap.union own_props proto_props in
@@ -4989,32 +4989,32 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some t ->
             let propref = Named (reason_op, x) in
             rec_flow cx trace (to_obj, SetPropT (
-              unknown_use, reason_op, propref, Normal, t, None
+              use_op, reason_op, propref, Normal, t, None
             ))
           | None ->
             add_output cx ~trace (Error_message.EPropAccess (
-              (lreason, reason_op), Some x, Property.polarity p, Read, unknown_use
+              (lreason, reason_op), Some x, Property.polarity p, Read, use_op
             ))
         )
       );
-      rec_flow_t cx trace (to_obj, t)
+      rec_flow_t cx ~use_op trace (to_obj, t)
 
     (* AnyT has every prop, each one typed as `any`, so spreading it into an
        existing object destroys all of the keys, turning the result into an
        AnyT as well. TODO: wait for `to_obj` to be resolved, and then call
        `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
-    | AnyT (_, src), ObjAssignFromT (_, reason, _, t, ObjAssign _) ->
-      rec_flow_t cx trace (AnyT.make src reason, t)
+    | AnyT (_, src), ObjAssignFromT (use_op, reason, _, t, ObjAssign _) ->
+      rec_flow_t cx ~use_op trace (AnyT.make src reason, t)
 
-    | AnyT _, ObjAssignFromT (_, _, _, t, _) ->
-      rec_flow_t cx trace (l, t)
+    | AnyT _, ObjAssignFromT (use_op, _, _, t, _) ->
+      rec_flow_t cx ~use_op trace (l, t)
 
-    | ObjProtoT _, ObjAssignFromT (_, _, to_obj, t, ObjAssign _) ->
-      rec_flow_t cx trace (to_obj, t)
+    | ObjProtoT _, ObjAssignFromT (use_op, _, to_obj, t, ObjAssign _) ->
+      rec_flow_t cx ~use_op trace (to_obj, t)
 
     (* Object.assign semantics *)
-    | DefT (_, _, (NullT | VoidT)), ObjAssignFromT (_, _, to_obj, tout, ObjAssign _) ->
-      rec_flow_t cx trace (to_obj, tout)
+    | DefT (_, _, (NullT | VoidT)), ObjAssignFromT (use_op, _, to_obj, tout, ObjAssign _) ->
+      rec_flow_t cx ~use_op trace (to_obj, tout)
 
     (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
     | DefT (reason, _, MixedT _), ObjAssignFromT (_, _, _, _, ObjAssign _) ->
@@ -5082,14 +5082,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let obj_inst = Obj_type.mk_with_proto cx reason_op ~props proto in
 
       (* ObjAssign the inst-generated obj into the super-generated obj *)
+      let use_op = Op (ObjectSpread {op = reason_op}) in
       let o = Tvar.mk_where cx reason_op (fun tvar ->
         rec_flow cx trace (
           obj_inst,
-          ObjAssignFromT (unknown_use, reason_op, obj_super, tvar, default_obj_assign_kind)
+          ObjAssignFromT (use_op, reason_op, obj_super, tvar, default_obj_assign_kind)
         )
       ) in
 
-      rec_flow_t cx trace (o, t)
+      rec_flow_t cx ~use_op trace (o, t)
 
     | AnyT (_, src), ObjRestT (reason, _, t) ->
       rec_flow_t cx trace (AnyT.why src reason, t)
