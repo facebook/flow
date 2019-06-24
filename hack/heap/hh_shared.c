@@ -1272,6 +1272,8 @@ void hh_shared_clear(void) {
 /*****************************************************************************/
 
 static void raise_dep_table_full(void) {
+  fprintf(stderr, "dcounter: %lu dep_size: %lu \n", *dcounter, dep_size);
+
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("dep_table_full");
   caml_raise_constant(*exn);
@@ -2187,6 +2189,8 @@ void hh_load_dep_table_blob_helper(const char* const in_filename) {
   // The number of bytes read from the file stream
   size_t count;
 
+  fprintf(stderr, "Start; dcounter: %lu dep_size: %lu \n", *dcounter, dep_size);
+
   do {
     count = fread(
       buffer,
@@ -2222,6 +2226,7 @@ void hh_load_dep_table_blob_helper(const char* const in_filename) {
 
   fclose(dep_table_blob_file);
 
+  fprintf(stderr, "End; dcounter: %lu dep_size: %lu \n", *dcounter, dep_size);
   fprintf(stderr, "Read %lu keys and %lu values\n", keys_count, values_count);
 
   log_duration("Finished reading the file", start_t);
