@@ -10037,6 +10037,35 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
     when c1 = c2 && List.length ts1 = List.length ts2 ->
     List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
 
+  | AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _) ->
+     (* It is tempting to unify the tvars here, but that would be problematic. These tvars should
+        eventually resolve to the type definitions that these annotations reference. By unifying
+        them, we might accidentally resolve one of the tvars to the type definition of the other,
+        which would lead to confusing behavior.
+
+        On the other hand, if the tvars are already resolved, then we can do something
+        interesting... *)
+     begin match Context.find_graph cx id1, Context.find_graph cx id2 with
+     | (Resolved t1 | FullyResolved t1), (Resolved t2 | FullyResolved t2)
+          (* Can we unify these types? Tempting, again, but annotations can refer to recursive type
+             definitions, and we might get into an infinite loop (which could perhaps be avoided by
+             a unification cache, but we'd rather not cache if we can get away with it).
+
+             The alternative is to do naive unification, but we must be careful. In particular, it
+             could cause confusing errors: recall that the naive unification of annotations goes
+             through repositioning over these types.
+
+             But if we simulate the same repositioning here, we won't really save anything. For
+             example, these types could be essentially the same union, and repositioning them would
+             introduce differences in their representations that would kill other
+             optimizations. Thus, we focus on the special case where these types have the same
+             reason, and then do naive unification. *)
+          when reason_of_t t1 = reason_of_t t2 ->
+        naive_unify cx trace ~use_op t1 t2
+     | _ ->
+        naive_unify cx trace ~use_op t1 t2
+     end;
+
   | _ ->
     naive_unify cx trace ~use_op t1 t2
   )
