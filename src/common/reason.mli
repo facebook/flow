@@ -229,7 +229,6 @@ val is_blamable_reason: reason -> bool
 
 val string_of_source: ?strip_root:Path.t option -> File_key.t -> string
 val string_of_reason: ?strip_root:Path.t option -> reason -> string
-val json_of_reason: ?strip_root:Path.t option -> offset_table:Offset_utils.t option -> reason -> Hh_json.json
 val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)

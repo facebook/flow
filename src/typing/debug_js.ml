@@ -94,6 +94,13 @@ type json_cx = {
   strip_root: Path.t option;
 }
 
+let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
+  JSON_Object ([
+    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc_exn);
+    "desc", JSON_String (string_of_desc (desc_of_reason ~unwrap:false r))
+  ])
+)
+
 let check_depth continuation json_cx =
   let depth = json_cx.depth - 1 in
   if depth < 0
