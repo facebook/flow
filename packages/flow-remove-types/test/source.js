@@ -190,3 +190,6 @@ class MyClass {
 function testit(arg: mixed): boolean %checks {
   return !!arg;
 }
+
+// Test function with default type parameter
+function f<T, S = T>() {}

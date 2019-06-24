@@ -150,4 +150,7 @@ function testit(arg) {
   return !!arg;
 }
 
+// Test function with default type parameter
+function f() {}
+
 //# sourceMappingURL=source.js.map
