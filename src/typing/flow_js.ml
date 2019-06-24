@@ -4084,17 +4084,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         call_strict_arity = _;
       } = calltype in
       let any = AnyT.untyped reason_fundef in
-      rec_flow_t cx trace (call_this_t, any);
+      rec_flow_t cx ~use_op trace (call_this_t, any);
       call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
-      rec_flow_t cx trace (AnyT.untyped reason_op, call_tout)
+      rec_flow_t cx ~use_op trace (AnyT.untyped reason_op, call_tout)
 
     (* Special handlers for builtin functions *)
 
     | CustomFunT (_, ObjectAssign),
-      CallT (_, reason_op, { call_targs = None; call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      CallT (use_op, reason_op, { call_targs = None; call_args_tlist = dest_t::ts; call_tout; _ }) ->
       let dest_t = extract_non_spread cx ~trace dest_t in
       let t = chain_objects cx ~trace reason_op dest_t ts in
-      rec_flow_t cx trace (t, call_tout)
+      rec_flow_t cx ~use_op trace (t, call_tout)
 
     | CustomFunT (_, ObjectGetPrototypeOf),
       CallT (_, reason_op, { call_targs = None; call_args_tlist = arg::_; call_tout; _ }) ->
@@ -4102,11 +4102,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
 
     | CustomFunT (_, ObjectSetPrototypeOf),
-      CallT (_, reason_op, { call_targs = None; call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
+      CallT (use_op, reason_op, { call_targs = None; call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
       let target = extract_non_spread cx ~trace arg1 in
       let proto = extract_non_spread cx ~trace arg2 in
       rec_flow cx trace (target, SetProtoT (reason_op, proto));
-      rec_flow_t cx trace (BoolT.why reason_op |> with_trust bogus_trust, call_tout)
+      rec_flow_t cx ~use_op trace (BoolT.why reason_op |> with_trust bogus_trust, call_tout)
 
     | DefT (reason, _, StrT (Literal (_, str))),
       UseT (use_op, DefT (reason_op, _, CharSetT chars)) ->
@@ -4159,7 +4159,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, u)
 
     | CustomFunT (_, ReactPropType React.PropType.Complex kind),
-      CallT (_, reason_op, { call_targs = None; call_args_tlist = arg1::_; call_tout; _ }) ->
+      CallT (use_op, reason_op, { call_targs = None; call_args_tlist = arg1::_; call_tout; _ }) ->
       let open React in
       let tool = match kind with
       | PropType.ArrayOf -> SimplifyPropType.ArrayOf
@@ -4170,7 +4170,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | PropType.Shape -> SimplifyPropType.Shape ResolveObject
       in
       let t = extract_non_spread cx ~trace arg1 in
-      rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
+      rec_flow cx trace (t, ReactKitT (use_op, reason_op,
         SimplifyPropType (tool, call_tout)))
 
     | CustomFunT (reason, ReactPropType React.PropType.Complex kind), _
@@ -4208,23 +4208,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        handling. Terminate with extreme prejudice. *)
 
     | CustomFunT (_, DebugPrint),
-      CallT (_, reason_op, { call_targs = None; call_args_tlist; call_tout; _ }) ->
+      CallT (use_op, reason_op, { call_targs = None; call_args_tlist; call_tout; _ }) ->
       List.iter (fun arg -> match arg with
         | Arg t -> rec_flow cx trace (t, DebugPrintT reason_op)
         | SpreadArg t ->
           add_output cx ~trace
             (Error_message.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)));
       ) call_args_tlist;
-      rec_flow_t cx trace (VoidT.why reason_op |> with_trust bogus_trust, call_tout);
+      rec_flow_t cx ~use_op trace (VoidT.why reason_op |> with_trust bogus_trust, call_tout);
 
     | CustomFunT (_, DebugThrow), CallT (_, reason_op, _) ->
       raise (Error_message.EDebugThrow (aloc_of_reason reason_op))
 
     | CustomFunT (_, DebugSleep),
-      CallT (_, reason_op, { call_targs = None; call_args_tlist=arg1::_; call_tout; _ }) ->
+      CallT (use_op, reason_op, { call_targs = None; call_args_tlist=arg1::_; call_tout; _ }) ->
       let t = extract_non_spread cx ~trace arg1 in
       rec_flow cx trace (t, DebugSleepT reason_op);
-      rec_flow_t cx trace (VoidT.why reason_op |> with_trust bogus_trust, call_tout)
+      rec_flow_t cx ~use_op trace (VoidT.why reason_op |> with_trust bogus_trust, call_tout)
 
     | CustomFunT (lreason, (
           Compose _
