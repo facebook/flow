@@ -360,7 +360,8 @@ let run_merge_service
   )
 
 let mk_intermediate_result_callback
-    ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
+    ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
+  let lazy_table_of_aloc = Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
   let%lwt send_errors_over_connection =
     match persistent_connections with
     | None -> Lwt.return (fun _ -> ())
@@ -433,12 +434,12 @@ let mk_intermediate_result_callback
       Core_list.map ~f:(fun (file, result) ->
         match result with
         | Ok (errors, warnings, suppressions, _) ->
-          let errors = Flow_error.make_errors_printable errors in
-          let warnings = Flow_error.make_errors_printable warnings in
+          let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+          let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
           file, errors, warnings, suppressions
         | Error msg ->
           let errors = error_set_of_merge_error file msg in
-          let errors = Flow_error.make_errors_printable errors in
+          let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
           let suppressions = Error_suppressions.empty in
           let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
           file, errors, warnings, suppressions
@@ -474,7 +475,7 @@ let merge
       | Options.Classic -> persistent_connections
       | Options.TypesFirst -> None in
     mk_intermediate_result_callback
-      ~options ~profiling ~persistent_connections ~recheck_reasons suppressions in
+      ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions in
   let%lwt () = match prep_merge with
     | None -> Lwt.return_unit
     | Some callback ->
@@ -587,6 +588,7 @@ let check_files
 
       let%lwt intermediate_result_callback =
         mk_intermediate_result_callback
+          ~reader
           ~options
           ~profiling
           ~persistent_connections
@@ -715,6 +717,9 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
     parse_contents ~options ~profiling ~check_syntax filename contents in
 
   let reader = State_reader.create () in
+  let lazy_table_of_aloc =
+    Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader
+  in
 
   match parse_result with
   | Parsing_service_js.Parse_ok parse_ok ->
@@ -756,8 +761,8 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let errors, warnings, suppressions =
         Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
-      let errors = Flow_error.make_errors_printable errors in
-      let warnings = Flow_error.make_errors_printable warnings in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
 
       let root = Options.root options in
       let file_options = Some (Options.file_options options) in
@@ -795,14 +800,14 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
           let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
           Flow_error.ErrorSet.add err errors
       in
-      let errors = Flow_error.make_errors_printable errors in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
     | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
-      let errors = Flow_error.make_errors_printable errors in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
 let typecheck_contents ~options ~env ~profiling contents filename =
@@ -1075,6 +1080,7 @@ end = struct
   let recheck_parse_and_update_dependency_info
       ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
       ~env =
+    let lazy_table_of_aloc = Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
     let errors = env.ServerEnv.errors in
 
     (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
@@ -1143,7 +1149,7 @@ end = struct
         let error_set: Flow_error.ErrorSet.t =
           FilenameMap.fold (fun _ -> Flow_error.ErrorSet.union) new_local_errors Flow_error.ErrorSet.empty
         in
-        let error_set = Flow_error.make_errors_printable error_set in
+        let error_set = Flow_error.make_errors_printable lazy_table_of_aloc error_set in
         if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0
         then Persistent_connection.update_clients
           ~clients:env.ServerEnv.connections

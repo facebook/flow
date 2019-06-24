@@ -625,8 +625,11 @@ let flow_check (code : string) : string option =
       let errors, warnings, suppressions =
         Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
-      let errors = Flow_error.make_errors_printable errors in
-      let warnings = Flow_error.make_errors_printable warnings in
+      let lazy_table_of_aloc _ =
+        lazy (failwith "Did not expect to encounter an abstract location in flowtestgen")
+      in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
       let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
           ~root ~file_options:None suppressions errors ~unused:suppressions in
       let warnings, _, _ = Error_suppressions.filter_suppressed_errors

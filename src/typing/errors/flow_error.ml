@@ -31,7 +31,11 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } = {
   trace_reasons = Core_list.map ~f:(Reason.map_reason_locs f) trace_reasons;
 }
 
-let concretize_error = map_loc_of_error ALoc.to_loc_exn
+let concretize_error lazy_table_of_aloc =
+  map_loc_of_error begin fun aloc ->
+    let table = lazy_table_of_aloc aloc in
+    ALoc.to_loc table aloc
+  end
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
@@ -211,7 +215,7 @@ let error_of_msg ~trace_reasons ~source_file (msg : ALoc.t Error_message.t') : A
     source_file;
     trace_reasons
   }
-let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
+let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors.printable_error =
   let open Errors in
 
   let { loc : Loc.t option; msg : Loc.t Error_message.t';
@@ -616,8 +620,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       let score = score_of_msg msg in
       let error =
         error_of_msg ~trace_reasons:[] ~source_file msg
-        |> concretize_error
-        |> make_error_printable in
+        |> (concretize_error lazy_table_of_aloc)
+        |> (make_error_printable lazy_table_of_aloc) in
       (score, error)
     ) branches in
     mk_speculation_error
@@ -879,8 +883,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       mk_use_op_speculation_error loc use_op branches
   | None, Error_message.Normal _ | Some _, _ -> raise (ImproperlyFormattedError msg)
 
-let make_errors_printable set =
+let make_errors_printable lazy_table_of_aloc set =
   Errors.(ErrorSet.fold
-    (concretize_error %> make_error_printable %> ConcreteLocPrintableErrorSet.add)
+    ((concretize_error lazy_table_of_aloc) %> (make_error_printable lazy_table_of_aloc) %> ConcreteLocPrintableErrorSet.add)
     set
     ConcreteLocPrintableErrorSet.empty)
