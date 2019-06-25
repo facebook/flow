@@ -252,6 +252,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | ObjUnionT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | MaybeT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -705,6 +709,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
+
+  | MakeObjUnionT (_, cont) -> _json_of_cont json_cx cont
 
   | CJSRequireT (_, export, _) -> [
       "export",
@@ -1807,6 +1813,7 @@ let rec dump_t_ (depth, tvars) cx t =
             (String.concat "; " (Core_list.map ~f:kid args))
         | None -> spf "%s, %s" (kid base) (kid this)
       end t
+  | ObjUnionT (_, arg) -> p ~extra:(kid arg) t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
   | MaybeT (_, arg) -> p ~extra:(kid arg) t
   | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
@@ -2146,6 +2153,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (lookup_kind kind)
       (lookup_action action)) t
   | MakeExactT _ -> p t
+  | MakeObjUnionT _ -> p t
   | MapTypeT _ -> p t
   | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
@@ -2625,6 +2633,10 @@ let dump_error_message =
           (string_of_use_op use_op)
     | EUnsupportedExact (reason1, reason2) ->
         spf "EUnsupportedExact (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EUnsupportedObjUnion (reason1, reason2) ->
+        spf "EUnsupportedObjUnion (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
     | EIdxArity reason ->

@@ -60,6 +60,8 @@ class ['a] t = object(self)
 
   | ExactT (_, t) -> self#type_ cx pole acc t
 
+  | ObjUnionT (_, t) -> self#type_ cx pole acc t
+
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t -> self#type_ cx pole acc t
 
@@ -443,6 +445,8 @@ class ['a] t = object(self)
     acc
 
   | MakeExactT (_, cont) -> self#cont cx acc cont
+
+  | MakeObjUnionT (_, cont) -> self#cont cx acc cont
 
   | CJSRequireT (_, t, _)
   | ImportModuleNsT (_, t, _)

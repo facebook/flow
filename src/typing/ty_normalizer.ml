@@ -579,6 +579,7 @@ end = struct
     | BoundT (reason, name, _) -> bound_t ~env reason name
     | AnnotT (_, t, _) -> type__ ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
+    | ObjUnionT (_, t) -> obj_union_t ~env t
     | ExactT (_, t) -> exact_t ~env t
     | CustomFunT (_, f) -> custom_fun ~env f
     | InternalT i -> internal_t ~env t i
@@ -1117,6 +1118,9 @@ end = struct
 
   and exact_t ~env t =
     type__ ~env  t >>| Ty.mk_exact
+
+  and obj_union_t ~env t =
+    type__ ~env t
 
   and type_app =
     let  go ~env targs = function

@@ -85,6 +85,8 @@ module rec TypeTerm : sig
     (* exact *)
     | ExactT of reason * t
 
+    | ObjUnionT of reason * t
+
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
@@ -519,6 +521,8 @@ module rec TypeTerm : sig
 
     (* exact ops *)
     | MakeExactT of reason * cont
+
+    | MakeObjUnionT of reason * cont
 
     (**
      * Module import handling
@@ -2212,6 +2216,7 @@ end = struct
     | IntersectionT (reason, _) -> reason
     | MaybeT (reason, _) -> reason
     | OptionalT (reason, _) -> reason
+    | ObjUnionT (reason, _) -> reason
 
   and reason_of_defer_use_t = function
     | LatentPredT (reason, _)
@@ -2270,6 +2275,7 @@ end = struct
     | InvariantT reason -> reason
     | LookupT(reason, _, _, _, _) -> reason
     | MakeExactT (reason, _) -> reason
+    | MakeObjUnionT (reason, _) -> reason
     | MapTypeT (_, reason, _, _) -> reason
     | MethodT (_,reason,_,_,_,_) -> reason
     | MixinT (reason, _) -> reason
@@ -2371,6 +2377,7 @@ end = struct
     | ThisClassT (reason, t) -> ThisClassT (f reason, t)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
     | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
+    | ObjUnionT (reason, t) -> ObjUnionT (f reason, t)
 
   and mod_reason_of_defer_use_t f = function
     | LatentPredT (reason, p) -> LatentPredT (f reason, p)
@@ -2442,6 +2449,7 @@ end = struct
     | InvariantT reason -> InvariantT (f reason)
     | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
     | MakeExactT (reason, t) -> MakeExactT (f reason, t)
+    | MakeObjUnionT (reason, t) -> MakeObjUnionT (f reason, t)
     | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
     | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
         MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
@@ -2583,6 +2591,7 @@ end = struct
   | BecomeT (_, _)
   | GetValuesT (_, _)
   | MakeExactT (_, _)
+  | MakeObjUnionT (_, _)
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)
   | ImportDefaultT (_, _, _, _, _)
@@ -3186,6 +3195,7 @@ let string_of_ctor = function
   | IntersectionT _ -> "IntersectionT"
   | OptionalT _ -> "OptionalT"
   | MaybeT _ -> "MaybeT"
+  | ObjUnionT _ -> "ObjUnionT"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"
@@ -3306,6 +3316,7 @@ let string_of_use_ctor = function
   | InvariantT _ -> "InvariantT"
   | LookupT _ -> "LookupT"
   | MakeExactT _ -> "MakeExactT"
+  | MakeObjUnionT _ -> "MakeObjUnionT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"
   | MixinT _ -> "MixinT"

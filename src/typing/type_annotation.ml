@@ -790,6 +790,16 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
 
+  | "$ObjUnion" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let reason = mk_reason RObjUnion loc in
+      let ts, targs = convert_type_params () in
+      let t = List.hd ts in
+      reconstruct_ast
+        (ObjUnionT (reason, t))
+        targs
+    )
+
   | "$CharSet" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match targs with
