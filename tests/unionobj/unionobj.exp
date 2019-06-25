@@ -1,0 +1,21 @@
+Error ------------------------------------------------------------------------------------------------ unionobj.js:18:42
+
+Cannot call `onAction` with object literal bound to `pattern` because property `Action3` is missing in object
+literal [1] but exists in object type [2].
+
+   unionobj.js:18:42
+                                                v
+   18| const result2: number = onAction(action, {
+   19|   Action1: () => 0,
+   20|   Action2: () => 1
+   21| });
+       ^ [1]
+
+References:
+   unionobj.js:5:12
+    5|   pattern: $ObjMap<$UnionObj<T>, () => () => Result>
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
