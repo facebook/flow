@@ -545,6 +545,45 @@ end
 
 (* Completion request, method="textDocument/completion" *)
 module Completion = struct
+  (* These numbers should match
+   * https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
+   *)
+  type completionItemKind =
+    | Text [@value 1]
+    | Method [@value 2]
+    | Function [@value 3]
+    | Constructor [@value 4]
+    | Field [@value 5]
+    | Variable [@value 6]
+    | Class [@value 7]
+    | Interface [@value 8]
+    | Module [@value 9]
+    | Property [@value 10]
+    | Unit [@value 11]
+    | Value [@value 12]
+    | Enum [@value 13]
+    | Keyword [@value 14]
+    | Snippet [@value 15]
+    | Color [@value 16]
+    | File [@value 17]
+    | Reference [@value 18]
+    | Folder [@value 19]
+    | EnumMember [@value 20]
+    | Constant [@value 21]
+    | Struct [@value 22]
+    | Event [@value 23]
+    | Operator [@value 24]
+    | TypeParameter [@value 25]
+  [@@deriving enum]
+
+  (* These numbers should match
+   * https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
+   *)
+  type insertTextFormat =
+    | PlainText [@value 1]  (* the insertText/textEdits are just plain strings *)
+    | SnippetFormat [@value 2]  (* wire: just "Snippet" *)
+  [@@deriving enum]
+
   type params = completionParams
 
   and completionParams = {
@@ -584,109 +623,6 @@ module Completion = struct
     data: Hh_json.json option;
   }
 
-  and completionItemKind =
-    | Text (* 1 *)
-    | Method (* 2 *)
-    | Function (* 3 *)
-    | Constructor (* 4 *)
-    | Field (* 5 *)
-    | Variable (* 6 *)
-    | Class (* 7 *)
-    | Interface (* 8 *)
-    | Module (* 9 *)
-    | Property (* 10 *)
-    | Unit (* 11 *)
-    | Value (* 12 *)
-    | Enum (* 13 *)
-    | Keyword (* 14 *)
-    | Snippet (* 15 *)
-    | Color (* 16 *)
-    | File (* 17 *)
-    | Reference (* 18 *)
-    | Folder (* 19 *)
-    | EnumMember (* 20 *)
-    | Constant (* 21 *)
-    | Struct (* 22 *)
-    | Event (* 23 *)
-    | Operator (* 24 *)
-    | TypeParameter (* 25 *)
-
-    (** Keep this in sync with `int_of_completionItemKind`. *)
-    and insertTextFormat =
-    | PlainText (* 1 *)  (* the insertText/textEdits are just plain strings *)
-    | SnippetFormat (* 2 *)  (* wire: just "Snippet" *)
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with completionItemKind_of_int_opt. *)
-  let int_of_completionItemKind = function
-    | Text -> 1
-    | Method -> 2
-    | Function -> 3
-    | Constructor -> 4
-    | Field -> 5
-    | Variable -> 6
-    | Class -> 7
-    | Interface -> 8
-    | Module -> 9
-    | Property -> 10
-    | Unit -> 11
-    | Value -> 12
-    | Enum -> 13
-    | Keyword -> 14
-    | Snippet -> 15
-    | Color -> 16
-    | File -> 17
-    | Reference -> 18
-    | Folder -> 19
-    | EnumMember -> 20
-    | Constant -> 21
-    | Struct -> 22
-    | Event -> 23
-    | Operator -> 24
-    | TypeParameter -> 25
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with int_of_completionItemKind. *)
-  let completionItemKind_of_int_opt = function
-    | 1 -> Some Text
-    | 2 -> Some Method
-    | 3 -> Some Function
-    | 4 -> Some Constructor
-    | 5 -> Some Field
-    | 6 -> Some Variable
-    | 7 -> Some Class
-    | 8 -> Some Interface
-    | 9 -> Some Module
-    | 10 -> Some Property
-    | 11 -> Some Unit
-    | 12 -> Some Value
-    | 13 -> Some Enum
-    | 14 -> Some Keyword
-    | 15 -> Some Snippet
-    | 16 -> Some Color
-    | 17 -> Some File
-    | 18 -> Some Reference
-    | 19 -> Some Folder
-    | 20 -> Some EnumMember
-    | 21 -> Some Constant
-    | 22 -> Some Struct
-    | 23 -> Some Event
-    | 24 -> Some Operator
-    | 25 -> Some TypeParameter
-    | _ -> None
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with insertFormat_of_int_opt. *)
-  let int_of_insertFormat = function
-    | PlainText -> 1
-    | SnippetFormat -> 2
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with int_of_insertFormat. *)
-  let insertFormat_of_int_opt = function
-    | 1 -> Some PlainText
-    | 2 -> Some SnippetFormat
-    | _ -> None
 end
 
 

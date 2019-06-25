@@ -564,7 +564,7 @@ let parse_completionItem (params: json option) : CompletionItemResolve.params =
   in
   {
     label = Jget.string_exn params "label";
-    kind = Option.bind (Jget.int_opt params "kind") completionItemKind_of_int_opt;
+    kind = Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
     detail = Jget.string_opt params "detail";
     inlineDetail = Jget.string_opt params "inlineDetail";
     itemType = Jget.string_opt params "itemType";
@@ -572,7 +572,8 @@ let parse_completionItem (params: json option) : CompletionItemResolve.params =
     sortText = Jget.string_opt params "sortText";
     filterText = Jget.string_opt params "filterText";
     insertText = Jget.string_opt params "insertText";
-    insertTextFormat = Option.bind (Jget.int_opt params "insertTextFormat") insertFormat_of_int_opt;
+    insertTextFormat = Option.bind (Jget.int_opt params "insertTextFormat")
+                         insertTextFormat_of_enum;
     textEdits;
     command;
     data = Jget.obj_opt params "data"
@@ -583,7 +584,7 @@ let print_completionItem (item: Completion.completionItem) : json =
   let open Completion in
   Jprint.object_opt [
     "label", Some (JSON_String item.label);
-    "kind", Option.map item.kind (fun x -> int_ @@ int_of_completionItemKind x);
+    "kind", Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x);
     "detail", Option.map item.detail string_;
     "inlineDetail", Option.map item.inlineDetail string_;
     "itemType", Option.map item.itemType string_;
@@ -591,7 +592,8 @@ let print_completionItem (item: Completion.completionItem) : json =
     "sortText", Option.map item.sortText string_;
     "filterText", Option.map item.filterText string_;
     "insertText", Option.map item.insertText string_;
-    "insertTextFormat", Option.map item.insertTextFormat (fun x -> int_ @@ int_of_insertFormat x);
+    "insertTextFormat", Option.map item.insertTextFormat
+                          (fun x -> int_ @@ insertTextFormat_to_enum x);
     "textEdit", Option.map (List.hd item.textEdits) print_textEdit;
     "additionalTextEdits", (match (List.tl item.textEdits) with
       | None | Some [] -> None
