@@ -1,0 +1,4 @@
+(library
+  (name injector_config)
+  (wrapped false)
+  (virtual_modules injector_config))
