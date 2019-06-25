@@ -98,10 +98,10 @@ class virtual ['a] t = object(self)
           let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
           if t' == t'' && ts == ts' then t
           else TypeAppT (r, op, t'', ts')
-      | ObjUnionT (r, t') ->
+      | UnionObjT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else ObjUnionT (r, t'')
+          else UnionObjT (r, t'')
       | ExactT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -874,10 +874,10 @@ class virtual ['a] t_with_uses = object(self)
           let cont' = self#cont cx map_cx cont in
           if cont' == cont then t
           else MakeExactT (r, cont')
-      | MakeObjUnionT (r, cont) ->
+      | MakeUnionObjT (r, cont) ->
           let cont' = self#cont cx map_cx cont in
           if cont' == cont then t
-          else MakeObjUnionT (r, cont')
+          else MakeUnionObjT (r, cont')
       | CJSRequireT (r, t', is_strict) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

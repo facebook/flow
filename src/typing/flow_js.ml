@@ -2933,7 +2933,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
            prevents a drastic blowup of cases which can cause perf problems. *)
         | PredicateT (RightP (SentinelProp _, _), _)
-        | MakeObjUnionT (_, _)
+        | MakeUnionObjT (_, _)
         | PredicateT (NotP (RightP (SentinelProp _, _)), _) -> false
         | _ -> true
       ) ->
@@ -5478,17 +5478,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (mapped_t, tout)
 
-    | _, UseT (use_op, ObjUnionT (r, k)) ->
-      rec_flow cx trace (k, MakeObjUnionT (r, Lower (use_op, l)))
+    | _, UseT (use_op, UnionObjT (r, k)) ->
+      rec_flow cx trace (k, MakeUnionObjT (r, Lower (use_op, l)))
 
-    | ObjUnionT (r, t), _ ->
-      rec_flow cx trace (t, MakeObjUnionT (r, Upper u))
+    | UnionObjT (r, t), _ ->
+      rec_flow cx trace (t, MakeUnionObjT (r, Upper u))
 
     (*********************)
     (* object from union *)
     (*********************)
 
-    | UnionT (_, rep), MakeObjUnionT (reason_op, Upper u) ->
+    | UnionT (_, rep), MakeUnionObjT (reason_op, Upper u) ->
       let ts = UnionRep.members rep in
       let props =
         Core_list.foldi ts ~f:(fun _ acc value ->
@@ -5514,7 +5514,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (obj, u)
 
-    | UnionT (_, rep), MakeObjUnionT (reason_op, Lower (use_op, l)) ->
+    | UnionT (_, rep), MakeUnionObjT (reason_op, Lower (use_op, l)) ->
       let ts = UnionRep.members rep in
       let props =
         Core_list.foldi ts ~f:(fun _ acc value ->
@@ -5540,7 +5540,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (l, UseT (use_op, obj))
 
-    | DefT (reason, _, StrT (Literal (_, str))), MakeObjUnionT (reason_op, Upper u) ->
+    | DefT (reason, _, StrT (Literal (_, str))), MakeUnionObjT (reason_op, Upper u) ->
       let props = SMap.add str (Field (None, AnyT.why Annotated reason, Positive)) SMap.empty in
       let props_tmap = Context.make_property_map cx props in
       let obj =
@@ -5557,7 +5557,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (obj, u)
 
-    | DefT (reason, _, StrT (Literal (_, str))), MakeObjUnionT (reason_op, Lower (use_op, l)) ->
+    | DefT (reason, _, StrT (Literal (_, str))), MakeUnionObjT (reason_op, Lower (use_op, l)) ->
       let props = SMap.add str (Field (None, AnyT.why Annotated reason, Positive)) SMap.empty in
       let props_tmap = Context.make_property_map cx props in
       let obj =
@@ -5575,8 +5575,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, obj))
 
     (* unsupported kind *)
-    | _, MakeObjUnionT (ru, _) ->
-      add_output cx ~trace (Error_message.EUnsupportedObjUnion (ru, reason_of_t l))
+    | _, MakeUnionObjT (ru, _) ->
+      add_output cx ~trace (Error_message.EUnsupportedUnionObj (ru, reason_of_t l))
 
     (***********************************************)
     (* functions may have their prototypes written *)
@@ -6970,7 +6970,7 @@ and empty_success flavor u =
   | _, CondT _
   | _, DestructuringT _
   | _, MakeExactT _
-  | _, MakeObjUnionT _
+  | _, MakeUnionObjT _
   | _, ObjKitT _
   | _, ReposLowerT _
   | _, ReposUseT _
@@ -7220,7 +7220,7 @@ and any_propagated cx trace any u =
   | LookupT _
   | MatchPropT _
   | MakeExactT _
-  | MakeObjUnionT _
+  | MakeUnionObjT _
   | MapTypeT _
   | MethodT _
   | MixinT _
@@ -7366,7 +7366,7 @@ and any_propagated_use cx trace use_op any l =
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
   | ExactT _
-  | ObjUnionT _
+  | UnionObjT _
   | ThisClassT _
   | ReposT _
   | EvalT _
@@ -7693,7 +7693,7 @@ and check_polarity cx ?trace polarity = function
 
   | OptionalT (_, t)
   | ExactT (_, t)
-  | ObjUnionT (_, t)
+  | UnionObjT (_, t)
   | MaybeT (_, t)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t

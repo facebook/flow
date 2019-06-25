@@ -135,7 +135,7 @@ type 'loc virtual_reason_desc =
   | RTupleMap
   | RObjectMap
   | RObjectMapi
-  | RObjUnion
+  | RUnionObj
   | RType of string
   | RTypeAlias of string * bool (* trust in normalization *) * 'loc virtual_reason_desc
   | ROpaqueType of string
@@ -293,7 +293,7 @@ let rec map_desc_locs f = function
   | RDummyThis
   | RTupleMap
   | RObjectMap
-  | RObjUnion
+  | RUnionObj
   | RType _
   | RTypeof _
   | RMethod _
@@ -655,7 +655,7 @@ let rec string_of_desc = function
   | RTupleMap -> "`$TupleMap`"
   | RObjectMap -> "`$ObjMap`"
   | RObjectMapi -> "`$ObjMapi`"
-  | RObjUnion -> "`$ObjUnion`"
+  | RUnionObj -> "`$UnionObj`"
   | RType x -> spf "`%s`" (prettify_react_util x)
   | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
@@ -1337,7 +1337,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RTupleMap
 | RObjectMap
 | RObjectMapi
-| RObjUnion
+| RUnionObj
 | RType _
 | RTypeAlias _
 | ROpaqueType _
