@@ -43,7 +43,7 @@
     "es6"
   ],
   "dependencies": {
-    "flow-parser": "^0.102.0-rc",
+    "flow-parser": "^0.102.0",
     "pirates": "^3.0.2",
     "vlq": "^0.2.1"
   },

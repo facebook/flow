@@ -1,5 +1,33 @@
 ### 0.102.0
 
+Likely to cause new Flow errors:
+* Function components with no arguments get a sealed empty object type as props.
+* Moved `MixedElement` export into the module declaration, so it will now need to be qualified as `React.MixedElement`.
+
+Notable bug fixes:
+* Fixed error positioning around utility types (e.g. `$ObjMap`).
+* Omit reporting error stack traces to end users over LSP.
+* Fixed bug where Flow would crash when variable has same name as a type (fixes #7825)
+
+Misc:
+* Refactored coverage computation to use the typed AST. This enables coverage results over more locations that earlier.
+* Improved server and monitor error logging.
+* In typing object types as react components, account for the `defaultProps` property and make them compatible with `React.AbstractComponent`.
+* Optimized the way module exports are populated to prevent recursion limiter exceptions.
+* Improved error messages for invalid `BigInt`s. (thanks, @goodmind!)
+* Hovering over an imported type alias returns its definition. (thanks, @vicapow!)
+* Fixed semver comparison to allow for suffixes such as `rc`.
+
+Libdefs:
+* Remove `Object` type (equivalent to `any`) from `WeakSet` and `$ReadOnlyWeakSet`. (thanks, @goodmind!)
+* Add methods to Node HTTP ServerResponse type definition. (thanks, @chrislloyd!)
+* Add definitions for the Web Animations API. (thanks, @goodmind!)
+
+### 0.101.1
+
+Notable bug fixes:
+* Fixed a bug with suppressions in the experimental types-first mode.
+
 ### 0.101.0
 
 Likely to cause new Flow errors:
