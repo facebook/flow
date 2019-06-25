@@ -768,7 +768,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
    * Similar to mk_incompatible_error except with any arbitrary *use*
    * instead of specifically an upper type. This error handles all use
    * incompatibilities in general. *)
-  let mk_incompatible_use_error use_loc use_kind lower use_op =
+  let mk_incompatible_use_error use_loc use_kind lower upper use_op =
     let nope msg =
       mk_use_op_error use_loc use_op
         [ref lower; text (" " ^ msg)]
@@ -793,8 +793,10 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
     | IncompatibleObjSealT
     | IncompatibleGetKeysT
     | IncompatibleGetValuesT
-    | IncompatibleMapTypeTObject
       -> nope "is not an object"
+    | IncompatibleMapTypeTObject
+      -> mk_use_op_error use_loc use_op
+      [ref lower; text " is not a valid argument of "; ref upper]
     | IncompatibleMixinT
     | IncompatibleThisSpecializeT
       -> nope "is not a class"
@@ -873,8 +875,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       mk_prop_missing_error prop_loc prop lower use_op
   | None, PropPolarityMismatch (x, p1, p2, use_op) ->
       mk_prop_polarity_mismatch_error x p1 p2 use_op
-  | None, IncompatibleUse (loc, use_kind, lower, use_op) ->
-      mk_incompatible_use_error loc use_kind lower use_op
+  | None, IncompatibleUse (loc, use_kind, lower, upper, use_op) ->
+      mk_incompatible_use_error loc use_kind lower upper use_op
   | None, Incompatible (lower, upper, use_op) ->
       mk_incompatible_error lower upper use_op
   | None, IncompatibleTrust (lower, upper, use_op) ->

@@ -839,8 +839,8 @@ let mk_prop_message = Errors.Friendly.(function
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
 type 'loc friendly_message_recipe =
-  | IncompatibleUse of 'loc * 'loc upper_kind * 'loc Reason.virtual_reason *
-      'loc Type.virtual_use_op
+  | IncompatibleUse of 'loc * 'loc upper_kind * 'loc Reason.virtual_reason * 'loc Reason.virtual_reason 
+      * 'loc Type.virtual_use_op
   | Speculation of 'loc * 'loc Type.virtual_use_op * ('loc Reason.virtual_reason * t) list
   | Incompatible of 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
       * 'loc Type.virtual_use_op
@@ -874,7 +874,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       } ->
       if branches = [] then
         IncompatibleUse
-          (loc_of_reason reason_upper, upper_kind, reason_lower, Option.value ~default:unknown_use use_op)
+          (loc_of_reason reason_upper, upper_kind, reason_lower, reason_upper, Option.value ~default:unknown_use use_op)
       else
         Speculation (loc_of_reason reason_upper, Option.value ~default:unknown_use use_op, branches)
 
