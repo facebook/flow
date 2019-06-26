@@ -42,6 +42,7 @@ module type S = sig
 
   val save_state_spec_json_descr: string
   val get_save_state_spec: string option -> (save_state_spec_info option, string) result
+  val get_save_state_spec_json: save_state_spec_info -> string
 
   val saved_state_json_descr: string
   val get_saved_state_spec: string option -> (saved_state_target_info option, string) result
