@@ -88,25 +88,26 @@ function flatMap_test() {
   }
   function case3() {
     // Let's say we want to remove all the negative numbers and split the odd numbers into an even number and a 1
-    let a = [5, 4, -3, 20, 17, -33, -4, 18];
+    let arr1 = [5, 4, -3, 20, 17, -33, -4, 18];
     //       |\  \  x   |  | \   x   x   |
     //      [4,1, 4,   20, 16, 1,       18]
 
-    let b: Array<number> = a.flatMap(n =>
+    let arr2: Array<number> = arr1.flatMap(n =>
       n < 0 ? [] : n % 2 == 0 ? [n] : [n - 1, 1]
     );
 
     // expected output: [4, 1, 4, 20, 16, 1, 18]
   }
   function case4() {
-    let a = [5, 2, 3, 4];
-    let b: Array<number | string> = a.flatMap(n => (n < 0 ? [1, 2, 3] : "ok"));
-    let c: $ReadOnlyArray<number> = [5, 2, 3, 4];
-    let d: Array<number | string> = a.flatMap(n => (n < 0 ? [1, 2, 3] : "ok"));
+    let arr1 = [5, 2, 3, 4];
+    let arr2: Array<number | string> = arr1.flatMap(n => (n < 0 ? [1, 2, 3] : "ok"));
+
+    let arr3: $ReadOnlyArray<number> = [5, 2, 3, 4];
+    let arr4: Array<number | string> = arr3.flatMap(n => (n < 0 ? [1, 2, 3] : "ok"));
   }
   function case5() {
-    let c: $ReadOnlyArray<number> = [5, 2, 3, 4];
-    let d: Array<number> = a.flatMap(n => {
+    let arr1: $ReadOnlyArray<number> = [5, 2, 3, 4];
+    let arr2: Array<number> = arr1.flatMap(n => {
       const r: $ReadOnlyArray<number> = [1, 2, 3];
       return r;
     });
