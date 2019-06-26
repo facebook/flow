@@ -77,6 +77,10 @@
  */
 /*****************************************************************************/
 
+/* For printing uint64_t
+ * http://jhshi.me/2014/07/11/print-uint64-t-properly-in-c/index.html */
+#define __STDC_FORMAT_MACROS
+
 /* define CAML_NAME_SPACE to ensure all the caml imports are prefixed with
  * 'caml_' */
 #define CAML_NAME_SPACE
@@ -106,6 +110,7 @@
 #include <unistd.h>
 #endif
 
+#include <inttypes.h>
 #include <lz4.h>
 #include <sys/time.h>
 #include <time.h>
@@ -1272,7 +1277,12 @@ void hh_shared_clear(void) {
 /*****************************************************************************/
 
 static void raise_dep_table_full(void) {
-  fprintf(stderr, "dcounter: %lu dep_size: %lu \n", *dcounter, dep_size);
+  fprintf(
+    stderr,
+    "dcounter: %"PRIu64" dep_size: %"PRIu64" \n",
+    *dcounter,
+    dep_size
+  );
 
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("dep_table_full");
@@ -2189,7 +2199,12 @@ void hh_load_dep_table_blob_helper(const char* const in_filename) {
   // The number of bytes read from the file stream
   size_t count;
 
-  fprintf(stderr, "Start; dcounter: %lu dep_size: %lu \n", *dcounter, dep_size);
+  fprintf(
+    stderr,
+    "Start; dcounter: %"PRIu64" dep_size: %"PRIu64" \n",
+    *dcounter,
+    dep_size
+  );
 
   do {
     count = fread(
@@ -2226,7 +2241,12 @@ void hh_load_dep_table_blob_helper(const char* const in_filename) {
 
   fclose(dep_table_blob_file);
 
-  fprintf(stderr, "End; dcounter: %lu dep_size: %lu \n", *dcounter, dep_size);
+  fprintf(
+    stderr,
+    "End; dcounter: %"PRIu64" dep_size: %"PRIu64" \n",
+    *dcounter,
+    dep_size
+  );
   fprintf(stderr, "Read %lu keys and %lu values\n", keys_count, values_count);
 
   log_duration("Finished reading the file", start_t);
