@@ -4,30 +4,48 @@ array.js 3 15
 function foo(): Array<number> {
   return [1, 2];
 }
+Found 0 errors
 arrow-0.js 3 8
 // @flow
 
 const a: ((x: number) => number) = (x) => x + 1;
 a(1);
+Found 0 errors
 arrow-0.js 3 13
 // @flow
 
 const a = (x: number) => x + 1;
 a(1);
+Found 0 errors
 arrow-0.js 3 14
 // @flow
 
 const a = (x): number => x + 1;
 a(1);
+Found 0 errors
 arrow-1.js 3 16
 // @flow
 
 const b = (x, y: string, z) => x(y, z.f);
 b((k, l) => (l + k), "a", { f: 2 });
+Found 0 errors
 arrow-2.js 3 5
 // @flow
 
 ((x): number => x + 1)(4);
+Found 0 errors
+class-0.js 4 3
+// @flow
+
+class A {
+  f: number = 1;
+  m(x) {
+    return this.f + 1;
+  }
+}
+
+(new A).m("");
+Found 0 errors
 class-0.js 4 4
 // @flow
 
@@ -39,6 +57,19 @@ class A {
 }
 
 (new A).m("");
+Found 0 errors
+class-0.js 4 3 4 4
+// @flow
+
+class A {
+  f: number = 1;
+  m(x) {
+    return this.f + 1;
+  }
+}
+
+(new A).m("");
+Found 0 errors
 class-1.js 5 6
 // @flow
 
@@ -50,6 +81,7 @@ class A {
 var a = new A;
 function foo(x) { return x; }
 foo(A);
+Found 0 errors
 class-2.js 4 6
 // @flow
 
@@ -58,6 +90,7 @@ class A {
     return this;
   }
 }
+Found 0 errors
 class-3.js 9 15
 // @flow
 
@@ -69,6 +102,7 @@ class A {
 
 function foo(x: (() => A)) {}
 foo(new A().m);
+Found 0 errors
 comments-0.js 4 33
 // @flow
 
@@ -79,6 +113,7 @@ export function test (x: number): string {
   // TWO
   return /* BETWEEEN */ `${a}` // END OF return ...
 } // END
+Found 0 errors
 dictionary.js 12 12
 // @flow
 
@@ -111,6 +146,7 @@ dictionary.js 12 12
   },
   set 'y'(z: string) {}
 });
+Found 0 errors
 func-0.js 3 26
 // @flow
 
@@ -119,6 +155,7 @@ function foo(x: number, y: string) {
 }
 
 foo(1, "");
+Found 0 errors
 func-1.js 3 18
 // @flow
 
@@ -127,6 +164,7 @@ function foo(x, y: ((z: number) => number)) {
 }
 
 foo(1, (z) => z + 1);
+Found 0 errors
 func-2.js 4 17
 // @flow
 
@@ -138,11 +176,13 @@ function foo(x, y) {
 }
 
 foo(1, 1);
+Found 0 errors
 func-3.js 2 22
 // @flow
 function throws_arg(): empty {
   throw 42;
 }
+Found 0 errors
 func-4.js 2 22
 // @flow
 function throws_arg(): empty {
@@ -152,6 +192,7 @@ function throws_arg(): empty {
     throw 42;
   }
 }
+Found 0 errors
 func-5.js 2 22
 // @flow
 function throws_arg(): number {
@@ -161,6 +202,7 @@ function throws_arg(): number {
     throw 42;
   }
 }
+Found 0 errors
 func-poly-0.js 3 24
 // @flow
 
@@ -169,6 +211,7 @@ function outer<T>(y: T): void {
     inner(x, x);
   }
 }
+Found 0 errors
 object-0.js 7 6
 // @flow
 
@@ -182,6 +225,7 @@ var obj = {
 }
 
 obj.n(0)
+Found 0 errors
 object-1.js 7 8
 // @flow
 
@@ -195,6 +239,7 @@ var obj = {
 }
 
 obj['n'](0)
+Found 0 errors
 object-2.js 6 6
 // @flow
 
@@ -205,6 +250,7 @@ foo({
   n: () => 2,
   l: function bar() {}
 });
+Found 0 errors
 poly-0.js 3 22
 // @flow
 
@@ -213,6 +259,7 @@ function foo<T>(x: T): {|f: T|} {
     f: x
   }
 }
+Found 0 errors
 poly-0.js 3 15
 // @flow
 
@@ -221,13 +268,14 @@ function foo<T: mixed>(x: T) {
     f: x
   }
 }
+Found 0 errors
 react-0.js 6 21
 // @flow
 
 import React from "react";
 import ReactDOM from "react-dom";
 
-function Clock(props: any) {
+function Clock(props: {|date: Date|}) {
   return (
     <div>
       <h1>Hello, world!</h1>
@@ -247,6 +295,7 @@ function tick() {
 }
 
 setInterval(tick, 1000);
+Found 0 errors
 spread.js 10 3
 // @flow
 
@@ -261,6 +310,7 @@ class D { g: O; }
 () => { declare var x: {...C} & {...D}; return x; };
 <T: {}, S: { f: O}>() => { declare var x: {...T, ...S, o: O}; return x; };
 <T: {}>() => { declare var x: {...T, o: O}; return x; };
+Found 0 errors
 string-literal.js 11 14
 // @flow
 
@@ -273,6 +323,7 @@ function f1() { return a; }
 function f2() { return single_quote; }
 function f3() { return double_quote; }
 function f4(): "\\" { return backslash; }
+Found 0 errors
 type-utils.js 6 3
 // @flow
 
@@ -283,6 +334,7 @@ declare var typeof_C: typeof C;
 
 declare var class_of_C_number: Class<C<number>>;
 () => class_of_C_number;
+Found 0 errors
 union-0.js 3 15
 // @flow
 
@@ -294,12 +346,14 @@ foo(1);
 foo(2);
 foo(() => foo());
 foo();
+Found 0 errors
 replacement-array.js 5 15
 // @flow
 
 // preserve spacing
 
 function foo(): Array<number> {return [1, 2];}
+Found 0 errors
 replacement-arrow.js 3 13
 // @flow
 
@@ -308,6 +362,7 @@ const a = (x: number) =>
 
 
 a(1);
+Found 0 errors
 replacement-class.js 5 7
 // @flow
 
@@ -315,6 +370,7 @@ class A { // end of line comment
                                 f = 1;
   m(x): number { return this.f + 1; }
 } (new A).m(""); // weird spacing
+Found 0 errors
 replacement-dictionary.js 3 3
 // @flow
 
@@ -339,6 +395,7 @@ replacement-dictionary.js 3 3
 () => ({
   ab: null, 'a b': null, 'a"b': null, '1': null, '"': null, ' ': null, '_': null, '': null,
   get 'x'() {return null;}, set 'y'(z: string) {} } );
+Found 0 errors
 replacement-function.js 7 47
 // @flow
 
@@ -356,6 +413,7 @@ function /*Random*/ test /*weird*/ (x: number): string /*Comments*/ {
 
   return /* BETWEEEN */ `${a}` // END OF return ...
 } // END */
+Found 0 errors
 replacement-object.js 2 16
 // @flow
 var obj = {n(y): string {return this.m(y);},m(x) {return "";}}
@@ -368,6 +426,7 @@ obj.n(0)
 
 
 // This is kinda trailing whitespace
+Found 0 errors
 func-0.js 4 14 4 15
 // @flow
 
@@ -376,6 +435,7 @@ function foo(x: number, y) {
 }
 
 foo(1, "");
+Found 0 errors
 func-0.js 4 10 4 15
 // @flow
 
@@ -384,16 +444,25 @@ function foo(x: number, y) {
 }
 
 foo(1, "");
+Found 0 errors
 arrow-0.js 3 11 3 23
 // @flow
 
-const a = ((x) => x + 1: (x: number) => number);
+const a: ((x: number) => number) = (x) => x + 1;
 a(1);
+Found 0 errors
 arrow-0.js 4 1 4 5
 // @flow
 
 const a = (x) => x + 1;
 (a(1): number);
+Found 0 errors
+arrow-0.js 3 7 3 8
+// @flow
+
+const a: ((x: number) => number) = (x) => x + 1;
+a(1);
+Found 0 errors
 alias.js 5 24
 // @flow
 
@@ -404,7 +473,8 @@ function f(x: MyNumber): MyNumber {
 };
 
 f(1);
---expand-type-aliases alias.js 5 24
+Found 0 errors
+alias.js 5 24 --expand-type-aliases
 // @flow
 
 type MyNumber = number;
@@ -414,6 +484,7 @@ function f(x: MyNumber): number {
 };
 
 f(1);
+Found 0 errors
 alias.js 6 10 6 11
 // @flow
 
@@ -424,7 +495,8 @@ function f(x: MyNumber) {
 };
 
 f(1);
---expand-type-aliases alias.js 9 1 9 5
+Found 0 errors
+alias.js 9 1 9 5 --expand-type-aliases
 // @flow
 
 type MyNumber = number;
@@ -434,6 +506,7 @@ function f(x: MyNumber) {
 };
 
 (f(1): number);
+Found 0 errors
 alias-0.js 9 24
 // @flow
 
@@ -448,7 +521,8 @@ function f(x: MyObject): MyObject {
 };
 
 f({foo:1, bar:true, baz:"baz"});
---expand-type-aliases alias-0.js 9 24
+Found 0 errors
+alias-0.js 9 24 --expand-type-aliases
 // @flow
 
 type MyObject = {
@@ -462,6 +536,7 @@ function f(x: MyObject): {bar: boolean, baz: string, foo: number} {
 };
 
 f({foo:1, bar:true, baz:"baz"});
+Found 0 errors
 alias-0.js 10 10 10 11
 // @flow
 
@@ -476,7 +551,8 @@ function f(x: MyObject) {
 };
 
 f({foo:1, bar:true, baz:"baz"});
---expand-type-aliases alias-0.js 13 1 13 32
+Found 0 errors
+alias-0.js 13 1 13 32 --expand-type-aliases
 // @flow
 
 type MyObject = {
@@ -490,6 +566,120 @@ function f(x: MyObject) {
 };
 
 (f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number});
+Found 0 errors
+replacement-object.js 2 5
+// @flow
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+obj.n(0)
+
+
+
+
+
+
+
+// This is kinda trailing whitespace
+Found 0 errors
+replacement-object.js 2 6
+// @flow
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+obj.n(0)
+
+
+
+
+
+
+
+// This is kinda trailing whitespace
+Found 0 errors
+replacement-object.js 2 7
+// @flow
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+obj.n(0)
+
+
+
+
+
+
+
+// This is kinda trailing whitespace
+Found 0 errors
+replacement-object.js 2 8
+// @flow
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+obj.n(0)
+
+
+
+
+
+
+
+// This is kinda trailing whitespace
+Found 0 errors
+replacement-object.js 2 5 2 8
+// @flow
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+obj.n(0)
+
+
+
+
+
+
+
+// This is kinda trailing whitespace
+Found 0 errors
+func-2.js 3 14
+// @flow
+
+function foo(x: number, y) {
+  function bar(z, w) {
+    return x + z + y + w;
+  }
+  bar(x, y);
+}
+
+foo(1, 1);
+Found 0 errors
+func-2.js 3 17 3 18
+// @flow
+
+function foo(x, y: number) {
+  function bar(z, w) {
+    return x + z + y + w;
+  }
+  bar(x, y);
+}
+
+foo(1, 1);
+Found 0 errors
+func-2.js 4 16
+// @flow
+
+function foo(x, y) {
+  function bar(z: number, w) {
+    return x + z + y + w;
+  }
+  bar(x, y);
+}
+
+foo(1, 1);
+Found 0 errors
+func-2.js 4 19 4 20
+// @flow
+
+function foo(x, y) {
+  function bar(z, w: number) {
+    return x + z + y + w;
+  }
+  bar(x, y);
+}
+
+foo(1, 1);
+Found 0 errors
 insert-type array.js 3:15
 cat array.js 3:15
 // @flow
@@ -501,7 +691,7 @@ insert-type arrow-0.js 3:11-3:23
 cat arrow-0-copy.js 3:11-3:23
 // @flow
 
-const a = ((x) => x + 1: (x: number) => number);
+const a: ((x: number) => number) = (x) => x + 1;
 a(1);
 cat arrow-0.js 3:11-3:23
 // @flow

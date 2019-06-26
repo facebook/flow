@@ -4,10 +4,19 @@
 
 # Dump the generated file in a temporary folder and in the end Flow check them
 TEMP_DIR=tmp
+mkdir $TEMP_DIR
+assert_ok "$FLOW" init $TEMP_DIR
 
 do_file() {
-  echo "$@"
-  assert_ok "$FLOW" autofix insert-type --strip-root --quiet "$@"
+  FILE="$1"; shift;
+  echo "$FILE" "$@"
+  cp "$FILE" "$TEMP_DIR/$FILE"
+  assert_ok "$FLOW" autofix insert-type --strip-root --quiet --in-place --path="$TEMP_DIR/out.js" \
+    "$TEMP_DIR/$FILE" "$@"
+  cat "$TEMP_DIR/out.js"
+  rm "$TEMP_DIR/$FILE"
+  assert_ok "$FLOW" check "$TEMP_DIR/out.js"
+  rm "$TEMP_DIR/out.js"
 }
 
 do_file "array.js" 3 15
@@ -16,7 +25,9 @@ do_file "arrow-0.js" 3 13
 do_file "arrow-0.js" 3 14
 do_file "arrow-1.js" 3 16
 do_file "arrow-2.js" 3 5
+do_file "class-0.js" 4 3
 do_file "class-0.js" 4 4
+do_file "class-0.js" 4 3 4 4
 do_file "class-1.js" 5 6
 do_file "class-2.js" 4 6
 do_file "class-3.js" 9 15
@@ -50,25 +61,38 @@ do_file "func-0.js" 4 14 4 15
 do_file "func-0.js" 4 10 4 15
 do_file "arrow-0.js" 3 11 3 23
 do_file "arrow-0.js" 4 1 4 5
+do_file "arrow-0.js" 3 7 3 8
 
 do_file "alias.js" 5 24
-do_file --expand-type-aliases "alias.js" 5 24
+do_file "alias.js" 5 24 --expand-type-aliases
 do_file "alias.js" 6 10 6 11
-do_file --expand-type-aliases "alias.js" 9 1 9 5
+do_file "alias.js" 9 1 9 5 --expand-type-aliases
 
 do_file "alias-0.js" 9 24
-do_file --expand-type-aliases "alias-0.js" 9 24
+do_file "alias-0.js" 9 24 --expand-type-aliases
 do_file "alias-0.js" 10 10 10 11
-do_file --expand-type-aliases "alias-0.js" 13 1 13 32
+do_file "alias-0.js" 13 1 13 32 --expand-type-aliases
+
+# Test pointing to identifiers
+do_file "replacement-object.js" 2 5
+do_file "replacement-object.js" 2 6
+do_file "replacement-object.js" 2 7
+do_file "replacement-object.js" 2 8
+do_file "replacement-object.js" 2 5 2 8
+do_file "func-2.js" 3 14
+do_file "func-2.js" 3 17 3 18
+do_file "func-2.js" 4 16
+do_file "func-2.js" 4 19 4 20
+assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet --strict-location "func-2.js" 3 14
+assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet --strict-location "func-2.js" 3 17 3 18
+assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet --strict-location "func-2.js" 4 16
+assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet --strict-location "func-2.js" 4 19 4 20
+
 
 assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "object-0.js" 4 4
 assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "poly-0.js" 3 21
-assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "arrow-0.js" 3 7 3 8
 
 # Test File IO
-mkdir "$TEMP_DIR"
-"$FLOW" init "$TEMP_DIR"
-
 echo "insert-type array.js 3:15"
 cp "array.js" "$TEMP_DIR/array.js"
 assert_ok "$FLOW" autofix insert-type --strip-root --quiet --in-place "$TEMP_DIR/array.js" 3 15

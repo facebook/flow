@@ -126,7 +126,7 @@ let infer_type
     Lwt.return (split_result result)
 
 let insert_type ~options ~env ~profiling ~file_input ~target
-      ~verbose ~expand_aliases ~omit_targ_defaults =
+      ~verbose ~expand_aliases ~omit_targ_defaults ~location_is_strict =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let options = {options with Options.opt_verbose = verbose} in
@@ -134,7 +134,7 @@ let insert_type ~options ~env ~profiling ~file_input ~target
     %>>= fun file_content -> try_with (fun _ ->
       let%lwt result =
         Type_info_service.insert_type ~options ~env ~profiling ~file_key ~file_content ~target
-          ~expand_aliases ~omit_targ_defaults
+          ~expand_aliases ~omit_targ_defaults ~location_is_strict
       in
       (* TODO After we figure out the error return value change the Server Result to match *)
       match result with
@@ -471,9 +471,10 @@ let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
 let handle_insert_type ~options ~file_input ~target ~verbose
-      ~expand_aliases ~omit_targ_defaults ~profiling ~env =
+      ~expand_aliases ~omit_targ_defaults ~location_is_strict ~profiling ~env =
   let%lwt result =
-    insert_type ~options ~env ~profiling ~file_input ~target ~verbose ~expand_aliases ~omit_targ_defaults in
+    insert_type ~options ~env ~profiling ~file_input ~target ~verbose ~expand_aliases
+      ~omit_targ_defaults ~location_is_strict in
   Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
 
 let handle_rage ~reader ~options ~files ~profiling:_ ~env =
@@ -611,10 +612,10 @@ let get_ephemeral_handler genv command =
   | ServerProt.Request.RAGE { files; } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE {input; target; wait_for_recheck; verbose;
-      expand_aliases; omit_targ_defaults;} ->
+      expand_aliases; omit_targ_defaults; location_is_strict;} ->
     mk_parallelizable ~wait_for_recheck ~options
       (handle_insert_type ~file_input:input ~options ~target
-          ~verbose ~expand_aliases ~omit_targ_defaults)
+          ~verbose ~expand_aliases ~omit_targ_defaults ~location_is_strict)
   | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
     * parallelizable *)

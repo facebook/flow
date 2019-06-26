@@ -32,6 +32,8 @@ module InsertType = struct
          or   %s autofix insert-type 12 3 < foo.js\n"
         exe_name exe_name exe_name;
       args = ArgSpec.(base_arg_spec
+        |> flag "--strict-location" no_arg
+            ~doc:"Restrict the number of valid positions for each annotation"
         |> flag "--in-place" no_arg
             ~doc:"Overwrite the input file or file specified by the path flag"
         |> flag "--expand-type-aliases" no_arg
@@ -83,7 +85,8 @@ module InsertType = struct
     | Error msg -> handle_error msg
 
   let main base_flags option_values json _pretty root_arg strip_root_arg
-        verbose path wait_for_recheck in_place expand_aliases omit_targ_defaults args () =
+        verbose path wait_for_recheck location_is_strict in_place
+        expand_aliases omit_targ_defaults args () =
     let (Loc.{source; _} as target) = parse_args args in
     let source_path = Option.map ~f:File_key.to_string source in
     let input = get_file_from_filename_or_stdin ~cmd:spec.name path source_path in
@@ -94,7 +97,8 @@ module InsertType = struct
     if not json && (verbose <> None) then
       prerr_endline "NOTE: --verbose writes to the server log file";
     let request = ServerProt.Request.INSERT_TYPE {
-      input; target; verbose; wait_for_recheck; expand_aliases; omit_targ_defaults; } in
+      input; target; verbose; location_is_strict;
+      wait_for_recheck; expand_aliases; omit_targ_defaults; } in
     let result = connect_and_make_request flowconfig_name option_values root request in
     match result with
     | ServerProt.Response.INSERT_TYPE (Error err) -> handle_error err

@@ -56,6 +56,7 @@ module Request = struct
       input: File_input.t;
       target: Loc.t;
       verbose: Verbose.t option;
+      location_is_strict: bool;
       wait_for_recheck: bool option;
       expand_aliases: bool;
       omit_targ_defaults: bool;
