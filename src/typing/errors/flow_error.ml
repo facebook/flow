@@ -309,8 +309,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
     let is_contravariant = function
     | FunParam _, Frame (FunCompatibility _, _) -> (true, true)
     | FunRestParam _, Frame (FunCompatibility _, _) -> (true, true)
-    | ReactGetConfig {polarity = Negative }, _ -> (true, false)
-    | TypeArgCompatibility {polarity = Negative; _}, _ -> (true, false)
+    | ReactGetConfig {polarity = Polarity.Negative }, _ -> (true, false)
+    | TypeArgCompatibility {polarity = Polarity.Negative; _}, _ -> (true, false)
     | _ -> (false, false)
     in
     let is_contravariant_root = function
@@ -842,22 +842,22 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       use_op
     in
     let expected = match lpole with
-    | Positive -> "read-only"
-    | Negative -> "write-only"
-    | Neutral ->
+    | Polarity.Positive -> "read-only"
+    | Polarity.Negative -> "write-only"
+    | Polarity.Neutral ->
       (match upole with
-      | Negative -> "readable"
-      | Positive -> "writable"
-      | Neutral -> failwith "unreachable")
+      | Polarity.Negative -> "readable"
+      | Polarity.Positive -> "writable"
+      | Polarity.Neutral -> failwith "unreachable")
     in
     let actual = match upole with
-    | Positive -> "read-only"
-    | Negative -> "write-only"
-    | Neutral ->
+    | Polarity.Positive -> "read-only"
+    | Polarity.Negative -> "write-only"
+    | Polarity.Neutral ->
       (match lpole with
-      | Negative -> "readable"
-      | Positive -> "writable"
-      | Neutral -> failwith "unreachable")
+      | Polarity.Negative -> "readable"
+      | Polarity.Positive -> "writable"
+      | Polarity.Neutral -> failwith "unreachable")
     in
     mk_use_op_error (loc_of_reason lower) use_op (
       mk_prop_message prop @

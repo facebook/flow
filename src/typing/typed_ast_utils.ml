@@ -39,9 +39,9 @@ class type_parameter_mapper = object(_)
       in
       let polarity = Ast.Variance.(
         match variance with
-        | Some (_, Plus) -> Type.Positive
-        | Some (_, Minus) -> Type.Negative
-        | None -> Type.Neutral
+        | Some (_, Plus) -> Polarity.Positive
+        | Some (_, Minus) -> Polarity.Negative
+        | None -> Polarity.Neutral
       ) in
       let default = Option.map default ~f:(fun ((_, t), _) -> t)
       in
@@ -69,7 +69,7 @@ class type_parameter_mapper = object(_)
         name = "this";
         reason = Reason.mk_reason (Reason.RType name) name_loc;
         bound = self_t;
-        polarity = Type.Positive;
+        polarity = Polarity.Positive;
         default = None;
       }
     ) in

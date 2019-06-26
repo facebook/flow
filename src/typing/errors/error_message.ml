@@ -62,13 +62,13 @@ and 'loc t' =
       'loc virtual_use_op
   | EExpectedBooleanLit of ('loc virtual_reason * 'loc virtual_reason) * bool * bool option * 'loc virtual_use_op
   | EPropNotFound of string option * ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
-  | EPropAccess of ('loc virtual_reason * 'loc virtual_reason) * string option * Type.polarity * Type.rw * 'loc virtual_use_op
-  | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Type.polarity * Type.polarity) * 'loc virtual_use_op
+  | EPropAccess of ('loc virtual_reason * 'loc virtual_reason) * string option * Polarity.t * Type.rw * 'loc virtual_use_op
+  | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Polarity.t * Polarity.t) * 'loc virtual_use_op
   | EPolarityMismatch of {
       reason: 'loc virtual_reason;
       name: string;
-      expected_polarity: Type.polarity;
-      actual_polarity: Type.polarity;
+      expected_polarity: Polarity.t;
+      actual_polarity: Polarity.t;
     }
   | EStrictLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_reason * string option * 'loc virtual_use_op option
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
@@ -849,8 +849,8 @@ type 'loc friendly_message_recipe =
   | PropMissing of 'loc * string option * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
   | Normal of 'loc Errors.Friendly.message_feature list
   | UseOp of 'loc * 'loc Errors.Friendly.message_feature list * 'loc Type.virtual_use_op
-  | PropPolarityMismatch of string option * ('loc Reason.virtual_reason * Type.polarity)
-      * ('loc Reason.virtual_reason * Type.polarity) * 'loc Type.virtual_use_op
+  | PropPolarityMismatch of string option * ('loc Reason.virtual_reason * Polarity.t)
+      * ('loc Reason.virtual_reason * Polarity.t) * 'loc Type.virtual_use_op
 
 let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   let text = Errors.Friendly.text in
@@ -1061,9 +1061,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
     | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       let polarity_string = function
-      | Positive -> "output"
-      | Negative -> "input"
-      | Neutral -> "input/output"
+      | Polarity.Positive -> "output"
+      | Polarity.Negative -> "input"
+      | Polarity.Neutral -> "input/output"
       in
       let expected_polarity = polarity_string expected_polarity in
       let actual_polarity = polarity_string actual_polarity in

@@ -28,7 +28,7 @@ and field =
   | Annot of Type.t
   | Infer of func_sig * set_asts
 
-type field' = ALoc.t option * Type.polarity * field
+type field' = ALoc.t option * Polarity.t * field
 
 type func_info = ALoc.t option * func_sig * set_asts * set_type
 
@@ -144,7 +144,7 @@ let add_indexer ~static polarity ~key ~value x =
 let add_name_field x =
   let r = replace_reason (fun desc -> RNameProperty desc) x.instance.reason in
   let t = Type.StrT.why r |> Type.with_trust Trust.bogus_trust in
-  add_field' ~static:true "name" (None, Type.Neutral, Annot t) x
+  add_field' ~static:true "name" (None, Polarity.Neutral, Annot t) x
 
 let add_proto_field name loc polarity field x =
   map_sig ~static:false (fun s -> {
@@ -458,7 +458,7 @@ let add_this self cx reason tparams tparams_map =
     name = "this";
     reason = this_reason;
     bound = rec_instance_type;
-    polarity = Type.Positive;
+    polarity = Polarity.Positive;
     default = None;
   } in
   let tparams =
@@ -476,7 +476,7 @@ let add_this self cx reason tparams tparams_map =
   in
   rec_instance_type,
   tparams,
-  SMap.add "this" (Type.BoundT (this_reason, "this", Type.Positive)) tparams_map
+  SMap.add "this" (Type.BoundT (this_reason, "this", Polarity.Positive)) tparams_map
 
 let remove_this x =
   if structural x then x
@@ -633,7 +633,7 @@ let classtype cx ?(check_polarity=true) x =
   let this = thistype cx x in
   let { tparams; _ } = remove_this x in
   let open Type in
-  (if check_polarity then Flow.check_polarity cx Positive this);
+  (if check_polarity then Flow.check_polarity cx Polarity.Positive this);
   let t =
     if structural x
     then class_type ~structural:true this

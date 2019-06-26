@@ -96,17 +96,18 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
       then self#tvar cx pole seen r root_id
       else
         if self#skip_reason r then seen else
-        let pole = if self#derivable_reason r then Positive else pole in
+        let pole = if self#derivable_reason r then Polarity.Positive else pole in
         (* TODO: clean up the match pole below. Visiting a tvar with a negative
            polarity will add an error and resolve the tvar to any. We don't need
            to also walk the positive edge of the tvar. This behavior is a bit
            different from what the Marked module provides, but treating negative
            as neutral gives the correct behavior. *)
-        match Marked.add id (match pole with Negative -> Neutral | _ -> pole) seen with
+        let marked_pole = match pole with Polarity.Negative -> Polarity.Neutral | _ -> pole in
+        match Marked.add id marked_pole seen with
         | None -> seen
         | Some (pole, seen) ->
           match pole with
-          | Neutral | Negative ->
+          | Polarity.Neutral | Polarity.Negative ->
             AnyT.locationless AnyError |> unify_opt cx ~unify_any:true (OpenT (r, id));
             let trace_reasons = if max_reasons = 0
                then []
@@ -115,7 +116,7 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
                  (Nel.to_list !reason_stack) in
             add_output cx (Error_message.EMissingAnnotation (r, trace_reasons));
             seen
-          | Positive ->
+          | Polarity.Positive ->
             match constraints with
             | FullyResolved _ ->
               (* A fully resolved node corresponds to either (a) a tvar imported
@@ -127,9 +128,9 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
                  resolved type, as we will not find anything to complain about. *)
               seen
             | Resolved t ->
-              self#type_ cx Positive seen t
+              self#type_ cx Polarity.Positive seen t
             | Unresolved { lower; _ } ->
-              TypeMap.fold (fun t _ seen -> self#type_ cx Positive seen t) lower seen
+              TypeMap.fold (fun t _ seen -> self#type_ cx Polarity.Positive seen t) lower seen
 
     method! type_ cx pole seen t =
       Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent; enabled_during_flowlib=_; } ->
@@ -277,7 +278,7 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
       in
       fun targs cx pole seen -> function
       | OpenT (r, id) ->
-        let seen = self#tvar cx Positive seen r id in
+        let seen = self#tvar cx Polarity.Positive seen r id in
         (match Context.find_graph cx id with
         | Resolved t | FullyResolved t -> self#typeapp targs cx pole seen t
         | Unresolved { lower; _ } ->
@@ -293,7 +294,8 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
         EvalT (BoundT (_, s, _) as t, (TypeDestructorT (_, _, destructor)), _))), _)) ->
           if (new type_finder t)#destructor cx false destructor
           then loop cx pole seen ((Nel.to_list tparams), targs)
-          else loop ~constant_polarity_param:(s, Positive) cx pole seen ((Nel.to_list tparams), targs)
+          else loop cx pole seen ((Nel.to_list tparams), targs)
+            ~constant_polarity_param:(s, Polarity.Positive)
       | DefT (_, _, PolyT (_, tparams, _, _)) -> loop cx pole seen ((Nel.to_list tparams), targs)
       | DefT (_, _, EmptyT _) -> seen
       | AnyT _ -> seen
@@ -308,6 +310,6 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
       new assert_ground_visitor (reason_of_t t)
         ~max_reasons:(Context.max_trace_depth cx)
     in
-    let seen = visitor#type_ cx Positive Marked.empty t in
+    let seen = visitor#type_ cx Polarity.Positive Marked.empty t in
     ignore (seen: Marked.t)
 end

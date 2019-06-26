@@ -117,11 +117,11 @@ let add_deprecated_type_error_if_not_lib_file cx loc =
       Flow_js.add_output cx (Error_message.EDeprecatedType loc)
     | _ -> ()
 
-let polarity = Ast.Variance.(function
-  | Some (_, Plus) -> Positive
-  | Some (_, Minus) -> Negative
-  | None -> Neutral
-)
+let polarity = function
+  | Some (_, Ast.Variance.Plus) -> Polarity.Positive
+  | Some (_, Ast.Variance.Minus) -> Polarity.Negative
+  | None -> Polarity.Neutral
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -318,7 +318,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         _ } ->
       let (_, t), _ = convert cx tparams_map v in
       let t = if optional then Type.optional t else t in
-      Properties.add_field name Neutral (Some loc) t map
+      Properties.add_field name Polarity.Neutral (Some loc) t map
 
     (* We enable some unsafe support for getters and setters. The main unsafe bit
     *  is that we don't properly havok refinements when getter and setter methods
@@ -1395,7 +1395,7 @@ and convert_object =
             acc, prop_ast proto
           else
             let t = if optional then Type.optional t else t in
-            let polarity = if _method then Positive else polarity variance in
+            let polarity = if _method then Polarity.Positive else polarity variance in
             Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc,
             prop_ast t
       | Ast.Expression.Object.Property.Literal (loc, _)

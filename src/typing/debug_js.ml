@@ -42,9 +42,9 @@ let string_of_type_map = function
   | ObjectMapi _ -> "ObjectMapi"
 
 let string_of_polarity = function
-  | Negative -> "Negative"
-  | Neutral -> "Neutral"
-  | Positive -> "Positive"
+  | Polarity.Negative -> "Negative"
+  | Polarity.Neutral -> "Neutral"
+  | Polarity.Positive -> "Positive"
 
 let string_of_enum = function
   | Enum.Str x -> spf "string %s" x

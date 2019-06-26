@@ -6,9 +6,9 @@
  *)
 
 open Type
-module P = Type.Polarity
+module P = Polarity
 
-let pole_TODO = Neutral
+let pole_TODO = Polarity.Neutral
 
 (* We walk types in a lot of places for all kinds of things, but often most of
    the code is boilerplate. The following visitor class for types aims to
@@ -42,13 +42,13 @@ class ['a] t = object(self)
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
 
   | EvalT (t, defer_use_t, id) ->
-    let acc = self#type_ cx Positive acc t in
+    let acc = self#type_ cx P.Positive acc t in
     let acc = self#defer_use_type cx acc defer_use_t in
     let acc =
       let pole = match defer_use_t, t with
       | LatentPredT _, _ -> pole
-      | TypeDestructorT _, OpenT _ -> Neutral
-      | TypeDestructorT _, _ -> Positive
+      | TypeDestructorT _, OpenT _ -> P.Neutral
+      | TypeDestructorT _, _ -> P.Positive
       in
       self#eval_id cx pole acc id
     in
@@ -70,9 +70,9 @@ class ['a] t = object(self)
 
   | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
 
-  | KeysT (_, t) -> self#type_ cx Positive acc t
+  | KeysT (_, t) -> self#type_ cx P.Positive acc t
 
-  | AnnotT (_, t, _) -> self#type_ cx Positive acc t
+  | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t
 
   | OpaqueT (_, ot) ->
     let {
@@ -106,7 +106,7 @@ class ['a] t = object(self)
   | ThisClassT (_, t) -> self#type_ cx pole acc t
 
   | ThisTypeAppT (_, t, this, ts_opt) ->
-    let acc = self#type_ cx Positive acc t in
+    let acc = self#type_ cx P.Positive acc t in
     let acc = self#type_ cx pole acc this in
     (* If we knew what `t` resolved to, we could determine the polarities for
        `ts`, but in general `t` might be unresolved. Subclasses which have more
@@ -115,7 +115,7 @@ class ['a] t = object(self)
     acc
 
   | TypeAppT (_, _, t, ts) ->
-    let acc = self#type_ cx Positive acc t in
+    let acc = self#type_ cx P.Positive acc t in
     (* If we knew what `t` resolved to, we could determine the polarities for
        `ts`, but in general `t` might be unresolved. Subclasses which have more
        information should override this to be more specific. *)
@@ -208,8 +208,8 @@ class ['a] t = object(self)
   | AndP (p1, p2) -> self#list (self#predicate cx) acc [p1;p2]
   | OrP (p1, p2) -> self#list (self#predicate cx) acc [p1;p2]
   | NotP p -> self#predicate cx acc p
-  | LeftP (_, t) -> self#type_ cx Positive acc t
-  | RightP (_, t) -> self#type_ cx Positive acc t
+  | LeftP (_, t) -> self#type_ cx P.Positive acc t
+  | RightP (_, t) -> self#type_ cx P.Positive acc t
   | ExistsP _ -> acc
   | NullP -> acc
   | MaybeP -> acc
@@ -225,7 +225,7 @@ class ['a] t = object(self)
   | VoidP -> acc
   | ArrP -> acc
   | PropExistsP _ -> acc
-  | LatentP (t, _) -> self#type_ cx Positive acc t
+  | LatentP (t, _) -> self#type_ cx P.Positive acc t
 
   method destructor cx acc = function
   | NonMaybeType
@@ -267,7 +267,7 @@ class ['a] t = object(self)
 
   method use_type_ cx (acc: 'a) = function
   | UseT (_, t) ->
-    self#type_ cx Negative acc t
+    self#type_ cx P.Negative acc t
 
   | BindT (_, _, fn, _)
   | CallT (_, _, fn) ->
@@ -450,7 +450,7 @@ class ['a] t = object(self)
   | ImportNamedT (_, _, _, _, t, _)
   | ImportTypeT (_, _, t)
   | ImportTypeofT (_, _, t)
-    -> self#type_ cx Negative acc t
+    -> self#type_ cx P.Negative acc t
 
   | AssertImportIsValueT _ -> acc
 
@@ -767,11 +767,11 @@ class ['a] t = object(self)
 
   method private arr_type cx pole acc = function
   | ArrayAT (t, None) ->
-    self#type_ cx Neutral acc t
+    self#type_ cx P.Neutral acc t
   | ArrayAT (t, Some ts)
   | TupleAT (t, ts) ->
-    let acc = self#type_ cx Neutral acc t in
-    let acc = self#list (self#type_ cx Neutral) acc ts in
+    let acc = self#type_ cx P.Neutral acc t in
+    let acc = self#list (self#type_ cx P.Neutral) acc ts in
     acc
   | ROArrayAT t ->
     self#type_ cx pole acc t

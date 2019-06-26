@@ -129,6 +129,7 @@ MODULES=\
   src/third-party/ocaml-vlq/src\
   src/typing\
   src/typing/errors\
+	src/typing/polarity\
   hack/dfind\
   hack/find\
   hack/globals\

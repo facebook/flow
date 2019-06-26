@@ -951,7 +951,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       in
       let type_ = poly_type_of_tparams (Context.make_nominal cx) typeparams
         (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t))) in
-      Flow.check_polarity cx Positive t;
+      Flow.check_polarity cx Polarity.Positive t;
 
       Env.init_type cx name type_ name_loc;
       let type_alias_ast = { TypeAlias.
@@ -985,7 +985,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         opaque_name = name
       } in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
-      Flow.check_polarity cx Positive t;
+      Flow.check_polarity cx Polarity.Positive t;
       let type_ = poly_type_of_tparams (Context.make_nominal cx) typeparams
         (DefT (r, bogus_trust (), TypeT (OpaqueKind, t))) in
       let open Flow in
@@ -1984,7 +1984,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           match entry with
           | Value {specific; _} ->
             let loc = Some (entry_loc entry) in
-            Properties.add_field x Positive loc specific acc
+            Properties.add_field x Polarity.Positive loc specific acc
           | Type _ | Class _ -> acc
         ) module_scope.entries SMap.empty in
         let proto = ObjProtoT reason in
@@ -2513,7 +2513,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
         })) as key;
       value = v; shorthand; }) ->
     let (_, t), _ as v = expression cx v in
-    Properties.add_field name Neutral (Some loc) t map,
+    Properties.add_field name Polarity.Neutral (Some loc) t map,
     Property (prop_loc, Property.Init {
       key = translate_identifier_or_literal_key t key;
       value = v;
@@ -2532,7 +2532,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
     }) ->
     let (_, t), v = expression cx (fn_loc, Ast.Expression.Function func) in
     let func = match v with Ast.Expression.Function func -> func | _ -> assert false in
-    Properties.add_field name Neutral (Some loc) t map,
+    Properties.add_field name Polarity.Neutral (Some loc) t map,
     Property (prop_loc, Property.Method {
       key = translate_identifier_or_literal_key t key;
       value = fn_loc, func
@@ -5112,7 +5112,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             | None ->
                 DefT (mk_reason RBoolean attr_loc, bogus_trust (), BoolT (Some true)), None
       in
-      let p = Field (Some id_loc, atype, Neutral) in
+      let p = Field (Some id_loc, atype, Polarity.Neutral) in
       let att = Opening.Attribute (attr_loc, { Attribute.
           name = Attribute.Identifier ((id_loc, atype), { Identifier.name = aname });
           value
@@ -5151,7 +5151,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             children
             (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout))
         ) in
-        let p = Field (None, arr, Neutral) in
+        let p = Field (None, arr, Polarity.Neutral) in
         SMap.add "children" p map
   in
   let t = eval_props ~sealed (map, result) in
@@ -6083,7 +6083,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         let t = Tvar.mk_where cx reason (fun tvar ->
           Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar))
         ) in
-        let p = Field (loc, t, Neutral) in
+        let p = Field (loc, t, Polarity.Neutral) in
         SMap.add x p acc
     ) pmap SMap.empty in
     Obj_type.mk_with_proto cx reason ~props proto,

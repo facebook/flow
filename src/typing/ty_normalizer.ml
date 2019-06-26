@@ -1436,9 +1436,9 @@ end = struct
     type__ ~env t >>| fun t -> (t, opt)
 
   and type_polarity = function
-    | T.Positive -> Ty.Positive
-    | T.Negative -> Ty.Negative
-    | T.Neutral -> Ty.Neutral
+    | Polarity.Positive -> Ty.Positive
+    | Polarity.Negative -> Ty.Negative
+    | Polarity.Neutral -> Ty.Neutral
 
   (************)
   (* EvalT    *)

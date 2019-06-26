@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Polarity
 open Reason
 open Utils_js
 
@@ -71,7 +72,7 @@ module rec TypeTerm : sig
     | EvalT of t * defer_use_t * int
 
     (* bound type variable *)
-    | BoundT of reason * string * polarity
+    | BoundT of reason * string * Polarity.t
     (* existential type variable *)
     | ExistsT of reason
 
@@ -333,7 +334,7 @@ module rec TypeTerm : sig
         targ: 'loc virtual_reason;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
-        polarity: polarity;
+        polarity: Polarity.t;
       }
     | TypeParamBound of { name: string }
     | UnifyFlip
@@ -442,7 +443,7 @@ module rec TypeTerm : sig
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
-    | VarianceCheckT of reason * t list * polarity
+    | VarianceCheckT of reason * t list * Polarity.t
 
     | TypeAppVarianceCheckT of use_op * reason * reason * (t * t) list
 
@@ -951,14 +952,12 @@ module rec TypeTerm : sig
     dict_name: string option;
     key: t;
     value: t;
-    dict_polarity: polarity;
+    dict_polarity: Polarity.t;
   }
-
-  and polarity = Negative | Neutral | Positive
 
   (* Locations refer to the location of the identifier, if one exists *)
   and property =
-    | Field of ALoc.t option * t * polarity
+    | Field of ALoc.t option * t * Polarity.t
     | Get of ALoc.t option * t
     | Set of ALoc.t option * t
     | GetSet of ALoc.t option * t * ALoc.t option * t
@@ -973,7 +972,7 @@ module rec TypeTerm : sig
 
   and insttype = {
     class_id: ALoc.t;
-    type_args: (string * reason * t * polarity) list;
+    type_args: (string * reason * t * Polarity.t) list;
     own_props: Properties.id;
     proto_props: Properties.id;
     inst_call_t: int option;
@@ -987,7 +986,7 @@ module rec TypeTerm : sig
     opaque_id: ALoc.t;
     underlying_t: t option;
     super_t: t option;
-    opaque_type_args: (string * reason * t * polarity) list;
+    opaque_type_args: (string * reason * t * Polarity.t) list;
     opaque_name: string;
   }
 
@@ -1030,7 +1029,7 @@ module rec TypeTerm : sig
     reason: reason;
     name: string;
     bound: t;
-    polarity: polarity;
+    polarity: Polarity.t;
     default: t option;
   }
 
@@ -1206,57 +1205,6 @@ end = struct
 end
 
 and EnumSet: Set.S with type elt = Enum.t = Set.Make(Enum)
-
-and Polarity : sig
-  type t = TypeTerm.polarity
-
-  val compat: t * t -> bool
-  val inv: t -> t
-  val mult: t * t -> t
-  val of_rw: TypeTerm.rw -> t
-
-  val string: t -> string
-  val sigil: t -> string
-end = struct
-  open TypeTerm
-
-  type t = polarity
-
-  (* Subtype relation for polarities, interpreting neutral as positive &
-     negative: whenever compat(p1,p2) holds, things that have polarity p1 can
-     appear in positions that have polarity p2. *)
-  let compat = function
-    | Positive, Positive
-    | Negative, Negative
-    | Neutral, _ -> true
-    | _ -> false
-
-  let inv = function
-    | Positive -> Negative
-    | Negative -> Positive
-    | Neutral -> Neutral
-
-  let mult = function
-    | Positive, Positive -> Positive
-    | Negative, Negative -> Positive
-    | Neutral, _ | _, Neutral -> Neutral
-    | _ -> Negative
-
-  let of_rw = function
-    | Read -> Positive
-    | Write _ -> Negative
-
-  (* printer *)
-  let string = function
-    | Positive -> "covariant"
-    | Negative -> "contravariant"
-    | Neutral -> "invariant"
-
-  let sigil = function
-    | Positive -> "+"
-    | Negative -> "-"
-    | Neutral -> ""
-end
 
 and Property : sig
   type t = TypeTerm.property

@@ -610,7 +610,7 @@ module ContextOptimizer = struct
     method reduce cx module_ref =
       let export = Context.find_module cx module_ref in
       export_file <- reason_of_t export |> Reason.aloc_of_reason |> ALoc.source;
-      let export' = self#type_ cx Neutral export in
+      let export' = self#type_ cx Polarity.Neutral export in
       reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
     method tvar cx pole r id =
@@ -801,7 +801,7 @@ module ContextOptimizer = struct
       SigHash.add_reason sig_hash (reason_of_use_t use);
       match use with
       | UseT (u, t) ->
-          let t' = self#type_ cx Neutral t in
+          let t' = self#type_ cx Polarity.Neutral t in
           if t' == t then use
           else UseT (u, t')
       | _ ->

@@ -261,7 +261,7 @@ end = struct
     | _ -> super#type_ cx pole acc t
   end
 
-  let collect_roots cx = roots_collector#type_ cx Neutral TypeSet.empty
+  let collect_roots cx = roots_collector#type_ cx Polarity.Neutral TypeSet.empty
 
   (* Util to stringify a list, given a separator string and a function that maps
      elements of the list to strings. Should probably be moved somewhere else
@@ -1772,7 +1772,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (* convert ES module's named exports to an object *)
           let proto = ObjProtoT reason in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
-          let props = SMap.map (fun (loc, t) -> Field (loc, t, Positive)) exports_tmap in
+          let props = SMap.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap in
           Obj_type.mk_with_proto cx reason
             ~sealed:true ~frozen:true ~props proto
       ) in
@@ -1782,11 +1782,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ModuleT(_, exports, imported_is_strict), ImportModuleNsT(reason, t, is_strict)) ->
       check_nonstrict_import cx trace is_strict imported_is_strict reason;
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
-      let props = SMap.map (fun (loc, t) -> Field (loc, t, Positive)) exports_tmap in
+      let props = SMap.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap in
       let props = match exports.cjs_export with
       | Some t ->
         (* TODO this Field should probably have a location *)
-        let p = Field (None, t, Positive) in
+        let p = Field (None, t, Polarity.Positive) in
         SMap.add "default" p props
       | None -> props
       in
@@ -1795,7 +1795,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         key = StrT.why reason |> with_trust bogus_trust;
         value = AnyT.untyped reason;
         dict_name = None;
-        dict_polarity = Neutral;
+        dict_polarity = Polarity.Neutral;
       }
       else None in
       let proto = ObjProtoT reason in
@@ -2185,11 +2185,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (* For TypeAssertWraps, return type is Result<T> *)
           let mk_bool b = DefT (mk_reason (RBooleanLit b) fun_loc, bogus_trust (), SingletonBoolT b) in
           let pmap_fail =
-            Properties.add_field "error" Neutral None (StrT.at fun_loc |> with_trust bogus_trust)
-            (Properties.add_field "success" Neutral None (mk_bool false) SMap.empty) in
+            SMap.empty
+            |> Properties.add_field "success" Polarity.Neutral None (mk_bool false)
+            |> Properties.add_field "error" Polarity.Neutral None (StrT.at fun_loc |> with_trust bogus_trust)
+          in
           let pmap_succ =
-            Properties.add_field "value" Neutral None t
-            (Properties.add_field "success" Neutral None (mk_bool true) SMap.empty) in
+            SMap.empty
+            |> Properties.add_field "success" Polarity.Neutral None (mk_bool true)
+            |> Properties.add_field "value" Polarity.Neutral None t
+          in
           let id_succ, id_fail =
             Context.make_property_map cx pmap_fail,
             Context.make_property_map cx pmap_succ in
@@ -3591,9 +3595,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               polarity;
             }, use_op) in
             match polarity with
-            | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
-            | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
-            | Neutral -> rec_unify cx trace ~use_op t1 t2;
+            | Polarity.Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
+            | Polarity.Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
+            | Polarity.Neutral -> rec_unify cx trace ~use_op t1 t2;
           in
           match default, targs with
           | None, [] ->
@@ -3833,7 +3837,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* Contravariant config check *)
         React_kit.get_config cx trace l ~use_op ~reason_op:reasonl ~rec_flow
           ~rec_flow_t ~rec_unify ~get_builtin_type ~add_output
-          (React.GetConfig l) Negative config;
+          (React.GetConfig l) Polarity.Negative config;
         (* check instancel <: instanceu *)
         rec_flow_t cx trace ~use_op (this, instance);
 
@@ -5022,7 +5026,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         dict_name = None;
         key = StrT.make reason |> with_trust bogus_trust;
         value = l;
-        dict_polarity = Neutral;
+        dict_polarity = Polarity.Neutral;
       } in
       let o = Obj_type.mk_with_proto cx reason
         (ObjProtoT reason)
@@ -5167,7 +5171,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * covariant props, which would always flow into `any`. *)
         ()
       | _ ->
-        let p = Field (None, AnyT.untyped reason_op, Neutral) in
+        let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
         (match kind with
         | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
         | _ -> ());
@@ -5183,7 +5187,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       then
         add_output cx ~trace
           (Error_message.EPropAccess ((prop, reason_op), Some "constructor",
-            Positive, Write (Normal, None), use_op))
+            Polarity.Positive, Write (Normal, None), use_op))
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
@@ -5194,7 +5198,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Computed t -> reason_of_t t, None
       in
       add_output cx ~trace (Error_message.EPropAccess ((reason_prop, reason_op), prop,
-        Positive, Write (Normal, None), use_op))
+        Polarity.Positive, Write (Normal, None), use_op))
 
     | DefT (reason_obj, _, ObjT o), SetPropT (use_op, reason_op, propref, _, tin, prop_t) ->
       write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t
@@ -5709,7 +5713,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         lower = lreason;
         upper = ureason;
       }, use_op) in
-      let lp = Field (None, l, Positive) in
+      let lp = Field (None, l, Polarity.Positive) in
       let up = Field (None, value, dict_polarity) in
       if lit
       then
@@ -6210,7 +6214,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_op = use_op_of_lookup_action action in
       add_output cx ~trace (Error_message.EStrictLookupFailed
         ((reason_prop, strict_reason), reason, Some x, use_op));
-      let p = Field (None, AnyT.error reason_op, Neutral) in
+      let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
       perform_lookup_action cx trace propref p reason reason_op action
 
     | (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
@@ -6224,12 +6228,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let loc = loc_of_t elem_t in
         add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
       | AnyT _ ->
-        let p = Field (None, AnyT.untyped reason_op, Neutral) in
+        let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
         perform_lookup_action cx trace propref p reason reason_op action
       | DefT (_, _, StrT _) | DefT (_, _, NumT _) ->
         (* string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        let p = Field (None, Unsoundness.why ComputedNonLiteralKey reason_op, Neutral) in
+        let p = Field (None, Unsoundness.why ComputedNonLiteralKey reason_op, Polarity.Neutral) in
         perform_lookup_action cx trace propref p reason reason_op action
       | _ ->
         let reason_prop = reason_of_t elem_t in
@@ -6283,7 +6287,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t_proto = Property.assert_field p_proto in
             rec_flow cx trace (t_proto, UnifyT (t_proto, t)));
           (* Add prop *)
-          let p = Field (Some prop_loc, t, Neutral) in
+          let p = Field (Some prop_loc, t, Polarity.Neutral) in
           pmap
             |> SMap.add x p
             |> Context.add_property_map cx id;
@@ -6762,7 +6766,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            robust. Tracked by #11299251. *)
         if not (Speculation.speculating ()) then
           Context.set_prop cx lflds s up;
-      | Field (_, OptionalT _, Positive)
+      | Field (_, OptionalT _, Polarity.Positive)
           when lflags.exact && Obj_type.sealed_in_op ureason lflags.sealed ->
         rec_flow cx trace (lproto,
           LookupT (ureason, NonstrictReturning (None, None), [], propref,
@@ -6838,8 +6842,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           upper = ureason;
         }, use_op) in
         let lp = match Context.find_call cx lcall with
-        | OptionalT (_, t) -> Field (None, t, Positive)
-        | t -> Field (None, t, Positive)
+        | OptionalT (_, t) -> Field (None, t, Polarity.Positive)
+        | t -> Field (None, t, Polarity.Positive)
         in
         let up = Field (None, value, dict_polarity) in
         if lit
@@ -7330,9 +7334,9 @@ and flow_type_args cx trace ~use_op lreason ureason targs1 targs2 =
       polarity;
     }, use_op) in
     match polarity with
-    | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
-    | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
-    | Neutral -> rec_unify cx trace ~use_op t1 t2
+    | Polarity.Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
+    | Polarity.Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
+    | Polarity.Neutral -> rec_unify cx trace ~use_op t1 t2
   ) targs1 targs2;
 
 (* dispatch checks to verify that lower satisfies the structural
@@ -7616,10 +7620,10 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace polarity func.return_t
 
   | DefT (_, _, ArrT (ArrayAT (elemt, _))) ->
-    check_polarity cx ?trace Neutral elemt
+    check_polarity cx ?trace Polarity.Neutral elemt
 
   | DefT (_, _, ArrT (TupleAT (_, tuple_types))) ->
-    List.iter (check_polarity cx ?trace Neutral) tuple_types
+    List.iter (check_polarity cx ?trace Polarity.Neutral) tuple_types
 
   | DefT (_, _, ArrT (ROArrayAT (elemt))) ->
     check_polarity cx ?trace polarity elemt
@@ -7628,7 +7632,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity_propmap cx ?trace polarity obj.props_tmap;
     (match obj.dict_t with
     | Some { key; value; dict_polarity; _ } ->
-      check_polarity cx ?trace Neutral key;
+      check_polarity cx ?trace Polarity.Neutral key;
       check_polarity cx ?trace (Polarity.mult (polarity, dict_polarity)) value
     | None -> ())
 
@@ -7645,17 +7649,17 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace polarity t
 
   | ThisTypeAppT (_, c, _, None) ->
-    check_polarity cx ?trace Positive c
+    check_polarity cx ?trace Polarity.Positive c
 
   | ThisTypeAppT (_, c, _, Some ts)
   | TypeAppT (_, _, c, ts)
     ->
-    check_polarity cx ?trace Positive c;
+    check_polarity cx ?trace Polarity.Positive c;
     check_polarity_typeapp cx ?trace polarity c ts
 
   | DefT (_, _, ReactAbstractComponentT {config; instance}) ->
-      check_polarity cx ?trace Negative config;
-      check_polarity cx ?trace Positive instance;
+      check_polarity cx ?trace Polarity.Negative config;
+      check_polarity cx ?trace Polarity.Positive instance;
 
   | OpaqueT (_, opaquetype) ->
     Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
@@ -7665,7 +7669,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace polarity t
 
   | KeysT (_, t) ->
-    check_polarity cx ?trace Positive t
+    check_polarity cx ?trace Polarity.Positive t
 
   | ThisClassT _
   | ModuleT _
@@ -8860,7 +8864,7 @@ and find_or_intro_shadow_prop cx trace reason_op x prop_loc =
   let intro_shadow_prop id =
     let reason_prop = replace_reason_const (RShadowProperty x) reason_op in
     let t = Tvar.mk cx reason_prop in
-    let p = Field (Some prop_loc, t, Neutral) in
+    let p = Field (Some prop_loc, t, Polarity.Neutral) in
     Context.set_prop cx id (internal_name x) p;
     t, p
   in
@@ -10089,8 +10093,8 @@ and unify_props cx trace ~use_op x r1 r2 p1 p2 =
 
   (* If both sides are neutral fields, we can just unify once *)
   match p1, p2 with
-  | Field (_, t1, Neutral),
-    Field (_, t2, Neutral) ->
+  | Field (_, t1, Polarity.Neutral),
+    Field (_, t2, Polarity.Neutral) ->
     rec_unify cx trace ~use_op t1 t2;
   | _ ->
     (* Otherwise, unify read/write sides separately. *)
@@ -11066,8 +11070,8 @@ and rec_flow_t cx trace ?(use_op=unknown_use) (t1, t2) =
 and flow_opt_p cx ?trace ~use_op ~report_polarity lreason ureason propref =
   function
   (* unification cases *)
-  | Field (_, lt, Neutral),
-    Field (_, ut, Neutral) ->
+  | Field (_, lt, Polarity.Neutral),
+    Field (_, ut, Polarity.Neutral) ->
     unify_opt cx ?trace ~use_op lt ut
   (* directional cases *)
   | lp, up ->
@@ -11205,7 +11209,7 @@ and object_kit =
   in
 
   let read_dict r {value; dict_polarity; _} =
-    if Polarity.compat (dict_polarity, Positive)
+    if Polarity.compat (dict_polarity, Polarity.Positive)
     then value
     else
       let reason = replace_reason_const (RUnknownProperty None) r in
@@ -11290,7 +11294,7 @@ and object_kit =
         dict_name = None;
         key = union d1.key d2.key;
         value = union (read_dict r1 d1) (read_dict r2 d2);
-        dict_polarity = Neutral
+        dict_polarity = Polarity.Neutral
       }) in
       let flags = {
         frozen = flags1.frozen && flags2.frozen;
@@ -11316,7 +11320,7 @@ and object_kit =
         | OptionalT _ -> t
         | _ -> if own then t else optional t
         in
-        Field (None, t, Neutral)
+        Field (None, t, Polarity.Neutral)
       ) props in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
@@ -11412,7 +11416,7 @@ and object_kit =
         | Sound,
           Some (t1, _), Some (t2, _), false ->
           rec_flow cx trace (t1, UseT (use_op, optional t2));
-          Some (Field (None, optional t1, Neutral))
+          Some (Field (None, optional t1, Polarity.Neutral))
 
         (* Otherwise if the object we are using to subtract has a non-optional own
          * property and the object is exact then we never add that property to our
@@ -11433,7 +11437,7 @@ and object_kit =
         | Sound,
           Some (t1, _), None, false ->
           rec_flow cx trace (t1, UseT (use_op, MixedT.make r2 |> with_trust bogus_trust));
-          Some (Field (None, optional t1, Neutral))
+          Some (Field (None, optional t1, Polarity.Neutral))
 
         (* If neither object has the prop then we don't add a prop to our
          * result here. *)
@@ -11445,10 +11449,10 @@ and object_kit =
          * prop then we will copy over that prop. If the first object's prop is
          * non-own then sometimes we may not copy it over so we mark it
          * as optional. *)
-        | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (None, t, Neutral))
-        | ReactConfigMerge _, Some (t, _), None, _ -> Some (Field (None, t, Positive))
-        | Sound, Some (t, true), None, _ -> Some (Field (None, t, Neutral))
-        | Sound, Some (t, false), None, _ -> Some (Field (None, optional t, Neutral))
+        | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (None, t, Polarity.Neutral))
+        | ReactConfigMerge _, Some (t, _), None, _ -> Some (Field (None, t, Polarity.Positive))
+        | Sound, Some (t, true), None, _ -> Some (Field (None, t, Polarity.Neutral))
+        | Sound, Some (t, false), None, _ -> Some (Field (None, optional t, Polarity.Neutral))
 
         (* React config merging is special. We are trying to solve for C
          * in the equation (where ... represents spread instead of rest):
@@ -11471,7 +11475,7 @@ and object_kit =
           (match t1 with
           | OptionalT (_, t1) -> rec_flow_t cx trace (t2, t1)
           | _ -> ());
-          Some (Field (None, t1, Positive))
+          Some (Field (None, t1, Polarity.Positive))
         (* Using our same equation. Consider this case:
          *
          *     {...{p}, ...C} = {p}
@@ -11484,7 +11488,7 @@ and object_kit =
           Some (t1, _), Some (t2, _), _ ->
           (* The DP type for p must be a subtype of the P type for p. *)
           rec_flow_t cx trace (t2, t1);
-          Some (Field (None, optional t1, Positive))
+          Some (Field (None, optional t1, Polarity.Positive))
         (* Consider this case:
          *
          *     {...{p}, ...C} = {}
@@ -11519,7 +11523,7 @@ and object_kit =
             dict_name = None;
             key = dict1.key;
             value = optional dict1.value;
-            dict_polarity = Neutral;
+            dict_polarity = Polarity.Neutral;
           })
       in
       let flags = {
@@ -11551,12 +11555,12 @@ and object_kit =
         in
         let use_op p = Frame (ReactGetConfig {polarity = p}, use_op) in
         match options with
-        | ReactConfigMerge Neutral ->
-            rec_unify cx trace ~use_op:(use_op Neutral) t tout
-        | ReactConfigMerge Negative ->
-            rec_flow_t cx trace ~use_op:(use_op Negative) (tout, t)
-        | ReactConfigMerge Positive ->
-            rec_flow_t cx trace ~use_op:(use_op Positive) (t, tout)
+        | ReactConfigMerge Polarity.Neutral ->
+            rec_unify cx trace ~use_op:(use_op Polarity.Neutral) t tout
+        | ReactConfigMerge Polarity.Negative ->
+            rec_flow_t cx trace ~use_op:(use_op Polarity.Negative) (tout, t)
+        | ReactConfigMerge Polarity.Positive ->
+            rec_flow_t cx trace ~use_op:(use_op Polarity.Positive) (t, tout)
         | _ ->
             (* Intentional UnknownUse here. *)
             rec_flow_t cx trace (t, tout)
@@ -11567,7 +11571,7 @@ and object_kit =
   (********************)
 
   let object_read_only =
-    let polarity = Positive in
+    let polarity = Polarity.Positive in
 
     let mk_read_only_object cx reason slice =
       let (r, props, dict, flags) = slice in
@@ -11597,7 +11601,7 @@ and object_kit =
   let object_rep =
     let mk_object cx reason (r, props, dict, flags) =
       (* TODO(jmbrown): Add polarity information to props *)
-      let polarity = Neutral in
+      let polarity = Polarity.Neutral in
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
       let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
       let call = None in
@@ -11628,7 +11632,7 @@ and object_kit =
      * props type we flow the config into is written by users who very rarely
      * add a positive variance annotation. We may consider marking that type as
      * constant in the future as well. *)
-    let prop_polarity = Neutral in
+    let prop_polarity = Polarity.Neutral in
 
     let finish cx trace reason config defaults children =
       let (config_reason, config_props, config_dict, config_flags) = config in
@@ -11807,7 +11811,7 @@ and object_kit =
       dict_name = None;
       key = intersection d1.key d2.key;
       value = intersection (read_dict r1 d1) (read_dict r2 d2);
-      dict_polarity = Neutral;
+      dict_polarity = Polarity.Neutral;
     }) in
     let flags = {
       frozen = flags1.frozen || flags2.frozen;
@@ -11850,7 +11854,7 @@ and object_kit =
       dict_name = None;
       key = d.key;
       value = read_dict r d;
-      dict_polarity = Neutral;
+      dict_polarity = Polarity.Neutral;
     }) in
     (r, props, dict, flags)
   in
@@ -11915,7 +11919,7 @@ and object_kit =
         dict_name = None;
         key = StrT.make r |> with_trust bogus_trust;
         value = t;
-        dict_polarity = Neutral;
+        dict_polarity = Polarity.Neutral;
       }), flags) in
       resolved cx trace use_op reason resolve_tool tool tout x
     (* If we see an empty then propagate empty to tout. *)
