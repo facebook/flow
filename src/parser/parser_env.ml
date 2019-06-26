@@ -138,6 +138,7 @@ type token_sink_result = {
 }
 
 type parse_options = {
+  enums: bool;
   esproposal_class_instance_fields: bool;
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
@@ -148,6 +149,7 @@ type parse_options = {
   use_strict: bool;
 }
 let default_parse_options = {
+  enums = false;
   esproposal_class_instance_fields = false;
   esproposal_class_static_fields = false;
   esproposal_decorators = false;

@@ -46,6 +46,8 @@ let convert_options opts =
   let open Parser_env in
   List.fold_left (fun (opts, tokens) (k, v) ->
     match k with
+    | "enums" ->
+        { opts with enums = v }, tokens
     | "esproposal_class_instance_fields" ->
         { opts with esproposal_class_instance_fields = v }, tokens
     | "esproposal_class_static_fields" ->

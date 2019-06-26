@@ -120,6 +120,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
      * ignore/warn/enable them is handled during inference so that a clean error
      * can be surfaced (rather than a more cryptic parse error).
      *)
+    enums = true;
     esproposal_class_instance_fields = true;
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
@@ -136,6 +137,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
 
 let parse_json_file ~fail content file =
   let parse_options = Some Parser_env.({
+    enums = false;
     esproposal_class_instance_fields = false;
     esproposal_class_static_fields = false;
     esproposal_decorators = false;

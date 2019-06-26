@@ -986,6 +986,7 @@ let parse_and_cache flowconfig_name (state: state) (uri: string)
       Server_files_js.config_file flowconfig_name root
       |> read_config_or_exit |> FlowConfig.modules_are_use_strict) in
     Some Parser_env.({
+      enums = true;
       esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;
       esproposal_decorators = true;

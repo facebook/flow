@@ -23,6 +23,7 @@ let error_of_file_sig_error source_file e =
 
 let parse_content file content =
   let parse_options = Some Parser_env.({
+    enums = true;
     (**
      * Always parse ES proposal syntax. The user-facing config option to
      * ignore/warn/enable them is handled during inference so that a clean error
@@ -143,6 +144,7 @@ let stub_metadata ~root ~checked = { Context.
   (* global *)
   max_literal_length = 100;
   enable_const_params = false;
+  enable_enums = true;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;

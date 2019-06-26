@@ -50,6 +50,7 @@ module Opts = struct
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool;
     enforce_well_formed_exports_whitelist: string list;
+    enums: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
@@ -139,6 +140,7 @@ module Opts = struct
     enforce_strict_call_arity = true;
     enforce_well_formed_exports = false;
     enforce_well_formed_exports_whitelist = [];
+    enums = false;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
@@ -582,6 +584,9 @@ module Opts = struct
     "experimental.const_params",
       boolean (fun opts v -> Ok { opts with enable_const_params = v });
 
+    "experimental.enums",
+      boolean (fun opts v -> Ok { opts with enums = v });
+
     "experimental.strict_call_arity",
       boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v });
 
@@ -1012,6 +1017,7 @@ let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let enforce_well_formed_exports c = c.options.Opts.enforce_well_formed_exports
 let enforce_well_formed_exports_whitelist c = c.options.Opts.enforce_well_formed_exports_whitelist
+let enums c = c.options.Opts.enums
 let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
 let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
 let esproposal_decorators c = c.options.Opts.esproposal_decorators

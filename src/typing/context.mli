@@ -31,6 +31,7 @@ type metadata = {
   (* global *)
   max_literal_length: int;
   enable_const_params: bool;
+  enable_enums: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
@@ -71,6 +72,7 @@ val all_unresolved: t -> ISet.t IMap.t
 val metadata: t -> metadata
 val max_literal_length: t -> int
 val enable_const_params: t -> bool
+val enable_enums: t -> bool
 val enforce_strict_call_arity: t -> bool
 val envs: t -> env IMap.t
 val errors: t -> Flow_error.ErrorSet.t

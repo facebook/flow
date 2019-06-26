@@ -465,6 +465,7 @@ let mk_program ?(comments=[]) stmts =
 
 let ast_of_string ~parser str =
   let parse_options = Some Parser_env.({
+    enums = true;
     esproposal_class_instance_fields = true;
     esproposal_class_static_fields = true;
     esproposal_decorators = true;

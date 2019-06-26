@@ -31,6 +31,7 @@ type metadata = {
   (* global *)
   max_literal_length: int;
   enable_const_params: bool;
+  enable_enums: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
@@ -154,6 +155,7 @@ let metadata_of_options options = {
   (* global *)
   max_literal_length = Options.max_literal_length options;
   enable_const_params = Options.enable_const_params options;
+  enable_enums = Options.enums options;
   enforce_strict_call_arity = Options.enforce_strict_call_arity options;
   esproposal_class_instance_fields = Options.esproposal_class_instance_fields options;
   esproposal_class_static_fields = Options.esproposal_class_static_fields options;
@@ -267,6 +269,7 @@ let metadata cx = cx.metadata
 let max_literal_length cx = cx.metadata.max_literal_length
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
+let enable_enums cx = cx.metadata.enable_enums
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 let errors cx = cx.sig_cx.errors
 let error_suppressions cx = cx.sig_cx.error_suppressions

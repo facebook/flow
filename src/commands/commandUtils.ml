@@ -1064,6 +1064,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports = FlowConfig.enforce_well_formed_exports flowconfig;
     opt_enforce_well_formed_exports_whitelist = FlowConfig.enforce_well_formed_exports_whitelist flowconfig;
+    opt_enums = FlowConfig.enums flowconfig;
     opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
