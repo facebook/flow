@@ -91,6 +91,8 @@ MODULES=\
   src/monitor\
   src/monitor/connections\
   src/monitor/logger\
+  src/monitor/rpc\
+  src/monitor/status\
   src/monitor/utils\
   src/parser\
   src/parser_utils\
@@ -129,7 +131,7 @@ MODULES=\
   src/third-party/ocaml-vlq/src\
   src/typing\
   src/typing/errors\
-	src/typing/polarity\
+  src/typing/polarity\
   hack/dfind\
   hack/find\
   hack/globals\
