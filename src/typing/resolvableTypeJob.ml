@@ -157,8 +157,8 @@ and collect_of_type ?log_unresolved cx reason acc = function
     | Some id -> (Context.find_call cx id)::ts
     in
     collect_of_types ?log_unresolved cx reason acc ts
-  | DefT (_, _, FunT (_, _, { params; return_t; _ })) ->
-    let ts = List.fold_left (fun acc (_, t) -> t::acc) [return_t] params in
+  | DefT (_, _, FunT (_, _, { params; return_t; this_t; _ })) ->
+    let ts = List.fold_left (fun acc (_, t) -> t::acc) [return_t; this_t] params in
     collect_of_types ?log_unresolved cx reason acc ts
   | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->
     let ts = Option.value ~default:[] tuple_types in
@@ -311,7 +311,7 @@ and collect_of_use ?log_unresolved cx reason acc = function
 | CallT (_, _, fct) ->
   let arg_types =
     Core_list.map ~f:(function Arg t | SpreadArg t -> t) fct.call_args_tlist in
-  collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout])
+  collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout; fct.call_this_t])
 | GetPropT (_, _, _, t_out) ->
   collect_of_type ?log_unresolved cx reason acc t_out
 | _ -> acc
