@@ -447,6 +447,8 @@ and statement_decl cx = Ast.Statement.(
         )
       )
 
+  | _, EnumDeclaration _ -> ()
+
   | (loc, DeclareVariable { DeclareVariable.id = (id_loc, { Ast.Identifier.name; comments= _ }); _ }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
       let t = Tvar.mk cx r in
@@ -1881,6 +1883,15 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         Env.init_fun cx ~use_op name fn_type loc
       | None -> ());
       loc, FunctionDeclaration func_ast
+
+  | loc, EnumDeclaration enum ->
+    if not @@ Context.enable_enums cx then
+      Flow.add_output cx (Error_message.EExperimentalEnums loc);
+    let open EnumDeclaration in
+    let {id = id_loc, ident; body} = enum in
+    let t = AnyT.untyped @@ mk_reason REnumDeclaration loc in
+    let id' = (id_loc, t), ident in
+    loc, EnumDeclaration {id = id'; body}
 
   | (loc, DeclareVariable { DeclareVariable.
       id = id_loc, ({ Ast.Identifier.name; comments= _ } as id);

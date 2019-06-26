@@ -231,6 +231,7 @@ end with type t = Impl.t) = struct
           "right", expression right;
           "body", statement body;
         ]
+    | loc, EnumDeclaration enum -> enum_declaration (loc, enum)
     | loc, Debugger -> node "DebuggerStatement" loc []
     | loc, ClassDeclaration c -> class_declaration (loc, c)
     | loc, InterfaceDeclaration i -> interface_declaration (loc, i)
@@ -812,6 +813,58 @@ end with type t = Impl.t) = struct
         "variance", option variance variance_;
       ]
 
+    and enum_declaration (loc, {Statement.EnumDeclaration.id; body}) =
+      let open Statement.EnumDeclaration in
+      let enum_body = match body with
+        | BooleanBody {BooleanBody.members; explicitType} ->
+          node "EnumBooleanBody" loc [
+            "members", array_of_list (fun (loc, {InitializedMember.id; init = _, bool_val}) ->
+              node "EnumBooleanMember" loc [
+                "id", identifier id;
+                "init", bool bool_val;
+              ]) members;
+            "explicitType", bool explicitType;
+          ]
+        | NumberBody {NumberBody.members; explicitType} ->
+          node "EnumNumberBody" loc [
+            "members", array_of_list (fun (loc, {InitializedMember.id; init}) ->
+              node "EnumNumberMember" loc [
+                "id", identifier id;
+                "init", number_literal init;
+              ]) members;
+            "explicitType", bool explicitType;
+          ]
+        | StringBody {StringBody.members; explicitType} ->
+          let members = match members with
+            | StringBody.Defaulted defaulted_members ->
+              List.map (fun (loc, {DefaultedMember.id}) ->
+                node "EnumDefaultedMember" loc [
+                  "id", identifier id;
+                ]) defaulted_members
+            | StringBody.Initialized initialized_members ->
+              List.map (fun (loc, {InitializedMember.id; init}) ->
+                node "EnumStringMember" loc [
+                  "id", identifier id;
+                  "init", string_literal init;
+                ]) initialized_members
+          in
+          node "EnumStringBody" loc [
+            "members", array members;
+            "explicitType", bool explicitType;
+          ]
+        | SymbolBody {SymbolBody.members} ->
+          node "EnumSymbolBody" loc [
+            "members", array_of_list (fun (loc, {DefaultedMember.id}) ->
+              node "EnumDefaultedMember" loc [
+                "id", identifier id;
+              ]) members;
+          ]
+      in
+      node "EnumDeclaration" loc [
+        "id", identifier id;
+        "body", enum_body;
+      ]
+
     and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends }) =
       node "InterfaceDeclaration" loc [
         "id", identifier id;
@@ -980,6 +1033,12 @@ end with type t = Impl.t) = struct
           [ "value", value_; "raw", string raw; ]
       in
       node ?comments "Literal" loc props
+
+    and number_literal (loc, {NumberLiteral.value; raw}) =
+      node "Literal" loc [
+        "value", number value;
+        "raw", string raw;
+      ]
 
     and bigint_literal (loc, { Literal.raw; _ }) =
       node "BigIntLiteral" loc [

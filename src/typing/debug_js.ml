@@ -2703,6 +2703,8 @@ let dump_error_message =
         spf "EUninitializedInstanceProperty (%s)" (string_of_aloc loc)
     | EExperimentalExportStarAs loc ->
         spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
+    | EExperimentalEnums loc ->
+        spf "EExperimentalEnums (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc ->
         spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc ->

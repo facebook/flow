@@ -88,6 +88,9 @@ class ['loc] mapper = object(this)
       this#empty loc;
       stmt
 
+    | loc, EnumDeclaration enum ->
+      id_loc this#enum_declaration loc enum stmt (fun enum -> loc, EnumDeclaration enum)
+
     | (loc, ExportDefaultDeclaration decl) ->
       id_loc this#export_default_declaration loc decl stmt (fun decl -> loc, ExportDefaultDeclaration decl)
 
@@ -429,6 +432,85 @@ class ['loc] mapper = object(this)
 
   method empty _loc =
     ()
+
+  method enum_declaration _loc (enum: ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
+    let open Ast.Statement.EnumDeclaration in
+    let {id = ident; body} = enum in
+    let id' = this#identifier ident in
+    let body' = match body with
+      | BooleanBody boolean_body ->
+        id this#enum_boolean_body boolean_body body (fun body -> BooleanBody body)
+      | NumberBody number_body ->
+        id this#enum_number_body number_body body (fun body -> NumberBody body)
+      | StringBody string_body ->
+        id this#enum_string_body string_body body (fun body -> StringBody body)
+      | SymbolBody symbol_body ->
+        id this#enum_symbol_body symbol_body body (fun body -> SymbolBody body)
+    in
+    if ident == id' && body == body' then enum
+    else {id = id'; body = body'}
+
+  method enum_boolean_body (body: 'loc Ast.Statement.EnumDeclaration.BooleanBody.t) =
+    let open Ast.Statement.EnumDeclaration.BooleanBody in
+    let {members; explicitType = _} = body in
+    let members' = ListUtils.ident_map this#enum_boolean_member members in
+    if members == members' then body
+    else {body with members = members'}
+
+  method enum_number_body (body: 'loc Ast.Statement.EnumDeclaration.NumberBody.t) =
+    let open Ast.Statement.EnumDeclaration.NumberBody in
+    let {members; explicitType = _} = body in
+    let members' = ListUtils.ident_map this#enum_number_member members in
+    if members == members' then body
+    else {body with members = members'}
+
+  method enum_string_body (body: 'loc Ast.Statement.EnumDeclaration.StringBody.t) =
+    let open Ast.Statement.EnumDeclaration.StringBody in
+    let {members; explicitType = _} = body in
+    let members' = match members with
+      | Defaulted members -> Defaulted (ListUtils.ident_map this#enum_defaulted_member members)
+      | Initialized members -> Initialized (ListUtils.ident_map this#enum_string_member members)
+    in
+    if members == members' then body
+    else {body with members = members'}
+
+  method enum_symbol_body (body: 'loc Ast.Statement.EnumDeclaration.SymbolBody.t) =
+    let open Ast.Statement.EnumDeclaration.SymbolBody in
+    let {members} = body in
+    let members' = ListUtils.ident_map this#enum_defaulted_member members in
+    if members == members' then body
+    else {members = members'}
+
+  method enum_defaulted_member (member: 'loc Ast.Statement.EnumDeclaration.DefaultedMember.t) =
+    let open Ast.Statement.EnumDeclaration.DefaultedMember in
+    let loc, {id = ident} = member in
+    let id' = this#identifier ident in
+    if ident = id' then member
+    else loc, {id = id'}
+
+  method enum_boolean_member
+      (member: (bool, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let loc, {id = ident; init} = member in
+    let id' = this#identifier ident in
+    if ident = id' then member
+    else loc, {id = id'; init}
+
+  method enum_number_member
+      (member: (Ast.NumberLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let loc, {id = ident; init} = member in
+    let id' = this#identifier ident in
+    if ident = id' then member
+    else loc, {id = id'; init}
+
+  method enum_string_member
+      (member: (Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let loc, {id = ident; init} = member in
+    let id' = this#identifier ident in
+    if ident = id' then member
+    else loc, {id = id'; init}
 
   method export_default_declaration _loc (decl: ('loc, 'loc) Ast.Statement.ExportDefaultDeclaration.t) =
     let open Ast.Statement.ExportDefaultDeclaration in

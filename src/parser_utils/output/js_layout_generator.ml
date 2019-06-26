@@ -660,6 +660,7 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
     | S.VariableDeclaration decl ->
       with_semicolon (variable_declaration (loc, decl))
     | S.ClassDeclaration class_ -> class_base class_
+    | S.EnumDeclaration _ -> Empty (* TODO(T44731104) Support enums in JS layout generator *)
     | S.ForOf { S.ForOf.left; right; body; async } ->
       fuse [
         Atom "for";

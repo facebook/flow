@@ -62,6 +62,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       this#empty ();
       Empty
 
+    | EnumDeclaration enum -> EnumDeclaration (this#enum_declaration enum)
+
     | ExportDefaultDeclaration decl ->
       ExportDefaultDeclaration (this#export_default_declaration annot decl)
 
@@ -453,6 +455,76 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method empty () =
     ()
+
+  method enum_declaration (enum: ('M, 'T) Ast.Statement.EnumDeclaration.t)
+      : ('N, 'U) Ast.Statement.EnumDeclaration.t =
+    let open Ast.Statement.EnumDeclaration in
+    let {id; body} = enum in
+    let body' = match body with
+      | BooleanBody boolean_body -> BooleanBody (this#enum_boolean_body boolean_body)
+      | NumberBody number_body -> NumberBody (this#enum_number_body number_body)
+      | StringBody string_body -> StringBody (this#enum_string_body string_body)
+      | SymbolBody symbol_body -> SymbolBody (this#enum_symbol_body symbol_body)
+    in
+    {id = this#t_identifier id; body = body'}
+
+  method enum_boolean_body (body: 'M Ast.Statement.EnumDeclaration.BooleanBody.t)
+      : 'N Ast.Statement.EnumDeclaration.BooleanBody.t =
+    let open Ast.Statement.EnumDeclaration.BooleanBody in
+    let {members; explicitType} = body in
+    {members = Core_list.map ~f:this#enum_boolean_member members; explicitType}
+
+  method enum_number_body (body: 'M Ast.Statement.EnumDeclaration.NumberBody.t)
+      : 'N Ast.Statement.EnumDeclaration.NumberBody.t =
+    let open Ast.Statement.EnumDeclaration.NumberBody in
+    let {members; explicitType} = body in
+    {members = Core_list.map ~f:this#enum_number_member members; explicitType}
+
+  method enum_string_body (body: 'M Ast.Statement.EnumDeclaration.StringBody.t)
+      : 'N Ast.Statement.EnumDeclaration.StringBody.t =
+    let open Ast.Statement.EnumDeclaration.StringBody in
+    let {members; explicitType} = body in
+    let members' = match members with
+      | Defaulted members -> Defaulted (Core_list.map ~f:this#enum_defaulted_member members)
+      | Initialized members -> Initialized (Core_list.map ~f:this#enum_string_member members)
+    in
+    {members = members'; explicitType}
+
+  method enum_symbol_body (body: 'M Ast.Statement.EnumDeclaration.SymbolBody.t)
+      : 'N Ast.Statement.EnumDeclaration.SymbolBody.t =
+    let open Ast.Statement.EnumDeclaration.SymbolBody in
+    let {members} = body in
+    {members = Core_list.map ~f:this#enum_defaulted_member members}
+
+  method enum_defaulted_member (member: 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
+      : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =
+    let open Ast.Statement.EnumDeclaration.DefaultedMember in
+    let annot, {id} = member in
+    this#on_loc_annot annot, {id = this#identifier id}
+
+  method enum_boolean_member
+      (member: (bool, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+      : (bool, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let annot, {id; init = (init_annot, init_val)} = member in
+    let init' = this#on_loc_annot init_annot, init_val in
+    this#on_loc_annot annot, {id = this#identifier id; init = init'}
+
+  method enum_number_member
+      (member: (Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+      : (Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let annot, {id; init = (init_annot, init_val)} = member in
+    let init' = this#on_loc_annot init_annot, init_val in
+    this#on_loc_annot annot, {id = this#identifier id; init = init'}
+
+  method enum_string_member
+      (member: (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+      : (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let annot, {id; init = (init_annot, init_val)} = member in
+    let init' = this#on_loc_annot init_annot, init_val in
+    this#on_loc_annot annot, {id = this#identifier id; init = init'}
 
   method export_default_declaration _loc (decl: ('M, 'T) Ast.Statement.ExportDefaultDeclaration.t)
                                               : ('N, 'U) Ast.Statement.ExportDefaultDeclaration.t =

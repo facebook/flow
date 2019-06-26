@@ -141,11 +141,12 @@ and 'loc t' =
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
-  | EExperimentalDecorators of 'loc
   | EExperimentalClassProperties of 'loc * bool
-  | EUnsafeGetSet of 'loc
   | EUninitializedInstanceProperty of 'loc
+  | EExperimentalDecorators of 'loc
   | EExperimentalExportStarAs of 'loc
+  | EExperimentalEnums of 'loc
+  | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
@@ -498,6 +499,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty loc -> EUninitializedInstanceProperty (f loc)
   | EExperimentalExportStarAs loc -> EExperimentalExportStarAs (f loc)
+  | EExperimentalEnums loc -> EExperimentalEnums (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -640,6 +642,7 @@ let util_use_op_of_msg nope util = function
 | EUnsafeGetSet (_)
 | EUninitializedInstanceProperty (_)
 | EExperimentalExportStarAs (_)
+| EExperimentalEnums (_)
 | EIndeterminateModuleType (_)
 | EBadExportPosition (_)
 | EBadExportContext (_)
@@ -748,6 +751,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EBadExportPosition loc
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
+  | EExperimentalEnums loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty loc
   | EExperimentalClassProperties (loc, _)
@@ -855,6 +859,7 @@ let kind_of_msg = Errors.(function
   | EExperimentalClassProperties _
   | EUnsafeGetSet _
   | EExperimentalExportStarAs _
+  | EExperimentalEnums _
   | EIndeterminateModuleType _
   | EUnreachable _
   | EInvalidTypeof _                -> InferWarning OtherKind
@@ -1562,6 +1567,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "export * as"; text " is an active early stage feature propsal that ";
         text "may change. You may opt-in to using it anyway by putting ";
         code "esproposal.export_star_as=enable"; text " into the ";
+        code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+      ]
+
+    | EExperimentalEnums _ ->
+      Normal [
+        text "Experimental "; code "enum"; text " usage. ";
+        text "You may opt-in to using enums by putting ";
+        code "experimental.enums=true"; text " into the ";
         code "[options]"; text " section of your "; code ".flowconfig"; text ".";
       ]
 

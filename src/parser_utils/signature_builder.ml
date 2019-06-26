@@ -112,6 +112,7 @@ module Signature = struct
     | _, DeclareModule _
     | _, DeclareModuleExports _
     | _, Empty
+    | _, EnumDeclaration _ (* TODO(T44736715) Support enums in signature builder/verifier/etc. *)
     | _, Expression _
     | _, Break _
     | _, Continue _
@@ -341,6 +342,7 @@ class type_hoister = object(this)
       | _, DeclareFunction _
       | _, ClassDeclaration _
       | _, DeclareClass _
+      | _, EnumDeclaration _
       | _, TypeAlias _
       | _, DeclareTypeAlias _
       | _, OpaqueType _
@@ -400,6 +402,7 @@ class type_hoister = object(this)
     (* ignore block-scoped bindings and type bindings *)
     | _, ClassDeclaration _
     | _, DeclareClass _
+    | _, EnumDeclaration _
     | _, TypeAlias _
     | _, DeclareTypeAlias _
     | _, OpaqueType _

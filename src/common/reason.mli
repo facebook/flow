@@ -49,6 +49,7 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | REnum
+  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
