@@ -1,6 +1,6 @@
 {
   "name": "flow-remove-types",
-  "version": "2.102.0-rc",
+  "version": "2.102.0",
   "description": "Removes Flow type annotations from JavaScript files with speed and simplicity.",
   "author": {
     "name": "Flow Team",
