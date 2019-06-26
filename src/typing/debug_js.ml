@@ -2528,8 +2528,13 @@ let dump_error_message =
           (dump_reason cx prop_reason)
           (dump_reason cx obj_reason)
           (string_of_use_op use_op)
-    | EPropAccess { reason_prop; prop_name; rw = _; use_op } ->
-        spf "EPropAccess { reason_prop = %s; prop_name = %s; use_op = %s }"
+    | EPropNotReadable { reason_prop; prop_name; use_op } ->
+        spf "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
+          (dump_reason cx reason_prop)
+          (match prop_name with Some x -> spf "%S" x | None -> "(computed)")
+          (string_of_use_op use_op)
+    | EPropNotWritable { reason_prop; prop_name; use_op } ->
+        spf "EPropNotWritable { reason_prop = %s; prop_name = %s; use_op = %s }"
           (dump_reason cx reason_prop)
           (match prop_name with Some x -> spf "%S" x | None -> "(computed)")
           (string_of_use_op use_op)

@@ -70,10 +70,14 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EPropNotFound of string option * ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
-  | EPropAccess of {
+  | EPropNotReadable of {
       reason_prop: 'loc virtual_reason;
       prop_name: string option;
-      rw: Type.rw;
+      use_op: 'loc virtual_use_op;
+    }
+  | EPropNotWritable of {
+      reason_prop: 'loc virtual_reason;
+      prop_name: string option;
       use_op: 'loc virtual_use_op;
     }
   | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Polarity.t * Polarity.t) * 'loc virtual_use_op
@@ -388,11 +392,16 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EPropNotFound (prop, (r1, r2), op) ->
       EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op)
-  | EPropAccess { reason_prop; prop_name; rw; use_op } ->
-      EPropAccess {
+  | EPropNotReadable { reason_prop; prop_name; use_op } ->
+      EPropNotReadable {
         reason_prop = map_reason reason_prop;
         prop_name;
-        rw;
+        use_op = map_use_op use_op;
+      }
+  | EPropNotWritable { reason_prop; prop_name; use_op } ->
+      EPropNotWritable {
+        reason_prop = map_reason reason_prop;
+        prop_name;
         use_op = map_use_op use_op;
       }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
@@ -568,8 +577,10 @@ let util_use_op_of_msg nope util = function
 | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
   util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
 | EPropNotFound (prop, rs, op) -> util op (fun op -> EPropNotFound (prop, rs, op))
-| EPropAccess { reason_prop; prop_name; rw; use_op } ->
-  util use_op (fun use_op -> EPropAccess { reason_prop; prop_name; rw; use_op })
+| EPropNotReadable { reason_prop; prop_name; use_op } ->
+  util use_op (fun use_op -> EPropNotReadable { reason_prop; prop_name; use_op })
+| EPropNotWritable { reason_prop; prop_name; use_op } ->
+  util use_op (fun use_op -> EPropNotWritable { reason_prop; prop_name; use_op })
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
 | EStrictLookupFailed (rs, r, p, Some op) ->
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
@@ -826,7 +837,8 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EPrivateLookupFailed _
   | EStrictLookupFailed _
   | EPropPolarityMismatch _
-  | EPropAccess _
+  | EPropNotReadable _
+  | EPropNotWritable _
   | EPropNotFound _
   | EExpectedBooleanLit _
   | EExpectedNumberLit _
@@ -1086,12 +1098,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       PropMissing
         (loc_of_reason reason_prop, prop, reason_obj, use_op)
 
-    | EPropAccess { reason_prop; prop_name = x; rw; use_op } ->
-      let rw = match rw with
-      | Read -> "readable"
-      | Write _ -> "writable"
-      in
-      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text (spf " is not %s" rw)], use_op)
+    | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
+      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text " is not readable"], use_op)
+
+    | EPropNotWritable { reason_prop; prop_name = x; use_op } ->
+      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text " is not writable"], use_op)
 
     | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
       let (lreason, ureason) = reasons in

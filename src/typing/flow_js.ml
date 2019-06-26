@@ -4981,10 +4981,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             use_op, reason_prop, propref, Normal, t, None
           ))
         | None ->
-          add_output cx ~trace (Error_message.EPropAccess {
+          add_output cx ~trace (Error_message.EPropNotReadable {
             reason_prop;
             prop_name = Some x;
-            rw = Read;
             use_op;
           })
       );
@@ -5011,10 +5010,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               use_op, reason_op, propref, Normal, t, None
             ))
           | None ->
-            add_output cx ~trace (Error_message.EPropAccess {
+            add_output cx ~trace (Error_message.EPropNotReadable {
               reason_prop = lreason;
               prop_name = Some x;
-              rw = Read;
               use_op;
             })
         )
@@ -5203,10 +5201,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       SetPropT (use_op, _, Named (prop, "constructor"), _, _, _) ->
       if flags.frozen
       then
-        add_output cx ~trace (Error_message.EPropAccess {
+        add_output cx ~trace (Error_message.EPropNotWritable {
           reason_prop = prop;
           prop_name = Some "constructor";
-          rw = Write (Normal, None);
           use_op;
         })
 
@@ -5218,10 +5215,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Named (r, prop) -> r, Some prop
       | Computed t -> reason_of_t t, None
       in
-      add_output cx ~trace (Error_message.EPropAccess {
+      add_output cx ~trace (Error_message.EPropNotWritable {
         reason_prop;
         prop_name = prop;
-        rw = Write (Normal, None);
         use_op
       })
 
@@ -8879,10 +8875,9 @@ and match_shape cx trace ~use_op proto reason props =
       let t = filter_optional cx ~trace reason_prop t in
       rec_flow cx trace (proto, MatchPropT (use_op, reason_op, propref, t))
     | None ->
-      add_output cx ~trace (Error_message.EPropAccess {
+      add_output cx ~trace (Error_message.EPropNotReadable {
         reason_prop;
         prop_name = Some x;
-        rw = Read;
         use_op;
       })
   ) props
@@ -9264,10 +9259,9 @@ and prop_exists_test_generic
         rec_flow cx trace (t, GuardT (pred, orig_obj, result))
       | None ->
         (* prop cannot be read *)
-        add_output cx ~trace (Error_message.EPropAccess {
+        add_output cx ~trace (Error_message.EPropNotReadable {
           reason_prop = lreason;
           prop_name = Some key;
-          rw = Read;
           use_op = unknown_use;
         })
       )
@@ -9504,10 +9498,9 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         rec_flow cx trace (t, test)
       | None ->
         let reason_obj = reason_of_t obj in
-        add_output cx ~trace (Error_message.EPropAccess {
+        add_output cx ~trace (Error_message.EPropNotReadable {
           reason_prop = reason_obj;
           prop_name = Some key;
-          rw = Read;
           use_op = unknown_use;
         })
       )
@@ -10773,31 +10766,25 @@ and perform_lookup_action cx trace propref p lreason ureason = function
       rec_flow cx trace (tout, UseT (use_op, t));
       Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (t, prop_t)) prop_t
     | _, None ->
-      let r, x = match propref with
+      let reason_prop, prop_name = match propref with
       | Named (r, x) -> r, Some x
       | Computed t -> reason_of_t t, None
       in
-      add_output cx ~trace (Error_message.EPropAccess {
-        reason_prop = r;
-        prop_name = x;
-        rw;
-        use_op;
-      })
+      let msg = match rw with
+      | Read -> Error_message.EPropNotReadable { reason_prop; prop_name; use_op }
+      | Write _ -> Error_message.EPropNotWritable { reason_prop; prop_name; use_op }
+      in
+      add_output cx ~trace msg
     end
   | MatchProp (use_op, tin) ->
     begin match Property.access Read p with
       | Some t -> rec_flow cx trace (tin, UseT (use_op, t))
       | None ->
-        let r, x = match propref with
+        let reason_prop, prop_name = match propref with
         | Named (r, x) -> r, Some x
         | Computed t -> reason_of_t t, None
         in
-        add_output cx ~trace (Error_message.EPropAccess {
-          reason_prop = r;
-          prop_name = x;
-          rw = Read;
-          use_op;
-        })
+        add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
 
 and perform_elem_action cx trace ~use_op reason_op l value = function
