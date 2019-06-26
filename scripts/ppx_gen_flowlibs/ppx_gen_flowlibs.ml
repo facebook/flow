@@ -5,6 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open! Migrate_parsetree
+
+open Ast_405
+let ocaml_version = Versions.ocaml_405
+
 open Asttypes
 open Parsetree
 open Ast_mapper
@@ -28,14 +33,7 @@ let contents lib_dir =
   |> Exp.array
 
 (* Whenever we see [%flowlib_contents], replace it wil the flowlib contents *)
-let ppx_gen_flowlibs_mapper argv =
-  let flowlib_contents, prelude_contents =
-    match argv with
-    | [flowlib_dir; prelude_dir] -> contents flowlib_dir, contents prelude_dir
-    | _ ->
-      failwith
-        (Printf.sprintf "Expected two arguments, got %d." (List.length argv))
-  in
+let ppx_gen_flowlibs_mapper ~flowlib_contents ~prelude_contents =
   { default_mapper with
     expr = fun mapper expr ->
       match expr with
@@ -45,5 +43,21 @@ let ppx_gen_flowlibs_mapper argv =
         prelude_contents
       | other -> default_mapper.expr mapper other; }
 
-  let () =
-    register "ppx_gen_flowlibs" ppx_gen_flowlibs_mapper
+let () =
+  let flowlib_dir_ref = ref "" in
+  let prelude_dir_ref = ref "" in
+  let args = [
+    "-flowlib", Arg.Set_string flowlib_dir_ref, "Path to flowlib directory";
+    "-prelude", Arg.Set_string prelude_dir_ref, "Path to prelude directory";
+  ] in
+  Driver.register ~name:"ppx_gen_flowlibs" ~args ocaml_version
+    (fun _config _cookies ->
+      let flowlib_contents, prelude_contents =
+        match !flowlib_dir_ref, !prelude_dir_ref with
+        | "", _
+        | _, "" ->
+          failwith "Expected two arguments."
+        | flowlib_dir, prelude_dir ->
+          contents flowlib_dir, contents prelude_dir
+      in
+      ppx_gen_flowlibs_mapper ~flowlib_contents ~prelude_contents)
