@@ -2615,9 +2615,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         SentinelPropTest (sense, key, t, inter, tvar)) ->
       sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
 
-    | _, IntersectionPreprocessKitT (reason,
+    | _, IntersectionPreprocessKitT (_,
         PropExistsTest (sense, key, inter, tvar)) ->
-      prop_exists_test_generic reason key cx trace tvar inter sense l
+      prop_exists_test_generic key cx trace tvar inter sense l
 
     (***********************)
     (* Singletons and keys *)
@@ -4981,9 +4981,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             use_op, reason_prop, propref, Normal, t, None
           ))
         | None ->
-          add_output cx ~trace (Error_message.EPropAccess (
-            (reason_prop, reason_op), Some x, Property.polarity p, Read, use_op
-          ))
+          add_output cx ~trace (Error_message.EPropAccess {
+            reason_prop;
+            prop_name = Some x;
+            rw = Read;
+            use_op;
+          })
       );
       if dict_t <> None then
         rec_flow_t cx trace ~use_op (AnyT.make Untyped reason_op, t)
@@ -5008,9 +5011,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               use_op, reason_op, propref, Normal, t, None
             ))
           | None ->
-            add_output cx ~trace (Error_message.EPropAccess (
-              (lreason, reason_op), Some x, Property.polarity p, Read, use_op
-            ))
+            add_output cx ~trace (Error_message.EPropAccess {
+              reason_prop = lreason;
+              prop_name = Some x;
+              rw = Read;
+              use_op;
+            })
         )
       );
       rec_flow_t cx ~use_op trace (to_obj, t)
@@ -5194,23 +5200,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************************************)
 
     | DefT (_, _, ObjT {flags; _}),
-      SetPropT (use_op, reason_op, Named (prop, "constructor"), _, _, _) ->
+      SetPropT (use_op, _, Named (prop, "constructor"), _, _, _) ->
       if flags.frozen
       then
-        add_output cx ~trace
-          (Error_message.EPropAccess ((prop, reason_op), Some "constructor",
-            Polarity.Positive, Write (Normal, None), use_op))
+        add_output cx ~trace (Error_message.EPropAccess {
+          reason_prop = prop;
+          prop_name = Some "constructor";
+          rw = Write (Normal, None);
+          use_op;
+        })
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
-    | DefT (_, _, ObjT { flags; _ }), SetPropT (use_op, reason_op, prop, _, _, _)
+    | DefT (_, _, ObjT { flags; _ }), SetPropT (use_op, _, prop, _, _, _)
       when flags.frozen ->
       let reason_prop, prop = match prop with
       | Named (r, prop) -> r, Some prop
       | Computed t -> reason_of_t t, None
       in
-      add_output cx ~trace (Error_message.EPropAccess ((reason_prop, reason_op), prop,
-        Polarity.Positive, Write (Normal, None), use_op))
+      add_output cx ~trace (Error_message.EPropAccess {
+        reason_prop;
+        prop_name = prop;
+        rw = Write (Normal, None);
+        use_op
+      })
 
     | DefT (reason_obj, _, ObjT o), SetPropT (use_op, reason_op, propref, _, tin, prop_t) ->
       write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t
@@ -8866,9 +8879,12 @@ and match_shape cx trace ~use_op proto reason props =
       let t = filter_optional cx ~trace reason_prop t in
       rec_flow cx trace (proto, MatchPropT (use_op, reason_op, propref, t))
     | None ->
-      add_output cx ~trace (Error_message.EPropAccess (
-        (reason_prop, reason_op), Some x, Property.polarity p, Read, use_op
-      ))
+      add_output cx ~trace (Error_message.EPropAccess {
+        reason_prop;
+        prop_name = Some x;
+        rw = Read;
+        use_op;
+      })
   ) props
 
 and find_or_intro_shadow_prop cx trace reason_op x prop_loc =
@@ -9202,13 +9218,13 @@ and predicate cx trace t l p = match p with
     let filtered = Type_filter.not_exists l in
     rec_flow_t cx trace (filtered, t)
 
-  | PropExistsP (reason, key, loc) ->
+  | PropExistsP (key, loc) ->
     update_sketchy_null cx loc l;
-    prop_exists_test cx trace reason key true l t
+    prop_exists_test cx trace key true l t
 
-  | NotP (PropExistsP (reason, key, loc)) ->
+  | NotP (PropExistsP (key, loc)) ->
     update_sketchy_null cx loc l;
-    prop_exists_test cx trace reason key false l t
+    prop_exists_test cx trace key false l t
 
   (* unreachable *)
   | NotP (NotP _)
@@ -9233,11 +9249,11 @@ and predicate cx trace t l p = match p with
       rec_flow cx trace (fun_t,
         CallLatentPredT (neg_reason, false, idx, l, t))
 
-and prop_exists_test cx trace reason key sense obj result =
-  prop_exists_test_generic reason key cx trace result obj sense obj
+and prop_exists_test cx trace key sense obj result =
+  prop_exists_test_generic key cx trace result obj sense obj
 
 and prop_exists_test_generic
-    reason key cx trace result orig_obj sense = function
+    key cx trace result orig_obj sense = function
   | DefT (lreason, _, ObjT { flags; props_tmap; _}) as obj ->
     (match Context.get_prop cx props_tmap key with
     | Some p ->
@@ -9248,9 +9264,12 @@ and prop_exists_test_generic
         rec_flow cx trace (t, GuardT (pred, orig_obj, result))
       | None ->
         (* prop cannot be read *)
-        add_output cx ~trace (Error_message.EPropAccess (
-          (lreason, reason), Some key, Property.polarity p, Read, unknown_use
-        ))
+        add_output cx ~trace (Error_message.EPropAccess {
+          reason_prop = lreason;
+          prop_name = Some key;
+          rw = Read;
+          use_op = unknown_use;
+        })
       )
     | None when flags.exact && Obj_type.sealed_in_op (reason_of_t result) flags.sealed ->
       (* prop is absent from exact object type *)
@@ -9485,10 +9504,12 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         rec_flow cx trace (t, test)
       | None ->
         let reason_obj = reason_of_t obj in
-        let reason = reason_of_t result in
-        add_output cx ~trace (Error_message.EPropAccess (
-          (reason_obj, reason), Some key, Property.polarity p, Read, unknown_use
-        ))
+        add_output cx ~trace (Error_message.EPropAccess {
+          reason_prop = reason_obj;
+          prop_name = Some key;
+          rw = Read;
+          use_op = unknown_use;
+        })
       )
     | None ->
       (* TODO: possibly unsound to filter out orig_obj here, but if we
@@ -10756,8 +10777,12 @@ and perform_lookup_action cx trace propref p lreason ureason = function
       | Named (r, x) -> r, Some x
       | Computed t -> reason_of_t t, None
       in
-      add_output cx ~trace
-        (Error_message.EPropAccess ((r, ureason), x, Property.polarity p, rw, use_op))
+      add_output cx ~trace (Error_message.EPropAccess {
+        reason_prop = r;
+        prop_name = x;
+        rw;
+        use_op;
+      })
     end
   | MatchProp (use_op, tin) ->
     begin match Property.access Read p with
@@ -10767,8 +10792,12 @@ and perform_lookup_action cx trace propref p lreason ureason = function
         | Named (r, x) -> r, Some x
         | Computed t -> reason_of_t t, None
         in
-        add_output cx ~trace
-          (Error_message.EPropAccess ((r, ureason), x, Property.polarity p, Read, use_op))
+        add_output cx ~trace (Error_message.EPropAccess {
+          reason_prop = r;
+          prop_name = x;
+          rw = Read;
+          use_op;
+        })
     end
 
 and perform_elem_action cx trace ~use_op reason_op l value = function

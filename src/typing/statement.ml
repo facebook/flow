@@ -5820,7 +5820,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (* refine the object (`foo.bar` in the example) based on the prop. *)
       begin match Refinement.key _object with
       | Some name ->
-        let predicate = PropExistsP (expr_reason, prop_name, Some prop_loc) in
+        let predicate = PropExistsP (prop_name, Some prop_loc) in
         out |> add_predicate name obj_t predicate true
       | None ->
         out

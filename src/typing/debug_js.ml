@@ -1368,7 +1368,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | SingletonStrP (_, _, str) -> ["value", JSON_String str]
   | SingletonNumP (_, _, (_,raw)) -> ["value", JSON_String raw]
 
-  | PropExistsP (_, key, _) -> ["propName", JSON_String key]
+  | PropExistsP (key, _) -> ["propName", JSON_String key]
 
   | ExistsP _
   | VoidP
@@ -2528,11 +2528,11 @@ let dump_error_message =
           (dump_reason cx prop_reason)
           (dump_reason cx obj_reason)
           (string_of_use_op use_op)
-    | EPropAccess ((reason1, reason2), x, _, _, _) ->
-        spf "EPropAccess ((%s, %s), %s, _, _, _)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (match x with Some x -> spf "%S" x | None -> "(computed)")
+    | EPropAccess { reason_prop; prop_name; rw = _; use_op } ->
+        spf "EPropAccess { reason_prop = %s; prop_name = %s; use_op = %s }"
+          (dump_reason cx reason_prop)
+          (match prop_name with Some x -> spf "%S" x | None -> "(computed)")
+          (string_of_use_op use_op)
     | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
         spf "EPropPolarityMismatch ((%s, %s), %s, _, _)"
           (dump_reason cx reason1)

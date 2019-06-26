@@ -70,7 +70,12 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EPropNotFound of string option * ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
-  | EPropAccess of ('loc virtual_reason * 'loc virtual_reason) * string option * Polarity.t * Type.rw * 'loc virtual_use_op
+  | EPropAccess of {
+      reason_prop: 'loc virtual_reason;
+      prop_name: string option;
+      rw: Type.rw;
+      use_op: 'loc virtual_use_op;
+    }
   | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Polarity.t * Polarity.t) * 'loc virtual_use_op
   | EPolarityMismatch of {
       reason: 'loc virtual_reason;
@@ -382,8 +387,13 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EPropNotFound (prop, (r1, r2), op) ->
       EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op)
-  | EPropAccess ((r1, r2), prop, p, rw, op) ->
-      EPropAccess ((map_reason r1, map_reason r2), prop, p, rw, map_use_op op)
+  | EPropAccess { reason_prop; prop_name; rw; use_op } ->
+      EPropAccess {
+        reason_prop = map_reason reason_prop;
+        prop_name;
+        rw;
+        use_op = map_use_op use_op;
+      }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
        EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
   | EStrictLookupFailed ((r1, r2), r, p, op) ->
@@ -556,7 +566,8 @@ let util_use_op_of_msg nope util = function
 | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
   util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
 | EPropNotFound (prop, rs, op) -> util op (fun op -> EPropNotFound (prop, rs, op))
-| EPropAccess (rs, prop, p, rw, op) -> util op (fun op -> EPropAccess (rs, prop, p, rw, op))
+| EPropAccess { reason_prop; prop_name; rw; use_op } ->
+  util use_op (fun use_op -> EPropAccess { reason_prop; prop_name; rw; use_op })
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
 | EStrictLookupFailed (rs, r, p, Some op) ->
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
@@ -1070,8 +1081,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       PropMissing
         (loc_of_reason reason_prop, prop, reason_obj, use_op)
 
-    | EPropAccess (reasons, x, _, rw, use_op) ->
-      let (reason_prop, _) = reasons in
+    | EPropAccess { reason_prop; prop_name = x; rw; use_op } ->
       let rw = match rw with
       | Read -> "readable"
       | Write _ -> "writable"
