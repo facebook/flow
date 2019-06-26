@@ -117,7 +117,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:7:2
 
-array literal [1] is not an object.
+Incorrect arguments passed to call of method `call` because array literal [1] is not an object.
 
    apply.js:7:2
    7| (Object.assign.call({}, [{a: 1}, {b: 'foo'}]): {a: number, b: string}); // error
@@ -210,7 +210,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:5:1
 
-number [1] is not an object.
+Incorrect arguments passed to call of method `assign` because number [1] is not an object.
 
    non_objects.js:5:1
    5| Object.assign({a: "foo"}, 123);
