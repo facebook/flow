@@ -2646,25 +2646,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if TypeUtil.literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons (rl, ru) in
-        add_output cx ~trace
-          (Error_message.EExpectedStringLit (reasons, expected, actual, use_op))
+        (* TODO: ordered_reasons should not be necessary *)
+        let rl, ru = FlowError.ordered_reasons (rl, ru) in
+        add_output cx ~trace (Error_message.EExpectedStringLit {
+          reason_lower = rl;
+          reason_upper = ru;
+          use_op;
+        })
 
     | DefT (rl, _, NumT actual), UseT (use_op, DefT (ru, _, SingletonNumT expected)) ->
       if TypeUtil.number_literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons (rl, ru) in
-        add_output cx ~trace
-          (Error_message.EExpectedNumberLit (reasons, expected, actual, use_op))
+        (* TODO: ordered_reasons should not be necessary *)
+        let rl, ru = FlowError.ordered_reasons (rl, ru) in
+        add_output cx ~trace (Error_message.EExpectedNumberLit {
+          reason_lower = rl;
+          reason_upper = ru;
+          use_op;
+        })
 
     | DefT (rl, _, BoolT actual), UseT (use_op, DefT (ru, _, SingletonBoolT expected)) ->
       if TypeUtil.boolean_literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons (rl, ru) in
-        add_output cx ~trace
-          (Error_message.EExpectedBooleanLit (reasons, expected, actual, use_op))
+        (* TODO: ordered_reasons should not be necessary *)
+        let rl, ru = FlowError.ordered_reasons (rl, ru) in
+        add_output cx ~trace (Error_message.EExpectedBooleanLit {
+          reason_lower = rl;
+          reason_upper = ru;
+          use_op;
+        })
 
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
@@ -4564,8 +4576,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_unify cx trace ~use_op ~unify_any:true l u
 
     (* non-class/function values used in annotations are errors *)
-    | _, UseT (_, DefT (ru, _, TypeT _)) ->
-      add_output cx ~trace (Error_message.EValueUsedAsType (reason_of_t l, ru))
+    | _, UseT (_, DefT (_, _, TypeT _)) ->
+      add_output cx ~trace (Error_message.EValueUsedAsType (reason_of_t l))
 
     | DefT (rl, _, ClassT l), UseT (use_op, DefT (_, _, ClassT u)) ->
       rec_flow cx trace (
@@ -5343,11 +5355,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | ReadElem _ | CallElem _ -> ()
         (* This isn't *)
         | WriteElem _ ->
-          let reasons = (reason, reason_tup) in
           let error =
             match ts with
-            | Some _ -> Error_message.ETupleUnsafeWrite (reasons, use_op)
-            | None -> Error_message.EROArrayWrite (reasons, use_op)
+            | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
+            | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
           in
           add_output
             cx
@@ -11932,7 +11943,6 @@ and object_kit =
      * new uses of the object kit resolution code is found. *)
     | t ->
       add_output cx ~trace (Error_message.EInvalidObjectKit {
-        tool;
         reason = reason_of_t t;
         reason_op = reason;
         use_op;

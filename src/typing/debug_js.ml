@@ -2506,44 +2506,21 @@ let dump_error_message =
           (dump_reason cx reason_arity)
           min_arity
           max_arity
-    | EValueUsedAsType (reason1, reason2) ->
-        spf "EValueUsedAsType (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-    | EExpectedStringLit ((reason1, reason2), expected, literal, use_op) ->
-        let literal = match literal with
-        | Literal (_, str) -> spf "%S" str
-        | Truthy -> "truthy"
-        | AnyLiteral -> "any"
-        in
-        spf "EExpectedStringLit ((%s, %s), %S, %S, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          expected
-          literal
+    | EValueUsedAsType reason -> spf "EValueUsedAsType (%s)" (dump_reason cx reason)
+    | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+        spf "EExpectedStringLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
           (string_of_use_op use_op)
-    | EExpectedNumberLit ((reason1, reason2), (_, expected), literal, use_op) ->
-        let literal = match literal with
-        | Literal (_, (_, raw)) -> spf "%S" raw
-        | Truthy -> "truthy"
-        | AnyLiteral -> "any"
-        in
-        spf "EExpectedNumberLit ((%s, %s), %s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          expected
-          literal
+    | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+        spf "EExpectedNumberLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
           (string_of_use_op use_op)
-    | EExpectedBooleanLit ((reason1, reason2), expected, literal, use_op) ->
-        let literal = match literal with
-        | Some b -> spf "%b" b
-        | None -> "any"
-        in
-        spf "EExpectedBooleanLit ((%s, %s), %b, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          expected
-          literal
+    | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+        spf "EExpectedBooleanLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
           (string_of_use_op use_op)
     | EPropNotFound (prop, (prop_reason, obj_reason), use_op) ->
         spf "EPropNotFound (%s, %s, %s, %s)"
@@ -2607,10 +2584,9 @@ let dump_error_message =
           (dump_reason cx reason2)
           arity1 arity2
           (string_of_use_op use_op)
-    | ETupleUnsafeWrite ((reason1, reason2), use_op) ->
-        spf "ETupleUnsafeWrite (%s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+    | ETupleUnsafeWrite { reason; use_op } ->
+        spf "ETupleUnsafeWrite { reason = %s; use_op = %s }"
+          (dump_reason cx reason)
           (string_of_use_op use_op)
     | EROArrayWrite ((reason1, reason2), use_op) ->
         spf "EROArrayWrite (%s, %s, %s)"
@@ -2735,7 +2711,7 @@ let dump_error_message =
         spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_aloc loc)
-    | EInvalidObjectKit { reason; reason_op; use_op; _ } ->
+    | EInvalidObjectKit { reason; reason_op; use_op } ->
         spf "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)

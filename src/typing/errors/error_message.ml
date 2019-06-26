@@ -53,14 +53,22 @@ and 'loc t' =
   | EOnlyDefaultExport of 'loc virtual_reason * string * string
   | ENoNamedExport of 'loc virtual_reason * string * string * string option
   | EMissingTypeArgs of { reason_tapp: 'loc virtual_reason; reason_arity: 'loc virtual_reason; min_arity: int; max_arity: int }
-  | EValueUsedAsType of ('loc virtual_reason * 'loc virtual_reason)
-  | EExpectedStringLit of ('loc virtual_reason * 'loc virtual_reason) * string * string Type.literal * 'loc virtual_use_op
-  | EExpectedNumberLit of
-      ('loc virtual_reason * 'loc virtual_reason) *
-      Type.number_literal *
-      Type.number_literal Type.literal *
-      'loc virtual_use_op
-  | EExpectedBooleanLit of ('loc virtual_reason * 'loc virtual_reason) * bool * bool option * 'loc virtual_use_op
+  | EValueUsedAsType of 'loc virtual_reason
+  | EExpectedStringLit of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
+  | EExpectedNumberLit of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
+  | EExpectedBooleanLit of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EPropNotFound of string option * ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EPropAccess of ('loc virtual_reason * 'loc virtual_reason) * string option * Polarity.t * Type.rw * 'loc virtual_use_op
   | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Polarity.t * Polarity.t) * 'loc virtual_use_op
@@ -77,7 +85,7 @@ and 'loc t' =
   | ETupleArityMismatch of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | ETupleOutOfBounds of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
-  | ETupleUnsafeWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
+  | ETupleUnsafeWrite of { reason: 'loc virtual_reason; use_op: 'loc virtual_use_op }
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
@@ -137,7 +145,11 @@ and 'loc t' =
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
   | EUnreachable of 'loc
-  | EInvalidObjectKit of { tool: Object.tool; reason: 'loc virtual_reason; reason_op: 'loc virtual_reason; use_op: 'loc virtual_use_op }
+  | EInvalidObjectKit of {
+      reason: 'loc virtual_reason;
+      reason_op: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EInvalidTypeof of 'loc * string
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
@@ -350,12 +362,24 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EIncompatibleProp {use_op; prop; reason_prop; reason_obj; special} ->
       EIncompatibleProp {use_op = Option.map ~f:map_use_op use_op;
         prop; reason_prop = map_reason reason_prop; reason_obj = map_reason reason_obj; special}
-  | EExpectedStringLit ((r1, r2), u, l, op) ->
-      EExpectedStringLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
-  | EExpectedNumberLit ((r1, r2), u, l, op) ->
-      EExpectedNumberLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
-  | EExpectedBooleanLit ((r1, r2), u, l, op) ->
-      EExpectedBooleanLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
+  | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+      EExpectedStringLit {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
+  | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+      EExpectedNumberLit {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
+  | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+      EExpectedBooleanLit {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
   | EPropNotFound (prop, (r1, r2), op) ->
       EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op)
   | EPropAccess ((r1, r2), prop, p, rw, op) ->
@@ -374,8 +398,8 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       ENonLitArrayToTuple ((map_reason r1, map_reason r2), map_use_op op)
   | ETupleOutOfBounds ((r1, r2), l, i, op) ->
       ETupleOutOfBounds ((map_reason r1, map_reason r2), l, i, map_use_op op)
-  | ETupleUnsafeWrite ((r1, r2), op) ->
-      ETupleUnsafeWrite ((map_reason r1, map_reason r2), map_use_op op)
+  | ETupleUnsafeWrite { reason; use_op } ->
+      ETupleUnsafeWrite { reason = map_reason reason; use_op = map_use_op use_op }
   | EROArrayWrite ((r1, r2), op) ->
       EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
@@ -389,8 +413,8 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op}
   | EIncompatibleWithShape (l, u, use_op) ->
       EIncompatibleWithShape (map_reason l, map_reason u, map_use_op use_op)
-  | EInvalidObjectKit {tool; reason; reason_op; use_op} ->
-      EInvalidObjectKit {tool; reason = map_reason reason;
+  | EInvalidObjectKit {reason; reason_op; use_op} ->
+      EInvalidObjectKit {reason = map_reason reason;
         reason_op = map_reason reason_op; use_op = map_use_op use_op}
   | EIncompatibleWithUseOp (rl, ru, op) ->
       EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
@@ -411,7 +435,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMissingTypeArgs {reason_tapp; reason_arity; min_arity; max_arity} ->
       EMissingTypeArgs {reason_tapp=map_reason reason_tapp; reason_arity=map_reason reason_arity;
         min_arity; max_arity}
-  | EValueUsedAsType (r1, r2) -> EValueUsedAsType (map_reason r1, map_reason r2)
+  | EValueUsedAsType reason -> EValueUsedAsType (map_reason reason)
   | EPolarityMismatch {reason; name; expected_polarity; actual_polarity} ->
       EPolarityMismatch {reason = map_reason reason; name; expected_polarity; actual_polarity}
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
@@ -525,9 +549,12 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op ->
       EIncompatibleProp {use_op=Some use_op; prop; reason_prop; reason_obj; special}))
 | ETrustIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> ETrustIncompatibleWithUseOp (rl, ru, op))
-| EExpectedStringLit (rs, u, l, op) -> util op (fun op -> EExpectedStringLit (rs, u, l, op))
-| EExpectedNumberLit (rs, u, l, op) -> util op (fun op -> EExpectedNumberLit (rs, u, l, op))
-| EExpectedBooleanLit (rs, u, l, op) -> util op (fun op -> EExpectedBooleanLit (rs, u, l, op))
+| EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+  util use_op (fun use_op -> EExpectedStringLit { reason_lower; reason_upper; use_op })
+| EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+  util use_op (fun use_op -> EExpectedNumberLit { reason_lower; reason_upper; use_op })
+| EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+  util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
 | EPropNotFound (prop, rs, op) -> util op (fun op -> EPropNotFound (prop, rs, op))
 | EPropAccess (rs, prop, p, rw, op) -> util op (fun op -> EPropAccess (rs, prop, p, rw, op))
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
@@ -538,7 +565,8 @@ let util_use_op_of_msg nope util = function
 | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
 | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
 | ETupleOutOfBounds (rs, l, i, op) -> util op (fun op -> ETupleOutOfBounds (rs, l, i, op))
-| ETupleUnsafeWrite (rs, op) -> util op (fun op -> ETupleUnsafeWrite (rs, op))
+| ETupleUnsafeWrite { reason; use_op } ->
+  util use_op (fun use_op -> ETupleUnsafeWrite { reason; use_op })
 | EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
 | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
   util use_op (fun use_op -> EUnionSpeculationFailed {use_op; reason; reason_op; branches})
@@ -547,8 +575,8 @@ let util_use_op_of_msg nope util = function
   util use_op (fun use_op -> EInvalidCharSet {invalid; valid; use_op})
 | EIncompatibleWithShape (l, u, use_op) ->
   util use_op (fun use_op -> EIncompatibleWithShape (l, u, use_op))
-| EInvalidObjectKit {tool; reason; reason_op; use_op} ->
-  util use_op (fun use_op -> EInvalidObjectKit {tool; reason; reason_op; use_op})
+| EInvalidObjectKit {reason; reason_op; use_op} ->
+  util use_op (fun use_op -> EInvalidObjectKit {reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
 | EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
@@ -562,7 +590,7 @@ let util_use_op_of_msg nope util = function
 | EOnlyDefaultExport (_, _, _)
 | ENoNamedExport (_, _, _, _)
 | EMissingTypeArgs {reason_tapp=_; reason_arity=_; min_arity=_; max_arity=_}
-| EValueUsedAsType (_, _)
+| EValueUsedAsType _
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
 | EStrictLookupFailed (_, _, _, None)
 | EComparison (_, _)
@@ -647,7 +675,7 @@ let util_use_op_of_msg nope util = function
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
   determined while locations are abstract. We just return None in this case. *)
 let aloc_of_msg : t -> ALoc.t option = function
-  | EValueUsedAsType (primary, _)
+  | EValueUsedAsType primary
   | EComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
   | EDynamicExport (_, primary)
@@ -839,7 +867,7 @@ let mk_prop_message = Errors.Friendly.(function
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
 type 'loc friendly_message_recipe =
-  | IncompatibleUse of 'loc * 'loc upper_kind * 'loc Reason.virtual_reason * 'loc Reason.virtual_reason 
+  | IncompatibleUse of 'loc * 'loc upper_kind * 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
       * 'loc Type.virtual_use_op
   | Speculation of 'loc * 'loc Type.virtual_use_op * ('loc Reason.virtual_reason * t) list
   | Incompatible of 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
@@ -1021,24 +1049,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text (spf "%n type argument%s." n (if n == 1 then "" else "s"));
         ]
 
-    | EValueUsedAsType reasons ->
-      let (value, _) = reasons in
+    | EValueUsedAsType value ->
       Normal [
         text "Cannot use "; desc value; text " as a type because ";
         desc value; text " is a value. To get the type of ";
         text "a value use "; code "typeof"; text ".";
       ]
 
-    | EExpectedStringLit (reasons, _, _, use_op) ->
-      let (reason_lower, reason_upper) = reasons in
+    | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
       Incompatible (reason_lower, reason_upper, use_op)
 
-    | EExpectedNumberLit (reasons, _, _, use_op) ->
-      let (reason_lower, reason_upper) = reasons in
+    | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
       Incompatible (reason_lower, reason_upper, use_op)
 
-    | EExpectedBooleanLit (reasons, _, _, use_op) ->
-      let (reason_lower, reason_upper) = reasons in
+    | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
       Incompatible (reason_lower, reason_upper, use_op)
 
     | EPropNotFound (prop, reasons, use_op) ->
@@ -1129,9 +1153,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           length (if length == 1 then "" else "s") index);
       ], use_op)
 
-    | ETupleUnsafeWrite (reasons, use_op) ->
-      let (lower, _) = reasons in
-      UseOp (loc_of_reason lower,
+    | ETupleUnsafeWrite { reason; use_op } ->
+      UseOp (loc_of_reason reason,
         [text "the index must be statically known to write a tuple element"],
         use_op)
 
@@ -1600,7 +1623,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnreachable _ ->
       Normal [text "Unreachable code."]
 
-    | EInvalidObjectKit { tool=_; reason; reason_op=_; use_op } ->
+    | EInvalidObjectKit { reason; reason_op=_; use_op } ->
       UseOp (loc_of_reason reason, [ref reason; text " is not an object"], use_op)
 
     | EInvalidTypeof (_, typename) ->
