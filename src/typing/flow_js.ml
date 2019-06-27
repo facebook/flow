@@ -10516,7 +10516,7 @@ and finish_resolve_spread_list =
 
   in
 
-  let finish_array cx ?trace ~reason_op ~resolve_to resolved elemt tout =
+  let finish_array cx ~use_op ?trace ~reason_op ~resolve_to resolved elemt tout =
     (* Did `any` flow to one of the rest parameters? If so, we need to resolve
      * to a type that is both a subtype and supertype of the desired type. *)
     let result = if spread_resolved_to_any resolved
@@ -10587,7 +10587,7 @@ and finish_resolve_spread_list =
          tvar instead of a union here doesn't conflict with those plans.
       *)
       TypeExSet.elements tset |> List.iter (fun t ->
-        flow cx (t, UseT (unknown_use, elemt)));
+        flow cx (t, UseT (use_op, elemt)));
 
       match tuple_types, resolve_to with
       | _, `Array ->
@@ -10600,7 +10600,7 @@ and finish_resolve_spread_list =
           DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
     end in
 
-    flow_opt_t cx ?trace (result, tout)
+    flow_opt_t cx ~use_op ?trace (result, tout)
   in
 
   (* If there are no spread elements or if all the spread elements resolved to
@@ -10739,11 +10739,11 @@ and finish_resolve_spread_list =
   fun cx ?trace ~use_op ~reason_op resolved resolve_to -> (
     match resolve_to with
     | ResolveSpreadsToTuple (_, elem_t, tout)->
-      finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved elem_t tout
+      finish_array cx ~use_op ?trace ~reason_op ~resolve_to:`Tuple resolved elem_t tout
     | ResolveSpreadsToArrayLiteral (_, elem_t, tout) ->
-      finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved elem_t tout
+      finish_array cx ~use_op ?trace ~reason_op ~resolve_to:`Literal resolved elem_t tout
     | ResolveSpreadsToArray (elem_t, tout) ->
-      finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved elem_t tout
+      finish_array cx ~use_op ?trace ~reason_op ~resolve_to:`Array resolved elem_t tout
     | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
       finish_multiflow_partial cx ?trace ~use_op ~reason_op ft call_reason resolved tout
     | ResolveSpreadsToMultiflowCallFull (_, ft) ->
@@ -11143,8 +11143,8 @@ and flow_opt cx ?trace (t1, t2) =
         Trace.rec_trace ~max t1 t2 trace in
   __flow cx (t1, t2) trace
 
-and flow_opt_t cx ?trace (t1, t2) =
-  flow_opt cx ?trace (t1, UseT (unknown_use, t2))
+and flow_opt_t cx ?(use_op=unknown_use) ?trace (t1, t2) =
+  flow_opt cx ?trace (t1, UseT (use_op, t2))
 
 (* Externally visible function for subtyping. *)
 (* Calls internal entry point and traps runaway recursion. *)
