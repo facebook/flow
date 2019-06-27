@@ -299,24 +299,69 @@ foo([]);
 
 ### Callable Objects <a class="toc" id="toc-callable-objects" href="#toc-callable-objects"></a>
 
-Callable objects can be typed, for example:
+You can annotate functions as callable objects, i.e.,
 
 ```js
-type CallableObj = {
-  (number, number): number,
-  bar: string
+type F = {
+  (): string,
 };
 
-function add(x, y) {
-  return x + y; 
+const f: F = () => 'hello';
+```
+
+A function or a callable object may have multiple callable properties, also known as _overloading_.
+
+Note that a few syntax are supported when annotating callable properties:
+
+```js
+type F = {
+  (): string,   
+  (x: boolean): string,
+  [[call]](x: number): string,   
+  [[call]]: string => string,
+};
+
+// It will be fine when a function satisfies them all
+const f: F = (x?: boolean | number | string) => {
+  return x ? x.toString() : '';
 }
 
-// $ExpectError
-(add: CallableObj);
+// And Flow will notice when the function doesn't satisfy them all
+const g: F = (x?: number | string) => { // $ExpectError
+  return x ? x.toString() : '';
+}
+```
 
-add.bar = "hello world";
+Callable objects can be viewed equivalently as functions with static fields. Function type statics are initially `{}`. Flow will notice when you annotate a variable as function type and try to access its statics without annotation.
 
-(add: CallableObj);
+```js
+type F = () => void;
+
+const f: F = () => {
+  f.foo = 'bar'; // $ExpectError "missing in statics of function type"
+}
+```
+
+You can annotate function with statics as objects with callable fields. This can be useful when annotating a memoized function:
+
+```js
+type MemoizedFactorial = {
+  cache: {
+    [number]: number,
+  },
+  [[call]](number): number,
+}
+
+const factorial: MemoizedFactorial = n => {
+  if (!factorial.cache) {
+    factorial.cache = {}
+  }
+  if (factorial.cache[n] !== undefined) {
+    return factorial.cache[n]
+  }
+  factorial.cache[n] = n === 0 ? 1 : n * factorial(n - 1)
+  return factorial.cache[n]
+}
 ```
 
 ### `Function` Type <a class="toc" id="toc-function-type" href="#toc-function-type"></a>
