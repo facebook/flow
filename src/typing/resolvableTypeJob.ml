@@ -298,10 +298,13 @@ and collect_of_destructor ?log_unresolved cx reason acc = function
     -> acc
 
 and collect_of_type_map ?log_unresolved cx reason acc = function
-  | TupleMap t 
-  | ObjectMap (t, _)
-  | ObjectMapi (t, _) ->
+  | ObjectMap (t, None)
+  | ObjectMapi (t, None)
+  | TupleMap t ->
     collect_of_type ?log_unresolved cx reason acc t
+  | ObjectMap (t, Some t2)
+  | ObjectMapi (t, Some t2) ->
+    collect_of_types ?log_unresolved cx reason acc [t; t2]
 
 (* TODO: Support for use types is currently sketchy. Full resolution of use
    types are only needed for choice-making on intersections. We care about

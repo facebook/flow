@@ -1222,11 +1222,19 @@ and json_of_type_map_impl json_cx = Hh_json.(function
   | TupleMap t -> JSON_Object [
       "tupleMap", _json_of_t json_cx t;
     ]
-  | ObjectMap (t, _) -> JSON_Object [
+  | ObjectMap (t, None) -> JSON_Object [
       "objectMap", _json_of_t json_cx t;
     ]
-  | ObjectMapi (t, _) -> JSON_Object [
+  | ObjectMap (t, Some t2) -> JSON_Object [
+      "objectMap", _json_of_t json_cx t;
+      "objectMapParams", _json_of_t json_cx t2;
+    ]
+  | ObjectMapi (t, None) -> JSON_Object [
       "objectMapi", _json_of_t json_cx t;
+    ]
+  | ObjectMapi (t, Some t2) -> JSON_Object [
+      "objectMapi", _json_of_t json_cx t;
+      "objectMapiParams", _json_of_t json_cx t2;
     ]
 )
 

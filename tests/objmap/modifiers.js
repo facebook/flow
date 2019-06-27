@@ -5,16 +5,16 @@ type Id = <T>(T) => T;
 type Partial<T: {}> = $ObjMap<T, Id, { optional: true }>;
 type Required<T: {}> = $ObjMap<T, Id, { optional: false }>;
 
-type Readonly<T: {}> = $ObjMap<T, Id, { polarity: '+' }>;
-type Writeonly<T: {}> = $ObjMap<T, Id, { polarity: '-' }>;
-type ReadWrite<T: {}> = $ObjMap<T, Id, { polarity: 'N' }>;
+type Readonly<T: {}> = $ObjMap<T, Id, { polarity: "+" }>;
+type Writeonly<T: {}> = $ObjMap<T, Id, { polarity: "-" }>;
+type ReadWrite<T: {}> = $ObjMap<T, Id, { polarity: "N" }>;
 
 type T = {| a: number, b: string |};
-type TP = {| a?: number, b ?: string |};
+type TP = {| a?: number, b?: string |};
 type TR = {| +a: number, +b: string |};
 type TW = {| -a: number, -b: string |};
-type TPR = {| +a ?: number, +b ?: string |};
-type TPW = {| -a ?: number, -b ?: string |};
+type TPR = {| +a?: number, +b?: string |};
+type TPW = {| -a?: number, -b?: string |};
 
 var v02: TP;
 var v02: $ObjMap<T, Id, { optional: true }>;
@@ -22,17 +22,17 @@ var v02: Partial<T>;
 var v02: $ObjMap<TP, Id>;
 
 var v03: TR;
-var v03: $ObjMap<T, Id, { polarity: '+' }>;
+var v03: $ObjMap<T, Id, { polarity: "+" }>;
 var v03: Readonly<T>;
 var v03: $ObjMap<TR, Id>;
 
 var v04: TW;
-var v04: $ObjMap<T, Id, { polarity: '-' }>;
+var v04: $ObjMap<T, Id, { polarity: "-" }>;
 var v04: Writeonly<T>;
 var v04: $ObjMap<TW, Id>;
 
 var v05: TPR;
-var v05: $ObjMap<T, Id, { optional: true, polarity: '+' }>;
+var v05: $ObjMap<T, Id, { optional: true, polarity: "+" }>;
 var v05: Partial<TR>;
 var v05: Readonly<TP>;
 var v05: Partial<Readonly<T>>;
@@ -40,7 +40,7 @@ var v05: Readonly<Partial<T>>;
 var v05: $ObjMap<TPR, Id>;
 
 var v06: TPW;
-var v06: $ObjMap<T, Id, { optional: true, polarity: '-' }>;
+var v06: $ObjMap<T, Id, { optional: true, polarity: "-" }>;
 var v06: Partial<TW>;
 var v06: Writeonly<TP>;
 var v06: Partial<Writeonly<T>>;
@@ -53,8 +53,8 @@ type B = { a: { x: number }, b: { x: string } };
 type BP = { a?: { x: number }, b?: { x: string } };
 type BR = { +a: { x: number }, +b: { x: string } };
 type BW = { -a: { x: number }, -b: { x: string } };
-type BPR = { +a ?: { x: number }, +b ?: { x: string } };
-type BPW = { -a ?: { x: number }, -b ?: { x: string } };
+type BPR = { +a?: { x: number }, +b?: { x: string } };
+type BPW = { -a?: { x: number }, -b?: { x: string } };
 
 var b01: B;
 var b01: $ObjMap<B, Id>;
@@ -65,17 +65,17 @@ var b02: Partial<B>;
 var b02: $ObjMap<BP, Id>;
 
 var b03: BR;
-var b03: $ObjMap<B, Id, { polarity: '+' }>;
+var b03: $ObjMap<B, Id, { polarity: "+" }>;
 var b03: Readonly<B>;
 var b03: $ObjMap<BR, Id>;
 
 var b04: BW;
-var b04: $ObjMap<B, Id, { polarity: '-' }>;
+var b04: $ObjMap<B, Id, { polarity: "-" }>;
 var b04: Writeonly<B>;
 var b04: $ObjMap<BW, Id>;
 
 var b05: BPR;
-var b05: $ObjMap<B, Id, { optional: true, polarity: '+' }>;
+var b05: $ObjMap<B, Id, { optional: true, polarity: "+" }>;
 var b05: Partial<BR>;
 var b05: Readonly<BP>;
 var b05: Partial<Readonly<B>>;
@@ -83,7 +83,7 @@ var b05: Readonly<Partial<B>>;
 var b05: $ObjMap<BPR, Id>;
 
 var b06: BPW;
-var b06: $ObjMap<B, Id, { optional: true, polarity: '-' }>;
+var b06: $ObjMap<B, Id, { optional: true, polarity: "-" }>;
 var b06: Partial<BW>;
 var b06: Writeonly<BP>;
 var b06: Partial<Writeonly<B>>;
@@ -119,22 +119,22 @@ var foo1: $ObjMap<T, Id, boolean>;
 var foo1: $ObjMap<T, Id, string>;
 var foo1: $ObjMap<T, Id, string>;
 
-type Config = { polarity: '+' }
+type Config = { polarity: "+" };
 var foo2: { +a: string }; // not ok
-var foo2: $ObjMap<{ a: string }, Id, Config>; // TODO: doesn't support aliases / generics
+var foo2: $ObjMap<{ a: string }, Id, Config>;
 
-type Polarity<T: {}, K: '-' | '+' | 'N' > = $ObjMap<T, Id, { polarity: K }>;
+type Polarity<T: {}, K: "-" | "+" | "N"> = $ObjMap<T, Id, { polarity: K }>;
 var foo3: { +a: string }; // not ok
-var foo3: Polarity<{ a: string }, '+'>; // TODO: doesn't support aliases / generics
+var foo3: Polarity<{ a: string }, "+">;
 
-var foo4: {+a: 'a', +b: 'b'}
-var foo4: $ObjMapi<{ a: string, b: string }, <K>(K) => K, { polarity: '+' }>
+var foo4: { +a: "a", +b: "b" };
+var foo4: $ObjMapi<{ a: string, b: string }, <K>(K) => K, { polarity: "+" }>;
 
 var foo5: { a: string, b: string };
-var foo5: ReadWrite<{+a: string, +b: string}>;
-var foo5: ReadWrite<{-a: string, +b: string}>;
-var foo5: ReadWrite<{+a: string, -b: string}>;
-var foo5: ReadWrite<{-a: string, -b: string}>;
+var foo5: ReadWrite<{ +a: string, +b: string }>;
+var foo5: ReadWrite<{ -a: string, +b: string }>;
+var foo5: ReadWrite<{ +a: string, -b: string }>;
+var foo5: ReadWrite<{ -a: string, -b: string }>;
 
 var foo6: { a: string, b: string };
 var foo6: Required<{ a?: string, b?: string }>;

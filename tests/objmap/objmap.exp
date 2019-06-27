@@ -324,7 +324,7 @@ Property `a` is read-only in object type [1] but writable in object type [2].
 
 References:
    modifiers.js:124:11
-   124| var foo2: $ObjMap<{ a: string }, Id, Config>; // TODO: doesn't support aliases / generics
+   124| var foo2: $ObjMap<{ a: string }, Id, Config>;
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -338,7 +338,7 @@ Property `a` is read-only in object type [1] but writable in object type [2].
 
 References:
    modifiers.js:128:11
-   128| var foo3: Polarity<{ a: string }, '+'>; // TODO: doesn't support aliases / generics
+   128| var foo3: Polarity<{ a: string }, "+">;
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
