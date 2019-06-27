@@ -31,7 +31,6 @@
   (libraries
     heap_libc
     logging_common
-    relative_path
     utils_core
     worker_cancel))
 
