@@ -568,7 +568,7 @@ let parse_completionItem (params: json option) : CompletionItemResolve.params =
     detail = Jget.string_opt params "detail";
     inlineDetail = Jget.string_opt params "inlineDetail";
     itemType = Jget.string_opt params "itemType";
-    documentation = Jget.string_opt params "documentation";
+    documentation = None;
     sortText = Jget.string_opt params "sortText";
     filterText = Jget.string_opt params "filterText";
     insertText = Jget.string_opt params "insertText";
@@ -579,6 +579,10 @@ let parse_completionItem (params: json option) : CompletionItemResolve.params =
     data = Jget.obj_opt params "data"
   }
 
+let string_of_markedString (acc: string) (marked: markedString): string =
+  match marked with
+  | MarkedCode (lang, code) -> (acc ^ "```" ^ lang ^ "\n" ^ code ^ "\n" ^ "```\n")
+  | MarkedString str -> (acc ^ str ^ "\n")
 
 let print_completionItem (item: Completion.completionItem) : json =
   let open Completion in
@@ -588,7 +592,12 @@ let print_completionItem (item: Completion.completionItem) : json =
     "detail", Option.map item.detail string_;
     "inlineDetail", Option.map item.inlineDetail string_;
     "itemType", Option.map item.itemType string_;
-    "documentation", Option.map item.documentation string_;
+    "documentation", Option.map item.documentation
+      ~f:(fun doc -> JSON_Object [
+        ("kind", JSON_String "markdown");
+        ("value", JSON_String (String.trim
+          (List.fold doc ~init:"" ~f:string_of_markedString)));
+      ]);
     "sortText", Option.map item.sortText string_;
     "filterText", Option.map item.filterText string_;
     "insertText", Option.map item.insertText string_;
