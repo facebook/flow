@@ -14,10 +14,10 @@ export default suite(({addFile, flowCmd}) => [
       'foo_parse_fail.js',
     ).stdout(
        `
-         hasOwnProperty (prop: any) => boolean
-         isPrototypeOf (o: any) => boolean
+         hasOwnProperty (prop: mixed) => boolean
+         isPrototypeOf (o: mixed) => boolean
          num number
-         propertyIsEnumerable (prop: any) => boolean
+         propertyIsEnumerable (prop: mixed) => boolean
          str string
          toLocaleString () => string
          toString () => string
@@ -38,13 +38,13 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -52,17 +52,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 76,
                "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -70,7 +70,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 77,
                "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "num",
@@ -84,13 +84,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -98,7 +98,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 78,
                "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "str",
@@ -1030,13 +1030,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1044,17 +1044,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 76,
                "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1062,17 +1062,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 77,
                "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1080,7 +1080,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 78,
                "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -1165,13 +1165,13 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1179,17 +1179,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 76,
                "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1197,17 +1197,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 77,
                "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1215,7 +1215,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 78,
                "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -1453,13 +1453,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1467,17 +1467,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 76,
                "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1485,17 +1485,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 77,
                "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1503,7 +1503,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 78,
                "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -1578,13 +1578,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1592,17 +1592,17 @@ export default suite(({addFile, flowCmd}) => [
                "line": 76,
                "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1610,7 +1610,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 77,
                "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "o",
@@ -1624,13 +1624,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
@@ -1638,7 +1638,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 78,
                "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -1893,13 +1893,13 @@ export default suite(({addFile, flowCmd}) => [
          "result": [
            {
              "name": "hasOwnProperty",
-             "type": "(prop: any) => boolean",
+             "type": "(prop: mixed) => boolean",
              "func_details": {
                "return_type": "boolean",
                "params": [
                  {
                    "name": "prop",
-                   "type": "any"
+                   "type": "mixed"
                  }
                ]
              },
@@ -1907,17 +1907,17 @@ export default suite(({addFile, flowCmd}) => [
              "line": 76,
              "endline": 76,
              "start": 5,
-             "end": 38
+             "end": 40
            },
            {
              "name": "isPrototypeOf",
-             "type": "(o: any) => boolean",
+             "type": "(o: mixed) => boolean",
              "func_details": {
                "return_type": "boolean",
                "params": [
                  {
                    "name": "o",
-                   "type": "any"
+                   "type": "mixed"
                  }
                ]
              },
@@ -1925,7 +1925,7 @@ export default suite(({addFile, flowCmd}) => [
              "line": 77,
              "endline": 77,
              "start": 5,
-             "end": 34
+             "end": 36
            },
            {
              "name": "num",
@@ -1939,13 +1939,13 @@ export default suite(({addFile, flowCmd}) => [
            },
            {
              "name": "propertyIsEnumerable",
-             "type": "(prop: any) => boolean",
+             "type": "(prop: mixed) => boolean",
              "func_details": {
                "return_type": "boolean",
                "params": [
                  {
                    "name": "prop",
-                   "type": "any"
+                   "type": "mixed"
                  }
                ]
              },
@@ -1953,7 +1953,7 @@ export default suite(({addFile, flowCmd}) => [
              "line": 78,
              "endline": 78,
              "start": 5,
-             "end": 44
+             "end": 46
            },
            {
              "name": "str",

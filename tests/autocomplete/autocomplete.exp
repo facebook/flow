@@ -1,7 +1,7 @@
-foo_parse_fail.js = hasOwnProperty (prop: any) => boolean
-isPrototypeOf (o: any) => boolean
+foo_parse_fail.js = hasOwnProperty (prop: mixed) => boolean
+isPrototypeOf (o: mixed) => boolean
 num number
-propertyIsEnumerable (prop: any) => boolean
+propertyIsEnumerable (prop: mixed) => boolean
 str string
 toLocaleString () => string
 toString () => string
@@ -10,23 +10,23 @@ foo.js = {
   "result":[
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"num",
@@ -40,13 +40,13 @@ foo.js = {
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"str",
@@ -641,33 +641,33 @@ union.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
@@ -707,33 +707,33 @@ fun.js = {
   "result":[
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
@@ -885,33 +885,33 @@ generics.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
@@ -959,23 +959,23 @@ optional.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"o",
@@ -989,13 +989,13 @@ optional.js = {
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
@@ -1640,23 +1640,23 @@ class.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"name",
@@ -1670,13 +1670,13 @@ class.js = {
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
@@ -1752,33 +1752,33 @@ idx.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
@@ -1816,23 +1816,23 @@ generic_alias.js = {
   "result":[
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":76,
       "endline":76,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":77,
       "endline":77,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"name",
@@ -1846,13 +1846,13 @@ generic_alias.js = {
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
       "line":78,
       "endline":78,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
