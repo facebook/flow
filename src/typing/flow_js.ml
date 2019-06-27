@@ -10641,14 +10641,14 @@ and finish_resolve_spread_list =
         flatten r args (Some tset) rest
 
     in
-    fun cx r resolved ->
+    fun cx ~use_op r resolved ->
       let args, spread = flatten r [] None resolved in
       let spread = Option.map
         ~f:(fun tset ->
           let r = mk_reason RArray (aloc_of_reason r) in
           Tvar.mk_where cx r (fun tvar ->
             TypeExSet.elements tset
-            |> List.iter (fun t -> flow cx (t, UseT (unknown_use, tvar)))
+            |> List.iter (fun t -> flow cx (t, UseT (use_op, tvar)))
           )
         )
         spread
@@ -10668,7 +10668,7 @@ and finish_resolve_spread_list =
 
     let {params; rest_param; return_t; def_reason; _} = ft in
 
-    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+    let args, spread_arg = flatten_call_arg cx ~use_op reason_op resolved in
 
     let params, rest_param = multiflow_partial
       cx ~trace ~use_op reason_op ~is_strict:true ~def_reason ~spread_arg ~rest_param
@@ -10701,7 +10701,7 @@ and finish_resolve_spread_list =
 
     let {params; rest_param; def_reason; _} = ft in
 
-    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+    let args, spread_arg = flatten_call_arg cx ~use_op reason_op resolved in
     multiflow_full
       cx ~trace ~use_op reason_op ~is_strict ~def_reason
       ~spread_arg ~rest_param (args, params)
@@ -10715,7 +10715,7 @@ and finish_resolve_spread_list =
     | Some trace -> trace
     | None -> failwith "All multiflows show have a trace" in
 
-    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+    let args, spread_arg = flatten_call_arg cx ~use_op reason_op resolved in
     CustomFunKit.run cx trace ~use_op reason_op kind args spread_arg tout
   in
 
