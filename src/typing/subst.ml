@@ -90,14 +90,14 @@ let substituter = object(self)
         let xs = Option.value_exn xs in
         let inner_ = self#type_ cx (map, false, None) inner in
         let changed = changed || inner_ != inner in
-        if changed then DefT (reason, trust, PolyT (tparams_loc, xs, inner_, mk_id ())) else t
+        if changed then DefT (reason, trust, PolyT (tparams_loc, xs, inner_, Context.make_nominal cx)) else t
 
       | ThisClassT (reason, this) ->
         let map = SMap.remove "this" map in
         let this_ = self#type_ cx (map, force, use_op) this in
         if this_ == this then t else ThisClassT (reason, this_)
 
-      | DefT (r, trust, TypeAppT (op, c, ts)) ->
+      | TypeAppT (r, op, c, ts) ->
         let c' = self#type_ cx map_cx c in
         let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
         if c == c' && ts == ts' then t else (
@@ -106,7 +106,7 @@ let substituter = object(self)
            * so we can point at the op which instantiated the types that
            * were substituted. *)
           let use_op = Option.value use_op ~default:op in
-          DefT (r, trust, TypeAppT (use_op, c', ts'))
+          TypeAppT (r, use_op, c', ts')
         )
 
       | EvalT (x, TypeDestructorT (op, r, d), _) ->

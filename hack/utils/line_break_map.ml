@@ -46,6 +46,7 @@ let make text =
 
 let offset_to_file_pos_triple bolmap offset =
   let len = Array.length bolmap in
+  if !curr_index >= len then curr_index := len - 1;
   let rec forward_search i =
     let offset_at_i = Array.unsafe_get bolmap i in
     if offset < offset_at_i then i - 1 else
@@ -73,7 +74,10 @@ let position_to_offset ?(existing = false)
   let len = Array.length bolmap in
   let file_line = line in
 
-  let line_start = Array.get bolmap (file_line - 1) in
+  (* Treat all file_line errors the same: Not_found *)
+  let line_start = try
+    Array.get bolmap (file_line - 1)
+  with _ -> raise Not_found in
   let offset = line_start + column - 1 in
 
   if not existing

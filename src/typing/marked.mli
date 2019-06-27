@@ -8,9 +8,9 @@ module type S = sig
   type t
   type key
   val empty: t
-  val add: key -> Type.polarity -> t -> (Type.polarity * t) option
-  val get: key -> t -> Type.polarity option
-  val mem: key -> Type.polarity -> t -> bool
+  val add: key -> Polarity.t -> t -> (Polarity.t * t) option
+  val get: key -> t -> Polarity.t option
+  val mem: key -> Polarity.t -> t -> bool
   val exclude: key -> t -> t
 end
 

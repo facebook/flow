@@ -24,6 +24,7 @@ let metadata = { Context.
   (* global *)
   max_literal_length = 100;
   enable_const_params = false;
+  enable_enums = true;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
@@ -37,6 +38,7 @@ let metadata = { Context.
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
+  recursion_limit = 10000;
   root = Path.dummy_path;
   strip_root = true;
   suppress_comments = [];
@@ -48,6 +50,7 @@ let metadata = { Context.
 (* somewhat copied from Flow_dot_js *)
 let parse_content file content =
   let parse_options = Some Parser_env.({
+    enums = true;
     esproposal_class_instance_fields = true;
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
@@ -112,7 +115,7 @@ let before_and_after_stmts file_name =
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
     Env.init_env cx module_scope;
-    let stmts = Core_list.map ~f:Ast_loc_utils.abstractify_mapper#statement stmts in
+    let stmts = Core_list.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
     let t_stmts =
       try
         Statement.toplevel_decls cx stmts;
@@ -196,7 +199,7 @@ let system_diff ~f prefix =
     | Error msg -> failwith msg
 
 let pp_diff =
-  let aloc_pp fmt x = Loc.pp fmt (ALoc.to_loc x) in
+  let aloc_pp fmt x = Loc.pp fmt (ALoc.to_loc_exn x) in
   let string_of_ast stmts =
       List.map (Flow_ast.Statement.show aloc_pp aloc_pp) stmts
       |> String.concat "\n"

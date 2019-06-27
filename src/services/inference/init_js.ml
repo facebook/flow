@@ -63,7 +63,7 @@ let parse_lib_file ~reader options file =
 
    returns list of (filename, success, errors, suppressions) tuples
  *)
-let load_lib_files ~master_cx ~options ~reader files =
+let load_lib_files ~sig_cx ~options ~reader files =
 
   let verbose = Options.verbose options in
 
@@ -87,20 +87,10 @@ let load_lib_files ~master_cx ~options ~reader files =
             { metadata with checked = false; weak = false }
           in
 
-          let sig_cx = Context.make_sig () in
           let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
-          Flow.mk_builtins cx;
 
           let syms = Infer.infer_lib_file cx ast
             ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig
-          in
-
-          Context.merge_into (Context.sig_cx master_cx) sig_cx;
-
-          let () =
-            let from_t = Context.find_module master_cx Files.lib_module_ref in
-            let to_t = Context.find_module cx Files.lib_module_ref in
-            Flow.flow_t master_cx (from_t, to_t)
           in
 
           let errors = Context.errors cx in
@@ -122,7 +112,6 @@ let load_lib_files ~master_cx ~options ~reader files =
 
           Context.remove_all_errors cx;
           Context.remove_all_error_suppressions cx;
-          Context.remove_all_lint_severities cx;
 
           (if verbose != None then
             prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -164,8 +153,8 @@ let load_lib_files ~master_cx ~options ~reader files =
    returns list of (lib file, success) pairs.
  *)
 let init ~options ~reader lib_files =
+  let sig_cx = Context.make_sig () in
   let master_cx =
-    let sig_cx = Context.make_sig () in
     let metadata =
       let open Context in
       let metadata = metadata_of_options options in
@@ -176,7 +165,7 @@ let init ~options ~reader lib_files =
 
   Flow_js.mk_builtins master_cx;
 
-  let%lwt result = load_lib_files ~master_cx ~options ~reader lib_files in
+  let%lwt result = load_lib_files ~sig_cx ~options ~reader lib_files in
 
   Flow.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
@@ -184,6 +173,7 @@ let init ~options ~reader lib_files =
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 
+  Context.remove_all_lint_severities master_cx;
   Context.clear_intermediates master_cx;
 
   (* store master signature context to heap *)

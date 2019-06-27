@@ -1,3 +1,18 @@
+declare.js:4:3 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"declare.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":18,"offset":27},
+    "end":{"line":3,"column":20,"offset":30}
+  },
+  "path":"declare.js",
+  "line":3,
+  "endline":3,
+  "start":18,
+  "end":20
+}
 function.js:4:3 = {
   "type":"() => void",
   "reasons":[],
@@ -57,6 +72,36 @@ function.js:16:3 = {
   "endline":16,
   "start":3,
   "end":3
+}
+default.js:4:16 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"default.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":16,"offset":36},
+    "end":{"line":4,"column":16,"offset":37}
+  },
+  "path":"default.js",
+  "line":4,
+  "endline":4,
+  "start":16,
+  "end":16
+}
+default.js:5:17 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"default.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":17,"offset":58},
+    "end":{"line":5,"column":17,"offset":59}
+  },
+  "path":"default.js",
+  "line":5,
+  "endline":5,
+  "start":17,
+  "end":17
 }
 function-poly-0.js:3:10 = {
   "type":"<T>(x: T) => T",

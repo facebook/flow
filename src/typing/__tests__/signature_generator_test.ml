@@ -511,6 +511,11 @@ let tests = "signature_generator" >::: ([
      "declare class C {foo(x?: string): void}";
      "export {C};"];
 
+  "class_extends_error" >:: mk_signature_generator_test
+    ["export class C extends (undefined: any) { }"]
+    ["declare class C extends $TEMPORARY$Super$FlowFixMe {}";
+     "export {C};"];
+
   "function_overloading" >:: mk_signature_generator_test
     ["declare function foo<T>(x: T): void;";
      "declare function foo<T,S>(x: T): void;";
@@ -633,8 +638,93 @@ let tests = "signature_generator" >::: ([
      "  a: null,";
      "  b: null,";
      "})"]
-    ["declare module.exports: $TEMPORARY$Object$freeze<";
-     "  {|a: $TEMPORARY$string<'a'>, b: $TEMPORARY$string<'b'>|},";
+    ["declare module.exports: $TEMPORARY$object<{|a: 'a', b: 'b'|}>;"];
+
+  "unusual_cjs_exports1" >:: mk_signature_generator_test
+    ["exports.wut = 'dead';";
+     "module.exports = { x: 42 };"]
+    ["declare module.exports: $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>;"];
+
+  "unusual_cjs_exports2" >:: mk_signature_generator_test
+    ["module.exports = { x: 42 };";
+     "module.exports.wut = 'wut';"]
+    ["declare module.exports: $TEMPORARY$module$exports$assign<";
+     "  $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>,";
+     "  {wut: $TEMPORARY$string<'wut'>, ...},";
      ">;"];
+
+  "unusual_cjs_exports3" >:: mk_signature_generator_test
+    ["module.exports = { x: 0xdead };";
+     "module.exports.wut = 'dead';";
+     "module.exports = { x: 42 };";
+     "module.exports.wut = 'wut';"]
+    ["declare module.exports: $TEMPORARY$module$exports$assign<";
+     "  $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>,";
+     "  {wut: $TEMPORARY$string<'wut'>, ...},";
+     ">;"];
+
+  "function_statics" >:: mk_signature_generator_test
+    ["function bar(): void { };";
+     "const x = 42;";
+     "bar.x = x;";
+     "module.exports = bar;"]
+    ["declare var bar: $TEMPORARY$function<() => void, {x: typeof x, ...}>;";
+     "declare var x: $TEMPORARY$number<42>;";
+     "";
+     "declare module.exports: typeof bar;"];
+
+  "function_predicates1" >:: mk_signature_generator_test
+    ["function foo(str: ?string): boolean %checks {";
+     "return str == null || str === '';";
+     "}";
+     "module.exports = foo;"]
+    ["declare function foo(str: ?string): boolean %checks(str == null || str === \"\");";
+     "declare module.exports: typeof foo;"];
+
+  "function_predicates2" >:: mk_signature_generator_test
+    ["declare function foo(str: ?string): boolean %checks(str == null || str === '');";
+     "module.exports = foo;"]
+    ["declare function foo(str: ?string): boolean %checks(str == null || str === \"\");";
+     "declare module.exports: typeof foo;"];
+
+  "function_predicates2" >:: mk_signature_generator_test
+    ["function foo1(x: ?string): boolean %checks { return x == null || x === ''; };";
+     "function foo2(x: ?string): boolean %checks { return foo1(x); }";
+     "module.exports = foo2;"]
+    ["declare function foo1(x: ?string): boolean %checks(x == null || x === \"\");";
+     "declare function foo2(x: ?string): boolean %checks(foo1(x));";
+     "declare module.exports: typeof foo2;"];
+
+  "function_predicates3" >:: mk_signature_generator_test
+    ["class A {};";
+     "function foo(x: mixed): boolean %checks { return x instanceof A; };";
+     "module.exports = foo;"]
+    ["declare class A {}";
+     "declare function foo(x: mixed): boolean %checks(x instanceof A);";
+     "declare module.exports: typeof foo;"];
+
+  "function_predicates4" >:: mk_signature_generator_test
+    ["function foo(x: mixed): boolean %checks { return typeof x === \"number\"; };";
+     "const obj = { foo };";
+     "function bar(x: mixed): boolean %checks { return obj.foo(x); };";
+     "module.exports = bar;"]
+    ["declare function foo(x: mixed): boolean %checks(typeof x === \"number\");";
+     "declare var obj: $TEMPORARY$object<{|foo: typeof foo|}>;";
+     "declare function bar(x: mixed): boolean %checks(obj.foo(x));";
+     "declare module.exports: typeof bar;"];
+
+  "destructure_annot" >:: mk_signature_generator_test
+     ["var { a }: { a: number } = { a: 0 };";
+      "module.exports = a"]
+     ["declare var a: typeof $1.a;";
+      "declare var $1: {a: number};";
+      "declare module.exports: typeof a;"];
+
+  "destructure_annot2" >:: mk_signature_generator_test
+     ["var { a: x }: { a: number } = { a: 0 };";
+      "module.exports = x"]
+     ["declare var x: typeof $1.a;";
+      "declare var $1: {a: number};";
+      "declare module.exports: typeof x;"];
 
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)

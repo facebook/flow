@@ -28,6 +28,7 @@ type token_sink_result = {
 }
 
 type parse_options = {
+  enums: bool;
   esproposal_class_instance_fields: bool;
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
@@ -88,7 +89,7 @@ val strict_error : env -> Parse_error.t -> unit
 val strict_error_at : env -> Loc.t * Parse_error.t -> unit
 val function_as_statement_error_at : env -> Loc.t -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
-val record_export: env -> Loc.t Flow_ast.Identifier.t -> unit
+val record_export: env -> (Loc.t, Loc.t) Flow_ast.Identifier.t -> unit
 val enter_class : env -> unit
 val exit_class : env -> unit
 val add_declared_private : env -> string -> unit
@@ -144,6 +145,7 @@ module Peek : sig
   val ith_loc : i:int -> env -> Loc.t
   val ith_errors : i:int -> env -> (Loc.t * Parse_error.t) list
   val ith_comments : i:int -> env -> Loc.t Flow_ast.Comment.t list
+  val ith_is_line_terminator : i:int -> env -> bool
   val ith_is_identifier : i:int -> env -> bool
   val ith_is_identifier_name : i:int -> env -> bool
   val ith_is_type_identifier : i:int -> env -> bool

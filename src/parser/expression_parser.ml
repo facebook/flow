@@ -17,7 +17,7 @@ module type EXPRESSION = sig
   val assignment: env -> (Loc.t, Loc.t) Expression.t
   val assignment_cover: env -> pattern_cover
   val conditional: env -> (Loc.t, Loc.t) Expression.t
-  val property_name_include_private: env -> Loc.t * Loc.t Identifier.t * bool
+  val property_name_include_private: env -> Loc.t * (Loc.t, Loc.t) Identifier.t * bool
   val is_assignable_lhs: (Loc.t, Loc.t) Expression.t -> bool
   val left_hand_side: env -> (Loc.t, Loc.t) Expression.t
   val number: env -> number_type -> string -> float
@@ -408,6 +408,7 @@ module Expression
 
   and unary_cover env =
     let begin_loc = Peek.loc env in
+    let leading = Peek.comments env in
     let op = peek_unary_op env in
     match op with
     | None -> begin
@@ -450,6 +451,7 @@ module Expression
       Cover_expr (loc, Expression.(Unary { Unary.
         operator;
         argument;
+        comments= (Flow_ast_utils.mk_comments_opt ~leading ())
       }))
 
   and unary env = as_expression env (unary_cover env)
@@ -842,19 +844,19 @@ module Expression
       begin try Int64.to_float (Int64.of_string ("0o"^raw))
       with Failure _ -> failwith ("Invalid legacy octal "^raw)
       end
+    | LEGACY_NON_OCTAL ->
+      strict_error env Error.StrictNonOctalLiteral;
+      begin try float_of_string raw
+      with Failure _ -> failwith ("Invalid number "^raw)
+      end
     | BINARY
     | OCTAL ->
       begin try Int64.to_float (Int64.of_string raw)
       with Failure _ -> failwith ("Invalid binary/octal "^raw)
       end
     | NORMAL ->
-      begin try Flow_lexer.FloatOfString.float_of_string raw
-      with
-      | _ when Sys.win32 ->
-        error env Parse_error.WindowsFloatOfString;
-        789.0
-      | Failure _ ->
-        failwith ("Invalid number "^raw)
+      begin try float_of_string raw
+      with Failure _ -> failwith ("Invalid number "^raw)
       end
     in
     Expect.token env (T_NUMBER { kind; raw });
@@ -870,27 +872,16 @@ module Expression
 
   and bigint env kind raw =
     let value = match kind with
-    | LEGACY_OCTAL ->
-      error env Error.StrictOctalLiteral;
-      let postraw = bigint_strip_n raw in
-      begin try Int64.to_float (Int64.of_string ("0o"^postraw))
-      with Failure _ -> failwith ("Invalid bigint legacy octal "^postraw)
-      end
-    | BINARY
-    | OCTAL ->
+    | BIG_BINARY
+    | BIG_OCTAL ->
       let postraw = bigint_strip_n raw in
       begin try Int64.to_float (Int64.of_string postraw)
       with Failure _ -> failwith ("Invalid bigint binary/octal "^postraw)
       end
-    | NORMAL ->
+    | BIG_NORMAL ->
       let postraw = bigint_strip_n raw in
-      begin try Flow_lexer.FloatOfString.float_of_string postraw
-      with
-      | _ when Sys.win32 ->
-        error env Parse_error.WindowsFloatOfString;
-        789.0
-      | Failure _ ->
-        failwith ("Invalid bigint "^postraw)
+      begin try float_of_string postraw
+      with Failure _ -> failwith ("Invalid bigint "^postraw)
       end
     in
     Expect.token env (T_BIGINT { kind; raw });
@@ -1232,8 +1223,12 @@ module Expression
 
   and property_name_include_private env =
     let start_loc = Peek.loc env in
-    let is_private = Expect.maybe env T_POUND in
-    let (id_loc, _) as id = identifier_name env in
-    let loc = Loc.btwn start_loc id_loc in
+    let loc, (is_private, id) = with_loc (fun env ->
+      let is_private = Expect.maybe env T_POUND in
+      let id = identifier_name env in
+      is_private, id
+    ) env in
+    if is_private && start_loc.Loc._end <> (fst id).Loc.start then
+      error_at env (loc, Error.WhitespaceInPrivateName);
     loc, id, is_private
 end

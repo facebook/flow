@@ -106,7 +106,7 @@ let rec merge_type cx =
        * sufficient. *)
       | Some _, None | None, Some _ -> Some (o1.flags.exact || o2.flags.exact)
       (* Covariant fields can be merged. *)
-      | Some (Field (_, _, Positive)), Some (Field (_, _, Positive)) -> Some true
+      | Some (Field (_, _, Polarity.Positive)), Some (Field (_, _, Polarity.Positive)) -> Some true
       (* Getters are covariant and thus can be merged. *)
       | Some (Get _), Some (Get _) -> Some true
       (* Anything else is can't be merged. *)
@@ -118,14 +118,14 @@ let rec merge_type cx =
     | None, None -> Some None
     (* If both objects covariant indexers, we can merge them. However, if the
      * key types are disjoint, the resulting dictionary is not useful. *)
-    | Some {key = k1; value = v1; dict_polarity = Positive; _},
-      Some {key = k2; value = v2; dict_polarity = Positive; _} ->
+    | Some {key = k1; value = v1; dict_polarity = Polarity.Positive; _},
+      Some {key = k2; value = v2; dict_polarity = Polarity.Positive; _} ->
       (* TODO: How to merge indexer names? *)
       Some (Some {
         dict_name = None;
         key = create_intersection (InterRep.make k1 k2 []);
         value = merge_type cx (v1, v2);
-        dict_polarity = Positive;
+        dict_polarity = Polarity.Positive;
       })
     (* Don't merge objects with possibly incompatible indexers. *)
     | _ -> None
@@ -290,7 +290,7 @@ let to_command_result_aloc = function
         "autocomplete on unexpected type of value %s (please file a task!)"
         (string_of_ctor t))
 
-let loc_tmap_of_aloc_tmap = Option.map ~f:ALoc.to_loc |> map_fst |> SMap.map
+let loc_tmap_of_aloc_tmap = Option.map ~f:ALoc.to_loc_exn |> map_fst |> SMap.map
 
 let to_command_result = to_command_result_aloc %> Core_result.map ~f:loc_tmap_of_aloc_tmap
 
@@ -371,7 +371,7 @@ let rec extract_type cx this_t = match this_t with
       let inst_t = instantiate_poly_t cx c ts_opt in
       let inst_t = instantiate_type inst_t in
       extract_type cx inst_t
-  | DefT (_, _, TypeAppT (_, c, ts)) ->
+  | TypeAppT (_, _, c, ts) ->
       let c = resolve_type cx c in
       let inst_t = instantiate_poly_t cx c (Some ts) in
       let inst_t = instantiate_type inst_t in

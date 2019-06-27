@@ -42,7 +42,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Class.Body.element -> ('N, 'U) Ast.Class.Body.element
     method class_extends :
       ('M, 'T) Ast.Class.Extends.t -> ('N, 'U) Ast.Class.Extends.t
-    method class_identifier : 'T Flow_ast.Identifier.t -> 'U Ast.Identifier.t
+    method class_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
     method class_implements :
       ('M, 'T) Flow_ast.Class.Implements.t -> ('N, 'U) Ast.Class.Implements.t
     method class_method :
@@ -55,7 +55,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method comment : 'M Ast.Comment.t -> 'N Ast.Comment.t
     method t_comment : 'T Ast.Comment.t -> 'U Ast.Comment.t
     method syntax : 'internal. ('M, 'internal) Ast.Syntax.t -> ('N, 'internal) Ast.Syntax.t
-    method t_syntax : 'internal. ('T, 'internal) Ast.Syntax.t -> ('U, 'internal) Ast.Syntax.t
     method comprehension :
       ('M, 'T) Ast.Expression.Comprehension.t ->
       ('N, 'U) Ast.Expression.Comprehension.t
@@ -102,6 +101,32 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method do_while :
       ('M, 'T) Ast.Statement.DoWhile.t -> ('N, 'U) Ast.Statement.DoWhile.t
     method empty : unit -> unit
+    method enum_declaration :
+      ('M, 'T) Ast.Statement.EnumDeclaration.t -> ('N, 'U) Ast.Statement.EnumDeclaration.t
+    method enum_boolean_body :
+      'M Ast.Statement.EnumDeclaration.BooleanBody.t ->
+      'N Ast.Statement.EnumDeclaration.BooleanBody.t
+    method enum_number_body :
+      'M Ast.Statement.EnumDeclaration.NumberBody.t ->
+      'N Ast.Statement.EnumDeclaration.NumberBody.t
+    method enum_string_body :
+      'M Ast.Statement.EnumDeclaration.StringBody.t ->
+      'N Ast.Statement.EnumDeclaration.StringBody.t
+    method enum_symbol_body :
+      'M Ast.Statement.EnumDeclaration.SymbolBody.t ->
+      'N Ast.Statement.EnumDeclaration.SymbolBody.t
+    method enum_defaulted_member :
+     'M Ast.Statement.EnumDeclaration.DefaultedMember.t ->
+      'N Ast.Statement.EnumDeclaration.DefaultedMember.t
+    method enum_boolean_member :
+     (bool, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      (bool, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+    method enum_number_member :
+     (Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      (Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+    method enum_string_member :
+     (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
     method explicit_or_implicit :
       ('M, 'T)
       Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation ->
@@ -156,7 +181,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method function_expression :
       ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
     method function_identifier :
-      'M Flow_ast.Identifier.t -> 'N Ast.Identifier.t
+      ('M, 'M) Flow_ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
     method function_param :
       ('M, 'T) Flow_ast.Function.Param.t -> ('N, 'U) Ast.Function.Param.t
     method function_params :
@@ -182,7 +207,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('N, 'U) Ast.Type.Generic.Identifier.t
     method generic_type :
       ('M, 'T) Ast.Type.Generic.t -> ('N, 'U) Ast.Type.Generic.t
-    method identifier : 'M Ast.Identifier.t -> 'N Ast.Identifier.t
+    method identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
     method if_consequent_statement :
       has_else:bool -> ('M, 'T) Ast.Statement.t -> ('N, 'U) Ast.Statement.t
     method if_statement :
@@ -195,12 +220,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.ImportDeclaration.t ->
       ('N, 'U) Ast.Statement.ImportDeclaration.t
     method import_default_specifier :
-      'T Flow_ast.Identifier.t -> 'U Ast.Identifier.t
+      ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
     method import_named_specifier :
-      'T Ast.Statement.ImportDeclaration.named_specifier ->
-      'U Ast.Statement.ImportDeclaration.named_specifier
+      ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier ->
+      ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier
     method import_namespace_specifier :
-      'M Flow_ast.Identifier.t -> 'N Ast.Identifier.t
+      ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
     method import_specifier :
       ('M, 'T) Ast.Statement.ImportDeclaration.specifier ->
       ('N, 'U) Ast.Statement.ImportDeclaration.specifier
@@ -247,7 +272,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method jsx_spread_attribute :
       ('M, 'T) Ast.JSX.SpreadAttribute.t' ->
       ('N, 'U) Ast.JSX.SpreadAttribute.t'
-    method label_identifier : 'M Flow_ast.Identifier.t -> 'N Ast.Identifier.t
+    method label_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
     method labeled_statement :
       ('M, 'T) Ast.Statement.Labeled.t -> ('N, 'U) Ast.Statement.Labeled.t
     method literal : 'M Ast.Literal.t -> 'N Ast.Literal.t
@@ -263,7 +288,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method member_property_expression :
       ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
     method member_property_identifier :
-      'T Flow_ast.Identifier.t -> 'U Ast.Identifier.t
+      ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
     method meta_property :
       'M Ast.Expression.MetaProperty.t -> 'N Ast.Expression.MetaProperty.t
     method new_ :
@@ -280,7 +305,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Expression.Object.Property.key ->
       ('N, 'U) Ast.Expression.Object.Property.key
     method object_key_identifier :
-      'T Flow_ast.Identifier.t -> 'U Ast.Identifier.t
+      ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
     method object_property :
       ('M, 'T) Ast.Expression.Object.Property.t ->
       ('N, 'U) Ast.Expression.Object.Property.t
@@ -337,7 +362,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
     method pattern_identifier :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      'M Ast.Identifier.t -> 'N Ast.Identifier.t
+      ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
     method pattern_literal :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
       'M Ast.Literal.t -> 'N Ast.Literal.t
@@ -354,7 +379,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
     method pattern_object_property_identifier_key :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      'T Flow_ast.Identifier.t -> 'U Ast.Identifier.t
+      ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
     method pattern_object_property_key :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
       ('M, 'T) Ast.Pattern.Object.Property.key ->
@@ -396,11 +421,11 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.Switch.Case.t' ->
       ('N, 'U) Ast.Statement.Switch.Case.t'
     method t_function_identifier :
-      'T Flow_ast.Identifier.t -> 'U Ast.Identifier.t
-    method t_identifier : 'T Flow_ast.Identifier.t -> 'U Ast.Identifier.t
+      ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+    method t_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
     method t_pattern_identifier :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      'T Ast.Identifier.t -> 'U Ast.Identifier.t
+      ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
     method tagged_template :
       ('M, 'T) Ast.Expression.TaggedTemplate.t ->
       ('N, 'U) Ast.Expression.TaggedTemplate.t

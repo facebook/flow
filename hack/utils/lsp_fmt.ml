@@ -564,36 +564,47 @@ let parse_completionItem (params: json option) : CompletionItemResolve.params =
   in
   {
     label = Jget.string_exn params "label";
-    kind = Option.bind (Jget.int_opt params "kind") completionItemKind_of_int_opt;
+    kind = Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
     detail = Jget.string_opt params "detail";
     inlineDetail = Jget.string_opt params "inlineDetail";
     itemType = Jget.string_opt params "itemType";
-    documentation = Jget.string_opt params "documentation";
+    documentation = None;
     sortText = Jget.string_opt params "sortText";
     filterText = Jget.string_opt params "filterText";
     insertText = Jget.string_opt params "insertText";
-    insertTextFormat = Option.bind (Jget.int_opt params "insertTextFormat") insertFormat_of_int_opt;
+    insertTextFormat = Option.bind (Jget.int_opt params "insertTextFormat")
+                         insertTextFormat_of_enum;
     textEdits;
     command;
     data = Jget.obj_opt params "data"
   }
 
+let string_of_markedString (acc: string) (marked: markedString): string =
+  match marked with
+  | MarkedCode (lang, code) -> (acc ^ "```" ^ lang ^ "\n" ^ code ^ "\n" ^ "```\n")
+  | MarkedString str -> (acc ^ str ^ "\n")
 
 let print_completionItem (item: Completion.completionItem) : json =
   let open Completion in
   Jprint.object_opt [
     "label", Some (JSON_String item.label);
-    "kind", Option.map item.kind (fun x -> int_ @@ int_of_completionItemKind x);
+    "kind", Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x);
     "detail", Option.map item.detail string_;
     "inlineDetail", Option.map item.inlineDetail string_;
     "itemType", Option.map item.itemType string_;
-    "documentation", Option.map item.documentation string_;
+    "documentation", Option.map item.documentation
+      ~f:(fun doc -> JSON_Object [
+        ("kind", JSON_String "markdown");
+        ("value", JSON_String (String.trim
+          (List.fold doc ~init:"" ~f:string_of_markedString)));
+      ]);
     "sortText", Option.map item.sortText string_;
     "filterText", Option.map item.filterText string_;
     "insertText", Option.map item.insertText string_;
-    "insertTextFormat", Option.map item.insertTextFormat (fun x -> int_ @@ int_of_insertFormat x);
+    "insertTextFormat", Option.map item.insertTextFormat
+                          (fun x -> int_ @@ insertTextFormat_to_enum x);
     "textEdit", Option.map (List.hd item.textEdits) print_textEdit;
-    "additionalTextEdit", (match (List.tl item.textEdits) with
+    "additionalTextEdits", (match (List.tl item.textEdits) with
       | None | Some [] -> None
       | Some l -> Some (JSON_Array (List.map l ~f:print_textEdit)));
     "command", Option.map item.command print_command;
@@ -791,7 +802,6 @@ let print_documentOnTypeFormatting (r: DocumentOnTypeFormatting.result)
   : json =
   JSON_Array (List.map r ~f:print_textEdit)
 
-
 (************************************************************************)
 (** initialize request                                                 **)
 (************************************************************************)
@@ -830,6 +840,13 @@ let parse_initialize (params: json option) : Initialize.params =
       applyEdit = Jget.bool_d json "applyEdit" ~default:false;
       workspaceEdit = Jget.obj_opt json "workspaceEdit"
                        |> parse_workspaceEdit;
+      didChangeWatchedFiles = Jget.obj_opt json "didChangeWatchedFiles"
+                       |> parse_dynamicRegistration;
+    }
+  and parse_dynamicRegistration json =
+    {
+      dynamicRegistration =
+        Jget.bool_d json "dynamicRegistration" ~default:false;
     }
   and parse_workspaceEdit json =
     {
@@ -903,6 +920,7 @@ let print_initialize (r: Initialize.result) : json =
         "triggerCharacters", Jprint.string_array shp.sighelp_triggerCharacters;
       ]);
       "definitionProvider", Some (JSON_Bool cap.definitionProvider);
+      "typeDefinitionProvider", Some (JSON_Bool cap.typeDefinitionProvider);
       "referencesProvider", Some (JSON_Bool cap.referencesProvider);
       "documentHighlightProvider", Some (JSON_Bool cap.documentHighlightProvider);
       "documentSymbolProvider", Some (JSON_Bool cap.documentSymbolProvider);
@@ -930,6 +948,66 @@ let print_initialize (r: Initialize.result) : json =
     ];
   ]
 
+(************************************************************************)
+(** capabilities                                                       **)
+(************************************************************************)
+
+let print_registrationOptions
+    (registerOptions: Lsp.lsp_registration_options)
+    : Hh_json.json =
+  match registerOptions with
+  | Lsp.DidChangeWatchedFilesRegistrationOptions registerOptions ->
+    let open Lsp.DidChangeWatchedFiles in
+    JSON_Object [
+      ("watchers", JSON_Array (
+        List.map registerOptions.watchers ~f:(fun watcher ->
+          JSON_Object [
+            ("globPattern", JSON_String watcher.globPattern);
+            ("kind", int_ 7 (* all events: create, change, and delete *));
+          ]
+        )
+      ));
+    ]
+
+let print_registerCapability
+    (params: Lsp.RegisterCapability.params)
+    : Hh_json.json =
+  let open Lsp.RegisterCapability in
+  JSON_Object [
+    ("registrations", JSON_Array (
+      List.map params.registrations ~f:(fun registration ->
+        JSON_Object [
+          ("id", string_ registration.id);
+          ("method", string_ registration.method_);
+          ("registerOptions",
+            print_registrationOptions registration.registerOptions);
+        ]
+      )
+    ));
+  ]
+
+let parse_didChangeWatchedFiles
+    (json: Hh_json.json option)
+    : DidChangeWatchedFiles.params =
+  let changes = Jget.array_exn json "changes"
+    |> List.map ~f:(fun change ->
+        let uri = Jget.string_exn change "uri" in
+        let type_ = Jget.int_exn change "type" in
+        let type_ =
+          match DidChangeWatchedFiles.fileChangeType_of_enum type_ with
+          | Some type_ -> type_
+          | None -> failwith
+            (Printf.sprintf "Invalid file change type %d" type_)
+        in
+        { DidChangeWatchedFiles.
+          uri;
+          type_;
+        }
+      )
+  in
+  { DidChangeWatchedFiles.
+    changes;
+  }
 
 (************************************************************************)
 (** error response                                                     **)
@@ -938,37 +1016,44 @@ let print_initialize (r: Initialize.result) : json =
 let error_of_exn (e: exn) : Lsp.Error.t =
   let open Lsp.Error in
   match e with
-  | Error.Parse message -> {code= -32700; message; data=None;}
-  | Error.InvalidRequest message -> {code= -32600; message; data=None;}
-  | Error.MethodNotFound message -> {code= -32601; message; data=None;}
-  | Error.InvalidParams message -> {code= -32602; message; data=None;}
-  | Error.InternalError message -> {code= -32603; message; data=None;}
+  | Error.Parse message -> {code= Code.parseError; message; data=None;}
+  | Error.InvalidRequest message -> {code= Code.invalidRequest; message; data=None;}
+  | Error.MethodNotFound message -> {code= Code.methodNotFound; message; data=None;}
+  | Error.InvalidParams message -> {code= Code.invalidParams; message; data=None;}
+  | Error.InternalError message -> {code= Code.internalError; message; data=None;}
   | Error.ServerErrorStart (message, data) ->
-      {code= -32099; message; data=Some (print_initializeError data);}
-  | Error.ServerErrorEnd message -> {code= -32000; message; data=None;}
-  | Error.ServerNotInitialized message -> {code= -32002; message; data=None;}
-  | Error.Unknown message -> {code= -32001; message; data=None;}
-  | Error.RequestCancelled message -> {code= -32800; message; data=None;}
-  | Exit_status.Exit_with code -> {code= -32001; message=Exit_status.to_string code; data=None;}
-  | _ -> {code= -32001; message=Printexc.to_string e; data=None;}
+      {code= Code.serverErrorStart; message; data=Some (print_initializeError data);}
+  | Error.ServerErrorEnd message -> {code= Code.serverErrorEnd; message; data=None;}
+  | Error.ServerNotInitialized message -> {code= Code.serverNotInitialized; message; data=None;}
+  | Error.Unknown message -> {code= Code.unknownErrorCode; message; data=None;}
+  | Error.RequestCancelled message -> {code= Code.requestCancelled; message; data=None;}
+  | Exit_status.Exit_with code ->
+      {code= Code.unknownErrorCode; message=Exit_status.to_string code; data=None;}
+  | _ -> {code= Code.unknownErrorCode; message=Printexc.to_string e; data=None;}
 
-let print_error (e: Error.t) (stack: string) : json =
+let print_error ?(include_error_stack_trace=true) (e: Error.t) (stack: string) : json =
   let open Hh_json in
   let open Error in
-  let stack_json_property = ("stack", string_ stack) in
-  (* We'd like to add a stack-trace. The only place we can fit it, that will *)
-  (* be respected by vscode-jsonrpc, is inside the 'data' field. And we can  *)
-  (* do that only if data is an object. We can synthesize one if needed.     *)
-  let data = match e.data with
-    | None -> JSON_Object [stack_json_property]
-    | Some (JSON_Object o) -> JSON_Object (stack_json_property :: o)
-    | Some primitive -> primitive
+  let entries = if include_error_stack_trace then
+    let stack_json_property = ("stack", string_ stack) in
+    (* We'd like to add a stack-trace. The only place we can fit it, that will *)
+    (* be respected by vscode-jsonrpc, is inside the 'data' field. And we can  *)
+    (* do that only if data is an object. We can synthesize one if needed.     *)
+    let data = match e.data with
+      | None -> JSON_Object [stack_json_property]
+      | Some (JSON_Object o) -> JSON_Object (stack_json_property :: o)
+      | Some primitive -> primitive
+    in
+    ["data", data]
+  else
+    []
   in
-  JSON_Object [
-    "code", int_ e.code;
-    "message", string_ e.message;
-    "data", data;
-  ]
+  let entries =
+    ("code", int_ e.code) ::
+    ("message", string_ e.message) ::
+    entries
+  in
+  JSON_Object entries
 
 let parse_error (error: json) : Error.t =
   let json = Some error in
@@ -988,11 +1073,13 @@ let request_name_to_string (request: lsp_request) : string =
   | ShowMessageRequestRequest _ -> "window/showMessageRequest"
   | ShowStatusRequest _ -> "window/showStatus"
   | InitializeRequest _ -> "initialize"
+  | RegisterCapabilityRequest _ -> "client/registerCapability"
   | ShutdownRequest -> "shutdown"
   | HoverRequest _ -> "textDocument/hover"
   | CompletionRequest _ -> "textDocument/completion"
   | CompletionItemResolveRequest _ -> "completionItem/resolve"
   | DefinitionRequest _ -> "textDocument/definition"
+  | TypeDefinitionRequest _ -> "textDocument/typeDefinition"
   | WorkspaceSymbolRequest _ -> "workspace/symbol"
   | DocumentSymbolRequest _ -> "textDocument/documentSymbol"
   | FindReferencesRequest _ -> "textDocument/references"
@@ -1015,6 +1102,7 @@ let result_name_to_string (result: lsp_result) : string =
   | CompletionResult _ -> "textDocument/completion"
   | CompletionItemResolveResult _ -> "completionItem/resolve"
   | DefinitionResult _ -> "textDocument/definition"
+  | TypeDefinitionResult _ -> "textDocument/typeDefinition"
   | WorkspaceSymbolResult _ -> "workspace/symbol"
   | DocumentSymbolResult _ -> "textDocument/documentSymbol"
   | FindReferencesResult _ -> "textDocument/references"
@@ -1036,6 +1124,7 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | DidCloseNotification _ -> "textDocument/didClose"
   | DidSaveNotification _ -> "textDocument/didSave"
   | DidChangeNotification _ -> "textDocument/didChange"
+  | DidChangeWatchedFilesNotification _ -> "workspace/didChangeWatchedFiles"
   | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
   | ShowMessageNotification _ -> "window/showMessage"
@@ -1099,6 +1188,8 @@ let parse_lsp_notification (method_: string) (params: json option) : lsp_notific
   | "textDocument/didClose" -> DidCloseNotification (parse_didClose params)
   | "textDocument/didSave" -> DidSaveNotification (parse_didSave params)
   | "textDocument/didChange" -> DidChangeNotification (parse_didChange params)
+  | "workspace/didChangeWatchedFiles" ->
+    DidChangeWatchedFilesNotification (parse_didChangeWatchedFiles params)
   | "textDocument/publishDiagnostics"
   | "window/logMessage"
   | "window/showMessage"
@@ -1115,11 +1206,13 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | ShowStatusRequest _ ->
     ShowStatusResult (parse_result_showMessageRequest (Some result)) (* shares result type *)
   | InitializeRequest _
+  | RegisterCapabilityRequest _
   | ShutdownRequest
   | HoverRequest _
   | CompletionRequest _
   | CompletionItemResolveRequest _
   | DefinitionRequest _
+  | TypeDefinitionRequest _
   | WorkspaceSymbolRequest _
   | DocumentSymbolRequest _
   | FindReferencesRequest _
@@ -1159,12 +1252,14 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
   let params = match request with
     | ShowMessageRequestRequest r -> print_showMessageRequest r
     | ShowStatusRequest r -> print_showStatus r
+    | RegisterCapabilityRequest r -> print_registerCapability r
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _
     | CompletionRequest _
     | CompletionItemResolveRequest _
     | DefinitionRequest _
+    | TypeDefinitionRequest _
     | WorkspaceSymbolRequest _
     | DocumentSymbolRequest _
     | FindReferencesRequest _
@@ -1185,7 +1280,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     "params", params;
   ]
 
-let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
+let print_lsp_response ?include_error_stack_trace (id: lsp_id) (result: lsp_result) : json =
   let method_ = result_name_to_string result in
   let json = match result with
     | InitializeResult r -> print_initialize r
@@ -1193,6 +1288,7 @@ let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
     | HoverResult r -> print_hover r
     | CompletionResult r -> print_completion r
     | DefinitionResult r -> print_definition r
+    | TypeDefinitionResult r -> print_definition r
     | WorkspaceSymbolResult r -> print_workspaceSymbol r
     | DocumentSymbolResult r -> print_documentSymbol r
     | FindReferencesResult r -> print_findReferences r
@@ -1207,7 +1303,7 @@ let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->
       failwith ("Don't know how to print result " ^ method_)
-    | ErrorResult (e, stack) -> print_error e stack
+    | ErrorResult (e, stack) -> print_error ?include_error_stack_trace e stack
   in
   match result with
   | ErrorResult _ ->
@@ -1243,6 +1339,7 @@ let print_lsp_notification (notification: lsp_notification) : json =
     | DidCloseNotification _
     | DidSaveNotification _
     | DidChangeNotification _
+    | DidChangeWatchedFilesNotification _
     | UnknownNotification _ ->
       failwith ("Don't know how to print notification " ^ method_)
   in
@@ -1252,8 +1349,8 @@ let print_lsp_notification (notification: lsp_notification) : json =
     "params", params;
   ]
 
-let print_lsp (message: lsp_message) : json =
+let print_lsp ?include_error_stack_trace (message: lsp_message) : json =
   match message with
   | RequestMessage (id, request) -> print_lsp_request id request
-  | ResponseMessage (id, result) -> print_lsp_response id result
+  | ResponseMessage (id, result) -> print_lsp_response ?include_error_stack_trace id result
   | NotificationMessage notification -> print_lsp_notification notification

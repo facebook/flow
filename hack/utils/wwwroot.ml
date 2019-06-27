@@ -33,3 +33,20 @@ let assert_www_directory ?(config=".hhconfig") (path : Path.t) : unit =
      flush stderr;
      exit 1
    end
+
+let rec guess_root config start ~recursion_limit : Path.t option =
+  if start = Path.parent start then None (* Reached file system root *)
+  else if is_www_directory ~config start then Some start
+  else if recursion_limit <= 0 then None
+  else guess_root config (Path.parent start) (recursion_limit - 1)
+
+let get ?(config=".hhconfig") (path: string option): Path.t =
+  let start_str = match path with
+    | None -> "."
+    | Some s -> s in
+  let start_path = Path.make start_str in
+  let root = match guess_root config start_path ~recursion_limit:50 with
+    | None -> start_path
+    | Some r -> r in
+  assert_www_directory ~config root;
+  root

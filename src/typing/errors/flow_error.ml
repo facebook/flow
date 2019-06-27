@@ -31,7 +31,11 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } = {
   trace_reasons = Core_list.map ~f:(Reason.map_reason_locs f) trace_reasons;
 }
 
-let concretize_error = map_loc_of_error ALoc.to_loc
+let concretize_error lazy_table_of_aloc =
+  map_loc_of_error begin fun aloc ->
+    let table = lazy_table_of_aloc aloc in
+    ALoc.to_loc table aloc
+  end
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
@@ -52,7 +56,6 @@ let reason_score = 100
 let frame_score = reason_score * 2
 let type_arg_frame_score = frame_score * 2
 let tuple_element_frame_score = type_arg_frame_score * 2
-let property_sentinel_score = tuple_element_frame_score * 2
 
 (* Gets the score of a use_op. Used in score_of_msg. See the comment on
  * score_of_msg to learn more about scores.
@@ -109,11 +112,6 @@ let score_of_use_op use_op =
       | ArrayElementCompatibility _ -> type_arg_frame_score
       (* Higher signal then TypeArgCompatibility. *)
       | TupleElementCompatibility _ -> tuple_element_frame_score
-      (* If we error-ed on a sentinel prop compatibility then tank the score of
-       * this use_op. This is so that the score of errors which passed sentinel
-       * compatibility are always picked relative to the score of errors which
-       * failed their sentinel prop checks. *)
-      | PropertyCompatibility {is_sentinel=true; _} -> -property_sentinel_score
       (* ImplicitTypeParam is an internal marker use_op that doesn't get
        * rendered in error messages. So it doesn't necessarily signal anything
        * about the user's intent. *)
@@ -217,7 +215,7 @@ let error_of_msg ~trace_reasons ~source_file (msg : ALoc.t Error_message.t') : A
     source_file;
     trace_reasons
   }
-let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
+let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors.printable_error =
   let open Errors in
 
   let { loc : Loc.t option; msg : Loc.t Error_message.t';
@@ -311,8 +309,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
     let is_contravariant = function
     | FunParam _, Frame (FunCompatibility _, _) -> (true, true)
     | FunRestParam _, Frame (FunCompatibility _, _) -> (true, true)
-    | ReactGetConfig {polarity = Negative }, _ -> (true, false)
-    | TypeArgCompatibility {polarity = Negative; _}, _ -> (true, false)
+    | ReactGetConfig {polarity = Polarity.Negative }, _ -> (true, false)
+    | TypeArgCompatibility {polarity = Polarity.Negative; _}, _ -> (true, false)
     | _ -> (false, false)
     in
     let is_contravariant_root = function
@@ -355,6 +353,14 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
 
       | Op (Type.Speculation _) ->
         `UnknownRoot true
+
+      | Op (ObjectSpread {op}) ->
+        `Root (op, None,
+          [text "Cannot spread "; desc op])
+
+      | Op (ObjectChain {op}) ->
+        `Root (op, None,
+          [text "Incorrect arguments passed to "; desc op])
 
       | Op (Addition {op; left; right}) ->
         `Root (op, None,
@@ -614,8 +620,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       let score = score_of_msg msg in
       let error =
         error_of_msg ~trace_reasons:[] ~source_file msg
-        |> concretize_error
-        |> make_error_printable in
+        |> (concretize_error lazy_table_of_aloc)
+        |> (make_error_printable lazy_table_of_aloc) in
       (score, error)
     ) branches in
     mk_speculation_error
@@ -762,7 +768,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
    * Similar to mk_incompatible_error except with any arbitrary *use*
    * instead of specifically an upper type. This error handles all use
    * incompatibilities in general. *)
-  let mk_incompatible_use_error use_loc use_kind lower use_op =
+  let mk_incompatible_use_error use_loc use_kind lower upper use_op =
     let nope msg =
       mk_use_op_error use_loc use_op
         [ref lower; text (" " ^ msg)]
@@ -787,8 +793,10 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
     | IncompatibleObjSealT
     | IncompatibleGetKeysT
     | IncompatibleGetValuesT
-    | IncompatibleMapTypeTObject
       -> nope "is not an object"
+    | IncompatibleMapTypeTObject
+      -> mk_use_op_error use_loc use_op
+      [ref lower; text " is not a valid argument of "; ref upper]
     | IncompatibleMixinT
     | IncompatibleThisSpecializeT
       -> nope "is not a class"
@@ -834,22 +842,22 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       use_op
     in
     let expected = match lpole with
-    | Positive -> "read-only"
-    | Negative -> "write-only"
-    | Neutral ->
+    | Polarity.Positive -> "read-only"
+    | Polarity.Negative -> "write-only"
+    | Polarity.Neutral ->
       (match upole with
-      | Negative -> "readable"
-      | Positive -> "writable"
-      | Neutral -> failwith "unreachable")
+      | Polarity.Negative -> "readable"
+      | Polarity.Positive -> "writable"
+      | Polarity.Neutral -> failwith "unreachable")
     in
     let actual = match upole with
-    | Positive -> "read-only"
-    | Negative -> "write-only"
-    | Neutral ->
+    | Polarity.Positive -> "read-only"
+    | Polarity.Negative -> "write-only"
+    | Polarity.Neutral ->
       (match lpole with
-      | Negative -> "readable"
-      | Positive -> "writable"
-      | Neutral -> failwith "unreachable")
+      | Polarity.Negative -> "readable"
+      | Polarity.Positive -> "writable"
+      | Polarity.Neutral -> failwith "unreachable")
     in
     mk_use_op_error (loc_of_reason lower) use_op (
       mk_prop_message prop @
@@ -867,8 +875,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       mk_prop_missing_error prop_loc prop lower use_op
   | None, PropPolarityMismatch (x, p1, p2, use_op) ->
       mk_prop_polarity_mismatch_error x p1 p2 use_op
-  | None, IncompatibleUse (loc, use_kind, lower, use_op) ->
-      mk_incompatible_use_error loc use_kind lower use_op
+  | None, IncompatibleUse (loc, use_kind, lower, upper, use_op) ->
+      mk_incompatible_use_error loc use_kind lower upper use_op
   | None, Incompatible (lower, upper, use_op) ->
       mk_incompatible_error lower upper use_op
   | None, IncompatibleTrust (lower, upper, use_op) ->
@@ -877,8 +885,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       mk_use_op_speculation_error loc use_op branches
   | None, Error_message.Normal _ | Some _, _ -> raise (ImproperlyFormattedError msg)
 
-let make_errors_printable set =
+let make_errors_printable lazy_table_of_aloc set =
   Errors.(ErrorSet.fold
-    (concretize_error %> make_error_printable %> ConcreteLocPrintableErrorSet.add)
+    ((concretize_error lazy_table_of_aloc) %> (make_error_printable lazy_table_of_aloc) %> ConcreteLocPrintableErrorSet.add)
     set
     ConcreteLocPrintableErrorSet.empty)

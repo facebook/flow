@@ -24,13 +24,15 @@ let compute_docblock file content =
 let compute_ast_result options file content =
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
   let docblock = compute_docblock file content in
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
-  let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock
-    ~module_ref_prefix ~facebook_fbt ~arch content file in
+  let parse_options = make_parse_options
+      ~fail:false ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ()
+  in
+  let result = do_parse ~parse_options ~info:docblock content file in
   match result with
     | Parse_ok parse_ok ->
       let ast, file_sig = basic parse_ok in
@@ -61,7 +63,7 @@ let get_ast_result ~reader file
 let get_dependents ~reader options workers env file_key content =
   let docblock = compute_docblock file_key content in
   let reader = Abstract_state_reader.State_reader reader in
-  let modulename = Module_js.exported_module ~options ~reader file_key docblock in
+  let modulename = Module_js.exported_module ~options file_key docblock in
   Dep_service.dependent_files
     ~reader
     workers

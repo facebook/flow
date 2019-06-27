@@ -7,7 +7,7 @@
 
 type t =
   | T_NUMBER of { kind: number_type; raw: string }
-  | T_BIGINT of { kind: number_type; raw: string }
+  | T_BIGINT of { kind: bigint_type; raw: string }
   | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
   | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
   | T_IDENTIFIER of { loc: Loc.t; value: string; raw: string }
@@ -139,8 +139,8 @@ type t =
   | T_NUMBER_TYPE
   | T_BIGINT_TYPE
   | T_NUMBER_SINGLETON_TYPE of { kind: number_type; value: float; raw: string }
-  | T_BIGINT_SINGLETON_TYPE of { 
-    kind: number_type;
+  | T_BIGINT_SINGLETON_TYPE of {
+    kind: bigint_type;
     approx_value: float; (* Warning! Might lose precision! *)
     raw: string
   }
@@ -158,8 +158,14 @@ and bool_or_boolean =
 and number_type =
   | BINARY
   | LEGACY_OCTAL
+  | LEGACY_NON_OCTAL (* NonOctalDecimalIntegerLiteral in Annex B *)
   | OCTAL
   | NORMAL
+
+and bigint_type =
+  | BIG_BINARY
+  | BIG_OCTAL
+  | BIG_NORMAL
 
 and template_part = {
   cooked: string; (* string after processing special chars *)

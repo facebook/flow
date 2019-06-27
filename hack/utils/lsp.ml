@@ -271,7 +271,13 @@ module Initialize = struct
   and workspaceClientCapabilities = {
     applyEdit: bool;  (* client supports appling batch edits *)
     workspaceEdit: workspaceEdit;
-    (* omitted: dynamic-registration fields *)
+
+    didChangeWatchedFiles: dynamicRegistration;
+    (* omitted: other dynamic-registration fields *)
+  }
+
+  and dynamicRegistration = {
+    dynamicRegistration: bool; (* client supports dynamic registration for this capability *)
   }
 
   and workspaceEdit = {
@@ -318,6 +324,7 @@ module Initialize = struct
     completionProvider: completionOptions option;
     signatureHelpProvider: signatureHelpOptions option;
     definitionProvider: bool;
+    typeDefinitionProvider: bool;
     referencesProvider: bool;
     documentHighlightProvider: bool;
     documentSymbolProvider: bool;  (* ie. document outline *)
@@ -496,6 +503,32 @@ module DidChange = struct
   }
 end
 
+(* Watched files changed notification, method="workspace/didChangeWatchedFiles" *)
+module DidChangeWatchedFiles = struct
+  type registerOptions = {
+    watchers: fileSystemWatcher list;
+  }
+
+  and fileSystemWatcher = {
+    globPattern: string;
+  }
+
+  type fileChangeType =
+    | Created [@value 1]
+    | Updated [@value 2]
+    | Deleted [@value 3]
+    [@@deriving enum]
+
+  type params = {
+    changes: fileEvent list;
+  }
+
+  and fileEvent = {
+    uri: documentUri;
+    type_: fileChangeType;
+  }
+end
+
 (* Goto Definition request, method="textDocument/definition" *)
 module Definition = struct
   type params = TextDocumentPositionParams.t
@@ -503,8 +536,54 @@ module Definition = struct
   and result = DefinitionLocation.t list  (* wire: either a single one or an array *)
 end
 
+(* Goto TypeDefinition request, method="textDocument/typeDefinition" *)
+module TypeDefinition = struct
+  type params = TextDocumentPositionParams.t
+
+  and result = DefinitionLocation.t list
+end
+
 (* Completion request, method="textDocument/completion" *)
 module Completion = struct
+  (* These numbers should match
+   * https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
+   *)
+  type completionItemKind =
+    | Text [@value 1]
+    | Method [@value 2]
+    | Function [@value 3]
+    | Constructor [@value 4]
+    | Field [@value 5]
+    | Variable [@value 6]
+    | Class [@value 7]
+    | Interface [@value 8]
+    | Module [@value 9]
+    | Property [@value 10]
+    | Unit [@value 11]
+    | Value [@value 12]
+    | Enum [@value 13]
+    | Keyword [@value 14]
+    | Snippet [@value 15]
+    | Color [@value 16]
+    | File [@value 17]
+    | Reference [@value 18]
+    | Folder [@value 19]
+    | EnumMember [@value 20]
+    | Constant [@value 21]
+    | Struct [@value 22]
+    | Event [@value 23]
+    | Operator [@value 24]
+    | TypeParameter [@value 25]
+  [@@deriving enum]
+
+  (* These numbers should match
+   * https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
+   *)
+  type insertTextFormat =
+    | PlainText [@value 1]  (* the insertText/textEdits are just plain strings *)
+    | SnippetFormat [@value 2]  (* wire: just "Snippet" *)
+  [@@deriving enum]
+
   type params = completionParams
 
   and completionParams = {
@@ -534,7 +613,7 @@ module Completion = struct
     detail: string option;  (* human-readable string like type/symbol info *)
     inlineDetail: string option; (* nuclide-specific, right column *)
     itemType: string option; (* nuclide-specific, left column *)
-    documentation: string option;  (* human-readable doc-comment *)
+    documentation: markedString list option;  (* human-readable doc-comment *)
     sortText: string option;  (* used for sorting; if absent, uses label *)
     filterText: string option;  (* used for filtering; if absent, uses label *)
     insertText: string option;  (* used for inserting; if absent, uses label *)
@@ -544,88 +623,6 @@ module Completion = struct
     data: Hh_json.json option;
   }
 
-  and completionItemKind =
-    | Text (* 1 *)
-    | Method (* 2 *)
-    | Function (* 3 *)
-    | Constructor (* 4 *)
-    | Field (* 5 *)
-    | Variable (* 6 *)
-    | Class (* 7 *)
-    | Interface (* 8 *)
-    | Module (* 9 *)
-    | Property (* 10 *)
-    | Unit (* 11 *)
-    | Value (* 12 *)
-    | Enum (* 13 *)
-    | Keyword (* 14 *)
-    | Snippet (* 15 *)
-    | Color (* 16 *)
-    | File (* 17 *)
-    | Reference (* 18 *)
-
-    (** Keep this in sync with `int_of_completionItemKind`. *)
-    and insertTextFormat =
-    | PlainText (* 1 *)  (* the insertText/textEdits are just plain strings *)
-    | SnippetFormat (* 2 *)  (* wire: just "Snippet" *)
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with completionItemKind_of_int_opt. *)
-  let int_of_completionItemKind = function
-    | Text -> 1
-    | Method -> 2
-    | Function -> 3
-    | Constructor -> 4
-    | Field -> 5
-    | Variable -> 6
-    | Class -> 7
-    | Interface -> 8
-    | Module -> 9
-    | Property -> 10
-    | Unit -> 11
-    | Value -> 12
-    | Enum -> 13
-    | Keyword -> 14
-    | Snippet -> 15
-    | Color -> 16
-    | File -> 17
-    | Reference -> 18
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with int_of_completionItemKind. *)
-  let completionItemKind_of_int_opt = function
-    | 1 -> Some Text
-    | 2 -> Some Method
-    | 3 -> Some Function
-    | 4 -> Some Constructor
-    | 5 -> Some Field
-    | 6 -> Some Variable
-    | 7 -> Some Class
-    | 8 -> Some Interface
-    | 9 -> Some Module
-    | 10 -> Some Property
-    | 11 -> Some Unit
-    | 12 -> Some Value
-    | 13 -> Some Enum
-    | 14 -> Some Keyword
-    | 15 -> Some Snippet
-    | 16 -> Some Color
-    | 17 -> Some File
-    | 18 -> Some Reference
-    | _ -> None
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with insertFormat_of_int_opt. *)
-  let int_of_insertFormat = function
-    | PlainText -> 1
-    | SnippetFormat -> 2
-
-(** Once we get better PPX support we can use [@@deriving enum].
-    Keep in sync with int_of_insertFormat. *)
-  let insertFormat_of_int_opt = function
-    | 1 -> Some PlainText
-    | 2 -> Some SnippetFormat
-    | _ -> None
 end
 
 
@@ -931,6 +928,52 @@ module Error = struct
 
   (* Defined by the protocol. *)
   exception RequestCancelled of string (* -32800 *)
+
+  module Code = struct
+    (* Defined by JSON RPC *)
+    let parseError = -32700
+    let invalidRequest = -32600
+    let methodNotFound = -32601
+    let invalidParams = -32602
+    let internalError = -32603
+    let serverErrorStart = -32099
+    let serverErrorEnd = -32000
+    let serverNotInitialized = -32002
+    let unknownErrorCode = -32001
+
+    (* Defined by the protocol. *)
+    let requestCancelled = -32800
+    let contentModified = -32801
+  end
+end
+
+type lsp_registration_options =
+  | DidChangeWatchedFilesRegistrationOptions of
+      DidChangeWatchedFiles.registerOptions
+
+(* Register capability request, method="client/registerCapability" *)
+module RegisterCapability = struct
+  type params = {
+    registrations: registration list;
+  }
+
+  and registration = {
+    id: string;
+    method_: string;
+    registerOptions: lsp_registration_options;
+  }
+
+  let make_registration
+      (registerOptions: lsp_registration_options)
+      : registration =
+    (* The ID field is arbitrary but unique per type of capability (for future
+    deregistering, which we don't do). *)
+    let (id, method_) =
+      match registerOptions with
+      | DidChangeWatchedFilesRegistrationOptions _ ->
+        ("did-change-watched-files", "workspace/didChangeWatchedFiles")
+    in
+    { id; method_; registerOptions }
 end
 
 
@@ -940,9 +983,11 @@ end
 
 type lsp_request =
   | InitializeRequest of Initialize.params
+  | RegisterCapabilityRequest of RegisterCapability.params
   | ShutdownRequest
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
+  | TypeDefinitionRequest of TypeDefinition.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
@@ -964,6 +1009,7 @@ type lsp_result =
   | ShutdownResult
   | HoverResult of Hover.result
   | DefinitionResult of Definition.result
+  | TypeDefinitionResult of TypeDefinition.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
@@ -988,6 +1034,7 @@ type lsp_notification =
   | DidCloseNotification of DidClose.params
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
+  | DidChangeWatchedFilesNotification of DidChangeWatchedFiles.params
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params

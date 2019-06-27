@@ -20,15 +20,26 @@ type 'a t = {
   explicit_values: ('a * Loc.t option) LintMap.t;
 }
 
-let of_default default_value = {
-  default_value;
-  explicit_values = LintMap.empty
-}
-
 let default_lint_severities = [
-  Lints.DeprecatedCallSyntax, (Severity.Err, None);
-  Lints.DeprecatedUtility,    (Severity.Err, None);
+  Lints.DeprecatedUtility, (Severity.Err, None);
+  Lints.DeprecatedEnumUtility, (Severity.Err, None);
 ]
+
+let ignored_by_all = [
+  Lints.DynamicExport;
+  Lints.DeprecatedUtility;
+  Lints.DeprecatedEnumUtility;
+  Lints.ImplicitInexactObject;
+  Lints.UninitializedInstanceProperty;
+]
+
+let config_default =
+  Core_list.Assoc.find default_lint_severities ~equal:(=)
+  %> Option.value ~default:(Severity.Off, None)
+
+let of_default default_value =
+  let explicit_values = LintMap.of_function ignored_by_all config_default in
+  { default_value; explicit_values }
 
 let set_value key value settings =
   let new_map = LintMap.add key value settings.explicit_values
@@ -116,16 +127,10 @@ let of_lines base_settings =
       "Malformed lint rule. Properly formed rules contain a single '=' character.")
   in
 
-  let config_default =
-    Core_list.Assoc.find default_lint_severities ~equal:(=)
-    %> Option.map ~f:fst
-    %> Option.value ~default:Severity.Off
-  in
-
   let add_value keys value settings =
     let (new_settings, all_redundant) = List.fold_left (fun (settings, all_redundant) key ->
         let v = get_value key settings in
-        let all_redundant = all_redundant && v = fst value && v <> config_default key in
+        let all_redundant = all_redundant && v = fst value && v <> fst (config_default key) in
         let settings = set_value key value settings in
         (settings, all_redundant))
       (settings, true) keys

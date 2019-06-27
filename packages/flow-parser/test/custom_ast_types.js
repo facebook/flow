@@ -64,7 +64,7 @@ def("DeclareOpaqueType")
 
 def("PrivateName")
   .bases("Expression")
-  .field("name", def("Identifier"))
+  .field("id", def("Identifier"))
 
 def("ClassPrivateProperty")
   .bases("ClassProperty")

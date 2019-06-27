@@ -10,6 +10,7 @@
 #include <caml/alloc.h>
 #include <caml/memory.h>
 #ifdef _WIN32
+#include <caml/fail.h>
 #include <windows.h>
 
 value hh_getrusage(void) {

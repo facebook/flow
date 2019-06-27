@@ -32,7 +32,17 @@ module ListenLoop = LwtLoop.Make (struct
     });
     Lwt.return_unit
   | MonitorProt.FileWatcherNotification (changed_files, metadata) ->
-    ServerMonitorListenerState.push_files_to_recheck ?metadata changed_files;
+    let file_count = SSet.cardinal changed_files in
+    let reason = Persistent_connection_prot.(match metadata with
+    | Some { MonitorProt.changed_mergebase = true; total_update_distance; } ->
+      Rebased { distance = total_update_distance; file_count; }
+    | _ when file_count = 1 ->
+      Single_file_changed { filename = SSet.elements changed_files |> List.hd; }
+    | _ ->
+      Many_files_changed { file_count; }
+    ) in
+
+    ServerMonitorListenerState.push_files_to_recheck ?metadata ~reason changed_files;
     Lwt.return_unit
   | MonitorProt.PleaseDie please_die_reason ->
     (* TODO - find a way to gracefully kill the workers. At the moment, if the workers are in the

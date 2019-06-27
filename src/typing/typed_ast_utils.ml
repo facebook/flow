@@ -39,9 +39,9 @@ class type_parameter_mapper = object(_)
       in
       let polarity = Ast.Variance.(
         match variance with
-        | Some (_, Plus) -> Type.Positive
-        | Some (_, Minus) -> Type.Negative
-        | None -> Type.Neutral
+        | Some (_, Plus) -> Polarity.Positive
+        | Some (_, Minus) -> Polarity.Negative
+        | None -> Polarity.Neutral
       ) in
       let default = Option.map default ~f:(fun ((_, t), _) -> t)
       in
@@ -69,7 +69,7 @@ class type_parameter_mapper = object(_)
         name = "this";
         reason = Reason.mk_reason (Reason.RType name) name_loc;
         bound = self_t;
-        polarity = Type.Positive;
+        polarity = Polarity.Positive;
         default = None;
       }
     ) in
@@ -82,101 +82,322 @@ class type_parameter_mapper = object(_)
 end
 
 
-(* Find identifier under location *)
-
 exception Found of ALoc.t * Type.TypeScheme.t
 
-(* Kinds of nodes that "type-at-pos" is interested in:
- * - identifiers              (handled in t_identifier)
- * - literal object keys      (handled in object_key)
- * - `this`, `super`          (handled in expression)
- * - private property names   (handled in expression)
- *)
-class type_at_pos_searcher (target_loc: Loc.t) = object(self)
+(* Find exact location match *)
+class exact_match_searcher (target_loc: ALoc.t) = object(self)
   inherit type_parameter_mapper as super
-
-  method covers_target loc =
-    Reason.in_range target_loc (ALoc.to_loc loc)
 
   method find_loc: 'a . ALoc.t -> Type.t -> Type.typeparam list -> 'a =
     fun loc t tparams ->
       raise (Found (loc, { Type.TypeScheme.tparams; type_ = t}))
 
-  method! t_identifier (((loc, t), _) as id) =
-    if self#covers_target loc
-    then self#annot_with_tparams (self#find_loc loc t)
-    else super#t_identifier id
-
-  method! jsx_identifier (((loc, t), _) as id) =
-    if self#covers_target loc
-    then self#annot_with_tparams (self#find_loc loc t)
-    else super#jsx_identifier id
-
-  method! object_key key =
-    let open Ast.Expression.Object.Property in
-    match key with
-    | Literal ((loc, t), _) when self#covers_target loc ->
+  method! on_type_annot annot =
+    let (loc, t) = annot in
+    if target_loc = loc then
       self#annot_with_tparams (self#find_loc loc t)
-    | _ -> super#object_key key
+    else
+      super#on_type_annot annot
+end
 
-  method! expression expr =
-    let open Ast.Expression in
-    match expr with
-    | (loc, t), (This | Super)
-    | (_, t), Member { Member.property = Member.PropertyPrivateName (loc, _); _ }
-    | (_, t), OptionalMember { OptionalMember.member = { Member.property =
-        Member.PropertyPrivateName (loc, _); _
-      }; _}
-    when self#covers_target loc ->
-      self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
-    | _ -> super#expression expr
+let find_exact_match_annotation typed_ast loc =
+  let searcher = new exact_match_searcher loc in
+  try ignore (searcher#program typed_ast); None with
+  | Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
 
-  method! implicit (loc, t) =
-    if self#covers_target loc
-    then self#annot_with_tparams (self#find_loc loc t)
-    else super#implicit (loc, t)
+(* Find identifier under location *)
+module Type_at_pos = struct
+
+  exception Found of ALoc.t * Type.TypeScheme.t
+
+  (* Kinds of nodes that "type-at-pos" is interested in:
+   * - identifiers              (handled in t_identifier)
+   * - literal object keys      (handled in object_key)
+   * - `this`, `super`          (handled in expression)
+   * - private property names   (handled in expression)
+   *)
+  class type_at_pos_searcher (target_loc: Loc.t) = object(self)
+    inherit type_parameter_mapper as super
+
+    method covers_target loc =
+      Reason.in_range target_loc (ALoc.to_loc_exn loc)
+
+    method find_loc: 'a . ALoc.t -> Type.t -> Type.typeparam list -> 'a =
+      fun loc t tparams ->
+        raise (Found (loc, { Type.TypeScheme.tparams; type_ = t}))
+
+    method! t_identifier (((loc, t), _) as id) =
+      if self#covers_target loc
+      then self#annot_with_tparams (self#find_loc loc t)
+      else super#t_identifier id
+
+    method! jsx_identifier (((loc, t), _) as id) =
+      if self#covers_target loc
+      then self#annot_with_tparams (self#find_loc loc t)
+      else super#jsx_identifier id
+
+    method! object_key key =
+      let open Ast.Expression.Object.Property in
+      match key with
+      | Literal ((loc, t), _) when self#covers_target loc ->
+        self#annot_with_tparams (self#find_loc loc t)
+      | _ -> super#object_key key
+
+    method! expression expr =
+      let open Ast.Expression in
+      match expr with
+      | (loc, t), (This | Super)
+      | (_, t), Member { Member.property = Member.PropertyPrivateName (loc, _); _ }
+      | (_, t), OptionalMember { OptionalMember.member = { Member.property =
+          Member.PropertyPrivateName (loc, _); _
+        }; _}
+      when self#covers_target loc ->
+        self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
+      | _ -> super#expression expr
+
+    method! implicit (loc, t) =
+      if self#covers_target loc
+      then self#annot_with_tparams (self#find_loc loc t)
+      else super#implicit (loc, t)
+
+  end
+
+  class type_at_aloc_map_folder = object(_)
+    inherit type_parameter_mapper
+    val mutable map = ALocMap.empty
+    method! on_type_annot x =
+      let loc, type_ = x in
+      let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams; } in
+      map <- ALocMap.add loc scheme map;
+      x
+    method to_map = map
+  end
+
+  class type_at_aloc_list_folder = object(_)
+    inherit type_parameter_mapper
+    val mutable l = []
+    method! on_type_annot x =
+      let loc, type_ = x in
+      l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams; }) :: l;
+      x
+    method to_list = l
+  end
+
+  let find_type_at_pos_annotation typed_ast loc =
+    let searcher = new type_at_pos_searcher loc in
+    try ignore (searcher#program typed_ast); None with
+    | Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
 
 end
 
-class type_at_aloc_map_folder = object(_)
-  inherit type_parameter_mapper
-  val mutable map = ALocMap.empty
-  method! on_type_annot x =
-    let loc, type_ = x in
-    let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams; } in
-    map <- ALocMap.add loc scheme map;
-    x
-  method to_map = map
-end
-
-class type_at_aloc_list_folder = object(_)
-  inherit type_parameter_mapper
-  val mutable l = []
-  method! on_type_annot x =
-    let loc, type_ = x in
-    l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams; }) :: l;
-    x
-  method to_list = l
-end
-
-let find_type_at_pos_annotation (typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program) (loc: Loc.t) =
-  let searcher = new type_at_pos_searcher loc in
-  try
-    let _ = searcher#program typed_ast in
-    None
-  with
-  | Found (loc, scheme) -> Some (ALoc.to_loc loc, scheme)
-  | exc -> raise exc
+let find_type_at_pos_annotation = Type_at_pos.find_type_at_pos_annotation
 
 let typed_ast_to_map typed_ast : (Type.TypeScheme.t ALocMap.t) =
-  let folder = new type_at_aloc_map_folder in
+  let folder = new Type_at_pos.type_at_aloc_map_folder in
   ignore (folder#program typed_ast);
   folder#to_map
 
 let typed_ast_to_list typed_ast: (ALoc.t * Type.TypeScheme.t) list =
-  let folder = new type_at_aloc_list_folder in
+  let folder = new Type_at_pos.type_at_aloc_list_folder in
   ignore (folder#program typed_ast);
   folder#to_list
+
+
+(* Get-def *)
+
+type get_def_object_source =
+  | GetDefType of Type.t
+  | GetDefRequireLoc of ALoc.t (* source loc *)
+
+type get_def_member_info = {
+  get_def_prop_name: string;
+  get_def_object_source: get_def_object_source;
+}
+
+module Get_def = struct
+
+  exception Found of get_def_member_info
+
+  class searcher (target_loc: Loc.t) = object(this)
+    inherit [
+      ALoc.t, ALoc.t * Type.t,
+      ALoc.t, ALoc.t * Type.t
+    ] Flow_polymorphic_ast_mapper.mapper as super
+
+    method on_loc_annot (x: ALoc.t) = x
+    method on_type_annot (x: ALoc.t * Type.t) = x
+
+    method covers_target loc =
+      Reason.in_range target_loc (ALoc.to_loc_exn loc)
+
+    method find_loc x =
+      raise (Found x)
+
+    method! import_declaration import_loc decl =
+      let open Ast.Statement.ImportDeclaration in
+      let { importKind = _; source = (source_loc, _); specifiers; default } = decl in
+      Option.iter ~f:(this#import_specifier_with_loc ~source_loc) specifiers;
+      Option.iter ~f:(this#import_default_specifier_with_loc ~source_loc) default;
+      super#import_declaration import_loc decl
+
+    method import_specifier_with_loc ~source_loc specifier =
+      let open Ast.Statement.ImportDeclaration in
+      match specifier with
+      | ImportNamedSpecifiers named_specifiers ->
+        Core_list.iter ~f:(this#import_named_specifier_with_loc ~source_loc) named_specifiers
+      | ImportNamespaceSpecifier _ -> ()
+
+    method import_named_specifier_with_loc ~source_loc specifier =
+      let open Ast.Statement.ImportDeclaration in
+      let { kind = _; local; remote } = specifier in
+      let (remote_name_loc, _), { Ast.Identifier.name = remote_name; _ } = remote in
+      let member_info = {
+        get_def_prop_name = remote_name;
+        get_def_object_source = GetDefRequireLoc source_loc;
+      } in
+      if this#covers_target remote_name_loc then this#find_loc member_info;
+      Option.iter ~f:(fun local ->
+        let (local_name_loc, _), _ = local in
+        if this#covers_target local_name_loc then
+          let member_info = {
+            get_def_prop_name = remote_name;
+            get_def_object_source = GetDefRequireLoc source_loc;
+          } in
+          this#find_loc member_info;
+      ) local
+
+    method! member expr =
+      let expr = super#member expr in
+      let open Ast.Expression.Member in
+      let { _object; property } = expr in
+      begin match property with
+        | PropertyIdentifier ((loc, _), { Ast.Identifier.name; _ })
+          when this#covers_target loc
+          ->
+          let (_, t), _ = _object in
+          let member_info = {
+            get_def_prop_name = name;
+            get_def_object_source = GetDefType t;
+          } in
+          this#find_loc member_info
+        | _ -> ()
+      end;
+      expr
+
+    method import_default_specifier_with_loc ~source_loc default =
+      let (remote_name_loc, _), _ = default in
+      if this#covers_target remote_name_loc then
+        let member_info = {
+          get_def_prop_name = "default"; (* see members.ml *)
+          get_def_object_source = GetDefRequireLoc source_loc;
+        } in
+        this#find_loc member_info;
+
+  end
+
+  let find_get_def_info typed_ast loc =
+    let searcher = new searcher loc in
+    try ignore (searcher#program typed_ast); None with
+    | Found info -> Some info
+
+end
+
+let find_get_def_info = Get_def.find_get_def_info
+
+
+(* Coverage *)
+
+class ['a, 'l, 't] coverage_folder ~(f: 'l -> 't -> 'a -> 'a) ~(init: 'a) = object(this)
+  inherit
+    ['l, 'l * 't, 'l, 'l * 't] Flow_polymorphic_ast_mapper.mapper
+    as super
+
+  val mutable acc: 'a = init
+  method on_loc_annot x = x
+  method on_type_annot x = x
+
+  method! expression exp =
+    let (loc, t), _ = exp in
+    acc <- f loc t acc;
+    super#expression exp
+
+  method! object_property prop =
+    let prop = super#object_property prop in
+    let open Ast.Expression.Object.Property in
+    match prop with
+    | loc, Method { key = (Literal ((_, t), _) | Identifier ((_, t), _)); _ } ->
+      acc <- f loc t acc;
+      prop
+    | _ -> prop
+
+  method! statement stmt =
+    let stmt = super#statement stmt in
+    match stmt with
+    | loc, Ast.Statement.ClassDeclaration { Ast.Class.id = Some ((_, t), _); _ }
+    | loc, Ast.Statement.DeclareClass { Ast.Statement.DeclareClass.id = ((_, t), _); _ }
+    | _, Ast.Statement.DeclareExportDeclaration {
+        Ast.Statement.DeclareExportDeclaration.
+        declaration = Some (
+          Ast.Statement.DeclareExportDeclaration.NamedOpaqueType (loc,
+            { Ast.Statement.OpaqueType.id = (_, t), _; _ }
+          )
+        | Ast.Statement.DeclareExportDeclaration.Class (loc,
+            {Ast.Statement.DeclareClass.id = (_, t), _; _ }
+          )
+        ); _
+      }
+    | loc, Ast.Statement.DeclareInterface { Ast.Statement.Interface.id = ((_, t), _); _ }
+    | loc, Ast.Statement.DeclareModule { Ast.Statement.DeclareModule.id = (
+          Ast.Statement.DeclareModule.Identifier ((_, t), _)
+        | Ast.Statement.DeclareModule.Literal ((_, t), _)
+      ); _}
+    | loc, Ast.Statement.DeclareTypeAlias { Ast.Statement.TypeAlias.id = (_, t), _; _}
+    | loc, Ast.Statement.DeclareOpaqueType { Ast.Statement.OpaqueType.id = (_, t), _; _}
+    | loc, Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id = (_, t), _; _ }
+    | loc, Ast.Statement.OpaqueType { Ast.Statement.OpaqueType.id = (_, t), _; _}
+    | loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id = (_, t), _; _}
+      ->
+      acc <- f loc t acc;
+      stmt
+    | _ -> stmt
+
+  method! class_identifier i = i (* skip this *)
+
+  method! jsx_name name =
+    let open Ast.JSX in
+    let name = super#jsx_name name in
+    match name with
+    | MemberExpression (loc, {
+        MemberExpression.property = (_, t), _; _
+      }) ->
+      acc <- f loc t acc;
+      name
+    | Identifier _
+    | NamespacedName _ -> name
+
+  method! jsx_member_expression_object _object =
+    let open Ast.JSX.MemberExpression in
+    match _object with
+    | Identifier ((loc, t), _) ->
+      acc <- f loc t acc;
+      _object
+    | MemberExpression _ ->
+      super#jsx_member_expression_object _object
+
+  method! t_pattern_identifier ?kind i =
+    let (loc, t), _ = i in
+    acc <- f loc t acc;
+    super#t_pattern_identifier ?kind i
+
+  method top_level_program prog =
+    acc <- init;
+    ignore (this#program prog);
+    acc
+end
+
+let coverage_fold_tast ~(f: 'l -> 't -> 'acc -> 'acc) ~(init: 'acc) tast =
+  let folder = new coverage_folder ~f ~init in
+  folder#top_level_program tast
 
 
 (** Mappers

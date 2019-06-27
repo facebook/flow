@@ -5,14 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type logging_context = {
-  argv: string;
-  command: string option;
-  from: string option;
-  root: string option;
-  root_name: string option;
-  start_time: float;
-}
+type logging_context = { from: string option }
 
 type persistent_context = {
   start_lsp_state: string option;
@@ -39,32 +32,27 @@ type persistent_delay = {
 }
 
 let context = ref {
-  argv = "";
-  command = None;
   from = None;
-  root = None;
-  root_name = None;
-  start_time = 0.0;
 }
 
 let get_context () = !context
 let get_from_I_AM_A_CLOWN () = !context.from
 let restore_context _ = ()
 let set_command _ = ()
-let set_from from = context := { !context with from; }
+let set_from from = context := { from; }
 let set_root _ = ()
 let set_root_name _ = ()
 let set_saved_state_filename _ = ()
 let set_monitor_options ~file_watcher:_  = ()
-let set_server_options ~lazy_mode:_ = ()
+let set_server_options ~lazy_mode:_ ~arch:_ = ()
 
 let status_response ~num_errors:_ = ()
 let init_done
   ?estimated_time_to_recheck:_
   ?estimated_time_to_restart:_
   ?estimated_time_to_init:_
-  ?estimated_time_to_merge_a_file:_
-  ?estimated_files_to_merge:_
+  ?estimated_time_per_file:_
+  ?estimated_files_to_recheck:_
   ?estimated_files_to_init:_
   _profiling = ()
 let init_flow_command ~version:_ = ()
@@ -75,6 +63,7 @@ let out_of_date _ = ()
 let exit _ _ = ()
 let report_from_monitor_server_exit_due_to_signal _ = ()
 let recheck
+    ~recheck_reasons:_
     ~modified:_
     ~deleted:_
     ~dependent_files:_
@@ -83,8 +72,8 @@ let recheck
     ~estimated_time_to_recheck:_
     ~estimated_time_to_restart:_
     ~estimated_time_to_init:_
-    ~estimated_time_to_merge_a_file:_
-    ~estimated_files_to_merge:_
+    ~estimated_time_per_file:_
+    ~estimated_files_to_recheck:_
     ~estimated_files_to_init:_
     ~scm_update_distance:_
     ~scm_changed_mergebase:_ = ()

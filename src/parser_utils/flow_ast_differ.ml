@@ -576,18 +576,18 @@ let program (algo : diff_algorithm)
     diff_if_changed_opt export_named_declaration_specifier specs1 specs2
 
   and import_default_specifier
-      (ident1: Loc.t Ast.Identifier.t option)
-      (ident2: Loc.t Ast.Identifier.t option): node change list option =
+      (ident1: (Loc.t, Loc.t) Ast.Identifier.t option)
+      (ident2: (Loc.t, Loc.t) Ast.Identifier.t option): node change list option =
     diff_if_changed_nonopt_fn identifier ident1 ident2
 
   and import_namespace_specifier
-      (ident1: Loc.t Ast.Identifier.t)
-      (ident2: Loc.t Ast.Identifier.t): node change list option =
+      (ident1: (Loc.t, Loc.t) Ast.Identifier.t)
+      (ident2: (Loc.t, Loc.t) Ast.Identifier.t): node change list option =
     diff_if_changed identifier ident1 ident2 |> Option.return
 
   and import_named_specifier
-      (nm_spec1: Loc.t Ast.Statement.ImportDeclaration.named_specifier)
-      (nm_spec2: Loc.t Ast.Statement.ImportDeclaration.named_specifier): node change list option =
+      (nm_spec1: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier)
+      (nm_spec2: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier): node change list option =
     let open Ast.Statement.ImportDeclaration in
     let { kind = kind1; local = local1; remote = remote1 } = nm_spec1 in
     let { kind = kind2; local = local2; remote = remote2 } = nm_spec2 in
@@ -876,8 +876,8 @@ let program (algo : diff_algorithm)
         Some (literal loc lit1 lit2)
       | (_, Binary b1), (_, Binary b2) ->
         binary b1 b2
-      | (_, Unary u1), (_, Unary u2) ->
-        unary u1 u2
+      | (loc, Unary u1), (_, Unary u2) ->
+        unary loc u1 u2
       | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
         identifier id1 id2 |> Option.return
       | (_, Conditional c1), (_, Conditional c2) ->
@@ -1244,16 +1244,19 @@ let program (algo : diff_algorithm)
     else
       Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
 
-  and unary (u1: (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2: (Loc.t, Loc.t) Ast.Expression.Unary.t): node change list option =
+  and unary loc (u1: (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2: (Loc.t, Loc.t) Ast.Expression.Unary.t): node change list option =
     let open Ast.Expression.Unary in
-    let { operator = op1; argument = arg1 } = u1 in
-    let { operator = op2; argument = arg2 } = u2 in
+    let { operator = op1; argument = arg1; comments = comments1 } = u1 in
+    let { operator = op2; argument = arg2; comments = comments2 } = u2 in
+    let comments = syntax_opt loc comments1 comments2
+      |> Option.value ~default:[]
+    in
     if op1 != op2 then
       None
     else
-      Some (expression arg1 arg2)
+      Some (comments @ (expression arg1 arg2))
 
-  and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
+  and identifier (id1: (Loc.t, Loc.t) Ast.Identifier.t) (id2: (Loc.t, Loc.t) Ast.Identifier.t): node change list =
     let (old_loc, { Ast.Identifier.name= name1; comments= comments1 }) = id1 in
     let (_new_loc, { Ast.Identifier.name= name2; comments= comments2 }) = id2 in
     let name =
@@ -1656,7 +1659,8 @@ let program (algo : diff_algorithm)
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
       | Interface i1, Interface i2 -> interface_type i1 i2
       | Generic g1, Generic g2 -> generic_type g1 g2
-      | Intersection (t0, t1, ts), Intersection (t0', t1', ts') ->
+      | Intersection (t0, t1, ts), Intersection (t0', t1', ts')
+      | Union (t0, t1, ts), Union (t0', t1', ts') ->
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
       | Nullable (t1_loc, t1), Nullable (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2

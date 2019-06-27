@@ -533,6 +533,7 @@ let stub_metadata ~root ~checked = { Context.
   (* global *)
   max_literal_length = 100;
   enable_const_params = false;
+  enable_enums = true;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
@@ -546,6 +547,7 @@ let stub_metadata ~root ~checked = { Context.
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
+  recursion_limit = 10000;
   root;
   strip_root = true;
   suppress_comments = [];
@@ -603,7 +605,7 @@ let flow_check (code : string) : string option =
                           } in
       let input_ast, _ = Parser_flow.program code in
       let (_, _, comments) = input_ast in
-      let aloc_ast = Ast_loc_utils.abstractify_mapper#program input_ast in
+      let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program input_ast in
       let filename = File_key.SourceFile "/tmp/foo.js" in
       let file_sig = match File_sig.With_Loc.program ~ast:input_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig
@@ -624,8 +626,11 @@ let flow_check (code : string) : string option =
       let errors, warnings, suppressions =
         Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
-      let errors = Flow_error.make_errors_printable errors in
-      let warnings = Flow_error.make_errors_printable warnings in
+      let lazy_table_of_aloc _ =
+        lazy (failwith "Did not expect to encounter an abstract location in flowtestgen")
+      in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
       let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
           ~root ~file_options:None suppressions errors ~unused:suppressions in
       let warnings, _, _ = Error_suppressions.filter_suppressed_errors

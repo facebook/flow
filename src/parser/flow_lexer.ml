@@ -49,7 +49,8 @@ let underscored_decimal = [%sedlex.regexp?
 (* Different ways you can write a number *)
 let binnumber = [%sedlex.regexp? '0', ('B' | 'b'), underscored_bin]
 let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), underscored_oct]
-let legacyoctnumber = [%sedlex.regexp? '0', underscored_oct]
+let legacyoctnumber = [%sedlex.regexp? '0', Plus oct_digit] (* no underscores allowed *)
+let legacynonoctnumber = [%sedlex.regexp? '0', Star oct_digit, '8'..'9', Star digit]
 let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), underscored_hex]
 let scinumber = [%sedlex.regexp?
   ((decintlit, Opt ('.', Opt underscored_decimal)) | ('.', underscored_decimal)),
@@ -60,7 +61,6 @@ let floatnumber = [%sedlex.regexp? Opt underscored_digit, '.', underscored_decim
 
 let binbigint = [%sedlex.regexp? binnumber, 'n']
 let octbigint = [%sedlex.regexp? octnumber, 'n']
-let legacyoctbigint = [%sedlex.regexp? legacyoctnumber, 'n']
 let hexbigint = [%sedlex.regexp? hexnumber, 'n']
 let scibigint = [%sedlex.regexp? scinumber, 'n']
 let wholebigint = [%sedlex.regexp? underscored_digit, 'n']
@@ -107,10 +107,10 @@ let htmlentity = [%sedlex.regexp?
   Opt alphanumeric, Opt alphanumeric, Opt alphanumeric, Opt alphanumeric
 ]
 
-(* http://www.ecma-international.org/ecma-262/6.0/#table-32 *)
+(* https://tc39.github.io/ecma262/#sec-white-space *)
 let whitespace = [%sedlex.regexp?
   0x0009 | 0x000B | 0x000C | 0x0020 | 0x00A0 | 0xfeff |
-  0x1680 | 0x180e | 0x2000 .. 0x200a | 0x202f | 0x205f | 0x3000
+  0x1680 | 0x2000 .. 0x200a | 0x202f | 0x205f | 0x3000
 ]
 
 (* minus sign in front of negative numbers
@@ -190,108 +190,6 @@ let new_line env lexbuf =
   let lex_bol = { line = Lex_env.line env + 1; offset; } in
   { env with Lex_env.lex_bol }
 
-module FloatOfString : sig
-  val float_of_string: string -> float
-end = struct
-  type t = {
-    negative: bool;
-    mantissa: int;
-    exponent: int;
-    decimal_exponent: int option;
-    todo: char list;
-  }
-
-  exception No_good
-
-  let eat f =
-    match f.todo with
-    | _::todo -> { f with todo; }
-    | _ -> raise No_good
-
-  let start str =
-    let todo = ref [] in
-    String.iter (fun c -> todo := c::(!todo)) str;
-    {
-      negative = false;
-      mantissa = 0;
-      exponent = 0;
-      decimal_exponent = None;
-      todo = List.rev (!todo);
-    }
-
-  let parse_sign f =
-    match f.todo with
-    | '+'::_ -> eat f
-    | '-'::_ -> { (eat f) with negative = true; }
-    | _ -> f
-
-  let parse_hex_symbol f =
-    match f.todo with
-    | '0'::('x' | 'X')::_ -> f |> eat |> eat
-    | _ -> raise No_good
-
-  let parse_exponent f =
-    let todo_str = f.todo
-      |> List.map Char.escaped
-      |> String.concat "" in
-    let exponent =
-      try int_of_string todo_str
-      with Failure _ -> raise No_good in
-    { f with exponent; todo = [] }
-
-  let rec parse_body f =
-    match f.todo with
-    | [] -> f
-    (* _ is just ignored *)
-    | '_'::_ -> parse_body (eat f)
-    | '.'::_ ->
-        if f.decimal_exponent = None
-        then parse_body { (eat f) with decimal_exponent = Some 0 }
-        else raise No_good
-    | ('p' | 'P')::_ ->
-        parse_exponent (eat f)
-    | c::_ ->
-        let ref_char_code =
-          if c >= '0' && c <= '9'
-          then Char.code '0'
-          else if c >= 'A' && c <= 'F'
-          then Char.code 'A' - 10
-          else if c >= 'a' && c <= 'f'
-          then Char.code 'a' - 10
-          else raise No_good in
-        let value = (Char.code c) - ref_char_code in
-        let decimal_exponent = match f.decimal_exponent with
-        | None -> None
-        | Some e -> Some (e - 4) in
-        let mantissa = (f.mantissa lsl 4) + value in
-        parse_body { (eat f) with decimal_exponent; mantissa; }
-
-  let float_of_t f =
-    assert (f.todo = []);
-    let ret = float_of_int f.mantissa in
-    let exponent = match f.decimal_exponent with
-    | None -> f.exponent
-    | Some decimal_exponent -> f.exponent + decimal_exponent in
-    let ret =
-      if exponent = 0
-      then ret
-      else ret ** (float_of_int exponent) in
-    if f.negative
-    then -.ret
-    else ret
-
-  let float_of_string str =
-    try Pervasives.float_of_string str
-    with e when Sys.win32 ->
-      try
-        start str
-          |> parse_sign
-          |> parse_hex_symbol
-          |> parse_body
-          |> float_of_t
-      with No_good -> raise e
-end
-
 let bigint_strip_n raw =
   let size = String.length raw in
   let str =
@@ -328,40 +226,36 @@ let mk_num_singleton number_type raw =
     begin try Int64.to_float (Int64.of_string num)
     with Failure _ -> failwith ("Invalid binary/octal "^num)
     end
+  | LEGACY_NON_OCTAL
   | NORMAL ->
-    begin try FloatOfString.float_of_string num
+    begin try float_of_string num
     with Failure _ -> failwith ("Invalid number "^num)
     end
   in
   let value = if neg then ~-.value else value in
   T_NUMBER_SINGLETON_TYPE { kind = number_type; value; raw }
 
-let mk_bignum_singleton number_type raw =
+let mk_bignum_singleton kind raw =
   let neg, num = if raw.[0] = '-'
     then true, String.sub raw 1 (String.length raw - 1)
     else false, raw
   in
   (* convert singleton number type into a float *)
-  let value = match number_type with
-  | LEGACY_OCTAL ->
-    let postraw = bigint_strip_n num in
-    begin try Int64.to_float (Int64.of_string ("0o"^postraw))
-    with Failure _ -> failwith ("Invalid (lexer) bigint legacy octal "^postraw)
-    end
-  | BINARY
-  | OCTAL ->
+  let value = match kind with
+  | BIG_BINARY
+  | BIG_OCTAL ->
     let postraw = bigint_strip_n num in
     begin try Int64.to_float (Int64.of_string postraw)
     with Failure _ -> failwith ("Invalid (lexer) bigint binary/octal "^postraw)
     end
-  | NORMAL ->
+  | BIG_NORMAL ->
     let postraw = bigint_strip_n num in
-    begin try FloatOfString.float_of_string postraw
+    begin try float_of_string postraw
     with Failure _ -> failwith ("Invalid (lexer) bigint "^postraw)
     end
   in
   let approx_value = if neg then ~-.value else value in
-  T_BIGINT_SINGLETON_TYPE { kind = number_type; approx_value; raw }
+  T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw }
 
 let decode_identifier =
   let assert_valid_unicode_in_identifier env loc code =
@@ -771,12 +665,12 @@ let token (env: Lex_env.t) lexbuf : result =
   | binbigint, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | binbigint -> 
-      Token (env, T_BIGINT { kind = BINARY; raw = lexeme lexbuf })
+    | binbigint ->
+      Token (env, T_BIGINT { kind = BIG_BINARY; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | binbigint ->
-    Token (env, T_BIGINT { kind = BINARY; raw = lexeme lexbuf })
+    Token (env, T_BIGINT { kind = BIG_BINARY; raw = lexeme lexbuf })
   | binnumber, (letter | '2'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -791,11 +685,11 @@ let token (env: Lex_env.t) lexbuf : result =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | octbigint ->
-      Token (env, T_BIGINT { kind = OCTAL; raw = lexeme lexbuf })
+      Token (env, T_BIGINT { kind = BIG_OCTAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | octbigint ->
-    Token (env, T_BIGINT { kind = OCTAL; raw = lexeme lexbuf })
+    Token (env, T_BIGINT { kind = BIG_OCTAL; raw = lexeme lexbuf })
   | octnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -805,14 +699,15 @@ let token (env: Lex_env.t) lexbuf : result =
   | octnumber ->
     Token (env, T_NUMBER { kind = OCTAL; raw = lexeme lexbuf })
 
-  | legacyoctbigint, word ->
+  | legacynonoctnumber, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | legacyoctbigint -> Token (env, T_BIGINT { kind = LEGACY_OCTAL; raw = lexeme lexbuf })
+    | legacynonoctnumber -> Token (env, T_NUMBER { kind = LEGACY_NON_OCTAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
-  | legacyoctbigint ->
-    Token (env, T_BIGINT { kind = LEGACY_OCTAL; raw = lexeme lexbuf })
+  | legacynonoctnumber ->
+    Token (env, T_NUMBER { kind = LEGACY_NON_OCTAL; raw = lexeme lexbuf })
+
   | legacyoctnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -825,11 +720,11 @@ let token (env: Lex_env.t) lexbuf : result =
   | hexbigint, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | hexbigint -> Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+    | hexbigint -> Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | hexbigint ->
-    Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+    Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
   | hexnumber, non_hex_letter, Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -842,16 +737,16 @@ let token (env: Lex_env.t) lexbuf : result =
   | scibigint, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | scibigint -> 
+    | scibigint ->
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
-      Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+      let env = lex_error env loc Parse_error.InvalidSciBigInt in
+      Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | scibigint ->
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
-    Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+    let env = lex_error env loc Parse_error.InvalidSciBigInt in
+    Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
   | scinumber, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -866,23 +761,23 @@ let token (env: Lex_env.t) lexbuf : result =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | floatbigint ->
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
-      Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+      let env = lex_error env loc Parse_error.InvalidFloatBigInt in
+      Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | wholebigint, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | wholebigint ->
-      Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+      Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | floatbigint ->
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
-    Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+    let env = lex_error env loc Parse_error.InvalidFloatBigInt in
+    Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
   | wholebigint ->
-    Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
+    Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
   | (wholenumber | floatnumber), word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -1691,12 +1586,12 @@ let type_token env lexbuf =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, binbigint ->
       let num = lexeme lexbuf in
-      Token (env, mk_bignum_singleton BINARY num)
+      Token (env, mk_bignum_singleton BIG_BINARY num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, binbigint ->
     let num = lexeme lexbuf in
-    Token (env, mk_bignum_singleton BINARY num)
+    Token (env, mk_bignum_singleton BIG_BINARY num)
   | Opt neg, binnumber, (letter | '2'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -1714,12 +1609,12 @@ let type_token env lexbuf =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, octbigint ->
       let num = lexeme lexbuf in
-      Token (env, mk_bignum_singleton OCTAL num)
+      Token (env, mk_bignum_singleton BIG_OCTAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, octbigint ->
     let num = lexeme lexbuf in
-    Token (env, mk_bignum_singleton OCTAL num)
+    Token (env, mk_bignum_singleton BIG_OCTAL num)
   | Opt neg, octnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -1732,17 +1627,6 @@ let type_token env lexbuf =
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton OCTAL num)
 
-  | Opt neg, legacyoctbigint, word ->
-    (* Numbers cannot be immediately followed by words *)
-    recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | Opt neg, legacyoctbigint ->
-      let num = lexeme lexbuf in
-      Token (env, mk_bignum_singleton LEGACY_OCTAL num)
-    | _ -> failwith "unreachable"
-    )
-  | Opt neg, legacyoctbigint ->
-    let num = lexeme lexbuf in
-    Token (env, mk_bignum_singleton LEGACY_OCTAL num)
   | Opt neg, legacyoctnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -1760,47 +1644,23 @@ let type_token env lexbuf =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, hexbigint ->
       let num = lexeme lexbuf in
-      (* Reconsider Windows support of FloatOfString *)
-      begin try Token (env, mk_bignum_singleton NORMAL num)
-      with _ when Sys.win32 ->
-        let loc = loc_of_lexbuf env lexbuf in
-        let env = lex_error env loc Parse_error.WindowsFloatOfString in
-        Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 291.0; raw = "0x123n" })
-      end
+      Token (env, mk_bignum_singleton BIG_NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, hexbigint ->
     let num = lexeme lexbuf in
-    (* Reconsider Windows support of FloatOfString *)
-    begin try Token (env, mk_bignum_singleton NORMAL num)
-    with _ when Sys.win32 ->
-      let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.WindowsFloatOfString in
-      Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 291.0; raw = "0x123n" })
-    end
+    Token (env, mk_bignum_singleton BIG_NORMAL num)
   | Opt neg, hexnumber, non_hex_letter, Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, hexnumber ->
       let num = lexeme lexbuf in
-      (* Reconsider Windows support of FloatOfString *)
-      begin try Token (env, mk_num_singleton NORMAL num)
-      with _ when Sys.win32 ->
-        let loc = loc_of_lexbuf env lexbuf in
-        let env = lex_error env loc Parse_error.WindowsFloatOfString in
-        Token (env, T_NUMBER_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" })
-      end
+      Token (env, mk_num_singleton NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, hexnumber ->
     let num = lexeme lexbuf in
-    (* Reconsider Windows support of FloatOfString *)
-    begin try Token (env, mk_num_singleton NORMAL num)
-    with _ when Sys.win32 ->
-      let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.WindowsFloatOfString in
-      Token (env, T_NUMBER_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" })
-    end
+    Token (env, mk_num_singleton NORMAL num)
 
   | Opt neg, scibigint, word ->
     (* Numbers cannot be immediately followed by words *)
@@ -1808,15 +1668,15 @@ let type_token env lexbuf =
     | Opt neg, scibigint ->
       let num = lexeme lexbuf in
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
-      Token (env, mk_bignum_singleton NORMAL num)
+      let env = lex_error env loc Parse_error.InvalidSciBigInt in
+      Token (env, mk_bignum_singleton BIG_NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, scibigint ->
     let num = lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
-    Token (env, mk_bignum_singleton NORMAL num)
+    let env = lex_error env loc Parse_error.InvalidSciBigInt in
+    Token (env, mk_bignum_singleton BIG_NORMAL num)
   | Opt neg, scinumber, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
@@ -1835,8 +1695,8 @@ let type_token env lexbuf =
     | Opt neg, floatbigint ->
       let num = lexeme lexbuf in
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
-      Token (env, mk_bignum_singleton NORMAL num)
+      let env = lex_error env loc Parse_error.InvalidFloatBigInt in
+      Token (env, mk_bignum_singleton BIG_NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, wholebigint, word ->
@@ -1844,17 +1704,17 @@ let type_token env lexbuf =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, wholebigint ->
       let num = lexeme lexbuf in
-      Token (env, mk_bignum_singleton NORMAL num)
+      Token (env, mk_bignum_singleton BIG_NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, floatbigint ->
     let num = lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
-    Token (env, mk_bignum_singleton NORMAL num)
+    let env = lex_error env loc Parse_error.InvalidFloatBigInt in
+    Token (env, mk_bignum_singleton BIG_NORMAL num)
   | Opt neg, wholebigint ->
     let num = lexeme lexbuf in
-    Token (env, mk_bignum_singleton NORMAL num)
+    Token (env, mk_bignum_singleton BIG_NORMAL num)
   | Opt neg, (wholenumber | floatnumber), word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with

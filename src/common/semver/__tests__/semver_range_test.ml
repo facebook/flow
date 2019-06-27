@@ -10,8 +10,10 @@ open OUnit2
 let v0_0_1 = Semver_version.({ zero with major = 0; minor = 0; patch = 1 })
 let v0_0_2 = Semver_version.({ zero with major = 0; minor = 0; patch = 2 })
 let v0_1_0 = Semver_version.({ zero with major = 0; minor = 1; patch = 0 })
+let v0_1_0_alpha_2 = Semver_version.({ v0_1_0 with prerelease = [Str "alpha"; Int 2] })
 let v0_1_2 = Semver_version.({ zero with major = 0; minor = 1; patch = 2 })
 let v0_2_0 = Semver_version.({ zero with major = 0; minor = 2; patch = 0 })
+let v0_2_0_alpha_2 = Semver_version.({ v0_2_0 with prerelease = [Str "alpha"; Int 2] })
 
 let v1 = Semver_version.({ zero with major = 1 })
 let v1_2_0 = Semver_version.({ zero with major = 1; minor = 2; patch = 0 })
@@ -37,6 +39,14 @@ let string_of_comparators comparators =
   comparators
   |> List.map Semver_comparator.to_string
   |> String.concat " "
+
+let assert_satisfies ~ctxt ?include_prereleases range version expected =
+  let msg = Printf.sprintf "Expected %s %sto satisfy %s"
+    (Semver_version.to_string version)
+    (if expected then "" else "NOT ")
+    (Semver_range.to_string range)
+  in
+  assert_equal ~ctxt ~msg expected (Semver_range.satisfies ?include_prereleases range version)
 
 let tests = "range" >::: [
   "comparators_of_range" >:: begin fun ctxt ->
@@ -66,19 +76,34 @@ let tests = "range" >::: [
       [Caret v1], v1, true;
       [Caret v1], v2, false;
       [Comparator (ge v1_2_3_alpha_3)], v1_2_3_alpha_7, true;
+      [Comparator (ge v1_2_3_alpha_3)], v1_2_4, true; (* only range has prerelease *)
       [Comparator (ge v1_2_3_alpha_3)], v3_4_5_alpha_9, false; (* prereleases from diff versions *)
       [Caret v1_2_3_alpha_7], v1_2_3_alpha_3, false;
       [Caret v1_2_3_alpha_7], v1_2_3_alpha_7, true;
       [Caret v1_2_3_alpha_7], v1_2_3, true;
       [Caret v1_2_3_alpha_7], v1_2_4, true;
+      [Caret v0_1_0], v0_1_0_alpha_2, false;
+      [Caret v0_1_0], v0_1_0, true;
+      [Caret v0_1_0], v0_1_2, true;
+      [Caret v0_1_0], v0_2_0_alpha_2, false;
+      [Caret v0_1_0], v0_2_0, false;
     ] in
     List.iter (fun (range, version, expected) ->
-      let msg = Printf.sprintf "Expected %s %sto satisfy %s"
-        (Semver_version.to_string version)
-        (if expected then "" else "NOT ")
-        (Semver_range.to_string range)
-      in
-      assert_equal ~ctxt ~msg expected (satisfies range version);
+      assert_satisfies ~ctxt range version expected
+    ) cases;
+    assert_bool "done" true; (* fixes ounit error reporting *)
+  end;
+
+  "satisfies_includes_prereleases" >:: begin fun ctxt ->
+    let open Semver_range in
+    let cases = [
+      [Comparator (ge v1_2_3)], v3_4_5_alpha_9, true; (* only version has prerelease *)
+      [Comparator (ge v1_2_3_alpha_3)], v1_2_4, true; (* only range has prerelease *)
+      [Comparator (ge v1_2_3_alpha_3)], v3_4_5_alpha_9, true; (* prereleases from diff versions *)
+    ] in
+    let include_prereleases = true in
+    List.iter (fun (range, version, expected) ->
+      assert_satisfies ~ctxt ~include_prereleases range version expected
     ) cases;
     assert_bool "done" true; (* fixes ounit error reporting *)
   end;

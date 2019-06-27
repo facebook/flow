@@ -10,7 +10,7 @@ open Severity
 
 type 'a t
 
-val of_default: 'a -> 'a t
+val of_default: severity -> severity t
 
 val set_value: lint_kind -> ('a * Loc.t option) -> 'a t -> 'a t
 

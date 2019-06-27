@@ -24,6 +24,9 @@ do_file "dictionary.js"
 do_file "func-0.js"
 do_file "func-1.js"
 do_file "func-2.js"
+do_file "func-3.js"
+do_file "func-4.js"
+do_file "func-5.js"
 do_file "func-poly-0.js"
 do_file "object-0.js"
 do_file "object-1.js"
@@ -34,6 +37,13 @@ do_file "spread.js"
 do_file "string-literal.js"
 do_file "type-utils.js"
 do_file "union-0.js"
+do_file "replacement-array.js"
+do_file "replacement-arrow.js"
+do_file "replacement-class.js"
+do_file "replacement-dictionary.js"
+do_file "replacement-function.js"
+do_file "replacement-object.js"
+do_file "func-arg-only.js"
 
 "$FLOW" init $TEMP_DIR
 assert_ok "$FLOW" check $TEMP_DIR
@@ -54,6 +64,9 @@ assert_errors "$FLOW" suggest --strip-root --quiet --quiet err-parse-1.js 2>&1
 
 echo "warn-empty-0.js"
 assert_ok "$FLOW" suggest --strip-root --quiet warn-empty-0.js 2>&1
+
+echo "func-6.js"
+assert_ok "$FLOW" suggest --strip-root --quiet "func-6.js"
 
 echo "warn-empty-0.js (--fail-on-suggest-warnings)"
 assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings warn-empty-0.js 2>&1

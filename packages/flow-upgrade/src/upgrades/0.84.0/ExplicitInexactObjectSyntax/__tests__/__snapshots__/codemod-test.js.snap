@@ -34,9 +34,9 @@ type U = {
   c: { x : {...}, ... },
   d: { x: { y :{...}, ... }, ... },
   ...
-}
+};
 
-
+// We should also make sure objects already using this syntax aren't broken by the codemod
 type T = {...};
 opaque type T: {...} = {...};
 
@@ -69,6 +69,6 @@ type U = {
   c: { x : {...}, ... },
   d: { x: { y :{...}, ... }, ... },
   ...
-}
+};
 "
 `;

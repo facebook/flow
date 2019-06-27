@@ -5,22 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+let lazy_table_of_aloc _ = lazy (failwith "Did not expect to encounter an abstract location in flow_dot_js")
+
 let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error
-  |> Flow_error.make_error_printable
+  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.make_error_printable lazy_table_of_aloc
 
 let error_of_file_sig_error source_file e =
   File_sig.With_Loc.(match e with
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
   )
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error
-  |> Flow_error.make_error_printable
+  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.make_error_printable lazy_table_of_aloc
 
 let parse_content file content =
   let parse_options = Some Parser_env.({
+    enums = true;
     (**
      * Always parse ES proposal syntax. The user-facing config option to
      * ignore/warn/enable them is handled during inference so that a clean error
@@ -141,6 +144,7 @@ let stub_metadata ~root ~checked = { Context.
   (* global *)
   max_literal_length = 100;
   enable_const_params = false;
+  enable_enums = true;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
@@ -154,6 +158,7 @@ let stub_metadata ~root ~checked = { Context.
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
+  recursion_limit = 10000;
   root;
   strip_root = true;
   suppress_comments = [];
@@ -214,7 +219,7 @@ let infer_and_merge ~root filename ast file_sig =
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, _, comments) = ast in
-  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let ((cx, tast, _), _other_cxs) = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
@@ -237,8 +242,8 @@ let check_content ~filename ~content =
     let include_suppressions = Context.include_suppressions cx in
     let errors, warnings, suppressions =
       Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
-    let errors = Flow_error.make_errors_printable errors in
-    let warnings = Flow_error.make_errors_printable warnings in
+    let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+    let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
     let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
       ~root ~file_options:None suppressions errors ~unused:suppressions in
     let warnings, _, _ = Error_suppressions.filter_suppressed_errors
@@ -286,11 +291,10 @@ let infer_type filename content line col =
     | Ok (ast, file_sig) ->
       let file_sig = File_sig.abstractify_locs file_sig in
       let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
-      let type_table = Context.type_table cx in
       let file = Context.file cx in
       let loc = mk_loc filename line col in Query_types.(
         let result = type_at_pos_type ~full_cx:cx ~file ~file_sig ~expand_aliases:false
-          ~omit_targ_defaults:false ~type_table ~typed_ast loc in
+          ~omit_targ_defaults:false ~typed_ast loc in
         match result with
         | FailureNoMatch -> Loc.none, Error "No match"
         | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
@@ -320,9 +324,9 @@ let dump_types js_file js_content =
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
       let file_sig = File_sig.abstractify_locs file_sig in
-      let cx, _ = infer_and_merge ~root filename ast file_sig in
+      let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
       let printer = Ty_printer.string_of_t in
-      let types = Query_types.dump_types cx file_sig ~printer in
+      let types = Query_types.dump_types ~printer cx file_sig typed_ast in
       let strip_root = None in
       let types_json = types_to_json types ~strip_root in
 

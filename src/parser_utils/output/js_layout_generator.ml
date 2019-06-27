@@ -253,12 +253,44 @@ let better_quote =
     if double > single then "'" else "\""
 
 let utf8_escape =
-  let f ~quote buf _i = function
+  (* a null character can be printed as \x00 or \0. but if the next character is an ASCII digit,
+     then using \0 would create \01 (for example), which is a legacy octal 1. so, rather than simply
+     fold over the codepoints, we have to look ahead at the next character as well. *)
+  let lookahead_fold_wtf_8 :
+      ?pos:int ->
+      ?len:int ->
+      (next: (int * Wtf8.codepoint) option -> 'a -> int -> Wtf8.codepoint -> 'a) ->
+      'a -> string -> 'a
+  =
+    let lookahead ~f (prev, buf) i cp =
+      let next = Some (i, cp) in
+      let buf = match prev with
+      | Some (prev_i, prev_cp) -> f ~next buf prev_i prev_cp
+      | None -> buf
+      in
+      (next, buf)
+    in
+    fun ?pos ?len f acc str ->
+      str
+      |> Wtf8.fold_wtf_8 ?pos ?len (lookahead ~f) (None, acc)
+      |> fun (last, acc) ->
+        begin match last with
+        | Some (i, cp) -> f ~next:None acc i cp
+        | None -> acc
+        end
+  in
+  let f ~quote ~next buf _i = function
   | Wtf8.Malformed -> buf
   | Wtf8.Point cp ->
     begin match cp with
     (* SingleEscapeCharacter: http://www.ecma-international.org/ecma-262/6.0/#table-34 *)
-    | 0x0 -> Buffer.add_string buf "\\0"; buf
+    | 0x0 ->
+        let zero = match next with
+        | Some (_i, Wtf8.Point n) when 0x30 <= n && n <= 0x39 -> "\\x00"
+        | _ -> "\\0"
+        in
+        Buffer.add_string buf zero;
+        buf
     | 0x8 -> Buffer.add_string buf "\\b"; buf
     | 0x9 -> Buffer.add_string buf "\\t"; buf
     | 0xA -> Buffer.add_string buf "\\n"; buf
@@ -296,7 +328,7 @@ let utf8_escape =
   in
   fun ~quote str ->
     str
-    |> Wtf8.fold_wtf_8 (f ~quote) (Buffer.create (String.length str))
+    |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str))
     |> Buffer.contents
 
 let layout_from_comment anchor loc_node (loc_cm, comment) =
@@ -473,9 +505,9 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         | Some l -> fuse [s_break; space; identifier l]
         | None -> s_break;
       )
-    | S.Continue { S.Continue.label } ->
+    | S.Continue { S.Continue.label; comments } ->
       let s_continue = Atom "continue" in
-      with_semicolon (
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (
         match label with
         | Some l -> fuse [s_continue; space; identifier l]
         | None -> s_continue;
@@ -628,6 +660,7 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
     | S.VariableDeclaration decl ->
       with_semicolon (variable_declaration (loc, decl))
     | S.ClassDeclaration class_ -> class_base class_
+    | S.EnumDeclaration _ -> Empty (* TODO(T44731104) Support enums in JS layout generator *)
     | S.ForOf { S.ForOf.left; right; body; async } ->
       fuse [
         Atom "for";
@@ -834,7 +867,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           ~sep:(Atom ",")
           (Core_list.map ~f:expression_or_spread arguments);
       ];
-    | E.Unary { E.Unary.operator; argument } ->
+    | E.Unary { E.Unary.operator; argument; comments } ->
       let s_operator, needs_space = begin match operator with
       | E.Unary.Minus -> Atom "-", false
       | E.Unary.Plus -> Atom "+", false
@@ -854,7 +887,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         } in
         expression_with_parens ~precedence ~ctxt argument
       in
-      fuse [
+      layout_node_with_simple_comments_opt loc comments @@ fuse [
         s_operator;
         if needs_space then begin match argument with
         | (_, E.Sequence _) -> Empty

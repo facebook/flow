@@ -1,3 +1,18 @@
+import.js:5:1 = {
+  "type":"mixed",
+  "reasons":[],
+  "loc":{
+    "source":"import.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":1,"offset":49},
+    "end":{"line":5,"column":6,"offset":55}
+  },
+  "path":"import.js",
+  "line":5,
+  "endline":5,
+  "start":1,
+  "end":6
+}
 exports.js:3:24 = {
   "type":"class klass<T>",
   "reasons":[],
@@ -317,20 +332,95 @@ import-typeof-class.js:7:16 {
   "start":16,
   "end":16
 }
-module-export.js:7:13 = {
+module-export-0.js:7:13 = {
   "type":"{|+A: class A|}",
   "reasons":[],
   "loc":{
-    "source":"module-export.js",
+    "source":"module-export-0.js",
     "type":"SourceFile",
     "start":{"line":7,"column":13,"offset":72},
     "end":{"line":7,"column":13,"offset":73}
   },
-  "path":"module-export.js",
+  "path":"module-export-0.js",
   "line":7,
   "endline":7,
   "start":13,
   "end":13
+}
+module-export-1.js:3:8 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":8,"offset":17},
+    "end":{"line":3,"column":14,"offset":24}
+  },
+  "path":"module-export-1.js",
+  "line":3,
+  "endline":3,
+  "start":8,
+  "end":14
+}
+module-export-1.js:4:9 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":9,"offset":38},
+    "end":{"line":4,"column":15,"offset":45}
+  },
+  "path":"module-export-1.js",
+  "line":4,
+  "endline":4,
+  "start":9,
+  "end":15
+}
+module-export-1.js:7:10 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":10,"offset":79},
+    "end":{"line":7,"column":16,"offset":86}
+  },
+  "path":"module-export-1.js",
+  "line":7,
+  "endline":7,
+  "start":10,
+  "end":16
+}
+module-export-1.js:8:11 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":11,"offset":107},
+    "end":{"line":8,"column":17,"offset":114}
+  },
+  "path":"module-export-1.js",
+  "line":8,
+  "endline":8,
+  "start":11,
+  "end":17
+}
+module-export-1.js:10:9 = {
+  "type":"number | string",
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":9,"offset":135},
+    "end":{"line":10,"column":15,"offset":142}
+  },
+  "path":"module-export-1.js",
+  "line":10,
+  "endline":10,
+  "start":9,
+  "end":15
 }
 module-import.js:3:7 = {
   "type":"{|+m: {|+A: class A|}|}",
@@ -461,4 +551,19 @@ test.js:14:7 = {
   "endline":14,
   "start":7,
   "end":7
+}
+import-type.js:3:20 = {
+  "type":"type MyUnionType = \"A\" | \"B\" | \"C\"",
+  "reasons":[],
+  "loc":{
+    "source":"import-type.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":15,"offset":24},
+    "end":{"line":3,"column":25,"offset":35}
+  },
+  "path":"import-type.js",
+  "line":3,
+  "endline":3,
+  "start":15,
+  "end":25
 }

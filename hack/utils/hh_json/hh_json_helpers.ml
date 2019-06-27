@@ -88,6 +88,7 @@ module Jget = struct
   let val_exn = get_exn val_opt
   let int_exn = get_exn int_opt
   let float_exn = get_exn float_opt
+  let array_exn = get_exn array_opt
   let obj_exn json key = Some (get_exn obj_opt json key)
   (* obj_exn lifts the result into the "json option" monad *)
 end

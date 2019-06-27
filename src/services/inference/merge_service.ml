@@ -9,16 +9,30 @@ open Utils_js
 open Loc_collections
 module Reqs = Merge_js.Reqs
 
-type 'a merge_job_result = ('a, Error_message.t) result
-type 'a merge_job_results = (File_key.t * 'a merge_job_result) list
+type 'a unit_result = ('a, Error_message.t) result
+type 'a file_keyed_result = File_key.t * 'a unit_result
+type acc =
+  (Flow_error.ErrorSet.t *
+   Flow_error.ErrorSet.t *
+   Error_suppressions.t *
+   Coverage.file_coverage FilenameMap.t)
+
+type 'a merge_job_results = 'a file_keyed_result list
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader: Mutator_state_reader.t ->
   File_key.t Nel.t ->
-  'a merge_job_result
+  'a unit_result
 
-type 'a merge_results = 'a merge_job_results * int (* skipped count *)
+type sig_opts_data = {
+  skipped_count: int;
+  sig_new_or_changed: FilenameSet.t;
+}
+
+type 'a merge_results =
+  'a merge_job_results *
+   sig_opts_data
 
 type merge_strict_context_result = {
   cx: Context.t;
@@ -128,23 +142,21 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
 
 let merge_strict_context ~options ~reader component =
   merge_strict_context_generic ~options ~reader
-    ~get_ast_unsafe:(match options.Options.opt_arch with
+    ~get_ast_unsafe:(match Options.arch options with
       | Options.Classic -> fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
         (comments, aloc_ast)
       | Options.TypesFirst -> fun ~reader file ->
-        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
-        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        let (_, _, comments) = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+        let aloc_ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
         (comments, aloc_ast)
     )
-    ~get_file_sig_unsafe:(match options.Options.opt_arch with
+    ~get_file_sig_unsafe:(match Options.arch options with
       | Options.Classic -> fun ~reader file ->
         let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
         File_sig.abstractify_locs loc_file_sig
-      | Options.TypesFirst -> fun ~reader file ->
-        let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe ~reader file in
-        File_sig.abstractify_locs loc_file_sig
+      | Options.TypesFirst -> Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe
     )
     component
 
@@ -152,7 +164,7 @@ let merge_strict_context ~options ~reader component =
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
   let (_, _, comments) = ast in
-  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
   let required =
@@ -251,7 +263,7 @@ let check_file options ~reader file =
     let { cx; coverage_map; _; } = merge_strict_context_generic ~options ~reader
       ~get_ast_unsafe:(fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
         (comments, aloc_ast)
       )
       ~get_file_sig_unsafe:(fun ~reader file ->
@@ -365,31 +377,33 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
         (file, result) :: merged
   ) merged elements
 
-(* make a map from component leaders to components *)
 let merge_runner
     ~job ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
-    dependency_graph component_map recheck_map =
+    ~dependency_graph ~component_map ~recheck_set =
   let num_workers = Options.max_workers options in
-  (* make a map from files to their component leaders *)
-  let leader_map =
-    FilenameMap.fold (fun file component acc ->
-      Nel.fold_left (fun acc file_ ->
-        FilenameMap.add file_ file acc
-      ) acc component
-    ) component_map FilenameMap.empty
+  (* (1) make a map from files to their component leaders
+     (2) lift recheck set from files to their component leaders *)
+  let leader_map, recheck_leader_set =
+    FilenameMap.fold (fun leader component (leader_map, recheck_leader_set) ->
+      let leader_map, recheck_leader = Nel.fold_left (fun (leader_map, recheck_leader) file ->
+        FilenameMap.add file leader leader_map,
+        recheck_leader || FilenameSet.mem file recheck_set
+      ) (leader_map, false) component in
+      let recheck_leader_set =
+        if recheck_leader then FilenameSet.add leader recheck_leader_set
+        else recheck_leader_set in
+      leader_map, recheck_leader_set
+    ) component_map (FilenameMap.empty, FilenameSet.empty)
   in
-  (* lift recheck map from files to leaders *)
-  let recheck_leader_map = FilenameMap.map (
-    Nel.exists (fun f -> FilenameMap.find_unsafe f recheck_map)
-  ) component_map in
 
   let start_time = Unix.gettimeofday () in
   let stream = Merge_stream.create
     ~num_workers
+    ~arch:(Options.arch options)
     ~dependency_graph
     ~leader_map
     ~component_map
-    ~recheck_leader_map
+    ~recheck_leader_set
     ~intermediate_result_callback
   in
   Merge_stream.update_server_status stream;
@@ -402,10 +416,50 @@ let merge_runner
     ~next:(Merge_stream.next stream)
   in
   let total_files = Merge_stream.total_files stream in
-  let skipped_files = Merge_stream.skipped_files stream in
-  Hh_logger.info "Merge skipped %d of %d modules" skipped_files total_files;
+  let skipped_count = Merge_stream.skipped_count stream in
+  let sig_new_or_changed = Merge_stream.sig_new_or_changed master_mutator in
+  Hh_logger.info "Merge skipped %d of %d modules" skipped_count total_files;
   let elapsed = Unix.gettimeofday () -. start_time in
   if Options.should_profile options then Hh_logger.info "merged (strict) in %f" elapsed;
-  Lwt.return (ret, skipped_files)
+  Lwt.return (ret, { skipped_count; sig_new_or_changed })
 
 let merge_strict = merge_runner ~job:merge_strict_component
+
+let check options ~reader file =
+  let result =
+    let check_timeout = Options.merge_timeout options in (* TODO: add new option *)
+    let interval = Option.value_map ~f:(min 15.0) ~default:15.0 check_timeout in
+    let file_str = File_key.to_string file in
+
+    try with_async_logging_timer
+      ~interval
+      ~on_timer:(fun run_time ->
+        Hh_logger.info "[%d] Slow CHECK (%f seconds so far): %s" (Unix.getpid()) run_time file_str;
+        Option.iter check_timeout ~f:(fun check_timeout ->
+          if run_time >= check_timeout then raise (Error_message.ECheckTimeout run_time)
+        )
+      )
+      ~f:(fun () -> Ok (check_file options ~reader file))
+    with
+    | SharedMem_js.Out_of_shared_memory
+    | SharedMem_js.Heap_full
+    | SharedMem_js.Hash_table_full
+    | SharedMem_js.Dep_table_full as exc -> raise exc
+    (* A catch all suppression is probably a bad idea... *)
+    | unwrapped_exc ->
+      let exc = Exception.wrap unwrapped_exc in
+      let exn_str = Printf.sprintf "%s: %s" (File_key.to_string file) (Exception.to_string exc) in
+      (* In dev mode, fail hard, but log and continue in prod. *)
+      if Build_mode.dev then Exception.reraise exc else
+        prerr_endlinef "(%d) check_job THROWS: %s\n"
+          (Unix.getpid()) exn_str;
+      let file_loc = Loc.({ none with source = Some file }) |> ALoc.of_loc in
+      (* We can't pattern match on the exception type once it's marshalled
+         back to the master process, so we pattern match on it here to create
+         an error result. *)
+      Error Error_message.(match unwrapped_exc with
+      | EDebugThrow loc -> EInternal (loc, DebugThrow)
+      | ECheckTimeout s -> EInternal (file_loc, CheckTimeout s)
+      | _ -> EInternal (file_loc, CheckJobException exc))
+  in
+  (file, result)

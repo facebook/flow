@@ -2,6 +2,9 @@ function test(a: string, b: number): number {
   return this.length; // expect []/"" this
 }
 
+// arity is strictly two arguments
+test.apply("", ["", 0], 'error')
+
 // tuples flow correctly into params
 test.apply("", ["", 0]);
 

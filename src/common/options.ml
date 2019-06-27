@@ -58,6 +58,7 @@ type trust_mode =
   | SilentTrust
 
 type t = {
+  opt_abstract_locations : bool;
   opt_all : bool;
   opt_debug : bool;
   opt_max_literal_length: int;
@@ -65,6 +66,7 @@ type t = {
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
   opt_enforce_well_formed_exports_whitelist: string list;
+  opt_enums: bool;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
@@ -82,6 +84,7 @@ type t = {
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_warnings: bool;
+  opt_max_files_checked_per_worker: int;
   opt_max_workers: int;
   opt_merge_timeout: float option;
   opt_module: module_system;
@@ -93,6 +96,7 @@ type t = {
   opt_profile : bool;
   opt_lazy_mode: lazy_mode;
   opt_quiet : bool;
+  opt_recursion_limit : int;
   opt_root : Path.t;
   opt_root_name : string option;
   opt_saved_state_fetcher: saved_state_fetcher;
@@ -115,10 +119,12 @@ type t = {
 }
 
 let all opts = opts.opt_all
+let arch opts = opts.opt_arch
 let max_literal_length opts = opts.opt_max_literal_length
 let enable_const_params opts = opts.opt_enable_const_params
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
+let enums opts = opts.opt_enums
 let esproposal_class_static_fields opts =
   opts.opt_esproposal_class_static_fields
 let esproposal_class_instance_fields opts =
@@ -138,6 +144,7 @@ let is_debug_mode opts = opts.opt_debug
 let is_lazy_mode opts = opts.opt_lazy_mode <> NON_LAZY_MODE
 let lazy_mode opts = opts.opt_lazy_mode
 let is_quiet opts = opts.opt_quiet
+let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
@@ -147,6 +154,7 @@ let module_resolver opts = opts.opt_module_resolver
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let no_saved_state opts = opts.opt_no_saved_state
+let recursion_limit opts = opts.opt_recursion_limit
 let root opts = opts.opt_root
 let root_name opts = opts.opt_root_name
 let facebook_fbs opts = opts.opt_facebook_fbs

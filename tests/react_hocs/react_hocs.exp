@@ -1,8 +1,8 @@
 Error ------------------------------------------------------------------------------------------------------ Bad.js:17:3
 
 Cannot call `compose` with compose intermediate value bound to the first parameter because:
- - property `foo` is missing in object type [1] but exists in `Props` [2].
- - number [3] is incompatible with string [4] in property `bar`.
+ - property `foo` is missing in props [1] but exists in `Props` [2].
+ - string [3] is incompatible with number [4] in property `bar`.
 
    Bad.js:17:3
           v------------------------
@@ -22,12 +22,12 @@ References:
    Bad.js:11:21
     11| const Bad = (props: Props) => null;
                             ^^^^^ [2]
+   <BUILTINS>/core.js:158:31
+   158|     toString(radix?: number): string;
+                                      ^^^^^^ [3]
    Bad.js:8:8
      8|   bar: number,
-               ^^^^^^ [3]
-   <BUILTINS>/core.js:148:31
-   148|     toString(radix?: number): string;
-                                      ^^^^^^ [4]
+               ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- Good_use.js:7:1

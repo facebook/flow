@@ -17,6 +17,7 @@ end = struct
   let commands = [
     AstCommand.command;
     AutocompleteCommand.command;
+    AutofixCommand.command;
     CheckCommands.CheckCommand.command;
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
@@ -98,7 +99,7 @@ let _ =
 
   let () = Exception.record_backtrace true in
 
-  let () = if Sys_utils.get_env "IN_FLOW_TEST" <> None then EventLogger.disable_logging () in
+  let () = if Sys_utils.get_env "IN_FLOW_TEST" <> None then LoggingUtils.disable_logging () in
 
   try
     Daemon.check_entry_point (); (* this call might not return *)

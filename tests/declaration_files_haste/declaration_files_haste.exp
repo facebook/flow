@@ -83,8 +83,8 @@ Cannot cast `Implicit.fun()` to string because number [1] is incompatible with s
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:1:32
-   1| declare export function fun(): number;
+   ImplicitProvidesModule.js.flow:2:32
+   2| declare export function fun(): number;
                                      ^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): string);

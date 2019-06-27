@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# declare.js
+printf "declare.js:4:3 = "
+assert_ok "$FLOW" type-at-pos declare.js 3 18 --strip-root --pretty
+
 # function.js
 printf "function.js:4:3 = "
 assert_ok "$FLOW" type-at-pos function.js 4 3 --strip-root --pretty
@@ -9,6 +13,12 @@ printf "function.js:12:3 = "
 assert_ok "$FLOW" type-at-pos function.js 12 3 --strip-root --pretty
 printf "function.js:16:3 = "
 assert_ok "$FLOW" type-at-pos function.js 16 3 --strip-root --pretty
+
+# default.js
+printf "default.js:4:16 = "
+assert_ok "$FLOW" type-at-pos default.js 4 16 --strip-root --pretty
+printf "default.js:5:17 = "
+assert_ok "$FLOW" type-at-pos default.js 5 17 --strip-root --pretty
 
 # function-poly-0.js
 printf "function-poly-0.js:3:10 = "

@@ -54,7 +54,7 @@ val type_: (Loc.t, Loc.t) Flow_ast.Type.t -> Layout.layout_node
 val variance: Loc.t Flow_ast.Variance.t -> Layout.layout_node
 val type_param: (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.TypeParam.t -> Layout.layout_node
 val type_annotation: ?parens:bool -> (Loc.t, Loc.t) Flow_ast.Type.annotation -> Layout.layout_node
-val identifier: Loc.t Flow_ast.Identifier.t -> Layout.layout_node
+val identifier: (Loc.t, Loc.t) Flow_ast.Identifier.t -> Layout.layout_node
 val pattern: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Pattern.t -> Layout.layout_node
 val comment: Loc.t Flow_ast.Comment.t -> Layout.layout_node
 val template_literal: (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t -> Layout.layout_node

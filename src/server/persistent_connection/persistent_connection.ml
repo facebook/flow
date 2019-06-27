@@ -10,30 +10,18 @@ module Prot = Persistent_connection_prot
 type single_client = {
   is_lsp: bool;
   logging_context: FlowEventLogger.logging_context;
-  client_id: Persistent_connection_prot.client_id;
+  client_id: Prot.client_id;
   lsp_initialize_params: Lsp.Initialize.params option;
 
   mutable subscribed: bool;
   mutable opened_files: string SMap.t; (* map from filename to content *)
 }
 
-type t = Persistent_connection_prot.client_id list
+type t = Prot.client_id list
 
 let active_clients: single_client IMap.t ref = ref IMap.empty
 
 let get_client client_id = IMap.get client_id !active_clients
-
-let to_string (clients: t) : string =
-  let client_to_string client_id : string =
-    match get_client client_id with
-    | None -> "{id:%d DEAD CLIENT}"
-    | Some client ->
-      Printf.sprintf "{id:%d opened:%d subscribed:%B context:%f}"
-        client.client_id (SMap.cardinal client.opened_files)
-        client.subscribed client.logging_context.FlowEventLogger.start_time
-  in
-  let clients_str = Core_list.map ~f:client_to_string clients in
-  Printf.sprintf "[%s]" (String.concat ", " clients_str)
 
 let empty = []
 
@@ -62,7 +50,7 @@ let send_errors =
       ]
   in
 
-  fun ~errors ~warnings client ->
+  fun ~errors_reason ~errors ~warnings client ->
     let opened_filenames = SMap.bindings client.opened_files |> Core_list.map ~f:fst in
     let warnings = List.fold_right
       (fun filename warn_acc ->
@@ -70,11 +58,11 @@ let send_errors =
         Errors.ConcreteLocPrintableErrorSet.union file_warns warn_acc)
       opened_filenames Errors.ConcreteLocPrintableErrorSet.empty
     in
-    send_message (Prot.Errors {errors; warnings}) client
+    send_message (Prot.Errors { errors; warnings; errors_reason; }) client
 
-let send_errors_if_subscribed ~client ~errors ~warnings =
+let send_errors_if_subscribed ~client ~errors_reason ~errors ~warnings =
   if client.subscribed
-  then send_errors ~errors ~warnings client
+  then send_errors ~errors_reason ~errors ~warnings client
 
 let send_single_lsp (message, metadata) client =
   send_message (Prot.LspFromServer (message, metadata)) client
@@ -120,7 +108,7 @@ let get_subscribed_lsp_clients =
     | _ -> acc
   ) []
 
-let update_clients ~clients ~calc_errors_and_warnings =
+let update_clients ~clients ~errors_reason ~calc_errors_and_warnings =
   let subscribed_clients = get_subscribed_clients clients in
   let subscribed_client_count = List.length subscribed_clients in
   let all_client_count = List.length clients in
@@ -132,7 +120,7 @@ let update_clients ~clients ~calc_errors_and_warnings =
     Hh_logger.info
       "sending (%d errors) and (warnings from %d files) to %d subscribed clients (of %d total)"
       error_count warning_file_count subscribed_client_count all_client_count;
-    List.iter (send_errors ~errors ~warnings) subscribed_clients
+    List.iter (send_errors ~errors_reason ~errors ~warnings) subscribed_clients
   end
 
 let send_lsp clients json =
@@ -156,7 +144,8 @@ let subscribe_client ~client ~current_errors ~current_warnings =
     (* noop *)
     ()
   else begin
-    send_errors ~errors:current_errors ~warnings:current_warnings client;
+    let errors_reason = Prot.New_subscription in
+    send_errors ~errors_reason ~errors:current_errors ~warnings:current_warnings client;
     client.subscribed <- true;
   end
 

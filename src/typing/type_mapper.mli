@@ -159,3 +159,4 @@ class virtual ['a] t_with_uses :
 end
 
 val union_flatten: Context.t -> Type.t list -> Type.t list
+val unwrap_type: Context.t -> Type.t -> Type.t

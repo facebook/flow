@@ -135,3 +135,9 @@ printf "type-utils.js:11:13 "
 assert_ok "$FLOW" type-at-pos type-utils.js 11 13 --strip-root --pretty
 printf "type-utils.js:12:13 "
 assert_ok "$FLOW" type-at-pos type-utils.js 12 13 --strip-root --pretty
+
+# default.js
+printf "default.js:4:17 "
+assert_ok "$FLOW" type-at-pos default.js 4 17 --strip-root --pretty
+printf "default.js:5:18 "
+assert_ok "$FLOW" type-at-pos default.js 5 18 --strip-root --pretty

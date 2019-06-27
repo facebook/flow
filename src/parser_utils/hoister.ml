@@ -18,7 +18,7 @@ open Flow_ast_visitor
 *)
 module Bindings: sig
   type 'loc t
-  type 'loc entry = 'loc Ast.Identifier.t
+  type 'loc entry = ('loc, 'loc) Ast.Identifier.t
   val empty: 'loc t
   val singleton: 'loc entry -> 'loc t
   val add: 'loc entry -> 'loc t -> 'loc t
@@ -27,7 +27,7 @@ module Bindings: sig
   val to_assoc: 'loc t -> (string * 'loc Nel.t) list
   val to_map: 'loc t -> 'loc list SMap.t
 end = struct
-  type 'loc entry = 'loc Ast.Identifier.t
+  type 'loc entry = ('loc, 'loc) Ast.Identifier.t
   type 'loc t = 'loc entry list
   let empty = []
   let singleton x = [x]
@@ -186,7 +186,7 @@ class ['loc] lexical_hoister = object(this)
     cls
 
   method! import_named_specifier
-    (specifier: 'loc Ast.Statement.ImportDeclaration.named_specifier) =
+    (specifier: ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
     let open Ast.Statement.ImportDeclaration in
     let binding = match specifier with
     | { local = Some binding; remote = _; kind = _ }
@@ -196,11 +196,11 @@ class ['loc] lexical_hoister = object(this)
     this#add_binding binding;
     specifier
 
-  method! import_default_specifier (id: 'loc Ast.Identifier.t) =
+  method! import_default_specifier (id: ('loc, 'loc) Ast.Identifier.t) =
     this#add_binding id;
     id
 
-  method! import_namespace_specifier _loc (id: 'loc Ast.Identifier.t) =
+  method! import_namespace_specifier _loc (id: ('loc, 'loc) Ast.Identifier.t) =
     this#add_binding id;
     id
 

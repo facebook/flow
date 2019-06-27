@@ -43,31 +43,6 @@ let spec = {
   )
 }
 
-let exit () =
-    CommandSpec.usage spec;
-    FlowExitStatus.(exit Commandline_usage_error)
-
-let parse_line_and_column line column =
-    try (int_of_string line), (int_of_string column)
-    with Failure(_) -> exit ()
-
-let parse_args path args =
-  let (file, line, column) = match args with
-  | [file; line; column] ->
-      let file = expand_path file in
-      let line, column = parse_line_and_column line column in
-      File_input.FileName file, line, column
-  | [line; column] ->
-      let line, column = parse_line_and_column line column in
-      get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
-      line,
-      column
-  | _ ->
-      exit ()
-  in
-  let (line, column) = convert_input_pos (line, column) in
-  file, line, column
-
 let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded =
   let ty = match t with
     | None -> "(unknown)"
@@ -113,13 +88,9 @@ let handle_error err ~json ~pretty =
 let main base_flags option_values json pretty root strip_root verbose path wait_for_recheck expanded
     expand_aliases omit_targ_defaults args () =
   let json = json || pretty || expanded in
-  let (file, line, column) = parse_args path args in
+  let (file, line, column) = parse_location_with_optional_filename spec path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
-  let root = guess_root flowconfig_name (
-    match root with
-    | Some root -> Some root
-    | None -> File_input.path_of_file_input file
-  ) in
+  let root = find_a_root ~base_flags ~input:file root in
   let strip_root = if strip_root then Some root else None in
 
   if not json && (verbose <> None)

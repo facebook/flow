@@ -49,6 +49,7 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | REnum
+  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -98,6 +99,7 @@ type 'loc virtual_reason_desc =
   | RProperty of string option
   | RPrivateProperty of string
   | RShadowProperty of string
+  | RMember of { object_: string; property: string }
   | RPropertyOf of string * 'loc virtual_reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
@@ -202,8 +204,6 @@ val is_internal_module_name: string -> bool
 val internal_module_name: string -> string
 val uninternal_module_name: string -> string
 
-val internal_pattern_name: ALoc.t -> string
-
 val is_instantiable_reason: 'loc virtual_reason -> bool
 
 val is_constant_reason: 'loc virtual_reason -> bool
@@ -230,7 +230,6 @@ val is_blamable_reason: reason -> bool
 
 val string_of_source: ?strip_root:Path.t option -> File_key.t -> string
 val string_of_reason: ?strip_root:Path.t option -> reason -> string
-val json_of_reason: ?strip_root:Path.t option -> offset_table:Offset_utils.t option -> reason -> Hh_json.json
 val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)

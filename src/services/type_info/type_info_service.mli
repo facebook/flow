@@ -33,17 +33,29 @@ val coverage :
   force:bool ->
   trust:bool ->
   File_key.t ->
-  string -> ((Loc.t * Coverage.expression_coverage) list, string) Core_result.t Lwt.t
+  string ->
+  ((Loc.t * Coverage.expression_coverage) list, string) Core_result.t Lwt.t
 
 val suggest :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  File_key.t ->
-  string ->
+  string -> string ->
   ((Errors.ConcreteLocPrintableErrorSet.t *   (* Typechecking errors *)
     Errors.ConcreteLocPrintableErrorSet.t *   (* Typechecking warnings *)
     Errors.ConcreteLocPrintableErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
-    (Loc.t, Loc.t) Flow_ast.program),   (* Annotated program *)
+    Replacement_printer.patch),   (* Annotated program *)
     Errors.ConcreteLocPrintableErrorSet.t     (* Parsing errors *)
   ) Core_result.t Lwt.t
+
+val insert_type :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
+  file_key:File_key.t ->
+  file_content:string ->
+  target:Loc.t ->
+  expand_aliases:bool ->
+  omit_targ_defaults:bool ->
+  location_is_strict:bool ->
+  (Replacement_printer.patch, Errors.ConcreteLocPrintableErrorSet.t) Core_result.t Lwt.t

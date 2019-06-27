@@ -38,7 +38,8 @@ let unit_of_op = function
 module Taint = struct
   type t = Untainted | Tainted
 
-  let of_trust tr = if Trust.is_tainted tr then Tainted else Untainted
+  let of_trust cx tr =
+    if Trust_helpers.actual_trust cx tr |> Trust.is_tainted then Tainted else Untainted
 
   let to_string = function
     | Untainted -> "Untainted"
@@ -160,7 +161,7 @@ class visitor = object (self)
     | AnnotT (_, t, _)
     | ExactT (_, t)
     | DefT (_, _, PolyT (_, _, t, _))
-    | DefT (_, _, TypeAppT (_, t, _))
+    | TypeAppT (_, _, t, _)
     | DefT (_, _, TypeT (_, t))
     | OpenPredT (_, t, _, _)
     | ReposT (_, t)
@@ -216,14 +217,14 @@ class visitor = object (self)
     | DefT (_, t, StrT _)
     | DefT (_, t, VoidT)
       ->
-      Kind.Checked, Taint.of_trust t
+      Kind.Checked, Taint.of_trust cx t
 
     (* Concrete uncovered constructors *)
     (* TODO: Rethink coverage and trust for these types *)
     | MatchingPropT _
     | TypeDestructorTriggerT _ -> Kind.Empty, Taint.Untainted
 
-    | DefT (_, t, EmptyT _) -> Kind.Empty, Taint.of_trust t
+    | DefT (_, t, EmptyT _) -> Kind.Empty, Taint.of_trust cx t
     | AnyT _ -> Kind.Any, Taint.Tainted
 
   method private types_of_use acc = function

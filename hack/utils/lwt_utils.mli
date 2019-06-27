@@ -56,3 +56,7 @@ val try_finally:
 (** Asynchronous version of [Utils.try_finally]. Run and wait for [f] to
 complete, and be sure to invoke [finally] asynchronously afterward, even if [f]
 raises an exception. *)
+
+val read_all: string -> (string, string) Lwt_result.t
+(** Reads all the contents from the given file on disk, or returns an error
+message if unable to do so. *)

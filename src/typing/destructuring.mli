@@ -16,13 +16,13 @@ type callback =
   use_op:Type.use_op ->
   ALoc.t ->
   string ->
-  (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t option ->
+  Type.t Default.t option ->
   Type.t ->
   unit
 
 val empty:
   ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-  ?default:(ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t ->
+  ?default:Type.t Default.t ->
   Type.t ->
   state
 
@@ -33,6 +33,22 @@ val pattern:
   state ->
   (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.t
+
+val array_elements:
+  Context.t ->
+  expr:expr ->
+  f:callback ->
+  state ->
+  (ALoc.t, ALoc.t) Flow_ast.Pattern.Array.element option list ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Array.element option list
+
+val object_properties:
+  Context.t ->
+  expr:expr ->
+  f:callback ->
+  state ->
+  (ALoc.t, ALoc.t) Flow_ast.Pattern.Object.property list ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Object.property list
 
 val type_of_pattern:
   'a * (ALoc.t, ALoc.t) Flow_ast.Pattern.t' ->

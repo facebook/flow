@@ -9,6 +9,8 @@
     called during AST traversal.
   *)
 
+module Class_type_sig: Class_sig.S
+
 val convert: Context.t ->
   Type.t SMap.t ->
   (ALoc.t, ALoc.t) Flow_ast.Type.t ->
@@ -76,14 +78,14 @@ val mk_type_param_declarations: Context.t ->
 val mk_interface_sig: Context.t ->
   Reason.t ->
   (ALoc.t, ALoc.t) Flow_ast.Statement.Interface.t ->
-  Class_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Interface.t
+  Class_type_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Interface.t
 
 val mk_declare_class_sig: Context.t ->
   Reason.t ->
   (ALoc.t, ALoc.t) Flow_ast.Statement.DeclareClass.t ->
-  Class_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t
+  Class_type_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t
 
-val polarity: 'a Flow_ast.Variance.t option -> Type.polarity
+val polarity: 'a Flow_ast.Variance.t option -> Polarity.t
 
 val qualified_name: (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t -> string
 

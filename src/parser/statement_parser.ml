@@ -102,8 +102,11 @@ module Statement
     loc, Statement.Break { Statement.Break.label }
 
   and continue env =
+    let leading = Peek.comments env in
+    let trailingComments = ref [] in
     let loc, label = with_loc (fun env ->
       Expect.token env T_CONTINUE;
+      trailingComments := Peek.comments env;
       let label =
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
         then None
@@ -118,7 +121,9 @@ module Statement
       label
     ) env in
     if not (in_loop env) then error_at env (loc, Error.IllegalContinue);
-    loc, Statement.Continue { Statement.Continue.label }
+    let trailing = !trailingComments in
+    loc, Statement.Continue { Statement.Continue.label;
+    comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }
 
   and debugger = with_loc (fun env ->
     Expect.token env T_DEBUGGER;
@@ -540,7 +545,7 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.semicolon env;
@@ -572,7 +577,7 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     let supertype = match Peek.token env with
     | T_COLON ->
         Expect.token env T_COLON;
@@ -610,7 +615,7 @@ module Statement
     then error env Error.UnexpectedTypeInterface;
     Expect.token env T_INTERFACE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     let { Ast.Type.Interface.extends; body } = Type.interface_helper env in
     Statement.Interface.({
       id;
@@ -649,7 +654,7 @@ module Statement
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
-      let tparams = Type.type_parameter_declaration_with_defaults env in
+      let tparams = Type.type_parameter_declaration env in
       let extends = if Expect.maybe env T_EXTENDS then Some (Type.generic env) else None in
       let mixins = match Peek.token env with
       | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []

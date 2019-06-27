@@ -221,13 +221,12 @@ end = struct
 
   let empty_type = Ty.Bot Ty.EmptyType
   let empty_matching_prop_t = Ty.Bot Ty.EmptyMatchingPropT
-  let empty_type_destructor_trigger_t = Ty.Bot Ty.EmptyTypeDestructorTriggerT
 
   let mk_empty bot_kind =
     match bot_kind with
     | Ty.EmptyType -> empty_type
     | Ty.EmptyMatchingPropT -> empty_matching_prop_t
-    | Ty.EmptyTypeDestructorTriggerT -> empty_type_destructor_trigger_t
+    | Ty.EmptyTypeDestructorTriggerT _
     | Ty.NoLowerWithUpper _ -> Ty.Bot bot_kind
 
 
@@ -635,7 +634,7 @@ end = struct
       Ty.mk_inter (t0, t1::ts)
     | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
-    | DefT (_, _ ,TypeAppT (_, t, ts)) -> type_app ~env t (Some ts)
+    | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
     | DefT (r, _, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, _, ClassT t) -> class_t ~env t None
     | DefT (_, _, IdxWrapper t) -> type__ ~env t
@@ -651,8 +650,12 @@ end = struct
       Ty.Utility (Ty.Keys ty)
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
-    | ShapeT t -> type__ ~env t
-    | TypeDestructorTriggerT _ -> return (mk_empty Ty.EmptyTypeDestructorTriggerT)
+    | ShapeT t ->
+      type__ ~env t >>| fun t ->
+      Ty.Utility (Ty.Shape t)
+    | TypeDestructorTriggerT (_, r, _, _, _) ->
+      let loc = Reason.def_aloc_of_reason r in
+      return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
     | MergedT (_, uses) -> merged_t ~env uses
     | ExistsT _ -> return (Ty.Utility Ty.Exists)
     | ObjProtoT _ -> return (Ty.TypeOf (["Object"], "prototype"))
@@ -861,11 +864,6 @@ end = struct
     mapM (method_ty ~env) ts >>| fun ts ->
     Core_list.map ~f:(fun t -> Ty.CallProp t) ts
 
-  and call_prop ~env = function
-    | _, T.Method (_, t)
-    | _, T.Field (_, t, _) -> call_prop_from_t ~env t
-    | _ -> terr ~kind:BadCallProp None
-
   and obj_props =
     (* call property *)
     let do_calls ~env = function
@@ -875,10 +873,6 @@ end = struct
         call_prop_from_t ~env ft
       | None ->
         return []
-    in
-    (* `$call` property *)
-    let do_calls_legacy ~env call_props =
-      concat_fold_m (call_prop ~env) call_props
     in
     let do_props ~env props =
       concat_fold_m (obj_prop ~env) props
@@ -894,16 +888,11 @@ end = struct
     in
     fun ~env props_id call_id_opt dict ->
       let cx = Env.get_cx env in
-      let call_props, props =
-        Context.find_props cx props_id
-        |> SMap.bindings
-        |> Core_list.partition_tf ~f:(fun (x, _) -> x = "$call")
-      in
-      do_calls_legacy ~env call_props >>= fun call_props_legacy ->
+      let props = SMap.bindings (Context.find_props cx props_id) in
       do_calls ~env call_id_opt >>= fun call_props ->
       do_props ~env props >>= fun props ->
       do_dict ~env dict >>| fun dict ->
-      call_props_legacy @ call_props @ props @ dict
+      call_props @ props @ dict
 
   and arr_ty ~env reason elt_t =
     let arr_literal = match Reason.desc_of_reason reason with
@@ -1109,7 +1098,6 @@ end = struct
         return ty
       | _ ->
         return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:ty)
-        (* return ty *)
     in
     let import_typeof env r t ps = import env r t ps in
     let opaque env t ps =
@@ -1448,9 +1436,9 @@ end = struct
     type__ ~env t >>| fun t -> (t, opt)
 
   and type_polarity = function
-    | T.Positive -> Ty.Positive
-    | T.Negative -> Ty.Negative
-    | T.Neutral -> Ty.Neutral
+    | Polarity.Positive -> Ty.Positive
+    | Polarity.Negative -> Ty.Negative
+    | Polarity.Neutral -> Ty.Neutral
 
   (************)
   (* EvalT    *)
@@ -1517,17 +1505,17 @@ end = struct
     | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
     | T.SpreadType (target, ts) -> spread ~env ty target ts
-    | T.ReactElementPropsType -> return (generic_builtin_t "React$ElementProps" [ty])
-    | T.ReactElementConfigType -> return (generic_builtin_t "React$ElementConfig" [ty])
-    | T.ReactElementRefType -> return (generic_builtin_t "React$ElementRef" [ty])
+    | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
+    | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
+    | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
     | T.ReactConfigType default_props ->
         type__ ~env default_props >>| fun default_props' ->
-          generic_builtin_t "React$Config" [ty; default_props']
+        Ty.Utility (Ty.ReactConfigType (ty, default_props'))
     | T.RestType (T.Object.Rest.ReactConfigMerge _, _)
     | T.Bind _ as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 
-  and destructuring_t ~env id t =
+  and latent_pred_t ~env id t =
     let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
     let t' = match IMap.get id evaluated with
@@ -1537,7 +1525,7 @@ end = struct
     type__ ~env t'
 
   and eval_t ~env t id = function
-    | Type.DestructuringT _ -> destructuring_t ~env id t
+    | Type.LatentPredT _ -> latent_pred_t ~env id t
     | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
 
   and module_t env reason t =
@@ -1563,14 +1551,17 @@ end = struct
         uses_t_aux ~env (t::acc) rest
       | T.ReposLowerT (_, _, u)::rest ->
         uses_t_aux ~env acc (u::rest)
-      | _ ->
-        return Ty.SomeUnknownUpper
+      (* skip these *)
+      | T.CJSExtractNamedExportsT _::rest ->
+        uses_t_aux ~env acc rest
+      | u::_ ->
+        return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))
     in
     fun ~env uses -> uses_t_aux ~env [] uses
 
   and merged_t ~env uses =
     uses_t ~env uses >>= function
-    | Ty.SomeUnknownUpper ->
+    | Ty.SomeUnknownUpper _ ->
       (* un-normalizable *)
       terr ~kind:BadUse None
     | Ty.NoUpper ->
@@ -1651,11 +1642,11 @@ end = struct
         from_require require acc
       ) [] requires
 
-    let extract_schemes type_table (imported_locs: acc_t) =
+    let extract_schemes typed_ast (imported_locs: acc_t) =
       List.fold_left (fun acc (loc, name, import_mode) ->
-        (* TODO use typed AST *)
-        match Type_table.find_type_info type_table loc with
-        | Some (_, scheme, _) ->  (name, loc, import_mode, scheme)::acc
+        let loc = ALoc.to_loc_exn loc in
+        match Typed_ast_utils.find_type_at_pos_annotation typed_ast loc with
+        | Some (_, scheme) ->  (name, loc, import_mode, scheme)::acc
         | None -> acc
       ) [] imported_locs
 
@@ -1678,7 +1669,7 @@ end = struct
       let _, result = List.fold_left (fun (st, acc) (name, loc, import_mode, scheme) ->
         match run st (extract_ident ~options ~genv scheme) with
         | Ok (Some def_loc), st ->
-          st, ALocMap.add def_loc (loc, name, import_mode) acc
+          st, ALocMap.add def_loc (ALoc.of_loc loc, name, import_mode) acc
         | Ok None, st ->
           (* unrecognizable remote type *)
           st, acc
@@ -1691,10 +1682,12 @@ end = struct
 
   let run_imports ~options ~genv =
     let open Imports in
-    let file_sig = genv.Env.file_sig in
-    File_sig.(file_sig.module_sig.requires) |>
-    extract_imported_idents |>
-    extract_schemes genv.Env.type_table |>
+    let {
+      Env.file_sig = { File_sig.module_sig = { File_sig.requires; _ }; _ };
+      typed_ast; _
+    } = genv in
+    extract_imported_idents requires |>
+    extract_schemes typed_ast |>
     normalize_imports ~options ~genv
 
 end

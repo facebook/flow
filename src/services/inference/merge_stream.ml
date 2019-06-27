@@ -52,6 +52,7 @@ type 'a t = {
   num_workers: int;
   total_components: int;
   total_files: int;
+  arch: Options.arch;
   mutable ready_components: int;
   mutable ready_files: int;
   mutable blocked_components: int;
@@ -93,10 +94,11 @@ let is_done stream =
 
 let create
   ~num_workers
+  ~arch
   ~dependency_graph
   ~leader_map
   ~component_map
-  ~recheck_leader_map
+  ~recheck_leader_set
   ~intermediate_result_callback =
 
   (* create node for each component *)
@@ -104,7 +106,7 @@ let create
     component;
     dependents = FilenameMap.empty; (* computed later *)
     blocking = 0; (* computed later *)
-    recheck = FilenameMap.find_unsafe leader recheck_leader_map;
+    recheck = FilenameSet.mem leader recheck_leader_set;
     size = Nel.length component;
   }) component_map in
 
@@ -137,6 +139,7 @@ let create
     num_workers;
     total_components;
     total_files;
+    arch;
     ready_components = 0;
     ready_files = 0;
     blocked_components = 0;
@@ -161,10 +164,17 @@ let create
   stream
 
 let update_server_status stream =
-  MonitorRPC.status_update ServerStatus.(Merging_progress {
-    finished = stream.merged_files;
-    total = Some stream.total_files;
-  })
+  let status = match stream.arch with
+    | Options.Classic -> ServerStatus.(Merging_progress {
+        finished = stream.merged_files;
+        total = Some stream.total_files;
+      })
+    | Options.TypesFirst -> ServerStatus.(Merging_types_progress {
+        finished = stream.merged_files;
+        total = Some stream.total_files;
+      })
+  in
+  MonitorRPC.status_update status
 
 let next stream =
   let rec take acc n =
@@ -232,5 +242,9 @@ let merge ~master_mutator ~reader stream =
     update_server_status stream;
     List.rev_append merged acc
 
+(* NOTE: call these functions only at the end of merge, not during. *)
 let total_files stream = stream.total_files
-let skipped_files stream = stream.skipped_files
+let skipped_count stream = stream.skipped_files
+(* See explanation in Context_heaps for why calling this function at the end of merge returns files
+   whose signatures are new or have changed. *)
+let sig_new_or_changed = Context_heaps.Merge_context_mutator.unrevived_files

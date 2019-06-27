@@ -1,17 +1,17 @@
-Error ---------------------------------------------------------------------------------- class_static_constructor.js:4:3
+Error --------------------------------------------------------------------------------- class_static_constructor.js:4:10
 
-Classes may not have fields named `constructor`.
+Classes may not have static fields named `constructor`.
 
    4|   static constructor: Object; // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------ class_static_prototype.js:4:3
+Error ----------------------------------------------------------------------------------- class_static_prototype.js:4:10
 
 Classes may not have static fields named `prototype`.
 
    4|   static prototype: Object; // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------ declared_class_static_constructor.js:4:10

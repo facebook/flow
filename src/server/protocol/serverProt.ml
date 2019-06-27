@@ -52,6 +52,15 @@ module Request = struct
       omit_targ_defaults: bool;
       wait_for_recheck: bool option;
     }
+  | INSERT_TYPE of {
+      input: File_input.t;
+      target: Loc.t;
+      verbose: Verbose.t option;
+      location_is_strict: bool;
+      wait_for_recheck: bool option;
+      expand_aliases: bool;
+      omit_targ_defaults: bool;
+    }
   | RAGE of { files: string list }
   | REFACTOR of {
       input: File_input.t;
@@ -97,6 +106,11 @@ module Request = struct
   | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input input) line char
+  | INSERT_TYPE { input; target; _} ->
+    let open Loc in
+    Printf.sprintf "autofix insert-type %s:%d:%d-%d:%d"
+      (File_input.filename_of_file_input input)
+      target.start.line target.start.column target._end.line target._end.column
   | RAGE { files; } -> Printf.sprintf "rage %s" (String.concat " " files)
   | REFACTOR { input; line; char; refactor_variant; } ->
       Printf.sprintf "refactor %s:%d:%d:%s"
@@ -138,7 +152,7 @@ module Response = struct
   (* Results ready to be displayed to the user *)
   type complete_autocomplete_result = {
       res_loc      : Loc.t;
-      res_ty       : string;
+      res_ty       : Loc.t * string;
       res_kind     : Lsp.Completion.completionItemKind option;
       res_name     : string;
       func_details : func_details_result option;
@@ -175,6 +189,8 @@ module Response = struct
     string
   ) result
 
+  type insert_type_response = (Replacement_printer.patch, string) result
+
   type textedit = Loc.t * string
   type refactor_ok = {
     refactor_edits: textedit list;
@@ -189,7 +205,7 @@ module Response = struct
       tc_errors: Errors.ConcreteLocPrintableErrorSet.t;
       tc_warnings: Errors.ConcreteLocPrintableErrorSet.t;
       suggest_warnings: Errors.ConcreteLocPrintableErrorSet.t;
-      annotated_program: (Loc.t, Loc.t) Flow_ast.program;
+      file_patch: Replacement_printer.patch;
     }
   | Suggest_Error of Errors.ConcreteLocPrintableErrorSet.t
 
@@ -208,7 +224,11 @@ module Response = struct
 
   type status_response =
   | DIRECTORY_MISMATCH of directory_mismatch
-  | ERRORS of {errors: Errors.ConcreteLocPrintableErrorSet.t; warnings: Errors.ConcreteLocPrintableErrorSet.t}
+  | ERRORS of {
+      errors: Errors.ConcreteLocPrintableErrorSet.t;
+      warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      suppressed_errors: (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list;
+    }
   | NO_ERRORS
   | NOT_COVERED
 
@@ -230,6 +250,7 @@ module Response = struct
   | GET_DEF of get_def_response
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
+  | INSERT_TYPE of insert_type_response
   | RAGE of rage_response
   | REFACTOR of refactor_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
@@ -250,6 +271,7 @@ module Response = struct
   | GET_DEF _ -> "get_def response"
   | GET_IMPORTS _ -> "get_imports response"
   | INFER_TYPE _ -> "infer_type response"
+  | INSERT_TYPE _ -> "insert_type response"
   | RAGE _ -> "rage response"
   | REFACTOR _ -> "refactor response"
   | STATUS _ -> "status response"

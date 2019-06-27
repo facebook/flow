@@ -74,6 +74,72 @@ end
 *)
 module Eval(Env: EvalEnv) = struct
 
+  class predicate_visitor = object(this)
+    inherit [Deps.t, Loc.t] Flow_ast_visitor.visitor ~init:Deps.bot as super
+
+    val mutable params_ = SSet.empty
+
+    method toplevel_expression params expr =
+      this#set_acc Deps.bot;
+      params_ <- params;
+      this#expression expr
+
+    method! expression expr =
+      match snd expr with
+      | Ast.Expression.Array _
+      | Ast.Expression.ArrowFunction _
+      | Ast.Expression.Assignment _
+      | Ast.Expression.Class _
+      | Ast.Expression.Comprehension _
+      | Ast.Expression.Function _
+      | Ast.Expression.Generator _
+      | Ast.Expression.Import _
+      | Ast.Expression.JSXElement _
+      | Ast.Expression.JSXFragment _
+      | Ast.Expression.MetaProperty _
+      | Ast.Expression.New _
+      | Ast.Expression.Object _
+      | Ast.Expression.OptionalCall _
+      | Ast.Expression.TaggedTemplate _
+      | Ast.Expression.TemplateLiteral _
+      | Ast.Expression.TypeCast _
+      | Ast.Expression.Update _
+      | Ast.Expression.Yield _
+        ->
+        this#update_acc (fun deps ->
+          Deps.join (deps, Deps.top (Error.UnsupportedPredicateExpression (fst expr)))
+        );
+        expr
+
+      | Ast.Expression.Binary _
+      | Ast.Expression.Call _
+      | Ast.Expression.Conditional _
+      | Ast.Expression.Logical _
+      | Ast.Expression.Member _
+      | Ast.Expression.OptionalMember _
+      | Ast.Expression.Sequence _
+      | Ast.Expression.Unary _
+        ->
+        super#expression expr
+
+      | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ }) ->
+        if not (SSet.mem name params_) then
+          this#update_acc (fun deps ->
+            Deps.join (deps, Deps.value name);
+          );
+        expr
+
+      | Ast.Expression.Literal _
+      | Ast.Expression.Super
+      | Ast.Expression.This ->
+        expr
+  end
+
+  let predicate_expression =
+    let visitor = new predicate_visitor in
+    fun params expr ->
+      visitor#eval (visitor#toplevel_expression params) expr
+
   let rec type_ tps t =
     let open Ast.Type in
     match t with
@@ -235,7 +301,7 @@ module Eval(Env: EvalEnv) = struct
 
   let rec annot_path tps = function
     | Kind.Annot_path.Annot (_, t) -> type_ tps t
-    | Kind.Annot_path.Object (path, _) -> annot_path tps path
+    | Kind.Annot_path.Object (_, (path, _)) -> annot_path tps path
 
   let rec init_path tps = function
     | Kind.Init_path.Init expr -> literal_expr tps expr
@@ -293,8 +359,8 @@ module Eval(Env: EvalEnv) = struct
       | _, ArrowFunction stuff
         ->
         let open Ast.Function in
-        let { id = _; generator; tparams; params; return; body; _ } = stuff in
-        function_ tps generator tparams params return body
+        let { id = _; generator; tparams; params; return; body; predicate; _ } = stuff in
+        function_ tps generator tparams params return body predicate
       | loc, Object stuff ->
         let open Ast.Expression.Object in
         let { properties; comments= _ } = stuff in
@@ -420,15 +486,20 @@ module Eval(Env: EvalEnv) = struct
   and arith_unary tps operator loc argument =
     let open Ast.Expression.Unary in
     match operator with
-      | Minus
       | Plus
-      | Not
       | BitNot
       | Typeof
       | Void
       | Delete
         ->
         (* These operations have simple result types. *)
+        ignore tps; ignore argument; Deps.bot
+      | Minus
+      | Not
+        ->
+        (* TODO: These operations are evaluated by Flow; they may or may not have simple result
+           types. Ideally we'd be verifying the argument. Unfortunately, we don't (see below). The
+           generator does some basic constant evaluation to compensate, but it's not enough. *)
         ignore tps; ignore argument; Deps.bot
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
@@ -486,13 +557,64 @@ module Eval(Env: EvalEnv) = struct
       else Deps.top (Error.ExpectedAnnotation (loc, EASort.FunctionReturn))
     | Ast.Type.Available (_, t) -> type_ tps t
 
-  and function_ tps generator tparams params return body =
+  and function_static tps (_id_prop, right) =
+    literal_expr tps right
+
+  and function_predicate params body predicate =
+    match predicate, body with
+    | Some (_, Ast.Type.Predicate.Declared e), _
+    | Some (_, Ast.Type.Predicate.Inferred), (
+        Ast.Function.BodyBlock (_, {
+          Ast.Statement.Block.body = [
+            _, Ast.Statement.Return {
+              Ast.Statement.Return.argument = Some e; _
+            }
+          ]
+        }) |
+        Ast.Function.BodyExpression e
+      ) ->
+      let _, { Ast.Function.Params.params; _ } = params in
+      let params = List.fold_left (fun acc param ->
+        let _, { Ast.Function.Param.argument; _ } = param in
+        match argument with
+        | _, Ast.Pattern.Identifier {
+            Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _
+          } -> name::acc
+        | _ -> acc
+      ) [] params in
+      let params = SSet.of_list params in
+      predicate_expression params e
+    | _ ->
+      (* We check for the form of the body of predicate functions in file_sig.ml *)
+      Deps.bot
+
+  and declare_function_predicate t predicate =
+    match t, predicate with
+    | (_, Ast.Type.Function { Ast.Type.Function.params = (_, {
+        Ast.Type.Function.Params.params; _
+      }); _ }),
+      Some (_, Ast.Type.Predicate.Declared e)
+      ->
+      let params = List.fold_left (fun acc param ->
+        match param with
+        | _, { Ast.Type.Function.Param.name = Some (_, { Ast.Identifier.name; _ }); _ } ->
+          name::acc
+        | _ -> acc
+      ) [] params in
+      let params = SSet.of_list params in
+      predicate_expression params e
+    | _ ->
+      (* TODO better error messages when the predicate is ignored *)
+      Deps.bot
+
+  and function_ tps generator tparams params return body predicate =
     let tps, deps = type_params tps tparams in
     let deps = Deps.join (deps, function_params tps params) in
     let deps =
       let is_missing_ok () = not generator && Signature_utils.Procedure_decider.is body in
       Deps.join (deps, function_return tps ~is_missing_ok return)
     in
+    let deps = Deps.join (deps, function_predicate params body predicate) in
     deps
 
   and class_ =
@@ -512,8 +634,8 @@ module Eval(Env: EvalEnv) = struct
 
         (* general cases *)
         | Body.Method (_, { Method.value; _ }) ->
-          let _, { Ast.Function.generator; tparams; params; return; body; _ } = value in
-          function_ tps generator tparams params return body
+          let _, { Ast.Function.generator; tparams; params; return; body; predicate; _ } = value in
+          function_ tps generator tparams params return body predicate
         | Body.Property (loc, { Property.annot; key; _ }) ->
           annotated_type ~sort:(EASort.Property key) tps loc annot
         | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
@@ -566,8 +688,8 @@ module Eval(Env: EvalEnv) = struct
         | loc, Set { key; value = (_, fn) }
           ->
           let deps = object_key (loc, key) in
-          let { Ast.Function.generator; tparams; params; return; body; _ } = fn in
-          Deps.join (deps, function_ tps generator tparams params return body)
+          let { Ast.Function.generator; tparams; params; return; body; predicate; _ } = fn in
+          Deps.join (deps, function_ tps generator tparams params return body predicate)
     in
     let object_spread_property tps prop =
       let open Ast.Expression.Object.SpreadProperty in
@@ -588,15 +710,28 @@ module Verifier(Env: EvalEnv) = struct
 
   module Eval = Eval(Env)
 
-  let eval id_loc (loc, kind) =
+  let rec eval id_loc (loc, kind) =
     match kind with
+      | Kind.WithPropertiesDef { base; properties } ->
+        begin match Kind.get_function_kind_info base with
+        | Some (generator, tparams, params, return, body) ->
+          let deps = Eval.function_ SSet.empty generator tparams params return body None in
+          let deps =
+            List.fold_left
+              (Deps.reduce_join (fun (_id_prop, expr) -> Eval.literal_expr SSet.empty expr))
+              deps properties in
+          deps
+        | None -> eval id_loc (loc, base)
+        end
       | Kind.VariableDef { id; annot; init } ->
         Eval.annotation ~sort:(EASort.VariableDefinition id) ?init
           SSet.empty (id_loc, annot)
-      | Kind.FunctionDef { generator; tparams; params; return; body; } ->
-        Eval.function_ SSet.empty generator tparams params return body
-      | Kind.DeclareFunctionDef { annot = (_, t) } ->
-        Eval.type_ SSet.empty t
+      | Kind.FunctionDef { generator; tparams; params; return; body; predicate } ->
+        Eval.function_ SSet.empty generator tparams params return body predicate
+      | Kind.DeclareFunctionDef { annot = (_, t); predicate } ->
+        let deps = Eval.type_ SSet.empty t in
+        let deps = Deps.join (deps, Eval.declare_function_predicate t predicate) in
+        deps
       | Kind.ClassDef { tparams; body; super; super_targs; implements } ->
         Eval.class_ tparams body super super_targs implements
       | Kind.DeclareClassDef { tparams; body = (_, body); extends; mixins; implements } ->
@@ -680,9 +815,9 @@ module Verifier(Env: EvalEnv) = struct
       ) ->
       eval_function_declaration loc function_declaration
     | Declaration (_, Ast.Statement.FunctionDeclaration ({ Ast.Function.
-        id = None; generator; tparams; params; return; body; _
+        id = None; generator; tparams; params; return; body; predicate; _
       })) ->
-      Eval.function_ SSet.empty generator tparams params return body
+      Eval.function_ SSet.empty generator tparams params return body predicate
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       eval_class loc class_
     | Declaration (_, Ast.Statement.ClassDeclaration

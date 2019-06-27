@@ -103,7 +103,7 @@ let process_prop_refs cx potential_refs file_key prop_def_info name =
     Core_list.map ~f:begin fun (ref_loc, ty) ->
       type_matches_locs cx ty prop_def_info name
       >>| function
-      | true -> Some (ALoc.to_loc ref_loc)
+      | true -> Some (ALoc.to_loc_exn ref_loc)
       | false -> None
     end
     |> Result.all

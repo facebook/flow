@@ -24,6 +24,7 @@ module AbstractTranslator : (
   let obj props = JObject props
   let array arr = JArray arr
   let number x = JNumber x
+  let int x = number (float x) (* TODO: this is inefficient, push ints to C *)
   let null = JNull
   let regexp _loc _pattern _flags = JNull
 end
@@ -45,6 +46,8 @@ let convert_options opts =
   let open Parser_env in
   List.fold_left (fun (opts, tokens) (k, v) ->
     match k with
+    | "enums" ->
+        { opts with enums = v }, tokens
     | "esproposal_class_instance_fields" ->
         { opts with esproposal_class_instance_fields = v }, tokens
     | "esproposal_class_static_fields" ->

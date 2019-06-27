@@ -1,2 +1,2 @@
 [lints]
-deprecated-call-syntax=error
+deprecated-utility=error

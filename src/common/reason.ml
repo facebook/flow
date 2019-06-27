@@ -100,7 +100,8 @@ type 'loc virtual_reason_desc =
   | RLogical of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
   | RTemplateString
   | RUnknownString
-  | REnum
+  | REnum (* TODO(T45400747): Rename union based "enums" code to something else *)
+  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -151,6 +152,7 @@ type 'loc virtual_reason_desc =
   | RProperty of string option
   | RPrivateProperty of string
   | RShadowProperty of string
+  | RMember of { object_: string; property: string }
   | RPropertyOf of string * 'loc virtual_reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
@@ -260,6 +262,7 @@ let rec map_desc_locs f = function
   | RTemplateString
   | RUnknownString
   | REnum
+  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -303,6 +306,7 @@ let rec map_desc_locs f = function
   | RProperty _
   | RPrivateProperty _
   | RShadowProperty _
+  | RMember _
   | RPropertyIsAString _
   | RMissingProperty _
   | RUnknownProperty _
@@ -424,7 +428,12 @@ let string_of_loc ?(strip_root=None) loc = Loc.(
     spf "%s:%s" (string_of_source ~strip_root file) (Loc.to_string_no_source loc)
 )
 
-let string_of_aloc ?strip_root aloc = string_of_loc ?strip_root (ALoc.to_loc aloc)
+let string_of_aloc ?(strip_root=None) aloc =
+  match ALoc.source aloc with
+  | None
+  | Some File_key.Builtins -> ""
+  | Some file ->
+    spf "%s:%s" (string_of_source ~strip_root file) (ALoc.to_string_no_source aloc)
 
 let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_table loc = Hh_json.(Loc.(
   let offset_entry offset_table pos =
@@ -479,7 +488,7 @@ let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc = Hh_json.(
 )
 
 let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
-  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc aloc)
+  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
 
 (* reason constructors, accessors, etc. *)
 
@@ -609,6 +618,7 @@ let rec string_of_desc = function
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | REnum -> "enum"
+  | REnumDeclaration -> "Enum declarations are not yet implemented."
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -664,6 +674,7 @@ let rec string_of_desc = function
   | RProperty (Some x) -> spf "property `%s`" x
   | RProperty None -> "computed property"
   | RPrivateProperty x -> spf "property `#%s`" x
+  | RMember { object_; property } -> spf "`%s%s`" object_ property
   | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x
   | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
@@ -754,13 +765,6 @@ let string_of_reason ?(strip_root=None) r =
     else spf "%s:\n%s" spos desc
   )
 
-let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
-  JSON_Object ([
-    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc);
-    "desc", JSON_String (string_of_desc r.desc)
-  ])
-)
-
 let dump_reason ?(strip_root=None) r =
   spf "%s: %S%s"
     (string_of_aloc ~strip_root (aloc_of_reason r))
@@ -799,9 +803,6 @@ let uninternal_module_name name =
   else
     name
 
-let internal_pattern_name loc =
-  spf ".$pattern__%s" (string_of_aloc loc)
-
 (* Instantiable reasons identify tvars that are created for the purpose of
    instantiation: they are fresh rather than shared, and should become types
    that flow to them. We assume these characteristics when performing
@@ -831,9 +832,18 @@ let is_instantiable_reason r =
 *)
 let is_constant_reason r =
   match desc_of_reason r with
-  | RIdentifier x
+  | RIdentifier x ->
+    (* A single-letter variable name which happens to be upper-case should not
+       be confused with a constant reason. This should really be further
+       restricted to `const`-declared identifiers in scope. Or, better yet,
+       removing this heuristic entirely. *)
+    let len = String.length x in
+    if len < 2
+    then false
+    else is_not_lowercase x 0 (len - 1)
   | RProperty (Some x)
   | RPrivateProperty x
+  | RMember { object_ = _; property = x }
   | RPropertyOf (x,_)
   | RPropertyIsAString x ->
     let len = String.length x in
@@ -1007,13 +1017,10 @@ Ast.Expression.(match x with
 | Ast.Expression.Literal x -> code_desc_of_literal x
 | Logical { Logical.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Logical operator) right)
-| Member { Member._object; property } -> Member.(
+| Member { Member._object; property } ->
   let o = code_desc_of_expression ~wrap:true _object in
-  o ^ (match property with
-  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> "." ^ x
-  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> ".#" ^ x
-  | PropertyExpression x -> "[" ^ code_desc_of_expression ~wrap:false x ^ "]"
-  ))
+  let p = code_desc_of_property ~optional:false property in
+  o ^ p
 | MetaProperty { MetaProperty.meta = (_, { Ast.Identifier.name= o; comments= _ }); property = (_, { Ast.Identifier.name= p; comments= _ }) } ->
   o ^ "." ^ p
 | New { New.callee; targs; arguments } ->
@@ -1049,12 +1056,8 @@ Ast.Expression.(match x with
     optional;
   } ->
   let o = code_desc_of_expression ~wrap:true _object in
-  o ^ Member.(match property with
-  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> (if optional then "?." else ".") ^ x
-  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> (if optional then "?.#" else ".#") ^ x
-  | PropertyExpression x ->
-    (if optional then "?.[" else "[") ^ code_desc_of_expression ~wrap:false x ^ "]"
-  )
+  let p = code_desc_of_property ~optional property in
+  o ^ p
 | Sequence { Sequence.expressions } ->
   code_desc_of_expression ~wrap (List.hd (List.rev expressions))
 | Super -> "super"
@@ -1062,7 +1065,7 @@ Ast.Expression.(match x with
 | TemplateLiteral _ -> "`...`"
 | This -> "this"
 | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
-| Unary { Unary.operator; argument } ->
+| Unary { Unary.operator; argument; comments= _ } ->
   let x = code_desc_of_expression ~wrap:true argument in
   let op = Unary.(match operator with
   | Minus -> "-"
@@ -1187,6 +1190,16 @@ and code_desc_of_literal x = Ast.(match x.Literal.value with
 | _ -> x.Literal.raw
 )
 
+and code_desc_of_property ~optional property =
+  match property with
+  | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) ->
+      (if optional then "?." else ".") ^ x
+  | Ast.Expression.Member.PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) ->
+      (if optional then "?.#" else ".#") ^ x
+  | Ast.Expression.Member.PropertyExpression x ->
+      (if optional then "?.[" else "[") ^ code_desc_of_expression ~wrap:false x ^ "]"
+
+
 let rec mk_expression_reason = Ast.Expression.(function
 | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
 | (loc, Object _) -> mk_reason RObjectLit loc
@@ -1197,6 +1210,11 @@ let rec mk_expression_reason = Ast.Expression.(function
   mk_reason (RStringLit "") loc
 | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
 | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
+| (loc, Member { Member._object; property }) ->
+  mk_reason (RMember {
+    object_ = code_desc_of_expression ~wrap:true _object;
+    property = code_desc_of_property ~optional:false property;
+  }) loc
 | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 )
 
@@ -1327,6 +1345,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RProperty _
 | RPrivateProperty _
 | RShadowProperty _
+| RMember _
 | RPropertyOf _
 | RPropertyIsAString _
 | RMissingProperty _
@@ -1385,6 +1404,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RReactConfig
 | RTrusted _
 | RPrivate _
+| REnumDeclaration
   -> `Unclassified
 
 let is_nullish_reason r =

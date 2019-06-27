@@ -43,21 +43,21 @@ s(unknown_str); // possibly falsey, sketchy
 // PropExistsP
 
 // optional prop
-function l(o: { p?: number }) {
+function l(o: { p?: number, ... }) {
   if (o.p) {/* sketchy */}
 }
 
 // maybe prop
-function m(o: { p: ?number }) {
+function m(o: { p: ?number, ... }) {
   if (o.p) {/* sketchy */}
 }
 
 // union
-function n(o: { p: number|null|void }) {
+function n(o: { p: number|null|void, ... }) {
   if (o.p) { /* sketchy */ }
 }
 
-function q(o: { p: number }) {
+function q(o: { p: number, ... }) {
   if (o.p) { /* NOT sketchy */ }
 }
 

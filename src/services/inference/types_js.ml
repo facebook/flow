@@ -115,15 +115,17 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
     let max_tokens = Options.max_header_tokens options in
     let module_ref_prefix = Options.haste_module_ref_prefix options in
     let facebook_fbt = Options.facebook_fbt options in
-    let arch = options.Options.opt_arch in
+    let arch = Options.arch options in
+    let abstract_locations = options.Options.opt_abstract_locations in
 
     let docblock_errors, info =
       Parsing_service_js.parse_docblock ~max_tokens filename contents in
     let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
-    let parse_result = Parsing_service_js.do_parse
-      ~fail:check_syntax ~types_mode ~use_strict ~info ~module_ref_prefix
-      ~facebook_fbt ~arch contents filename
+    let parse_options = Parsing_service_js.make_parse_options
+        ~fail:check_syntax ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch
+        ~abstract_locations ()
     in
+    let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
     Lwt.return (errors, parse_result, info)
   )
 
@@ -250,12 +252,12 @@ let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
     Lwt.return (dependency_graph, component_map)
   )
 
-(* The infer_input passed in basically tells us what the caller wants to typecheck.
+(* The input passed in basically tells us what the caller wants to typecheck.
  * However, due to laziness, it's possible that certain dependents or dependencies have not been
  * checked yet. So we need to calculate all the transitive dependents and transitive dependencies
- * and add them to infer_input, unless they're already checked and in unchanged_checked
+ * and add them to input, unless they're already checked and in unchanged_checked
  *
- * Note that we do not want to add all_dependent_files to infer_input directly! We only want to
+ * Note that we do not want to add all_dependent_files to input directly! We only want to
  * pass the dependencies, and later add dependent files as needed. This is important for recheck
  * optimizations. We create the recheck map which indicates whether a given file needs to be
  * rechecked. Dependent files only need to be rechecked if their dependencies change.
@@ -264,15 +266,15 @@ let include_dependencies_and_dependents
     ~options
     ~profiling
     ~unchanged_checked
-    ~infer_input
+    ~input
     ~dependency_info
-    ~all_dependent_files
-    ~direct_dependent_files =
-  let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
+    ~all_dependent_files =
+  let%lwt input_with_dependencies_of_all_dependents, components =
+    with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
     let preliminary_to_merge = CheckedSet.all
-      (CheckedSet.add ~dependents:all_dependent_files infer_input) in
+      (CheckedSet.add ~dependents:all_dependent_files input) in
     let preliminary_to_merge = Dep_service.calc_direct_dependencies dependency_info
       preliminary_to_merge in
     (* So we want to prune our dependencies to only the dependencies which changed. However,
@@ -289,27 +291,46 @@ let include_dependencies_and_dependents
       (* If every element is unchanged, drop the component *)
       else dependencies
     ) FilenameSet.empty components in
-    Lwt.return (CheckedSet.add ~dependencies infer_input, components)
+    Lwt.return (CheckedSet.add ~dependencies input, components)
   ) in
 
-  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with infer_input +
-     all_dependent_files (which is = to_merge later) on dependency_graph, we would get exactly the
-     same components. Later, we will filter dependency_graph to just to_merge, and correspondingly
-     filter components as well. This will work out because every component is either entirely inside
-     to_merge or entirely outside. *)
+  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with
+     input_with_dependencies_of_all_dependents + all_dependent_files (which is = to_merge later) on
+     dependency_graph, we would get exactly the same components. Later, we will filter
+     dependency_graph to just to_merge, and correspondingly filter components as well. This will
+     work out because every component is either entirely inside to_merge or entirely outside. *)
 
-  let to_merge = CheckedSet.add ~dependents:all_dependent_files infer_input in
+  let to_merge =
+    CheckedSet.add ~dependents:all_dependent_files input_with_dependencies_of_all_dependents in
 
-  let recheck_map =
-    let roots = CheckedSet.add ~dependents:direct_dependent_files infer_input in
-    (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
-       files in to_merge may or may not be rechecked. *)
-    CheckedSet.fold (fun recheck_map file ->
-      FilenameMap.add file (CheckedSet.mem file roots) recheck_map
-    ) FilenameMap.empty to_merge
+  let recheck_set =
+    (* Definitely recheck input files. As merging proceeds, other files in to_merge may or may not
+       be rechecked. *)
+    CheckedSet.fold (fun recheck_set file ->
+      if CheckedSet.mem file input_with_dependencies_of_all_dependents
+      then FilenameSet.add file recheck_set
+      else recheck_set
+    ) FilenameSet.empty to_merge
   in
 
-  Lwt.return (to_merge, components, recheck_map)
+  Lwt.return (to_merge, components, recheck_set)
+
+let remove_old_results (errors, warnings, suppressions, coverage) file =
+  FilenameMap.remove file errors,
+  FilenameMap.remove file warnings,
+  Error_suppressions.remove file suppressions,
+  FilenameMap.remove file coverage
+
+let add_new_results (errors, warnings, suppressions, coverage) file result =
+  match result with
+  | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
+    update_errset errors file new_errors,
+    update_errset warnings file new_warnings,
+    Error_suppressions.update_suppressions suppressions new_suppressions,
+    update_coverage coverage new_coverage
+  | Error msg ->
+    let new_errors = error_set_of_merge_error file msg in
+    update_errset errors file new_errors, warnings, suppressions, coverage
 
 let run_merge_service
     ~master_mutator
@@ -319,72 +340,41 @@ let run_merge_service
     ~options
     ~profiling
     ~workers
-    dependency_graph
-    component_map
-    recheck_map
+    ~dependency_graph
+    ~component_map
+    ~recheck_set
     acc
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
-    let%lwt merged, skipped_count = Merge_service.merge_strict
+    let%lwt merged, { Merge_service.skipped_count; sig_new_or_changed } = Merge_service.merge_strict
       ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
-      dependency_graph component_map recheck_map
+      ~dependency_graph ~component_map ~recheck_set
     in
     let errs, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
-      (* remove all errors, suppressions for rechecked component *)
-      let errors, warnings, suppressions, coverage =
-        Nel.fold_left (fun (errors, warnings, suppressions, coverage) file ->
-          FilenameMap.remove file errors,
-          FilenameMap.remove file warnings,
-          Error_suppressions.remove file suppressions,
-          FilenameMap.remove file coverage
-        ) acc component
-      in
-      match result with
-      | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
-        update_errset errors file new_errors,
-        update_errset warnings file new_warnings,
-        Error_suppressions.update_suppressions suppressions new_suppressions,
-        update_coverage coverage new_coverage
-      | Error msg ->
-        let new_errors = error_set_of_merge_error file msg in
-        update_errset errors file new_errors, warnings, suppressions, coverage
+      let acc = Nel.fold_left remove_old_results acc component in
+      add_new_results acc file result
     ) acc merged
     in
-    Lwt.return (errs, warnings, suppressions, coverage, skipped_count)
+    Lwt.return (errs, warnings, suppressions, coverage, skipped_count, sig_new_or_changed)
   )
 
-(* This function does some last minute preparation and then calls into the merge service, which
- * typechecks the code. By the time this function is called, we know exactly what we want to merge
- * (though we may later decline to typecheck some files due to recheck optimizations) *)
-let merge
-  ~transaction
-  ~reader
-  ~options
-  ~profiling
-  ~workers
-  ~errors
-  ~unchanged_checked
-  ~to_merge
-  ~components
-  ~recheck_map
-  ~dependency_graph
-  ~deleted
-  ~persistent_connections
-  ~prep_merge =
-  let { ServerEnv.local_errors; merge_errors; warnings; suppressions; } = errors in
-
+let mk_intermediate_result_callback
+    ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
+  let lazy_table_of_aloc = Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
   let%lwt send_errors_over_connection =
     match persistent_connections with
     | None -> Lwt.return (fun _ -> ())
     | Some clients -> with_timer_lwt ~options "MakeSendErrors" profiling (fun () ->
-      (* Each merge step uncovers new errors, warnings, suppressions.
-
+      (* In classic, each merge step uncovers new errors, warnings, suppressions.
          While more suppressions may come in later steps, the suppressions we've seen so far are
          sufficient to filter the errors and warnings we've seen so far.
-
          Intuitively, we will not see an error (or warning) before we've seen all the files involved
-         in that error, and thus all the suppressions which could possibly suppress the error. *)
+         in that error, and thus all the suppressions which could possibly suppress the error.
+
+         In types-first, we have already accumulated suppressions in the overall merge step, and
+         each check step uses those suppressions to filter the errors and warnings uncovered.
+       *)
       let open Errors in
       let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
       let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
@@ -431,12 +421,61 @@ let merge
         curr_suppressions := suppressions;
 
         if not (ConcreteLocPrintableErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
-        then Persistent_connection.update_clients
-          ~clients
-          ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
+        then
+          let errors_reason = Persistent_connection_prot.Recheck_streaming { recheck_reasons; } in
+          Persistent_connection.update_clients
+            ~clients
+            ~errors_reason
+            ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
       ))
   in
+  let intermediate_result_callback results =
+    let errors = lazy (
+      Core_list.map ~f:(fun (file, result) ->
+        match result with
+        | Ok (errors, warnings, suppressions, _) ->
+          let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+          let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
+          file, errors, warnings, suppressions
+        | Error msg ->
+          let errors = error_set_of_merge_error file msg in
+          let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+          let suppressions = Error_suppressions.empty in
+          let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
+          file, errors, warnings, suppressions
+      ) (Lazy.force results)
+    ) in
+    send_errors_over_connection errors
+  in
+  Lwt.return intermediate_result_callback
 
+(* This function does some last minute preparation and then calls into the merge service, which
+ * typechecks the code. By the time this function is called, we know exactly what we want to merge
+ * (though we may later decline to typecheck some files due to recheck optimizations) *)
+let merge
+  ~transaction
+  ~reader
+  ~options
+  ~profiling
+  ~workers
+  ~errors
+  ~to_merge
+  ~components
+  ~recheck_set
+  ~dependency_graph
+  ~deleted
+  ~persistent_connections
+  ~recheck_reasons
+  ~prep_merge =
+  let { ServerEnv.local_errors; merge_errors; warnings; suppressions; } = errors in
+  let coverage = FilenameMap.empty in
+
+  let%lwt intermediate_result_callback =
+    let persistent_connections = match Options.arch options with
+      | Options.Classic -> persistent_connections
+      | Options.TypesFirst -> None in
+    mk_intermediate_result_callback
+      ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions in
   let%lwt () = match prep_merge with
     | None -> Lwt.return_unit
     | Some callback ->
@@ -449,11 +488,10 @@ let merge
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
 
-     recheck_map maps each file in to_merge to whether it should be rechecked
+     recheck_set maps each file in to_merge to whether it should be rechecked
      initially.
   *)
   Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
-  Hh_logger.info "unchanged_checked: %s" (CheckedSet.debug_counts_to_string unchanged_checked);
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let files_to_merge = CheckedSet.all to_merge in
@@ -461,26 +499,9 @@ let merge
     calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
-  let%lwt merge_errors, warnings, suppressions, coverage, skipped_count =
-    let intermediate_result_callback results =
-      let errors = lazy (
-        Core_list.map ~f:(fun (file, result) ->
-          match result with
-          | Ok (errors, warnings, suppressions, _) ->
-            let errors = Flow_error.make_errors_printable errors in
-            let warnings = Flow_error.make_errors_printable warnings in
-            file, errors, warnings, suppressions
-          | Error msg ->
-            let errors = error_set_of_merge_error file msg in
-            let errors = Flow_error.make_errors_printable errors in
-            let suppressions = Error_suppressions.empty in
-            let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
-            file, errors, warnings, suppressions
-        ) (Lazy.force results)
-      ) in
-      send_errors_over_connection errors
-    in
-
+  let%lwt
+      (merge_errors, warnings, suppressions, coverage, skipped_count, sig_new_or_changed),
+      time_to_merge =
     let master_mutator, worker_mutator =
       Context_heaps.Merge_context_mutator.create
         transaction (FilenameSet.union files_to_merge deleted)
@@ -488,7 +509,7 @@ let merge
 
     let merge_start_time = Unix.gettimeofday () in
 
-    let%lwt merge_errors, warnings, suppressions, coverage, skipped_count =
+    let%lwt result =
       run_merge_service
         ~master_mutator
         ~worker_mutator
@@ -497,10 +518,10 @@ let merge
         ~options
         ~profiling
         ~workers
-        dependency_graph
-        component_map
-        recheck_map
-        (merge_errors, warnings, suppressions, FilenameMap.empty)
+        ~dependency_graph
+        ~component_map
+        ~recheck_set
+        (merge_errors, warnings, suppressions, coverage)
     in
     let%lwt () =
       if Options.should_profile options
@@ -510,73 +531,110 @@ let merge
       else Lwt.return_unit
     in
 
-    let%lwt () = Recheck_stats.record_merge_time
-      ~options
-      ~total_time:(Unix.gettimeofday () -. merge_start_time)
-      ~merged_files:(CheckedSet.cardinal to_merge);
-    in
+    let time_to_merge = Unix.gettimeofday () -. merge_start_time in
 
     Hh_logger.info "Done";
-    Lwt.return (merge_errors, warnings, suppressions, coverage, skipped_count)
+    Lwt.return (result, time_to_merge)
   in
-
-  let checked = CheckedSet.union unchanged_checked to_merge in
-  Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked);
 
   let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
   let cycle_leaders = component_map
     |> Utils_js.FilenameMap.elements
     |> Core_list.map ~f:(fun (leader, members) -> (leader, Nel.length members))
     |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
-  Lwt.return (checked, cycle_leaders, errors, coverage, skipped_count)
+  Lwt.return (cycle_leaders, errors, coverage, skipped_count, sig_new_or_changed, time_to_merge)
 
-let check_files ~options ~reader ~workers errors coverage checked_files =
-  let files = FilenameSet.union (CheckedSet.focused checked_files) (CheckedSet.dependents checked_files) in
-  match options.Options.opt_arch with
-  | Options.Classic -> Lwt.return (errors, coverage)
+let check_files
+  ~reader
+  ~options
+  ~profiling
+  ~workers
+  ~errors
+  ~updated_errors
+  ~coverage
+  ~merged_files
+  ~direct_dependent_files
+  ~sig_new_or_changed
+  ~dependency_info
+  ~persistent_connections
+  ~recheck_reasons =
+  match Options.arch options with
+  | Options.Classic -> Lwt.return (updated_errors, coverage, 0.)
   | Options.TypesFirst ->
-    let job = List.fold_left (fun (errors, warnings, suppressions, coverage) file ->
-      let new_errors, new_warnings, new_suppressions, new_coverage =
-        Merge_service.check_file options ~reader file in
-      update_errset errors file new_errors,
-      update_errset warnings file new_warnings,
-      Error_suppressions.update_suppressions suppressions new_suppressions,
-      update_coverage coverage new_coverage
-    ) in
-    let neutral =
-      FilenameMap.empty,
-      FilenameMap.empty,
-      Error_suppressions.empty,
-      FilenameMap.empty in
-    let merge
-        (errors, warnings, suppressions, coverage)
-        (new_errors, new_warnings, new_suppressions, new_coverage) =
-      FilenameMap.union errors new_errors,
-      FilenameMap.union warnings new_warnings,
-      Error_suppressions.update_suppressions suppressions new_suppressions,
-      FilenameMap.union coverage new_coverage
-      in
+    with_timer_lwt ~options "Check" profiling (fun () ->
+      Hh_logger.info "Check prep";
+      Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
+      let focused_to_check = CheckedSet.focused merged_files in
+      let merged_dependents = CheckedSet.dependents merged_files in
+      let skipped_count = ref 0 in
+      let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+      (* skip dependents whenever none of their dependencies have new or changed signatures *)
+      (* NOTE: We don't skip direct dependents because, in particular, they might be direct
+         dependents of files that were deleted, became unparsed, or fell out of @flow; those files
+         would not be dependencies tracked by the dependency graph; the direct dependents of those
+         files would need to be checked nevertheless. Of course, this is a hammer of a solution for
+         a nail of a problem.
 
-    Hh_logger.info "Checking files";
-    let progress_fn ~total ~start ~length:_ =
-      MonitorRPC.status_update
-        ServerStatus.(Checking_progress { total = Some total; finished = start })
-    in
-    let%lwt merge_errors, warnings, suppressions, coverage = MultiWorkerLwt.call
+         TODO: Figure out how to safely skip direct dependents. *)
+      let dependents_to_check =
+        FilenameSet.filter (fun f ->
+          (FilenameSet.mem f direct_dependent_files)
+          || (FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
+              @@ FilenameMap.find_unsafe f all_dependency_graph)
+          || (incr skipped_count; false)
+        ) @@ merged_dependents in
+      Hh_logger.info "Check will skip %d files" !skipped_count;
+      let files = FilenameSet.union focused_to_check dependents_to_check in
+
+      let%lwt intermediate_result_callback =
+        mk_intermediate_result_callback
+          ~reader
+          ~options
+          ~profiling
+          ~persistent_connections
+          ~recheck_reasons
+          updated_errors.ServerEnv.suppressions in
+
+      Hh_logger.info "Checking files";
+
+      let check_start_time = Unix.gettimeofday () in
+
+      let job = List.fold_left (fun acc file ->
+        (Merge_service.check options ~reader file) :: acc
+      ) in
+      let merge new_acc acc =
+        intermediate_result_callback (lazy new_acc);
+        List.rev_append new_acc acc in
+      let progress_fn ~total ~start ~length:_ =
+        MonitorRPC.status_update
+          ServerStatus.(Checking_progress { total = Some total; finished = start })
+      in
+      let max_size = Options.max_files_checked_per_worker options in
+      let%lwt ret = MultiWorkerLwt.call
         workers
         ~job
-        ~neutral
+        ~neutral:[]
         ~merge
-        ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers
-                 (FilenameSet.elements files))
-    in
-    Hh_logger.info "Done";
-    let errors = { errors with
-      ServerEnv.merge_errors;
-      warnings;
-      suppressions;
-    } in
-    Lwt.return (errors, coverage)
+        ~next:(MultiWorkerLwt.next ~progress_fn ~max_size workers (FilenameSet.elements files))
+      in
+
+      let { ServerEnv.merge_errors; warnings; _ } = errors in
+      let suppressions = updated_errors.ServerEnv.suppressions in
+      let merge_errors, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
+        let acc = remove_old_results acc file in
+        add_new_results acc file result
+      ) (merge_errors, warnings, suppressions, coverage) ret in
+
+      let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
+
+      Hh_logger.info "Done";
+      let errors = { errors with
+        ServerEnv.merge_errors;
+        warnings;
+        suppressions;
+      } in
+      Lwt.return (errors, coverage, time_to_check_merged)
+    )
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
@@ -592,7 +650,13 @@ let ensure_parsed ~options ~profiling ~workers ~reader files =
         parse_hash_mismatch_skips
         SSet.empty
       in
-      ServerMonitorListenerState.push_files_to_recheck files_to_recheck;
+      let file_count = SSet.cardinal files_to_recheck in
+      let reason = Persistent_connection_prot.(
+        if file_count = 1
+        then Single_file_changed { filename = SSet.elements files_to_recheck |> List.hd; }
+        else Many_files_changed { file_count; }
+      ) in
+      ServerMonitorListenerState.push_files_to_recheck ~reason files_to_recheck;
       raise Lwt.Canceled
     end
   )
@@ -618,7 +682,7 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
     ) require_loc_map Modulename.Set.empty
   in
 
-  let infer_input = Modulename.Set.fold (fun m acc ->
+  let input = Modulename.Set.fold (fun m acc ->
     match Module_heaps.Reader.get_file ~reader m ~audit:Expensive.warn with
     | Some f ->
       let reader = Abstract_state_reader.State_reader reader in
@@ -628,18 +692,21 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
       else acc
     | None -> acc (* complain elsewhere about required module not found *)
   ) resolved_requires CheckedSet.empty in
-  let unchanged_checked = env.ServerEnv.checked_files in
+  let checked = env.ServerEnv.checked_files in
 
-  (* Often, all dependencies have already been checked, so infer_input contains no unchecked files.
+  (* Often, all dependencies have already been checked, so input contains no unchecked files.
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
    * large repos *)
-  let unchecked_dependencies = CheckedSet.diff infer_input unchanged_checked in
+  let unchecked_dependencies = CheckedSet.diff input checked in
   if CheckedSet.is_empty unchecked_dependencies
   then Lwt.return_unit
   else begin
     Hh_logger.info "Canceling command due to %d unchecked dependencies"
       (CheckedSet.cardinal unchecked_dependencies);
-    ServerMonitorListenerState.push_checked_set_to_force unchecked_dependencies;
+    let reason =
+      Persistent_connection_prot.Unchecked_dependencies { filename = File_key.to_string file; }
+    in
+    ServerMonitorListenerState.push_checked_set_to_force ~reason unchecked_dependencies;
     raise Lwt.Canceled
   end
 
@@ -650,6 +717,9 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
     parse_contents ~options ~profiling ~check_syntax filename contents in
 
   let reader = State_reader.create () in
+  let lazy_table_of_aloc =
+    Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader
+  in
 
   match parse_result with
   | Parsing_service_js.Parse_ok parse_ok ->
@@ -691,8 +761,8 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let errors, warnings, suppressions =
         Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
-      let errors = Flow_error.make_errors_printable errors in
-      let warnings = Flow_error.make_errors_printable warnings in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
 
       let root = Options.root options in
       let file_options = Some (Options.file_options options) in
@@ -730,14 +800,14 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
           let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
           Flow_error.ErrorSet.add err errors
       in
-      let errors = Flow_error.make_errors_printable errors in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
     | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
-      let errors = Flow_error.make_errors_printable errors in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
 let typecheck_contents ~options ~env ~profiling contents filename =
@@ -933,8 +1003,8 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
         estimated_time_to_recheck = time_to_recheck;
         estimated_time_to_restart = time_to_restart;
         estimated_time_to_init = init_time;
-        estimated_time_to_merge_a_file = per_file_time;
-        estimated_files_to_merge = files_about_to_recheck;
+        estimated_time_per_file = per_file_time;
+        estimated_files_to_recheck = files_about_to_recheck;
         estimated_files_to_init = files_already_checked;
       } in
 
@@ -976,6 +1046,7 @@ module Recheck: sig
     updates:Utils_js.FilenameSet.t ->
     files_to_force:CheckedSet.t ->
     file_watcher_metadata:MonitorProt.file_watcher_metadata ->
+    recheck_reasons:Persistent_connection_prot.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
     (ServerEnv.env * recheck_result) Lwt.t
@@ -988,6 +1059,7 @@ module Recheck: sig
     workers:MultiWorkerLwt.worker list option ->
     updates:Utils_js.FilenameSet.t ->
     files_to_force:CheckedSet.t ->
+    recheck_reasons:Persistent_connection_prot.recheck_reason list ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
 end = struct
@@ -1006,23 +1078,15 @@ end = struct
    * It returns an updated env and a bunch of intermediate values which `recheck_merge` can use to
    * calculate the to_merge and perform the merge *)
   let recheck_parse_and_update_dependency_info
-      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env =
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env =
+    let lazy_table_of_aloc = Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
     let errors = env.ServerEnv.errors in
 
     (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
      * or focused file. We can ignore a request if the file is already checked at the desired level
      * or at a more important level *)
     let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
-
-    (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
-     * updated too. This is because sometimes we decide what foo.js.flow
-     * provides based on the existence of foo.js *)
-    let updates = FilenameSet.fold (fun file updates ->
-      if not (File_key.check_suffix file Files.flow_ext) &&
-        Parsing_heaps.Mutator_reader.has_ast ~reader (File_key.with_suffix file Files.flow_ext)
-      then FilenameSet.add (File_key.with_suffix file Files.flow_ext) updates
-      else updates
-    ) updates updates in
 
     (* split updates into deleted files and modified files *)
     (** NOTE: We use the term "modified" in the same sense as the underlying file
@@ -1085,10 +1149,11 @@ end = struct
         let error_set: Flow_error.ErrorSet.t =
           FilenameMap.fold (fun _ -> Flow_error.ErrorSet.union) new_local_errors Flow_error.ErrorSet.empty
         in
-        let error_set = Flow_error.make_errors_printable error_set in
+        let error_set = Flow_error.make_errors_printable lazy_table_of_aloc error_set in
         if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0
         then Persistent_connection.update_clients
           ~clients:env.ServerEnv.connections
+          ~errors_reason:(Persistent_connection_prot.Recheck_streaming { recheck_reasons; })
           ~calc_errors_and_warnings:(fun () -> error_set, FilenameMap.empty)
       in
       let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
@@ -1277,7 +1342,7 @@ end = struct
 
 
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
-       or are new / changed files that are phantom dependents. dependent_files are
+       or are new / changed files that are phantom dependents. all_dependent_files are
        direct_dependent_files plus their dependents (transitive closure) *)
     let%lwt all_dependent_files, direct_dependent_files =
       with_timer_lwt ~options "DependentFiles" profiling (fun () ->
@@ -1310,12 +1375,10 @@ end = struct
 
     Hh_logger.info "Recalculating dependency graph";
     let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-      let files_to_include_in_dependency_info =
-        freshparsed
-        |> FilenameSet.union direct_dependent_files
-      in
-      let%lwt updated_dependency_info = Dep_service.calc_partial_dependency_info ~options ~reader workers
-        files_to_include_in_dependency_info ~parsed in
+      let files_to_update_dependency_info = FilenameSet.union freshparsed direct_dependent_files in
+      let%lwt updated_dependency_info =
+        Dep_service.calc_partial_dependency_info ~options ~reader workers
+        files_to_update_dependency_info ~parsed in
       let old_dependency_info = env.ServerEnv.dependency_info in
       match old_dependency_info, updated_dependency_info with
         | Dependency_info.Classic old_map, Dependency_info.Classic updated_map ->
@@ -1369,7 +1432,7 @@ end = struct
    * merge. Then it merges them. *)
   let recheck_merge
       ~profiling ~transaction ~reader ~options ~workers
-      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~env =
+      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~recheck_reasons ~env =
 
     let (
       all_dependent_files,
@@ -1451,14 +1514,13 @@ end = struct
 
     (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
      * will be focused *)
-    let infer_input = CheckedSet.filter updated_checked_files ~f:(fun fn ->
+    let input = CheckedSet.filter updated_checked_files ~f:(fun fn ->
       FilenameSet.mem fn acceptable_files_to_focus
     ) in
 
-    let%lwt to_merge, components, recheck_map =
+    let%lwt to_merge, components, recheck_set =
       include_dependencies_and_dependents
-        ~options ~profiling ~unchanged_checked ~infer_input ~dependency_info ~all_dependent_files
-        ~direct_dependent_files
+        ~options ~profiling ~unchanged_checked ~input ~dependency_info ~all_dependent_files
     in
 
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
@@ -1473,20 +1535,27 @@ end = struct
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
     (* recheck *)
-    let%lwt checked_files, cycle_leaders, errors, coverage, skipped_count = merge
+    let%lwt
+        cycle_leaders,
+        updated_errors,
+        coverage,
+        skipped_count,
+        sig_new_or_changed,
+        time_to_merge =
+      merge
       ~transaction
       ~reader
       ~options
       ~profiling
       ~workers
       ~errors
-      ~unchanged_checked
       ~to_merge
       ~components
-      ~recheck_map
+      ~recheck_set
       ~dependency_graph
       ~deleted
       ~persistent_connections:(Some env.ServerEnv.connections)
+      ~recheck_reasons
       ~prep_merge:(Some (fun () ->
         let n = FilenameSet.cardinal all_dependent_files in
         if n > 0
@@ -1499,8 +1568,30 @@ end = struct
         Hh_logger.info "Merge prep"
       ))
     in
+    let merged_files = to_merge in
+    let%lwt errors, coverage, time_to_check_merged = check_files
+      ~reader
+      ~options
+      ~profiling
+      ~workers
+      ~errors
+      ~updated_errors
+      ~coverage
+      ~merged_files
+      ~direct_dependent_files
+      ~sig_new_or_changed
+      ~dependency_info
+      ~persistent_connections:(Some env.ServerEnv.connections)
+      ~recheck_reasons in
 
-    let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
+    let%lwt () = Recheck_stats.record_recheck_time
+      ~options
+      ~total_time:(time_to_merge +. time_to_check_merged)
+      ~rechecked_files:(CheckedSet.cardinal merged_files);
+    in
+
+    let checked_files = CheckedSet.union unchanged_checked merged_files in
+    Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
 
     (* NOTE: unused fields are left in their initial empty state *)
     env.ServerEnv.collated_errors := None;
@@ -1530,18 +1621,21 @@ end = struct
    *)
   let full
       ~profiling ~transaction ~reader ~options ~workers ~updates
-      ~files_to_force ~file_watcher_metadata ~will_be_checked_files ~env =
+      ~files_to_force ~file_watcher_metadata ~recheck_reasons ~will_be_checked_files ~env =
     let%lwt env, intermediate_values = recheck_parse_and_update_dependency_info
-      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env
     in
     recheck_merge
       ~profiling ~transaction ~reader ~options ~workers
-      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~env
+      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~recheck_reasons ~env
 
   let parse_and_update_dependency_info
-    ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env=
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env=
     let%lwt env, _intermediate_values = recheck_parse_and_update_dependency_info
-      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env
     in
     Lwt.return env
 end
@@ -1552,7 +1646,8 @@ let with_transaction f =
     f transaction reader
 
 let recheck
-    ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~will_be_checked_files =
+    ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~recheck_reasons
+    ~will_be_checked_files =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, stats) =
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
@@ -1560,7 +1655,7 @@ let recheck
         with_transaction (fun transaction reader ->
           Recheck.full
             ~profiling ~transaction ~reader ~options ~workers ~updates ~env
-            ~files_to_force ~file_watcher_metadata ~will_be_checked_files
+            ~files_to_force ~file_watcher_metadata ~recheck_reasons ~will_be_checked_files
         )
       )
     )
@@ -1577,8 +1672,8 @@ let recheck
     estimated_time_to_recheck,
     estimated_time_to_restart,
     estimated_time_to_init,
-    estimated_time_to_merge_a_file,
-    estimated_files_to_merge,
+    estimated_time_per_file,
+    estimated_files_to_recheck,
     estimated_files_to_init
   ) = Option.value_map estimates
     ~default:(None, None, None, None, None, None)
@@ -1586,20 +1681,23 @@ let recheck
       estimated_time_to_recheck;
       estimated_time_to_restart;
       estimated_time_to_init;
-      estimated_time_to_merge_a_file;
-      estimated_files_to_merge;
+      estimated_time_per_file;
+      estimated_files_to_recheck;
       estimated_files_to_init;
     } -> (
       Some estimated_time_to_recheck,
       Some estimated_time_to_restart,
       Some estimated_time_to_init,
-      Some estimated_time_to_merge_a_file,
-      Some estimated_files_to_merge,
+      Some estimated_time_per_file,
+      Some estimated_files_to_recheck,
       Some estimated_files_to_init
     )
   ) in
   (** TODO: update log to reflect current terminology **)
   FlowEventLogger.recheck
+    ~recheck_reasons:(
+      List.map Persistent_connection_prot.verbose_string_of_recheck_reason recheck_reasons
+    )
     ~modified
     ~deleted
     ~dependent_files
@@ -1608,8 +1706,8 @@ let recheck
     ~estimated_time_to_recheck
     ~estimated_time_to_restart
     ~estimated_time_to_init
-    ~estimated_time_to_merge_a_file
-    ~estimated_files_to_merge
+    ~estimated_time_per_file
+    ~estimated_files_to_recheck
     ~estimated_files_to_init
     ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
     ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase;
@@ -1684,13 +1782,17 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
 
   Hh_logger.info "Restoring heaps";
   let%lwt () = with_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+    let root = Options.root options |> Path.to_string in
     let%lwt () = MultiWorkerLwt.call workers
       ~job:(List.fold_left (fun () (fn, parsed_file_data) ->
+        let { Saved_state.package; file_sig; hash; resolved_requires; } =
+          Saved_state.denormalize_parsed_data ~root parsed_file_data.Saved_state.normalized_file_data
+        in
         (* Every package.json file should have a Package_json.t. Use those to restore the
          * PackageHeap and the ReversePackageHeap *)
         begin match fn with
         | File_key.JsonFile str when Filename.basename str = "package.json" ->
-          begin match parsed_file_data.Saved_state.package with
+          begin match package with
           | None -> failwith (Printf.sprintf "Saved state for `%s` missing Package_json.t data" str)
           | Some package -> Module_heaps.Package_heap_mutator.add_package_json str package
           end
@@ -1698,14 +1800,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
         end;
 
         (* Restore the FileSigHeap *)
-        Parsing_heaps.From_saved_state.add_file_sig fn parsed_file_data.Saved_state.file_sig;
+        Parsing_heaps.From_saved_state.add_file_sig fn file_sig;
 
         (* Restore the FileHashHeap *)
-        Parsing_heaps.From_saved_state.add_file_hash fn parsed_file_data.Saved_state.hash;
+        Parsing_heaps.From_saved_state.add_file_hash fn hash;
 
         (* Restore the ResolvedRequiresHeap *)
-        Module_heaps.From_saved_state.add_resolved_requires
-          fn parsed_file_data.Saved_state.resolved_requires
+        Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires
       ))
       ~merge:(fun () () -> ())
       ~neutral:()
@@ -1899,40 +2000,42 @@ let load_saved_state ~profiling ~workers options =
     Hh_logger.info "No saved state available";
     Lwt.return_none
   | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files; } ->
-    with_timer_lwt ~options "LoadSavedState" profiling (fun () ->
-      let changed_files_count = SSet.cardinal changed_files in
-      try%lwt
-        let%lwt saved_state = Saved_state.load ~workers ~saved_state_filename ~options in
-        let updates = Recheck_updates.process_updates
-          ~options
-          ~libs:(SSet.of_list saved_state.Saved_state.ordered_non_flowlib_libs)
-          changed_files
+    let changed_files_count = SSet.cardinal changed_files in
+    try%lwt
+      let%lwt load_profiling, saved_state =
+        Saved_state.load ~workers ~saved_state_filename ~options
+      in
+      Profiling_js.merge load_profiling profiling;
+
+      let updates = Recheck_updates.process_updates
+        ~options
+        ~libs:(SSet.of_list saved_state.Saved_state.ordered_non_flowlib_libs)
+        changed_files
+      in
+      let updates = match updates with
+      | Core_result.Error ({ Recheck_updates.msg; _; }) ->
+        Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
+        raise Saved_state.(Invalid_saved_state Changed_files)
+      | Core_result.Ok updates -> updates in
+      Hh_logger.info "Saved state script reports %d files changed & we care about %d of them"
+        (SSet.cardinal changed_files)
+        (FilenameSet.cardinal updates);
+      FlowEventLogger.set_saved_state_filename (Path.to_string saved_state_filename);
+      FlowEventLogger.load_saved_state_success ~changed_files_count;
+      Lwt.return_some (saved_state, updates)
+    with Saved_state.Invalid_saved_state invalid_reason ->
+      let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
+      FlowEventLogger.load_saved_state_error
+        ~saved_state_filename:(Path.to_string saved_state_filename)
+        ~changed_files_count
+        ~invalid_reason;
+      if Options.saved_state_no_fallback options
+      then
+        let msg =
+          spf "Failed to load saved state: %s" invalid_reason
         in
-        let updates = match updates with
-        | Core_result.Error ({ Recheck_updates.msg; _; }) ->
-          Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
-          raise Saved_state.(Invalid_saved_state Changed_files)
-        | Core_result.Ok updates -> updates in
-        Hh_logger.info "Saved state script reports %d files changed & we care about %d of them"
-          (SSet.cardinal changed_files)
-          (FilenameSet.cardinal updates);
-        FlowEventLogger.set_saved_state_filename (Path.to_string saved_state_filename);
-        FlowEventLogger.load_saved_state_success ~changed_files_count;
-        Lwt.return_some (saved_state, updates)
-      with Saved_state.Invalid_saved_state invalid_reason ->
-        let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
-        FlowEventLogger.load_saved_state_error
-          ~saved_state_filename:(Path.to_string saved_state_filename)
-          ~changed_files_count
-          ~invalid_reason;
-        if Options.saved_state_no_fallback options
-        then
-          let msg =
-            spf "Failed to load saved state: %s" invalid_reason
-          in
-          FlowExitStatus.exit ~msg FlowExitStatus.Invalid_saved_state
-        else Lwt.return_none
-    )
+        FlowExitStatus.exit ~msg FlowExitStatus.Invalid_saved_state
+      else Lwt.return_none
 
 let query_watchman_for_changed_files ~options =
   match Options.lazy_mode options with
@@ -2017,10 +2120,11 @@ let init ~profiling ~workers options =
          * is to update the dependency graph and stuff like that. We don't actually want to merge
          * anything yet. *)
         with_transaction @@ fun transaction reader ->
+          let recheck_reasons = [Persistent_connection_prot.Lazy_init_update_deps] in
           let%lwt env =
             Recheck.parse_and_update_dependency_info
               ~profiling ~transaction ~reader ~options ~workers ~updates
-              ~files_to_force:CheckedSet.empty ~env
+              ~files_to_force:CheckedSet.empty ~recheck_reasons ~env
           in
           Lwt.return (FilenameSet.empty, env, libs_ok)
       end
@@ -2055,6 +2159,7 @@ let init ~profiling ~workers options =
   then Lwt.return (libs_ok, env, last_estimates)
   else begin
     let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
+    let recheck_reasons = [Persistent_connection_prot.Lazy_init_typecheck] in
     let%lwt recheck_profiling, _summary, env =
       recheck
         ~options
@@ -2063,6 +2168,7 @@ let init ~profiling ~workers options =
         env
         ~files_to_force
         ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+        ~recheck_reasons
         ~will_be_checked_files:(ref files_to_force)
     in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
@@ -2072,42 +2178,56 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _; } = env in
   with_transaction (fun transaction reader ->
-    let%lwt infer_input = files_to_infer
+    let%lwt input = files_to_infer
       ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info in
 
-    let unchanged_checked = CheckedSet.empty in
-
-    let%lwt to_merge, components, recheck_map =
+    let%lwt to_merge, components, recheck_set =
       include_dependencies_and_dependents
         ~options ~profiling
-        ~unchanged_checked
-        ~infer_input
+        ~unchanged_checked:CheckedSet.empty
+        ~input
         ~dependency_info
         ~all_dependent_files:FilenameSet.empty
-        ~direct_dependent_files:FilenameSet.empty
     in
-    (* The values to_merge and recheck_map are essentially the same as infer_input, aggregated. This
+    (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
        of calling include_dependencies_and_dependents is to compute components. *)
 
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
-    let%lwt (checked_files, _, errors, coverage, _) = merge
+    let recheck_reasons = [Persistent_connection_prot.Full_init] in
+    let%lwt _, updated_errors, coverage, _, sig_new_or_changed, _ = merge
       ~transaction
       ~reader
       ~options
       ~profiling
       ~workers
       ~errors
-      ~unchanged_checked
       ~to_merge
       ~components
-      ~recheck_map
+      ~recheck_set
       ~dependency_graph
       ~deleted:FilenameSet.empty
       ~persistent_connections:None
+      ~recheck_reasons
       ~prep_merge:None in
-    let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
+    let merged_files = to_merge in
+    let%lwt errors, coverage, _ = check_files
+      ~reader
+      ~options
+      ~profiling
+      ~workers
+      ~errors
+      ~updated_errors
+      ~coverage
+      ~merged_files
+      ~direct_dependent_files:FilenameSet.empty
+      ~sig_new_or_changed
+      ~dependency_info
+      ~persistent_connections:None
+      ~recheck_reasons in
+    let checked_files = merged_files in
+    Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
     Lwt.return { env with ServerEnv.checked_files; errors; coverage }
   )

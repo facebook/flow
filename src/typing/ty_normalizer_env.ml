@@ -94,17 +94,17 @@ type genv = {
   (* Full (merged) context *)
   cx: Context.t;
 
-  (* Type table of the current file *)
-  type_table: Type_table.t;
+  (* Typed AST of the current file *)
+  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program;
 
   (* The file_sig of the current file *)
   file_sig: File_sig.t;
 }
 
-let mk_genv ~full_cx ~file ~type_table ~file_sig = {
+let mk_genv ~full_cx ~file ~typed_ast ~file_sig = {
   file;
   cx = full_cx;
-  type_table;
+  typed_ast;
   file_sig;
 }
 

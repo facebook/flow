@@ -107,9 +107,10 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
 let get_defaults cx trace component ~reason_op ~rec_flow =
   match component with
   | DefT (_, _, ClassT _)
-  | DefT (_, _, FunT _) ->
+  | DefT (_, _, FunT _)
+  | DefT (_, _, ObjT _) ->
     let tvar = Tvar.mk cx reason_op in
-    lookup_defaults cx trace component ~reason_op ~rec_flow tvar Positive;
+    lookup_defaults cx trace component ~reason_op ~rec_flow tvar Polarity.Positive;
     Some tvar
   | DefT (_, _, ReactAbstractComponentT _) -> None
   (* Everything else will not have default props we should diff out. *)
@@ -147,7 +148,7 @@ let props_to_tout
     ~get_builtin_type
     `Props
     lit
-    (Field (None, tout, Positive))
+    (Field (None, tout, Polarity.Positive))
 
   (* any and any specializations *)
   | AnyT (reason, src) ->
@@ -197,9 +198,9 @@ let get_config
   | DefT (_, _, ReactAbstractComponentT {config; _}) ->
       let use_op = Frame (ReactGetConfig {polarity = pole}, use_op) in
       begin match pole with
-      | Positive -> rec_flow_t ~use_op cx trace (config, tout)
-      | Negative -> rec_flow_t ~use_op cx trace (tout, config)
-      | Neutral -> rec_unify cx trace ~use_op tout config
+      | Polarity.Positive -> rec_flow_t ~use_op cx trace (config, tout)
+      | Polarity.Negative -> rec_flow_t ~use_op cx trace (tout, config)
+      | Polarity.Neutral -> rec_unify cx trace ~use_op tout config
       end
   | _ ->
     let reason_component = (reason_of_t component) in
@@ -335,7 +336,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         rec_flow_t cx trace (tin, MixedT.why reason trust);
 
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
+      | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Polarity.Negative))
 
       | AnyT (reason, source) ->
         rec_flow_t cx trace (tin, AnyT.why source reason)
@@ -409,21 +410,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         Some (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
     in
 
-    let create_element clone component config children_args tout =
-      (* If our config is void or null then we want to replace it with an
-       * empty object. *)
-      let config =
-        let reason = reason_of_t config in
-        let empty_object = Obj_type.mk_with_proto
-          cx reason
-          ~sealed:true ~exact:true ~frozen:true
-          (ObjProtoT reason)
-        in
-        Tvar.mk_where cx reason (fun tout ->
-          rec_flow cx trace (filter_maybe cx ~trace reason config,
-            CondT (reason, None, empty_object, tout))
-        )
-      in
+    let config_check clone config children_args =
       (* Create the optional children input type from the children arguments. *)
       let children = coerce_children_args children_args in
       (* Create a type variable for our props. *)
@@ -457,6 +444,47 @@ module Kit (Flow: Flow_common.S): REACT = struct
            * static default props property so that we may add it to our config input. *)
           get_defaults cx trace l ~reason_op ~rec_flow
       in
+      (* Use object spread to add children to config (if we have children)
+       * and remove key and ref since we already checked key and ref. Finally in
+       * this block we will flow the final config to our props type.
+       *
+       * NOTE: We don't eagerly run this check so that create_element can constrain the
+       * ref and key pseudoprops before we run the config check.
+       *)
+      let open Object in
+      let open Object.ReactConfig in
+      (* We need to treat config input as a literal here so we ensure it has the
+       * RReactProps reason description. *)
+      let reason = replace_reason_const RReactProps (reason_of_t config) in
+      (* Create the final config object using the ReactConfig object kit tool
+       * and flow it to our type for props.
+       *
+       * We wrap our use_op in a ReactConfigCheck frame to increment the
+       * speculation error message score. Usually we will already have a
+       * ReactCreateElementCall use_op, but we want errors after this point to
+       * win when picking the best errors speculation discovered. *)
+      let use_op = Frame (ReactConfigCheck, use_op) in
+      rec_flow cx trace (config,
+        ObjKitT (use_op, reason, Resolve Next,
+          ReactConfig (Config { defaults; children }), props))
+    in
+
+    let create_element clone component config children_args tout =
+      config_check clone config children_args;
+
+      (* If our config is void or null then we want to replace it with an
+       * empty object.
+       *
+       * NOTE: We only need the normalized config to look up the key
+       * and ref.
+       *)
+      let normalized_config = Tvar.mk_where cx (reason_of_t config) (fun normalized_config ->
+        let open Object in
+        let reason = (reason_of_t config) in
+        rec_flow cx trace (config,
+          ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))
+      ) in
+
       (* Check the type of React keys in the config input.
        *
        * NOTE: We are intentionally being unsound here. If config is inexact
@@ -466,7 +494,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * in existing React code. *)
       let () =
         let reason_key =
-          (replace_reason_const (RCustom "React key") (reason_of_t config)) in
+          (replace_reason_const (RCustom "React key") (reason_of_t normalized_config)) in
         (* Create the key type. *)
         let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
         (* Flow the config input key type to the key type. *)
@@ -474,12 +502,11 @@ module Kit (Flow: Flow_common.S): REACT = struct
         let propref = Named (reason_key, "key") in
         let use_op = Frame (PropertyCompatibility {
           prop = Some "key";
-          lower = reason_of_t config;
+          lower = reason_of_t normalized_config;
           upper = reason_key;
-          is_sentinel = false;
         }, use_op) in
-        let action = LookupProp (use_op, Field (None, key_t, Positive)) in
-        rec_flow cx trace (config,
+        let action = LookupProp (use_op, Field (None, key_t, Polarity.Positive)) in
+        rec_flow cx trace (normalized_config,
           LookupT (reason_key, kind, [], propref, action))
       in
       (* Check the type of React refs in the config input.
@@ -491,7 +518,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * in existing React code. *)
       let () =
         let reason_ref =
-          (replace_reason_const (RCustom "React ref") (reason_of_t config)) in
+          (replace_reason_const (RCustom "React ref") (reason_of_t normalized_config)) in
         (* Create the ref type. *)
         let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
         (* Flow the config input ref type to the ref type. *)
@@ -499,36 +526,14 @@ module Kit (Flow: Flow_common.S): REACT = struct
         let propref = Named (reason_ref, "ref") in
         let use_op = Frame (PropertyCompatibility {
           prop = Some "ref";
-          lower = reason_of_t config;
+          lower = reason_of_t normalized_config;
           upper = reason_ref;
-          is_sentinel = false;
         }, use_op) in
-        let action = LookupProp (use_op, Field (None, ref_t, Positive)) in
-        rec_flow cx trace (config,
+        let action = LookupProp (use_op, Field (None, ref_t, Polarity.Positive)) in
+        rec_flow cx trace (normalized_config,
           LookupT (reason_ref, kind, [], propref, action))
       in
-      (* Use object spread to add children to config (if we have children)
-       * and remove key and ref since we already checked key and ref. Finally in
-       * this block we will flow the final config to our props type. *)
-      let () =
-        let open Object in
-        let open Object.ReactConfig in
-        (* We need to treat config input as a literal here so we ensure it has the
-         * RReactProps reason description. *)
-        let reason = replace_reason_const RReactProps (reason_of_t config) in
-        (* Create the final config object using the ReactConfig object kit tool
-         * and flow it to our type for props.
-         *
-         * We wrap our use_op in a ReactConfigCheck frame to increment the
-         * speculation error message score. Usually we will already have a
-         * ReactCreateElementCall use_op, but we want errors after this point to
-         * win when picking the best errors speculation discovered. *)
-        let use_op = Frame (ReactConfigCheck, use_op) in
-        rec_flow cx trace (config,
-          ObjKitT (use_op, reason, Resolve Next,
-            ReactConfig (Config { defaults; children }), props))
-      in
-      (* Set the return type as a React element. *)
+
       let elem_reason = annot_reason (replace_reason_const (RType "React$Element") reason_op) in
       rec_flow_t cx trace (
         get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
@@ -537,7 +542,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
     in
 
     let get_config = get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t ~rec_unify
-      ~get_builtin_type ~add_output u Positive
+      ~get_builtin_type ~add_output u Polarity.Positive
     in
 
     let get_config_with_props_and_defaults default_props tout =
@@ -546,8 +551,13 @@ module Kit (Flow: Flow_common.S): REACT = struct
       let props = l in
       let tool = Resolve Next in
       let state = One default_props in
-      rec_flow cx trace (props,
-        ObjKitT (Op UnknownUse, reason_op, tool, Rest (ReactConfigMerge Neutral, state), tout))
+      rec_flow cx trace (props, ObjKitT (
+        Op UnknownUse,
+        reason_op,
+        tool,
+        Rest (ReactConfigMerge Polarity.Neutral, state),
+        tout
+      ))
     in
 
 
@@ -570,7 +580,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         rec_flow_t cx trace (instance, tout);
 
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
+      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
 
       | AnyT (reason, source) ->
         rec_flow_t cx trace (AnyT.why source reason, tout)
@@ -625,7 +635,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           dict_name = None;
           key = tout |> reason_of_t |> StrT.why |> with_trust bogus_trust;
           value;
-          dict_polarity = Neutral;
+          dict_polarity = Polarity.Neutral;
         } in
         let proto = ObjProtoT (locationless_reason RObjectClassName) in
         let reason = replace_reason_const RObjectType reason_op in
@@ -680,7 +690,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
            for reasons descriptions/locations, recursive ReactKit constraints, and
            `resolve` behavior. *)
         let add_prop k t (reason, props, dict, flags) =
-          let props = SMap.add k (Field (None, t, Neutral)) props in
+          let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
           reason, props, dict, flags
         in
         let add_dict dict (reason, props, _, flags) =
@@ -937,8 +947,8 @@ module Kit (Flow: Flow_common.S): REACT = struct
 
         let props =
           SMap.empty
-          |> SMap.add "props" (Field (None, props_t, Neutral))
-          |> SMap.add "state" (Field (None, knot.state_t, Neutral))
+          |> SMap.add "props" (Field (None, props_t, Polarity.Neutral))
+          |> SMap.add "state" (Field (None, knot.state_t, Polarity.Neutral))
         in
 
         (* Some spec fields are used to create the instance type, but are not
@@ -961,7 +971,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
             | None -> v
             | Some t ->
               let loc = Property.read_loc v in
-              Field (loc, t, Positive)
+              Field (loc, t, Polarity.Positive)
             in
             props, SMap.add k v static_props
 
@@ -1006,7 +1016,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         ) spec_props (props, SMap.empty) in
 
         let static_props = static_props
-          |> SMap.add "defaultProps" (Field (None, knot.default_t, Neutral))
+          |> SMap.add "defaultProps" (Field (None, knot.default_t, Polarity.Neutral))
         in
 
         let reason_component = replace_reason_const RReactComponent reason_op in
@@ -1026,7 +1036,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
               dict_name = None;
               key = StrT.why reason (bogus_trust ());
               value = EmptyT.why reason (bogus_trust ());
-              dict_polarity = Neutral;
+              dict_polarity = Polarity.Neutral;
             } in
             reason, static_props, dict, false, true
           | Some (Known (reason, props, dict, { exact; sealed; _ })) ->
@@ -1129,7 +1139,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
 
       | PropTypes (stack, tool) ->
         let add_prop k t (reason, props, dict, flags) =
-          let props = SMap.add k (Field (None, t, Neutral)) props in
+          let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
           reason, props, dict, flags
         in
         let add_dict dict (reason, props, _, flags) =
@@ -1208,6 +1218,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
     | CreateElement0 _ -> failwith "handled elsewhere"
     | CreateElement (clone, component, config, children, tout) ->
       create_element clone component config children tout
+    | ConfigCheck config -> config_check false config ([], None)
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout

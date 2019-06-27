@@ -138,6 +138,7 @@ type token_sink_result = {
 }
 
 type parse_options = {
+  enums: bool;
   esproposal_class_instance_fields: bool;
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
@@ -148,6 +149,7 @@ type parse_options = {
   use_strict: bool;
 }
 let default_parse_options = {
+  enums = false;
   esproposal_class_instance_fields = false;
   esproposal_class_static_fields = false;
   esproposal_decorators = false;
@@ -469,11 +471,14 @@ module Peek = struct
   let lex_env env = ith_lex_env ~i:0 env
 
   (* True if there is a line terminator before the next token *)
-  let is_line_terminator env =
-    match last_loc env with
+  let ith_is_line_terminator ~i env =
+    let loc = if i > 0 then Some (ith_loc ~i:(i - 1) env) else last_loc env in
+    match loc with
       | None -> false
       | Some loc' ->
-          (loc env).start.line > loc'.start.line
+          (ith_loc ~i env).start.line > loc'.start.line
+
+  let is_line_terminator env = ith_is_line_terminator ~i:0 env
 
   let is_implicit_semicolon env =
     match token env with

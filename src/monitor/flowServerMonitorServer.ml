@@ -235,55 +235,65 @@ end = struct
 
   (* The monitor is exiting. Let's try and shut down the server gracefully *)
   let cleanup_on_exit ~exit_status ~exit_msg ~connection ~pid =
-    let msg = MonitorProt.(PleaseDie (MonitorExiting (exit_status, exit_msg))) in
-    ServerConnection.write ~msg connection;
+    let () =
+      try
+        let msg = MonitorProt.(PleaseDie (MonitorExiting (exit_status, exit_msg))) in
+        ServerConnection.write ~msg connection
+      with Lwt_stream.Closed ->
+        (* Connection to the server has already closed. The server is likely already dead *)
+        ()
+    in
 
     (* The monitor waits 1 second before exiting. So let's give the server .75 seconds to shutdown
      * gracefully. *)
-    let%lwt server_status = Lwt.pick [
-      (let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in Lwt.return (Some status));
-      (let%lwt () = Lwt_unix.sleep 0.75 in Lwt.return None)
-    ] in
+    try%lwt
+      let%lwt server_status = Lwt.pick [
+        (let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in Lwt.return (Some status));
+        (let%lwt () = Lwt_unix.sleep 0.75 in Lwt.return None)
+      ] in
 
-    let%lwt () = ServerConnection.close_immediately connection in
-    let still_alive = begin match server_status with
-    | Some (Unix.WEXITED exit_status) ->
-      let exit_type =
-        try Some (FlowExitStatus.error_type exit_status)
-        with Not_found -> None
-      in
-      begin if exit_type = Some FlowExitStatus.Killed_by_monitor
-      then Logger.info "Successfully killed the server process"
-      else
-        let exit_status_string =
-          Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+      let%lwt () = ServerConnection.close_immediately connection in
+      let still_alive = begin match server_status with
+      | Some (Unix.WEXITED exit_status) ->
+        let exit_type =
+          try Some (FlowExitStatus.error_type exit_status)
+          with Not_found -> None
         in
+        begin if exit_type = Some FlowExitStatus.Killed_by_monitor
+        then Logger.info "Successfully killed the server process"
+        else
+          let exit_status_string =
+            Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+          in
+          Logger.error
+            "Tried to kill the server process (%d), which exited with the wrong exit code: %s"
+            pid
+            exit_status_string
+        end;
+        false
+      | Some (Unix.WSIGNALED signal) ->
         Logger.error
-          "Tried to kill the server process (%d), which exited with the wrong exit code: %s"
+          "Tried to kill the server process (%d), but for some reason it was killed with %s signal"
           pid
-          exit_status_string
-      end;
-      false
-    | Some (Unix.WSIGNALED signal) ->
-      Logger.error
-        "Tried to kill the server process (%d), but for some reason it was killed with %s signal"
-        pid
-        (PrintSignal.string_of_signal signal);
-      false
-    | Some (Unix.WSTOPPED signal) ->
-      Logger.error
-        "Tried to kill the server process (%d), but for some reason it was stopped with %s signal"
-        pid
-        (PrintSignal.string_of_signal signal);
-      true
-    | None ->
-      Logger.error "Tried to kill the server process (%d), but it didn't die" pid;
-      true
-    end in
+          (PrintSignal.string_of_signal signal);
+        false
+      | Some (Unix.WSTOPPED signal) ->
+        Logger.error
+          "Tried to kill the server process (%d), but for some reason it was stopped with %s signal"
+          pid
+          (PrintSignal.string_of_signal signal);
+        true
+      | None ->
+        Logger.error "Tried to kill the server process (%d), but it didn't die" pid;
+        true
+      end in
 
-    if still_alive then Unix.kill pid Sys.sigkill;
+      if still_alive then Unix.kill pid Sys.sigkill;
 
-    Lwt.return_unit
+      Lwt.return_unit
+    with Unix.Unix_error (Unix.ECHILD, _, _) ->
+      Logger.info "Server process has already exited. No need to kill it";
+      Lwt.return_unit
 
   let cleanup t =
     Lwt.cancel t.command_loop;

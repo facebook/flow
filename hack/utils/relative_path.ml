@@ -17,7 +17,7 @@ type prefix =
   | Hhi
   | Dummy
   | Tmp
-  [@@deriving show]
+  [@@deriving show, enum]
 
 
 let root = ref None
@@ -30,14 +30,19 @@ let path_ref_of_prefix = function
   | Tmp -> tmp
   | Dummy -> ref (Some "")
 
-let path_of_prefix x =
-  unsafe_opt_note "Prefix has not been set!" !(path_ref_of_prefix x)
-
 let string_of_prefix = function
   | Root -> "root"
   | Hhi -> "hhi"
   | Tmp -> "tmp"
   | Dummy -> ""
+
+let path_of_prefix prefix =
+  match !(path_ref_of_prefix prefix) with
+  | Some path -> path
+  | None ->
+    let message = Printf.sprintf "Prefix '%s' has not been set!"
+      (string_of_prefix prefix) in
+    raise (Invalid_argument message)
 
 let set_path_prefix prefix v =
   let v = Path.to_string v in
@@ -149,8 +154,8 @@ let strip_root_if_possible s =
   let prefix_s = path_of_prefix Root in
   let prefix_len = String.length prefix_s in
   if not (string_starts_with s prefix_s)
-  then s else
-  String.sub s prefix_len (String.length s - prefix_len)
+  then None
+  else Some (String.sub s prefix_len (String.length s - prefix_len))
 
 
 let from_root (s : string) : t = Root, s

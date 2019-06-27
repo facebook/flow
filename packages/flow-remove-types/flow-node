@@ -1,0 +1,159 @@
+#!/usr/bin/env node
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var fs = require('fs');
+var Module = require('module');
+var path = require('path');
+var repl = require('repl');
+var util = require('util');
+var vm = require('vm');
+
+var flowRemoveTypes = require('./index');
+
+var usage = 'Usage: flow-node [options] [ script.js ] [arguments] \n' +
+
+'\nOptions:\n' +
+'  -h, --help            Show this message\n' +
+'  -v, --version         Prints the current version of flow-node\n' +
+'  -e, --eval script     Evaluate script\n' +
+'  -p, --print script    Evaluate script and print result\n' +
+'  -c, --check           Syntax check script without executing\n' +
+'  -a, --all             Interpret all files as flow-typed, not just those with a @flow comment\n';
+
+// Collect arguments
+var evalScript;
+var printScript;
+var checkSource;
+var all;
+var source;
+var options = [];
+var i = 2;
+while (i < process.argv.length) {
+  var arg = process.argv[i++];
+  if (arg === '-h' || arg === '--help') {
+    process.stdout.write(usage);
+    process.exit(0);
+  } else if (arg === '-v' || arg === '--version') {
+    process.stdout.write('v' + require('./package').version + '\n');
+    process.exit(0);
+  } else if (arg === '-e' || arg === '--eval') {
+    evalScript = process.argv[i++];
+    if (!evalScript) {
+      process.stderr.write('flow-node: ' + arg + ' requires an argument');
+      return process.exit(1);
+    }
+  } else if (arg === '-p' || arg === '--print') {
+    printScript = process.argv[i++];
+    if (!printScript) {
+      process.stderr.write('flow-node: ' + arg + ' requires an argument');
+      return process.exit(1);
+    }
+  } else if (arg === '-c' || arg === '--check') {
+    checkSource = true;
+  } else if (arg === '-a' || arg === '--all') {
+    all = true;
+  } else if (arg[0] === '-' || arg === 'debug') {
+    options.push(arg);
+  } else {
+    source = arg;
+    break;
+  }
+}
+
+// If node options were provided, forward to another process with the options
+// applied before other arguments.
+if (options.length > 0) {
+  var nodePath = process.argv.shift();
+  var nodeArgs = options.concat(process.argv.filter(function (arg) {
+    return options.indexOf(arg) === -1;
+  }));
+
+  const child_process = require('child_process');
+  const proc = child_process.spawn(nodePath, nodeArgs, { stdio: 'inherit' });
+  proc.on('exit', function (code, signal) {
+    process.on('exit', function () {
+      if (signal) {
+        process.kill(process.pid, signal);
+      } else {
+        process.exit(code);
+      }
+    });
+  });
+
+  return;
+}
+
+require('./register')({ all: all });
+
+// Evaluate and possibly also print a script.
+if (evalScript || printScript) {
+  global.__filename = '[eval]';
+  global.__dirname = process.cwd();
+  var evalModule = new Module(global.__filename);
+  evalModule.filename = global.__filename;
+  evalModule.paths = Module._nodeModulePaths(global.__dirname);
+  global.exports = evalModule.exports;
+  global.module = evalModule;
+  global.require = evalModule.require.bind(evalModule);
+  var result = vm.runInThisContext(
+    flowRemoveTypes(evalScript || printScript, { all: true }).toString(),
+    { filename: global.__filename }
+  );
+
+  if (printScript) {
+    process.stdout.write((typeof result === 'string' ? result : util.inspect(result)) + '\n');
+  }
+
+// Or check the source for syntax errors but do not run it.
+} else if (source && checkSource) {
+  var code = fs.readFileSync(source, 'utf8');
+  try {
+    flowRemoveTypes(code, { all: all });
+  } catch (error) {
+    var lines = code.split(/\r\n?|\n|\u2028|\u2029/);
+    process.stdout.write(source + ':' + error.loc.line + '\n');
+    process.stdout.write(lines[error.loc.line - 1] + '\n');
+    process.stdout.write(Array(error.loc.column + 1).join(' ') + '^\n');
+    process.stdout.write(error.stack + '\n');
+    return process.exit(1);
+  }
+
+// Or run the script.
+} else if (source) {
+  var absoluteSource = path.resolve(process.cwd(), source);
+  process.argv = [ 'node' ].concat(
+    absoluteSource,
+    process.argv.slice(i)
+  );
+  process.execArgv.unshift(__filename);
+  Module.runMain();
+
+// Or begin a REPL.
+} else {
+  repl.start({
+    prompt: '> ',
+    input: process.stdin,
+    output: process.stdout,
+    useGlobal: true,
+    eval: function (code, context, filename, callback) {
+      var error;
+      var result;
+      try {
+        var runCode = flowRemoveTypes(code, { all: true }).toString();
+        try {
+          result = vm.runInThisContext(runCode, { filename: filename });
+        } catch (runError) {
+          error = runError;
+        }
+      } catch (transformError) {
+        error = repl.Recoverable ? new repl.Recoverable(transformError) : transformError;
+      }
+      callback(error, result);
+    }
+  });
+}

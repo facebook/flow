@@ -1,3 +1,161 @@
+### 0.102.0
+
+Likely to cause new Flow errors:
+* Function components with no arguments get a sealed empty object type as props.
+* Moved `MixedElement` export into the module declaration, so it will now need to be qualified as `React.MixedElement`.
+
+Notable bug fixes:
+* Fixed error positioning around utility types (e.g. `$ObjMap`).
+* Omit reporting error stack traces to end users over LSP.
+* Fixed bug where Flow would crash when variable has same name as a type (fixes #7825)
+
+Misc:
+* Refactored coverage computation to use the typed AST. This enables coverage results over more locations that earlier.
+* Improved server and monitor error logging.
+* In typing object types as react components, account for the `defaultProps` property and make them compatible with `React.AbstractComponent`.
+* Optimized the way module exports are populated to prevent recursion limiter exceptions.
+* Improved error messages for invalid `BigInt`s. (thanks, @goodmind!)
+* Hovering over an imported type alias returns its definition. (thanks, @vicapow!)
+* Fixed semver comparison to allow for suffixes such as `rc`.
+
+Libdefs:
+* Remove `Object` type (equivalent to `any`) from `WeakSet` and `$ReadOnlyWeakSet`. (thanks, @goodmind!)
+* Add methods to Node HTTP ServerResponse type definition. (thanks, @chrislloyd!)
+* Add definitions for the Web Animations API. (thanks, @goodmind!)
+
+### 0.101.1
+
+Notable bug fixes:
+* Fixed a bug with suppressions in the experimental types-first mode.
+
+### 0.101.0
+
+Likely to cause new Flow errors:
+  * `$Keys` now produces a more precise type, which may find errors where incompatible strings were passed to something expecting the `$Keys` of some object.
+
+New Features:
+  * We released a new implicit-inexact-object lint to detect when an inexact object is used without explicitly adding `...` to the
+    end of the props list. See [here](https://medium.com/flow-type/on-the-roadmap-exact-objects-by-default-16b72933c5cf) for context.
+  * Function type parameters may now use default arguments. This is not yet supported by babel.
+
+Notable bug fixes:
+  * Fixed a bug with ranges returned by autocomplete
+  * Fixed a bug where errors with bad locations reported over the LSP could cause the editor to clear all errors.
+
+Misc:
+  * `React.memo` and `React.lazy` now both allow you to specify an instance type via `React.AbstractComponent`.
+  * Various performance improvements to union types.
+  * Various libdef fixes and improvements.
+  * Various improvements to error positioning.
+  * The recursion limit is now configurable in the .flowconfig via `recursion_limit`. Most projects will not need to override this value.
+
+Parser:
+  * Forbid private fields named `#constructor`
+  * Fix duplicate private class field validation for getters/setters
+  * Fix parsing of private getters and setters
+  * Function type parameters may now use default arguments.
+
+### 0.100.0
+
+Likely to cause new Flow errors:
+
+* The `React$ElementType` annotation, which was previously unsafe, is now strict. Before you could create an element given a component with this type using arbitrary props. To annotate any component that accepts some given props, use `React$ComponentType` instead. [Try Flow example](https://flow.org/try/#0JYWwDg9gTgLgBAKjgQwM5wEoFNkGN4BmUEIcARFDvmQNwBQdMAnmFnAArFjoC8cA3gB84AO2QgsALjioYUYCIDmcQQF96dAgFcR+YBBFwA4pSwwsUABRguqaZwjcAlALpw4lGFqiGAPGAA+AAksABtQiAAaOAASfhtHVAA6MQlVAEJfAHpA+lUGbV0YfUMdVGQCLABhA1koLXxLGvADLBEYaWw8GBiAUVCsCXaAFRYsF343OCysuF6oYihpKuRDEQh4XFq5BvhVuDDBtr30CAI4ADEIgHc4ADcABiSARgenh6nfZsgRY7hrgAWyHMdwsPDITAgWjI-1WMHBAIsWBhWQCeQYZQq1W29UaJiwZgsTg0hT0BhkWJqIjquyaJB+x06VB631aIzGvgc3ACEymMzmC2g0mGiNQbGQlDgMER-2ISjgCW46U+rN+7X+QJBYIhUJh1zhCKRKLRUz5swA8gBpYWi8WS6VsRXoaXAuAAA3xhKgboOAA9WPhUCr6Wz4KksOCAOrQUIAE2NdHydHKlSpNLxpnMUGJQA)
+* The `React$ComponentType` annotation is now strict when used with refs. Before, it was possible to pass a `ref` having any type when creating an element from a component using this type. If you need to describe components that accept refs, use the `React$AbstractComponent` type instead. [Try Flow example](https://flow.org/try/#0JYWwDg9gTgLgBAKjgQwM5wEoFNkGN4BmUEIcARFDvmQNwBQdMAnmFnAArFjoC8cA3gB84AO2QgsALjioYUYCIDmcQQF96dXABs06AOKUsMLFDhYAHsZEATdNjwwAdAGESkEVhEwAPJwjcAPgE6ODhKGxMACgBKYNDQyhgAVygROG8wAIAJLC0tCAAaOAASfhgAC2BURzAuarEJVQBCbwB6TPpQ1RC4HpAYgW7uzQgRWTgAQWl7fBc3Uc8YABUWLF86oL4DLCMTDVbWuABRKGIoaQADSgILuCq4ZlZrFHQLkGBzLGtbtDgIAjgADF8gB3OAANwADI4AIyQ+F0bwTUTiLA8MgAdWgWmsZDCWAIPH41zgPCCJIAZBT8QRHP1oqo4K0AgxcKNxgAhaZUJwTABGsigDlc4AWXnW-lQRW2uygmzgMuMUH2hwA8gBpIpXAm3e6PL4vFBwC6Kky6sYwZAiXBYREclESdFYqA4vHXIkksk0uBUml0mKM5lAA)
+* The `$Enum` built-in type annotation is now deprecated. Please use the semantically equivalent `$Keys` type instead.
+* Destructuring patterns could previously include missing properties if the resulting binding was unused. This is now an error even when unused. [Try Flow example](https://flow.org/try/#0C4TwDgpgBA8lC8UDeUwC4oGdgCcCWAdgOZQC+A3AFAD01UAojjgPY4YAqAFhDtHplALNULSDlBQABgEdJUQlFCQpMSQBooAQwHMAZlABiAG2YB3KADcADADoAjFdtXKugK4EAxsDzMCUXQAUSGAa0qQYMACUyKRAA)
+
+New Features:
+
+* You can now use the built-in type `React$MixedElement` as the sound superclass of all React elements. This is a type alias for `React$Element<React$ElementType>`.
+
+Misc:
+
+* Add `decode` method to `HTMLImageElement` (thanks, @vicapow!)
+
+Parser:
+
+* Handle NonOctalDecimalIntegerLiteral
+* Remove U+180e (Mongolian vowel separator) from list of valid whitespace code points
+* Remove support for legacy octal literals with numeric separators
+* Remove support for legacy octal bigints
+* Fix various issues related to automatic semicolon insertion (ASI) for class properties
+
+### 0.99.1
+
+Notable bug fixes:
+
+* Fix bug where well-formed-exports errors were reported for unchecked files
+
+### 0.99.0
+
+Likely to cause new Flow errors:
+
+* The statics of function types used to be `any` but are now typed as an empty object.
+* Recursive calls of named function expressions were previously unchecked, but are now checked.
+* `$call` property syntax, deprecated in Flow v0.75, has finally been removed.
+
+Notable bug fixes:
+
+* Fix an issue where Flow would not catch certain errors involving React function components with unannotated props.
+* Fix React synthetic mouse events for drag, wheel, pointer events to give the specific native event type. (Thanks, @Kiwka!)
+
+Misc:
+
+* Improved performance of starting a server from a saved state.
+
+Parser:
+
+* Fix parsing of function types inside tuples inside arrow function return types.
+
+### 0.98.1
+
+Notable bug fixes:
+
+* Do not report bad module uses in unchecked files
+
+### 0.98.0
+
+Likely to cause new Flow errors:
+
+* Infer `void` before typechecking starts for functions without a `return` statement, lessening the impact of a union typechecking bug (#7322).
+* Fix a bug which prevented Flow from asking for required type annotations.
+* Turn the `deprecated-utility` lint on by default.
+* Two related changes to type refinements to fix unsoundness:
+  * `mixed` refined to an array produces a read-only array.
+  * `mixed` refined to an object produces a read-only object.
+
+New Features:
+
+* Add the ability to exclude paths included by a previous pattern in a `.flowconfig` (#7317).
+
+Notable bug fixes:
+
+* Fix a bug that led IDEs to report all code as uncovered (#7654).
+* Fix the `untyped-import` lint rule so that `export [type] * from` triggers it.
+* Flow now recognizes refinements against negative number literals.
+
+Misc:
+
+* Exclude `deprecated-utility` and `dynamic-export` lints when applying all=setting rules (#7473).
+* Improve client/server version mismatch behavior so that the newest of the two is preserved, rather than the client version.
+* Preserve exactness of the input type when using `$ObjMap` or `$ObjMapi` (#7642).
+* Minor changes to metadata in the results of `flow type-at-pos --json`.
+* Batch `DidOpen` notifications from the IDE in order to make checking in IDE lazy mode more efficient.
+* When `flow lsp` automatically starts a server, it prefers the lazy mode set in a `.flowconfig` to the lazy mode passed on the CLI.
+* Allow lints to be explicitly set to their defaults (normally redundant lint settings are disallowed).
+* Fix spurious missing annotation errors when the `this` type is used incorrectly.
+* Fix a bug that made `React.Element` behave differently than `React$Element`.
+* Fix an edge case where object property assignments were typechecked incorrectly (#7618).
+* Fix an unsoundness with addition or logical operators when combined with generics (#6671, #7070).
+* Fix an issue which allowed read-only arrays to be written to if the index was of type `any`.
+* Fix a bug which stymied typechecking after try/catch blocks (#7530).
+
+Libdefs:
+
+* Add `document.elementsFromPoint()` (#7540).
+* Add `ConstantSourceNode` (#7543).
+* Remove `React.Suspense` `maxDuration` attribute (#7613).
+
 ### 0.97.0
 
 Likely to cause new Flow errors:

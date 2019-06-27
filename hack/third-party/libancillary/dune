@@ -4,5 +4,4 @@
   (c_names
     fd_recv
     fd_send)
-  (c_flags (:standard
-    (:include ../../dune_config/incl_hphp_parent.sexp))))
+  (c_flags (:standard -I%{env:CMAKE_SOURCE_DIR=xxx})))

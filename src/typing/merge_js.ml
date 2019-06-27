@@ -210,7 +210,8 @@ let check_type_visitor wrap =
     | Top -> wrap Reason.RMixed
     | Bot _ -> wrap Reason.REmpty
     | Module { Ty.name; _ } -> wrap (Reason.RModule name)
-    | TypeAlias { ta_name = { Ty.name; _ }; _} ->
+    | TypeAlias { ta_tparams = None; ta_type = Some t; _ } -> self#on_t env t
+    | TypeAlias { ta_name = { Ty.name; _ }; _ } ->
       wrap (Reason.RCustom ("type alias " ^ name))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
     | (Void|Null|Num _|Str _|Bool _|NumLit _|StrLit _|BoolLit _|TypeOf _|
@@ -218,7 +219,7 @@ let check_type_visitor wrap =
 
   end
 
-let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
+let detect_invalid_type_assert_calls ~full_cx file_sigs cxs tasts =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -231,29 +232,28 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     omit_targ_defaults = false;
     simplify_empty = true;
   } in
-  let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
-    Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
+  let check_valid_call ~genv (call_loc: ALoc.t) (_, targ_loc) =
+    let typed_ast = genv.Ty_normalizer_env.typed_ast in
+    let ty_opt = Typed_ast_utils.find_exact_match_annotation typed_ast targ_loc in
+    Option.iter ty_opt ~f:(fun (_, scheme) ->
       let desc = Reason.RCustom "TypeAssert library function" in
       let reason_main = Reason.mk_reason desc call_loc in
       let wrap reason = Flow_js.add_output full_cx (Error_message.EInvalidTypeArgs (
         reason_main, Reason.mk_reason reason call_loc
       )) in
       match Ty_normalizer.from_scheme ~options ~genv scheme with
-      | Ok ty ->
-        (check_type_visitor wrap)#on_t () ty
+      | Ok ty -> (check_type_visitor wrap)#on_t () ty
       | Error _ ->
         let { Type.TypeScheme.type_ = t; _ } = scheme in
         wrap (Type.desc_of_t t)
     )
   in
-  Core_list.iter ~f:(fun cx ->
+  Core_list.iter2_exn ~f:(fun cx typed_ast ->
     let file = Context.file cx in
-    let type_table = Context.type_table cx in
-    let targs_map = Type_table.targs_hashtbl type_table in
     let file_sig = FilenameMap.find_unsafe file file_sigs in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
-    Loc_collections.ALocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
-  ) cxs
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
+    Loc_collections.ALocMap.iter (check_valid_call ~genv) (Context.type_asserts cx)
+  ) cxs tasts
 
 let force_annotations leader_cx other_cxs =
   Core_list.iter ~f:(fun cx ->
@@ -277,7 +277,7 @@ let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
   let metadata =
     let jsx = match Docblock.jsx docblock_info with
     | Some (Docblock.Jsx_pragma (expr, jsx_expr)) ->
-      let jsx_expr = Ast_loc_utils.abstractify_mapper#expression jsx_expr in
+      let jsx_expr = Ast_loc_utils.loc_to_aloc_mapper#expression jsx_expr in
       Options.Jsx_pragma (expr, jsx_expr)
     | Some Docblock.Csx_pragma -> Options.Jsx_csx
     | None -> Options.Jsx_react
@@ -432,7 +432,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
     ) locs
   );
 
-  let coverages = cx :: other_cxs |> Query_types.component_coverage ~full_cx:cx in
+  let coverages = Query_types.component_coverage ~full_cx:cx tasts in
 
   (* Post-merge errors.
    *
@@ -445,7 +445,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_invalid_type_assert_calls ~full_cx:cx file_sigs cxs;
+  detect_invalid_type_assert_calls ~full_cx:cx file_sigs cxs tasts;
 
   force_annotations cx other_cxs;
 
@@ -498,6 +498,14 @@ let merge_tvar =
         if uses = [] || existential
           then AnyT.locationless Unsoundness.existential
           else MergedT (r, uses)
+
+let merge_trust_var constr =
+  let open Trust_constraint in
+  match constr with
+  | TrustResolved t -> t
+  | TrustUnresolved bound ->
+    get_trust bound |> Trust.fix
+
 
 (****************** signature contexts *********************)
 
@@ -558,10 +566,14 @@ module ContextOptimizer = struct
       stable_id
 
     val mutable stable_tvar_ids = IMap.empty
+    val mutable stable_trust_var_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_poly_ids = IMap.empty
+    val mutable stable_props_ids = IMap.empty
+    val mutable stable_call_prop_ids = IMap.empty
     val mutable reduced_module_map = SMap.empty;
     val mutable reduced_graph = IMap.empty;
+    val mutable reduced_trust_graph = IMap.empty;
     val mutable reduced_property_maps = Properties.Map.empty;
     val mutable reduced_call_props = IMap.empty;
     val mutable reduced_export_maps = Exports.Map.empty;
@@ -598,7 +610,7 @@ module ContextOptimizer = struct
     method reduce cx module_ref =
       let export = Context.find_module cx module_ref in
       export_file <- reason_of_t export |> Reason.aloc_of_reason |> ALoc.source;
-      let export' = self#type_ cx Neutral export in
+      let export' = self#type_ cx Polarity.Neutral export in
       reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
     method tvar cx pole r id =
@@ -627,12 +639,51 @@ module ContextOptimizer = struct
         id
       )
 
+    method trust_var cx pole id =
+      let root_id, constr = Context.find_trust_constraints cx id in
+      if id == root_id then
+        if IMap.mem id reduced_trust_graph then
+          let stable_id = IMap.find_unsafe root_id stable_trust_var_ids in
+          SigHash.add_int sig_hash stable_id;
+          id
+        else
+          let t = merge_trust_var constr in
+          let node = Trust_constraint.new_resolved_root t in
+          reduced_trust_graph <- IMap.add id node reduced_trust_graph;
+          let () =
+            let stable_id = self#fresh_stable_id in
+            stable_trust_var_ids <- IMap.add id stable_id stable_trust_var_ids
+          in
+          id
+      else (
+        ignore (self#trust_var cx pole root_id);
+        let node = Trust_constraint.TrustGoto root_id in
+        reduced_trust_graph <- IMap.add id node reduced_trust_graph;
+        id
+      )
+
     method props cx pole id =
       if (Properties.Map.mem id reduced_property_maps)
       then
-        let () = SigHash.add_int sig_hash (id :> int) in
+        let () =
+          let id_int = (id :> int) in
+          let stable_id =
+            if Context.mem_nominal_id cx id_int
+            then IMap.find_unsafe id_int stable_props_ids
+            else id_int in
+          SigHash.add_int sig_hash stable_id in
         id
       else
+        let () =
+          let id_int = (id :> int) in
+          let stable_id =
+            if Context.mem_nominal_id cx id_int
+            then
+              let stable_id = self#fresh_stable_id in
+              stable_props_ids <- IMap.add (id :> int) stable_id stable_props_ids;
+              stable_id
+            else id_int in
+          SigHash.add_int sig_hash stable_id in
         let pmap = Context.find_props cx id in
         let () = SigHash.add_props_map sig_hash pmap in
         reduced_property_maps <- Properties.Map.add id pmap reduced_property_maps;
@@ -643,9 +694,14 @@ module ContextOptimizer = struct
     method call_prop cx pole id =
       if (IMap.mem id reduced_call_props)
       then
-        let () = SigHash.add_int sig_hash id in
+        let stable_id = IMap.find_unsafe id stable_call_prop_ids in
+        let () = SigHash.add_int sig_hash stable_id in
         id
       else
+        let () =
+          let stable_id = self#fresh_stable_id in
+          stable_call_prop_ids <- IMap.add id stable_id stable_call_prop_ids
+        in
         let t = Context.find_call cx id in
         reduced_call_props <- IMap.add id t reduced_call_props;
         let t' = self#type_ cx pole t in
@@ -701,6 +757,11 @@ module ContextOptimizer = struct
 
     method! type_ cx pole t =
       SigHash.add_reason sig_hash (reason_of_t t);
+      begin match t with
+        | DefT (_, trust, _) when Context.trust_tracking cx && is_ident trust ->
+          ignore (self#trust_var cx pole (as_ident trust))
+        | _ -> ()
+      end;
       match t with
       | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
       | OpenT _ -> super#type_ cx pole t
@@ -740,44 +801,25 @@ module ContextOptimizer = struct
       SigHash.add_reason sig_hash (reason_of_use_t use);
       match use with
       | UseT (u, t) ->
-          let t' = self#type_ cx Neutral t in
+          let t' = self#type_ cx Polarity.Neutral t in
           if t' == t then use
           else UseT (u, t')
       | _ ->
         SigHash.add_use sig_hash use;
         super#use_type cx pole use
 
-    method! choice_use_tool cx pole t =
-      match t with
-      | FullyResolveType id ->
-          ignore @@ self#type_graph cx pole ISet.empty id;
-          t
-      | _ -> super#choice_use_tool cx pole t
+    method! choice_use_tool =
+      (* Even with MergedT, any choice kit constraints should be fully
+         discharged by this point. This preserves a key invariant, that type
+         graphs are local to a single merge job. In other words, we will not see
+         a FullyResolveType constraint that corresponds to a tvar from another
+         context. This makes it possible to clear the type graph before storing
+         in the heap. *)
+    Utils_js.assert_false "choice kit uses should not appear in signatures"
 
-    method private type_graph cx pole seen id =
-      let open Graph_explorer in
-      let seen' = ISet.add id seen in
-      if seen' == seen then (seen, id) else
-      let graph = Context.type_graph cx in
-      ignore @@ self#eval_id cx pole id;
-      let seen' = match IMap.get id graph.explored_nodes with
-      | None -> seen'
-      | Some {deps} ->
-        ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) deps seen'
-      in
-      let seen' =
-        match IMap.get id graph.unexplored_nodes with
-        | None -> seen'
-        | Some {rev_deps} ->
-          ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) rev_deps seen'
-      in
-      (seen', id)
-
-    method get_stable_tvar_ids = stable_tvar_ids
-    method get_stable_eval_ids = stable_eval_ids
-    method get_stable_poly_ids = stable_poly_ids
     method get_reduced_module_map = reduced_module_map
     method get_reduced_graph = reduced_graph
+    method get_reduced_trust_graph = reduced_trust_graph
     method get_reduced_property_maps = reduced_property_maps
     method get_reduced_call_props = reduced_call_props
     method get_reduced_export_maps = reduced_export_maps
@@ -795,14 +837,11 @@ module ContextOptimizer = struct
     let sig_hash, reducer = reduce_context cx module_refs in
     Context.set_module_map cx reducer#get_reduced_module_map;
     Context.set_graph cx reducer#get_reduced_graph;
+    Context.set_trust_graph cx reducer#get_reduced_trust_graph;
     Context.set_property_maps cx reducer#get_reduced_property_maps;
     Context.set_call_props cx reducer#get_reduced_call_props;
     Context.set_export_maps cx reducer#get_reduced_export_maps;
     Context.set_evaluated cx reducer#get_reduced_evaluated;
-    Context.set_type_graph cx (
-      Graph_explorer.new_graph
-        (IMap.fold (fun k _ -> ISet.add k) reducer#get_reduced_graph ISet.empty)
-    );
     sig_hash
 
 end

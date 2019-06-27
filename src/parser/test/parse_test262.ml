@@ -281,6 +281,7 @@ let parse_test acc filename =
 let run_test (name, frontmatter, content) =
   let (filename, use_strict) = name in
   let parse_options = { Parser_env.
+      enums = true;
       esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;
       esproposal_decorators = false;

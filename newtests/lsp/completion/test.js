@@ -130,9 +130,9 @@ export default suite(
                 },
                 {
                   label: 'aUnion',
-                  kind: 6,
-                  detail: 'number',
-                  inlineDetail: 'number',
+                  kind: 13,
+                  detail: 'type aUnion = "a" | "b"',
+                  inlineDetail: 'type aUnion = "a" | "b"',
                   insertTextFormat: 1,
                 },
                 {
@@ -191,16 +191,16 @@ export default suite(
             completion: {
               completionItem: {
                 // snippet support needs to be enabled.
-                snippetSupport: true
-              }
-            }
-          }
-        }
+                snippetSupport: true,
+              },
+            },
+          },
+        },
       }).waitUntilIDEMessage(30000, 'initialize'),
       ideRequestAndWaitUntilResponse('textDocument/completion', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>params.js'},
         position: {line: 9, character: 15},
-        context: { triggerKind: 1 }
+        context: {triggerKind: 1},
       }).verifyAllIDEMessagesInStep(
         [
           (() => {
@@ -212,7 +212,7 @@ export default suite(
                   kind: 6,
                   detail: 'number',
                   inlineDetail: 'number',
-                  insertTextFormat: 1
+                  insertTextFormat: 1,
                 },
                 {
                   label: 'foo',
@@ -223,18 +223,18 @@ export default suite(
                   insertTextFormat: 2,
                   textEdit: {
                     range: {
-                      start: { line: 9, character: 14 },
-                      end: { line: 9, character: 16 }
+                      start: { line: 9, character: 15 },
+                      end: { line: 9, character: 15 }
                     },
-                    newText: 'foo()'
-                  }
+                    newText: 'foo()',
+                  },
                 },
                 {
                   label: 'exports',
                   kind: 6,
                   detail: '{||}',
                   inlineDetail: '{||}',
-                  insertTextFormat: 1
+                  insertTextFormat: 1,
                 },
                 {
                   label: 'aFunction',
@@ -245,33 +245,33 @@ export default suite(
                   insertTextFormat: 2,
                   textEdit: {
                     range: {
-                      start: { line: 9, character: 14 },
-                      end: { line: 9, character: 16 }
+                      start: { line: 9, character: 15 },
+                      end: { line: 9, character: 15 }
                     },
-                    newText: 'aFunction(${1:arg1}, ${2:arg2})'
-                  }
+                    newText: 'aFunction(${1:arg1}, ${2:arg2})',
+                  },
                 },
                 {
                   label: 'this',
                   kind: 6,
                   detail: 'empty',
                   inlineDetail: 'empty',
-                  insertTextFormat: 1
+                  insertTextFormat: 1,
                 },
                 {
                   label: 'super',
                   kind: 6,
                   detail: 'typeof Object.prototype',
                   inlineDetail: 'typeof Object.prototype',
-                  insertTextFormat: 1
-                }
-              ]
+                  insertTextFormat: 1,
+                },
+              ],
             };
-            return `textDocument/completion${JSON.stringify(expectedResponse)}`
-          })()
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
         ],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
-  ]
+  ],
 );

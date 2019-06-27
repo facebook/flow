@@ -18,7 +18,7 @@ export default suite(
     test('invalid_method', [
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})
@@ -202,9 +202,14 @@ export default suite(
       ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
       }).verifyAllIDEMessagesInStep(
-        ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
-        [...lspIgnoreStatusAndCancellation],
-      ),
+          [
+            "textDocument/typeCoverage"
+          ],
+          [
+            "window/showStatus",
+            "$/cancelRequest"
+          ],
+        ),
     ]),
 
     test('textDocument/typeCoverage 2', [

@@ -31,6 +31,7 @@ type metadata = {
   (* global *)
   max_literal_length: int;
   enable_const_params: bool;
+  enable_enums: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
@@ -43,6 +44,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
+  recursion_limit: int;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
@@ -52,18 +54,14 @@ type metadata = {
   trust_mode: Options.trust_mode;
 }
 
-type module_kind =
-  | CommonJSModule of ALoc.t option
-  | ESModule
-
 type type_assert_kind = Is | Throws | Wraps
 
 val make_sig: unit -> sig_t
 val make: sig_t -> metadata -> File_key.t -> string -> t
 val metadata_of_options: Options.t -> metadata
 
-val trust_constructor: t -> (unit -> Trust.trust)
-val cx_with_trust: t -> (unit -> Trust.trust) -> t
+val trust_constructor: t -> (unit -> Trust.trust_rep)
+val cx_with_trust: t -> (unit -> Trust.trust_rep) -> t
 
 val sig_cx: t -> sig_t
 val graph_sig: sig_t -> Constraint.node IMap.t
@@ -74,6 +72,7 @@ val all_unresolved: t -> ISet.t IMap.t
 val metadata: t -> metadata
 val max_literal_length: t -> int
 val enable_const_params: t -> bool
+val enable_enums: t -> bool
 val enforce_strict_call_arity: t -> bool
 val envs: t -> env IMap.t
 val errors: t -> Flow_error.ErrorSet.t
@@ -87,6 +86,7 @@ val esproposal_nullish_coalescing: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
+val find_real_props: t -> Type.Properties.id -> Type.Properties.t
 val find_call: t -> int -> Type.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_require: t -> ALoc.t -> Type.t
@@ -94,6 +94,7 @@ val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val mem_nominal_id: t -> Constraint.ident -> bool
 val graph: t -> Constraint.node IMap.t
+val trust_graph: t -> Trust_constraint.node IMap.t
 val import_stmts: t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
@@ -104,13 +105,14 @@ val is_strict_local: t -> bool
 val include_suppressions: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t
 val max_trace_depth: t -> int
-val module_kind: t -> module_kind
+val module_kind: t -> Module_info.kind
 val require_map: t -> Type.t ALocMap.t
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
 val property_maps: t -> Type.Properties.map
 val call_props: t -> Type.t IMap.t
 val export_maps: t -> Type.Exports.map
+val recursion_limit: t -> int
 val root: t -> Path.t
 val facebook_fbs: t -> string option
 val facebook_fbt: t -> string option
@@ -125,7 +127,6 @@ val trust_mode: t -> Options.trust_mode
 val trust_tracking: t -> bool
 val trust_errors: t -> bool
 val type_graph: t -> Graph_explorer.graph
-val type_table: t -> Type_table.t
 val type_asserts: t -> (type_assert_kind * ALoc.t) ALocMap.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
@@ -138,9 +139,10 @@ val pid_prefix: t -> string
 val copy_of_context: t -> t
 val merge_into: sig_t -> sig_t -> unit
 
-val push_declare_module: t -> string -> unit
+(* modules *)
+val push_declare_module: t -> Module_info.t -> unit
 val pop_declare_module: t -> unit
-val in_declare_module: t -> bool
+val module_info: t -> Module_info.t
 
 (* mutators *)
 val add_env: t -> int -> env -> unit
@@ -156,6 +158,7 @@ val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_call_prop: t -> int -> Type.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
+val add_trust_var: t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
 val add_type_assert: t -> ALoc.t -> (type_assert_kind * ALoc.t) -> unit
 val remove_all_errors: t -> unit
@@ -167,7 +170,7 @@ val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
-val set_module_kind: t -> module_kind -> unit
+val set_trust_graph: t -> Trust_constraint.node IMap.t -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_call_props: t -> Type.t IMap.t -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
@@ -202,6 +205,7 @@ val unnecessary_invariants: t -> (ALoc.t * Reason.t) list
 
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
+val iter_real_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
 val has_prop: t -> Type.Properties.id -> string -> bool
 val get_prop: t -> Type.Properties.id -> string -> Type.Property.t option
 val set_prop: t -> Type.Properties.id -> string -> Type.Property.t -> unit
@@ -221,3 +225,10 @@ val find_constraints:
 val find_graph: t -> Constraint.ident -> Constraint.constraints
 val find_root: t -> Constraint.ident -> Constraint.ident * Constraint.root
 val find_resolved: t -> Type.t -> Type.t option
+
+val find_trust_constraints:
+  t ->
+  Trust_constraint.ident ->
+  Trust_constraint.ident * Trust_constraint.constraints
+val find_trust_graph: t -> Trust_constraint.ident -> Trust_constraint.constraints
+val find_trust_root: t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root

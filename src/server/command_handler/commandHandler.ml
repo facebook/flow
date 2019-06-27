@@ -16,13 +16,16 @@ let status_log errors =
     else Hh_logger.info "Status: Error";
   flush stdout
 
-let convert_errors ~errors ~warnings =
-  if Errors.ConcreteLocPrintableErrorSet.is_empty errors && Errors.ConcreteLocPrintableErrorSet.is_empty warnings then
+let convert_errors ~errors ~warnings ~suppressed_errors =
+  if Errors.ConcreteLocPrintableErrorSet.is_empty errors &&
+     Errors.ConcreteLocPrintableErrorSet.is_empty warnings &&
+     suppressed_errors = []
+  then
     ServerProt.Response.NO_ERRORS
   else
-    ServerProt.Response.ERRORS {errors; warnings}
+    ServerProt.Response.ERRORS {errors; warnings; suppressed_errors}
 
-let get_status genv env client_root =
+let get_status ~reader genv env client_root =
   let options = genv.ServerEnv.options in
   let server_root = Options.root options in
   let lazy_stats = Rechecker.get_lazy_stats genv env in
@@ -34,17 +37,21 @@ let get_status genv env client_root =
       }
     end else begin
       (* collate errors by origin *)
-      let errors, warnings, _ = ErrorCollator.get ~options env in
+      let errors, warnings, suppressed_errors = ErrorCollator.get ~reader ~options env in
       let warnings = if Options.should_include_warnings options
         then warnings
         else Errors.ConcreteLocPrintableErrorSet.empty
+      in
+      let suppressed_errors = if Options.include_suppressions options
+        then suppressed_errors
+        else []
       in
 
       (* TODO: check status.directory *)
       status_log errors;
       FlowEventLogger.status_response
         ~num_errors:(Errors.ConcreteLocPrintableErrorSet.cardinal errors);
-      convert_errors errors warnings
+      convert_errors ~errors ~warnings ~suppressed_errors
     end
   in
   status_response, lazy_stats
@@ -62,10 +69,12 @@ let autocomplete ~options ~env ~profiling file_input =
   in
   let%lwt autocomplete_result =
     map_error ~f:(fun str -> str, None) check_contents_result
-    %>>= (fun (cx, info, file_sig, _) ->
+    %>>= (fun (cx, info, file_sig, tast) ->
       Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json (fun () ->
-          Lwt.return (AutocompleteService_js.autocomplete_get_results cx file_sig state info)
+          Lwt.return (
+            AutocompleteService_js.autocomplete_get_results cx file_sig tast state info
+          )
         )
       )
     )
@@ -93,7 +102,7 @@ let check_file ~options ~env ~profiling ~force file_input =
         let%lwt _, errors, warnings =
           Types_js.typecheck_contents ~options ~env ~profiling content file
         in
-        Lwt.return (convert_errors ~errors ~warnings)
+        Lwt.return (convert_errors ~errors ~warnings ~suppressed_errors:[])
       else
         Lwt.return (ServerProt.Response.NOT_COVERED)
 
@@ -115,6 +124,22 @@ let infer_type
         file content line col
     ) in
     Lwt.return (split_result result)
+
+let insert_type ~options ~env ~profiling ~file_input ~target
+      ~verbose ~expand_aliases ~omit_targ_defaults ~location_is_strict =
+  let filename = File_input.filename_of_file_input file_input in
+  let file_key = File_key.SourceFile filename in
+  let options = {options with Options.opt_verbose = verbose} in
+  File_input.content_of_file_input file_input
+    %>>= fun file_content -> try_with (fun _ ->
+      let%lwt result =
+        Type_info_service.insert_type ~options ~env ~profiling ~file_key ~file_content ~target
+          ~expand_aliases ~omit_targ_defaults ~location_is_strict
+      in
+      (* TODO After we figure out the error return value change the Server Result to match *)
+      match result with
+      | Ok ty -> Lwt.return @@ Ok ty
+      | Error _ -> Lwt.return @@ Error "Flow: server failed to insert type")
 
 let collect_rage ~options ~reader ~env ~files =
   let items = [] in
@@ -146,7 +171,7 @@ let collect_rage ~options ~reader ~env ~files =
   let items = ("env.dependencies", data) :: items in
 
   (* env: errors *)
-  let errors, warnings, _ = ErrorCollator.get ~options env in
+  let errors, warnings, _ = ErrorCollator.get ~reader ~options env in
   let json = Errors.Json_output.json_of_errors_with_context ~strip_root:None ~stdin_file:None
     ~suppressed_errors:[] ~errors ~warnings () in
   let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in
@@ -260,18 +285,17 @@ let get_cycle ~env fn =
     |> serialize_graph
   ))
 
-let suggest ~options ~env ~profiling file_input =
-  let file = File_input.filename_of_file_input file_input in
-  let file = File_key.SourceFile file in
-  File_input.content_of_file_input file_input
-  %>>= fun content -> try_with (fun _ ->
+let suggest ~options ~env ~profiling file =
+  let file_name = File_input.filename_of_file_input file in
+  File_input.content_of_file_input file
+  %>>= fun file_content -> try_with (fun _ ->
     let%lwt result =
-      Type_info_service.suggest ~options ~env ~profiling file content
+      Type_info_service.suggest ~options ~env ~profiling file_name file_content
     in
     match result with
-    | Ok (tc_errors, tc_warnings, suggest_warnings, annotated_program) ->
+    | Ok (tc_errors, tc_warnings, suggest_warnings, file_patch) ->
       Lwt.return (Ok (ServerProt.Response.Suggest_Ok {
-        tc_errors; tc_warnings; suggest_warnings; annotated_program
+        tc_errors; tc_warnings; suggest_warnings; file_patch
       }))
     | Error errors ->
       Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))
@@ -354,9 +378,9 @@ let get_imports ~options ~reader module_names =
    * flow. *)
   List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
-let save_state ~saved_state_filename ~genv ~env =
+let save_state ~saved_state_filename ~genv ~env ~profiling =
   try_with (fun () ->
-    let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env in
+    let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
     Lwt.return (Ok ())
   )
 
@@ -396,12 +420,19 @@ let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~pro
 let handle_force_recheck ~files ~focus ~profile ~profiling =
   let fileset = SSet.of_list files in
 
+  let reason = Persistent_connection_prot.(
+    match files with
+    | [filename] -> Single_file_changed { filename; }
+    | _ -> Many_files_changed { file_count = List.length files; }
+  ) in
+
   (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
    * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
    * focused *)
   let push ?callback files = ServerMonitorListenerState.(
-    if focus then push_files_to_force_focused files;
-    push_files_to_recheck ?metadata:None ?callback files (* Only register the callback once *)
+    if focus
+    then push_files_to_force_focused_and_recheck ?callback ~reason files
+    else push_files_to_recheck ?metadata:None ?callback ~reason files
   ) in
 
   if profile
@@ -432,11 +463,19 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
   let%lwt response = output_dependencies ~env root strip_root outfile in
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
-let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults ~profiling ~env =
+let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
+      ~omit_targ_defaults ~profiling ~env =
   let%lwt result, json_data =
     infer_type ~options ~env ~profiling (input, line, char, verbose, expand_aliases, omit_targ_defaults)
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
+
+let handle_insert_type ~options ~file_input ~target ~verbose
+      ~expand_aliases ~omit_targ_defaults ~location_is_strict ~profiling ~env =
+  let%lwt result =
+    insert_type ~options ~env ~profiling ~file_input ~target ~verbose ~expand_aliases
+      ~omit_targ_defaults ~location_is_strict in
+  Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
 
 let handle_rage ~reader ~options ~files ~profiling:_ ~env =
   let items = collect_rage ~options ~reader ~env ~files:(Some files) in
@@ -458,16 +497,16 @@ let handle_refactor
   in
   Lwt.return (env, REFACTOR (result), None)
 
-let handle_status ~genv ~client_root ~profiling:_ ~env =
-  let status_response, lazy_stats = get_status genv env client_root in
+let handle_status ~reader ~genv ~client_root ~profiling:_ ~env =
+  let status_response, lazy_stats = get_status ~reader genv env client_root in
   Lwt.return (env, ServerProt.Response.STATUS {status_response; lazy_stats}, None)
 
 let handle_suggest ~options ~input ~profiling ~env =
   let%lwt result = suggest ~options ~env ~profiling input in
   Lwt.return (ServerProt.Response.SUGGEST result, None)
 
-let handle_save_state ~saved_state_filename ~genv ~profiling:_ ~env =
-  let%lwt result = save_state ~saved_state_filename ~genv ~env in
+let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
+  let%lwt result = save_state ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 
@@ -572,6 +611,11 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.RAGE { files; } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
+  | ServerProt.Request.INSERT_TYPE {input; target; wait_for_recheck; verbose;
+      expand_aliases; omit_targ_defaults; location_is_strict;} ->
+    mk_parallelizable ~wait_for_recheck ~options
+      (handle_insert_type ~file_input:input ~options ~target
+          ~verbose ~expand_aliases ~omit_targ_defaults ~location_is_strict)
   | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
     * parallelizable *)
@@ -588,7 +632,7 @@ let get_ephemeral_handler genv command =
      * coworkers and users, glevi decided that users would rather that `flow status` always waits
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
-    Handle_nonparallelizable (handle_status ~genv ~client_root)
+    Handle_nonparallelizable (handle_status ~reader ~genv ~client_root)
   | ServerProt.Request.SUGGEST { input; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_suggest ~options ~input)
   | ServerProt.Request.SAVE_STATE { outfile; } ->
@@ -770,7 +814,7 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
     ServerMonitorListenerState.push_new_workload workload;
     Lwt.return_unit
 
-let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
+let did_open ~reader genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
   match Options.lazy_mode options with
   | Options.LAZY_MODE_IDE ->
@@ -787,8 +831,11 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
     let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
     if not triggered_recheck then begin
       (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
-      Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
+      let errors, warnings, _ =
+        ErrorCollator.get_with_separate_warnings ~reader ~options env
+      in
+      Persistent_connection.send_errors_if_subscribed
+        ~client ~errors_reason:Persistent_connection_prot.Env_change ~errors ~warnings
     end;
     Lwt.return env
   | Options.LAZY_MODE_FILESYSTEM
@@ -796,14 +843,20 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
   | Options.NON_LAZY_MODE ->
     (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
      * a new file is opened is to send the errors to the client *)
-    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
-    Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+    let errors, warnings, _ =
+      ErrorCollator.get_with_separate_warnings ~reader ~options env
+    in
+    Persistent_connection.send_errors_if_subscribed
+      ~client ~errors_reason:Persistent_connection_prot.Env_change ~errors ~warnings;
     Lwt.return env
 
-let did_close genv env client : ServerEnv.env Lwt.t =
+let did_close ~reader genv env client : ServerEnv.env Lwt.t =
   let options = genv.options in
-  let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
-  Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+  let errors, warnings, _ =
+    ErrorCollator.get_with_separate_warnings ~reader ~options env
+  in
+  Persistent_connection.send_errors_if_subscribed
+    ~client ~errors_reason:Persistent_connection_prot.Env_change ~errors ~warnings;
   Lwt.return env
 
 
@@ -852,8 +905,10 @@ let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let response = ResponseMessage (id, ErrorResult (e, "")) in
   Lwt.return (LspResponse (Ok (ret, Some response, metadata)))
 
-let handle_persistent_subscribe ~options ~client ~profiling:_ ~env =
-  let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
+let handle_persistent_subscribe ~reader ~options ~client ~profiling:_ ~env =
+  let current_errors, current_warnings, _ =
+    ErrorCollator.get_with_separate_warnings ~reader ~options env
+  in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (IdeResponse (Ok (env, None)))
 
@@ -863,12 +918,12 @@ let handle_persistent_autocomplete ~options ~file_input ~id ~client ~profiling ~
   Persistent_connection.send_message wrapped client;
   Lwt.return (IdeResponse (Ok ((), json_data)))
 
-let handle_persistent_did_open ~genv ~filenames ~client ~profiling:_ ~env =
+let handle_persistent_did_open ~reader ~genv ~filenames ~client ~profiling:_ ~env =
   Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
   let files = Nel.map (fun fn -> (fn, "%%Legacy IDE has no content")) filenames in
   let%lwt env =
     if Persistent_connection.client_did_open client ~files
-    then did_open genv env client files
+    then did_open ~reader genv env client files
     else Lwt.return env  (* No new files were opened, so do nothing *)
   in
   Lwt.return (IdeResponse (Ok (env, None)))
@@ -891,11 +946,11 @@ let enqueue_did_open_files, handle_persistent_did_open_notification =
   in
 
   let handle_persistent_did_open_notification
-      ~genv ~metadata ~client ~profiling:_ ~env =
+      ~reader ~genv ~metadata ~client ~profiling:_ ~env =
     let%lwt env =
       match get_and_clear_did_open_files () with
       | [] -> Lwt.return env
-      | first::rest -> did_open genv env client (first, rest)
+      | first::rest -> did_open ~reader genv env client (first, rest)
     in
     Lwt.return (LspResponse (Ok (env, None, metadata)))
   in
@@ -920,17 +975,17 @@ let handle_persistent_did_change_notification ~params ~metadata ~client ~profili
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
   Lwt.return (LspResponse (Ok ((), None, metadata)))
 
-let handle_persistent_did_close ~genv ~filenames ~client ~profiling:_ ~env =
+let handle_persistent_did_close ~reader ~genv ~filenames ~client ~profiling:_ ~env =
   Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
   let%lwt env =
     if Persistent_connection.client_did_close client ~filenames
-    then did_close genv env client
+    then did_close ~reader genv env client
     else Lwt.return env (* No new files were closed, so do nothing *)
   in
   Lwt.return (IdeResponse (Ok (env, None)))
 
-let handle_persistent_did_close_notification ~genv ~metadata ~client ~profiling:_ ~env =
-  let%lwt env = did_close genv env client in
+let handle_persistent_did_close_notification ~reader ~genv ~metadata ~client ~profiling:_ ~env =
+  let%lwt env = did_close ~reader genv env client in
   Lwt.return (LspResponse (Ok (env, None, metadata)))
 
 let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
@@ -1035,7 +1090,7 @@ let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~clie
       let metadata = with_data ~extra_data metadata in
       begin match result with
         | Ok items ->
-          let items = Core_list.map ~f: (Flow_lsp_conversions.flow_completion_to_lsp line char is_snippet_supported) items in
+          let items = Core_list.map ~f: (Flow_lsp_conversions.flow_completion_to_lsp is_snippet_supported) items in
           let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
           let response = ResponseMessage (id, r) in
           Lwt.return (LspResponse (Ok ((), Some response, metadata)))
@@ -1120,7 +1175,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       (* Figure out each individual uncovered span *)
       let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, cov) ->
         match cov with
-        | Coverage.Tainted | Coverage.Untainted
+        | Coverage.Tainted | Coverage.Untainted -> None
         | Coverage.Uncovered
         | Coverage.Empty -> Some loc
       ) in
@@ -1315,7 +1370,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
 
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~options)
+    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~reader ~options)
 
   | Autocomplete (file_input, id) ->
     mk_parallelizable_persistent ~options (
@@ -1324,7 +1379,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
 
   | DidOpen filenames ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (handle_persistent_did_open ~genv ~filenames)
+    Handle_nonparallelizable_persistent (handle_persistent_did_open ~reader ~genv ~filenames)
 
   | LspToServer (NotificationMessage (DidOpenNotification params), metadata) ->
     let open Lsp.DidOpen in
@@ -1345,7 +1400,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       enqueue_did_open_files files;
       (* This mutates env, so it can't run in parallel *)
       Handle_nonparallelizable_persistent (
-        handle_persistent_did_open_notification ~genv ~metadata
+        handle_persistent_did_open_notification ~reader ~genv ~metadata
       )
     end else
       (* It's a no-op, so we can respond immediately *)
@@ -1363,7 +1418,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
 
   | Persistent_connection_prot.DidClose filenames ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (handle_persistent_did_close ~genv ~filenames)
+    Handle_nonparallelizable_persistent (handle_persistent_did_close ~reader ~genv ~filenames)
 
   | LspToServer (NotificationMessage (DidCloseNotification params), metadata) ->
     let open Lsp.DidClose in
@@ -1381,7 +1436,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     then
       (* This mutates env, so it can't run in parallel *)
       Handle_nonparallelizable_persistent (
-        handle_persistent_did_close_notification ~genv ~metadata
+        handle_persistent_did_close_notification ~reader ~genv ~metadata
       )
     else
       (* It's a no-op, so we can respond immediately *)
@@ -1562,6 +1617,11 @@ let wrap_persistent_handler
       let e = Lsp_fmt.error_of_exn (Failure reason) in
       let lsp_response = match request with
         | LspToServer (RequestMessage (id, _), _) ->
+          let friendly_message =
+            "Flow encountered an unexpected error while handling this request. " ^
+            "See the Flow logs for more details."
+          in
+          let e = {e with Lsp.Error.message=friendly_message} in
           Some (ResponseMessage (id, ErrorResult (e, stack)))
         | LspToServer _ ->
           let open LogMessage in

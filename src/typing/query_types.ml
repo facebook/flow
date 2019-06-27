@@ -41,12 +41,20 @@ type result =
 | Success of Loc.t * Ty.t
 
 let concretize_loc_pairs pair_list =
-  Core_list.map ~f:(fun (loc, x) -> ALoc.to_loc loc, x) pair_list
+  Core_list.map ~f:(fun (loc, x) -> ALoc.to_loc_exn loc, x) pair_list
 
 let sort_loc_pairs pair_list =
   List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
-let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_defaults ~type_table ~typed_ast loc =
+let type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme =
+  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+  match Ty_normalizer.from_scheme ~options ~genv scheme with
+  | Ok ty -> Success (loc, ty)
+  | Error err ->
+    let msg = Ty_normalizer.error_to_string err in
+    FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
+
+let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_defaults ~typed_ast loc =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -62,14 +70,9 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
   match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
   | Some  (loc, scheme) ->
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
-    (match Ty_normalizer.from_scheme ~options ~genv scheme with
-    | Ok ty -> Success (loc, ty)
-    | Error err ->
-      let msg = Ty_normalizer.error_to_string err in
-      FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
+    type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme
 
-let dump_types cx file_sig ~printer =
+let dump_types ~printer cx file_sig typed_ast =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -83,21 +86,18 @@ let dump_types cx file_sig ~printer =
     simplify_empty = true;
   } in
   let file = Context.file cx in
-  let type_table = Context.type_table cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
   let result = Ty_normalizer.from_schemes ~options ~genv
-    (Type_table.coverage_to_list type_table) in
+    (Typed_ast_utils.typed_ast_to_list typed_ast) in
   let print_ok = function
     | l, Ok t -> Some (l, printer t)
     | _ -> None
   in
-  (Core_list.filter_map result ~f:print_ok)
+  Core_list.filter_map result ~f:print_ok
   |> concretize_loc_pairs
   |> sort_loc_pairs
 
-let covered_types cx ~should_check ~check_trust =
-  let type_table = Context.type_table cx in
-  let htbl = Type_table.coverage_hashtbl type_table in
+let covered_types ~should_check ~check_trust cx tast =
   let check_trust =
     if check_trust then
       fun x -> x
@@ -106,40 +106,38 @@ let covered_types cx ~should_check ~check_trust =
       | Coverage.Tainted -> Coverage.Untainted
       | x -> x
   in
-  let coverage = new Coverage.visitor in
   let compute_cov =
-    if should_check
-    then coverage#type_ cx %> Coverage.result_of_coverage %> check_trust
-    else fun _ -> Coverage.Empty
+    if should_check then
+      (new Coverage.visitor)#type_ cx %>
+      Coverage.result_of_coverage %>
+      check_trust
+    else
+      fun _ -> Coverage.Empty
   in
-  let result_pairs =
-    Hashtbl.fold (fun loc { Type.TypeScheme.type_; _ } acc ->
-      (ALoc.to_loc loc, compute_cov type_)::acc
-    ) htbl []
-  in
-  sort_loc_pairs result_pairs
+  let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t)::acc in
+  coverage_fold_tast ~f:step ~init:[] tast |>
+  sort_loc_pairs
 
-let component_coverage ~full_cx =
+let component_coverage:
+  full_cx:Context.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program list ->
+  Coverage.file_coverage list
+  =
   let open Coverage in
   let coverage_computer = new visitor in
-  Core_list.map ~f:(fun cx ->
-    let type_table = Context.type_table cx in
-    Type_table.fold_coverage (fun _ { Type.TypeScheme.type_; _ } coverage ->
-      match coverage_computer#type_ full_cx type_ |> Coverage.result_of_coverage with
-      | Uncovered -> { coverage with uncovered = coverage.uncovered + 1 }
-      | Untainted -> { coverage with untainted = coverage.untainted + 1 }
-      | Tainted   -> { coverage with tainted   = coverage.tainted   + 1 }
-      | Empty     -> { coverage with empty     = coverage.empty     + 1 }
-    ) type_table initial_coverage
-  )
+  let step cx _ t acc =
+    let coverage = coverage_computer#type_ cx t in
+    match Coverage.result_of_coverage coverage with
+    | Uncovered -> { acc with uncovered = acc.uncovered + 1 }
+    | Untainted -> { acc with untainted = acc.untainted + 1 }
+    | Tainted   -> { acc with tainted   = acc.tainted   + 1 }
+    | Empty     -> { acc with empty     = acc.empty     + 1 }
+  in
+  fun ~full_cx tasts ->
+    let step = step full_cx in
+    Core_list.map ~f:(Typed_ast_utils.coverage_fold_tast ~f:step ~init:initial_coverage) tasts
 
-(* 'suggest' can use as many types in the type tables as possible, which is why
-   we are querying the tables from both "coverage" and "type_info". Coverage
-   should be enough on its own, but "type_info" stores method types more
-   reliably. On the other hand "type_info" only stores information about
-   identifiers, so anonymous functions and arrows are not captured.
-*)
-let suggest_types cx file_sig =
+let suggest_types cx file_sig typed_ast loc =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -152,18 +150,23 @@ let suggest_types cx file_sig =
     omit_targ_defaults = false;
     simplify_empty = true;
   } in
-  let type_table = Context.type_table cx in
   let file = Context.file cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
-  let result = Loc_collections.ALocMap.empty in
-  let result = Ty_normalizer.fold_hashtbl
-    ~options ~genv
-    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
-    ~g:(fun t -> t)
-    ~htbl:(Type_table.coverage_hashtbl type_table) result in
-  let result = Ty_normalizer.fold_hashtbl
-    ~options ~genv
-    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
-    ~g:(fun (_, t, _) -> t)
-    ~htbl:(Type_table.type_info_hashtbl type_table) result in
-  result
+  match Typed_ast_utils.find_exact_match_annotation typed_ast loc with
+  | None -> FailureNoMatch
+  | Some (loc, scheme) ->
+    type_of_scheme ~options ~full_cx:cx ~file ~file_sig typed_ast loc scheme
+
+let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~expand_aliases ~omit_targ_defaults ~typed_ast loc scheme =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = expand_aliases;
+    flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
+    optimize_types = true;
+    omit_targ_defaults;
+    simplify_empty = true; }
+  in
+  type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme

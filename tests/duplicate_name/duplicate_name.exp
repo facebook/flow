@@ -1,0 +1,58 @@
+Error --------------------------------------------------------------------------------------------- type_then_var.js:4:5
+
+Cannot declare `A` [1] because the name is already bound.
+
+   type_then_var.js:4:5
+   4| var A: string
+          ^
+
+References:
+   type_then_var.js:2:11
+   2| interface A {}
+                ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- type_then_var.js:8:5
+
+Cannot declare `B` [1] because the name is already bound.
+
+   type_then_var.js:8:5
+   8| var B : string;
+          ^
+
+References:
+   type_then_var.js:6:6
+   6| type B = number;
+           ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- var_then_type.js:4:11
+
+Cannot declare `A` [1] because the name is already bound.
+
+   var_then_type.js:4:11
+   4| interface A {}
+                ^
+
+References:
+   var_then_type.js:2:5
+   2| var A: string
+          ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- var_then_type.js:8:6
+
+Cannot declare `B` [1] because the name is already bound.
+
+   var_then_type.js:8:6
+   8| type B = number;
+           ^
+
+References:
+   var_then_type.js:6:5
+   6| var B : string;
+          ^ [1]
+
+
+
+Found 4 errors

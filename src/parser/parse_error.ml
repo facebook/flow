@@ -32,7 +32,8 @@ type t =
   | InexactInsideExact
   | InexactInsideNonObject
   | NewlineAfterThrow
-  | InvalidBigInt
+  | InvalidFloatBigInt
+  | InvalidSciBigInt
   | InvalidRegExp
   | InvalidRegExpFlags of string
   | UnterminatedRegExp
@@ -56,6 +57,7 @@ type t =
   | StrictParamDupe
   | StrictFunctionName
   | StrictOctalLiteral
+  | StrictNonOctalLiteral
   | StrictDelete
   | StrictDuplicateProperty
   | AccessorDataProperty
@@ -88,7 +90,6 @@ type t =
   | ExportNamelessFunction
   | UnsupportedDecorator
   | MissingTypeParamDefault
-  | WindowsFloatOfString
   | DuplicateDeclareModuleExports
   | AmbiguousDeclareModuleKind
   | GetterArity
@@ -100,7 +101,7 @@ type t =
   | MalformedUnicode
   | DuplicateConstructor
   | DuplicatePrivateFields of string
-  | InvalidFieldName of string * bool * bool
+  | InvalidFieldName of { name: string; static: bool; private_: bool }
   | PrivateMethod
   | PrivateDelete
   | UnboundPrivate of string
@@ -118,6 +119,7 @@ type t =
   | OptionalChainNew
   | OptionalChainTemplate
   | NullishCoalescingDisabled
+  | WhitespaceInPrivateName
 
 exception Error of (Loc.t * t) list
 
@@ -160,7 +162,8 @@ module PP =
       | InexactInsideNonObject ->
           "Explicit inexact syntax can only appear inside an object type"
       | NewlineAfterThrow ->  "Illegal newline after throw"
-      | InvalidBigInt -> "Invalid bigint literal"
+      | InvalidFloatBigInt -> "A bigint literal must be an integer"
+      | InvalidSciBigInt -> "A bigint literal cannot use exponential notation"
       | InvalidRegExp -> "Invalid regular expression"
       | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '"^flags^"'"
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"
@@ -187,6 +190,7 @@ module PP =
       | StrictParamDupe -> "Strict mode function may not have duplicate parameter names"
       | StrictFunctionName ->  "Function name may not be eval or arguments in strict mode"
       | StrictOctalLiteral ->  "Octal literals are not allowed in strict mode."
+      | StrictNonOctalLiteral -> "Number literals with leading zeros are not allowed in strict mode."
       | StrictDelete ->  "Delete of an unqualified identifier in strict mode."
       | StrictDuplicateProperty ->  "Duplicate data property in object literal not allowed in strict mode"
       | AccessorDataProperty ->  "Object literal may not have data and accessor property with the same name"
@@ -242,10 +246,6 @@ module PP =
       | UnsupportedDecorator -> "Found a decorator in an unsupported position."
       | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
           since a preceding type parameter declaration has a default."
-      | WindowsFloatOfString -> "The Windows version of OCaml has a bug in how \
-          it parses hexadecimal numbers. It is fixed in OCaml 4.03.0. Until we \
-          can switch to 4.03.0, please avoid either hexadecimal notation or \
-          Windows."
       | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` \
           statement!"
       | AmbiguousDeclareModuleKind -> "Found both `declare module.exports` and \
@@ -270,7 +270,7 @@ module PP =
         "Classes may only have one constructor"
       | DuplicatePrivateFields name ->
         "Private fields may only be declared once. `#" ^ name ^ "` is declared more than once."
-      | InvalidFieldName (name, static, private_) ->
+      | InvalidFieldName { name; static; private_; } ->
         let static_modifier = if static then "static " else "" in
         let name = if private_ then "#" ^ name else name in
         "Classes may not have " ^ static_modifier ^ "fields named `" ^ name ^ "`."
@@ -302,4 +302,5 @@ module PP =
         use the nullish coalescing operator (`??`). Nullish coalescing is an active early-stage \
         feature proposal which may change and is not enabled by default. To enable support in \
         the parser, use the `esproposal_nullish_coalescing` option."
+      | WhitespaceInPrivateName -> "Unexpected whitespace between `#` and identifier"
   end

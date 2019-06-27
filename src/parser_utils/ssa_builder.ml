@@ -387,7 +387,7 @@ module Make
     val mutable possible_labeled_continues = []
 
     (* write *)
-    method! pattern_identifier ?kind (ident: L.t Ast.Identifier.t) =
+    method! pattern_identifier ?kind (ident: (L.t, L.t) Ast.Identifier.t) =
       ignore kind;
       let loc, { Ast.Identifier.name= x; comments= _ } = ident in
       begin match SMap.get x ssa_env with
@@ -406,7 +406,7 @@ module Make
         | None -> ()
       end;
 
-    method! identifier (ident: L.t Ast.Identifier.t) =
+    method! identifier (ident: (L.t, L.t) Ast.Identifier.t) =
       let loc, { Ast.Identifier.name= x; comments= _ } = ident in
       this#any_identifier loc x;
       super#identifier ident
@@ -493,7 +493,7 @@ module Make
 
     method! continue _loc (stmt: L.t Ast.Statement.Continue.t) =
       let open Ast.Statement.Continue in
-      let { label } = stmt in
+      let { label; comments = _ } = stmt in
       this#raise_abrupt_completion (AbruptCompletion.continue label)
 
     method! return _loc (stmt: (L.t, L.t) Ast.Statement.Return.t) =
@@ -954,6 +954,14 @@ module Make
 
     method! call _loc (expr: (L.t, L.t) Ast.Expression.Call.t) =
       let open Ast.Expression.Call in
+      let { callee; targs = _; arguments } = expr in
+      ignore @@ this#expression callee;
+      ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
+      this#havoc_current_ssa_env;
+      expr
+
+    method! new_ _loc (expr: (L.t, L.t) Ast.Expression.New.t) =
+      let open Ast.Expression.New in
       let { callee; targs = _; arguments } = expr in
       ignore @@ this#expression callee;
       ignore @@ ListUtils.ident_map this#expression_or_spread arguments;

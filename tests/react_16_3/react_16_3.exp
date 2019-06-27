@@ -41,14 +41,14 @@ References:
    forwardRef.js:19:32
     19| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:289:22
-   289|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
-                             ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:240:6
-   240|   ): {|current: null | T|};
+   <BUILTINS>/react-dom.js:313:15
+   313|     instance: HTMLButtonElement,
+                      ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:246:6
+   246|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:195:6
-   195|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -66,15 +66,15 @@ References:
    forwardRef.js:23:39
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:194:5
-   194|   | {-current: React$ElementRef<ElementType> | null}
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: React$ElementRef<ElementType> | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                          ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:289:22
-   289|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
-                             ^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react-dom.js:313:15
+   313|     instance: HTMLButtonElement,
+                      ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:12
@@ -99,11 +99,11 @@ References:
    forwardRef.js:41:57
     41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
                                                                 ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:240:6
-   240|   ): {|current: null | T|};
+   <BUILTINS>/react.js:246:6
+   246|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:195:6
-   195|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 

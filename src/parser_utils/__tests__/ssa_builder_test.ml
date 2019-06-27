@@ -746,4 +746,29 @@ let tests = "ssa_builder" >::: [
         mk_write (1, 6) (1, 9);
       ]
     );
+  "new" >:: mk_ssa_builder_test
+    "(function() { \
+      var x; \
+      new Y(x = 1); \
+      return x; \
+    })"
+    LocMap.(
+      empty
+      |> add (mk_loc (1, 42) (1, 43)) [
+        mk_write (1, 27) (1, 28);
+      ]
+    );
+  "new_closure" >:: mk_ssa_builder_test
+    "(function() { \
+      var x; \
+      new Y(function() { x = 1; }); \
+      return x; \
+    })"
+    LocMap.(
+      empty
+      |> add (mk_loc (1, 58) (1, 59)) [
+        Ssa_api.uninitialized;
+        mk_write (1, 40) (1, 41);
+      ]
+    );
 ]

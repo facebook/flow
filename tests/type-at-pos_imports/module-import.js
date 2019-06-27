@@ -1,3 +1,3 @@
 // @flow
 
-const m = require('./module-export');
+const m = require('./module-export-0');

@@ -352,7 +352,8 @@ end = struct
           value = Ast.Literal.Number _;
           raw = expected;
           comments = _;
-        })
+        });
+        comments = _;
       }) ->
         let expected = "-" ^ expected in
         if actual <> expected then

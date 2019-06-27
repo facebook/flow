@@ -71,11 +71,17 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
   let fail exn = raise exn
   let (>>=) a f = f a
 
-  let write ?timeout fd ~buffer ~offset ~size =
+  let rec write ?timeout fd ~buffer ~offset ~size =
     match Timeout.select ?timeout [] [fd] [] ~-.1.0 with
     | _, [], _ -> 0
-    | _ -> Unix.write fd buffer offset size
-
+    | _ ->
+      (* Timeout.select handles EINTR, but the Unix.write call can also be interrupted. If the write
+       * is interrupted before any bytes are written, the call fails with EINTR. Otherwise, the call
+       * succeeds and returns the number of bytes written.
+       *)
+      try Unix.write fd buffer offset size
+      with Unix.Unix_error (Unix.EINTR, _, _) ->
+        write ?timeout fd ~buffer ~offset ~size
 
   (* Marshal_tools reads from file descriptors. These file descriptors might be for some
    * non-blocking socket. Normally if you try to read from an fd, it will block until some data is
@@ -86,10 +92,17 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
    * that the first read won't block. Marshal_tools will always do at least 2 reads (one for the
    * preamble and one or more for the data). Any read after the first might block.
    *)
-  let read ?timeout fd ~buffer ~offset ~size =
+  let rec read ?timeout fd ~buffer ~offset ~size =
     match Timeout.select ?timeout [fd] [] [] ~-.1.0 with
     | [], _, _ -> 0
-    | _ -> Unix.read fd buffer offset size
+    | _ ->
+      (* Timeout.select handles EINTR, but the Unix.read call can also be interrupted. If the read
+       * is interrupted before any bytes are read, the call fails with EINTR. Otherwise, the call
+       * succeeds and returns the number of bytes read.
+       *)
+      try Unix.read fd buffer offset size
+      with Unix.Unix_error (Unix.EINTR, _, _) ->
+        read ?timeout fd ~buffer ~offset ~size
 
   let log str = Printf.eprintf "%s\n%!" str
 end

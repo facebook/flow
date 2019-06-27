@@ -12,8 +12,6 @@ type t
 
 type single_client
 
-val to_string: t -> string
-
 val empty: t
 
 val add_client:
@@ -25,7 +23,12 @@ val remove_client_from_clients: t -> Prot.client_id -> t
 (* Send updates to all clients that are subscribed *)
 val update_clients:
   clients:t ->
-  calc_errors_and_warnings:(unit -> Errors.ConcreteLocPrintableErrorSet.t * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t) ->
+  errors_reason:Persistent_connection_prot.errors_reason ->
+  calc_errors_and_warnings:(
+    unit ->
+    Errors.ConcreteLocPrintableErrorSet.t *
+      (Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t)
+  ) ->
   unit
 val send_lsp:
   t -> Lsp.lsp_message option * Prot.metadata -> unit
@@ -38,8 +41,10 @@ val send_end_recheck:
 val send_message: Prot.response -> single_client -> unit
 val send_errors_if_subscribed:
   client:single_client ->
+  errors_reason:Persistent_connection_prot.errors_reason ->
   errors:Errors.ConcreteLocPrintableErrorSet.t ->
-  warnings:Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t -> unit
+  warnings:Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
+  unit
 
 (* getters/setters on single_client *)
 val subscribe_client:

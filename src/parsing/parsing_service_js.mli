@@ -12,9 +12,10 @@ type types_mode =
   | TypesForbiddenByDefault
 
 type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option
 type parse_ok =
   | Classic of t
-  | TypesFirst of t * t (* sig *)
+  | TypesFirst of t * aloc_t (* sig *)
 
 val basic: parse_ok -> t
 
@@ -57,6 +58,29 @@ type results = {
   (* set of unchanged files *)
   parse_unchanged: FilenameSet.t;
 }
+
+type parse_options = {
+  parse_fail: bool;
+  parse_types_mode: types_mode;
+  parse_use_strict: bool;
+  parse_prevent_munge: bool;
+  parse_module_ref_prefix: string option;
+  parse_facebook_fbt: string option;
+  parse_arch: Options.arch;
+  parse_abstract_locations: bool;
+}
+
+val make_parse_options:
+  ?fail: bool ->
+  ?arch: Options.arch ->
+  ?abstract_locations: bool ->
+  ?prevent_munge: bool ->
+  types_mode: types_mode ->
+  use_strict: bool ->
+  module_ref_prefix: string option ->
+  facebook_fbt: string option ->
+  unit ->
+  parse_options
 
 val docblock_max_tokens: int
 
@@ -104,14 +128,8 @@ val parse_json_file :
 
 (* parse contents of a file *)
 val do_parse:
-  ?fail:bool ->
-  types_mode: types_mode ->
-  use_strict: bool ->
+  parse_options: parse_options ->
   info: Docblock.t ->
-  ?prevent_munge: bool ->
-  module_ref_prefix: string option ->
-  facebook_fbt: string option ->
-  ?arch: Options.arch ->
   string ->                 (* contents of the file *)
   File_key.t ->               (* filename *)
   result

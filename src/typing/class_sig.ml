@@ -6,12 +6,18 @@
  *)
 
 module Ast = Flow_ast
-
 module Flow = Flow_js
 
 open Reason
 
+include Class_sig_intf
+
+module Make (F: Func_sig.S) = struct
+type func_sig = F.t
+type func_params_tast = F.func_params_tast
+
 type set_asts =
+  func_params_tast option *
   (ALoc.t, ALoc.t * Type.t) Ast.Function.body option *
   (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
   -> unit
@@ -20,11 +26,11 @@ type set_type = Type.t -> unit
 
 and field =
   | Annot of Type.t
-  | Infer of Func_sig.t * set_asts
+  | Infer of func_sig * set_asts
 
-type field' = ALoc.t option * Type.polarity * field
+type field' = ALoc.t option * Polarity.t * field
 
-type func_info = ALoc.t option * Func_sig.t * set_asts * set_type
+type func_info = ALoc.t option * func_sig * set_asts * set_type
 
 type signature = {
   reason: reason;
@@ -37,7 +43,6 @@ type signature = {
   getters: func_info SMap.t;
   setters: func_info SMap.t;
   calls: Type.t list;
-  call_deprecated: Type.t option;
 }
 
 type t = {
@@ -79,7 +84,6 @@ let empty id reason tparams tparams_map super =
     getters = SMap.empty;
     setters = SMap.empty;
     calls = [];
-    call_deprecated = None;
   } in
   let constructor = [] in
   let static =
@@ -108,14 +112,14 @@ let add_private_field name loc polarity field = map_sig (fun s -> {
 })
 
 let add_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
-  {s with constructor = [loc, Func_sig.to_ctor_sig fsig, set_asts, set_type]}
+  {s with constructor = [loc, F.to_ctor_sig fsig, set_asts, set_type]}
 
 let add_default_constructor reason s =
-  let fsig = Func_sig.default_constructor reason in
+  let fsig = F.default_constructor reason in
   add_constructor None fsig s
 
 let append_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
-  {s with constructor = (loc, Func_sig.to_ctor_sig fsig, set_asts, set_type)::s.constructor}
+  {s with constructor = (loc, F.to_ctor_sig fsig, set_asts, set_type)::s.constructor}
 
 let add_field' ~static name fld x =
   let flat = static || structural x in
@@ -140,7 +144,7 @@ let add_indexer ~static polarity ~key ~value x =
 let add_name_field x =
   let r = replace_reason (fun desc -> RNameProperty desc) x.instance.reason in
   let t = Type.StrT.why r |> Type.with_trust Trust.bogus_trust in
-  add_field' ~static:true "name" (None, Type.Neutral, Annot t) x
+  add_field' ~static:true "name" (None, Polarity.Neutral, Annot t) x
 
 let add_proto_field name loc polarity field x =
   map_sig ~static:false (fun s -> {
@@ -183,19 +187,7 @@ let append_method ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x 
   }) x
 
 let append_call ~static t = map_sig ~static (fun s ->
-  (* Note that $call properties always override the call property syntax.
-     As before, if both are present, the $call property is used and the call
-     property is ignored. *)
-  match s.call_deprecated with
-  | None -> { s with calls = t :: s.calls }
-  | Some _ -> s
-)
-
-let add_call_deprecated ~static t = map_sig ~static (fun s ->
-  (* Note that $call properties always override the call property syntax.
-     As before, if both are present, the $call property is used and the call
-     property is ignored. *)
-  { s with call_deprecated = Some t; calls = [] }
+  {s with calls = t :: s.calls}
 )
 
 let add_getter ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x =
@@ -233,10 +225,10 @@ let iter_methods f s =
 let subst_field cx map (loc, polarity, field) =
   loc, polarity, match field with
   | Annot t -> Annot (Flow.subst cx map t)
-  | Infer (fsig, set_asts) -> Infer (Func_sig.subst cx map fsig, set_asts)
+  | Infer (fsig, set_asts) -> Infer (F.subst cx map fsig, set_asts)
 
 let subst_sig cx map s =
-  let subst_func_sig (loc, sig_, f, g) = (loc, Func_sig.subst cx map sig_, f, g) in
+  let subst_func_sig (loc, sig_, f, g) = (loc, F.subst cx map sig_, f, g) in
   {
     reason = s.reason;
     fields = SMap.map (subst_field cx map) s.fields;
@@ -246,7 +238,6 @@ let subst_sig cx map s =
     getters = SMap.map (subst_func_sig) s.getters;
     setters = SMap.map (subst_func_sig) s.setters;
     calls = Core_list.map ~f:(Flow.subst cx map) s.calls;
-    call_deprecated = Option.map ~f:(Flow.subst cx map) s.call_deprecated;
   }
 
 let subst_typeapp cx map (loc, c, targs) =
@@ -279,7 +270,7 @@ let generate_tests cx f x =
     super = subst_super cx map x.super;
     constructor =
       List.map
-        (fun (loc, sig_, g, h) -> loc, Func_sig.subst cx map sig_, g, h)
+        (fun (loc, sig_, g, h) -> loc, F.subst cx map sig_, g, h)
         x.constructor;
     static = subst_sig cx map x.static;
     instance = subst_sig cx map x.instance;
@@ -288,7 +279,7 @@ let generate_tests cx f x =
 let to_field (loc, polarity, field) =
   let t = match field with
   | Annot t -> t
-  | Infer (fsig, _) -> Func_sig.gettertype fsig
+  | Infer (fsig, _) -> F.gettertype fsig
   in
   Type.Field (loc, t, polarity)
 
@@ -297,15 +288,13 @@ let elements cx ?constructor s =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
        function signature for this method, simply return the method type. *)
-    SMap.mapi Type.(fun name xs ->
+    SMap.mapi Type.(fun _name xs ->
       let ms =
-        Nel.rev_map (fun (loc, x, _, set_type) -> loc, Func_sig.methodtype cx x, set_type) xs in
+        Nel.rev_map (fun (loc, x, _, set_type) -> loc, F.methodtype cx x, set_type) xs in
       (* Keep track of these before intersections are merged, to enable
        * type information on every member of the intersection. *)
       ms |> Nel.iter (fun (loc, t, set_type) ->
-        Option.iter loc ~f:(fun loc ->
-          let id_info = name, t, Type_table.Other in
-          Type_table.set_info loc id_info (Context.type_table cx);
+        Option.iter loc ~f:(fun _loc ->
           set_type t
         )
       );
@@ -327,20 +316,15 @@ let elements cx ?constructor s =
      the getter. Otherwise just use the getter type or the setter type *)
   let getters =
     SMap.map
-      (fun (loc, t, _, set_type) -> loc, Func_sig.gettertype t, set_type)
+      (fun (loc, t, _, set_type) -> loc, F.gettertype t, set_type)
       s.getters in
   let setters =
     SMap.map
-      (fun (loc, t, _, set_type) -> loc, Func_sig.settertype t, set_type)
+      (fun (loc, t, _, set_type) -> loc, F.settertype t, set_type)
       s.setters in
-
-  (* Register getters and setters with the type table *)
-  let register_accessors = SMap.iter (fun name (loc, t, set_type) ->
-    Option.iter ~f:(fun loc ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info loc id_info (Context.type_table cx);
-      set_type t
-    ) loc
+(* Register getters and setters with the typed AST *)
+  let register_accessors = SMap.iter (fun _ (loc, t, set_type) ->
+    Option.iter ~f:(fun _ -> set_type t) loc
   ) in
   register_accessors getters;
   register_accessors setters;
@@ -355,19 +339,6 @@ let elements cx ?constructor s =
 
   let fields = SMap.map to_field s.fields in
 
-  (* Register fields with the type table *)
-  SMap.iter (fun name fld ->
-    let loc_type_opt = match fld with
-    | Some loc, _, Annot t -> Some (loc, t)
-    | Some loc, _, Infer (func_sig, _) -> Some (loc, Func_sig.gettertype func_sig)
-    | _ -> None
-    in
-    Option.iter ~f:(fun (loc, t) ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info loc id_info (Context.type_table cx)
-    ) loc_type_opt
-  ) s.fields;
-
   let methods = SMap.map (fun (loc, t) -> Type.Method (loc, t)) methods in
 
   (* Treat proto fields as methods, as they are on the proto object *)
@@ -378,16 +349,7 @@ let elements cx ?constructor s =
   (* Treat getters and setters as methods *)
   let methods = SMap.union getters_and_setters methods in
 
-  (* Previously, call properties were stored in the props map under the key
-     $call. Unfortunately, this made it possible to specify call properties
-     using this syntax in interfaces, declared classes, and even normal classes.
-
-     Note that $call properties always override the call property syntax
-     As before, if both are present, the $call property is used and the call
-     property is ignored. *)
-  let call = match s.call_deprecated with
-  | Some t -> Some t
-  | None ->
+  let call =
     match List.rev s.calls with
     | [] -> None
     | [t] -> Some t
@@ -449,7 +411,7 @@ let statictype cx tparams_with_this x =
 
 let insttype cx ~initialized_static_fields s =
   let constructor =
-    let ts = List.rev_map (fun (loc, t, _, _) -> loc, Func_sig.methodtype cx t) s.constructor in
+    let ts = List.rev_map (fun (loc, t, _, _) -> loc, F.methodtype cx t) s.constructor in
     match ts with
     | [] -> None
     | [x] -> Some x
@@ -496,7 +458,7 @@ let add_this self cx reason tparams tparams_map =
     name = "this";
     reason = this_reason;
     bound = rec_instance_type;
-    polarity = Type.Positive;
+    polarity = Polarity.Positive;
     default = None;
   } in
   let tparams =
@@ -514,7 +476,7 @@ let add_this self cx reason tparams tparams_map =
   in
   rec_instance_type,
   tparams,
-  SMap.add "this" (Type.BoundT (this_reason, "this", Type.Positive)) tparams_map
+  SMap.add "this" (Type.BoundT (this_reason, "this", Polarity.Positive)) tparams_map
 
 let remove_this x =
   if structural x then x
@@ -671,7 +633,7 @@ let classtype cx ?(check_polarity=true) x =
   let this = thistype cx x in
   let { tparams; _ } = remove_this x in
   let open Type in
-  (if check_polarity then Flow.check_polarity cx Positive this);
+  (if check_polarity then Flow.check_polarity cx Polarity.Positive this);
   let t =
     if structural x
     then class_type ~structural:true this
@@ -689,8 +651,8 @@ let toplevels cx ~decls ~stmts ~expr x =
     let method_ this super ~set_asts f =
       let save_return = Abnormal.clear_saved Abnormal.Return in
       let save_throw = Abnormal.clear_saved Abnormal.Throw in
-      let asts = f |> Func_sig.generate_tests cx (
-        Func_sig.toplevels None cx this super ~decls ~stmts ~expr
+      let asts = f |> F.generate_tests cx (
+        F.toplevels None cx this super ~decls ~stmts ~expr
       ) in
       set_asts asts;
       ignore (Abnormal.swap_saved Abnormal.Return save_return);
@@ -798,5 +760,4 @@ module This = struct
     with FoundInClass -> true
 end
 
-let with_typeparams cx f x =
-  Type_table.with_typeparams (Type.TypeParams.to_list x.tparams) (Context.type_table cx) f
+end

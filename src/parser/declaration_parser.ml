@@ -21,7 +21,7 @@ module type DECLARATION = sig
   val function_params: await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
   val function_body: env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
   val is_simple_function_params: (Loc.t, Loc.t) Ast.Function.Params.t -> bool
-  val strict_post_check: env -> strict:bool -> simple:bool -> Loc.t Identifier.t option -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
+  val strict_post_check: env -> strict:bool -> simple:bool -> (Loc.t, Loc.t) Identifier.t option -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
   val let_: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val const: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val var: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
@@ -196,7 +196,12 @@ module Declaration
 
   let generator env = Expect.maybe env T_MULT
 
-  let async env = Expect.maybe env T_ASYNC
+  (* Returns true and consumes a token if the token is `async` and the token after it is on
+     the same line (see https://tc39.github.io/ecma262/#sec-async-function-definitions) *)
+  let async env =
+    if Peek.token env = T_ASYNC && not (Peek.ith_is_line_terminator ~i:1 env)
+    then let () = Eat.token env in true
+    else false
 
   let is_simple_function_params =
     let is_simple_param = function

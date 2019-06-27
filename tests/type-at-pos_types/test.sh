@@ -430,3 +430,7 @@ printf "tparam_defaults.js:24:8:\n"
 assert_ok "$FLOW" type-at-pos tparam_defaults.js 24 8 --strip-root --omit-typearg-defaults
 printf "tparam_defaults.js:25:8:\n"
 assert_ok "$FLOW" type-at-pos tparam_defaults.js 25 8 --strip-root --omit-typearg-defaults
+
+# utility.js
+printf "utility.js:3:6:\n"
+assert_ok "$FLOW" type-at-pos utility.js 3 6 --strip-root

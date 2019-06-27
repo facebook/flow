@@ -98,7 +98,6 @@ type t = {
   mutable entries : Entry.t SMap.t;
   mutable refis : refi_binding Key_map.t;
   mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
-  mutable declare_module_local_exports: (ALoc.t option * Type.t) SMap.t;
 }
 val fresh_impl : kind -> t
 val fresh : ?var_scope_kind:var_scope_kind -> unit -> t
@@ -124,5 +123,3 @@ val add_declare_func_annot : string -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.a
 val get_declare_func_annot : string -> t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation option
 val is_lex : t -> bool
 val is_global : t -> bool
-val set_declare_module_local_export : t -> string -> ALoc.t -> Type.t -> unit
-val with_declare_module_local_exports : t -> (unit -> 'a) -> 'a * (ALoc.t option * Type.t) SMap.t

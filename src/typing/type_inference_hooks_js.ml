@@ -101,12 +101,6 @@ type hook_state_t = {
        string -> ALoc.t -> Type.t ->
        bool);
 
-  ref_hook:
-      (Context.t ->
-       ALoc.t ->
-       ALoc.t ->
-       unit);
-
   class_member_decl_hook:
      (Context.t ->
       Type.t (* self *) ->
@@ -147,7 +141,6 @@ let nop_hook_state = {
   call_hook = call_nop;
   import_hook = import_nop;
   jsx_hook = jsx_nop;
-  ref_hook = ref_nop;
   class_member_decl_hook = class_member_decl_nop;
   obj_prop_decl_hook = obj_prop_decl_nop;
   require_pattern_hook = require_pattern_nop;
@@ -175,9 +168,6 @@ let set_import_hook hook =
 
 let set_jsx_hook hook =
   hook_state := { !hook_state with jsx_hook = hook }
-
-let set_ref_hook hook =
-  hook_state := { !hook_state with ref_hook = hook }
 
 let set_class_member_decl_hook hook =
   hook_state := { !hook_state with class_member_decl_hook = hook }
@@ -217,9 +207,6 @@ let dispatch_import_hook cx name loc =
 
 let dispatch_jsx_hook cx name loc this_t =
   !hook_state.jsx_hook cx name loc this_t
-
-let dispatch_ref_hook cx loc =
-    !hook_state.ref_hook cx loc
 
 let dispatch_class_member_decl_hook cx self static name loc =
   !hook_state.class_member_decl_hook cx self static name loc

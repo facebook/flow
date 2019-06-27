@@ -254,11 +254,11 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:240:6
-   240|   ): {|current: null | T|};
+   <BUILTINS>/react.js:246:6
+   246|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:195:6
-   195|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -276,11 +276,11 @@ References:
    create_element.js:19:49
     19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
                                                         ^^^^^^^^ [1]
-   <BUILTINS>/react.js:188:26
-   188| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:26
+   190| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:188:35
-   188| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:35
+   190| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -389,8 +389,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_lower.js:7:2
 
-Cannot cast `Component` to AbstractComponent because property `foo` is missing in object type [1] but exists in
-`Props` [2].
+Cannot cast `Component` to AbstractComponent because property `foo` is missing in props [1] but exists in `Props` [2].
 
    function_lower.js:7:2
    7| (Component: React$AbstractComponent<{}, void>); // Error, missing foo
@@ -421,9 +420,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:18:2
 
-Cannot cast `ComponentWithDefaultProps` to AbstractComponent because:
- - property `bar` is missing in object type [1] but exists in `Props2` [2].
- - property `foo` is missing in object type [1] but exists in `Props2` [2].
+Cannot cast `ComponentWithDefaultProps` to AbstractComponent because property `bar` is missing in props [1] but exists
+in `Props2` [2].
 
    function_lower.js:18:2
    18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
@@ -450,6 +448,29 @@ References:
    function_lower.js:20:62
    20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
                                                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:22:7
+
+Cannot assign class `NotAComponent` to `NotAComponent` because:
+ - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
+ - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+
+   function_lower.js:22:7
+   22| class NotAComponent {}; // Error, not a component
+             ^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
@@ -490,8 +511,8 @@ Cannot call `x.displayName.toString` because:
           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:133:17
-   133|   displayName?: ?string,
+   <BUILTINS>/react.js:131:17
+   131|   displayName?: ?string,
                         ^^^^^^^ [1]
    get_set_props.js:6:21
      6|     x.displayName = null;
@@ -508,14 +529,15 @@ Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing
           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:132:47
+   <BUILTINS>/react.js:130:47
                                                       v
-   132| declare type React$AbstractComponentStatics = {
-   133|   displayName?: ?string,
-   134|   // This is only on function components, but trying to access name when
-   135|   // displayName is undefined is a common pattern.
-   136|   name?: ?string,
-   137| };
+   130| declare type React$AbstractComponentStatics = {
+   131|   displayName?: ?string,
+   132|   // This is only on function components, but trying to access name when
+   133|   // displayName is undefined is a common pattern.
+   134|   name?: ?string,
+   135|   ...
+   136| };
         ^ [1]
 
 
@@ -528,9 +550,59 @@ Cannot assign `3` to `x.displayName` because number [1] is incompatible with str
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:133:18
-   133|   displayName?: ?string,
+   <BUILTINS>/react.js:131:18
+   131|   displayName?: ?string,
                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- no_annot_fun.js:3:29
+
+Cannot get `props.LOL` because property `LOL` is missing in props [1].
+
+   no_annot_fun.js:3:29
+   3| function Component(props) { props.LOL ; return null} // Error, missing LOL
+                                  ^^^^^^^^^
+
+References:
+   no_annot_fun.js:4:37
+   4| (Component: React$AbstractComponent<{}, void>);
+                                          ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- strict.js:4:11
+
+Cannot create `Component` element because props [1] is incompatible with empty [2].
+
+   strict.js:4:11
+     4| const c = <Component f = {3}/>;
+                  ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:171:29
+   171|   | React$AbstractComponent<empty, mixed>;
+                                    ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
+
+Cannot call `foo` with `ref` bound to `a` because:
+ - `HTMLElement` [1] is incompatible with `React.Component` [2].
+ - mixed [3] is incompatible with `React.Component` [2].
+
+   strict.js:9:5
+     9| foo(ref);
+            ^^^
+
+References:
+   <BUILTINS>/react-dom.js:781:13
+   781|   instance: HTMLElement,
+                    ^^^^^^^^^^^ [1]
+   strict.js:7:26
+     7| declare function foo(a: ?React$Component<any, any>): void;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:171:36
+   171|   | React$AbstractComponent<empty, mixed>;
+                                           ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
@@ -542,14 +614,15 @@ Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` 
               ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:132:47
+   <BUILTINS>/react.js:130:47
                                                       v
-   132| declare type React$AbstractComponentStatics = {
-   133|   displayName?: ?string,
-   134|   // This is only on function components, but trying to access name when
-   135|   // displayName is undefined is a common pattern.
-   136|   name?: ?string,
-   137| };
+   130| declare type React$AbstractComponentStatics = {
+   131|   displayName?: ?string,
+   132|   // This is only on function components, but trying to access name when
+   133|   // displayName is undefined is a common pattern.
+   134|   name?: ?string,
+   135|   ...
+   136| };
         ^ [1]
 
 
@@ -572,7 +645,7 @@ References:
 
 
 
-Found 41 errors
+Found 45 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -12,3 +12,4 @@ let merge ~length:_ ~merge_time:_ ~leader:_ = ()
 let processor_sample () = ()
 let get_id () = "hello"
 let print_url () = ()
+let disable_logging () = ()

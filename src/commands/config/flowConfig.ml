@@ -31,13 +31,26 @@ let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Fl
 let map_add map (key, value) = SMap.add key value map
 
 module Opts = struct
+  type raw_value = int * string
+  type raw_values = raw_value list
+  type raw_options = raw_values SMap.t
+
+  type error_kind =
+    | Failed_to_parse_value of string
+    | Failed_to_set of string
+    | Duplicate_option
+
+  type opt_error = int * error_kind
+
   type t = {
+    abstract_locations: bool;
     all: bool;
     emoji: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool;
     enforce_well_formed_exports_whitelist: string list;
+    enums: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
@@ -56,6 +69,7 @@ module Opts = struct
     include_warnings: bool;
     lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
+    max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
     max_workers: int;
@@ -69,11 +83,11 @@ module Opts = struct
     munge_underscores: bool;
     no_flowlib: bool;
     node_resolver_dirnames: string list;
+    recursion_limit: int;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_dep_table_pow: int;
     shm_dirs: string list;
-    shm_global_size: int;
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
@@ -83,7 +97,7 @@ module Opts = struct
     temp_dir: string;
     traces: int;
     trust_mode: Options.trust_mode;
-    version: string option;
+    types_first: bool;
     wait_for_recheck: bool;
     weak: bool;
   }
@@ -119,12 +133,14 @@ module Opts = struct
     |> SSet.add ".webm"
 
   let default_options = {
+    abstract_locations = false;
     all = false;
     emoji = false;
     enable_const_params = false;
     enforce_strict_call_arity = true;
     enforce_well_formed_exports = false;
     enforce_well_formed_exports_whitelist = [];
+    enums = false;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
@@ -144,6 +160,7 @@ module Opts = struct
     lazy_mode = None;
     log_file = None;
     max_header_tokens = 10;
+    max_files_checked_per_worker = 100;
     max_literal_length = 100;
     max_workers = Sys_utils.nbr_procs;
     merge_timeout = Some 100;
@@ -156,11 +173,11 @@ module Opts = struct
     munge_underscores = false;
     no_flowlib = false;
     node_resolver_dirnames = ["node_modules"];
+    recursion_limit = 10000;
     root_name = None;
     saved_state_fetcher = Options.Dummy_fetcher;
     shm_dep_table_pow = 17;
     shm_dirs = default_shm_dirs;
-    shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
     shm_hash_table_pow = 19;
     shm_heap_size = 1024 * 1024 * 1024 * 25; (* 25 gigs *)
     shm_log_level = 0;
@@ -170,12 +187,12 @@ module Opts = struct
     temp_dir = default_temp_dir;
     traces = 0;
     trust_mode = Options.NoTrust;
-    version = None;
+    types_first = false;
     wait_for_recheck = false;
     weak = false;
   }
 
-  let parse_lines : line list -> ((int * string) list SMap.t, error) result =
+  let parse_lines : line list -> (raw_options, error) result =
     let rec loop acc lines = acc >>= (fun map ->
       match lines with
       | [] -> Ok map
@@ -212,49 +229,42 @@ module Opts = struct
     * settings, we want to start from a clean list.
     *)
   let opt =
-    let rec loop optparser setter key values config =
+    let rec loop optparser setter values config =
       match values with
       | [] -> Ok config
       | (line_num, value_str)::rest ->
         let value =
           optparser value_str
           |> Core_result.map_error
-              ~f:(fun msg -> line_num, spf "Error parsing value for \"%s\". %s" key msg)
+              ~f:(fun msg -> line_num, Failed_to_parse_value msg)
         in
         let config =
           value >>= fun value ->
           setter config value
           |> Core_result.map_error
-              ~f:(fun msg -> line_num, spf "Error setting value for \"%s\". %s" key msg)
+              ~f:(fun msg -> line_num, Failed_to_set msg)
         in
-        config >>= loop optparser setter key rest
+        config >>= loop optparser setter rest
     in
     fun
       (optparser: (string -> ('a, string) result))
       ?init
       ?(multiple=false)
       (setter: (t -> 'a -> (t, string) result))
-      key
-      (raw_opts, config)
-  : ((int * string) list SMap.t * t, error) result ->
-    match SMap.get key raw_opts with
-    | None -> Ok (raw_opts, config)
-    | Some values ->
-      let config =
-        match init with
-        | None -> config
-        | Some f -> f config
-      in
-      (* Error when duplicate options were incorrectly given *)
-      match multiple, values with
-      | false, _::(dupe_ln, _)::_ ->
-        Error (dupe_ln, spf "Duplicate option: \"%s\"" key)
-      | _ ->
-        Ok config
-        >>= loop optparser setter key values
-        >>= fun config ->
-          let new_raw_opts = SMap.remove key raw_opts in
-          Ok (new_raw_opts, config)
+      (values: raw_values)
+      config
+  : (t, opt_error) result ->
+    let config =
+      match init with
+      | None -> config
+      | Some f -> f config
+    in
+    (* Error when duplicate options were incorrectly given *)
+    match multiple, values with
+    | false, _::(dupe_ln, _)::_ ->
+      Error (dupe_ln, Duplicate_option)
+    | _ ->
+      loop optparser setter values config
 
   let optparse_string str =
     try Ok (Scanf.unescaped str)
@@ -574,6 +584,9 @@ module Opts = struct
     "experimental.const_params",
       boolean (fun opts v -> Ok { opts with enable_const_params = v });
 
+    "experimental.enums",
+      boolean (fun opts v -> Ok { opts with enums = v });
+
     "experimental.strict_call_arity",
       boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v });
 
@@ -593,6 +606,12 @@ module Opts = struct
             set to \"true\"."
         );
 
+    "experimental.types_first",
+      boolean (fun opts v -> Ok { opts with types_first = v });
+
+    "experimental.abstract_locations",
+      boolean (fun opts v -> Ok { opts with abstract_locations = v });
+
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
 
@@ -604,15 +623,42 @@ module Opts = struct
           ("none", Options.NoTrust);
         ]
         (fun opts trust_mode -> Ok { opts with trust_mode });
+
+    "recursion_limit",
+      uint (fun opts v -> Ok { opts with recursion_limit = v });
+
+    "experimental.types_first.max_files_checked_per_worker",
+      uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v });
   ]
 
   let parse =
-    let rec loop acc parsers =
-      acc >>= fun acc ->
+    let error_of_opt_error key (line_num, opt_error) =
+      let msg = match opt_error with
+      | Failed_to_parse_value msg -> spf "Error parsing value for \"%s\". %s" key msg
+      | Failed_to_set msg -> spf "Error setting value for \"%s\". %s" key msg
+      | Duplicate_option -> spf "Duplicate option: \"%s\"" key
+      in
+      line_num, msg
+    in
+    let rec loop
+        (acc: ((raw_options * t), error) result)
+        (parsers: (string * (raw_values -> t -> (t, opt_error) result)) list)
+    =
+      acc >>= fun (raw_opts, config) ->
       match parsers with
-      | [] -> Ok acc
+      | [] -> Ok (raw_opts, config)
       | (key, f)::rest ->
-        loop (f key acc) rest
+        let acc =
+          match SMap.get key raw_opts with
+          | None -> Ok (raw_opts, config)
+          | Some values ->
+            f values config
+            |> Core_result.map_error ~f:(error_of_opt_error key)
+            >>= fun config ->
+            let new_raw_opts = SMap.remove key raw_opts in
+            Ok (new_raw_opts, config)
+        in
+        loop acc rest
     in
     fun (init: t) (lines: line list) : (t * warning list, error) result ->
       parse_lines lines >>= fun raw_options ->
@@ -637,6 +683,8 @@ type config = {
   strict_mode: StrictModeSettings.t;
   (* config options *)
   options: Opts.t;
+  (* version constraint *)
+  version: string option;
 }
 
 module Pp : sig
@@ -742,7 +790,8 @@ let empty_config = {
   libs = [];
   lint_severities = LintSettings.empty_severities;
   strict_mode = StrictModeSettings.empty;
-  options = Opts.default_options
+  options = Opts.default_options;
+  version = None;
 }
 
 let group_into_sections : line list -> (section list, error) result =
@@ -821,8 +870,7 @@ let parse_version lines config =
           version_str
       ))
     else
-      let options = { config.options with Opts.version = Some version_str } in
-      Ok ({ config with options }, [])
+      Ok ({ config with version = Some version_str }, [])
   | _ -> Ok (config, [])
 
 let parse_lints lines config : (config * warning list, error) result =
@@ -961,6 +1009,7 @@ let includes config = config.includes
 let libs config = config.libs
 
 (* options *)
+let abstract_locations c = c.options.Opts.abstract_locations
 let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji
 let max_literal_length c = c.options.Opts.max_literal_length
@@ -968,6 +1017,7 @@ let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let enforce_well_formed_exports c = c.options.Opts.enforce_well_formed_exports
 let enforce_well_formed_exports_whitelist c = c.options.Opts.enforce_well_formed_exports_whitelist
+let enums c = c.options.Opts.enums
 let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
 let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
 let esproposal_decorators c = c.options.Opts.esproposal_decorators
@@ -986,6 +1036,7 @@ let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 let include_warnings c = c.options.Opts.include_warnings
 let lazy_mode c = c.options.Opts.lazy_mode
 let log_file c = c.options.Opts.log_file
+let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_workers c = c.options.Opts.max_workers
 let merge_timeout c = c.options.Opts.merge_timeout
@@ -998,11 +1049,11 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 let no_flowlib c = c.options.Opts.no_flowlib
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
+let recursion_limit c = c.options.Opts.recursion_limit
 let root_name c = c.options.Opts.root_name
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 let shm_dirs c = c.options.Opts.shm_dirs
-let shm_global_size c = c.options.Opts.shm_global_size
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 let shm_heap_size c = c.options.Opts.shm_heap_size
 let shm_log_level c = c.options.Opts.shm_log_level
@@ -1012,7 +1063,8 @@ let suppress_types c = c.options.Opts.suppress_types
 let temp_dir c = c.options.Opts.temp_dir
 let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
-let required_version c = c.options.Opts.version
+let types_first c = c.options.Opts.types_first
+let required_version c = c.version
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 let weak c = c.options.Opts.weak
 

@@ -243,7 +243,7 @@ let file_dependencies ~audit ~reader file =
   let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set = match sig_file_sig_opt with
     | None -> require_set
-    | Some sig_file_sig -> File_sig.With_Loc.(require_set sig_file_sig.module_sig) in
+    | Some sig_file_sig -> File_sig.With_ALoc.(require_set sig_file_sig.module_sig) in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
   in
@@ -270,7 +270,7 @@ let calc_partial_dependency_info ~options ~reader workers files ~parsed =
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
     ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files)) in
-  let dependency_info = match options.Options.opt_arch with
+  let dependency_info = match Options.arch options with
     | Options.Classic ->
       Dependency_info.Classic (FilenameMap.map (fun (_sig_files, all_files) ->
         FilenameSet.inter parsed all_files

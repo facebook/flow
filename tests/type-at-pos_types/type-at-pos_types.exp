@@ -542,7 +542,7 @@ callable-object.js:8:6 = {
   "end":9
 }
 callable-object.js:13:6 = {
-  "type":"type Obj2 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T}",
+  "type":"type Obj2 = {$call: (...args: $ReadOnlyArray<mixed>) => void, f: <T>(x: T) => T}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
@@ -562,8 +562,8 @@ callable-object.js:18:6 = {
   "loc":{
     "source":"callable-object.js",
     "type":"SourceFile",
-    "start":{"line":18,"column":6,"offset":281},
-    "end":{"line":18,"column":9,"offset":285}
+    "start":{"line":18,"column":6,"offset":295},
+    "end":{"line":18,"column":9,"offset":299}
   },
   "path":"callable-object.js",
   "line":18,
@@ -572,13 +572,13 @@ callable-object.js:18:6 = {
   "end":9
 }
 callable-object.js:23:6 = {
-  "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, (...args: $ReadOnlyArray<mixed>): O2, (...args: $ReadOnlyArray<mixed>): O4, f: <T>(x: T) => T}",
+  "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
     "type":"SourceFile",
-    "start":{"line":23,"column":6,"offset":373},
-    "end":{"line":23,"column":9,"offset":377}
+    "start":{"line":23,"column":6,"offset":387},
+    "end":{"line":23,"column":9,"offset":391}
   },
   "path":"callable-object.js",
   "line":23,
@@ -587,13 +587,13 @@ callable-object.js:23:6 = {
   "end":9
 }
 callable-object.js:31:6 = {
-  "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, (...args: $ReadOnlyArray<mixed>): O1, (...args: $ReadOnlyArray<mixed>): O2, f: <T>(x: T) => T}",
+  "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
     "type":"SourceFile",
-    "start":{"line":31,"column":6,"offset":606},
-    "end":{"line":31,"column":9,"offset":610}
+    "start":{"line":31,"column":6,"offset":620},
+    "end":{"line":31,"column":9,"offset":624}
   },
   "path":"callable-object.js",
   "line":31,
@@ -842,7 +842,7 @@ opaque.js:19:14 = {
   "end":18
 }
 opaque.js:19:22 = {
-  "type":"imported Opaque",
+  "type":"type Opaque",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -872,7 +872,7 @@ opaque.js:20:16 = {
   "end":27
 }
 opaque.js:20:34 = {
-  "type":"imported PolyTransparent<A>",
+  "type":"type PolyTransparent<A> = Poly$Opaque<A>",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -902,7 +902,7 @@ opaque.js:21:19 = {
   "end":22
 }
 opaque.js:21:28 = {
-  "type":"imported PolyOpaque<A>",
+  "type":"type PolyOpaque<A>",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -2702,3 +2702,6 @@ tparam_defaults.js:24:7,24:12
 tparam_defaults.js:25:8:
 Three<>
 tparam_defaults.js:25:7,25:12
+utility.js:3:6:
+type T<X> = $Shape<{f: X}>
+utility.js:3:6,3:6

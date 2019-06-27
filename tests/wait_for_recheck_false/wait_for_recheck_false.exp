@@ -63,12 +63,16 @@ Found 1 error
 
 
 coverage without --wait-for-recheck runs immediately:
-Covered: 100.00% (2 of 2 expressions)
+Covered: 100.00% (3 of 3 expressions)
 
 
 
 dump-types without --wait-for-recheck runs immediately:
+focused.js:3:8-10: number
+focused.js:5:5: string
 focused.js:5:5-13: string
+focused.js:5:8-13: string
+focused.js:5:17-19: number
 focused.js:5:17-19: number
 
 
@@ -106,10 +110,10 @@ get-imports without --wait-for-recheck runs immediately:
 
 suggest without --wait-for-recheck runs immediately:
 // @flow
-import val from "./dependency.js";
+
+import val from "./dependency.js"
 
 var x: string = val;
-
 
 
 type-at-pos without --wait-for-recheck runs immediately:

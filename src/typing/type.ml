@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Polarity
 open Reason
 open Utils_js
 
@@ -55,7 +56,7 @@ module rec TypeTerm : sig
     (* def types *)
     (*************)
 
-    | DefT of reason * Trust.trust * def_t
+    | DefT of reason * Trust.trust_rep * def_t
 
     (* type expression whose evaluation is deferred *)
     (* Usually a type expression is evaluated by splitting it into a def type
@@ -71,7 +72,7 @@ module rec TypeTerm : sig
     | EvalT of t * defer_use_t * int
 
     (* bound type variable *)
-    | BoundT of reason * string * polarity
+    | BoundT of reason * string * Polarity.t
     (* existential type variable *)
     | ExistsT of reason
 
@@ -79,6 +80,8 @@ module rec TypeTerm : sig
     | ThisClassT of reason * t
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
+    (* type application *)
+    | TypeAppT of reason * use_op * t * t list
 
     (* exact *)
     | ExactT of reason * t
@@ -247,8 +250,6 @@ module rec TypeTerm : sig
 
     (* polymorphic type *)
     | PolyT of ALoc.t * typeparam Nel.t * t * int
-    (* type application *)
-    | TypeAppT of use_op * t * t list
 
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
@@ -257,14 +258,8 @@ module rec TypeTerm : sig
     | ReactAbstractComponentT of {config: t; instance: t}
 
   and defer_use_t =
-    (* type of a variable / parameter / property extracted from a pattern *)
-    | DestructuringT of reason * selector
+    | LatentPredT of reason * predicate
     (* destructors that extract parts of various kinds of types *)
-    (* TODO: in principle it should be possible to encode destructors as
-       selectors (see above), but currently we don't because some selectors are
-       programmed to do more than just destruct types---e.g., they handle
-       defaults---and these additional behaviors cannot be covered by a simple
-       implementation of destructors. *)
     | TypeDestructorT of use_op * reason * destructor
 
   and internal_t =
@@ -282,6 +277,8 @@ module rec TypeTerm : sig
     | WidenEnv
 
   and 'loc virtual_root_use_op =
+    | ObjectSpread of {op : 'loc virtual_reason}
+    | ObjectChain of {op : 'loc virtual_reason}
     | Addition of { op: 'loc virtual_reason; left: 'loc virtual_reason; right: 'loc virtual_reason }
     | AssignVar of { var: 'loc virtual_reason option; init: 'loc virtual_reason }
     | Cast of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
@@ -328,7 +325,6 @@ module rec TypeTerm : sig
         prop: string option;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
-        is_sentinel: bool;
       }
     | ReactConfigCheck
     | ReactGetConfig of { polarity: Polarity.t }
@@ -338,7 +334,7 @@ module rec TypeTerm : sig
         targ: 'loc virtual_reason;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
-        polarity: polarity;
+        polarity: Polarity.t;
       }
     | TypeParamBound of { name: string }
     | UnifyFlip
@@ -447,7 +443,7 @@ module rec TypeTerm : sig
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
-    | VarianceCheckT of reason * t list * polarity
+    | VarianceCheckT of reason * t list * Polarity.t
 
     | TypeAppVarianceCheckT of use_op * reason * reason * (t * t) list
 
@@ -488,9 +484,9 @@ module rec TypeTerm : sig
     (* operations on objects *)
 
     (* Resolves the object into which the properties are assigned *)
-    | ObjAssignToT of reason * t * t * obj_assign_kind
+    | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
-    | ObjAssignFromT of reason * t * t * obj_assign_kind
+    | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
@@ -498,6 +494,10 @@ module rec TypeTerm : sig
     | ObjTestProtoT of reason * t_out
     (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
+
+    (* Assign properties to module.exports. The only interesting case is when module.exports is a
+       function type, where we set the statics field of the function type. *)
+    | ModuleExportsAssignT of reason * t * t
 
     (* assignment rest element in array pattern *)
     | ArrRestT of use_op * reason * int * t
@@ -559,7 +559,7 @@ module rec TypeTerm : sig
     | AssertExportIsTypeT of reason * string (* export name *) * t_out
 
     (* Map a FunT over a structure *)
-    | MapTypeT of reason * type_map * t_out
+    | MapTypeT of use_op * reason * type_map * t_out
 
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
 
@@ -688,6 +688,8 @@ module rec TypeTerm : sig
     | ReactPropsToOut of reason * t
     | ReactInToProps of reason * t
 
+    | DestructuringT of reason * selector * t_out
+
 
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
@@ -732,8 +734,8 @@ module rec TypeTerm : sig
 
     | ArrP (* Array.isArray *)
 
-    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP (reason, "b", loc), tout))` *)
-    | PropExistsP of reason * string * ALoc.t option (* Location of the property in the existence check *)
+    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b", loc), tout))` *)
+    | PropExistsP of string * ALoc.t option (* Location of the property in the existence check *)
 
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
@@ -793,11 +795,14 @@ module rec TypeTerm : sig
     | UnresolvedType
     | WeakContext
 
+  and fun_param = string option * t
+  and fun_rest_param = string option * ALoc.t * t
+
   (* used by FunT *)
   and funtype = {
     this_t: t;
-    params: (string option * t) list;
-    rest_param: (string option * ALoc.t * t) option;
+    params: fun_param list;
+    rest_param: fun_rest_param option;
     return_t: t;
     closure_t: int;
     is_predicate: bool;
@@ -947,14 +952,12 @@ module rec TypeTerm : sig
     dict_name: string option;
     key: t;
     value: t;
-    dict_polarity: polarity;
+    dict_polarity: Polarity.t;
   }
-
-  and polarity = Negative | Neutral | Positive
 
   (* Locations refer to the location of the identifier, if one exists *)
   and property =
-    | Field of ALoc.t option * t * polarity
+    | Field of ALoc.t option * t * Polarity.t
     | Get of ALoc.t option * t
     | Set of ALoc.t option * t
     | GetSet of ALoc.t option * t * ALoc.t option * t
@@ -969,7 +972,7 @@ module rec TypeTerm : sig
 
   and insttype = {
     class_id: ALoc.t;
-    type_args: (string * reason * t * polarity) list;
+    type_args: (string * reason * t * Polarity.t) list;
     own_props: Properties.id;
     proto_props: Properties.id;
     inst_call_t: int option;
@@ -983,7 +986,7 @@ module rec TypeTerm : sig
     opaque_id: ALoc.t;
     underlying_t: t option;
     super_t: t option;
-    opaque_type_args: (string * reason * t * polarity) list;
+    opaque_type_args: (string * reason * t * Polarity.t) list;
     opaque_name: string;
   }
 
@@ -1026,7 +1029,7 @@ module rec TypeTerm : sig
     reason: reason;
     name: string;
     bound: t;
-    polarity: polarity;
+    polarity: Polarity.t;
     default: t option;
   }
 
@@ -1039,8 +1042,6 @@ module rec TypeTerm : sig
   | ObjRest of string list
   | ArrRest of int
   | Default
-  | Become
-  | Refine of predicate
 
   and destructor =
   | NonMaybeType
@@ -1204,57 +1205,6 @@ end = struct
 end
 
 and EnumSet: Set.S with type elt = Enum.t = Set.Make(Enum)
-
-and Polarity : sig
-  type t = TypeTerm.polarity
-
-  val compat: t * t -> bool
-  val inv: t -> t
-  val mult: t * t -> t
-  val of_rw: TypeTerm.rw -> t
-
-  val string: t -> string
-  val sigil: t -> string
-end = struct
-  open TypeTerm
-
-  type t = polarity
-
-  (* Subtype relation for polarities, interpreting neutral as positive &
-     negative: whenever compat(p1,p2) holds, things that have polarity p1 can
-     appear in positions that have polarity p2. *)
-  let compat = function
-    | Positive, Positive
-    | Negative, Negative
-    | Neutral, _ -> true
-    | _ -> false
-
-  let inv = function
-    | Positive -> Negative
-    | Negative -> Positive
-    | Neutral -> Neutral
-
-  let mult = function
-    | Positive, Positive -> Positive
-    | Negative, Negative -> Positive
-    | Neutral, _ | _, Neutral -> Neutral
-    | _ -> Negative
-
-  let of_rw = function
-    | Read -> Positive
-    | Write _ -> Negative
-
-  (* printer *)
-  let string = function
-    | Positive -> "covariant"
-    | Negative -> "contravariant"
-    | Neutral -> "invariant"
-
-  let sigil = function
-    | Positive -> "+"
-    | Negative -> "-"
-    | Neutral -> ""
-end
 
 and Property : sig
   type t = TypeTerm.property
@@ -1669,7 +1619,7 @@ end = struct
       | OpenT _
       (* some types may not be evaluated yet; TODO *)
       | EvalT _
-      | DefT (_, _, TypeAppT _)
+      | TypeAppT _
       | KeysT _
       | IntersectionT _
       (* other types might wrap parts that are accessible directly *)
@@ -2030,6 +1980,7 @@ and Object : sig
     | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
     | ReactConfig of ReactConfig.state
+    | ObjectRep
 end = Object
 
 and React : sig
@@ -2122,6 +2073,7 @@ and React : sig
   type tool =
   | CreateElement0 of bool * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
   | CreateElement of bool * TypeTerm.t * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
+  | ConfigCheck of TypeTerm.t
   | GetProps of TypeTerm.t_out
   | GetConfig of TypeTerm.t_out
   | GetConfigType of TypeTerm.t * TypeTerm.t_out
@@ -2202,6 +2154,7 @@ end = struct
     | ShapeT (t) -> reason_of_t t
     | ThisClassT (reason, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
+    | TypeAppT (reason, _, _, _) -> reason
     | AnyT (reason, _) -> reason
     | UnionT (reason, _) -> reason
     | IntersectionT (reason, _) -> reason
@@ -2209,7 +2162,7 @@ end = struct
     | OptionalT (reason, _) -> reason
 
   and reason_of_defer_use_t = function
-    | DestructuringT (reason, _)
+    | LatentPredT (reason, _)
     | TypeDestructorT (_, reason, _) ->
         reason
 
@@ -2265,13 +2218,13 @@ end = struct
     | InvariantT reason -> reason
     | LookupT(reason, _, _, _, _) -> reason
     | MakeExactT (reason, _) -> reason
-    | MapTypeT (reason, _, _) -> reason
+    | MapTypeT (_, reason, _, _) -> reason
     | MethodT (_,reason,_,_,_,_) -> reason
     | MixinT (reason, _) -> reason
     | NotT (reason, _) -> reason
     | NullishCoalesceT (reason, _, _) -> reason
-    | ObjAssignToT (reason, _, _, _) -> reason
-    | ObjAssignFromT (reason, _, _, _) -> reason
+    | ObjAssignToT (_, reason, _, _, _) -> reason
+    | ObjAssignFromT (_, reason, _, _, _) -> reason
     | ObjFreezeT (reason, _) -> reason
     | ObjRestT (reason, _, _) -> reason
     | ObjSealT (reason, _) -> reason
@@ -2292,6 +2245,7 @@ end = struct
     | SetProtoT (reason,_) -> reason
     | SpecializeT(_,_,reason,_,_,_) -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
+    | ModuleExportsAssignT (reason, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
     | SuperT (_,reason,_) -> reason
     | TestPropT (reason, _, _, _) -> reason
@@ -2306,6 +2260,7 @@ end = struct
     | MatchPropT (_, reason, _, _) -> reason
     | ReactPropsToOut (reason, _)
     | ReactInToProps (reason, _) -> reason
+    | DestructuringT (reason, _, _) -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2363,9 +2318,10 @@ end = struct
     | ShapeT t -> ShapeT (mod_reason_of_t f t)
     | ThisClassT (reason, t) -> ThisClassT (f reason, t)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
+    | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
 
   and mod_reason_of_defer_use_t f = function
-    | DestructuringT (reason, s) -> DestructuringT (f reason, s)
+    | LatentPredT (reason, p) -> LatentPredT (f reason, p)
     | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
 
   and mod_reason_of_use_t f = function
@@ -2434,16 +2390,16 @@ end = struct
     | InvariantT reason -> InvariantT (f reason)
     | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
     | MakeExactT (reason, t) -> MakeExactT (f reason, t)
-    | MapTypeT (reason, kind, t) -> MapTypeT (f reason, kind, t)
+    | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
     | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
         MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
     | MixinT (reason, inst) -> MixinT (f reason, inst)
     | NotT (reason, t) -> NotT (f reason, t)
     | NullishCoalesceT (reason, t1, t2) -> NullishCoalesceT (f reason, t1, t2)
-    | ObjAssignToT (reason, t, t2, kind) ->
-        ObjAssignToT (f reason, t, t2, kind)
-    | ObjAssignFromT (reason, t, t2, kind) ->
-        ObjAssignFromT (f reason, t, t2, kind)
+    | ObjAssignToT (op, reason, t, t2, kind) ->
+        ObjAssignToT (op, f reason, t, t2, kind)
+    | ObjAssignFromT (op, reason, t, t2, kind) ->
+        ObjAssignFromT (op, f reason, t, t2, kind)
     | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
     | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
     | ObjSealT (reason, t) -> ObjSealT (f reason, t)
@@ -2468,6 +2424,7 @@ end = struct
         SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
     | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
         ObjKitT (use_op, f reason, resolve_tool, tool, tout)
+    | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
     | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
     | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
     | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
@@ -2485,6 +2442,7 @@ end = struct
     | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
     | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
     | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
+    | DestructuringT (reason, s, t) -> DestructuringT (f reason, s, t)
 
   and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2540,6 +2498,9 @@ end = struct
   | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
   | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
   | ExtendsUseT (op, r, ts, a, b) -> util op (fun op -> ExtendsUseT (op, r, ts, a, b))
+  | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
+  | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
+  | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
   | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)
   | GetStaticsT (_, _)
@@ -2562,8 +2523,6 @@ end = struct
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _)
   | LookupT (_, _, _, _, _)
-  | ObjAssignToT (_, _, _, _)
-  | ObjAssignFromT (_, _, _, _)
   | ObjFreezeT (_, _)
   | ObjRestT (_, _, _)
   | ObjSealT (_, _)
@@ -2586,7 +2545,6 @@ end = struct
   | ExportNamedT (_, _, _, _, _)
   | ExportTypeT (_, _, _, _, _)
   | AssertExportIsTypeT (_, _, _)
-  | MapTypeT (_, _, _)
   | ChoiceKitUseT (_, _)
   | IntersectionPreprocessKitT (_, _)
   | DebugPrintT (_)
@@ -2603,6 +2561,8 @@ end = struct
   | CondT (_, _, _, _)
   | ReactPropsToOut _
   | ReactInToProps _
+  | DestructuringT _
+  | ModuleExportsAssignT _
     -> nope u
 
   let use_op_of_use_t =
@@ -2624,6 +2584,8 @@ end = struct
   let rec mod_loc_of_virtual_use_op f =
     let mod_reason = Reason.map_reason_locs f in
     let mod_loc_of_root_use_op f = function
+    | ObjectSpread {op} -> ObjectSpread {op = mod_reason op}
+    | ObjectChain {op} -> ObjectChain {op = mod_reason op}
     | Addition { op; left; right } ->
         Addition {op = mod_reason op; left = mod_reason left; right = mod_reason right}
     | AssignVar { var; init} ->
@@ -2710,10 +2672,9 @@ end = struct
     | ImplicitTypeParam -> ImplicitTypeParam
     | IndexerKeyCompatibility { lower; upper } ->
         IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
-    | PropertyCompatibility { prop; lower; upper; is_sentinel } ->
+    | PropertyCompatibility { prop; lower; upper } ->
         PropertyCompatibility {
           prop;
-          is_sentinel;
           lower = mod_reason lower;
           upper = mod_reason upper;
         }
@@ -2751,6 +2712,7 @@ end = struct
     fun t1 t2 ->
       if t1 == t2 then 0 else
       compare t1 (swap_reason t2 t1)
+
   let reasonless_eq t1 t2 =
     reasonless_compare t1 t2 = 0
 
@@ -2768,7 +2730,13 @@ end = struct
     | Some y -> x = y
     | None -> false
 
+  let trust_subtype_fixed tr1 tr2 =
+    match Trust.expand tr1, Trust.expand tr2 with
+    | Trust.Qualifier trust1, Trust.Qualifier trust2 -> Trust.subtype_trust trust1 trust2
+    | _ -> false
+
   let quick_subtype trust_checked t1 t2 =
+    let open Trust in
     match t1, t2 with
     | DefT (_, ltrust, NumT _), DefT (_, rtrust, NumT _)
     | DefT (_, ltrust, SingletonNumT _), DefT (_, rtrust, NumT _)
@@ -2780,12 +2748,15 @@ end = struct
     | DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT)
     | DefT (_, ltrust, EmptyT _), DefT(_, rtrust, _)
     | DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)
-      -> not trust_checked || Trust.subtype_trust ltrust rtrust
-    | DefT (_, ltrust, EmptyT _), _ -> not trust_checked || Trust.is_public ltrust
-    | _, DefT (_, rtrust, MixedT _) -> not trust_checked || Trust.is_tainted rtrust
-    | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) -> Trust.subtype_trust ltrust rtrust && literal_eq expected actual
-    | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) -> Trust.subtype_trust ltrust rtrust && number_literal_eq expected actual
-    | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) -> Trust.subtype_trust ltrust rtrust && boolean_literal_eq expected actual
+      -> not trust_checked || trust_subtype_fixed ltrust rtrust
+    | DefT (_, ltrust, EmptyT _), _ -> not trust_checked || trust_value_map ~f:is_public ~default:false ltrust
+    | _, DefT (_, rtrust, MixedT _) -> not trust_checked || trust_value_map ~f:is_tainted ~default:false rtrust
+    | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) ->
+      (not trust_checked || trust_subtype_fixed ltrust rtrust) && literal_eq expected actual
+    | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) ->
+      (not trust_checked || trust_subtype_fixed ltrust rtrust) && number_literal_eq expected actual
+    | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) ->
+      (not trust_checked || trust_subtype_fixed ltrust rtrust) && boolean_literal_eq expected actual
     | _ -> reasonless_eq t1 t2
 end
 
@@ -2805,8 +2776,8 @@ include Trust
 (**** Trust utilities ****)
 
 let with_trust
-    (trust_constructor: unit -> trust)
-    (type_constructor: trust -> t) : t =
+    (trust_constructor: unit -> trust_rep)
+    (type_constructor: trust_rep -> t) : t =
   trust_constructor () |> type_constructor
 
 (*********************************************************)
@@ -2820,7 +2791,7 @@ let open_tvar tvar =
 
 module type PrimitiveType = sig
   val desc: reason_desc
-  val make: reason -> trust -> t
+  val make: reason -> trust_rep -> t
 end
 
 module Primitive (P: PrimitiveType) = struct
@@ -2968,6 +2939,15 @@ let is_proper_def = function
   | MatchingPropT _ -> false
   | _ -> true
 
+(* not all use types should appear in "merged" types *)
+let is_proper_use = function
+  (* Speculation should be completed by the end of merge. This does not hold
+     today because non-0->1 things are erroneously considered 0->1, specifically
+     type parameters and sometimes eval types. Until this situation is fixed, we
+     can at least avoid these things leaking into dependent merge steps. *)
+  | ChoiceKitUseT _ -> false
+  | _ -> true
+
 (* convenience *)
 let is_bot = function
 | DefT (_, _, EmptyT _) -> true
@@ -3033,6 +3013,8 @@ let replace_speculation_root_use_op =
     | Error use_op -> use_op
 
 let aloc_of_root_use_op : root_use_op -> ALoc.t = function
+| ObjectSpread {op}
+| ObjectChain {op}
 | Addition {op; _}
 | AssignVar {init=op; _}
 | Cast {lower=op; _}
@@ -3086,7 +3068,7 @@ end
 
 (* printing *)
 let string_of_defer_use_ctor = function
-  | DestructuringT _ -> "DestructuringT"
+  | LatentPredT _ -> "LatentPredT"
   | TypeDestructorT _ -> "TypeDestructorT"
 
 let string_of_def_ctor = function
@@ -3109,7 +3091,6 @@ let string_of_def_ctor = function
   | SingletonStrT _ -> "SingletonStrT"
   | StrT _ -> "StrT"
   | TypeT _ -> "TypeT"
-  | TypeAppT _ -> "TypeAppT"
   | VoidT -> "VoidT"
 
 let string_of_ctor = function
@@ -3148,6 +3129,7 @@ let string_of_ctor = function
   | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
+  | TypeAppT _ -> "TypeAppT"
   | UnionT _ -> "UnionT"
   | IntersectionT _ -> "IntersectionT"
   | OptionalT _ -> "OptionalT"
@@ -3160,6 +3142,8 @@ let string_of_internal_use_op = function
   | WidenEnv -> "WidenEnv"
 
 let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
+| ObjectSpread _ -> "ObjectSpread"
+| ObjectChain _ -> "ObjectChain"
 | Addition _ -> "Addition"
 | AssignVar _ -> "AssignVar"
 | Cast _ -> "Cast"
@@ -3322,6 +3306,8 @@ let string_of_use_ctor = function
   | CondT _ -> "CondT"
   | ReactPropsToOut _ -> "ReactPropsToOut"
   | ReactInToProps _ -> "ReactInToProps"
+  | DestructuringT _ -> "DestructuringT"
+  | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
@@ -3360,7 +3346,7 @@ let rec string_of_predicate = function
   (* Array.isArray *)
   | ArrP -> "array"
 
-  | PropExistsP (_, key, _) -> spf "prop `%s` is truthy" key
+  | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
 
   | LatentP (OpenT (_, id),i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
@@ -3443,7 +3429,7 @@ let typeapp ?(implicit=false) ?annot_loc t targs =
   | None -> reason
   in
   let use_op = Op (TypeApplication { type' = reason }) in
-  DefT (reason, bogus_trust (), TypeAppT (use_op, t, targs))
+  TypeAppT (reason, use_op, t, targs)
 
 let this_typeapp ?annot_loc t this targs =
   let reason = match targs with

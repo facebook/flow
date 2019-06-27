@@ -42,9 +42,9 @@ let string_of_type_map = function
   | ObjectMapi _ -> "ObjectMapi"
 
 let string_of_polarity = function
-  | Negative -> "Negative"
-  | Neutral -> "Neutral"
-  | Positive -> "Positive"
+  | Polarity.Negative -> "Negative"
+  | Polarity.Neutral -> "Neutral"
+  | Polarity.Positive -> "Positive"
 
 let string_of_enum = function
   | Enum.Str x -> spf "string %s" x
@@ -61,6 +61,31 @@ let string_of_rw = function
   | Read -> "Read"
   | Write _ -> "Write"
 
+let string_of_selector = function
+  | Elem _ -> "Elem _" (* TODO print info about the key *)
+  | Prop x -> spf "Prop %s" x
+  | ArrRest i -> spf "ArrRest %i" i
+  | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
+  | Default -> "Default"
+
+let string_of_destructor = function
+  | NonMaybeType -> "NonMaybeType"
+  | PropertyType x -> spf "PropertyType %s" x
+  | ElementType _ -> "ElementType"
+  | Bind _ -> "Bind"
+  | ReadOnlyType -> "ReadOnly"
+  | SpreadType _ -> "Spread"
+  | RestType _ -> "Rest"
+  | ValuesType -> "Values"
+  | CallType _ -> "CallType"
+  | TypeMap (TupleMap _) -> "TupleMap"
+  | TypeMap (ObjectMap _) -> "ObjectMap"
+  | TypeMap (ObjectMapi _) -> "ObjectMapi"
+  | ReactElementPropsType -> "ReactElementProps"
+  | ReactElementConfigType -> "ReactElementConfig"
+  | ReactElementRefType -> "ReactElementRef"
+  | ReactConfigType _ -> "ReactConfig"
+
 type json_cx = {
   stack: ISet.t;
   size: int ref;
@@ -68,6 +93,13 @@ type json_cx = {
   cx: Context.t;
   strip_root: Path.t option;
 }
+
+let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
+  JSON_Object ([
+    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc_exn);
+    "desc", JSON_String (string_of_desc (desc_of_reason ~unwrap:false r))
+  ])
+)
 
 let check_depth continuation json_cx =
   let depth = json_cx.depth - 1 in
@@ -197,7 +229,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DefT (_, _, TypeAppT (_, t, targs)) -> [
+  | TypeAppT (_, _, t, targs) -> [
       "typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs);
       "type", _json_of_t json_cx t
     ]
@@ -615,13 +647,13 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "action", json_of_lookup_action json_cx action
     ]
 
-  | ObjAssignFromT (_, proto, tvar, kind) -> [
+  | ObjAssignFromT (_, _, proto, tvar, kind) -> [
       "target", _json_of_t json_cx proto;
       "resultType", _json_of_t json_cx tvar;
       "kind", json_of_obj_assign_kind json_cx kind;
   ]
 
-  | ObjAssignToT (_, from, tvar, kind) -> [
+  | ObjAssignToT (_, _, from, tvar, kind) -> [
       "source", _json_of_t json_cx from;
       "resultType", _json_of_t json_cx tvar;
       "kind", json_of_obj_assign_kind json_cx kind;
@@ -741,7 +773,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | DebugPrintT _ -> []
   | DebugSleepT _ -> []
 
-  | MapTypeT (_, kind, t) -> [
+  | MapTypeT (_, _, kind, t) -> [
       "kind", JSON_String (string_of_type_map kind);
       "t", _json_of_t json_cx t;
     ]
@@ -886,6 +918,15 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | ExtendsUseT (_, _, _, t1, t2) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
+    ]
+  | DestructuringT (_, s, t_out) -> [
+      "selector", json_of_selector json_cx s;
+      "t_out", _json_of_t json_cx t_out;
+    ]
+
+  | ModuleExportsAssignT (_, assign, t_out) -> [
+      "assign", _json_of_t json_cx assign;
+      "t_out", _json_of_t json_cx t_out;
     ]
   )
 )
@@ -1114,7 +1155,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let own_props = Context.find_props json_cx.cx insttype.own_props in
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
-    "classId", json_of_loc ~offset_table:None (ALoc.to_loc insttype.class_id);
+    "classId", json_of_loc ~offset_table:None (ALoc.to_loc_exn insttype.class_id);
     "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
       JSON_Object [
         "name", JSON_String x;
@@ -1145,12 +1186,6 @@ and json_of_selector_impl json_cx = Hh_json.(function
     ]
   | Default -> JSON_Object [
       "default", JSON_Bool true;
-    ]
-  | Become -> JSON_Object [
-      "become", JSON_Bool true;
-    ]
-  | Refine p -> JSON_Object [
-      "predicate", json_of_pred json_cx p
     ]
 )
 
@@ -1259,8 +1294,8 @@ and json_of_pmap_impl json_cx bindings = Hh_json.(
 
 and json_of_defer_use_t json_cx = check_depth json_of_defer_use_t_impl json_cx
 and json_of_defer_use_t_impl json_cx = Hh_json.(function
-  | DestructuringT (_, s) -> JSON_Object [
-      "selector", json_of_selector json_cx s
+  | LatentPredT (_, p) -> JSON_Object [
+      "predicate", json_of_pred json_cx p
     ]
   | TypeDestructorT (_, _, s) -> JSON_Object [
       "destructor", json_of_destructor json_cx s
@@ -1301,7 +1336,7 @@ and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
 and json_of_type_binding_impl json_cx (name, (loc, t)) = Hh_json.(
   let loc_json = match loc with
     | None -> Hh_json.JSON_Null
-    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root ~offset_table:None (ALoc.to_loc loc)
+    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root ~offset_table:None (ALoc.to_loc_exn loc)
   in
   JSON_Object [
     "name", JSON_String name;
@@ -1333,7 +1368,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | SingletonStrP (_, _, str) -> ["value", JSON_String str]
   | SingletonNumP (_, _, (_,raw)) -> ["value", JSON_String raw]
 
-  | PropExistsP (_, key, _) -> ["propName", JSON_String key]
+  | PropExistsP (key, _) -> ["propName", JSON_String key]
 
   | ExistsP _
   | VoidP
@@ -1619,6 +1654,12 @@ let json_of_env ?(size=5000) ?(depth=1000) cx env =
 
 (* debug printer *)
 
+let lookup_trust cx id =
+  let open Trust_constraint in
+  match Context.find_trust_graph cx id with
+  | TrustResolved trust -> trust
+  | TrustUnresolved b -> get_trust b
+
 let dump_reason cx reason =
   let strip_root = if Context.should_strip_root cx
     then Some (Context.root cx)
@@ -1631,7 +1672,7 @@ let rec dump_t_ (depth, tvars) cx t =
     spf "%s %s(%s%s%s)"
       (string_of_ctor t)
       (if not (Context.trust_tracking cx) then "" else
-        (Option.value_map ~default:"" ~f:string_of_trust trust))
+        (Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust))
       (if reason then spf "%S" (dump_reason cx (reason_of_t t)) else "")
       (if reason && extra <> "" then ", " else "")
       extra
@@ -1640,38 +1681,10 @@ let rec dump_t_ (depth, tvars) cx t =
   let kid = dump_t_ (depth-1, tvars) cx in
   let tvar id = dump_tvar_ (depth-1, tvars) cx id in
 
-  let string_of_destructor = function
-  | NonMaybeType -> "non-maybe type"
-  | PropertyType x -> spf "property type `%s`" x
-  | ElementType _ -> "element type"
-  | Bind _ -> "bind"
-  | ReadOnlyType -> "read only"
-  | SpreadType _ -> "spread"
-  | RestType _ -> "rest"
-  | ValuesType -> "values"
-  | CallType _ -> "function call"
-  | TypeMap (TupleMap _) -> "tuple map"
-  | TypeMap (ObjectMap _) -> "object map"
-  | TypeMap (ObjectMapi _) -> "object mapi"
-  | ReactElementPropsType -> "React element props"
-  | ReactElementConfigType -> "React element config"
-  | ReactElementRefType -> "React element instance"
-  | ReactConfigType _ -> "React config"
-  in
-
   let defer_use =
-    let string_of_selector = function
-    | Prop name -> spf "prop `%s`" name
-    | Elem _ -> "elem"
-    | ObjRest _ -> "obj rest"
-    | ArrRest i -> spf "arr rest at index %d" i
-    | Default -> "default"
-    | Become -> "become"
-    | Refine _ -> "refine"
-    in
     fun expr t -> match expr with
-    | DestructuringT (_, selector) ->
-      spf "Destructure %s on %s" (string_of_selector selector) t
+    | LatentPredT (_, p) ->
+      spf "LatentPred %s on %s" (string_of_predicate p) t
     | TypeDestructorT (use_op, _, destructor) ->
       spf "%s, TypeDestruct %s on %s"
         (string_of_use_op use_op)
@@ -1793,7 +1806,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | OptionalT (_, arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
-  | DefT (_, trust, TypeAppT (_, base, args)) -> p ~trust:(Some trust) ~extra:(spf "%s, [%s]"
+  | TypeAppT (_, _, base, args) -> p ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (Core_list.map ~f:kid args))) t
   | ThisTypeAppT (_, base, this, args_opt) -> p ~reason:false
       ~extra:begin match args_opt with
@@ -1960,6 +1973,7 @@ and dump_use_t_ (depth, tvars) cx t =
             | Some children_spread -> spf "; ...%s" (kid children_spread)
             | None -> "")
           (kid tout)) t
+    | ConfigCheck config -> spf "ConfigCheck (%s)" (kid config)
     | GetProps tout -> spf "GetProps (%s)" (kid tout)
     | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
     | GetConfigType (default_props, tout) ->
@@ -2043,6 +2057,7 @@ and dump_use_t_ (depth, tvars) cx t =
     in
     let tool = function
       | ReadOnly -> "ReadOnly"
+      | ObjectRep -> "ObjectRep"
       | Spread (options, state) -> spread options state
       | Rest (options, state) -> rest options state
       | ReactConfig state -> react_props state
@@ -2060,7 +2075,7 @@ and dump_use_t_ (depth, tvars) cx t =
       id
   | UseT (use_op, (DefT (_, trust, _) as t)) ->
     spf "UseT (%s, %s%s)" (string_of_use_op use_op)
-      (if Context.trust_tracking cx then string_of_trust trust else "")
+      (if Context.trust_tracking cx then string_of_trust_rep (lookup_trust cx) trust else "")
       (kid t)
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
   | AdderT (use_op, _, _, x, y) -> p ~extra:(spf "%s, %s, %s"
@@ -2143,9 +2158,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
-  | ObjAssignToT (_, arg1, arg2, _) -> p t
+  | ObjAssignToT (_, _, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
-  | ObjAssignFromT (_, arg1, arg2, _) -> p t
+  | ObjAssignFromT (_, _, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
   | ObjFreezeT _ -> p t
   | ObjRestT (_, xs, arg) -> p t
@@ -2227,6 +2242,9 @@ and dump_use_t_ (depth, tvars) cx t =
         (kid tout))
   | ExtendsUseT (_, _, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (Core_list.map ~f:kid nexts)) (kid l) (kid u)) t
+  | DestructuringT (_, s, tout) -> p t
+      ~extra:(spf "%s, %s" (string_of_selector s) (kid tout))
+  | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then spf "%d, ^" id else
@@ -2369,33 +2387,6 @@ let string_of_file cx =
       then Files.relative_path root_str filename
       else filename
 
-let string_of_selector = function
-  | Elem _ -> "Elem _" (* TODO print info about the key *)
-  | Prop x -> spf "Prop %s" x
-  | ArrRest i -> spf "ArrRest %i" i
-  | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
-  | Default -> "Default"
-  | Become -> "Become"
-  | Refine p -> spf "Refine with %s" (string_of_predicate p)
-
-let string_of_destructor = function
-  | NonMaybeType -> "NonMaybeType"
-  | PropertyType x -> spf "PropertyType %s" x
-  | ElementType _ -> "ElementType"
-  | Bind _ -> "Bind"
-  | ReadOnlyType -> "ReadOnly"
-  | SpreadType _ -> "Spread"
-  | RestType _ -> "Rest"
-  | ValuesType -> "Values"
-  | CallType _ -> "CallType"
-  | TypeMap (TupleMap _) -> "TupleMap"
-  | TypeMap (ObjectMap _) -> "ObjectMap"
-  | TypeMap (ObjectMapi _) -> "ObjectMapi"
-  | ReactElementPropsType -> "ReactElementProps"
-  | ReactElementConfigType -> "ReactElementConfig"
-  | ReactElementRefType -> "ReactElementRef"
-  | ReactConfigType _ -> "ReactConfig"
-
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->
     spf "Expr %s" (string_of_loc loc))
@@ -2430,6 +2421,8 @@ let dump_error_message =
   | Error_message.DebugThrow -> "DebugThrow"
   | MergeTimeout _ -> "MergeTimeout"
   | MergeJobException _ -> "MergeJobException"
+  | CheckTimeout _ -> "CheckTimeout"
+  | CheckJobException _ -> "CheckJobException"
   | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
   in
   let dump_upper_kind = function
@@ -2513,44 +2506,21 @@ let dump_error_message =
           (dump_reason cx reason_arity)
           min_arity
           max_arity
-    | EValueUsedAsType (reason1, reason2) ->
-        spf "EValueUsedAsType (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-    | EExpectedStringLit ((reason1, reason2), expected, literal, use_op) ->
-        let literal = match literal with
-        | Literal (_, str) -> spf "%S" str
-        | Truthy -> "truthy"
-        | AnyLiteral -> "any"
-        in
-        spf "EExpectedStringLit ((%s, %s), %S, %S, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          expected
-          literal
+    | EValueUsedAsType reason -> spf "EValueUsedAsType (%s)" (dump_reason cx reason)
+    | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+        spf "EExpectedStringLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
           (string_of_use_op use_op)
-    | EExpectedNumberLit ((reason1, reason2), (_, expected), literal, use_op) ->
-        let literal = match literal with
-        | Literal (_, (_, raw)) -> spf "%S" raw
-        | Truthy -> "truthy"
-        | AnyLiteral -> "any"
-        in
-        spf "EExpectedNumberLit ((%s, %s), %s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          expected
-          literal
+    | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+        spf "EExpectedNumberLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
           (string_of_use_op use_op)
-    | EExpectedBooleanLit ((reason1, reason2), expected, literal, use_op) ->
-        let literal = match literal with
-        | Some b -> spf "%b" b
-        | None -> "any"
-        in
-        spf "EExpectedBooleanLit ((%s, %s), %b, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          expected
-          literal
+    | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+        spf "EExpectedBooleanLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
           (string_of_use_op use_op)
     | EPropNotFound (prop, (prop_reason, obj_reason), use_op) ->
         spf "EPropNotFound (%s, %s, %s, %s)"
@@ -2558,11 +2528,16 @@ let dump_error_message =
           (dump_reason cx prop_reason)
           (dump_reason cx obj_reason)
           (string_of_use_op use_op)
-    | EPropAccess ((reason1, reason2), x, _, _, _) ->
-        spf "EPropAccess ((%s, %s), %s, _, _, _)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (match x with Some x -> spf "%S" x | None -> "(computed)")
+    | EPropNotReadable { reason_prop; prop_name; use_op } ->
+        spf "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
+          (dump_reason cx reason_prop)
+          (match prop_name with Some x -> spf "%S" x | None -> "(computed)")
+          (string_of_use_op use_op)
+    | EPropNotWritable { reason_prop; prop_name; use_op } ->
+        spf "EPropNotWritable { reason_prop = %s; prop_name = %s; use_op = %s }"
+          (dump_reason cx reason_prop)
+          (match prop_name with Some x -> spf "%S" x | None -> "(computed)")
+          (string_of_use_op use_op)
     | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
         spf "EPropPolarityMismatch ((%s, %s), %s, _, _)"
           (dump_reason cx reason1)
@@ -2614,10 +2589,9 @@ let dump_error_message =
           (dump_reason cx reason2)
           arity1 arity2
           (string_of_use_op use_op)
-    | ETupleUnsafeWrite ((reason1, reason2), use_op) ->
-        spf "ETupleUnsafeWrite (%s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+    | ETupleUnsafeWrite { reason; use_op } ->
+        spf "ETupleUnsafeWrite { reason = %s; use_op = %s }"
+          (dump_reason cx reason)
           (string_of_use_op use_op)
     | EROArrayWrite ((reason1, reason2), use_op) ->
         spf "EROArrayWrite (%s, %s, %s)"
@@ -2629,10 +2603,9 @@ let dump_error_message =
           (string_of_use_op use_op)
           (dump_reason cx reason)
           (dump_reason cx reason_op)
-    | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
-        spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+    | ESpeculationAmbiguous { reason; _ } ->
+        spf "ESpeculationAmbiguous { reason = %s; _ }"
+          (dump_reason cx reason)
     | EIncompatibleWithExact ((reason1, reason2), use_op) ->
         spf "EIncompatibleWithExact ((%s, %s), %s)"
           (dump_reason cx reason1)
@@ -2731,8 +2704,12 @@ let dump_error_message =
         spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
     | EUnsafeGetSet loc ->
         spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
+    | EUninitializedInstanceProperty loc ->
+        spf "EUninitializedInstanceProperty (%s)" (string_of_aloc loc)
     | EExperimentalExportStarAs loc ->
         spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
+    | EExperimentalEnums loc ->
+        spf "EExperimentalEnums (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc ->
         spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc ->
@@ -2741,7 +2718,7 @@ let dump_error_message =
         spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_aloc loc)
-    | EInvalidObjectKit { reason; reason_op; use_op; _ } ->
+    | EInvalidObjectKit { reason; reason_op; use_op } ->
         spf "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
@@ -2810,6 +2787,8 @@ let dump_error_message =
         | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
+    | EImplicitInexactObject loc ->
+      spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->
       spf "EUntypedTypeImport (%s, %s)" (string_of_aloc loc) module_name
     | EUntypedImport (loc, module_name) ->
@@ -2820,14 +2799,14 @@ let dump_error_message =
       spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedUtility (loc, name) ->
       spf "EDeprecatedUtility (%s, %s)" (string_of_aloc loc) name
+    | EDeprecatedEnumUtility loc ->
+      spf "EDeprecatedEnumUtility (%s)" (string_of_aloc loc)
     | EDynamicExport (reason, reason') ->
       spf "EDynamicExport (%s, %s)" (dump_reason cx reason) (dump_reason cx reason')
     | EDeprecatedType loc ->
       spf "EDeprecatedType (%s)" (string_of_aloc loc)
     | EUnsafeGettersSetters loc ->
       spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
-    | EDeprecatedCallSyntax loc ->
-      spf "EDeprecatedCallSyntax (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_aloc loc)
     | ELintSetting (loc, kind) ->
@@ -2880,3 +2859,41 @@ let dump_error_message =
       spf "ESignatureVerification (%s)" (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
     | EBigIntNotYetSupported reason ->
       spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
+
+module Verbose = struct
+  let print_if_verbose_lazy cx trace
+      ?(delim = "")
+      ?(indent = 0)
+      (lines: string Lazy.t list) =
+    match Context.verbose cx with
+    | Some { Verbose.indent = num_spaces; _ } ->
+      let indent = indent + Trace.trace_depth trace - 1 in
+      let prefix = String.make (indent * num_spaces) ' ' in
+      let pid = Context.pid_prefix cx in
+      let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
+      let lines = Core_list.map ~f:add_prefix lines in
+      prerr_endline (String.concat delim lines)
+    | None ->
+      ()
+
+  let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines: string list) =
+    match Context.verbose cx with
+    | Some _ ->
+      let lines = Core_list.map ~f:(fun line -> lazy line) lines in
+      print_if_verbose_lazy cx trace ~delim ~indent lines
+    | None ->
+      ()
+
+  let print_types_if_verbose cx trace
+      ?(note: string option)
+      ((l: Type.t), (u: Type.use_t)) =
+    match Context.verbose cx with
+    | Some { Verbose.depth; _ } ->
+      let delim = match note with Some x -> spf " ~> %s" x | None -> " ~>" in
+      print_if_verbose cx trace ~delim [
+        dump_t ~depth cx l;
+        dump_use_t ~depth cx u;
+      ]
+    | None ->
+      ()
+end

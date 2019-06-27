@@ -151,15 +151,8 @@ let main base_flags option_values json pretty root strip_root
     get_filenames_from_input input files
     |> Core_list.map ~f:(Path.make %> Path.to_string) in
 
-  let root = match root with
-  | None -> Core_list.hd batch |> CommandUtils.guess_root flowconfig_name
-  | Some provided_root ->
-    let dir = Path.make provided_root in
-    if Path.file_exists (Path.concat dir flowconfig_name) then dir
-    else begin
-      let msg = spf "Invalid root directory %s" provided_root in
-      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
-    end in
+  let input = Option.map (Core_list.hd batch) (fun x -> File_input.FileName x) in
+  let root = get_the_root ~base_flags ?input root in
 
   (* pretty implies json *)
   let json = json || pretty in

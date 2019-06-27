@@ -15,6 +15,23 @@ References:
                                     ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------ test-multiple-export-2.js:6:2
+
+Cannot cast `a.f` to number because string [1] is incompatible with number [2].
+
+   test-multiple-export-2.js:6:2
+   6| (a.f: number);
+       ^^^
+
+References:
+   multiple-export-2.js:8:13
+   8|   static f: string = ""
+                  ^^^^^^ [1]
+   test-multiple-export-2.js:6:7
+   6| (a.f: number);
+            ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:3:19
 
 Cannot assign `require(...)` to `n` because number [1] is incompatible with string [2].
@@ -98,4 +115,4 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors

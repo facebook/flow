@@ -161,6 +161,17 @@ let strip_all_ns s =
     String.sub s base_name_start ((String.length s) - base_name_start)
   with Not_found -> s
 
+(* "\\A\\B\\C" -> ("\\A\\B\\" * "C") *)
+let split_ns_from_name (s: string): (string * string) =
+  try
+    let base_name_start = (String.rindex s '\\') + 1 in
+    let name_part = String.sub s
+      (base_name_start)
+      ((String.length s) - base_name_start) in
+    let namespace_part = String.sub s 0 base_name_start in
+    (namespace_part, name_part)
+  with Not_found -> ("\\", s)
+
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest
  * of both lists.

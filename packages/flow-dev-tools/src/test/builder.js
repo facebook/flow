@@ -760,19 +760,20 @@ export class TestBuilder {
         }
         alreadyDone = true;
         const duration = new Date().getTime() - startTime;
-        emitter && emitter.removeListener('message', checkLastMessage);
+        emitter && emitter.removeListener('message', checkMessages);
         timeout && clearTimeout(timeout);
         await this.log('%s message %s in %dms', verb, expected, duration);
         resolve();
       };
 
-      const checkMessage = message => {
-        if (Builder.doesMessageMatch(message, expected)) {
-          doneWithVerb('Got');
+      let nextMessageIndex = 0;
+      const checkMessages = () => {
+        for (; nextMessageIndex < ideMessages.length; nextMessageIndex++) {
+          const message = ideMessages[nextMessageIndex];
+          if (Builder.doesMessageMatch(message, expected)) {
+            doneWithVerb('Got');
+          }
         }
-      };
-      const checkLastMessage = () => {
-        checkMessage(ideMessages.slice(-1)[0]);
       };
 
       // It's unavoidably racey whether the log message gets printed
@@ -782,10 +783,10 @@ export class TestBuilder {
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
       // let's account for them
-      ideMessages.forEach(checkMessage);
+      checkMessages();
 
       // And account for all further messages that arrive
-      emitter = ide.messageEmitter.on('message', checkLastMessage);
+      emitter = ide.messageEmitter.on('message', checkMessages);
 
       // ... until our stopping condition
       timeout = setTimeout(() => doneWithVerb('Failed to get'), timeoutMs);

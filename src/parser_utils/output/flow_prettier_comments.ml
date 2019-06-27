@@ -196,6 +196,7 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
   | Expression {Expression.expression; _} -> get_children_nodes_expr expression
   | Debugger -> []
   | Empty -> []
+  | EnumDeclaration _ -> []
   | Break _ -> []
   | ClassDeclaration clazz -> get_children_nodes_class clazz
   | Continue _ -> []
