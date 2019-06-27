@@ -2102,10 +2102,11 @@ References:
 Error -------------------------------------------------------------------------------------------- stream/stream.js:65:1
 
 Cannot call `stream.pipeline` because:
- - Either `MyReadStream` [1] is incompatible with `stream$Duplex` [2].
+ - Either `MyReadStream` [1] is incompatible with `stream$Writable` [2].
  - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [3].
  - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [4].
  - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [5].
+ - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [6].
 
    stream/stream.js:65:1
          v---------------
@@ -2121,18 +2122,21 @@ References:
    stream/stream.js:68:3
      68|   new MyReadStream(), // error - last stream must be Writable
            ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1951:32
+   1951|   declare function pipeline<T: stream$Writable>(
+                                        ^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/node.js:1960:9
    1960|     s3: stream$Duplex,
-                 ^^^^^^^^^^^^^ [2]
+                 ^^^^^^^^^^^^^ [3]
    <BUILTINS>/node.js:1967:9
    1967|     s3: stream$Duplex,
-                 ^^^^^^^^^^^^^ [3]
+                 ^^^^^^^^^^^^^ [4]
    <BUILTINS>/node.js:1975:9
    1975|     s3: stream$Duplex,
-                 ^^^^^^^^^^^^^ [4]
+                 ^^^^^^^^^^^^^ [5]
    <BUILTINS>/node.js:1984:9
    1984|     s3: stream$Duplex,
-                 ^^^^^^^^^^^^^ [5]
+                 ^^^^^^^^^^^^^ [6]
 
 
 

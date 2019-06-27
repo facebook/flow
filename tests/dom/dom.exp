@@ -451,47 +451,47 @@ References:
 Error ------------------------------------------------------------------------------------------------ traversal.js:29:5
 
 Cannot call `document.createNodeIterator` because:
- - Either object literal [1] is incompatible with `Attr` [2] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [3] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [4] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [5] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [6] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [7] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [8] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [9] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [10] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [11] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [12] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [13] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [14] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [15] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [16] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [17] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [18] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [19] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [20] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [21] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [22] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [23] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [24] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [25] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [26] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [27] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [28] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [29] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [30] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [31] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [32] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [33] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [34] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [35] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [36] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [37] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [38] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [39] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [40] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [41] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [42] in type argument `RootNodeT`.
+ - Either object literal [1] is incompatible with `Attr` [2].
+ - Or object literal [1] is incompatible with `Document` [3].
+ - Or object literal [1] is incompatible with `Document` [4].
+ - Or object literal [1] is incompatible with `Document` [5].
+ - Or object literal [1] is incompatible with `Document` [6].
+ - Or object literal [1] is incompatible with `Document` [7].
+ - Or object literal [1] is incompatible with `Document` [8].
+ - Or object literal [1] is incompatible with `Document` [9].
+ - Or object literal [1] is incompatible with `Document` [10].
+ - Or object literal [1] is incompatible with `Document` [11].
+ - Or object literal [1] is incompatible with `Document` [12].
+ - Or object literal [1] is incompatible with `Document` [13].
+ - Or object literal [1] is incompatible with `Document` [14].
+ - Or object literal [1] is incompatible with `Document` [15].
+ - Or object literal [1] is incompatible with `Document` [16].
+ - Or object literal [1] is incompatible with `Document` [17].
+ - Or object literal [1] is incompatible with `Document` [18].
+ - Or object literal [1] is incompatible with `Document` [19].
+ - Or object literal [1] is incompatible with `Document` [20].
+ - Or object literal [1] is incompatible with `Document` [21].
+ - Or object literal [1] is incompatible with `Document` [22].
+ - Or object literal [1] is incompatible with `Document` [23].
+ - Or object literal [1] is incompatible with `Document` [24].
+ - Or object literal [1] is incompatible with `Document` [25].
+ - Or object literal [1] is incompatible with `Document` [26].
+ - Or object literal [1] is incompatible with `DocumentFragment` [27].
+ - Or object literal [1] is incompatible with `DocumentFragment` [28].
+ - Or object literal [1] is incompatible with `DocumentFragment` [29].
+ - Or object literal [1] is incompatible with `DocumentFragment` [30].
+ - Or object literal [1] is incompatible with `DocumentFragment` [31].
+ - Or object literal [1] is incompatible with `DocumentFragment` [32].
+ - Or object literal [1] is incompatible with `DocumentFragment` [33].
+ - Or object literal [1] is incompatible with `DocumentFragment` [34].
+ - Or object literal [1] is incompatible with `Node` [35].
+ - Or object literal [1] is incompatible with `Node` [36].
+ - Or object literal [1] is incompatible with `Node` [37].
+ - Or object literal [1] is incompatible with `Node` [38].
+ - Or object literal [1] is incompatible with `Node` [39].
+ - Or object literal [1] is incompatible with `Node` [40].
+ - Or object literal [1] is incompatible with `Node` [41].
+ - Or object literal [1] is incompatible with `Node` [42].
 
    traversal.js:29:5
      29|     document.createNodeIterator({}); // invalid
@@ -629,47 +629,47 @@ References:
 Error ------------------------------------------------------------------------------------------------ traversal.js:33:5
 
 Cannot call `document.createTreeWalker` because:
- - Either object literal [1] is incompatible with `Attr` [2] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [3] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [4] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [5] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [6] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [7] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [8] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [9] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [10] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [11] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [12] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [13] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [14] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [15] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [16] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [17] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [18] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [19] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [20] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [21] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [22] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [23] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [24] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [25] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Document` [26] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [27] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [28] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [29] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [30] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [31] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [32] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [33] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `DocumentFragment` [34] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [35] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [36] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [37] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [38] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [39] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [40] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [41] in type argument `RootNodeT`.
- - Or object literal [1] is incompatible with `Node` [42] in type argument `RootNodeT`.
+ - Either object literal [1] is incompatible with `Attr` [2].
+ - Or object literal [1] is incompatible with `Document` [3].
+ - Or object literal [1] is incompatible with `Document` [4].
+ - Or object literal [1] is incompatible with `Document` [5].
+ - Or object literal [1] is incompatible with `Document` [6].
+ - Or object literal [1] is incompatible with `Document` [7].
+ - Or object literal [1] is incompatible with `Document` [8].
+ - Or object literal [1] is incompatible with `Document` [9].
+ - Or object literal [1] is incompatible with `Document` [10].
+ - Or object literal [1] is incompatible with `Document` [11].
+ - Or object literal [1] is incompatible with `Document` [12].
+ - Or object literal [1] is incompatible with `Document` [13].
+ - Or object literal [1] is incompatible with `Document` [14].
+ - Or object literal [1] is incompatible with `Document` [15].
+ - Or object literal [1] is incompatible with `Document` [16].
+ - Or object literal [1] is incompatible with `Document` [17].
+ - Or object literal [1] is incompatible with `Document` [18].
+ - Or object literal [1] is incompatible with `Document` [19].
+ - Or object literal [1] is incompatible with `Document` [20].
+ - Or object literal [1] is incompatible with `Document` [21].
+ - Or object literal [1] is incompatible with `Document` [22].
+ - Or object literal [1] is incompatible with `Document` [23].
+ - Or object literal [1] is incompatible with `Document` [24].
+ - Or object literal [1] is incompatible with `Document` [25].
+ - Or object literal [1] is incompatible with `Document` [26].
+ - Or object literal [1] is incompatible with `DocumentFragment` [27].
+ - Or object literal [1] is incompatible with `DocumentFragment` [28].
+ - Or object literal [1] is incompatible with `DocumentFragment` [29].
+ - Or object literal [1] is incompatible with `DocumentFragment` [30].
+ - Or object literal [1] is incompatible with `DocumentFragment` [31].
+ - Or object literal [1] is incompatible with `DocumentFragment` [32].
+ - Or object literal [1] is incompatible with `DocumentFragment` [33].
+ - Or object literal [1] is incompatible with `DocumentFragment` [34].
+ - Or object literal [1] is incompatible with `Node` [35].
+ - Or object literal [1] is incompatible with `Node` [36].
+ - Or object literal [1] is incompatible with `Node` [37].
+ - Or object literal [1] is incompatible with `Node` [38].
+ - Or object literal [1] is incompatible with `Node` [39].
+ - Or object literal [1] is incompatible with `Node` [40].
+ - Or object literal [1] is incompatible with `Node` [41].
+ - Or object literal [1] is incompatible with `Node` [42].
 
    traversal.js:33:5
      33|     document.createTreeWalker({}); // invalid

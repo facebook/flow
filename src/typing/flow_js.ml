@@ -3805,8 +3805,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ~use_op ~reason_op ~reason_tapp in
         rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
       | _ ->
+         let use_op = match use_op_of_use_t u with
+           | Some use_op -> use_op
+           | None -> unknown_use
+         in
         let t_ = instantiate_poly cx trace
-          ~use_op:unknown_use ~reason_op ~reason_tapp (tparams_loc,ids,t) in
+          ~use_op ~reason_op ~reason_tapp (tparams_loc,ids,t) in
         rec_flow cx trace (t_, u)
       end
 
@@ -9597,23 +9601,24 @@ and flow_use_op op1 u =
            * based on the 'locality' of the use_op root. *)
           | ImplicitTypeParam when not should_replace ->
              (match root_of_op2 with
-              | FunCall {local; _} | FunCallMethod {local; _} ->
-                 local
+              | FunCall {local; _} | FunCallMethod {local; _}
+                 -> local
               | Addition _
-                | AssignVar _
-                | Coercion _
-                | FunImplicitReturn _ | FunReturnStatement _
-                | GetProperty _ | SetProperty _
-                | JSXCreateElement _
-                | ObjectSpread _ | ObjectChain _
-                | TypeApplication _
+              | AssignVar _
+              | Coercion _
+              | FunImplicitReturn _ | FunReturnStatement _
+              | GetProperty _ | SetProperty _
+              | JSXCreateElement _
+              | ObjectSpread _ | ObjectChain _
+              | TypeApplication _
+              | Speculation _
                 -> true
               | Cast _
-                | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
-                | GeneratorYield _
-                | Internal _
-                | ReactCreateElementCall _ | ReactGetIntrinsic _
-                | Speculation _ | UnknownUse
+              | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
+              | GeneratorYield _
+              | Internal _
+              | ReactCreateElementCall _ | ReactGetIntrinsic _
+              | UnknownUse
                 -> false)
           | _ -> should_replace)
         op2 in

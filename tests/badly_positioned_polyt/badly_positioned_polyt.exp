@@ -1,0 +1,42 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
+
+Cannot create `Foo` element because undefined property `context` [1] is incompatible with object type [2] in type
+argument `Context`.
+
+   test.js:23:1
+   23| <Foo x={props.t} />;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:17:10
+   17|   Props: {},
+                ^^ [1]
+   test.js:18:12
+   18|   Context: {},
+                  ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+
+Cannot create `Bar` element because:
+ - undefined property `context` [1] is incompatible with object type [2] in type argument `Context`.
+ - `T` [3] is incompatible with object type [1] in type argument `Props`.
+
+   test.js:35:1
+   35| <Bar y={props.t} />;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:29:10
+   29|   Props: {},
+                ^^ [1]
+   test.js:30:12
+   30|   Context: {},
+                  ^^ [2]
+   test.js:6:18
+    6| type Props = {t: T};
+                        ^ [3]
+
+
+
+Found 3 errors
