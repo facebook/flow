@@ -17,7 +17,7 @@ module Reqs : sig
   val add_decl:string -> File_key.t -> (Loc_collections.ALocSet.t * Modulename.t) -> t -> t
 end
 
-val merge_component_strict:
+val merge_component:
   metadata: Context.metadata ->
   lint_severities: Severity.severity LintSettings.t ->
   file_options: Files.options option ->

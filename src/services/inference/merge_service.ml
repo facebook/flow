@@ -34,7 +34,7 @@ type 'a merge_results =
   'a merge_job_results *
    sig_opts_data
 
-type merge_strict_context_result = {
+type merge_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
@@ -44,7 +44,7 @@ type merge_strict_context_result = {
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
-   functions `merge_component_strict` and `restore` defined in merge_js.ml
+   functions `merge_component` and `restore` defined in merge_js.ml
    with appropriate reqs prepared below.
 
    (a) orig_sig_cxs: the original signature contexts of dependencies outside the
@@ -102,7 +102,7 @@ let reqs_of_component ~reader component required =
 
   master_cx, dep_cxs, reqs
 
-let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe component =
+let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe component =
   let required, file_sigs =
     Nel.fold_left (fun (required, file_sigs) file ->
       let file_sig = get_file_sig_unsafe ~reader file in
@@ -124,7 +124,7 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
-  let (((cx, _, _), other_cxs) as cx_nel) = Merge_js.merge_component_strict
+  let (((cx, _, _), other_cxs) as cx_nel) = Merge_js.merge_component
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:(get_ast_unsafe ~reader)
     ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
@@ -140,8 +140,8 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
 
   { cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
 
-let merge_strict_context ~options ~reader component =
-  merge_strict_context_generic ~options ~reader
+let merge_context ~options ~reader component =
+  merge_context_generic ~options ~reader
     ~get_ast_unsafe:(match Options.arch options with
       | Options.Classic -> fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
@@ -160,7 +160,7 @@ let merge_strict_context ~options ~reader component =
     )
     component
 
-(* Variation of merge_strict_context where requires may not have already been
+(* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
   let (_, _, comments) = ast in
@@ -194,7 +194,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
-  let ((cx, tast, _), _) = Merge_js.merge_component_strict
+  let ((cx, tast, _), _) = Merge_js.merge_component
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
     ~get_docblock_unsafe:(fun _ -> info)
@@ -204,7 +204,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   (cx, tast)
 
 (* Entry point for merging a component *)
-let merge_strict_component ~worker_mutator ~options ~reader component =
+let merge_component ~worker_mutator ~options ~reader component =
   let file = Nel.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -223,7 +223,7 @@ let merge_strict_component ~worker_mutator ~options ~reader component =
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let { cx; other_cxs = _; master_cx; coverage_map; _ } =
-      merge_strict_context ~options ~reader component in
+      merge_context ~options ~reader component in
 
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
@@ -260,7 +260,7 @@ let check_file options ~reader file =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let { cx; coverage_map; _; } = merge_strict_context_generic ~options ~reader
+    let { cx; coverage_map; _; } = merge_context_generic ~options ~reader
       ~get_ast_unsafe:(fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
         let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
@@ -310,7 +310,7 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   cancel_timer ();
   ret
 
-let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
+let merge_job ~worker_mutator ~reader ~job ~options merged elements =
   List.fold_left (fun merged -> function
     | Merge_stream.Component component ->
       (* A component may have several files: there's always at least one, and
@@ -361,7 +361,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
           ~audit:Expensive.ok worker_mutator ~options component;
         (* In dev mode, fail hard, but log and continue in prod. *)
         if Build_mode.dev then Exception.reraise exc else
-          prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
+          prerr_endlinef "(%d) merge_job THROWS: [%d] %s\n"
             (Unix.getpid()) (Nel.length component) exn_str;
         (* An errored component is always changed. *)
         let file = Nel.hd component in
@@ -410,7 +410,7 @@ let merge_runner
   (* returns parallel lists of filenames, error sets, and suppression sets *)
   let%lwt ret = MultiWorkerLwt.call
     workers
-    ~job: (merge_strict_job ~worker_mutator ~reader ~options ~job)
+    ~job: (merge_job ~worker_mutator ~reader ~options ~job)
     ~neutral: []
     ~merge:(Merge_stream.merge ~master_mutator ~reader stream)
     ~next:(Merge_stream.next stream)
@@ -420,10 +420,10 @@ let merge_runner
   let sig_new_or_changed = Merge_stream.sig_new_or_changed master_mutator in
   Hh_logger.info "Merge skipped %d of %d modules" skipped_count total_files;
   let elapsed = Unix.gettimeofday () -. start_time in
-  if Options.should_profile options then Hh_logger.info "merged (strict) in %f" elapsed;
+  if Options.should_profile options then Hh_logger.info "merged in %f" elapsed;
   Lwt.return (ret, { skipped_count; sig_new_or_changed })
 
-let merge_strict = merge_runner ~job:merge_strict_component
+let merge = merge_runner ~job:merge_component
 
 let check options ~reader file =
   let result =

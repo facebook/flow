@@ -346,7 +346,7 @@ let run_merge_service
     acc
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
-    let%lwt merged, { Merge_service.skipped_count; sig_new_or_changed } = Merge_service.merge_strict
+    let%lwt merged, { Merge_service.skipped_count; sig_new_or_changed } = Merge_service.merge
       ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
       ~dependency_graph ~component_map ~recheck_set
     in

@@ -73,14 +73,14 @@ end
 
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
-let implicit_require_strict cx master_cx cx_to =
+let implicit_require cx master_cx cx_to =
   let from_t = Context.find_module_sig master_cx Files.lib_module_ref in
   let to_t = Context.find_module cx_to Files.lib_module_ref in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, m, loc, cx_to) =
+let explicit_impl_require cx (cx_from, m, loc, cx_to) =
   let from_t = Context.find_module_sig cx_from m in
   let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
@@ -88,7 +88,7 @@ let explicit_impl_require_strict cx (cx_from, m, loc, cx_to) =
 (* Create the export of a resource file on the fly and connect it to its import
    in cxs_to. This happens in some arbitrary cx, so cx_to should have already
    been copied to cx. *)
-let explicit_res_require_strict cx (loc, f, cx_to) =
+let explicit_res_require cx (loc, f, cx_to) =
   (* Recall that a resource file is not parsed, so its export doesn't depend on
      its contents, just its extension. So, we create the export of a resource
      file on the fly by looking at its extension. The general alternative of
@@ -103,7 +103,7 @@ let explicit_res_require_strict cx (loc, f, cx_to) =
 
 (* Connect a export of a declared module to its import in cxs_to. This happens
    in some arbitrary cx, so cx_to should have already been copied to cx. *)
-let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
+let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
 
   (* lookup module declaration from builtin context *)
@@ -124,7 +124,7 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
    still lookup the module instead of returning `any` directly. This is because
    a resolved-unchecked dependency is superceded by a possibly-checked libdef.
    See unchecked_*_module_vs_lib tests for examples. *)
-let explicit_unchecked_require_strict cx (m, loc, cx_to) =
+let explicit_unchecked_require cx (m, loc, cx_to) =
   (* Use a special reason so we can tell the difference between an any-typed type import
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
@@ -340,7 +340,7 @@ let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
+let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
   ~get_ast_unsafe ~get_docblock_unsafe
   component reqs dep_cxs (master_cx: Context.sig_t) =
 
@@ -361,7 +361,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
       need_merge_master_cx := false;
       Flow_js.mk_builtins cx;
       Context.merge_into sig_cx master_cx;
-      implicit_require_strict cx master_cx cx
+      implicit_require cx master_cx cx
     );
 
     (* local inference *)
@@ -396,7 +396,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
     ALocSet.iter (fun loc ->
-      explicit_impl_require_strict cx (sig_cx, m, loc, cx_to);
+      explicit_impl_require cx (sig_cx, m, loc, cx_to);
     ) locs;
   );
 
@@ -404,7 +404,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
     ALocSet.iter (fun loc ->
-      explicit_impl_require_strict cx (cx_from, m, loc, cx_to)
+      explicit_impl_require cx (cx_from, m, loc, cx_to)
     ) locs
   );
 
@@ -412,7 +412,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   |> RequireMap.iter (fun (f, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
     ALocSet.iter (fun loc ->
-      explicit_res_require_strict cx (loc, f, cx_to)
+      explicit_res_require cx (loc, f, cx_to)
     ) locs
   );
 
@@ -420,7 +420,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
     ALocSet.iter (fun loc ->
-      explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+      explicit_decl_require cx (m, loc, resolved_m, cx_to)
     ) locs
   );
 
@@ -428,7 +428,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
     ALocSet.iter (fun loc ->
-      explicit_unchecked_require_strict cx (m, loc, cx_to)
+      explicit_unchecked_require cx (m, loc, cx_to)
     ) locs
   );
 

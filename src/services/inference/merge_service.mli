@@ -32,7 +32,7 @@ type 'a merge_results =
   'a merge_job_results *
    sig_opts_data
 
-type merge_strict_context_result = {
+type merge_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
@@ -41,11 +41,11 @@ type merge_strict_context_result = {
   coverage_map: Coverage.file_coverage FilenameMap.t;
 }
 
-val merge_strict_context:
+val merge_context:
   options: Options.t ->
   reader: Abstract_state_reader.t ->
   File_key.t Nel.t ->
-  merge_strict_context_result
+  merge_context_result
 
 val merge_contents_context:
   reader: State_reader.t ->
@@ -69,7 +69,7 @@ val merge_runner:
   recheck_set: FilenameSet.t ->
   'a merge_results Lwt.t
 
-val merge_strict:
+val merge:
   master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   reader: Mutator_state_reader.t ->
