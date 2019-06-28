@@ -2,19 +2,19 @@
 support for Flow. Babel will take your Flow code and strip out any type
 annotations.
 
-First install `babel-cli` and `babel-preset-flow` with either
+First install `@babel/core`, `@babel/cli` and `@babel/preset-flow` with either
 [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
 ```sh
-{{include.install_command}} babel-cli babel-preset-flow
+{{include.install_command}} @babel/core @babel/cli @babel/preset-flow
 ```
 
 Next you need to create a `.babelrc` file at the root of your project with
-`"flow"` in your `"presets"`.
+`"@babel/preset-flow"` in your `"presets"`.
 
 ```json
 {
-  "presets": ["flow"]
+  "presets": ["@babel/preset-flow"]
 }
 ```
 
@@ -33,7 +33,8 @@ You can add this to your `package.json` scripts easily.
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src/ -d lib/",
-    "prepublish": "{{include.package_manager}} run build"
+    "prepublish": "{{include.package_manager}} run build",
+    "flow": "flow"
   }
 }
 ```
