@@ -231,4 +231,5 @@ module ALocRepresentationDoNotUse = struct
   let is_abstract = Repr.is_abstract
 
   let get_key_exn = Repr.get_key_exn
+  let string_of_key = string_of_key
 end

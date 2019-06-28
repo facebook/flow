@@ -58,4 +58,5 @@ module ALocRepresentationDoNotUse : sig
   val is_abstract: t -> bool
   (* Should only be called if `is_abstract` returns `true`. Otherwise it will raise *)
   val get_key_exn: t -> key
+  val string_of_key: key -> string
 end
