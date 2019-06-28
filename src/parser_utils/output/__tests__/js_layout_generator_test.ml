@@ -2113,6 +2113,9 @@ let tests = "js_layout_generator" >::: [
     begin fun ctxt ->
       assert_statement_string ~ctxt "declare class a{}";
       assert_statement_string ~ctxt "declare class a extends b{}";
+      assert_statement_string ~ctxt "declare class a implements b{}";
+      assert_statement_string ~ctxt "declare class a extends b mixins c implements d{}";
+      assert_statement_string ~ctxt "declare class a extends b implements c{}";
       assert_statement_string ~ctxt ~pretty:true (
         "declare class a {\n  static a: b,\n  static d(): " ^
           String.make 80 'c' ^ ",\n}"

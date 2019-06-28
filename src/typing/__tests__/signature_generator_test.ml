@@ -508,7 +508,7 @@ let tests = "signature_generator" >::: ([
      "  foo(x?: string): void { }";
      "}"]
     ["interface I {foo(x?: string): void}";
-     "declare class C {foo(x?: string): void}";
+     "declare class C implements I {foo(x?: string): void}";
      "export {C};"];
 
   "class_extends_error" >:: mk_signature_generator_test
