@@ -166,6 +166,7 @@ let stub_metadata ~root ~checked = { Context.
   suppress_types = SSet.empty;
   default_lib_dir = None;
   trust_mode = Options.NoTrust;
+  type_asserts = false;
 }
 
 let get_master_cx =

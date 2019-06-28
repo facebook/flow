@@ -1,0 +1,2 @@
+[options]
+experimental.type_asserts=true

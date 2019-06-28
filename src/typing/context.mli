@@ -52,6 +52,7 @@ type metadata = {
   max_workers: int;
   default_lib_dir: Path.t option;
   trust_mode: Options.trust_mode;
+  type_asserts: bool;
 }
 
 type type_assert_kind = Is | Throws | Wraps
@@ -127,8 +128,9 @@ val default_lib_dir: t -> Path.t option
 val trust_mode: t -> Options.trust_mode
 val trust_tracking: t -> bool
 val trust_errors: t -> bool
+val type_asserts: t -> bool
 val type_graph: t -> Graph_explorer.graph
-val type_asserts: t -> (type_assert_kind * ALoc.t) ALocMap.t
+val type_asserts_map: t -> (type_assert_kind * ALoc.t) ALocMap.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode

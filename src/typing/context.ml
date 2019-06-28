@@ -51,7 +51,8 @@ type metadata = {
   suppress_types: SSet.t;
   max_workers: int;
   default_lib_dir : Path.t option;
-  trust_mode: Options.trust_mode
+  trust_mode: Options.trust_mode;
+  type_asserts: bool;
 }
 
 type test_prop_hit_or_miss =
@@ -96,7 +97,7 @@ type sig_t = {
   mutable nominal_ids: ISet.t;
 
   (* map from TypeAssert assertion locations to the type being asserted *)
-  mutable type_asserts: (type_assert_kind * ALoc.t) ALocMap.t;
+  mutable type_asserts_map: (type_assert_kind * ALoc.t) ALocMap.t;
 
   mutable errors: Flow_error.ErrorSet.t;
 
@@ -178,6 +179,7 @@ let metadata_of_options options = {
   suppress_types = Options.suppress_types options;
   default_lib_dir = (Options.file_options options).Files.default_lib_dir;
   trust_mode = Options.trust_mode options;
+  type_asserts = Options.type_asserts options;
 }
 
 let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty
@@ -194,7 +196,7 @@ let make_sig () = {
   envs = IMap.empty;
   module_map = SMap.empty;
   nominal_ids = ISet.empty;
-  type_asserts = ALocMap.empty;
+  type_asserts_map = ALocMap.empty;
   errors = Flow_error.ErrorSet.empty;
   error_suppressions = Error_suppressions.empty;
   severity_cover = Utils_js.FilenameMap.empty;
@@ -331,9 +333,10 @@ let suppress_comments cx = cx.metadata.suppress_comments
 let suppress_types cx = cx.metadata.suppress_types
 let default_lib_dir cx = cx.metadata.default_lib_dir
 
-let type_asserts cx = cx.sig_cx.type_asserts
+let type_asserts_map cx = cx.sig_cx.type_asserts_map
 let type_graph cx = cx.sig_cx.type_graph
 let trust_mode cx = cx.metadata.trust_mode
+let type_asserts cx = cx.metadata.type_asserts
 let verbose cx = cx.metadata.verbose
 let max_workers cx = cx.metadata.max_workers
 let jsx cx = cx.metadata.jsx
@@ -397,7 +400,7 @@ let add_trust_var cx id bounds =
 let add_nominal_id cx id =
   cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
 let add_type_assert cx k v =
-  cx.sig_cx.type_asserts <- ALocMap.add k v cx.sig_cx.type_asserts
+  cx.sig_cx.type_asserts_map <- ALocMap.add k v cx.sig_cx.type_asserts_map
 let remove_all_errors cx =
   cx.sig_cx.errors <- Flow_error.ErrorSet.empty
 let remove_all_error_suppressions cx =
@@ -563,7 +566,7 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
-  sig_cx.type_asserts <- ALocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;
+  sig_cx.type_asserts_map <- ALocMap.union sig_cx.type_asserts_map sig_cx_other.type_asserts_map;
   ()
 
 (* Find the constraints of a type variable in the graph.

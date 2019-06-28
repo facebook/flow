@@ -11,19 +11,19 @@ type esproposal_feature_mode =
   | ESPROPOSAL_WARN
 
 type file_watcher =
-| NoFileWatcher
-| DFind
-| Watchman
+  | NoFileWatcher
+  | DFind
+  | Watchman
 
 type module_system =
   | Node
   | Haste
 
 type lazy_mode =
-| LAZY_MODE_FILESYSTEM
-| LAZY_MODE_IDE
-| LAZY_MODE_WATCHMAN
-| NON_LAZY_MODE
+  | LAZY_MODE_FILESYSTEM
+  | LAZY_MODE_IDE
+  | LAZY_MODE_WATCHMAN
+  | NON_LAZY_MODE
 
 type jsx_mode =
   (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
@@ -44,9 +44,9 @@ type jsx_mode =
   | Jsx_csx
 
 type saved_state_fetcher =
-| Dummy_fetcher
-| Local_fetcher
-| Fb_fetcher
+  | Dummy_fetcher
+  | Local_fetcher
+  | Fb_fetcher
 
 type arch =
   | Classic
@@ -115,7 +115,8 @@ type t = {
   opt_strict_mode: StrictModeSettings.t;
   opt_arch: arch;
   opt_include_suppressions : bool;
-  opt_trust_mode: trust_mode
+  opt_trust_mode: trust_mode;
+  opt_type_asserts: bool;
 }
 
 let all opts = opts.opt_all
@@ -180,6 +181,7 @@ let lint_severities opts = opts.opt_lint_severities
 let strict_mode opts = opts.opt_strict_mode
 
 let trust_mode opts = opts.opt_trust_mode
+let type_asserts opts = opts.opt_type_asserts
 
 
 let lazy_mode_to_string lazy_mode =

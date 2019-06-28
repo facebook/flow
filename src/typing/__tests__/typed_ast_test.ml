@@ -45,6 +45,7 @@ let metadata = { Context.
   suppress_types = SSet.empty;
   default_lib_dir = None;
   trust_mode = Options.NoTrust;
+  type_asserts = false;
 }
 
 (* somewhat copied from Flow_dot_js *)
