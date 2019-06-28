@@ -435,6 +435,20 @@ let string_of_aloc ?(strip_root=None) aloc =
   | Some file ->
     spf "%s:%s" (string_of_source ~strip_root file) (ALoc.to_string_no_source aloc)
 
+let json_of_source ?(strip_root=None) = Hh_json.(function
+  | Some x -> JSON_String (string_of_source ~strip_root x)
+  | None -> JSON_Null
+)
+
+let json_source_type_of_source = Hh_json.(function
+  | Some File_key.LibFile _ -> JSON_String "LibFile"
+  | Some File_key.SourceFile _ -> JSON_String "SourceFile"
+  | Some File_key.JsonFile _ -> JSON_String "JsonFile"
+  | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
+  | Some File_key.Builtins -> JSON_String "Builtins"
+  | None -> JSON_Null
+)
+
 let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_table loc = Hh_json.(Loc.(
   let offset_entry offset_table pos =
     let offset = try
@@ -466,18 +480,8 @@ let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_ta
     end
   in
   [
-    "source", (
-      match loc.source with
-      | Some x -> JSON_String (string_of_source ~strip_root x)
-      | None -> JSON_Null
-    );
-    "type", (match loc.source with
-    | Some File_key.LibFile _ -> JSON_String "LibFile"
-    | Some File_key.SourceFile _ -> JSON_String "SourceFile"
-    | Some File_key.JsonFile _ -> JSON_String "JsonFile"
-    | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
-    | Some File_key.Builtins -> JSON_String "Builtins"
-    | None -> JSON_Null);
+    "source", (json_of_source ~strip_root loc.source);
+    "type", (json_source_type_of_source loc.source);
     "start", JSON_Object start;
     "end", JSON_Object end_;
   ]
