@@ -106,7 +106,7 @@ let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
 
 let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
   JSON_Object ([
-    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc_exn);
+    "pos", json_of_aloc ~strip_root ~offset_table (aloc_of_reason r);
     "desc", JSON_String (string_of_desc (desc_of_reason ~unwrap:false r))
   ])
 )
@@ -1165,7 +1165,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let own_props = Context.find_props json_cx.cx insttype.own_props in
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
-    "classId", json_of_loc ~offset_table:None (ALoc.to_loc_exn insttype.class_id);
+    "classId", json_of_aloc ~offset_table:None insttype.class_id;
     "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
       JSON_Object [
         "name", JSON_String x;
@@ -1346,7 +1346,7 @@ and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
 and json_of_type_binding_impl json_cx (name, (loc, t)) = Hh_json.(
   let loc_json = match loc with
     | None -> Hh_json.JSON_Null
-    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root ~offset_table:None (ALoc.to_loc_exn loc)
+    | Some loc -> json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None loc
   in
   JSON_Object [
     "name", JSON_String name;
