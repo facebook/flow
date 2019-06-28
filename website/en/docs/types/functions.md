@@ -321,9 +321,8 @@ add.bar = "hello world";
 
 ### `Function` Type <a class="toc" id="toc-function-type" href="#toc-function-type"></a>
 
-** NOTE: `Function` has become an alias to `any`. For new code, either use `any` or
-`(...args: Array<any>) => any` but there really is no reason to use `Function` and will
-be deprecated and removed in a future version of Flow. **
+** NOTE: For new code prefer `any` or `(...args: Array<any>) => any`. `Function` has become an alias to `any` and will be
+deprecated and removed in a future version of Flow. **
 
 Sometimes it is useful to write types that accept arbitrary functions, for
 those you should write `() => mixed` like this:
