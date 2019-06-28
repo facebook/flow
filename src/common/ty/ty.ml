@@ -153,7 +153,7 @@ and utility =
   | ObjMap of t * t
   | ObjMapi of t * t
   | TupleMap of t * t
-  | UnionObj of t
+  | ObjSingleton of t
   | Call of t * t list
   | Class of t
   | Shape of t
@@ -303,7 +303,7 @@ let string_of_utility_ctor = function
   | ObjMap _ -> "$ObjMap"
   | ObjMapi _ -> "$ObjMapi"
   | TupleMap _ -> "$TupleMap"
-  | UnionObj _ -> "$UnionObj"
+  | ObjSingleton _ -> "$ObjSingleton"
   | Call _ -> "$Call"
   | Class _ -> "Class"
   | Shape _ -> "$Shape"
@@ -328,7 +328,7 @@ let types_of_utility = function
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]
-  | UnionObj t -> Some [t]
+  | ObjSingleton t -> Some [t]
   | Call (t, ts) -> Some (t::ts)
   | Class t -> Some [t]
   | Shape t -> Some [t]

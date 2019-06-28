@@ -203,7 +203,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t
   | ExactT (_, t)
-  | UnionObjT (_, t)
+  | ObjectSingletonT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)
   | ThisClassT (_, t)

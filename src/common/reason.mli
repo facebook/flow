@@ -83,7 +83,7 @@ type 'loc virtual_reason_desc =
   | RTupleMap
   | RObjectMap
   | RObjectMapi
-  | RUnionObj
+  | RObjectSingleton
   | RType of string
   | RTypeAlias of string * bool * 'loc virtual_reason_desc
   | ROpaqueType of string

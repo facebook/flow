@@ -62,7 +62,7 @@ type hash =
   | BoundH
   | ExistsH
   | ExactH
-  | UnionObjH
+  | ObjectSingletonH
   | MaybeH
   | IntersectionH
   | UnionH
@@ -139,7 +139,7 @@ type hash =
   | GetValuesH
   | ElemH
   | MakeExactH
-  | MakeUnionObjH
+  | MakeObjectSingletonH
   | CJSRequireH
   | ImportModuleNsH
   | ImportDefaultH
@@ -218,7 +218,7 @@ let hash_of_ctor = Type.(function
   | CustomFunT _ -> CustomFunH
   | DefT (_, _, t) -> hash_of_def_ctor t
   | EvalT _ -> EvalH
-  | UnionObjT _ -> UnionObjH
+  | ObjectSingletonT _ -> ObjectSingletonH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
   | FunProtoT _ -> FunProtoH
@@ -301,7 +301,7 @@ let hash_of_use_ctor = Type.(function
   | GetValuesT _ -> GetValuesH
   | ElemT _ -> ElemH
   | MakeExactT _ -> MakeExactH
-  | MakeUnionObjT _ -> MakeUnionObjH
+  | MakeObjectSingletonT _ -> MakeObjectSingletonH
   | CJSRequireT _ -> CJSRequireH
   | ImportModuleNsT _ -> ImportModuleNsH
   | ImportDefaultT _ -> ImportDefaultH

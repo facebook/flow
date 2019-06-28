@@ -790,13 +790,13 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
 
-  | "$UnionObj" ->
+  | "$ObjSingleton" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-      let reason = mk_reason RUnionObj loc in
+      let reason = mk_reason RObjectSingleton loc in
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       reconstruct_ast
-        (UnionObjT (reason, t))
+        (ObjectSingletonT (reason, t))
         targs
     )
 

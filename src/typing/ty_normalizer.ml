@@ -648,9 +648,9 @@ end = struct
     | KeysT (_, t) ->
       type__ ~env t >>| fun ty ->
       Ty.Utility (Ty.Keys ty)
-    | UnionObjT (_, t) ->
+    | ObjectSingletonT (_, t) ->
       type__ ~env t >>| fun ty ->
-      Ty.Utility (Ty.UnionObj ty)
+      Ty.Utility (Ty.ObjSingleton ty)
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t ->
