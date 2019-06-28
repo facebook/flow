@@ -1,0 +1,18 @@
+(library
+  (name buffered_line_reader)
+  (wrapped false)
+  (modules
+    buffered_line_reader
+    buffered_line_reader_sig)
+  (libraries
+    utils_core))
+
+(library
+  (name buffered_line_reader_lwt)
+  (wrapped false)
+  (modules
+    buffered_line_reader_lwt)
+  (libraries
+    buffered_line_reader
+    lwt
+    lwt.unix))
