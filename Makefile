@@ -153,6 +153,7 @@ MODULES=\
   hack/utils/file_content\
   hack/utils/file_url\
   hack/utils/hh_json\
+  hack/utils/http_lite\
   hack/utils/jsonrpc\
   hack/utils/marshal_tools\
   hack/utils/string\
