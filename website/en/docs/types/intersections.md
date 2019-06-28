@@ -142,3 +142,39 @@ var value: Both = {
   prop: 1 // Error!
 };
 ```
+### Intersections of exact object types <a class="toc" id="toc-intersections-of-exact-object-types" href="#toc-intersections-of-exact-object-types"></a>
+
+It is not possible to create an intersection of [Exact object types](objects/#toc-exact-object-types).
+
+```js
+// @flow
+type One = {| foo: number |};
+type Two = {| bar: boolean |};
+
+type Both = One & Two;
+
+var value:Both = { // Error!
+  foo: 1,
+  bar: true
+}
+```
+
+For `Both` to be valid it would need to be both `One` and `Two` at the same time.
+That isn't possible because `One` can only have the property `foo` and `Two` can
+only have the property `bar`. There isn't a valid intersection of `One` and `Two`
+and so any declaration of `Both` will fail to type check.
+
+It is possible to compose two exact types using [object type spreading](objects/#toc-object-type-spreading).
+
+```js
+// @flow
+type One = {| foo: number |};
+type Two = {| bar: boolean |};
+
+type Both = {| ...One, ...Two|}
+
+var value:Both = {
+  foo: 1,
+  bar: true
+}
+```
