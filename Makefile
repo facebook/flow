@@ -150,6 +150,7 @@ MODULES=\
   hack/utils/build_mode/prod\
   hack/utils/collections\
   hack/utils/disk\
+  hack/utils/file_content\
   hack/utils/hh_json\
   hack/utils/jsonrpc\
   hack/utils/marshal_tools\
