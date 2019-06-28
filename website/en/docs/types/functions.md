@@ -362,5 +362,7 @@ method(function(a: number, b: number) {
   // ...
 });
 
+```
+
 > ***You should follow [all the same rules](../any/) as `any` when using
 > `Function`.***.
