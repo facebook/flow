@@ -487,9 +487,6 @@ let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc = Hh_json.(
   JSON_Object (json_of_loc_props ?strip_root ?catch_offset_errors ~offset_table loc)
 )
 
-let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
-  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
-
 (* reason constructors, accessors, etc. *)
 
 let mk_reason_with_test_id test_id desc loc def_loc_opt annot_loc_opt = {

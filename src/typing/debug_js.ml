@@ -90,6 +90,9 @@ type json_cx = {
   strip_root: Path.t option;
 }
 
+let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
+  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
+
 let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
   JSON_Object ([
     "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc_exn);
