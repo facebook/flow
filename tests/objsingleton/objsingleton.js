@@ -2,7 +2,7 @@
 
 declare function onAction<T, Result>(
   myEnum: T,
-  pattern: $ObjMap<$UnionObj<T>, () => () => Result>
+  pattern: $ObjMap<$ObjSingleton<T>, () => () => Result>
 ): Result;
 
 declare var action: "Action1" | "Action2" | "Action3";
