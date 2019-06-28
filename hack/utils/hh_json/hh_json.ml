@@ -408,7 +408,7 @@ let rec json_to_string ?(pretty=false) (json:json): string =
     Out_buffer.add_json buf json;
     Buffer.contents buf
 
-and json_to_multiline json =
+and json_to_multiline ?(sort_keys=false) json =
   let rec loop indent json =
     let single = json_to_string json in
     if String.length single < 80 then single else
@@ -418,6 +418,12 @@ and json_to_multiline json =
         "[\n" ^ indent ^ "  " ^ (String.concat (",\n" ^ indent ^ "  ") nl) ^
           "\n" ^ indent ^ "]"
     | JSON_Object l ->
+       (* Make the pretty output deterministic by sorting the keys *)
+       let l =
+         if sort_keys then
+           List.sort ~cmp:(fun (k1, _) (k2, _) -> Pervasives.compare k1 k2) l
+         else l
+       in
        let nl =
          List.map l
            (fun (k, v) ->
