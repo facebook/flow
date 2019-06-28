@@ -19,6 +19,7 @@ flow.docdir
 *~
 /hack/utils/get_build_id.gen.c
 /flowlib.rc
+.merlin
 
 # This is an alias of flow-remove-types that we generate during publishing
 /packages/flow-node

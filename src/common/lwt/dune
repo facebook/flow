@@ -1,0 +1,10 @@
+(library
+  (name flow_common_lwt)
+  (wrapped false)
+  (libraries
+    imported_core
+    lwt
+    lwt.unix
+  )
+  (preprocess (pps lwt_ppx))
+)

@@ -14,6 +14,12 @@ let query_env s =
   | t -> Some t
   | exception Not_found -> None
 
+let abs =
+  let current_dir = Sys.getcwd () in
+  (* we are in ./src/heap/config, locate . *)
+  let root_dir = Filename.(dirname @@ dirname @@ dirname current_dir) in
+  fun s -> if Filename.is_relative s then Filename.concat root_dir s else s
+
 let process_env () =
   let open Option in
   let open String in
@@ -22,8 +28,8 @@ let process_env () =
   and dirs = (query_env "EXTRA_LIB_PATHS") >>| split
   and names = (query_env "EXTRA_NATIVE_LIBRARIES") >>| split
   and opaque_opts = (query_env "EXTRA_LINK_OPTS") >>| split in
-  let includes = includes >>| (List.map (fun s -> "-I" ^ s))
-  and dirs = dirs >>| (List.map (fun s -> "-L" ^ s))
+  let includes = includes >>| (List.map (fun s -> "-I" ^ (abs s)))
+  and dirs = dirs >>| (List.map (fun s -> "-L" ^ (abs s)))
   and names = names >>| (List.map (fun s -> "-l" ^ s)) in
   match includes, dirs, names, opaque_opts with
   | Some includes, Some dirs, Some names, Some opts ->

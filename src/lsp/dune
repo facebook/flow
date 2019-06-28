@@ -1,0 +1,10 @@
+(library
+  (name flow_lsp)
+  (wrapped false)
+  (libraries
+    flow_commands_utils
+    flow_common_lsp_conversions
+    flow_logging_lwt
+  )
+  (preprocess (pps lwt_ppx))
+)

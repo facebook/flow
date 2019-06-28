@@ -1,0 +1,12 @@
+(library
+  (name flow_state_heaps_context)
+  (wrapped false)
+  (libraries
+    flow_common_audit
+    flow_parser
+    flow_shared_mem
+    flow_state_readers
+    flow_typing
+    heap_shared_mem ; hack
+  )
+)
