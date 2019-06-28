@@ -91,7 +91,18 @@ type json_cx = {
 }
 
 let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
-  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
+  (* Okay because this is only for debugging output *)
+  if ALoc.ALocRepresentationDoNotUse.is_abstract aloc then
+    let open Hh_json in
+    let key = ALoc.ALocRepresentationDoNotUse.get_key_exn aloc in
+    let source = ALoc.source aloc in
+    JSON_Object [
+      "source", (json_of_source ?strip_root source);
+      "type", (json_source_type_of_source source);
+      "key", JSON_Number (ALoc.ALocRepresentationDoNotUse.string_of_key key);
+    ]
+  else
+    json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
 
 let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
   JSON_Object ([
