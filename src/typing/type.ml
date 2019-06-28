@@ -1061,7 +1061,7 @@ module rec TypeTerm : sig
   | ReactConfigType of t
 
   and type_map =
-  | Reduce of t * t option
+  | TupleReduce of t * t option
   | ObjectReduce of t
   | TupleMap of t
   | ObjectMap of t

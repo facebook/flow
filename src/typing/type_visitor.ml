@@ -877,7 +877,8 @@ class ['a] t = object(self)
   | Upper u -> self#use_type_ cx acc u
 
   method private type_map cx acc = function
-  | Reduce (t, _)
+  | TupleReduce (t, _)
+  | UnionReduce (t, _)
   | ObjectReduce t
   | TupleMap t
   | ObjectMap t

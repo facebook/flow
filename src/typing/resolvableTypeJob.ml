@@ -277,8 +277,14 @@ and collect_of_destructor ?log_unresolved cx acc = function
     -> acc
 
 and collect_of_type_map ?log_unresolved cx acc = function
-  | Reduce (t, _) | ObjectReduce t | TupleMap t | ObjectMap t | ObjectMapi t ->
+  | TupleMap t
+  | ObjectReduce t
+  | ObjectMap t
+  | TupleReduce (t, None)
+  | ObjectMapi t ->
     collect_of_type ?log_unresolved cx acc t
+  | TupleReduce (t, Some t2) ->
+    collect_of_types ?log_unresolved cx acc [t; t2]
 
 (* In some positions, like annots, we trust that tvars are 0->1. *)
 and collect_of_binding ?log_unresolved cx acc = function

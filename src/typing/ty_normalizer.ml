@@ -1500,10 +1500,10 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMapi (ty, ty'))
     | T.PropertyType k ->
       return (Ty.Utility (Ty.PropertyType (ty, Ty.StrLit k)))
-    | T.TypeMap (T.Reduce (t', Some t2')) ->
-      mapM (type__ ~env) [t'; t2'] >>| fun tys -> Ty.Utility (Ty.Reduce (ty, Core_list.nth_exn tys 0, Core_list.nth tys 1))
-    | T.TypeMap (T.Reduce (t', None)) ->
-      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Reduce (ty, ty', None))
+    | T.TypeMap (T.TupleReduce (t', Some t2')) ->
+      mapM (type__ ~env) [t'; t2'] >>| fun tys -> Ty.Utility (Ty.TupleReduce (ty, Core_list.nth_exn tys 0, Core_list.nth tys 1))
+    | T.TypeMap (T.TupleReduce (t', None)) ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.TupleReduce (ty, ty', None))
     | T.TypeMap (T.ObjectReduce t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjReduce (ty, ty'))
     | T.TypeMap (T.TupleMap t') ->

@@ -153,7 +153,7 @@ and utility =
   | NonMaybeType of t
   | ObjMap of t * t
   | ObjMapi of t * t
-  | Reduce of t * t * t option
+  | TupleReduce of t * t * t option
   | ObjReduce of t * t
   | TupleMap of t * t
   | Call of t * t list
@@ -305,7 +305,7 @@ let string_of_utility_ctor = function
   | NonMaybeType _ -> "$NonMaybeType"
   | ObjMap _ -> "$ObjMap"
   | ObjMapi _ -> "$ObjMapi"
-  | Reduce _ -> "$Reduce"
+  | TupleReduce _ -> "$TupleReduce"
   | ObjReduce _ -> "$ObjReduce"
   | TupleMap _ -> "$TupleMap"
   | Call _ -> "$Call"
@@ -332,8 +332,8 @@ let types_of_utility = function
   | NonMaybeType t -> Some [t]
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]
-  | Reduce (t1, t2, Some t3) -> Some [t1; t2; t3]
-  | Reduce (t1, t2, None) -> Some [t1; t2]
+  | TupleReduce (t1, t2, Some t3) -> Some [t1; t2; t3]
+  | TupleReduce (t1, t2, None) -> Some [t1; t2]
   | ObjReduce (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t::ts)

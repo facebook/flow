@@ -37,7 +37,7 @@ let string_of_binary_test_ctor = function
   | SentinelProp _ -> "SentinelProp"
 
 let string_of_type_map = function
-  | Reduce _ -> "Reduce"
+  | TupleReduce _ -> "TupleReduce"
   | ObjectReduce _ -> "ObjectReduce"
   | TupleMap _ -> "TupleMap"
   | ObjectMap _ -> "ObjectMap"
@@ -83,7 +83,7 @@ let string_of_destructor = function
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
-  | TypeMap (Reduce _) -> "Reduce"
+  | TypeMap (TupleReduce _) -> "TupleReduce"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"
@@ -1261,11 +1261,11 @@ and json_of_destructor_impl json_cx = Hh_json.(function
 
 and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
 and json_of_type_map_impl json_cx = Hh_json.(function
-  | Reduce (t, Some t2) -> JSON_Object [
+  | TupleReduce (t, Some t2) -> JSON_Object [
       "reduce", _json_of_t json_cx t;
       "reduceInit", _json_of_t json_cx t2;
     ]
-  | Reduce (t, None) -> JSON_Object [
+  | TupleReduce (t, None) -> JSON_Object [
       "reduce", _json_of_t json_cx t;
     ]
   | ObjectReduce t -> JSON_Object [
