@@ -151,6 +151,7 @@ MODULES=\
   hack/utils/collections\
   hack/utils/disk\
   hack/utils/file_content\
+  hack/utils/file_url\
   hack/utils/hh_json\
   hack/utils/jsonrpc\
   hack/utils/marshal_tools\
