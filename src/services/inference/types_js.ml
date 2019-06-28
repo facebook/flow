@@ -269,51 +269,49 @@ let include_dependencies_and_dependents
     ~input
     ~dependency_info
     ~all_dependent_files =
-  let%lwt input_with_dependencies_of_all_dependents, components =
-    with_timer_lwt ~options "PruneDeps" profiling (fun () ->
+  with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let preliminary_to_merge = CheckedSet.all
-      (CheckedSet.add ~dependents:all_dependent_files input) in
     let preliminary_to_merge = Dep_service.calc_direct_dependencies dependency_info
-      preliminary_to_merge in
-    (* So we want to prune our dependencies to only the dependencies which changed. However,
-     * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
-     * check both of them. So we need to calculate components before we can prune *)
+      (CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files input)) in
+    (* So we want to prune our dependencies to only the dependencies which changed. However, two
+       dependencies A and B might be in a cycle. If A changed and B did not, we still need to check
+       B. Likewise, a dependent A and a dependency B might be in a cycle. If B is not a dependent
+       and A and B are unchanged, we still need to check B. So we need to calculate components
+       before we can prune. *)
     (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
-     * cycles *)
+       cycles *)
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let components = Sort_js.topsort ~roots:preliminary_to_merge dependency_graph in
     let dependencies = List.fold_left (fun dependencies component ->
-      if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
-      (* If at least one member of the component is not unchanged, then keep the component *)
-      then Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
-      (* If every element is unchanged, drop the component *)
-      else dependencies
+      let dependencies =
+        if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
+        (* If some member of the component is not unchanged, then keep the component *)
+        then Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
+        (* If every element is unchanged, drop the component *)
+        else dependencies in
+      let dependencies =
+        let dependents, non_dependents =
+          List.partition (fun fn -> FilenameSet.mem fn all_dependent_files)
+          @@ Nel.to_list component in
+        if dependents <> [] && non_dependents <> []
+        (* If some member of the component is a dependent and others are not, then keep the
+           others *)
+        then List.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies non_dependents
+        (* If every element is a dependent or if every element is not, drop the component *)
+        else dependencies in
+      dependencies
     ) FilenameSet.empty components in
-    Lwt.return (CheckedSet.add ~dependencies input, components)
-  ) in
-
-  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with
-     input_with_dependencies_of_all_dependents + all_dependent_files (which is = to_merge later) on
-     dependency_graph, we would get exactly the same components. Later, we will filter
-     dependency_graph to just to_merge, and correspondingly filter components as well. This will
-     work out because every component is either entirely inside to_merge or entirely outside. *)
-
-  let to_merge =
-    CheckedSet.add ~dependents:all_dependent_files input_with_dependencies_of_all_dependents in
-
-  let recheck_set =
-    (* Definitely recheck input files. As merging proceeds, other files in to_merge may or may not
-       be rechecked. *)
-    CheckedSet.fold (fun recheck_set file ->
-      if CheckedSet.mem file input_with_dependencies_of_all_dependents
-      then FilenameSet.add file recheck_set
-      else recheck_set
-    ) FilenameSet.empty to_merge
-  in
-
-  Lwt.return (to_merge, components, recheck_set)
+    (* Definitely recheck input and dependencies. As merging proceeds, dependents may or may not be
+       rechecked. *)
+    let definitely_to_merge = CheckedSet.add ~dependencies input in
+    let to_merge = CheckedSet.add ~dependents:all_dependent_files definitely_to_merge in
+    (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with to_merge on
+       dependency_graph, we would get exactly the same components. Later, we will filter
+       dependency_graph to just to_merge, and correspondingly filter components as well. This will
+       work out because every component is either entirely inside to_merge or entirely outside. *)
+    Lwt.return (to_merge, components, CheckedSet.all definitely_to_merge)
+  )
 
 let remove_old_results (errors, warnings, suppressions, coverage) file =
   FilenameMap.remove file errors,
@@ -1344,9 +1342,9 @@ end = struct
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. all_dependent_files are
        direct_dependent_files plus their dependents (transitive closure) *)
-    let%lwt all_dependent_files, direct_dependent_files =
-      with_timer_lwt ~options "DependentFiles" profiling (fun () ->
-        Dep_service.dependent_files
+    let%lwt direct_dependent_files =
+      with_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
+        Dep_service.calc_direct_dependents
           ~reader:(Abstract_state_reader.Mutator_state_reader reader)
           workers
           ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
@@ -1395,6 +1393,11 @@ end = struct
           ))
         | _ -> assert false
     ) in
+
+    let%lwt all_dependent_files =
+      with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
+        Lwt.return (Dep_service.calc_all_dependents dependency_info direct_dependent_files)
+      ) in
 
     (* Here's how to update unparsed:
      * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed

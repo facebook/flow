@@ -60,11 +60,11 @@ let get_ast_result ~reader file
   docblock_result >>= fun docblock ->
   Ok (ast, file_sig, docblock)
 
-let get_dependents ~reader options workers env file_key content =
+let get_all_dependents ~reader options workers env file_key content =
   let docblock = compute_docblock file_key content in
   let reader = Abstract_state_reader.State_reader reader in
   let modulename = Module_js.exported_module ~options file_key docblock in
-  Dep_service.dependent_files
+  let%lwt direct_deps = Dep_service.calc_direct_dependents
     ~reader
     workers
     (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
@@ -72,3 +72,5 @@ let get_dependents ~reader options workers env file_key content =
     ~candidates:ServerEnv.(CheckedSet.all !env.checked_files)
     ~root_files:(FilenameSet.singleton file_key)
     ~root_modules:(Modulename.Set.singleton modulename)
+  in
+  Lwt.return (Dep_service.calc_all_dependents !env.ServerEnv.dependency_info direct_deps)

@@ -262,7 +262,7 @@ let deps_of_file_key
   File_key.to_path file_key %>>= fun path ->
   let fileinput = File_input.FileName path in
   File_input.content_of_file_input fileinput %>>| fun content ->
-  let%lwt all_deps, _ = get_dependents ~reader options workers env file_key content in
+  let%lwt all_deps = get_all_dependents ~reader options workers env file_key content in
   Lwt.return all_deps
 
 let deps_of_file_keys
