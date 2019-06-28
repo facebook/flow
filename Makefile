@@ -150,6 +150,7 @@ MODULES=\
   hack/utils/collections\
   hack/utils/disk\
   hack/utils/hh_json\
+  hack/utils/marshal_tools\
   hack/utils/string\
   hack/utils/sys\
   hack/watchman\
