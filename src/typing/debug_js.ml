@@ -38,7 +38,6 @@ let string_of_binary_test_ctor = function
 
 let string_of_type_map = function
   | TupleReduce _ -> "TupleReduce"
-  | ObjectReduce _ -> "ObjectReduce"
   | TupleMap _ -> "TupleMap"
   | ObjectMap _ -> "ObjectMap"
   | ObjectMapi _ -> "ObjectMapi"
@@ -1267,9 +1266,6 @@ and json_of_type_map_impl json_cx = Hh_json.(function
     ]
   | TupleReduce (t, None) -> JSON_Object [
       "reduce", _json_of_t json_cx t;
-    ]
-  | ObjectReduce t -> JSON_Object [
-      "objectReduce", _json_of_t json_cx t;
     ]
   | TupleMap t -> JSON_Object [
       "tupleMap", _json_of_t json_cx t;

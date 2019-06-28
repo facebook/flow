@@ -1062,7 +1062,6 @@ module rec TypeTerm : sig
 
   and type_map =
   | TupleReduce of t * t option
-  | ObjectReduce of t
   | TupleMap of t
   | ObjectMap of t
   | ObjectMapi of t

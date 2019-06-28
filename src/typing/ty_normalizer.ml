@@ -1504,8 +1504,6 @@ end = struct
       mapM (type__ ~env) [t'; t2'] >>| fun tys -> Ty.Utility (Ty.TupleReduce (ty, Core_list.nth_exn tys 0, Core_list.nth tys 1))
     | T.TypeMap (T.TupleReduce (t', None)) ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.TupleReduce (ty, ty', None))
-    | T.TypeMap (T.ObjectReduce t') ->
-      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjReduce (ty, ty'))
     | T.TypeMap (T.TupleMap t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.TupleMap (ty, ty'))
     | T.RestType (T.Object.Rest.Sound, t') ->

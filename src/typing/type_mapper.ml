@@ -569,10 +569,6 @@ class virtual ['a] t = object(self)
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
       else TupleReduce (t'', None)
-    | ObjectReduce t' ->
-      let t'' = self#type_ cx map_cx t' in
-      if t'' == t' then t
-      else ObjectReduce t''
     | TupleMap t' ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t

@@ -878,8 +878,6 @@ class ['a] t = object(self)
 
   method private type_map cx acc = function
   | TupleReduce (t, _)
-  | UnionReduce (t, _)
-  | ObjectReduce t
   | TupleMap t
   | ObjectMap t
   | ObjectMapi t -> self#type_ cx pole_TODO acc t

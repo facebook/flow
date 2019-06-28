@@ -278,7 +278,6 @@ and collect_of_destructor ?log_unresolved cx acc = function
 
 and collect_of_type_map ?log_unresolved cx acc = function
   | TupleMap t
-  | ObjectReduce t
   | ObjectMap t
   | TupleReduce (t, None)
   | ObjectMapi t ->
