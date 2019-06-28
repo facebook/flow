@@ -720,6 +720,7 @@ module Object
     Expect.token env T_CLASS;
     let id, tparams = match Peek.token env with
       | T_EXTENDS
+      | T_IMPLEMENTS
       | T_LESS_THAN
       | T_LCURLY -> None, None
       | _ ->
