@@ -548,6 +548,11 @@ class virtual ['a] t = object(self)
 
   method type_map cx map_cx t =
     match t with
+    | ObjectReduce (t', t2') ->
+      let t'' = self#type_ cx map_cx t' in
+      let t2'' = self#type_ cx map_cx t2' in
+      if t'' == t' && t2'' == t2' then t
+      else ObjectReduce (t'', t2'')
     | TupleMap t' ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t

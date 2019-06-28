@@ -1498,6 +1498,8 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMapi (ty, ty'))
     | T.PropertyType k ->
       return (Ty.Utility (Ty.PropertyType (ty, Ty.StrLit k)))
+    | T.TypeMap (T.ObjectReduce (t', t2')) ->
+      mapM (type__ ~env) [t'; t2'] >>| fun tys -> Ty.Utility (Ty.ObjReduce (ty, Core_list.nth_exn tys 0, Core_list.nth_exn tys 1))
     | T.TypeMap (T.TupleMap t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.TupleMap (ty, ty'))
     | T.RestType (T.Object.Rest.Sound, t') ->

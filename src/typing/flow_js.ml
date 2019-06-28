@@ -5434,6 +5434,32 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _, MapTypeT (_, reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
+    | DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectReduce (funt, init), tout) ->
+      let mk_key key =
+        let t_reason = replace_reason_const (RStringLit key) reason_op in
+        DefT (t_reason, trust, SingletonStrT key)
+      in
+      let f acc (key, value) =
+        let key = mk_key key in
+        EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [acc; value; key]), mk_id ())
+      in
+      let mk_fold ts init =
+        Core_list.fold ts ~f:f ~init:init
+      in
+      let t_type =
+        let props_tmap = Context.find_props cx o.props_tmap |> SMap.map (function
+          | Field (_, t, _) -> t
+          | Get (_, t) -> t
+          | Set (_, t) -> t
+          | GetSet (_, t, _, _) -> t
+          | Method (_, t) -> t
+        )
+        in
+        let props = SMap.bindings props_tmap in
+        mk_fold props init
+      in
+      rec_flow_t cx trace (t_type, tout)
+
     | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout) ->
       let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
       let arrtype = match arrtype with

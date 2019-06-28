@@ -768,6 +768,17 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
 
+  | "$ObjReduce" ->
+    check_type_arg_arity cx loc t_ast targs 3 (fun () ->
+      let t1, t2, t3, targs = match convert_type_params () with
+      | [t1; t2; t3], targs -> t1, t2, t3, targs
+      | _ -> assert false in
+      let reason = mk_reason RObjectReduce loc in
+      reconstruct_ast
+        (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectReduce (t2, t3))), mk_id ()))
+        targs
+    )
+
   | "$ObjMap" ->
     check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       let t1, t2, targs = match convert_type_params () with
