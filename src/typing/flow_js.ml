@@ -704,7 +704,8 @@ let error_message_kind_of_upper = function
   | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)
 
 let use_op_of_lookup_action = function
-  | RWProp (use_op, _, _, _) -> Some use_op
+  | ReadProp { use_op; _ } -> Some use_op
+  | WriteProp { use_op; _ } -> Some use_op
   | LookupProp (use_op, _) -> Some use_op
   | SuperProp (use_op, _) -> Some use_op
   | MatchProp (use_op, _) -> Some use_op
@@ -4774,10 +4775,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
 
     | DefT (reason_c, _, InstanceT (_, _, _, instance)),
-      SetPrivatePropT (use_op, reason_op, x, scope::scopes, static, tin, prop_t) ->
+      SetPrivatePropT (use_op, reason_op, x, scope::scopes, static, tin, prop_tout) ->
       if scope.class_binding_id != instance.class_id then
         rec_flow cx trace (
-          l, SetPrivatePropT (use_op, reason_op, x, scopes, static, tin, prop_t)
+          l, SetPrivatePropT (use_op, reason_op, x, scopes, static, tin, prop_tout)
         )
       else (
         let map =
@@ -4789,7 +4790,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | None ->
           add_output cx ~trace (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
         | Some p ->
-          let action = RWProp (use_op, l, tin, Write (Normal, prop_t)) in
+          let action = WriteProp {
+            use_op;
+            obj_t = l;
+            prop_tout;
+            tin;
+            write_ctx = Normal;
+          } in
           let propref = Named (reason_op, x) in
           perform_lookup_action cx trace propref p reason_c reason_op action
       )
@@ -4845,7 +4852,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | None ->
           add_output cx ~trace (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
         | Some p ->
-          let action = RWProp (use_op, l, tout, Read) in
+          let action = ReadProp { use_op; obj_t = l; tout = tout } in
           let propref = Named (reason_op, x) in
           perform_lookup_action cx trace propref p reason_c reason_op action)
 
@@ -6146,9 +6153,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           Some (DefT (r, bogus_trust (), MixedT Mixed_everything), lookup_default)
       in
       let lookup_kind = NonstrictReturning (lookup_default, test_info) in
-      rec_flow cx trace (l,
-        LookupT (reason_op, lookup_kind, [], propref,
-          RWProp (unknown_use, l, tout, Read)))
+      rec_flow cx trace (l, LookupT (reason_op, lookup_kind, [], propref, ReadProp {
+        use_op = unknown_use;
+        obj_t = l;
+        tout = tout;
+      }))
 
     (************)
     (* indexing *)
@@ -6211,13 +6220,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (next, LookupT (reason, strict, try_ts_on_failure, propref, t))
 
     | (ObjProtoT _ | FunProtoT _),
-      LookupT (reason_op, _, [], Named (_, "__proto__"), RWProp (_, l, t, rw)) ->
+      LookupT (reason_op, _, [], Named (_, "__proto__"), ReadProp {
+        use_op = _;
+        obj_t = l;
+        tout;
+      }) ->
       (* __proto__ is a getter/setter on Object.prototype *)
-      let u = match rw with
-      | Read -> GetProtoT (reason_op, t)
-      | Write _ -> SetProtoT (reason_op, t)
-      in
-      rec_flow cx trace (l, u)
+      rec_flow cx trace (l, GetProtoT (reason_op, tout))
+
+    | (ObjProtoT _ | FunProtoT _),
+      LookupT (reason_op, _, [], Named (_, "__proto__"), WriteProp {
+        use_op = _;
+        obj_t = l;
+        prop_tout = _;
+        tin;
+        write_ctx = _;
+      }) ->
+      (* __proto__ is a getter/setter on Object.prototype *)
+      rec_flow cx trace (l, SetProtoT (reason_op, tin))
 
     | ObjProtoT _, LookupT (reason_op, _, [], Named (_, x), _)
       when is_object_prototype_method x ->
@@ -8750,15 +8770,16 @@ and access_prop cx trace reason_prop reason_op strict super x pmap action =
     lookup_prop cx trace super reason_prop reason_op strict x action
 
 and get_prop cx trace ~use_op reason_prop reason_op strict l super x map tout =
-  RWProp (use_op, l, tout, Read)
+  ReadProp { use_op; obj_t = l; tout }
   |> access_prop cx trace reason_prop reason_op strict super x map
 
 and match_prop cx trace ~use_op reason_prop reason_op strict super x pmap prop_t =
   MatchProp (use_op, prop_t)
   |> access_prop cx trace reason_prop reason_op strict super x pmap
 
-and set_prop cx ?(wr_ctx=Normal) trace ~use_op reason_prop reason_op strict l super x pmap tin prop_t =
-  RWProp (use_op, l, tin, Write (wr_ctx, prop_t))
+and set_prop cx ?(wr_ctx=Normal) trace ~use_op
+    reason_prop reason_op strict l super x pmap tin prop_tout =
+  WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx = wr_ctx }
   |> access_prop cx trace reason_prop reason_op strict super x pmap
 
 and get_obj_prop cx trace o propref reason_op =
@@ -8784,7 +8805,7 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
   let l = DefT (reason_obj, bogus_trust (), ObjT o) in
   (match get_obj_prop cx trace o propref reason_op with
   | Some p ->
-    let action = RWProp (use_op, l, tout, Read) in
+    let action = ReadProp { use_op; obj_t = l; tout = tout } in
     perform_lookup_action cx trace propref p reason_obj reason_op action
   | None ->
     match propref with
@@ -8794,8 +8815,11 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
         then Strict reason_obj
         else ShadowRead (None, Nel.one o.props_tmap)
       in
-      rec_flow cx trace (o.proto_t,
-        LookupT (reason_op, strict, [], propref, RWProp (use_op, l, tout, Read)))
+      rec_flow cx trace (o.proto_t, LookupT (reason_op, strict, [], propref, ReadProp {
+        use_op;
+        obj_t = l;
+        tout = tout;
+      }))
     | Computed elem_t ->
       match elem_t with
       | OpenT _ ->
@@ -8857,8 +8881,9 @@ and match_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t =
   MatchProp (use_op, prop_t)
   |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t
 
-and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t =
-  RWProp (use_op, DefT (reason_obj, bogus_trust (), ObjT o), tin, Write (Normal, prop_t))
+and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_tout =
+  let obj_t = DefT (reason_obj, bogus_trust (), ObjT o) in
+  WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal }
   |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op tin
 
 and match_shape cx trace ~use_op proto reason props =
@@ -10761,28 +10786,36 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
   | SuperProp (use_op, lp) ->
     rec_flow_p cx trace ~use_op ureason lreason propref (lp, p)
-  | RWProp (use_op, _, tout, rw) ->
-    begin match rw, Property.access rw p with
+  | ReadProp { use_op; obj_t = _; tout } ->
+    begin match Property.read_t p with
     (* TODO: Sam, comment repositioning logic here *)
-    | Read, Some t ->
+    | Some t ->
       let loc = aloc_of_reason ureason in
       rec_flow_t cx trace (reposition cx ~trace loc t, tout)
-    | Write (_, prop_t), Some t ->
-      rec_flow cx trace (tout, UseT (use_op, t));
-      Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (t, prop_t)) prop_t
-    | _, None ->
+    | None ->
       let reason_prop, prop_name = match propref with
       | Named (r, x) -> r, Some x
       | Computed t -> reason_of_t t, None
       in
-      let msg = match rw with
-      | Read -> Error_message.EPropNotReadable { reason_prop; prop_name; use_op }
-      | Write _ -> Error_message.EPropNotWritable { reason_prop; prop_name; use_op }
+      let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
+      add_output cx ~trace msg
+    end
+  | WriteProp { use_op; obj_t = _; prop_tout; tin; write_ctx } ->
+    begin match Property.write_t ~ctx:write_ctx p with
+    (* TODO: Sam, comment repositioning logic here *)
+    | Some t ->
+      rec_flow cx trace (tin, UseT (use_op, t));
+      Option.iter ~f:(fun prop_tout -> rec_flow_t cx trace (t, prop_tout)) prop_tout
+    | None ->
+      let reason_prop, prop_name = match propref with
+      | Named (r, x) -> r, Some x
+      | Computed t -> reason_of_t t, None
       in
+      let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
       add_output cx ~trace msg
     end
   | MatchProp (use_op, tin) ->
-    begin match Property.access Read p with
+    begin match Property.read_t p with
       | Some t -> rec_flow cx trace (tin, UseT (use_op, t))
       | None ->
         let reason_prop, prop_name = match propref with
@@ -10817,8 +10850,11 @@ and get_builtin cx ?trace x reason =
 and lookup_builtin cx ?trace x reason strict builtin =
   let propref = Named (reason, x) in
   let l = builtins cx in
-  flow_opt cx ?trace (l,
-    LookupT (reason, strict, [], propref, RWProp (unknown_use, l, builtin, Read)))
+  flow_opt cx ?trace (l, LookupT (reason, strict, [], propref, ReadProp {
+    use_op = unknown_use;
+    obj_t = l;
+    tout = builtin;
+  }))
 
 and get_builtin_typeapp cx ?trace reason x ts =
   typeapp (get_builtin cx ?trace x reason) ts

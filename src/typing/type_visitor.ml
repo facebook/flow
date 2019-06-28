@@ -846,20 +846,20 @@ class ['a] t = object(self)
     Nel.fold_left (self#props cx pole_TODO) acc props
 
   method private lookup_action cx acc = function
-  | RWProp (_, t1, t2, rw) ->
+  | ReadProp { use_op = _; obj_t = t1; tout = t2 } ->
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in
-    let acc = self#read_write cx acc rw in
+    acc
+  | WriteProp { use_op = _; obj_t; prop_tout; tin; write_ctx = _ } ->
+    let acc = self#type_ cx pole_TODO acc obj_t in
+    let acc = self#opt (self#type_ cx pole_TODO) acc prop_tout in
+    let acc = self#type_ cx pole_TODO acc tin in
     acc
   | LookupProp (_, prop)
   | SuperProp (_, prop) ->
     self#prop cx pole_TODO acc prop
   | MatchProp (_, t) ->
     self#type_ cx pole_TODO acc t
-
-  method private read_write cx acc = function
-  | Read -> acc
-  | Write (_, prop_t) -> self#opt (self#type_ cx pole_TODO) acc prop_t
 
   method private elem_action cx acc = function
   | ReadElem t ->

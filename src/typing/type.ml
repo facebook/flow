@@ -913,14 +913,21 @@ module rec TypeTerm : sig
   | ShadowWrite of Properties.id Nel.t
 
   and lookup_action =
-  | RWProp of use_op * t (* original target *) * t (* in/out type *) * rw
+  | ReadProp of {
+      use_op: use_op;
+      obj_t: t;
+      tout: t;
+    }
+  | WriteProp of {
+      use_op: use_op;
+      obj_t: t;
+      prop_tout: t option;
+      tin: t;
+      write_ctx: write_ctx;
+    }
   | LookupProp of use_op * Property.t
   | SuperProp of use_op * Property.t
   | MatchProp of use_op * t
-
-  and rw =
-  | Read
-  | Write of write_ctx * t option (* original type of field *)
 
   and write_ctx = ThisInCtor | Normal
 
@@ -1213,7 +1220,6 @@ and Property : sig
 
   val read_t: t -> TypeTerm.t option
   val write_t: ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
-  val access: TypeTerm.rw -> t -> TypeTerm.t option
 
   val read_loc: t -> ALoc.t option
   val write_loc: t -> ALoc.t option
@@ -1290,10 +1296,6 @@ end = struct
           let k = ALoc.compare loc1 loc2 in
           let loc = if k <= 0 then loc1 else loc2 in
           Some loc
-
-  let access = function
-    | Read -> read_t
-    | Write (ctx, _) -> write_t ~ctx
 
   let iter_t f = function
     | Field (_, t, _)

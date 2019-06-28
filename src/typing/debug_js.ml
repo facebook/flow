@@ -57,10 +57,6 @@ let string_of_sentinel = function
   | Enum.One enum -> string_of_enum enum
   | Enum.Many enums -> ListUtils.to_string " | " string_of_enum @@ EnumSet.elements enums
 
-let string_of_rw = function
-  | Read -> "Read"
-  | Write _ -> "Write"
-
 let string_of_selector = function
   | Elem _ -> "Elem _" (* TODO print info about the key *)
   | Prop x -> spf "Prop %s" x
@@ -1469,10 +1465,19 @@ and json_of_lookup_action json_cx =
 and json_of_lookup_action_impl json_cx action = Hh_json.(
   JSON_Object (
     match action with
-    | RWProp (_, _, t, rw) -> [
-        "kind", JSON_String "RWProp";
-        "rw", JSON_String (string_of_rw rw);
-        "t", _json_of_t json_cx t
+    | ReadProp { use_op = _; obj_t = _; tout }  -> [
+        "kind", JSON_String "ReadProp";
+        "t", _json_of_t json_cx tout
+      ]
+    | WriteProp {
+        use_op = _;
+        obj_t = _;
+        prop_tout = _;
+        tin;
+        write_ctx = _;
+      }  -> [
+        "kind", JSON_String "WriteProp";
+        "t", _json_of_t json_cx tin
       ]
     | LookupProp (op, p) -> [
         "kind", JSON_String "LookupProp";
@@ -1898,8 +1903,8 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let lookup_action = function
-  | RWProp (_, _, t, Read) -> spf "Read %s" (kid t)
-  | RWProp (_, _, t, Write _) -> spf "Write %s" (kid t)
+  | ReadProp { tout; _ } -> spf "Read %s" (kid tout)
+  | WriteProp { tin; _ } -> spf "Write %s" (kid tin)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp (_, p) -> spf "Super %s" (prop p)
   | MatchProp (_, t) -> spf "Match %s" (kid t)

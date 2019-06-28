@@ -546,14 +546,6 @@ class virtual ['a] t = object(self)
         if t' == t then p
         else LatentP (t', i)
 
-  method private read_write cx map_cx rw =
-    match rw with
-    | Read -> rw
-    | Write (wr_ctx, prop_t) ->
-      let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
-      if prop_t' == prop_t then rw
-      else Write (wr_ctx, prop_t')
-
   method type_map cx map_cx t =
     match t with
     | TupleMap t' ->
@@ -1200,12 +1192,23 @@ class virtual ['a] t_with_uses = object(self)
 
   method lookup_action cx map_cx t =
     match t with
-    | RWProp (use_op, t1, t2, rw) ->
-        let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
-        let rw' = self#read_write cx map_cx rw in
-        if t1' == t1 && t2' == t2 && rw' == rw then t
-        else RWProp (use_op, t1', t2', rw')
+    | ReadProp { use_op; obj_t; tout } ->
+        let obj_t' = self#type_ cx map_cx obj_t in
+        let tout' = self#type_ cx map_cx tout in
+        if obj_t' == obj_t && tout' == tout then t
+        else ReadProp { use_op; obj_t =  obj_t'; tout = tout' }
+    | WriteProp { use_op; obj_t; prop_tout; tin; write_ctx } ->
+        let obj_t' = self#type_ cx map_cx obj_t in
+        let tin' = self#type_ cx map_cx tin in
+        let prop_tout' = OptionUtils.ident_map (self#type_ cx map_cx) prop_tout in
+        if obj_t' == obj_t && tin' == tin && prop_tout' == prop_tout then t
+        else WriteProp {
+          use_op;
+          obj_t = obj_t';
+          prop_tout = prop_tout';
+          tin = tin';
+          write_ctx;
+        }
     | LookupProp (use, prop) ->
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t
