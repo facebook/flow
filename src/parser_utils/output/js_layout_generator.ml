@@ -660,7 +660,7 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
     | S.VariableDeclaration decl ->
       with_semicolon (variable_declaration (loc, decl))
     | S.ClassDeclaration class_ -> class_base class_
-    | S.EnumDeclaration _ -> Empty (* TODO(T44731104) Support enums in JS layout generator *)
+    | S.EnumDeclaration enum -> enum_declaration enum
     | S.ForOf { S.ForOf.left; right; body; async } ->
       fuse [
         Atom "for";
@@ -1537,6 +1537,69 @@ and class_base { Ast.Class.
   group [
     decorator_parts;
     group parts;
+  ]
+
+and enum_declaration {Ast.Statement.EnumDeclaration.id; body} =
+  let open Ast.Statement.EnumDeclaration in
+  let representation_type name explicit =
+    if explicit then
+      fuse [space; Atom "of"; space; Atom name]
+    else
+      Empty
+  in
+  let wrap_body members =
+    wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
+  in
+  let defaulted_member (_, {DefaultedMember.id}) = fuse [
+    identifier id;
+    Atom ","
+  ] in
+  let initialized_member id value_str = fuse [
+    identifier id;
+    pretty_space;
+    Atom "=";
+    pretty_space;
+    Atom value_str;
+    Atom ","
+  ] in
+  let boolean_member (_, {InitializedMember.id; init = (_, init_value)}) =
+    initialized_member id (if init_value then "true" else "false")
+  in
+  let number_member (_, {InitializedMember.id; init = (_, {Ast.NumberLiteral.raw; _})}) =
+    initialized_member id raw
+  in
+  let string_member (_, {InitializedMember.id; init = (_, {Ast.StringLiteral.raw; _})}) =
+    initialized_member id raw
+  in
+  let body = match body with
+    | BooleanBody {BooleanBody.members; explicitType} -> fuse [
+      representation_type "boolean" explicitType;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:boolean_member members;
+    ]
+    | NumberBody {NumberBody.members; explicitType} -> fuse [
+      representation_type "number" explicitType;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:number_member members;
+    ]
+    | StringBody {StringBody.members; explicitType} -> fuse [
+      representation_type "string" explicitType;
+      pretty_space;
+      wrap_body @@ match members with
+      | StringBody.Defaulted members -> Core_list.map ~f:defaulted_member members
+      | StringBody.Initialized members -> Core_list.map ~f:string_member members
+    ]
+    | SymbolBody {SymbolBody.members} -> fuse [
+      representation_type "symbol" true;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:defaulted_member members;
+    ]
+  in
+  fuse [
+    Atom "enum";
+    space;
+    identifier id;
+    body;
   ]
 
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)
