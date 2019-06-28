@@ -108,7 +108,8 @@ let before_and_after_stmts file_name =
   | Ok ((_, stmts, _), file_sig) ->
     let cx =
       let sig_cx = Context.make_sig () in
-      Context.make sig_cx metadata file_key Files.lib_module_ref
+      let aloc_table = Utils_js.FilenameMap.empty in
+      Context.make sig_cx metadata file_key aloc_table Files.lib_module_ref
     in
     Flow_js.mk_builtins cx;
     Flow_js.Cache.clear ();

@@ -87,7 +87,9 @@ let load_lib_files ~sig_cx ~options ~reader files =
             { metadata with checked = false; weak = false }
           in
 
-          let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
+          (* Lib files use only concrete locations, so this is not needed. *)
+          let aloc_tables = FilenameMap.empty in
+          let cx = Context.make sig_cx metadata lib_file aloc_tables Files.lib_module_ref in
 
           let syms = Infer.infer_lib_file cx ast
             ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig
@@ -160,7 +162,9 @@ let init ~options ~reader lib_files =
       let metadata = metadata_of_options options in
       { metadata with checked = false; weak = false }
     in
-    Context.make sig_cx metadata File_key.Builtins Files.lib_module_ref
+    (* Builtins use only concrete locations, so this is not needed. *)
+    let aloc_tables = FilenameMap.empty in
+    Context.make sig_cx metadata File_key.Builtins aloc_tables Files.lib_module_ref
   in
 
   Flow_js.mk_builtins master_cx;

@@ -24,6 +24,7 @@ val merge_component:
   strict_mode: StrictModeSettings.t ->
   file_sigs: File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   get_ast_unsafe: (File_key.t -> get_ast_return) ->
+  get_aloc_table_unsafe: (File_key.t -> ALoc.table) ->
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
   (* component *)
   File_key.t Nel.t ->

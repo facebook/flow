@@ -57,7 +57,7 @@ type metadata = {
 type type_assert_kind = Is | Throws | Wraps
 
 val make_sig: unit -> sig_t
-val make: sig_t -> metadata -> File_key.t -> string -> t
+val make: sig_t -> metadata -> File_key.t -> ALoc.table Lazy.t Utils_js.FilenameMap.t -> string -> t
 val metadata_of_options: Options.t -> metadata
 
 val trust_constructor: t -> (unit -> Trust.trust_rep)
@@ -85,6 +85,7 @@ val esproposal_optional_chaining: t -> Options.esproposal_feature_mode
 val esproposal_nullish_coalescing: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
+val aloc_tables: t -> ALoc.table Lazy.t Utils_js.FilenameMap.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_real_props: t -> Type.Properties.id -> Type.Properties.t
 val find_call: t -> int -> Type.t

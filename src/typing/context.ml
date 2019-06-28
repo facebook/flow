@@ -125,6 +125,8 @@ type t = {
   sig_cx: sig_t;
 
   file: File_key.t;
+  (* Tables for the current component (cycle) *)
+  aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   metadata: metadata;
 
   module_info: Module_info.t;
@@ -206,10 +208,11 @@ let make_sig () = {
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make sig_cx metadata file module_ref = {
+let make sig_cx metadata file aloc_tables module_ref = {
   sig_cx;
 
   file;
+  aloc_tables;
   metadata;
 
   module_info = Module_info.empty_cjs_module module_ref;
@@ -281,6 +284,7 @@ let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
 let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
 let evaluated cx = cx.sig_cx.evaluated
 let file cx = cx.file
+let aloc_tables cx = cx.aloc_tables
 let find_props cx id =
   try Type.Properties.Map.find_unsafe id cx.sig_cx.property_maps
   with Not_found -> raise (Props_not_found id)

@@ -129,8 +129,12 @@ end = struct
     let sig_cx = Context.make_sig () in
     let cx =
       let metadata = Context.metadata_of_options options in
+      (* This context is only used to add *something* to the sighash when we encounter an unexpected
+       * exception during typechecking. It doesn't really matter what we choose, so we might as well
+       * make it the empty map. *)
+      let aloc_tables = FilenameMap.empty in
       let module_ref = Files.module_ref leader_f in
-      Context.make sig_cx metadata leader_f module_ref
+      Context.make sig_cx metadata leader_f aloc_tables module_ref
     in
     let module_refs = Core_list.map ~f:(fun f ->
       let module_ref = Files.module_ref f in

@@ -124,9 +124,13 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
+  let get_aloc_table_unsafe =
+    Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
+  in
   let (((cx, _, _), other_cxs) as cx_nel) = Merge_js.merge_component
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:(get_ast_unsafe ~reader)
+    ~get_aloc_table_unsafe
     ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
     component file_reqs dep_cxs master_cx
   in
@@ -194,9 +198,13 @@ let merge_contents_context ~reader options file ast info file_sig =
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
+  let get_aloc_table_unsafe =
+    Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
+  in
   let ((cx, tast, _), _) = Merge_js.merge_component
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
+    ~get_aloc_table_unsafe
     ~get_docblock_unsafe:(fun _ -> info)
     component file_reqs dep_cxs master_cx
   in

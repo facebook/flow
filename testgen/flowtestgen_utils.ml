@@ -564,9 +564,11 @@ let flow_check (code : string) : string option =
     try
       let root = Path.dummy_path in
       let master_sig_cx = Context.make_sig () in
+      let aloc_table = Utils_js.FilenameMap.empty in
       let master_cx = Context.make master_sig_cx
         (stub_metadata ~root ~checked:false)
         File_key.Builtins
+        aloc_table
         Files.lib_module_ref in
 
       (* Merge builtins *)
@@ -579,7 +581,7 @@ let flow_check (code : string) : string option =
       in
       let builtins_sig_cx = Context.make_sig () in
       let builtins_cx = Context.make builtins_sig_cx builtin_metadata
-        File_key.Builtins Files.lib_module_ref in
+        File_key.Builtins aloc_table Files.lib_module_ref in
       let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
         ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:(File_sig.abstractify_locs builtins_file_sig) in
       let () =
@@ -617,6 +619,7 @@ let flow_check (code : string) : string option =
       let ((final_cx, _, _), _other_cxs) = Merge_js.merge_component
           ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
           ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
+          ~get_aloc_table_unsafe:(fun _ -> failwith "Did not expect to need an ALoc table in testgen")
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
           (Nel.one filename) reqs [] master_sig_cx in
       let suppressions = Error_suppressions.empty in
