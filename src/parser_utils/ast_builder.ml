@@ -51,6 +51,12 @@ module Types = struct
     loc, Ast.Type.Object (Objects.make ?exact ?inexact properties)
 end
 
+let string_literal value =
+  {Ast.StringLiteral.value; raw = Printf.sprintf "%S" value}
+
+let number_literal value raw =
+  {Ast.NumberLiteral.value; raw}
+
 module Literals = struct
   open Ast.Literal
 
@@ -281,6 +287,36 @@ module Statements = struct
 
   let with_ _object body =
     Loc.none, With { With._object; body }
+
+  let enum_declaration ?(loc=Loc.none) id body =
+    loc, EnumDeclaration {EnumDeclaration.id; body}
+
+  module EnumDeclarations = struct
+    open EnumDeclaration
+
+    let initialized_member ?(loc=Loc.none) id init_value =
+      loc, {InitializedMember.id; init = Loc.none, init_value}
+
+    let defaulted_member ?(loc=Loc.none) id =
+      loc, {DefaultedMember.id}
+
+    let boolean_body ?(explicit_type=false) members =
+      BooleanBody {BooleanBody.members; explicitType = explicit_type}
+
+    let number_body ?(explicit_type=false) members =
+      NumberBody {NumberBody.members; explicitType = explicit_type}
+
+    let string_defaulted_body ?(explicit_type=false) members =
+      let members = StringBody.Defaulted members in
+      StringBody {StringBody.members; explicitType = explicit_type}
+
+    let string_initialized_body ?(explicit_type=false) members =
+      let members = StringBody.Initialized members in
+      StringBody {StringBody.members; explicitType = explicit_type}
+
+    let symbol_body members =
+      SymbolBody {SymbolBody.members}
+  end
 end
 
 module Expressions = struct
