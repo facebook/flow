@@ -153,7 +153,6 @@ and utility =
   | ObjMap of t * t
   | ObjMapi of t * t
   | TupleReduce of t * t * t option
-  | ObjReduce of t * t
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
@@ -304,7 +303,6 @@ let string_of_utility_ctor = function
   | ObjMap _ -> "$ObjMap"
   | ObjMapi _ -> "$ObjMapi"
   | TupleReduce _ -> "$TupleReduce"
-  | ObjReduce _ -> "$ObjReduce"
   | TupleMap _ -> "$TupleMap"
   | Call _ -> "$Call"
   | Class _ -> "Class"
@@ -331,7 +329,6 @@ let types_of_utility = function
   | ObjMapi (t1, t2) -> Some [t1; t2]
   | TupleReduce (t1, t2, Some t3) -> Some [t1; t2; t3]
   | TupleReduce (t1, t2, None) -> Some [t1; t2]
-  | ObjReduce (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t::ts)
   | Class t -> Some [t]
