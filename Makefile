@@ -155,6 +155,7 @@ MODULES=\
   hack/utils/hh_json\
   hack/utils/http_lite\
   hack/utils/jsonrpc\
+  hack/utils/lsp\
   hack/utils/marshal_tools\
   hack/utils/string\
   hack/utils/sys\
