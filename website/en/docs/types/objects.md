@@ -304,8 +304,7 @@ function add(id: number, name: string) {
 
 ### `Object` Type <a class="toc" id="toc-object-type" href="#toc-object-type"></a>
 
-** NOTE: `Object` has become an alias to `any`. For new code, either use `any` or
-`{ [key: string]: any}` but there really is no reason to use `Object` and it will
+** NOTE: For new code, prefer `any` or `{ [key: string]: any}`. Object is an alias to `any` and will
 be deprecated and removed in a future version of Flow. **
 
 Sometimes it is useful to write types that accept arbitrary objects, for
