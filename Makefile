@@ -145,7 +145,7 @@ MODULES=\
   hack/socket\
   hack/third-party/avl\
   hack/third-party/core\
-  hack/utils\
+  hack/utils/core\
   hack/utils/buffered_line_reader\
   hack/utils/build_mode/prod\
   hack/utils/collections\
@@ -172,7 +172,7 @@ NATIVE_C_FILES=\
   src/services/saved_state/saved_state_compression_stubs.c\
   hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
-  hack/utils/get_build_id.c\
+  hack/utils/core/get_build_id.c\
   hack/utils/sys/files.c\
   hack/utils/sys/gc_profiling.c\
   hack/utils/sys/getrusage.c\
@@ -229,7 +229,7 @@ NATIVE_C_DIRS=$(patsubst %/,%,$(sort $(dir $(NATIVE_C_FILES))))
 ALL_HEADER_FILES=$(addprefix _build/,$(shell find $(NATIVE_C_DIRS) -name '*.h'))
 ALL_HEADER_FILES+=_build/src/third-party/lz4/xxhash.c
 NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
-NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
+NATIVE_OBJECT_FILES+=hack/utils/core/get_build_id.gen.o
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
@@ -267,7 +267,7 @@ all-homebrew:
 clean:
 	ocamlbuild -clean
 	rm -rf bin
-	rm -f hack/utils/get_build_id.gen.c
+	rm -f hack/utils/core/get_build_id.gen.c
 	rm -f flow.odocl
 
 build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
@@ -306,10 +306,10 @@ $(BUILT_C_FILES): _build/%.c: %.c
 $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
-hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
-_build/hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+_build/hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
 $(COPIED_FLOWLIB): _build/%.js: %.js
