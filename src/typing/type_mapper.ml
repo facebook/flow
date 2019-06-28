@@ -385,10 +385,6 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ElementType t''
-      | ElementWrite (t', t2') ->
-          let (t1, t2) as t'' = (self#type_ cx map_cx t', self#type_ cx map_cx t2') in
-          if t'' == (t', t2') then t
-          else ElementWrite (t1, t2)
       | Bind t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

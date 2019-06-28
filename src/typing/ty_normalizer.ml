@@ -1490,8 +1490,6 @@ end = struct
     | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
     | T.ElementType t' ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementType (ty, ty'))
-    | T.ElementWrite (t', _) ->
-       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementWrite (ty, ty', ty'))
     | T.CallType ts ->
       mapM (type__ ~env) ts >>| fun tys -> Ty.Utility (Ty.Call (ty, tys))
     | T.TypeMap (T.ObjectMap t') ->

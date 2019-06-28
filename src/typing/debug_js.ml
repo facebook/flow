@@ -1202,10 +1202,6 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ElementType t -> JSON_Object [
       "elementType", _json_of_t json_cx t
     ]
-  | ElementWrite (t1, t2) -> JSON_Object [
-      "elementWrite", _json_of_t json_cx t1;
-      "elementWriteType", _json_of_t json_cx t2
-    ]
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]

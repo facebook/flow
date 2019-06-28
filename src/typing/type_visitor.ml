@@ -238,7 +238,6 @@ class ['a] t = object(self)
     -> acc
   | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
   | ElementType t -> self#type_ cx pole_TODO acc t
-  | ElementWrite (_,t) -> self#type_ cx pole_TODO acc t
   | Bind t -> self#type_ cx pole_TODO acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx pole_TODO) acc ts
   | RestType (_,t) -> self#type_ cx pole_TODO acc t

@@ -7608,7 +7608,6 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     let reason_op = replace_reason_const (RProperty (Some x)) reason in
     GetPropT (use_op, reason, Named (reason_op, x), tout)
   | ElementType t -> GetElemT (use_op, reason, t, tout)
-  | ElementWrite (t, t2) -> SetElemT (use_op, reason, t, t2, Some tout)
   | Bind t -> BindT (use_op, reason, mk_methodcalltype t None [] tout, true)
   | SpreadType (options, todo_rev) ->
     let open Object in

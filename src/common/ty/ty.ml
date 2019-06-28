@@ -149,7 +149,6 @@ and utility =
   | Rest of t * t
   | PropertyType of t * t
   | ElementType of t * t
-  | ElementWrite of t * t * t
   | NonMaybeType of t
   | ObjMap of t * t
   | ObjMapi of t * t
@@ -301,7 +300,6 @@ let string_of_utility_ctor = function
   | Rest _ -> "$Rest"
   | PropertyType _ -> "$PropertyType"
   | ElementType _ -> "$ElementType"
-  | ElementWrite _ -> "$ElementWrite"
   | NonMaybeType _ -> "$NonMaybeType"
   | ObjMap _ -> "$ObjMap"
   | ObjMapi _ -> "$ObjMapi"
@@ -328,7 +326,6 @@ let types_of_utility = function
   | Rest (t1, t2) -> Some [t1; t2]
   | PropertyType (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
-  | ElementWrite (t1, t2, t3) -> Some [t1; t2; t3]
   | NonMaybeType t -> Some [t]
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]

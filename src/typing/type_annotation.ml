@@ -626,20 +626,6 @@ let rec convert cx tparams_map = Ast.Type.(function
       | _ -> assert false
     )
 
-  (* $ElementWrite<T, string, T2> acts as the type of the string elements in object
-     type T *)
-  | "$ElementWrite" ->
-    check_type_arg_arity cx loc t_ast targs 3 (fun () ->
-      match convert_type_params () with
-      | ([t; e; e2], targs) ->
-        let reason = mk_reason (RType "$ElementWrite") loc in
-        reconstruct_ast
-          (EvalT (t, TypeDestructorT
-            (use_op reason, reason, ElementWrite (e, e2)), mk_id()))
-          targs
-      | _ -> assert false
-    )
-
   (* $NonMaybeType<T> acts as the type T without null and void *)
   | "$NonMaybeType" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->

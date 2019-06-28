@@ -262,7 +262,6 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
   | ElementType t -> collect_of_type ?log_unresolved cx acc t
-  | ElementWrite (_, t) -> collect_of_type ?log_unresolved cx acc t
   | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
   | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx acc ts

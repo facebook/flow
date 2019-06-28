@@ -1047,7 +1047,6 @@ module rec TypeTerm : sig
   | NonMaybeType
   | PropertyType of string
   | ElementType of t
-  | ElementWrite of t * t
   | Bind of t
   | ReadOnlyType
   | SpreadType of Object.Spread.target * t list
