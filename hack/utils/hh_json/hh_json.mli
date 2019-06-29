@@ -21,7 +21,7 @@ type json =
 
 exception Syntax_error of string
 
-val json_to_string : ?pretty:bool -> json -> string
+val json_to_string : ?sort_keys:bool -> ?pretty:bool -> json -> string
 val json_to_multiline : ?sort_keys:bool -> json -> string
 val json_to_output: out_channel -> json ->  unit
 val json_to_multiline_output: out_channel -> json ->  unit
