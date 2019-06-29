@@ -27,37 +27,42 @@
                 "range":[8,16],
                 "types":[
                   {
-                    "type":"GenericTypeAnnotation",
+                    "type":"TupleTypeElement",
                     "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":15}},
                     "range":[9,15],
-                    "id":{
-                      "type":"Identifier",
-                      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":12}},
-                      "range":[9,12],
-                      "name":"Foo",
-                      "typeAnnotation":null,
-                      "optional":false
-                    },
-                    "typeParameters":{
-                      "type":"TypeParameterInstantiation",
-                      "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":15}},
-                      "range":[12,15],
-                      "params":[
-                        {
-                          "type":"GenericTypeAnnotation",
-                          "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":14}},
-                          "range":[13,14],
-                          "id":{
-                            "type":"Identifier",
+                    "argument":{
+                      "type":"GenericTypeAnnotation",
+                      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":15}},
+                      "range":[9,15],
+                      "id":{
+                        "type":"Identifier",
+                        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":12}},
+                        "range":[9,12],
+                        "name":"Foo",
+                        "typeAnnotation":null,
+                        "optional":false
+                      },
+                      "typeParameters":{
+                        "type":"TypeParameterInstantiation",
+                        "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":15}},
+                        "range":[12,15],
+                        "params":[
+                          {
+                            "type":"GenericTypeAnnotation",
                             "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":14}},
                             "range":[13,14],
-                            "name":"T",
-                            "typeAnnotation":null,
-                            "optional":false
-                          },
-                          "typeParameters":null
-                        }
-                      ]
+                            "id":{
+                              "type":"Identifier",
+                              "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":14}},
+                              "range":[13,14],
+                              "name":"T",
+                              "typeAnnotation":null,
+                              "optional":false
+                            },
+                            "typeParameters":null
+                          }
+                        ]
+                      }
                     }
                   }
                 ]
