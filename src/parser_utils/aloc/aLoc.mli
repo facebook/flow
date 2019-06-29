@@ -29,6 +29,8 @@ val abstractify: table -> t -> t
  * necessary. We will have to look up tables in the shared heap at some point, so making it lazy
  * allows us to avoid fetching the table if the underlying location is actually concrete. *)
 val to_loc: table Lazy.t -> t -> Loc.t
+(* Like to_loc, but conveniently picks the correct table for the conversion out of the map *)
+val to_loc_with_tables: table Lazy.t Utils_js.FilenameMap.t -> t -> Loc.t
 (* TODO move to ALocRepresentationDoNotUse *)
 (* Unsafe: fails if the location has an abstract underlying representation. *)
 val to_loc_exn: t -> Loc.t

@@ -163,6 +163,16 @@ let to_loc table loc =
   else
     Repr.to_loc_exn loc
 
+let to_loc_with_tables tables loc =
+  let aloc_table = lazy (
+    let source = match Repr.source loc with
+    | Some x -> x
+    | None -> failwith "Unexpectedly encountered a location without a source"
+    in
+    Lazy.force (Utils_js.FilenameMap.find_unsafe source tables)
+  ) in
+  to_loc aloc_table loc
+
 let none = Repr.of_loc Loc.none
 
 let source = Repr.source
