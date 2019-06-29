@@ -5485,19 +5485,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | UnionT (_, rep), GetObjectSingletonT (reason_op, t, tout) ->
       let ts = UnionRep.members rep in
       let props_tmap = Context.make_property_map cx SMap.empty in
-      let obj =
-        let reason = replace_reason_const RObjectType reason_op in
+      let reason = replace_reason_const RObjectType reason_op in
+      let o =
         let proto_t = ObjProtoT reason in
         let call_t = None in
         let dict_t = None in
         let sealed = UnsealedInFile (ALoc.source (loc_of_t proto_t)) in
         let flags = {
-          exact = true;
+          exact = false;
           sealed;
           frozen = false;
         } in
-        DefT (reason, bogus_trust (), ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
+        {flags; dict_t; proto_t; props_tmap; call_t;}
       in
+      let obj = DefT (reason, literal_trust (), ObjT o) in
       Core_list.iter ~f:(fun key ->
         rec_flow cx trace (obj, SetElemT (
           unknown_use,
@@ -5507,29 +5508,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           None
         ))
       ) ts;
-      let sealed_obj = match obj with
-      | DefT (reason, trust, ObjT objtype) -> DefT (reason, trust, ObjT {
-        objtype with flags = {objtype.flags with sealed = Sealed}
-      })
-      | _ -> obj
+      let sealed_obj = DefT (
+        reason,
+        literal_trust (),
+        ObjT { o with flags = { o.flags with sealed = Sealed } }
+      )
       in
+      (* TODO: doesn't work  *)
+      let sealed_obj = ExactT (reason, sealed_obj) in
       rec_flow_t cx trace (sealed_obj, tout)
 
     | DefT (_, _, StrT (Literal (_, str))), GetObjectSingletonT (reason_op, t, tout) ->
-      let props = SMap.add str (Field (None, t, Polarity.Neutral)) SMap.empty in
+      let props = SMap.add str (Field (None, t, Neutral)) SMap.empty in
       let props_tmap = Context.make_property_map cx props in
-      let obj =
-        let reason = replace_reason_const RObjectType reason_op in
+      let reason = replace_reason_const RObjectType reason_op in
+      let o =
         let proto_t = ObjProtoT reason in
         let call_t = None in
         let dict_t = None in
         let flags = {
-          exact = true;
+          exact = false;
           sealed = Sealed;
           frozen = false;
         } in
-        DefT (reason, bogus_trust (), ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
+        {flags; dict_t; proto_t; props_tmap; call_t;}
       in
+      let obj = DefT (reason, literal_trust (), ObjT o) in
+      (* TODO: doesn't work  *)
+      let obj = ExactT (reason, obj) in
       rec_flow_t cx trace (obj, tout)
 
     (***********************************************)
@@ -6924,6 +6930,7 @@ and empty_success flavor u =
   | _, CondT _
   | _, DestructuringT _
   | _, MakeExactT _
+  | _, GetObjectSingletonT _
   | _, ObjKitT _
   | _, ReposLowerT _
   | _, ReposUseT _
@@ -7016,7 +7023,6 @@ and empty_success flavor u =
   | _, GetProtoT _
   | _, GetStaticsT _
   | _, GetValuesT _
-  | _, GetObjectSingletonT _
   | _, GuardT _
   | _, HasOwnPropT _
   | _, IdxUnMaybeifyT _
