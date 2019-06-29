@@ -1377,8 +1377,7 @@ and convert_tuple =
     | Acc.Slice elements, [] ->
       mk_tuple cx loc elements
     | os ->
-      (* let open Type.Tuple.Spread in *)
-      let reason = mk_reason RObjectType loc in
+      let reason = mk_reason RTupleType loc in
       let t, ts = Nel.rev_map (function
         | Acc.Spread t -> t
         | Acc.Slice elements ->
