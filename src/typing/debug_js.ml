@@ -71,6 +71,7 @@ let string_of_destructor = function
   | Bind _ -> "Bind"
   | ReadOnlyType -> "ReadOnly"
   | SpreadType _ -> "Spread"
+  | SpreadTupleType _ -> "SpreadTupleType"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
   | CallType _ -> "CallType"
@@ -796,6 +797,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx tout;
     ]
 
+  | TupleKitT (_, _, _, _, tout) -> [
+      "t_out", _json_of_t json_cx tout;
+    ]
+
   | ReactKitT (_, _, React.CreateElement0 (shape, config, (children, children_spread), t_out)) -> [
       "shape", JSON_Bool shape;
       "config", _json_of_t json_cx config;
@@ -1243,6 +1248,10 @@ and json_of_destructor_impl json_cx = Hh_json.(function
           | Some head_slice -> json_of_spread_operand_slice json_cx head_slice;
       ]
     )
+  | SpreadTupleType ts ->
+    JSON_Object ([
+      "spread", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts);
+    ])
   | RestType (merge_mode, t) ->
     let open Object.Rest in
     JSON_Object [
@@ -2299,6 +2308,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (string_of_use_op use_op)
       (object_kit resolve_tool tool)
       (kid tout)) t
+  | TupleKitT (_, _, _, _, _) -> p t
   | TestPropT (_, _, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
@@ -2810,6 +2820,11 @@ let dump_error_message =
         spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
         spf "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
+          (dump_reason cx reason)
+          (dump_reason cx reason_op)
+          (string_of_use_op use_op)
+    | EInvalidTupleKit { reason; reason_op; use_op } ->
+        spf "EInvalidTupleKit { reason = %s; reason_op = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
           (string_of_use_op use_op)

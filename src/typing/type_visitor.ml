@@ -242,6 +242,7 @@ class ['a] t = object(self)
   | SpreadType (_, ts, head_slice) ->
       let acc = self#list (self#object_kit_spread_operand cx) acc ts in
       self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
+  | SpreadTupleType ts -> self#list (self#type_ cx pole_TODO) acc ts
   | RestType (_,t) -> self#type_ cx pole_TODO acc t
   | CallType args -> self#list (self#type_ cx pole_TODO) acc args
   | TypeMap map -> self#type_map cx acc map
@@ -562,6 +563,8 @@ class ['a] t = object(self)
     in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
+
+  | TupleKitT _ -> acc
 
   | DebugPrintT _ -> acc
   | DebugSleepT _ -> acc

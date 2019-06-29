@@ -267,6 +267,8 @@ and collect_of_destructor ?log_unresolved cx acc = function
       | Some head_slice ->
         collect_of_object_kit_spread_operand_slice ?log_unresolved cx acc head_slice
       end
+  | SpreadTupleType ts ->
+    collect_of_types ?log_unresolved cx acc ts
   | RestType (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ValuesType -> acc
   | CallType ts -> collect_of_types ?log_unresolved cx acc ts

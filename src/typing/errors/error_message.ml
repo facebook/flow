@@ -171,6 +171,11 @@ and 'loc t' =
       reason_op: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
+  | EInvalidTupleKit of {
+      reason: 'loc virtual_reason;
+      reason_op: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EInvalidTypeof of 'loc * string
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
@@ -502,6 +507,9 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidObjectKit {reason; reason_op; use_op} ->
       EInvalidObjectKit {reason = map_reason reason;
         reason_op = map_reason reason_op; use_op = map_use_op use_op}
+  | EInvalidTupleKit {reason; reason_op; use_op} ->
+      EInvalidTupleKit {reason = map_reason reason;
+        reason_op = map_reason reason_op; use_op = map_use_op use_op}
   | EIncompatibleWithUseOp (rl, ru, op) ->
       EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
@@ -721,6 +729,8 @@ let util_use_op_of_msg nope util = function
   util use_op (fun use_op -> EIncompatibleWithShape (l, u, use_op))
 | EInvalidObjectKit {reason; reason_op; use_op} ->
   util use_op (fun use_op -> EInvalidObjectKit {reason; reason_op; use_op})
+| EInvalidTupleKit {reason; reason_op; use_op} ->
+  util use_op (fun use_op -> EInvalidTupleKit {reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
 | ENotAReactComponent { reason; use_op } ->
   util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
@@ -975,6 +985,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | ETrustIncompatibleWithUseOp _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
+  | EInvalidTupleKit _
   | EIncompatibleWithShape _
   | EInvalidCharSet _
   | EIncompatibleWithExact _
@@ -1834,6 +1845,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
     | EInvalidObjectKit { reason; reason_op=_; use_op } ->
       UseOp (loc_of_reason reason, [ref reason; text " is not an object"], use_op)
+
+    | EInvalidTupleKit { reason; reason_op=_; use_op } ->
+      UseOp (loc_of_reason reason, [ref reason; text " is not an array-like"], use_op)
 
     | EInvalidTypeof (_, typename) ->
       Normal [

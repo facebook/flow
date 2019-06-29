@@ -993,6 +993,7 @@ module M__flow
   (TrustChecking: Flow_common.TRUST_CHECKING)
   (CustomFunKit: Custom_fun_kit.CUSTOM_FUN)
   (ObjectKit: Object_kit.OBJECT)
+  (TupleKit: Tuple_kit.TUPLE)
 = struct
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
@@ -5504,6 +5505,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
 
+    (*************)
+    (* tuple kit *)
+    (*************)
+
+    | _, TupleKitT (use_op, reason, resolve_tool, tool, tout) ->
+      TupleKit.run cx trace ~use_op reason resolve_tool tool tout l
+
     (**************************************************)
     (* function types can be mapped over a structure  *)
     (**************************************************)
@@ -6996,6 +7004,7 @@ and empty_success flavor u =
   | _, DestructuringT _
   | _, MakeExactT _
   | _, ObjKitT _
+  | _, TupleKitT _
   | _, ReposLowerT _
   | _, ReposUseT _
   | _, UnifyT _ -> false
@@ -7258,6 +7267,7 @@ and any_propagated cx trace any u =
   | OrT _
   | PredicateT _
   | ReactKitT _
+  | TupleKitT _
   | RefineT _
   | ReposLowerT _
   | ReposUseT _
@@ -7658,6 +7668,12 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     let tool = Resolve Next in
     let state = { todo_rev; acc = Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice} in
     ObjKitT (use_op, reason, tool, Spread (options, state), tout)
+  | SpreadTupleType todo_rev ->
+    let open Tuple in
+    let open Tuple.Spread in
+    let tool = Resolve Next in
+    let state = { todo_rev; acc = [] } in
+    TupleKitT (use_op, reason, tool, Spread state, tout)
   | RestType (options, t) ->
     let open Object in
     let open Object.Rest in
@@ -11339,13 +11355,15 @@ and continue_repos cx trace reason ?(use_desc=false) t = function
   include AssertGround
   include TrustChecking
 end
+
 module rec FlowJs: Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
   module AssertGround = Assert_ground.Kit (FlowJs)
   module TrustKit = Trust_checking.TrustKit (FlowJs)
   module CustomFun = Custom_fun_kit.Kit (FlowJs)
   module ObjectKit = Object_kit.Kit (FlowJs)
-  include M__flow (React) (AssertGround) (TrustKit) (CustomFun) (ObjectKit)
+  module TupleKit = Tuple_kit.Kit (FlowJs)
+  include M__flow (React) (AssertGround) (TrustKit) (CustomFun) (ObjectKit) (TupleKit)
   let add_output = add_output
   let union_of_ts = union_of_ts
   let generate_tests = generate_tests

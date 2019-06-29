@@ -395,6 +395,10 @@ class virtual ['a] t = object(self)
           let acc' = OptionUtils.ident_map (self#object_kit_spread_operand_slice cx map_cx) acc in
           if tlist' == tlist && acc == acc' then t
           else SpreadType (options, tlist', acc')
+       | SpreadTupleType tlist ->
+          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+          if tlist' == tlist then t
+          else SpreadTupleType tlist'
       | RestType (options, x) ->
           let x' = self#type_ cx map_cx x in
           if x' == x then t
@@ -957,6 +961,7 @@ class virtual ['a] t_with_uses = object(self)
           let tout' = self#type_ cx map_cx tout in
           if resolve_tool' == resolve_tool && tool' == tool && tout' == tout then t
           else ObjKitT (use_op, r, resolve_tool', tool', tout')
+      | TupleKitT _ -> t
       | ChoiceKitUseT (r, choice_use_tool) ->
           let choice_use_tool' = self#choice_use_tool cx map_cx choice_use_tool in
           if choice_use_tool' == choice_use_tool then t

@@ -199,33 +199,45 @@ let rec convert cx tparams_map = Ast.Type.(function
     error_type cx loc (Error_message.EUnexpectedTypeof q_loc) t_ast
   end
 
-| loc, Tuple ts ->
-  let tuple_types, ts_ast = convert_list cx tparams_map ts in
+(* | loc, Tuple elems ->
   let reason = annot_reason (mk_reason RTupleType loc) in
-  let element_reason = mk_reason RTupleElement loc in
-  let elemt = match tuple_types with
-  | [] -> EmptyT.why element_reason |> with_trust bogus_trust
-  | [t] -> t
-  | t0::t1::ts ->
-    (* If a tuple should be viewed as an array, what would the element type of
-       the array be?
+  let elem_spread_list, elements = type_or_spread_list cx tparams_map elems in
+  (
+    loc,
+    Tvar.mk_where cx reason (fun tout ->
+      let reason_op = reason in
+      let element_reason = mk_reason RTupleElement loc in
+      let elem_t = Tvar.mk cx element_reason in
+      let resolve_to = (ResolveSpreadsToTuple (mk_id (), elem_t, tout)) in
+      let resolve_spread_list_rec
+        cx ?trace ~use_op ~reason_op (resolved, unresolved) resolve_to =
+        match resolved, unresolved with
+        | resolved, [] ->
+            Flow.finish_resolve_spread_list
+              cx ?trace ~use_op ~reason_op (List.rev resolved) resolve_to
+        | resolved, UnresolvedArg(next)::unresolved ->
+            resolve_spread_list_rec
+              cx
+              ?trace
+              ~use_op
+              ~reason_op
+              (ResolvedArg(next)::resolved, unresolved)
+              resolve_to
+        | resolved, UnresolvedSpreadArg(next)::unresolved ->
+            flow_opt cx ?trace (next, ResolveSpreadT (use_op, reason_op, {
+              rrt_resolved = resolved;
+              rrt_unresolved = unresolved;
+              rrt_resolve_to = resolve_to;
+            }))
+      in
+      resolve_spread_list cx ~use_op:unknown_use ~reason_op ([], elem_spread_list) resolve_to
+    )
+  ),
+  Tuple elements *)
 
-       Using a union here seems appealing but is wrong: setting elements
-       through arbitrary indices at the union type would be unsound, since it
-       might violate the projected types of the tuple at their corresponding
-       positions. This also shows why `mixed` doesn't work, either.
-
-       On the other hand, using the empty type would prevent writes, but admit
-       unsound reads.
-
-       The correct solution is to safely case a tuple type to a covariant
-       array interface whose element type would be a union. Until we have
-       that, we use the following closest approximation, that behaves like a
-       union as a lower bound but `any` as an upper bound.
-    *)
-    AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make t0 t1 ts))
-  in
-  (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast
+| loc, Tuple elements ->
+  let t, elements = convert_tuple cx tparams_map loc elements in
+  (loc, t), Tuple elements
 
 | loc, Array t ->
   let r = mk_reason RArrayType loc in
@@ -1263,6 +1275,119 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     let t = Env.get_var ~lookup_mode cx name loc in
     t, Unqualified ((loc, t), id_name)
 )
+
+and convert_tuple =
+  let module Acc = struct
+    type element =
+      | Spread of Type.t
+      | Slice of Type.t list
+
+    type t = {
+      elements: Type.t list;
+      tail: element list;
+    }
+
+    let empty = {
+      elements = [];
+      tail = [];
+    }
+
+    let empty_slice = Slice []
+
+    let head_slice {elements; _}  =
+      if Core_list.is_empty elements
+      then None
+      else Some (Slice elements)
+
+    let add_element t acc =
+      {acc with elements = acc.elements @ [t]}
+
+    let add_spread t acc =
+      let tail = match head_slice acc with
+      | None -> acc.tail
+      | Some slice -> slice::acc.tail
+      in
+      {elements = []; tail = (Spread t)::tail}
+
+    let elements_rev acc =
+      match head_slice acc with
+      | Some slice -> slice, acc.tail
+      | None ->
+        match acc.tail with
+        | [] -> empty_slice, []
+        | x::xs -> x, xs
+
+    let elements acc = Nel.rev (elements_rev acc)
+  end in
+
+  let mk_tuple cx loc elements =
+    let element_reason = mk_reason RTupleElement loc in
+    let elemt = match elements with
+    | [] -> EmptyT.why element_reason |> with_trust bogus_trust
+    | [t] -> t
+    | t0::t1::ts ->
+      (* If a tuple should be viewed as an array, what would the element type of
+        the array be?
+
+        Using a union here seems appealing but is wrong: setting elements
+        through arbitrary indices at the union type would be unsound, since it
+        might violate the projected types of the tuple at their corresponding
+        positions. This also shows why `mixed` doesn't work, either.
+
+        On the other hand, using the empty type would prevent writes, but admit
+        unsound reads.
+
+        The correct solution is to safely case a tuple type to a covariant
+        array interface whose element type would be a union. Until we have
+        that, we use the following closest approximation, that behaves like a
+        union as a lower bound but `any` as an upper bound.
+      *)
+      AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make t0 t1 ts))
+    in
+    DefT (
+      mk_reason RTupleType loc,
+      infer_trust cx,
+      ArrT (TupleAT (elemt, elements))
+    )
+  in
+
+  let open Ast.Type in
+
+  let element cx tparams_map acc =
+    let open Tuple in
+    function
+    | Element argument ->
+      let (_, t), _ as argument_ast = convert cx tparams_map argument in
+      Acc.add_element t acc,
+      Element argument_ast
+    | SpreadElement argument ->
+      let (_, t), _ as argument_ast = convert cx tparams_map argument in
+      Acc.add_spread t acc,
+      SpreadElement argument_ast
+  in
+
+  fun cx tparams_map loc elements ->
+    let acc, rev_prop_asts =
+      List.fold_left (fun (acc, rev_prop_asts) p ->
+        let acc, prop_ast = element cx tparams_map acc p in
+        acc, prop_ast::rev_prop_asts
+      ) (Acc.empty, []) elements
+    in
+    let t = match Acc.elements acc with
+    | Acc.Slice elements, [] ->
+      mk_tuple cx loc elements
+    | os ->
+      (* let open Type.Tuple.Spread in *)
+      let reason = mk_reason RObjectType loc in
+      let t, ts = Nel.rev_map (function
+        | Acc.Spread t -> t
+        | Acc.Slice elements ->
+          mk_tuple cx loc elements
+      ) os
+      in
+      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadTupleType ts), mk_id ())
+    in
+    t, List.rev rev_prop_asts
 
 and convert_object =
   let obj_proto_t = ObjProtoT (locationless_reason RObjectPrototype) in

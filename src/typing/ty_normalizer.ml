@@ -1552,6 +1552,8 @@ end = struct
     | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
     | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
+    (* TODO *)
+    | T.SpreadTupleType _ -> return (Ty.Utility (Ty.Values ty))
     | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
     | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
     | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))

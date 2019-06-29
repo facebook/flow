@@ -564,6 +564,8 @@ module rec TypeTerm : sig
 
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
 
+    | TupleKitT of use_op * reason * Tuple.resolve_tool * Tuple.tool * t_out
+
     | ReactKitT of use_op * reason * React.tool
 
     | ChoiceKitUseT of reason * choice_use_tool
@@ -1075,6 +1077,7 @@ module rec TypeTerm : sig
   | Bind of t
   | ReadOnlyType
   | SpreadType of Object.Spread.target * Object.Spread.operand list * Object.Spread.operand_slice option
+  | SpreadTupleType of t list
   | RestType of Object.Rest.merge_mode * t
   | ValuesType
   | CallType of t list
@@ -2036,6 +2039,36 @@ and Object : sig
     | ObjectRep
 end = Object
 
+and Tuple : sig
+  type resolve_tool =
+    (* Each part of a spread must be resolved in order to compute the result *)
+    | Resolve of resolve
+
+  and resolve =
+    | Next
+
+  and join' = And | Or
+  (* This location is that of the entire intersection/union, not just the location of the &/| symbol *)
+  and join = ALoc.t * join'
+
+  (* A union type resolves to a resolved spread with more than one element *)
+  and resolved = slice
+
+  and slice = reason * TypeTerm.t * elements option
+
+  and elements = TypeTerm.t list
+
+  module Spread : sig
+    type state = {
+      todo_rev: TypeTerm.t list;
+      acc: resolved list;
+    }
+  end
+
+  type tool =
+    | Spread of Spread.state
+end = Tuple
+
 and React : sig
   module PropType : sig
     type t =
@@ -2298,6 +2331,7 @@ end = struct
     | SetProtoT (reason,_) -> reason
     | SpecializeT(_,_,reason,_,_,_) -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
+    | TupleKitT (_, reason, _, _, _) -> reason
     | ModuleExportsAssignT (reason, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
     | SuperT (_,reason,_) -> reason
@@ -2477,6 +2511,8 @@ end = struct
         SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
     | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
         ObjKitT (use_op, f reason, resolve_tool, tool, tout)
+    | TupleKitT (use_op, reason, resolve_tool, tool, tout) ->
+        TupleKitT (use_op, f reason, resolve_tool, tool, tout)
     | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
     | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
     | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
@@ -2548,6 +2584,7 @@ end = struct
   | GetKeysT (r, u2) -> nested_util u2 (fun u2 -> GetKeysT (r, u2))
   | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
   | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
+  | TupleKitT (op, r, x, y, t) -> util op (fun op -> TupleKitT (op, r, x, y, t))
   | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
   | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
   | ExtendsUseT (op, r, ts, a, b) -> util op (fun op -> ExtendsUseT (op, r, ts, a, b))
@@ -3350,6 +3387,7 @@ let string_of_use_ctor = function
   | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"
   | ObjKitT _ -> "ObjKitT"
+  | TupleKitT _ -> "TupleKitT"
   | SubstOnPredT _ -> "SubstOnPredT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"
