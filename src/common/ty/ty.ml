@@ -153,7 +153,7 @@ and utility =
   | ObjMap of t * t
   | ObjMapi of t * t
   | TupleMap of t * t
-  | ObjSingleton of t
+  | ObjSingleton of t * t
   | Call of t * t list
   | Class of t
   | Shape of t
@@ -328,7 +328,7 @@ let types_of_utility = function
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]
-  | ObjSingleton t -> Some [t]
+  | ObjSingleton (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t::ts)
   | Class t -> Some [t]
   | Shape t -> Some [t]

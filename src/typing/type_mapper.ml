@@ -98,10 +98,6 @@ class virtual ['a] t = object(self)
           let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
           if t' == t'' && ts == ts' then t
           else TypeAppT (r, op, t'', ts')
-      | ObjectSingletonT (r, t') ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else ObjectSingletonT (r, t'')
       | ExactT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -403,6 +399,10 @@ class virtual ['a] t = object(self)
           if x' == x then t
           else RestType (options, x')
       | ValuesType -> t
+      | ObjectSingletonType t' ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else ObjectSingletonType t''
       | CallType args ->
           let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
           if args' == args then t
@@ -857,6 +857,11 @@ class virtual ['a] t_with_uses = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else GetValuesT (r, t'')
+      | GetObjectSingletonT (r, t', t1') ->
+          let t'' = self#type_ cx map_cx t' in
+          let t1'' = self#type_ cx map_cx t1' in
+          if t'' == t' && t1'' == t1' then t
+          else GetObjectSingletonT (r, t'', t1'')
       | ReactPropsToOut (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -874,10 +879,6 @@ class virtual ['a] t_with_uses = object(self)
           let cont' = self#cont cx map_cx cont in
           if cont' == cont then t
           else MakeExactT (r, cont')
-      | MakeObjectSingletonT (r, cont) ->
-          let cont' = self#cont cx map_cx cont in
-          if cont' == cont then t
-          else MakeObjectSingletonT (r, cont')
       | CJSRequireT (r, t', is_strict) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

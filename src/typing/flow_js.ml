@@ -2933,7 +2933,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
            prevents a drastic blowup of cases which can cause perf problems. *)
         | PredicateT (RightP (SentinelProp _, _), _)
-        | MakeObjectSingletonT (_, _)
+        | GetObjectSingletonT (_, _, _)
         | PredicateT (NotP (RightP (SentinelProp _, _)), _) -> false
         | _ -> true
       ) ->
@@ -5478,27 +5478,45 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (mapped_t, tout)
 
-    | _, UseT (use_op, ObjectSingletonT (r, k)) ->
-      rec_flow cx trace (k, MakeObjectSingletonT (r, Lower (use_op, l)))
+    (********************)
+    (* object singleton *)
+    (********************)
 
-    | ObjectSingletonT (r, t), _ ->
-      rec_flow cx trace (t, MakeObjectSingletonT (r, Upper u))
-
-    (*********************)
-    (* object from union *)
-    (*********************)
-
-    | UnionT (_, rep), MakeObjectSingletonT (reason_op, Upper u) ->
+    | UnionT (_, rep), GetObjectSingletonT (reason_op, t, tout) ->
       let ts = UnionRep.members rep in
-      let props =
-        Core_list.foldi ts ~f:(fun _ acc value ->
-          match value with
-            | DefT (reason, _, SingletonStrT str) ->
-              let t = AnyT.why Annotated reason in
-              SMap.add str (Field (None, t, Positive)) acc
-            | _ -> acc
-        ) ~init:SMap.empty
+      let props_tmap = Context.make_property_map cx SMap.empty in
+      let obj =
+        let reason = replace_reason_const RObjectType reason_op in
+        let proto_t = ObjProtoT reason in
+        let call_t = None in
+        let dict_t = None in
+        let sealed = UnsealedInFile (ALoc.source (loc_of_t proto_t)) in
+        let flags = {
+          exact = true;
+          sealed;
+          frozen = false;
+        } in
+        DefT (reason, bogus_trust (), ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
       in
+      Core_list.iter ~f:(fun key ->
+        rec_flow cx trace (obj, SetElemT (
+          unknown_use,
+          reason_op,
+          key,
+          t,
+          None
+        ))
+      ) ts;
+      let sealed_obj = match obj with
+      | DefT (reason, trust, ObjT objtype) -> DefT (reason, trust, ObjT {
+        objtype with flags = {objtype.flags with sealed = Sealed}
+      })
+      | _ -> obj
+      in
+      rec_flow_t cx trace (sealed_obj, tout)
+
+    | DefT (_, _, StrT (Literal (_, str))), GetObjectSingletonT (reason_op, t, tout) ->
+      let props = SMap.add str (Field (None, t, Polarity.Neutral)) SMap.empty in
       let props_tmap = Context.make_property_map cx props in
       let obj =
         let reason = replace_reason_const RObjectType reason_op in
@@ -5512,71 +5530,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         } in
         DefT (reason, bogus_trust (), ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
       in
-      rec_flow cx trace (obj, u)
-
-    | UnionT (_, rep), MakeObjectSingletonT (reason_op, Lower (use_op, l)) ->
-      let ts = UnionRep.members rep in
-      let props =
-        Core_list.foldi ts ~f:(fun _ acc value ->
-          match value with
-            | DefT (reason, _, SingletonStrT str) ->
-              let t = AnyT.why Annotated reason in
-              SMap.add str (Field (None, t, Positive)) acc
-            | _ -> acc
-        ) ~init:SMap.empty
-      in
-      let props_tmap = Context.make_property_map cx props in
-      let obj =
-        let reason = replace_reason_const RObjectType reason_op in
-        let proto_t = ObjProtoT reason in
-        let call_t = None in
-        let dict_t = None in
-        let flags = {
-          exact = true;
-          sealed = Sealed;
-          frozen = false;
-        } in
-        DefT (reason, bogus_trust (), ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
-      in
-      rec_flow cx trace (l, UseT (use_op, obj))
-
-    | DefT (reason, _, StrT (Literal (_, str))), MakeObjectSingletonT (reason_op, Upper u) ->
-      let props = SMap.add str (Field (None, AnyT.why Annotated reason, Positive)) SMap.empty in
-      let props_tmap = Context.make_property_map cx props in
-      let obj =
-        let reason = replace_reason_const RObjectType reason_op in
-        let proto_t = ObjProtoT reason in
-        let call_t = None in
-        let dict_t = None in
-        let flags = {
-          exact = true;
-          sealed = Sealed;
-          frozen = false;
-        } in
-        DefT (reason, bogus_trust (), ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
-      in
-      rec_flow cx trace (obj, u)
-
-    | DefT (reason, _, StrT (Literal (_, str))), MakeObjectSingletonT (reason_op, Lower (use_op, l)) ->
-      let props = SMap.add str (Field (None, AnyT.why Annotated reason, Positive)) SMap.empty in
-      let props_tmap = Context.make_property_map cx props in
-      let obj =
-        let reason = replace_reason_const RObjectType reason_op in
-        let proto_t = ObjProtoT reason in
-        let call_t = None in
-        let dict_t = None in
-        let flags = {
-          exact = true;
-          sealed = Sealed;
-          frozen = false;
-        } in
-        DefT (reason, bogus_trust (), ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
-      in
-      rec_flow cx trace (l, UseT (use_op, obj))
-
-    (* unsupported kind *)
-    | _, MakeObjectSingletonT (ru, _) ->
-      add_output cx ~trace (Error_message.EUnsupportedObjectSingleton (ru, reason_of_t l))
+      rec_flow_t cx trace (obj, tout)
 
     (***********************************************)
     (* functions may have their prototypes written *)
@@ -6970,7 +6924,6 @@ and empty_success flavor u =
   | _, CondT _
   | _, DestructuringT _
   | _, MakeExactT _
-  | _, MakeObjectSingletonT _
   | _, ObjKitT _
   | _, ReposLowerT _
   | _, ReposUseT _
@@ -7063,6 +7016,7 @@ and empty_success flavor u =
   | _, GetProtoT _
   | _, GetStaticsT _
   | _, GetValuesT _
+  | _, GetObjectSingletonT _
   | _, GuardT _
   | _, HasOwnPropT _
   | _, IdxUnMaybeifyT _
@@ -7208,6 +7162,7 @@ and any_propagated cx trace any u =
   | GetProtoT _
   | GetStaticsT _
   | GetValuesT _
+  | GetObjectSingletonT _
   | GuardT _
   | IdxUnMaybeifyT _
   | IdxUnwrap _
@@ -7220,7 +7175,6 @@ and any_propagated cx trace any u =
   | LookupT _
   | MatchPropT _
   | MakeExactT _
-  | MakeObjectSingletonT _
   | MapTypeT _
   | MethodT _
   | MixinT _
@@ -7366,7 +7320,6 @@ and any_propagated_use cx trace use_op any l =
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
   | ExactT _
-  | ObjectSingletonT _
   | ThisClassT _
   | ReposT _
   | EvalT _
@@ -7601,10 +7554,15 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
 | UnionT (r, rep) ->
-  rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
-    let destructor = TypeDestructorT (use_op, reason, d) in
-    EvalT (t, destructor, Cache.Eval.id t destructor)
-  )), tout)
+  (match d with
+  | ObjectSingletonType t1 ->
+    rec_flow cx trace (t, GetObjectSingletonT (reason, t1, tout))
+  | _ ->
+    rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
+      let destructor = TypeDestructorT (use_op, reason, d) in
+      EvalT (t, destructor, Cache.Eval.id t destructor)
+    )), tout)
+  )
 | MaybeT (r, t) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let reason = replace_reason_const RNullOrVoid r in
@@ -7646,6 +7604,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     let open Object in
     ObjKitT (use_op, reason, Resolve (Next), ReadOnly, tout)
   | ValuesType -> GetValuesT (reason, tout)
+  | ObjectSingletonType t -> GetObjectSingletonT (reason, t, tout)
   | CallType args ->
     let args = Core_list.map ~f:(fun arg -> Arg arg) args in
     let call = mk_functioncalltype reason None args tout in
@@ -7693,7 +7652,6 @@ and check_polarity cx ?trace polarity = function
 
   | OptionalT (_, t)
   | ExactT (_, t)
-  | ObjectSingletonT (_, t)
   | MaybeT (_, t)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t

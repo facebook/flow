@@ -791,12 +791,13 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$ObjSingleton" ->
-    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+      let t1, t2, targs = match convert_type_params () with
+      | [t1; t2], targs -> t1, t2, targs
+      | _ -> assert false in
       let reason = mk_reason RObjectSingleton loc in
-      let ts, targs = convert_type_params () in
-      let t = List.hd ts in
       reconstruct_ast
-        (ObjectSingletonT (reason, t))
+        (EvalT (t1, TypeDestructorT (use_op reason, reason, ObjectSingletonType t2), mk_id ()))
         targs
     )
 

@@ -85,8 +85,6 @@ module rec TypeTerm : sig
     (* exact *)
     | ExactT of reason * t
 
-    | ObjectSingletonT of reason * t
-
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
@@ -516,13 +514,14 @@ module rec TypeTerm : sig
     (* Values *)
     | GetValuesT of reason * t
 
+    (* Object Singleton *)
+    | GetObjectSingletonT of reason * t * t
+
     (* Element access *)
     | ElemT of use_op * reason * t * elem_action
 
     (* exact ops *)
     | MakeExactT of reason * cont
-
-    | MakeObjectSingletonT of reason * cont
 
     (**
      * Module import handling
@@ -1057,6 +1056,7 @@ module rec TypeTerm : sig
   | SpreadType of Object.Spread.target * t list
   | RestType of Object.Rest.merge_mode * t
   | ValuesType
+  | ObjectSingletonType of t
   | CallType of t list
   | TypeMap of type_map
   | ReactElementPropsType
@@ -2216,7 +2216,6 @@ end = struct
     | IntersectionT (reason, _) -> reason
     | MaybeT (reason, _) -> reason
     | OptionalT (reason, _) -> reason
-    | ObjectSingletonT (reason, _) -> reason
 
   and reason_of_defer_use_t = function
     | LatentPredT (reason, _)
@@ -2257,6 +2256,7 @@ end = struct
     | GetElemT (_,reason,_,_) -> reason
     | GetKeysT (reason, _) -> reason
     | GetValuesT (reason, _) -> reason
+    | GetObjectSingletonT (reason, _, _) -> reason
     | GetPropT (_,reason,_,_) -> reason
     | GetPrivatePropT (_,reason,_,_,_, _) -> reason
     | GetProtoT (reason,_) -> reason
@@ -2275,7 +2275,6 @@ end = struct
     | InvariantT reason -> reason
     | LookupT(reason, _, _, _, _) -> reason
     | MakeExactT (reason, _) -> reason
-    | MakeObjectSingletonT (reason, _) -> reason
     | MapTypeT (_, reason, _, _) -> reason
     | MethodT (_,reason,_,_,_,_) -> reason
     | MixinT (reason, _) -> reason
@@ -2377,7 +2376,6 @@ end = struct
     | ThisClassT (reason, t) -> ThisClassT (f reason, t)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
     | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
-    | ObjectSingletonT (reason, t) -> ObjectSingletonT (f reason, t)
 
   and mod_reason_of_defer_use_t f = function
     | LatentPredT (reason, p) -> LatentPredT (f reason, p)
@@ -2427,6 +2425,7 @@ end = struct
     | GetElemT (use_op, reason, it, et) -> GetElemT (use_op, f reason, it, et)
     | GetKeysT (reason, t) -> GetKeysT (f reason, t)
     | GetValuesT (reason, t) -> GetValuesT (f reason, t)
+    | GetObjectSingletonT (reason, t, t1) -> GetObjectSingletonT (f reason, t, t1)
     | GetPropT (use_op, reason, n, t) -> GetPropT (use_op, f reason, n, t)
     | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
         GetPrivatePropT (use_op, f reason, name, bindings, static, t)
@@ -2449,7 +2448,6 @@ end = struct
     | InvariantT reason -> InvariantT (f reason)
     | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
     | MakeExactT (reason, t) -> MakeExactT (f reason, t)
-    | MakeObjectSingletonT (reason, t) -> MakeObjectSingletonT (f reason, t)
     | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
     | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
         MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
@@ -2590,8 +2588,8 @@ end = struct
   | UnifyT (_, _)
   | BecomeT (_, _)
   | GetValuesT (_, _)
+  | GetObjectSingletonT (_, _, _)
   | MakeExactT (_, _)
-  | MakeObjectSingletonT (_, _)
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)
   | ImportDefaultT (_, _, _, _, _)
@@ -3195,7 +3193,6 @@ let string_of_ctor = function
   | IntersectionT _ -> "IntersectionT"
   | OptionalT _ -> "OptionalT"
   | MaybeT _ -> "MaybeT"
-  | ObjectSingletonT _ -> "ObjectSingletonT"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"
@@ -3293,6 +3290,7 @@ let string_of_use_ctor = function
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
+  | GetObjectSingletonT _ -> "GetObjectSingletonT"
   | GetPropT _ -> "GetPropT"
   | GetPrivatePropT _ -> "GetPrivatePropT"
   | GetProtoT _ -> "GetProtoT"
@@ -3316,7 +3314,6 @@ let string_of_use_ctor = function
   | InvariantT _ -> "InvariantT"
   | LookupT _ -> "LookupT"
   | MakeExactT _ -> "MakeExactT"
-  | MakeObjectSingletonT _ -> "MakeObjectSingletonT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"
   | MixinT _ -> "MixinT"

@@ -203,7 +203,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t
   | ExactT (_, t)
-  | ObjectSingletonT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)
   | ThisClassT (_, t)
@@ -268,6 +267,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx acc ts
   | RestType (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ValuesType -> acc
+  | ObjectSingletonType t -> collect_of_type ?log_unresolved cx acc t
   | CallType ts -> collect_of_types ?log_unresolved cx acc ts
   | TypeMap tmap -> collect_of_type_map ?log_unresolved cx acc tmap
   | ReactConfigType default_props -> collect_of_type ?log_unresolved cx acc default_props
