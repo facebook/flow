@@ -2874,6 +2874,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
 
+    | UnionT _, TupleKitT (use_op, reason, resolve_tool, tool, tout) ->
+      tuple_kit cx trace ~use_op reason resolve_tool tool tout l
+
     (* cases where there is no loss of precision *)
 
     | UnionT _, UseT (_, (UnionT _ as u)) when union_optimization_guard cx l u -> ()
@@ -3150,6 +3153,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | IntersectionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+
+    | IntersectionT _, TupleKitT (use_op, reason, resolve_tool, tool, tout) ->
+      tuple_kit cx trace ~use_op reason resolve_tool tool tout l
 
     (* CallT uses that arise from the CallType type destructor are processed
        without preparation (see below). This is because in these cases, the

@@ -2046,13 +2046,16 @@ and Tuple : sig
 
   and resolve =
     | Next
+    (* Resolve each element of a union or intersection *)
+    | List0 of TypeTerm.t Nel.t * join
+    | List of TypeTerm.t list * resolved Nel.t * join
 
   and join' = And | Or
   (* This location is that of the entire intersection/union, not just the location of the &/| symbol *)
   and join = ALoc.t * join'
 
   (* A union type resolves to a resolved spread with more than one element *)
-  and resolved = slice
+  and resolved = slice Nel.t
 
   and slice = reason * TypeTerm.t * elements option
 
