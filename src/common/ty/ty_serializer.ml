@@ -73,7 +73,10 @@ let rec type_ t =
   | Fun f -> function_ f >>| fun f -> (Loc.none, T.Function f)
   | Obj o -> obj_ o
   | Arr a -> arr a
-  | Tup ts -> mapM type_ ts >>| fun ts -> (Loc.none, T.Tuple ts)
+  | Tup ts -> mapM (function
+    | Ty.Elem t -> type_ t >>| fun t -> T.Tuple.Element t
+    | Ty.SpreadElem t -> type_ t >>| fun t -> T.Tuple.SpreadElement t
+  ) ts >>| fun ts -> (Loc.none, T.Tuple ts)
   | Union (t0, t1, ts) as t -> union t (t0,t1,ts)
   | Inter (t0, t1, ts) -> intersection (t0,t1,ts)
   | ClassDecl (s, _) -> class_decl s

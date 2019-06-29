@@ -783,10 +783,14 @@ class ['loc] mapper = object(this)
       let ts' = ListUtils.ident_map this#type_ ts in
       if t0' == t0 && t1' == t1 && ts' == ts then t
       else loc, Intersection (t0', t1', ts')
-    | loc, Tuple ts ->
-      let ts' = ListUtils.ident_map this#type_ ts in
-      if ts' == ts then t
-      else loc, Tuple ts'
+    | loc, Tuple elements ->
+      let open Ast.Type.Tuple in
+      let elements' = ListUtils.ident_map (fun p -> match p with
+        | Element p' -> id this#type_ p' p (fun p' -> Element p')
+        | SpreadElement p' -> id this#type_ p' p (fun p' -> SpreadElement p')
+      ) elements in
+      if elements' == elements then t
+      else loc, Tuple elements'
 
   method type_or_implicit t =
     let open Ast.Expression.TypeParameterInstantiation in

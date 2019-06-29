@@ -835,7 +835,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let ts' = Core_list.map ~f:this#type_ ts in
       Intersection (t0', t1', ts')
     | Tuple ts ->
-      let ts' = Core_list.map ~f:this#type_ ts in
+      let open Ast.Type.Tuple in
+      let ts' = Core_list.map ~f:(fun p -> match p with
+        | Element t -> Element (this#type_ t)
+        | SpreadElement t -> SpreadElement (this#type_ t)
+      ) ts in
       Tuple ts'
 
   method implicit (t: 'T): 'U = this#on_type_annot t

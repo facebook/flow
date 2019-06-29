@@ -112,6 +112,13 @@ and dump_arr ~depth { arr_readonly; arr_elt_t; _ } =
   let ctor = if arr_readonly then "$ReadOnlyArray" else "Array" in
   spf "%s<%s>" ctor (dump_t ~depth arr_elt_t)
 
+and dump_elem ~depth = function
+  | Elem t -> dump_t ~depth t
+  | SpreadElem t -> dump_spread ~depth t
+
+and dump_tup ~depth ts =
+  spf "Tup (%s)" (dump_list (dump_elem ~depth) ~sep:"," ts)
+
 and dump_generics ~depth = function
   | Some ts -> "<" ^ dump_list (dump_t ~depth) ts ^ ">"
   | _ -> ""
@@ -162,8 +169,7 @@ and dump_t ?(depth = 10) t =
   | Fun f -> dump_fun_t ~depth f
   | Obj o -> dump_obj ~depth o
   | Arr a -> dump_arr ~depth a
-  | Tup ts ->
-    spf "Tup (%s)" (dump_list (dump_t ~depth) ~sep:"," ts)
+  | Tup ts -> dump_tup ~depth ts
   | Union (t1,t2,ts) ->
     spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1::t2::ts)))
   | Inter (t1,t2,ts) ->
@@ -284,7 +290,7 @@ let json_of_t ~strip_root =
         "type", json_of_t arr_elt_t;
       ]
     | Tup ts -> [
-        "types", JSON_Array (Core_list.map ~f:json_of_t ts);
+        "types", JSON_Array (Core_list.map ~f:json_of_elem ts);
       ]
     | Union (t0,t1,ts) -> [
         "types", JSON_Array (Core_list.map ~f:json_of_t (t0::t1::ts));
@@ -397,6 +403,19 @@ let json_of_t ~strip_root =
     | SpreadProp t -> [
         "kind", JSON_String "SpreadProp";
         "prop", json_of_t t;
+      ]
+    )
+  )
+
+  and json_of_elem elem = Hh_json.(
+    JSON_Object (match elem with
+    | Elem t -> [
+        "kind", JSON_String "Elem";
+        "elem", json_of_t t;
+      ]
+    | SpreadElem t -> [
+        "kind", JSON_String "SpreadElem";
+        "elem", json_of_t t;
       ]
     )
   )

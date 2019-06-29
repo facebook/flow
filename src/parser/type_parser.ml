@@ -216,8 +216,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       match Peek.token env with
       | T_EOF
       | T_RBRACKET -> List.rev acc
+      | T_ELLIPSIS ->
+          Eat.token env;
+          let prop = Type.Tuple.SpreadElement (_type env) in
+          let acc = prop::acc in
+          if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
+          types env acc
       | _ ->
-          let acc = (_type env)::acc in
+          let acc = (Type.Tuple.Element (_type env))::acc in
           (* Trailing comma support (like [number, string,]) *)
           if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
           types env acc

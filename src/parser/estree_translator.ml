@@ -1332,8 +1332,23 @@ end with type t = Impl.t) = struct
       ]
 
     and tuple_type (loc, tl) =
+      let open Ast.Type.Tuple in
+      let element p = match p with
+        | Element p -> tuple_type_element p
+        | SpreadElement p -> tuple_type_spread_element p
+      in
       node "TupleTypeAnnotation" loc [
-        "types", array_of_list _type tl;
+        "types", array_of_list element tl;
+      ]
+
+    and tuple_type_element (loc, t) =
+      node "TupleTypeElement" loc [
+        "argument", _type (loc, t);
+      ]
+
+    and tuple_type_spread_element (loc, t) =
+      node "TupleTypeSpreadElement" loc [
+        "argument", _type (loc, t);
       ]
 
     and string_literal_type (loc, { Ast.StringLiteral.value; raw }) =

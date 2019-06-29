@@ -1,0 +1,6 @@
+type C = [...A, ...B, number]
+type D = [number, ...A, ...B]
+type E = [...A, ...B]
+type F = [...B]
+type G = [...B,]
+type H = [...B, ...A,]

@@ -176,7 +176,11 @@ module Eval(Env: EvalEnv) = struct
         let deps = Deps.join (deps, type_ tps t2) in
         List.fold_left (Deps.reduce_join (type_ tps)) deps ts
       | _, Tuple ts ->
-        List.fold_left (Deps.reduce_join (type_ tps)) Deps.bot ts
+        let open Ast.Type.Tuple in
+        List.fold_left (fun deps -> function
+        | Element t -> Deps.join (deps, type_ tps t)
+        | SpreadElement t -> Deps.join (deps, type_ tps t)
+        ) Deps.bot ts
       | _, Exists -> Deps.unreachable
 
   and function_type =

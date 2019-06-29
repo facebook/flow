@@ -2432,6 +2432,20 @@ and type_with_parens t =
   | (_, T.Intersection _) -> wrap_in_parens (type_ t)
   | _ -> type_ t
 
+and type_tuple ts =
+  let open Ast.Type.Tuple in
+  let element = function
+  | Element t -> type_ t;
+  | SpreadElement t ->
+    fuse [
+      Atom "...";
+      type_ t;
+    ]
+  in
+  group [
+    new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:element ts)
+  ]
+
 and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
   let module T = Ast.Type in
   source_location_with_comments (
@@ -2464,8 +2478,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.Intersection (t1, t2, ts) ->
       type_union_or_intersection ~sep:(Atom "&") (t1::t2::ts)
     | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
-    | T.Tuple ts ->
-      group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
+    | T.Tuple ts -> type_tuple ts
     | T.StringLiteral lit -> string_literal_type lit
     | T.NumberLiteral t -> number_literal_type t
     | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Atom bigint

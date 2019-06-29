@@ -96,11 +96,18 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
     | Utility s -> utility ~depth s
     | Tup ts ->
+      let type_elem ~depth = function
+      | Elem t -> type_ ~depth t
+      | SpreadElem t -> fuse [
+        Atom "...";
+        type_ ~depth t;
+      ]
+      in
       list
         ~wrap:(Atom "[", Atom "]")
         ~sep:(Atom ",")
         ~trailing:false
-        (counted_map (type_ ~depth) ts)
+        (counted_map (type_elem ~depth) ts)
     | StrLit raw -> fuse (in_quotes raw)
     | NumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")

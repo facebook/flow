@@ -916,7 +916,7 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
     | T.TupleAT (_, ts) ->
-      mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
+      mapM (type__ ~env) ts >>| fun ts -> Ty.Tup (Core_list.map ~f:(fun t -> Ty.Elem t) ts)
 
   and name_of_instance_reason r =
     (* This should cover all cases but throw an error just in case. *)

@@ -227,6 +227,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Tuple : sig
+    type ('M, 'T) t = ('M, 'T) element list
+    [@@deriving show]
+    and ('M, 'T) element =
+      | Element of ('M, 'T) Type.t
+      | SpreadElement of ('M, 'T) Type.t
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -249,7 +257,7 @@ and Type : sig
     | Union of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
     | Intersection of ('M, 'T) t * ('M, 'T) t * ('M, 'T) t list
     | Typeof of ('M, 'T) t
-    | Tuple of ('M, 'T) t list
+    | Tuple of ('M, 'T) Tuple.t
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
     | BigIntLiteral of BigIntLiteral.t
