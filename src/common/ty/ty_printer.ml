@@ -97,7 +97,9 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     | Utility s -> utility ~depth s
     | Tup ts ->
       let type_elem ~depth = function
-      | Elem t -> type_ ~depth t
+      | Elem t -> fuse [
+        type_ ~depth t;
+      ]
       | SpreadElem t -> fuse [
         Atom "...";
         type_ ~depth t;
