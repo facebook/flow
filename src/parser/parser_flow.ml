@@ -155,6 +155,7 @@ module rec Parse : PARSER = struct
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env
+    | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
     | _ -> statement env)
 
   and statement env =
@@ -252,8 +253,8 @@ module rec Parse : PARSER = struct
   and object_key = Object.key
   and class_declaration = Object.class_declaration
   and class_expression = Object.class_expression
-
   and is_assignable_lhs = Expression.is_assignable_lhs
+  and number = Expression.number
 
   and assert_identifier_name_is_identifier ?restricted_error env (loc, { Ast.Identifier.name; comments= _ }) =
     match name with

@@ -26,6 +26,7 @@ module type DECLARATION = sig
   val const: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val var: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val _function: env -> (Loc.t, Loc.t) Statement.t
+  val enum_declaration: env -> (Loc.t, Loc.t) Statement.t
 end
 
 module Declaration
@@ -33,6 +34,8 @@ module Declaration
   (Type: Type_parser.TYPE)
 : DECLARATION
 = struct
+  module Enum  = Enum_parser.Enum (Parse)
+
   let check_param =
     let rec pattern ((env, _) as check_env) (loc, p) = Pattern.(match p with
       | Object o -> _object check_env o
@@ -320,4 +323,6 @@ module Declaration
   let let_ env =
     let env = env |> with_no_let true in
     declarations T_LET Statement.VariableDeclaration.Let env
+
+  let enum_declaration = Enum.declaration
 end

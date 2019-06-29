@@ -1,4 +1,3 @@
 enum E {
-  A,
-  B,
+  class,
 }

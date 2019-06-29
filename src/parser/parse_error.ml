@@ -7,6 +7,14 @@
 
 type t =
   | Assertion of string
+  | EnumBooleanMemberNotInitialized of {enum_name: string; member_name: string}
+  | EnumDuplicateMemberName of {enum_name: string; member_name: string}
+  | EnumInconsistentMemberValues of {enum_name: string}
+  | EnumInvalidExplicitType of {enum_name: string; supplied_type: string option}
+  | EnumInvalidMemberInitializer of
+    {enum_name: string; explicit_type: Enum_common.explicit_type option; member_name: string}
+  | EnumNumberMemberNotInitialized of {enum_name: string; member_name: string}
+  | EnumStringMemberInconsistentlyInitailized of {enum_name: string}
   | UnexpectedToken of string
   | UnexpectedTokenWithSuggestion of string * string
   | UnexpectedNumber
@@ -130,6 +138,73 @@ module PP =
   struct
     let error = function
       | Assertion str -> "Unexpected parser state: "^str
+      | EnumBooleanMemberNotInitialized {enum_name; member_name} ->
+        Printf.sprintf
+          "Boolean enum members need to be initialized. Use either `%s = true,` or \
+          `%s = false,` in enum `%s`."
+          member_name
+          member_name
+          enum_name
+      | EnumDuplicateMemberName {enum_name; member_name} ->
+        Printf.sprintf
+          "Enum member names need to be unique, but the name `%s` has already been \
+          used before in enum `%s`."
+          member_name
+          enum_name
+      | EnumInconsistentMemberValues {enum_name} ->
+        Printf.sprintf
+          "Enum `%s` has inconsistent member initializers. Either use no initializers, or \
+           consistently use literals (either booleans, numbers, or strings) for all \
+           member initializers."
+          enum_name
+      | EnumInvalidExplicitType {enum_name; supplied_type} ->
+        let suggestion = Printf.sprintf
+          "Use one of `boolean`, `number`, `string`, or `symbol` in enum `%s`."
+          enum_name
+        in
+        begin match supplied_type with
+        | Some supplied_type ->
+            Printf.sprintf "Enum type `%s` is not valid. %s"
+            supplied_type
+            suggestion
+        | None ->
+            Printf.sprintf "Supplied enum type is not valid. %s"
+            suggestion
+        end
+      | EnumInvalidMemberInitializer {enum_name; explicit_type; member_name} ->
+        begin match explicit_type with
+        | Some (Enum_common.Boolean as explicit_type)
+        | Some (Enum_common.Number as explicit_type)
+        | Some (Enum_common.String as explicit_type) ->
+          let explicit_type_str = Enum_common.string_of_explicit_type explicit_type in
+          Printf.sprintf
+            "Enum `%s` has type `%s`, so the initializer of `%s` needs to be a %s literal."
+            enum_name
+            explicit_type_str
+            member_name
+            explicit_type_str
+        | Some Enum_common.Symbol ->
+          Printf.sprintf
+            "Symbol enum members cannot be initialized. Use `%s,` in enum `%s`."
+            member_name
+            enum_name
+        | None ->
+          Printf.sprintf
+            "The enum member initializer for `%s` needs to be a literal \
+            (either a boolean, number, or string) in enum `%s`."
+            member_name
+            enum_name
+        end
+      | EnumNumberMemberNotInitialized {enum_name; member_name} ->
+        Printf.sprintf
+          "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
+          member_name
+          enum_name
+      | EnumStringMemberInconsistentlyInitailized {enum_name} ->
+        Printf.sprintf
+          "String enum members need to consistently either all use initializers, \
+          or use no initializers, in enum %s."
+          enum_name
       | UnexpectedToken token->  "Unexpected token "^token
       | UnexpectedTokenWithSuggestion (token, suggestion) ->
           Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?"

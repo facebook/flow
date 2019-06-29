@@ -118,6 +118,9 @@ end = struct
     >>= fun props ->
       List.fold_left (fun opts (k, v) -> opts >>= (fun (test_opts, opts) ->
         match k with
+        | "enums" -> get_bool k v >>= fun v ->
+          return (test_opts, { opts with Parser_env.enums = v })
+
         | "esproposal_class_instance_fields" -> get_bool k v >>= fun v ->
           return (test_opts, { opts with Parser_env.esproposal_class_instance_fields = v })
 

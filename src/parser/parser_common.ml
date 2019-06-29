@@ -45,6 +45,7 @@ module type PARSER = sig
   val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
   val class_expression : env -> (Loc.t, Loc.t) Expression.t
   val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
+  val number: env -> Token.number_type -> string -> float
 end
 
 (* IdentifierName - https://tc39.github.io/ecma262/#prod-IdentifierName *)
