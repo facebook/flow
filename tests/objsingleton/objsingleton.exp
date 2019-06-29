@@ -1,20 +1,20 @@
-Error -------------------------------------------------------------------------------------------- objsingleton.js:18:42
+Error -------------------------------------------------------------------------------------------- objsingleton.js:19:42
 
 Cannot call `onAction` with object literal bound to `pattern` because property `Action3` is missing in object
 literal [1] but exists in object type [2].
 
-   objsingleton.js:18:42
+   objsingleton.js:19:42
                                                 v
-   18| const result2: number = onAction(action, {
-   19|   Action1: () => 0,
-   20|   Action2: () => 1
-   21| });
+   19| const result2: number = onAction(action, {
+   20|   Action1: () => 0,
+   21|   Action2: () => 1
+   22| });
        ^ [1]
 
 References:
-   objsingleton.js:5:12
-    5|   pattern: $ObjMap<$ObjSingleton<T>, () => () => Result>
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   objsingleton.js:6:19
+    6|   pattern: $Exact<$ObjSingleton<T, () => Result>>
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 

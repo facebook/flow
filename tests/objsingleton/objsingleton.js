@@ -2,7 +2,8 @@
 
 declare function onAction<T, Result>(
   myEnum: T,
-  pattern: $ObjMap<$ObjSingleton<T>, () => () => Result>
+  // TODO: bug with ExactT ?
+  pattern: $Exact<$ObjSingleton<T, () => Result>>
 ): Result;
 
 declare var action: "Action1" | "Action2" | "Action3";
