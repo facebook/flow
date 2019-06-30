@@ -103,13 +103,24 @@ function printErrors(errors, editor) {
 
 function printCrash(error, editor) {
   const div = document.createElement('div');
-  switch (error[1].c) {
-    case 'Stack_overflow':
-      div.appendChild(document.createTextNode('A stack overflow error has occured. Flow stopped working'));
-      break;
-    default:
-      div.appendChild(document.createTextNode('An unknown internal error has occured. Flow stopped working'));
-      break;
+  if (error[0] === 248) {
+    switch (error[1].c) {
+      case 'Stack_overflow':
+        div.appendChild(document.createTextNode('A stack overflow error has occured. Flow stopped working'));
+        break;
+      default:
+        div.appendChild(document.createTextNode('An unknown internal error has occured. Flow stopped working'));
+        break;
+    }
+  } else if (error[0] === 0) {
+    switch (error[1][1].c) {
+      case 'Flow_js.Not_expect_bound':
+        div.appendChild(document.createTextNode(`An internal error occured: ${error[2].c}`));
+        break;
+      default:
+        div.appendChild(document.createTextNode('An unknown internal error has occured. Flow stopped working'));
+        break;
+    }
   }
   return div;
 }
