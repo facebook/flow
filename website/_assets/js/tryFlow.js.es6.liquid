@@ -101,6 +101,19 @@ function printErrors(errors, editor) {
   return list;
 }
 
+function printCrash(error, editor) {
+  const div = document.createElement('div');
+  switch (error[1].c) {
+    case 'Stack_overflow':
+      div.appendChild(document.createTextNode('A stack overflow error has occured. Flow stopped working'));
+      break;
+    default:
+      div.appendChild(document.createTextNode('An unknown internal error has occured. Flow stopped working'));
+      break;
+  }
+  return div;
+}
+
 function removeChildren(node) {
   while (node.lastChild) node.removeChild(node.lastChild);
 }
@@ -128,7 +141,10 @@ function getAnnotations(text, callback, options, editor) {
       };
     });
     callback(lint);
-  });
+  }).catch(error => {
+    CodeMirror.signal(editor, 'flowCrash', error);
+    return [];
+  })
 }
 getAnnotations.async = true;
 
@@ -441,6 +457,14 @@ function createEditor(
         });
       }
     });
+
+    editor.on('flowCrash', error => {
+      console.error(error)
+      if (errorsNode) {
+        removeChildren(errorsNode);
+        errorsNode.appendChild(printCrash(error, editor));
+      }
+    })
 
     versionTabNode.addEventListener('change', function(evt) {
       const version = evt.target.value;
