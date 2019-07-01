@@ -2948,6 +2948,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when (match u with
         (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
            prevents a drastic blowup of cases which can cause perf problems. *)
+        | MapTypeT (_, _, Distribute _, _)
         | PredicateT (RightP (SentinelProp _, _), _)
         | PredicateT (NotP (RightP (SentinelProp _, _)), _) -> false
         | _ -> true
@@ -5512,6 +5513,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (mapped_t, tout)
 
+    | UnionT (_, rep), MapTypeT (use_op, reason_op, Distribute funt, tout) ->
+      let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
+      let t =
+        let reason = replace_reason_const RUnion reason_op in
+        UnionT (reason, rep |> UnionRep.ident_map (fun t -> f t))
+      in
+      rec_flow_t cx trace (t, tout)
+
+    | _, MapTypeT (use_op, reason_op, Distribute funt, tout) ->
+      let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
+      rec_flow_t cx trace (f l, tout)
+
     (***********************************************)
     (* functions may have their prototypes written *)
     (***********************************************)
@@ -7544,11 +7557,16 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
    bounds, which prevents the speculative match process from working.
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
-| UnionT (r, rep) ->
-  rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
-    let destructor = TypeDestructorT (use_op, reason, d) in
-    EvalT (t, destructor, Cache.Eval.id t destructor)
-  )), tout)
+| UnionT (r, rep) -> (
+  match d with
+  | TypeMap (Distribute _ as tmap) ->
+    rec_flow cx trace (t, MapTypeT (use_op, reason, tmap, tout))
+  | _ ->
+    rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
+      let destructor = TypeDestructorT (use_op, reason, d) in
+      EvalT (t, destructor, Cache.Eval.id t destructor)
+    )), tout)
+)
 | MaybeT (r, t) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let reason = replace_reason_const RNullOrVoid r in

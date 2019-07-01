@@ -548,6 +548,10 @@ class virtual ['a] t = object(self)
 
   method type_map cx map_cx t =
     match t with
+    | Distribute t' ->
+      let t'' = self#type_ cx map_cx t' in
+      if t'' == t' then t
+      else Distribute t''
     | TupleMap t' ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t

@@ -150,6 +150,7 @@ and utility =
   | PropertyType of t * t
   | ElementType of t * t
   | NonMaybeType of t
+  | Distribute of t * t
   | ObjMap of t * t
   | ObjMapi of t * t
   | TupleMap of t * t
@@ -299,6 +300,7 @@ let string_of_utility_ctor = function
   | PropertyType _ -> "$PropertyType"
   | ElementType _ -> "$ElementType"
   | NonMaybeType _ -> "$NonMaybeType"
+  | Distribute _ -> "$Distribute"
   | ObjMap _ -> "$ObjMap"
   | ObjMapi _ -> "$ObjMapi"
   | TupleMap _ -> "$TupleMap"
@@ -323,6 +325,7 @@ let types_of_utility = function
   | PropertyType (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
   | NonMaybeType t -> Some [t]
+  | Distribute (t1, t2) -> Some [t1; t2]
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]

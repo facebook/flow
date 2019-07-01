@@ -1492,6 +1492,8 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementType (ty, ty'))
     | T.CallType ts ->
       mapM (type__ ~env) ts >>| fun tys -> Ty.Utility (Ty.Call (ty, tys))
+    | T.TypeMap (T.Distribute t') ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Distribute (ty, ty'))
     | T.TypeMap (T.ObjectMap t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMap (ty, ty'))
     | T.TypeMap (T.ObjectMapi t') ->

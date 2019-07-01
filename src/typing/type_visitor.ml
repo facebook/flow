@@ -876,6 +876,7 @@ class ['a] t = object(self)
   | Upper u -> self#use_type_ cx acc u
 
   method private type_map cx acc = function
+  | Distribute t
   | TupleMap t
   | ObjectMap t
   | ObjectMapi t -> self#type_ cx pole_TODO acc t

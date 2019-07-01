@@ -37,6 +37,7 @@ let string_of_binary_test_ctor = function
   | SentinelProp _ -> "SentinelProp"
 
 let string_of_type_map = function
+  | Distribute _ -> "Distribute"
   | TupleMap _ -> "TupleMap"
   | ObjectMap _ -> "ObjectMap"
   | ObjectMapi _ -> "ObjectMapi"
@@ -74,6 +75,7 @@ let string_of_destructor = function
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
   | CallType _ -> "CallType"
+  | TypeMap (Distribute _) -> "Distribute"
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
@@ -1264,6 +1266,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
 
 and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
 and json_of_type_map_impl json_cx = Hh_json.(function
+  | Distribute t -> JSON_Object [
+      "distribute", _json_of_t json_cx t;
+    ]
   | TupleMap t -> JSON_Object [
       "tupleMap", _json_of_t json_cx t;
     ]

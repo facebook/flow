@@ -276,7 +276,10 @@ and collect_of_destructor ?log_unresolved cx acc = function
     -> acc
 
 and collect_of_type_map ?log_unresolved cx acc = function
-  | TupleMap t | ObjectMap t | ObjectMapi t ->
+  | Distribute t
+  | TupleMap t
+  | ObjectMap t
+  | ObjectMapi t ->
     collect_of_type ?log_unresolved cx acc t
 
 (* In some positions, like annots, we trust that tvars are 0->1. *)

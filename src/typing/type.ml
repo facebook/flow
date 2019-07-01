@@ -1067,6 +1067,7 @@ module rec TypeTerm : sig
   | ReactConfigType of t
 
   and type_map =
+  | Distribute of t
   | TupleMap of t
   | ObjectMap of t
   | ObjectMapi of t
