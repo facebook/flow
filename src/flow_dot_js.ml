@@ -245,8 +245,9 @@ let check_content ~filename ~content =
     let errors = Context.errors cx in
     let severity_cover = Context.severity_cover cx in
     let include_suppressions = Context.include_suppressions cx in
+    let aloc_tables = Utils_js.FilenameMap.empty in
     let errors, warnings, suppressions =
-      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors aloc_tables severity_cover in
     let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
     let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
     let errors, _, suppressions = Error_suppressions.filter_suppressed_errors

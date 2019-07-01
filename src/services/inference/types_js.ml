@@ -755,9 +755,10 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
 
       let severity_cover = Context.severity_cover cx in
       let include_suppressions = Context.include_suppressions cx in
+      let aloc_tables = Context.aloc_tables cx in
 
       let errors, warnings, suppressions =
-        Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+        Error_suppressions.filter_lints ~include_suppressions suppressions errors aloc_tables severity_cover in
 
       let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
       let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in

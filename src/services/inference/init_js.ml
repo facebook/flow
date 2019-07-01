@@ -110,7 +110,7 @@ let load_lib_files ~sig_cx ~options ~reader files =
 
           let errors, warnings, suppressions =
             Error_suppressions.filter_lints ~include_suppressions suppressions errors
-            severity_cover in
+            (Context.aloc_tables cx) severity_cover in
 
           Context.remove_all_errors cx;
           Context.remove_all_error_suppressions cx;

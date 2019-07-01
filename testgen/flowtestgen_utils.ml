@@ -627,8 +627,9 @@ let flow_check (code : string) : string option =
       let severity_cover = Utils_js.FilenameMap.singleton filename (ExactCover.default_file_cover filename) in
       let errors = Context.errors final_cx in
       let include_suppressions = Context.include_suppressions final_cx in
+      let aloc_tables = Utils_js.FilenameMap.empty in
       let errors, warnings, suppressions =
-        Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+        Error_suppressions.filter_lints ~include_suppressions suppressions errors aloc_tables severity_cover in
 
       let lazy_table_of_aloc _ =
         lazy (failwith "Did not expect to encounter an abstract location in flowtestgen")

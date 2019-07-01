@@ -228,12 +228,12 @@ let get_lint_settings severity_cover loc =
 
 (* Filter out lint errors which are definitely suppressed or were never
  * enabled in the first place. *)
-let filter_lints suppressions errors ~include_suppressions severity_cover =
+let filter_lints suppressions errors aloc_tables ~include_suppressions severity_cover =
   Flow_error.(ErrorSet.fold (fun error (errors, warnings, suppressions) ->
     let open Severity in
     match msg_of_error error |> Error_message.kind_of_msg, loc_of_error error with
     | Errors.LintError lint_kind, Some loc ->
-      let loc = ALoc.to_loc_exn loc in
+      let loc = ALoc.to_loc_with_tables aloc_tables loc in
       begin match get_lint_settings severity_cover loc with
       | None ->
         (* This shouldn't happen -- the primary location of a lint error

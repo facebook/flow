@@ -242,9 +242,10 @@ let merge_component ~worker_mutator ~options ~reader component =
     let suppressions = Context.error_suppressions cx in
     let severity_cover = Context.severity_cover cx in
     let include_suppressions = Context.include_suppressions cx in
+    let aloc_tables = Context.aloc_tables cx in
 
     let errors, warnings, suppressions =
-      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors aloc_tables severity_cover in
 
     Context.remove_all_errors cx;
     Context.remove_all_error_suppressions cx;
@@ -283,8 +284,9 @@ let check_file options ~reader file =
     let suppressions = Context.error_suppressions cx in
     let severity_cover = Context.severity_cover cx in
     let include_suppressions = Context.include_suppressions cx in
+    let aloc_tables = Context.aloc_tables cx in
     let errors, warnings, suppressions =
-      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors aloc_tables severity_cover in
     errors, warnings, suppressions, coverage_map
   )
   else

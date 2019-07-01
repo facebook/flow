@@ -31,7 +31,13 @@ val filter_suppressed_errors :
 
 (* We use an PrintableErrorSet here (as opposed to a ConcretePrintableErrorSet) because this operation happens
    during merge rather than during collation as filter_suppressed_errors does *)
-val filter_lints : t -> Flow_error.ErrorSet.t -> include_suppressions:bool ->
+val filter_lints :
+  t ->
+  Flow_error.ErrorSet.t ->
+  (* If needed, we will resolve abstract locations using these tables. Context.aloc_tables is most
+   * likely the right thing to pass to this. *)
+  ALoc.table Lazy.t Utils_js.FilenameMap.t ->
+  include_suppressions:bool ->
   ExactCover.lint_severity_cover Utils_js.FilenameMap.t ->
   (Flow_error.ErrorSet.t * Flow_error.ErrorSet.t * t)
 
