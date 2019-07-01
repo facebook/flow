@@ -20,7 +20,7 @@ module Request = struct
     }
   | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; trust : bool }
   | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; trust : bool }
-  | CYCLE of { filename: string; }
+  | CYCLE of { filename: string; types_only: bool }
   | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
   | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
   | FIND_REFS of {
@@ -84,8 +84,8 @@ module Request = struct
       Printf.sprintf "%s" "batch-coverage"
   | COVERAGE { input; force=_; wait_for_recheck=_; trust=_ } ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
-  | CYCLE { filename; } ->
-      Printf.sprintf "cycle %s" filename
+  | CYCLE { filename; types_only } ->
+      Printf.sprintf "cycle (types_only: %b) %s" types_only filename
   | GRAPH_DEP_GRAPH _ ->
       Printf.sprintf "dep-graph"
   | DUMP_TYPES { input; wait_for_recheck=_; } ->

@@ -262,11 +262,15 @@ let output_dependencies ~env root strip_root outfile =
   let%lwt () = Lwt_io.close out in
   ok_unit |> Lwt.return
 
-let get_cycle ~env fn =
+let get_cycle ~env fn types_only =
   (* Re-calculate SCC *)
   let parsed = env.ServerEnv.files in
   let dependency_info = env.ServerEnv.dependency_info in
-  let dependency_graph = Dependency_info.dependency_graph dependency_info in
+  let dependency_graph =
+    if types_only
+    then Dependency_info.dependency_graph dependency_info
+    else Dependency_info.all_dependency_graph dependency_info
+  in
   Lwt.return (Ok (
     let components = Sort_js.topsort ~roots:parsed dependency_graph in
 
@@ -400,8 +404,8 @@ let handle_batch_coverage ~genv ~options ~profiling:_ ~env ~batch ~trust =
   let%lwt response = batch_coverage ~options ~genv ~env ~batch ~trust in
   Lwt.return (ServerProt.Response.BATCH_COVERAGE response, None)
 
-let handle_cycle ~fn ~profiling:_ ~env =
-  let%lwt response = get_cycle ~env fn in
+let handle_cycle ~fn ~types_only ~profiling:_ ~env =
+  let%lwt response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
 let handle_dump_types ~options ~input ~profiling ~env =
@@ -575,11 +579,11 @@ let get_ephemeral_handler genv command =
   | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; trust } ->
     mk_parallelizable ~wait_for_recheck ~options
       (handle_batch_coverage ~genv ~options ~trust ~batch)
-  | ServerProt.Request.CYCLE { filename; } ->
+  | ServerProt.Request.CYCLE { filename; types_only } ->
     (* The user preference is to make this wait for up-to-date data *)
     let file_options = Options.file_options options in
     let fn = Files.filename_from_string ~options:file_options filename in
-    Handle_nonparallelizable (handle_cycle ~fn)
+    Handle_nonparallelizable (handle_cycle ~fn ~types_only)
   | ServerProt.Request.DUMP_TYPES { input; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_dump_types ~options ~input)
   | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck; } ->
