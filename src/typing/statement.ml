@@ -18,6 +18,7 @@ module Tast_utils = Typed_ast_utils
 
 module Anno = Type_annotation
 module Class_type_sig = Anno.Class_type_sig
+module Object_freeze = Anno.Object_freeze
 module Flow = Flow_js
 module T = Type
 
@@ -6177,10 +6178,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
   | "freeze", None, [Expression ((arg_loc, Object _) as e)] ->
     let (_, arg_t), _ as e_ast = expression cx e in
 
-    let reason_arg = mk_reason (RFrozen RObjectLit) arg_loc in
-    let arg_t = Tvar.mk_where cx reason_arg (fun tvar ->
-      Flow.flow cx (arg_t, ObjFreezeT (reason_arg, tvar));
-    ) in
+    let arg_t = Object_freeze.freeze_object cx arg_loc arg_t in
 
     let reason = mk_reason (RMethodCall (Some m)) loc in
     snd (method_call cx reason prop_loc ~use_op:unknown_use (expr, obj_t, m) None [Arg arg_t]),

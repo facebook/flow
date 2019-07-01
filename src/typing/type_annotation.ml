@@ -52,6 +52,14 @@ end)
 module Func_type_sig = Func_sig.Make (Func_type_params)
 module Class_type_sig = Class_sig.Make (Func_type_sig)
 
+module Object_freeze = struct
+  let freeze_object cx loc t =
+    let reason_arg = mk_reason (RFrozen RObjectLit) loc in
+    Tvar.mk_derivable_where cx reason_arg (fun tvar ->
+      Flow.flow cx (t, ObjFreezeT (reason_arg, tvar));
+    )
+end
+
 (* AST helpers *)
 
 let qualified_name =
@@ -483,12 +491,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason_arg = mk_reason (RFrozen RObjectLit) loc in
-      let tout = Tvar.mk_where cx reason_arg (fun tvar ->
-        Flow.flow cx (t, ObjFreezeT (reason_arg, tvar));
-      ) in
+      let t = Object_freeze.freeze_object cx loc t in
       (* TODO fix targs *)
-      reconstruct_ast tout targs
+      reconstruct_ast t targs
     )
 
   | "$TEMPORARY$module$exports$assign" ->
