@@ -28,9 +28,6 @@ extern const char* const BuildInfo_kRevision;
 extern const uint64_t BuildInfo_kRevisionCommitTimeUnix;
 extern const char* const BuildInfo_kBuildMode;
 
-#define STRINGIFY_HELPER(x) #x
-#define STRINGIFY_VALUE(x) STRINGIFY_HELPER(x)
-
 /**
  * Export the constants provided by Facebook's build system to ocaml-land, since
  * their FFI only allows you to call functions, not reference variables. Doing
@@ -96,30 +93,6 @@ value hh_get_build_mode(void) {
   result = caml_alloc_string(len);
 
   memcpy(String_val(result), BuildInfo_kBuildMode, len);
-
-  CAMLreturn(result);
-}
-
-value hh_get_build_banner(void) {
-  CAMLparam0();
-  CAMLlocal1(result);
-
-  char timestamp_string[25] = { 0 };
-#ifdef HH_BUILD_BANNER
-  const char* const buf =
-    STRINGIFY_VALUE(HH_BUILD_BANNER) "-" HHVM_VERSION_C_STRING_LITERALS;
-  const size_t len = strlen(buf);
-  const size_t timestamp_string_len = 0;
-#else
-  const char* const buf = BuildInfo_kRevision;
-  const size_t len = strlen(buf);
-  struct tm *timestamp = get_built_timestamp();
-  strftime(timestamp_string, sizeof(timestamp_string), "%c", timestamp);
-  const size_t timestamp_string_len = strlen(timestamp_string);
-#endif
-  result = caml_alloc_string(len + timestamp_string_len + 1);
-
-  sprintf(String_val(result), "%s %s", buf, timestamp_string);
 
   CAMLreturn(result);
 }

@@ -89,7 +89,7 @@ type build_mismatch_info =
 let current_build_info =
   {
     existing_version = Build_id.build_revision;
-    existing_build_commit_time = Build_id.get_build_commit_time_string ();
+    existing_build_commit_time = Build_id.build_commit_time_string;
     existing_argv = Array.to_list Sys.argv;
     existing_launch_time = Unix.gettimeofday ();
   }

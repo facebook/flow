@@ -8,7 +8,6 @@
     get_build_id_gen)
   (c_flags (:standard
     -I%{env:CMAKE_SOURCE_DIR=xxx}
-    (:include config/build-id-opt)
     (:include config/build-timestamp-opt)))
   (libraries
     string

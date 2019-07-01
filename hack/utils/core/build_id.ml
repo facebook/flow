@@ -14,13 +14,12 @@ external get_build_commit_time_string : unit -> string =
 external get_build_major : unit -> int = "hh_get_build_major"
 external get_build_minor : unit -> int = "hh_get_build_minor"
 external get_build_mode : unit -> string = "hh_get_build_mode"
-external get_build_banner : unit -> string = "hh_get_build_banner"
 
 let build_revision = get_build_revision ()
 
-let build_id_ohai = get_build_banner ()
-
 let build_commit_time = get_build_commit_time ()
+
+let build_commit_time_string = get_build_commit_time_string ()
 
 let build_major_version = get_build_major ()
 let build_minor_version = get_build_minor ()
@@ -40,11 +39,3 @@ let is_build_optimized =
  * v5 (hvvm 3.23, 17 Nov 2017) - 'hh_client lsp' stable
  *)
 let build_api_version = 5
-
-let build_version_json =
-  let open Hh_json in
-  JSON_Object [
-    "commit", JSON_String build_revision;
-    "commit_time", int_ build_commit_time;
-    "api_version", int_ build_api_version;
-  ]
