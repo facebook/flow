@@ -166,7 +166,7 @@ and reason_desc_function =
   | RNormal
   | RUnknown
 
-and reason_desc = ALoc.t virtual_reason_desc
+type reason_desc = ALoc.t virtual_reason_desc
 
 type 'loc virtual_reason
 type reason = ALoc.t virtual_reason
