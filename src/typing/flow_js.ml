@@ -3374,6 +3374,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ObjT { o with flags = { o.flags with sealed = Sealed } }
       )
       in
+      let sealed_obj = if o.flags.exact then ExactT (reason, sealed_obj) else sealed_obj in
       rec_flow cx trace (sealed_obj, u)
 
     | UnionT (_, rep), MakeObjectSingletonT (reason_op, Lower (use_op, l), t) ->
@@ -3408,6 +3409,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ObjT { o with flags = { o.flags with sealed = Sealed } }
       )
       in
+      let sealed_obj = if o.flags.exact then ExactT (reason, sealed_obj) else sealed_obj in
       rec_flow cx trace (l, UseT (use_op, sealed_obj))
 
     | DefT (_, _, StrT (Literal (_, str))), MakeObjectSingletonT (reason_op, Upper u, t) ->
@@ -3426,6 +3428,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         {flags; dict_t; proto_t; props_tmap; call_t;}
       in
       let obj = DefT (reason, literal_trust (), ObjT o) in
+      let obj = if o.flags.exact then ExactT (reason, obj) else obj in
       rec_flow cx trace (obj, u)
 
     | DefT (_, _, StrT (Literal (_, str))), MakeObjectSingletonT (reason_op, Lower (use_op, l), t) ->
@@ -3444,6 +3447,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         {flags; dict_t; proto_t; props_tmap; call_t;}
       in
       let obj = DefT (reason, literal_trust (), ObjT o) in
+      let obj = if o.flags.exact then ExactT (reason, obj) else obj in
       rec_flow cx trace (l, UseT (use_op, obj))
 
     (* unsupported kind *)
