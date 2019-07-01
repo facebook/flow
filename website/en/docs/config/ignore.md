@@ -13,7 +13,7 @@ default, nothing is ignored.
 
 Things to keep in mind:
 
-1. These are [OCaml regular   expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
+1. These are [OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
 2. These regular expressions match against absolute paths. They probably should
    start with `.*`
 3. Ignores are processed AFTER includes. If you both include and ignore a file
@@ -50,3 +50,14 @@ Which would ignore any file or directory under the directory named `__tests__/`
 within the project root. However, unlike the previous example's
 `.*/__tests__/.*`, it would NOT ignore files or directories under other
 directories named `__tests__/`, like `src/__tests__/`.
+
+You can also exclude paths included by a previous pattern with optional prefix "!":
+
+```
+[ignore]
+<PROJECT_ROOT>/node_modules/.*
+!<PROJECT_ROOT>/node_modules/not-excluded-package/.*
+```
+
+This is useful when you need to whitelist some parts of your project which are normally excluded.
+This feature is available from Flow version 0.98.0.
