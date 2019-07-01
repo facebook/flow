@@ -48,6 +48,11 @@ val update_source: (File_key.t option -> File_key.t option) -> t -> t
 val compare: t -> t -> int
 val equal: t -> t -> bool
 
+(* If one of the provided locations has an abstract underlying representation, and the other is
+ * concrete, attempt to concretize the abstract one using the given table, before comparing *)
+val concretize_compare: table Lazy.t Utils_js.FilenameMap.t -> t -> t -> int
+val concretize_equal: table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool
+
 (* Stringifies the underlying representation of the ALoc.t, without concretizing it, for debugging
  * purposes. If you make any typechecking behavior depend on the result of this function you are a
  * bad person. *)

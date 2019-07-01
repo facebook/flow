@@ -230,6 +230,33 @@ let compare loc1 loc2 =
 
 let equal loc1 loc2 = compare loc1 loc2 = 0
 
+let concretize_if_possible available_tables loc =
+  if Repr.is_abstract loc then
+    match Repr.source loc with
+    (* We shouldn't end up with a location with no source and an abstract representation. It may be
+     * worth asserting here at some point. *)
+    | None -> loc
+    | Some source ->
+      begin match Utils_js.FilenameMap.find_opt source available_tables with
+      (* We don't have the right table, so just return the loc *)
+      | None -> loc
+      | Some table ->
+        (* Concretize by converting to a Loc.t, then back to an ALoc.t *)
+        of_loc (to_loc table loc)
+      end
+  else
+    loc
+
+let concretize_compare available_tables loc1 loc2 =
+  if Repr.source loc1 = Repr.source loc2 && Repr.is_abstract loc1 <> Repr.is_abstract loc2 then
+    let loc1 = concretize_if_possible available_tables loc1 in
+    let loc2 = concretize_if_possible available_tables loc2 in
+    compare loc1 loc2
+  else
+    compare loc1 loc2
+
+let concretize_equal table loc1 loc2 = concretize_compare table loc1 loc2 = 0
+
 let to_string_no_source loc =
   if Repr.is_abstract loc then
     let key = Repr.get_key_exn loc in
