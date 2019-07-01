@@ -364,6 +364,9 @@ let rec extract_type cx this_t = match this_t with
   | ExactT (_, t) ->
       let t = resolve_type cx t in
       extract_type cx t
+  | ObjectSingletonT (_, t, _) ->
+      let t = resolve_type cx t in
+      extract_type cx t
   | ModuleT _ as t ->
       SuccessModule t
   | ThisTypeAppT (_, c, _, ts_opt) ->

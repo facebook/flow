@@ -2933,7 +2933,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
            prevents a drastic blowup of cases which can cause perf problems. *)
         | PredicateT (RightP (SentinelProp _, _), _)
-        | GetObjectSingletonT (_, _, _)
+        | MakeObjectSingletonT (_, _, _)
         | PredicateT (NotP (RightP (SentinelProp _, _)), _) -> false
         | _ -> true
       ) ->
@@ -3331,6 +3331,124 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        a lower bound, it's the same as DefT (_, _, NullT) *)
     | NullProtoT reason, _ ->
       rec_flow cx trace (DefT (reason, bogus_trust (), NullT), u)
+
+    (********************)
+    (* object singleton *)
+    (********************)
+
+    | _, UseT (use_op, ObjectSingletonT (r, t1, t2)) ->
+      rec_flow cx trace (t1, MakeObjectSingletonT (r, Lower (use_op, l), t2))
+
+    | ObjectSingletonT (r, t1, t2), _ ->
+      rec_flow cx trace (t1, MakeObjectSingletonT (r, Upper u, t2))
+
+    | UnionT (_, rep), MakeObjectSingletonT (reason_op, Upper u, t) ->
+      let ts = UnionRep.members rep in
+      let props_tmap = Context.make_property_map cx SMap.empty in
+      let reason = replace_reason_const RObjectType reason_op in
+      let o =
+        let proto_t = ObjProtoT reason in
+        let call_t = None in
+        let dict_t = None in
+        let sealed = UnsealedInFile (ALoc.source (loc_of_t proto_t)) in
+        let flags = {
+          exact = true;
+          sealed;
+          frozen = false;
+        } in
+        {flags; dict_t; proto_t; props_tmap; call_t;}
+      in
+      let obj = DefT (reason, literal_trust (), ObjT o) in
+      Core_list.iter ~f:(fun key ->
+        rec_flow cx trace (obj, SetElemT (
+          unknown_use,
+          reason_op,
+          key,
+          t,
+          None
+        ))
+      ) ts;
+      let sealed_obj = DefT (
+        reason,
+        literal_trust (),
+        ObjT { o with flags = { o.flags with sealed = Sealed } }
+      )
+      in
+      rec_flow cx trace (sealed_obj, u)
+
+    | UnionT (_, rep), MakeObjectSingletonT (reason_op, Lower (use_op, l), t) ->
+      let ts = UnionRep.members rep in
+      let props_tmap = Context.make_property_map cx SMap.empty in
+      let reason = replace_reason_const RObjectType reason_op in
+      let o =
+        let proto_t = ObjProtoT reason in
+        let call_t = None in
+        let dict_t = None in
+        let sealed = UnsealedInFile (ALoc.source (loc_of_t proto_t)) in
+        let flags = {
+          exact = true;
+          sealed;
+          frozen = false;
+        } in
+        {flags; dict_t; proto_t; props_tmap; call_t;}
+      in
+      let obj = DefT (reason, literal_trust (), ObjT o) in
+      Core_list.iter ~f:(fun key ->
+        rec_flow cx trace (obj, SetElemT (
+          unknown_use,
+          reason_op,
+          key,
+          t,
+          None
+        ))
+      ) ts;
+      let sealed_obj = DefT (
+        reason,
+        literal_trust (),
+        ObjT { o with flags = { o.flags with sealed = Sealed } }
+      )
+      in
+      rec_flow cx trace (l, UseT (use_op, sealed_obj))
+
+    | DefT (_, _, StrT (Literal (_, str))), MakeObjectSingletonT (reason_op, Upper u, t) ->
+      let props = SMap.add str (Field (None, t, Neutral)) SMap.empty in
+      let props_tmap = Context.make_property_map cx props in
+      let reason = replace_reason_const RObjectType reason_op in
+      let o =
+        let proto_t = ObjProtoT reason in
+        let call_t = None in
+        let dict_t = None in
+        let flags = {
+          exact = true;
+          sealed = Sealed;
+          frozen = false;
+        } in
+        {flags; dict_t; proto_t; props_tmap; call_t;}
+      in
+      let obj = DefT (reason, literal_trust (), ObjT o) in
+      rec_flow cx trace (obj, u)
+
+    | DefT (_, _, StrT (Literal (_, str))), MakeObjectSingletonT (reason_op, Lower (use_op, l), t) ->
+      let props = SMap.add str (Field (None, t, Neutral)) SMap.empty in
+      let props_tmap = Context.make_property_map cx props in
+      let reason = replace_reason_const RObjectType reason_op in
+      let o =
+        let proto_t = ObjProtoT reason in
+        let call_t = None in
+        let dict_t = None in
+        let flags = {
+          exact = true;
+          sealed = Sealed;
+          frozen = false;
+        } in
+        {flags; dict_t; proto_t; props_tmap; call_t;}
+      in
+      let obj = DefT (reason, literal_trust (), ObjT o) in
+      rec_flow cx trace (l, UseT (use_op, obj))
+
+    (* unsupported kind *)
+    | _, MakeObjectSingletonT (ru, _, _) ->
+      add_output cx ~trace (Error_message.EUnsupportedObjectSingleton (ru, reason_of_t l))
 
     (************************************************************************)
     (* exact object types *)
@@ -5478,66 +5596,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (mapped_t, tout)
 
-    (********************)
-    (* object singleton *)
-    (********************)
-
-    | UnionT (_, rep), GetObjectSingletonT (reason_op, t, tout) ->
-      let ts = UnionRep.members rep in
-      let props_tmap = Context.make_property_map cx SMap.empty in
-      let reason = replace_reason_const RObjectType reason_op in
-      let o =
-        let proto_t = ObjProtoT reason in
-        let call_t = None in
-        let dict_t = None in
-        let sealed = UnsealedInFile (ALoc.source (loc_of_t proto_t)) in
-        let flags = {
-          exact = false;
-          sealed;
-          frozen = false;
-        } in
-        {flags; dict_t; proto_t; props_tmap; call_t;}
-      in
-      let obj = DefT (reason, literal_trust (), ObjT o) in
-      Core_list.iter ~f:(fun key ->
-        rec_flow cx trace (obj, SetElemT (
-          unknown_use,
-          reason_op,
-          key,
-          t,
-          None
-        ))
-      ) ts;
-      let sealed_obj = DefT (
-        reason,
-        literal_trust (),
-        ObjT { o with flags = { o.flags with sealed = Sealed } }
-      )
-      in
-      (* TODO: doesn't work  *)
-      let sealed_obj = ExactT (reason, sealed_obj) in
-      rec_flow_t cx trace (sealed_obj, tout)
-
-    | DefT (_, _, StrT (Literal (_, str))), GetObjectSingletonT (reason_op, t, tout) ->
-      let props = SMap.add str (Field (None, t, Neutral)) SMap.empty in
-      let props_tmap = Context.make_property_map cx props in
-      let reason = replace_reason_const RObjectType reason_op in
-      let o =
-        let proto_t = ObjProtoT reason in
-        let call_t = None in
-        let dict_t = None in
-        let flags = {
-          exact = false;
-          sealed = Sealed;
-          frozen = false;
-        } in
-        {flags; dict_t; proto_t; props_tmap; call_t;}
-      in
-      let obj = DefT (reason, literal_trust (), ObjT o) in
-      (* TODO: doesn't work  *)
-      let obj = ExactT (reason, obj) in
-      rec_flow_t cx trace (obj, tout)
-
     (***********************************************)
     (* functions may have their prototypes written *)
     (***********************************************)
@@ -6930,7 +6988,7 @@ and empty_success flavor u =
   | _, CondT _
   | _, DestructuringT _
   | _, MakeExactT _
-  | _, GetObjectSingletonT _
+  | _, MakeObjectSingletonT _
   | _, ObjKitT _
   | _, ReposLowerT _
   | _, ReposUseT _
@@ -7168,7 +7226,6 @@ and any_propagated cx trace any u =
   | GetProtoT _
   | GetStaticsT _
   | GetValuesT _
-  | GetObjectSingletonT _
   | GuardT _
   | IdxUnMaybeifyT _
   | IdxUnwrap _
@@ -7181,6 +7238,7 @@ and any_propagated cx trace any u =
   | LookupT _
   | MatchPropT _
   | MakeExactT _
+  | MakeObjectSingletonT _
   | MapTypeT _
   | MethodT _
   | MixinT _
@@ -7326,6 +7384,7 @@ and any_propagated_use cx trace use_op any l =
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
   | ExactT _
+  | ObjectSingletonT _
   | ThisClassT _
   | ReposT _
   | EvalT _
@@ -7560,15 +7619,10 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
 | UnionT (r, rep) ->
-  (match d with
-  | ObjectSingletonType t1 ->
-    rec_flow cx trace (t, GetObjectSingletonT (reason, t1, tout))
-  | _ ->
-    rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
-      let destructor = TypeDestructorT (use_op, reason, d) in
-      EvalT (t, destructor, Cache.Eval.id t destructor)
-    )), tout)
-  )
+  rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
+    let destructor = TypeDestructorT (use_op, reason, d) in
+    EvalT (t, destructor, Cache.Eval.id t destructor)
+  )), tout)
 | MaybeT (r, t) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let reason = replace_reason_const RNullOrVoid r in
@@ -7610,7 +7664,6 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     let open Object in
     ObjKitT (use_op, reason, Resolve (Next), ReadOnly, tout)
   | ValuesType -> GetValuesT (reason, tout)
-  | ObjectSingletonType t -> GetObjectSingletonT (reason, t, tout)
   | CallType args ->
     let args = Core_list.map ~f:(fun arg -> Arg arg) args in
     let call = mk_functioncalltype reason None args tout in
@@ -7658,6 +7711,7 @@ and check_polarity cx ?trace polarity = function
 
   | OptionalT (_, t)
   | ExactT (_, t)
+  | ObjectSingletonT (_, t, _)
   | MaybeT (_, t)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t

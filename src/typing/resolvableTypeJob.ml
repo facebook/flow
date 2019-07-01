@@ -209,6 +209,8 @@ and collect_of_type ?log_unresolved cx acc = function
     ->
     collect_of_type ?log_unresolved cx acc t
 
+  | ObjectSingletonT (_, t1, t2) -> collect_of_types ?log_unresolved cx acc [t1; t2]
+
   | KeysT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
 
@@ -267,7 +269,6 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx acc ts
   | RestType (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ValuesType -> acc
-  | ObjectSingletonType t -> collect_of_type ?log_unresolved cx acc t
   | CallType ts -> collect_of_types ?log_unresolved cx acc ts
   | TypeMap tmap -> collect_of_type_map ?log_unresolved cx acc tmap
   | ReactConfigType default_props -> collect_of_type ?log_unresolved cx acc default_props

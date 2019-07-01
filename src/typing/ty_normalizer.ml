@@ -648,6 +648,10 @@ end = struct
     | KeysT (_, t) ->
       type__ ~env t >>| fun ty ->
       Ty.Utility (Ty.Keys ty)
+    | ObjectSingletonT (_, t1, t2) ->
+      type__ ~env t1 >>= fun t1 ->
+      type__ ~env t2 >>= fun t2 ->
+      return (Ty.Utility (Ty.ObjSingleton (t1, t2)))
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t ->
@@ -1488,8 +1492,6 @@ end = struct
     | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
     | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
     | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
-    | T.ObjectSingletonType t' ->
-      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjSingleton (ty, ty'))
     | T.ElementType t' ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementType (ty, ty'))
     | T.CallType ts ->

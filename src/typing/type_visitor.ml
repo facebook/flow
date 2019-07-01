@@ -60,6 +60,8 @@ class ['a] t = object(self)
 
   | ExactT (_, t) -> self#type_ cx pole acc t
 
+  | ObjectSingletonT (_, t, _) -> self#type_ cx pole acc t
+
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t -> self#type_ cx pole acc t
 
@@ -236,7 +238,6 @@ class ['a] t = object(self)
   | ReactElementConfigType
   | ReactElementRefType
     -> acc
-  | ObjectSingletonType t -> self#type_ cx pole_TODO acc t
   | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
   | ElementType t -> self#type_ cx pole_TODO acc t
   | Bind t -> self#type_ cx pole_TODO acc t
@@ -435,7 +436,6 @@ class ['a] t = object(self)
 
   | GetKeysT (_, t) -> self#use_type_ cx acc t
   | GetValuesT (_, t) -> self#type_ cx pole_TODO acc t
-  | GetObjectSingletonT (_, t, _) -> self#type_ cx pole_TODO acc t
 
   | HasOwnPropT _ -> acc
 
@@ -445,6 +445,8 @@ class ['a] t = object(self)
     acc
 
   | MakeExactT (_, cont) -> self#cont cx acc cont
+
+  | MakeObjectSingletonT (_, cont, _) -> self#cont cx acc cont
 
   | CJSRequireT (_, t, _)
   | ImportModuleNsT (_, t, _)

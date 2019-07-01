@@ -77,7 +77,6 @@ let string_of_destructor = function
   | SpreadType _ -> "Spread"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
-  | ObjectSingletonType _ -> "ObjectSingleton"
   | CallType _ -> "CallType"
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
@@ -251,6 +250,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | ExactT (_, t) -> [
       "type", _json_of_t json_cx t
+    ]
+
+  | ObjectSingletonT (_, t1, t2) -> [
+      "key", _json_of_t json_cx t1;
+      "value", _json_of_t json_cx t2
     ]
 
   | MaybeT (_, t) -> [
@@ -697,11 +701,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | GetObjectSingletonT (_, t1, t2) -> [
-      "value", _json_of_t json_cx t1;
-      "type", _json_of_t json_cx t2;
-    ]
-
   | ElemT (_, _, base, action) -> [
       "baseType", _json_of_t json_cx base;
       match action with
@@ -711,6 +710,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
+
+  | MakeObjectSingletonT (_, cont, _) -> _json_of_cont json_cx cont
 
   | CJSRequireT (_, export, _) -> [
       "export",
@@ -1231,10 +1232,6 @@ and json_of_destructor_impl json_cx = Hh_json.(function
     ]
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
-    ]
-  | ObjectSingletonType t -> JSON_Object [
-      "objectSingleton", JSON_Bool true;
-      "value", _json_of_t json_cx t
     ]
   | CallType args -> JSON_Object [
       "args", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) args);
@@ -1818,6 +1815,7 @@ let rec dump_t_ (depth, tvars) cx t =
         | None -> spf "%s, %s" (kid base) (kid this)
       end t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
+  | ObjectSingletonT (_, key, value) -> p ~extra:(spf "%s, %s" (kid key) (kid value)) t
   | MaybeT (_, arg) -> p ~extra:(kid arg) t
   | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
@@ -2127,7 +2125,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
-  | GetObjectSingletonT _ -> p t
   | MatchPropT (use_op, _, prop, ptype)
   | GetPropT (use_op, _, prop, ptype) -> p ~extra:(spf "%s, (%s), %s"
       (string_of_use_op use_op)
@@ -2157,6 +2154,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (lookup_kind kind)
       (lookup_action action)) t
   | MakeExactT _ -> p t
+  | MakeObjectSingletonT _ -> p t
   | MapTypeT _ -> p t
   | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t

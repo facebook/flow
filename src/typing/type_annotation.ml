@@ -797,7 +797,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | _ -> assert false in
       let reason = mk_reason RObjectSingleton loc in
       reconstruct_ast
-        (EvalT (t1, TypeDestructorT (use_op reason, reason, ObjectSingletonType t2), mk_id ()))
+        (ObjectSingletonT (reason, t1, t2))
         targs
     )
 
