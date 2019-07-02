@@ -1,0 +1,4 @@
+Get-def imported class:
+{"path":"foo.js","line":3,"endline":3,"start":14,"end":16}
+Get-def class member:
+{"path":"foo.js","line":4,"endline":4,"start":3,"end":5}
