@@ -93,7 +93,7 @@ module rec TypeTerm : sig
        appears as an upper bound of an object type, otherwise the same. *)
     | NullProtoT of reason
 
-    | FunProtoApplyT of reason  (* Function.prototype.apply *)
+    | FunProtoApplyT of reason * t option  (* Function.prototype.apply *)
     | FunProtoBindT of reason   (* Function.prototype.bind *)
     | FunProtoCallT of reason   (* Function.prototype.call *)
 
@@ -2140,7 +2140,7 @@ end = struct
     | ExistsT reason -> reason
     | InternalT (ExtendsT (reason, _, _)) -> reason
     | FunProtoT reason -> reason
-    | FunProtoApplyT reason -> reason
+    | FunProtoApplyT (reason, _) -> reason
     | FunProtoBindT reason -> reason
     | FunProtoCallT reason -> reason
     | KeysT (reason, _) -> reason
@@ -2303,7 +2303,7 @@ end = struct
     | ExactT (reason, t) -> ExactT (f reason, t)
     | ExistsT reason -> ExistsT (f reason)
     | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
-    | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
+    | FunProtoApplyT (reason, t1) -> FunProtoApplyT (f reason, t1)
     | FunProtoT (reason) -> FunProtoT (f reason)
     | FunProtoBindT (reason) -> FunProtoBindT (f reason)
     | FunProtoCallT (reason) -> FunProtoCallT (f reason)

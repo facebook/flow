@@ -5586,8 +5586,68 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*******************************************)
 
     (* resolves the arguments... *)
-    | FunProtoApplyT lreason,
+    | FunProtoApplyT (lreason, None),
         CallT (use_op, reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+      (* Drop the specific AST derived argument reasons. Our new arguments come
+       * from arbitrary positions in the array. *)
+      let use_op = match use_op with
+      | Op FunCall {op; fn; args = _; local} -> Op (FunCall {op; fn; args = []; local})
+      | Op FunCallMethod {op; fn; prop; args = _; local} ->
+          Op (FunCallMethod {op; fn; prop; args = []; local})
+      | _ -> use_op
+      in
+
+      begin match call_args_tlist with
+      (* func.apply() *)
+      | [] ->
+         let funtype = { funtype with
+           call_this_t = VoidT.why reason_op |> with_trust bogus_trust;
+           call_args_tlist = [];
+         } in
+         rec_flow cx trace (func, CallT (use_op, reason_op, funtype))
+
+       (* func.apply(this_arg) *)
+      | (Arg this_arg)::[] ->
+         let funtype = { funtype with call_this_t = this_arg; call_args_tlist = [] } in
+         rec_flow cx trace (func, CallT (use_op, reason_op, funtype))
+
+       (* func.apply(this_arg, ts) *)
+      | first_arg::(Arg ts)::[] ->
+         let call_this_t = extract_non_spread cx ~trace first_arg in
+         let call_args_tlist = [ SpreadArg ts ] in
+         let funtype = { funtype with call_this_t; call_args_tlist; } in
+         (* Ignoring `this_arg`, we're basically doing func(...ts). Normally
+          * spread arguments are resolved for the multiflow application, however
+          * there are a bunch of special-cased functions like bind(), call(),
+          * apply, etc which look at the arguments a little earlier. If we delay
+          * resolving the spread argument, then we sabotage them. So we resolve
+          * it early *)
+         let t = Tvar.mk_where cx reason_op (fun t ->
+           let resolve_to = ResolveSpreadsToCallT (funtype, t) in
+           resolve_call_list cx ~trace ~use_op reason_op call_args_tlist resolve_to
+         ) in
+         rec_flow_t cx trace (func, t)
+
+      | (SpreadArg t1)::(SpreadArg t2)::[] ->
+           add_output cx ~trace
+             (Error_message.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
+           add_output cx ~trace
+             (Error_message.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument)))
+      | (SpreadArg t)::[]
+      | (Arg _)::(SpreadArg t)::[] ->
+          add_output cx ~trace
+             (Error_message.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
+      | _::_::_::_ ->
+          Error_message.EFunctionCallExtraArg (
+             mk_reason RFunctionUnusedArgument (aloc_of_reason lreason),
+             lreason,
+             2,
+             use_op
+          ) |> add_output cx ~trace;
+       end
+
+    | FunProtoApplyT (lreason, Some func),
+        CallT (use_op, reason_op, ({call_args_tlist; _} as funtype)) ->
       (* Drop the specific AST derived argument reasons. Our new arguments come
        * from arbitrary positions in the array. *)
       let use_op = match use_op with
@@ -5709,6 +5769,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (AnyT.untyped reason, UseT (use_op, param_t))
       ) call_args_tlist;
       rec_flow_t cx trace (l, call_tout)
+
+    | FunProtoApplyT (lreason, _), BindT (_, _, { call_this_t; call_tout; _ }, _) ->
+      rec_flow_t cx trace (FunProtoApplyT (lreason, Some call_this_t), call_tout)
 
     | _, BindT (_, _, { call_tout; _ }, true) ->
       rec_flow_t cx trace (l, call_tout)
@@ -6512,7 +6575,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (AnyT.make AnyError lreason, u);
 
     (* Special cases of FunT *)
-    | FunProtoApplyT reason, _
+    | FunProtoApplyT (reason, _), _
     | FunProtoBindT reason, _
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
@@ -7296,9 +7359,13 @@ and any_propagated_use cx trace use_op any l =
       covariant_flow ~use_op instance;
       true
 
+  | FunProtoApplyT (_, Some t) ->
+      contravariant_flow ~use_op t;
+      true
+
   (* These types have no negative positions in their lower bounds *)
   | ExistsT _
-  | FunProtoApplyT _
+  | FunProtoApplyT (_, None)
   | FunProtoBindT _
   | FunProtoCallT _
   | FunProtoT _

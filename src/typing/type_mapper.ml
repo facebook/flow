@@ -105,9 +105,13 @@ class virtual ['a] t = object(self)
       | FunProtoT _
       | ObjProtoT _
       | NullProtoT _
-      | FunProtoApplyT _
+      | FunProtoApplyT (_, None)
       | FunProtoBindT _
       | FunProtoCallT _ -> t
+      | FunProtoApplyT (r, Some t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else FunProtoApplyT (r, Some t'')
       | AnyWithLowerBoundT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
