@@ -103,6 +103,7 @@ MODULES=\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parsing\
+  src/procs\
   src/server\
   src/server/command_handler\
   src/server/env\

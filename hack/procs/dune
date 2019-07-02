@@ -23,6 +23,3 @@
     procs_bucket
     sys_utils
     worker_cancel))
-
-; procs_lwt depends on Flow files that are outside the dune project
-; we will need to add a dune public library definition in Flow for that
