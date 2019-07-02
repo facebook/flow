@@ -10128,7 +10128,7 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
              introduce differences in their representations that would kill other
              optimizations. Thus, we focus on the special case where these types have the same
              reason, and then do naive unification. *)
-          when reason_of_t t1 = reason_of_t t2 ->
+          when Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2) ->
         naive_unify cx trace ~use_op t1 t2
      | _ ->
         naive_unify cx trace ~use_op t1 t2
