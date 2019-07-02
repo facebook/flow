@@ -50,19 +50,21 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
 
 let insert_type ~options ~env ~profiling ~file_key
       ~file_content ~target ~expand_aliases ~omit_targ_defaults ~location_is_strict:(strict) =
+  let open Insert_type in
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
   | (Some (full_cx, ast, file_sig, typed_ast), _tc_errors, _tc_warnings) ->
     let file_sig = (File_sig.abstractify_locs file_sig) in
-    let normalize loc =
-      Query_types.insert_type_normalize ~full_cx ~file_sig ~typed_ast
-        ~expand_aliases ~omit_targ_defaults loc in
-    let ty_lookup = Insert_type.type_lookup_at_location typed_ast in
-    let mapper = new Insert_type.mapper ~target ~normalize ~ty_lookup ~strict in
-    let new_ast = mapper#program ast in
-    let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
-    let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff ast file_content in
-    Ok file_patch
-  | (None, errors, _) -> Error errors
+    let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
+    let ty_lookup = type_lookup_at_location typed_ast in
+    begin try
+      let new_ast = (new mapper ~normalize ~ty_lookup ~strict target)#program ast in
+      let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
+      let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff ast file_content in
+      Ok file_patch
+      with FailedToInsertType err -> Error err
+    end
+  | (None, errors, _) ->
+    Error (Unexpected (FailedToTypeCheck errors))
 
 
 let dump_types ~options ~env ~profiling file content =

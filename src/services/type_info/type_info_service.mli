@@ -58,4 +58,4 @@ val insert_type :
   expand_aliases:bool ->
   omit_targ_defaults:bool ->
   location_is_strict:bool ->
-  (Replacement_printer.patch, Errors.ConcreteLocPrintableErrorSet.t) Core_result.t Lwt.t
+  (Replacement_printer.patch, Insert_type.errors) Core_result.t Lwt.t

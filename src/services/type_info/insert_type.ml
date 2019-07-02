@@ -5,20 +5,43 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-exception UnknownTypeAtPoint of Loc.t
-exception FailedToSerializeType of {location:Loc.t; ty:Ty.t; error_message:string}
-exception FailedToNormalizeType of {location:Loc.t; ty:Type.t; error_message:string}
-exception TypeAvailableAtPoint of {location:Loc.t; type_ast: (Loc.t, Loc.t) Flow_ast.Type.t}
-exception UnknownAnnotation of Loc.t
-exception UnsupportedAnnotation of {location:Loc.t; error_message:string}
+module Utils = Insert_type_utils
 
+type unexpected =
+  | UnknownTypeAtPoint of Loc.t
+  | FailedToSerialize of {ty:Ty.t; error_message:string}
+  | FailedToNormalize of ((Loc.t * string) option)
+  | FailedToTypeCheck of Errors.ConcreteLocPrintableErrorSet.t
 
-let is_point loc = Loc.(loc.start = loc._end)
+type expected =
+  | TypeAnnotationAtPoint of {location:Loc.t; type_ast: (Loc.t, Loc.t) Flow_ast.Type.t}
+  | InvalidAnnotationTarget of Loc.t
+  | UnsupportedAnnotation of {location:Loc.t; error_message:string}
+  | TypeSizeLimitExceeded of {size_limit:int; size:int option;}
+  | MulipleTypesPossibleAtPoint of {generalized:Ty.t; specialized:Ty.t}
+  | FailedToValidateType of {error:Utils.validation_error; error_message:string}
+
+type errors =
+  | Unexpected of unexpected
+  | Expected of expected
+
+exception FailedToInsertType of errors
+
+let expected err = (FailedToInsertType (Expected err))
+
+let unexpected err = (FailedToInsertType (Unexpected err))
+
+let fail_when_ty_size_exceeds size_limit ty =
+  match Ty_utils.size_of_type ~max:size_limit ty with
+  | None ->
+    raise @@ expected @@ TypeSizeLimitExceeded {size_limit; size=Ty_utils.size_of_type ty}
+  | _ -> ()
+
 
 (* This class maps each node that contains the target until a node is contained
    by the target *)
-class mapper ~strict ~target ~normalize ~ty_lookup =
-  let target_is_point = is_point target in
+class mapper ~strict ?(size_limit=30) ~normalize ~ty_lookup target =
+  let target_is_point = Utils.is_point target in
   object(this)
   inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
 
@@ -29,16 +52,18 @@ class mapper ~strict ~target ~normalize ~ty_lookup =
 
   method private synth_type location =
     let (location, scheme) = ty_lookup location in
-    match normalize location scheme with
-    | Query_types.Success (_, ty) ->
-      begin match Ty_serializer.type_ ty with
-      | Ok type_ast -> (location, type_ast)
-      | Error error_message ->
-        raise @@ FailedToSerializeType {location; ty; error_message}
-      end
-    | Query_types.FailureUnparseable (location, ty, error_message) ->
-      raise @@ FailedToNormalizeType {location; ty; error_message}
-    | Query_types.FailureNoMatch -> failwith "TODO handle this error"
+    let ty = normalize location scheme in
+    fail_when_ty_size_exceeds size_limit ty;
+    let ty = Ty_utils.simplify_type ~simplify_empty:false ty in
+    begin try
+      Utils.validate_type ty
+      with
+      | Utils.Fatal error -> raise @@ expected @@
+          FailedToValidateType{error; error_message=Utils.serialize_validation_error error}
+    end;
+    match Utils.serialize ~imports_react:true ty with
+    | Ok type_ast -> (location, type_ast)
+    | Error msg -> raise (unexpected (FailedToSerialize {ty; error_message=msg}))
 
   method private synth_type_annotation_hint loc =
     Flow_ast.Type.Available (this#synth_type loc)
@@ -55,7 +80,8 @@ class mapper ~strict ~target ~normalize ~ty_lookup =
       this#synth_type_annotation_hint type_loc
     | Available (location, type_ast)
       when (not check_loc) || this#target_contained_by location ->
-      raise @@ TypeAvailableAtPoint {location; type_ast;}
+      raise @@ expected
+        @@ TypeAnnotationAtPoint {location; type_ast;}
     | _ -> annot
 
   method! type_annotation_hint = this#update_type_annotation_hint ?type_loc:None ~check_loc:true
@@ -65,8 +91,8 @@ class mapper ~strict ~target ~normalize ~ty_lookup =
     | { Flow_ast.Class.Extends.targs = None; _} ->
       super#class_extends location extends
     | _ ->
-      raise @@ UnsupportedAnnotation {location;
-       error_message="Classes with type arguments"}
+      raise @@ expected @@
+        UnsupportedAnnotation {location; error_message="Classes with type arguments"}
 
   method! function_param_pattern node =
     let open Flow_ast.Pattern in
@@ -76,8 +102,8 @@ class mapper ~strict ~target ~normalize ~ty_lookup =
       when this#is_target loc
         || (target_is_point && this#target_contained_by loc) ->
       if strict
-      then raise @@ UnsupportedAnnotation {location=loc;
-        error_message="Function parameter in strict mode."}
+      then raise @@ expected
+        @@ UnsupportedAnnotation {location=loc; error_message="Function parameter in strict mode."}
       else
         let annot = this#update_type_annotation_hint annot in
         loc, Identifier {id with annot}
@@ -92,8 +118,8 @@ class mapper ~strict ~target ~normalize ~ty_lookup =
       Property (loc, {prop with annot}) in
     match elem with
       | PrivateField (location, _) when this#is_target location ->
-        raise @@ UnsupportedAnnotation {location;
-          error_message="Private field"}
+        raise @@ expected
+          @@ UnsupportedAnnotation {location; error_message="Private field"}
       | Property (loc, ({annot; _} as prop)) when this#is_target loc ->
         update_property loc prop annot
       | Property (loc, ({key=(Literal     (kloc, _)|
@@ -103,8 +129,8 @@ class mapper ~strict ~target ~normalize ~ty_lookup =
         when this#is_target kloc
           || (target_is_point && this#target_contained_by kloc) ->
         if strict
-        then raise @@ UnsupportedAnnotation {location=kloc;
-          error_message="property key in strict mode"}
+        then raise @@ expected
+          @@ UnsupportedAnnotation {location=kloc; error_message="property key in strict mode"}
         else update_property loc prop annot
       | _ -> super#class_element elem
 
@@ -152,11 +178,21 @@ class mapper ~strict ~target ~normalize ~ty_lookup =
 
   method! program p =
     let p' = super#program p in
-    if p == p' then raise @@ UnknownAnnotation target;
+    if p == p' then raise @@ expected @@ InvalidAnnotationTarget target;
     p'
 end
 
 let type_lookup_at_location typed_ast loc =
   match Typed_ast_utils.find_exact_match_annotation typed_ast (ALoc.of_loc loc) with
   | Some p -> p
-  | None -> raise @@ UnknownTypeAtPoint loc
+  | None -> raise @@ unexpected @@ UnknownTypeAtPoint loc
+
+let normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults loc scheme =
+  let open Query_types in
+  match insert_type_normalize ~full_cx ~file_sig ~typed_ast
+    ~expand_aliases ~omit_targ_defaults loc scheme
+  with
+  | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalize None
+  | FailureUnparseable (loc, _, msg) ->
+    raise @@ unexpected @@ FailedToNormalize (Some (loc, msg))
+  | Success (_, ty) -> ty
