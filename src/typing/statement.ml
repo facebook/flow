@@ -6257,7 +6257,9 @@ and check_properties_initialized_before_use cx class_ast: unit =
 
   uninitialized
   |> Class_property_map.iter (fun _ loc ->
-    Flow.add_output cx Error_message.(EUninitializedInstanceProperty loc)
+    Flow.add_output cx Error_message.(
+      EUninitializedInstanceProperty (loc, PropertyNotDefinitivelyInitialized)
+    )
   )
 
 and mk_class cx class_loc ~name_loc reason c =

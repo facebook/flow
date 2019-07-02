@@ -2723,8 +2723,14 @@ let dump_error_message =
         spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
     | EUnsafeGetSet loc ->
         spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
-    | EUninitializedInstanceProperty loc ->
-        spf "EUninitializedInstanceProperty (%s)" (string_of_aloc loc)
+    | EUninitializedInstanceProperty (loc, err) ->
+        spf "EUninitializedInstanceProperty (%s, %s)"
+          (string_of_aloc loc)
+          (match err with
+          | PropertyNotDefinitivelyInitialized -> "PropertyNotDefinitivelyInitialized"
+          | ReadFromUninitializedProperty -> "ReadFromUninitializedProperty"
+          | MethodCallBeforeEverythingInitialized -> "MethodCallBeforeEverythingInitialized"
+          | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
     | EExperimentalExportStarAs loc ->
         spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
     | EExperimentalEnums loc ->

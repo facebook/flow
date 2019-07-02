@@ -146,7 +146,7 @@ and 'loc t' =
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
   | EExperimentalClassProperties of 'loc * bool
-  | EUninitializedInstanceProperty of 'loc
+  | EUninitializedInstanceProperty of 'loc * uninitialized_property_error
   | EExperimentalDecorators of 'loc
   | EExperimentalExportStarAs of 'loc
   | EExperimentalEnums of 'loc
@@ -323,6 +323,12 @@ and 'loc upper_kind =
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
   | IncompatibleUnclassified of string
+
+and uninitialized_property_error =
+  | PropertyNotDefinitivelyInitialized
+  | ReadFromUninitializedProperty
+  | MethodCallBeforeEverythingInitialized
+  | ThisBeforeEverythingInitialized
 
 let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
@@ -506,7 +512,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EExperimentalDecorators loc -> EExperimentalDecorators (f loc)
   | EExperimentalClassProperties (loc, b) -> EExperimentalClassProperties (f loc, b)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
-  | EUninitializedInstanceProperty loc -> EUninitializedInstanceProperty (f loc)
+  | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EExperimentalExportStarAs loc -> EExperimentalExportStarAs (f loc)
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
@@ -764,7 +770,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
   | EUnsafeGetSet loc
-  | EUninitializedInstanceProperty loc
+  | EUninitializedInstanceProperty (loc, _)
   | EExperimentalClassProperties (loc, _)
   | EExperimentalDecorators loc
   | EModuleOutsideRoot (loc, _)
@@ -1566,11 +1572,25 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "[options]"; text " section of your "; code ".flowconfig"; text ".";
       ]
 
-    | EUninitializedInstanceProperty _ ->
-      Normal [
-        text "All instance properties should be initialized before use to ";
-        text "avoid potential runtime exceptions."
-      ]
+    | EUninitializedInstanceProperty (_loc, err) ->
+      (match err with
+      | PropertyNotDefinitivelyInitialized -> Normal [
+          text "Class property not definitively initialized in the constructor. ";
+          text "Can you add an assignment to the property declaration?";
+        ]
+      | ReadFromUninitializedProperty -> Normal [
+          text "It is unsafe to read from a class property before it is ";
+          text "definitively initialized.";
+        ]
+      | MethodCallBeforeEverythingInitialized -> Normal [
+          text "It is unsafe to call a method in the constructor before all ";
+          text "class properties are definitively initialized.";
+        ]
+      | ThisBeforeEverythingInitialized -> Normal [
+          text "It is unsafe to use "; code "this"; text " in the constructor ";
+          text "before all class properties are definitively initialized.";
+        ]
+      )
 
     | EExperimentalExportStarAs _ ->
       Normal [
