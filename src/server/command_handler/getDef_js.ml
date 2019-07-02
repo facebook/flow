@@ -96,7 +96,7 @@ let extract_member_def cx this name =
     | Some (loc, t) ->
         begin match loc with
           | None -> Type.loc_of_t t |> ALoc.to_loc_exn
-          | Some x -> x
+          | Some x -> (ALoc.to_loc_exn x)
         end
     | None -> Loc.none
     end

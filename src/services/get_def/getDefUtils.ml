@@ -282,6 +282,7 @@ and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, stri
   >>= begin function
     | None -> Ok NoDefFound
     | Some loc ->
+      let loc = ALoc.to_loc_exn loc in
       extract_def_loc cx super name
       >>= begin function
         | FoundClass lst ->
@@ -314,7 +315,7 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
         get_def_loc_from_extracted_type cx extracted_type name
         >>| begin function
           | None -> NoDefFound
-          | Some loc -> FoundObject loc
+          | Some loc -> FoundObject (ALoc.to_loc_exn loc)
         end
     | Success (UnionT (_, rep)) ->
         let union_members =

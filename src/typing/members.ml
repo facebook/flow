@@ -275,7 +275,7 @@ let string_of_extracted_type = function
   | FailureAnyType -> "FailureAnyType"
   | FailureUnhandledType t -> Printf.sprintf "FailureUnhandledType (%s)" (Type.string_of_ctor t)
 
-let to_command_result_aloc = function
+let to_command_result = function
   | Success map
   | SuccessModule (map, None) ->
       Ok map
@@ -289,10 +289,6 @@ let to_command_result_aloc = function
       Error (spf
         "autocomplete on unexpected type of value %s (please file a task!)"
         (string_of_ctor t))
-
-let loc_tmap_of_aloc_tmap = Option.map ~f:ALoc.to_loc_exn |> map_fst |> SMap.map
-
-let to_command_result = to_command_result_aloc %> Core_result.map ~f:loc_tmap_of_aloc_tmap
 
 let find_props cx =
   Context.find_props cx %> SMap.filter (fun key _ ->
@@ -545,6 +541,6 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
 and extract ?exclude_proto_members cx = extract_type cx %> extract_members ?exclude_proto_members cx
 
 and extract_members_as_map ~exclude_proto_members cx this_t =
-  match extract ~exclude_proto_members cx this_t |> to_command_result_aloc with
+  match extract ~exclude_proto_members cx this_t |> to_command_result with
   | Ok map -> map
   | Error _ -> SMap.empty
