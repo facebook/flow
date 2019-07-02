@@ -56,7 +56,7 @@ let get_status ~reader genv env client_root =
   in
   status_response, lazy_stats
 
-let autocomplete ~options ~env ~profiling file_input =
+let autocomplete ~reader ~options ~env ~profiling file_input =
   let path, content = match file_input with
     | File_input.FileName _ -> failwith "Not implemented"
     | File_input.FileContent (_, content) ->
@@ -73,7 +73,7 @@ let autocomplete ~options ~env ~profiling file_input =
       Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json (fun () ->
           Lwt.return (
-            AutocompleteService_js.autocomplete_get_results cx file_sig tast state info
+            AutocompleteService_js.autocomplete_get_results ~reader cx file_sig tast state info
           )
         )
       )
@@ -388,8 +388,8 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
     Lwt.return (Ok ())
   )
 
-let handle_autocomplete ~options ~input ~profiling ~env =
-  let%lwt result, json_data = autocomplete ~options ~env ~profiling input in
+let handle_autocomplete ~reader ~options ~input ~profiling ~env =
+  let%lwt result, json_data = autocomplete ~reader ~options ~env ~profiling input in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
 let handle_check_file ~options ~force ~input ~profiling ~env =
@@ -567,7 +567,7 @@ let get_ephemeral_handler genv command =
   let reader = State_reader.create () in
   match command with
   | ServerProt.Request.AUTOCOMPLETE { input; wait_for_recheck; } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_autocomplete ~options ~input)
+    mk_parallelizable ~wait_for_recheck ~options (handle_autocomplete ~reader ~options ~input)
   | ServerProt.Request.CHECK_FILE { input; verbose; force; include_warnings; wait_for_recheck; } ->
     let options = { options with Options.
       opt_verbose = verbose;
@@ -916,8 +916,8 @@ let handle_persistent_subscribe ~reader ~options ~client ~profiling:_ ~env =
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (IdeResponse (Ok (env, None)))
 
-let handle_persistent_autocomplete ~options ~file_input ~id ~client ~profiling ~env =
-  let%lwt results, json_data = autocomplete ~options ~env ~profiling file_input in
+let handle_persistent_autocomplete ~reader ~options ~file_input ~id ~client ~profiling ~env =
+  let%lwt results, json_data = autocomplete ~reader ~options ~env ~profiling file_input in
   let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
   Persistent_connection.send_message wrapped client;
   Lwt.return (IdeResponse (Ok ((), json_data)))
@@ -1062,7 +1062,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
       Lwt.return (LspResponse (Error ((), with_error metadata ~reason)))
   end
 
-let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+let handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let is_snippet_supported = Persistent_connection.client_snippet_support client in
   let open Completion in
   let (file, line, char) = match loc with
@@ -1089,7 +1089,7 @@ let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~clie
       let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
       let file_with_token = File_input.FileContent (fn, content_with_token) in
       let%lwt result, extra_data =
-        autocomplete ~options ~env ~profiling file_with_token
+        autocomplete ~reader ~options ~env ~profiling file_with_token
       in
       let metadata = with_data ~extra_data metadata in
       begin match result with
@@ -1378,7 +1378,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
 
   | Autocomplete (file_input, id) ->
     mk_parallelizable_persistent ~options (
-      handle_persistent_autocomplete ~options ~file_input ~id
+      handle_persistent_autocomplete ~reader ~options ~file_input ~id
     )
 
   | DidOpen filenames ->
@@ -1487,7 +1487,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       ~f:(fun client -> Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client)
     in
     mk_parallelizable_persistent ~options (
-      handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata
+      handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata
     )
 
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params), metadata) ->
