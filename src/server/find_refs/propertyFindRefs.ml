@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module File_sig = File_sig.With_Loc
 
 open Utils_js
+open Parsing_heaps_utils
 open Loc_collections
 open ServerEnv
 
@@ -41,7 +42,7 @@ end = struct
     builder#eval builder#program ast
 end
 
-let set_get_refs_hook potential_refs potential_matching_literals target_name =
+let set_get_refs_hook ~reader potential_refs potential_matching_literals target_name =
   let hook ret _ctxt name loc ty =
     begin if name = target_name then
       (* Replace previous bindings of `loc`. We should always use the result of the last call to
@@ -58,7 +59,7 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
   in
   let obj_to_obj_hook _ctxt obj1 obj2 =
     let open Type in
-    match get_object_literal_loc obj1, obj2 with
+    match get_object_literal_loc ~reader obj1, obj2 with
     | Some loc, DefT (_, _, ObjT _) ->
       let entry = (loc, obj2) in
       potential_matching_literals := entry:: !potential_matching_literals
@@ -71,7 +72,7 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
   Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
 (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
-let type_matches_locs cx ty prop_def_info name =
+let type_matches_locs ~reader cx ty prop_def_info name =
   let rec def_loc_matches_locs = function
   | FoundClass ty_def_locs ->
     prop_def_info |> Nel.exists begin function
@@ -95,15 +96,15 @@ let type_matches_locs cx ty prop_def_info name =
    * are references or not. For now we'll leave them out. *)
   | NoDefFound | UnsupportedType | AnyType -> false
   in
-  extract_def_loc cx ty name >>| def_loc_matches_locs
+  extract_def_loc ~reader cx ty name >>| def_loc_matches_locs
 
-let process_prop_refs cx potential_refs file_key prop_def_info name =
+let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
   potential_refs |>
     ALocMap.bindings |>
     Core_list.map ~f:begin fun (ref_loc, ty) ->
-      type_matches_locs cx ty prop_def_info name
+      type_matches_locs ~reader cx ty prop_def_info name
       >>| function
-      | true -> Some (ALoc.to_loc_exn ref_loc)
+      | true -> Some (loc_of_aloc ~reader ref_loc)
       | false -> None
     end
     |> Result.all
@@ -133,7 +134,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   if not has_symbol then
     Ok local_defs
   else begin
-    set_get_refs_hook potential_refs potential_matching_literals name;
+    set_get_refs_hook ~reader potential_refs potential_matching_literals name;
     let (cx, _) = Merge_service.merge_contents_context
       ~reader options file_key ast info file_sig
     in
@@ -143,7 +144,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
        * examine *)
       let prop_loc_map = lazy (LiteralToPropLoc.make ast name) in
       let get_prop_loc_if_relevant (obj_loc, into_type) =
-        type_matches_locs cx into_type def_info name
+        type_matches_locs ~reader cx into_type def_info name
         >>| function
         | false -> None
         | true -> LocMap.get obj_loc (Lazy.force prop_loc_map)
@@ -159,7 +160,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
     in
     literal_prop_refs_result
     >>= begin fun literal_prop_refs_result ->
-      process_prop_refs cx !potential_refs file_key def_info name
+      process_prop_refs ~reader cx !potential_refs file_key def_info name
       >>| (@) local_defs
       >>| (@) literal_prop_refs_result
     end
@@ -304,7 +305,7 @@ let focus_and_check_filename_set genv env files =
 *)
 let find_related_defs_in_file ~reader options name file =
   let get_single_def_info_pairs_if_relevant cx (t1, t2) =
-    map2 (extract_def_loc cx t1 name) (extract_def_loc cx t2 name) ~f:begin fun x y -> match x, y with
+    map2 (extract_def_loc ~reader cx t1 name) (extract_def_loc ~reader cx t2 name) ~f:begin fun x y -> match x, y with
     | FoundObject loc1, FoundObject loc2 -> [Object loc1, Object loc2]
     | FoundClass class_locs, FoundObject obj_loc ->
       class_locs
