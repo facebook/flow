@@ -889,7 +889,8 @@ let init_libs
  * There are no expected invariants for the input sets. The returned set has the following invariants
  * 1. Every recursive dependent of a focused file will be in the focused set or the dependent set
  **)
-let focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependency_info =
+let focused_files_and_dependents_to_infer ~reader ~dependency_info
+  ~input_focused ~input_dependencies ~all_dependent_files =
   let input = CheckedSet.add
     ~focused:input_focused
     ~dependencies:(Option.value ~default:FilenameSet.empty input_dependencies)
@@ -905,13 +906,19 @@ let focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependenc
 
   let focused = CheckedSet.focused input in
 
-  (* Roots is the set of all focused files and all dependent files *)
-  let roots = Dep_service.calc_all_reverse_dependencies dependency_info focused in
+  (* Roots is the set of all focused files and all dependent files. *)
+  let roots = Dep_service.calc_all_dependents dependency_info focused in
   let dependents = FilenameSet.diff roots focused in
 
   let dependencies = CheckedSet.dependencies input in
 
-  Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
+  let checked_files = CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty in
+  (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
+   * dependency. That's fine if foo.js is in the checked set. But if it's just some random
+   * other dependent then we need to filter it out.
+   *)
+  let all_dependent_files = FilenameSet.inter all_dependent_files (CheckedSet.all checked_files) in
+  Lwt.return (checked_files, all_dependent_files)
 
 let filter_out_node_modules ~options =
   let root = Options.root options in
@@ -928,12 +935,13 @@ let filter_out_node_modules ~options =
  * 1. Node modules will only appear in the dependency set.
  * 2. Dependent files are empty.
  *)
-let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
+let unfocused_files_and_dependents_to_infer ~options
+  ~input_focused ~input_dependencies ~all_dependent_files =
   let focused = filter_out_node_modules ~options input_focused in
 
   let dependencies = Option.value ~default:FilenameSet.empty input_dependencies in
 
-  Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty)
+  Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty, all_dependent_files)
 
 (* Called on initialization in non-lazy mode, with optional focus targets.
 
@@ -947,13 +955,15 @@ let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
 
    In either case, we can consider the result to be "closed" in terms of expected invariants.
 *)
-let files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info =
+let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~parsed =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focus_targets with
     | None ->
-      unfocused_files_to_infer ~options ~input_focused:parsed ~input_dependencies:None
+      unfocused_files_and_dependents_to_infer ~options
+        ~input_focused:parsed ~input_dependencies:None ~all_dependent_files:FilenameSet.empty
     | Some input_focused ->
-      focused_files_to_infer ~reader ~input_focused ~input_dependencies:None ~dependency_info
+      focused_files_and_dependents_to_infer ~reader ~dependency_info
+        ~input_focused ~input_dependencies:None ~all_dependent_files:FilenameSet.empty
   )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
@@ -1467,10 +1477,10 @@ end = struct
           let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
           let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
           let focused = FilenameSet.union old_focus_targets freshparsed in
-          let%lwt updated_checked_files = unfocused_files_to_infer ~options
-              ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
-              ~input_dependencies:(Some (CheckedSet.dependencies files_to_force)) in
-          Lwt.return (updated_checked_files, all_dependent_files)
+          unfocused_files_and_dependents_to_infer ~options
+            ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
+            ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
+            ~all_dependent_files
         | Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
           (* Unfortunately, our checked_files set might be out of date. This update could have added
            * some new dependents or dependencies. So we need to recalculate those.
@@ -1502,17 +1512,8 @@ end = struct
               |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
           in
           let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
-          let%lwt updated_checked_files =
-            focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependency_info
-          in
-
-          (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
-           * dependency. That's fine if foo.js is in the checked set. But if it's just some random
-           * other dependent then we need to filter it out.
-           *)
-          let all_dependent_files =
-            FilenameSet.inter all_dependent_files (CheckedSet.all updated_checked_files) in
-          Lwt.return (updated_checked_files, all_dependent_files)
+          focused_files_and_dependents_to_infer ~reader ~dependency_info
+            ~input_focused ~input_dependencies ~all_dependent_files
       )
     in
 
@@ -2182,7 +2183,7 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _; } = env in
   with_transaction (fun transaction reader ->
-    let%lwt input = files_to_infer
+    let%lwt input, all_dependent_files = files_to_infer
       ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info in
 
     let%lwt to_merge, components, recheck_set =
@@ -2191,7 +2192,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
         ~unchanged_checked:CheckedSet.empty
         ~input
         ~dependency_info
-        ~all_dependent_files:FilenameSet.empty
+        ~all_dependent_files
     in
     (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose

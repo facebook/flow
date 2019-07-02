@@ -274,24 +274,11 @@ let reverse graph =
     FilenameSet.of_list @@ Hashtbl.find_all acc f
   ) graph
 
-(* `calc_all_reverse_dependencies graph files` will return the set of direct and transitive
- * dependents of `files`. This set includes `files`.
- * TODO: deprecate this function. See `calc_all_dependents` below.
-*)
-let calc_all_reverse_dependencies dependency_info files =
-  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-  let rev_dependency_graph = reverse all_dependency_graph in
-  closure rev_dependency_graph files files
-
 (* `calc_all_dependents graph files` will return the set of direct and transitive dependents of
    `files`. This set include `files`.
 
-   Compared to `calc_all_reverse_dependencies` above, this function is more precise in its
-   calculation under types-first. A file is a dependent of `files` whenever its code depends on any
-   file whose *signature*, in turn, directly or transitively depends on `files`. In contrast,
-   `calc_all_reverse_dependencies` considers code dependencies throughout (and thus computes a
-   larger set of dependents).
-*)
+   A file is a dependent of `files` whenever its code depends on any file whose *signature*, in
+   turn, directly or transitively depends on `files`.  *)
 let calc_all_dependents dependency_info files =
   let rev_dependency_graph = reverse (Dependency_info.dependency_graph dependency_info) in
   let all_type_dependents = closure rev_dependency_graph files files in

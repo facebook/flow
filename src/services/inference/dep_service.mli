@@ -43,11 +43,6 @@ val calc_all_dependencies:
   FilenameSet.t ->
   FilenameSet.t
 
-val calc_all_reverse_dependencies:
-  Dependency_info.t ->
-  FilenameSet.t ->
-  FilenameSet.t
-
 val calc_all_dependents:
   Dependency_info.t ->
   FilenameSet.t ->
