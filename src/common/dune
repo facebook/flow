@@ -18,4 +18,6 @@
     heap_ident ; hack
     hh_json ; hack
     sys_utils ; hack
-    ))
+    )
+  (preprocess (pps ppx_deriving.eq))
+)
