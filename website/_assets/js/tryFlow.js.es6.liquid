@@ -106,12 +106,25 @@ function removeChildren(node) {
 }
 
 function getAnnotations(text, callback, options, editor) {
-  Promise.resolve(editor.getOption('flow'))
-  .then(flowProxy => flowProxy.checkContent('-', text))
-  .then(errors => {
-    CodeMirror.signal(editor, 'flowErrors', errors);
+  const flow = Promise.resolve(editor.getOption('flow'));
+  const sources = Promise.all([
+    flow
+      .then(flowProxy => flowProxy.coverage('-', text))
+      .then(coverage => {
+        CodeMirror.signal(editor, 'flowCoverage', coverage);
+        return coverage.expressions.uncovered_locs
+      })
+      .catch(() => []),
+    flow
+      .then(flowProxy => flowProxy.checkContent('-', text))
+      .then(errors => {
+        CodeMirror.signal(editor, 'flowErrors', errors);
+        return errors
+      })
+  ]);
 
-    var lint = errors.map(function(err) {
+  sources.then(([coverage, errors]) => {
+    const errorsLint = errors.map(function(err) {
       var messages = err.message;
       var firstLoc = messages[0].loc;
       var message = messages.map(function(msg) {
@@ -127,7 +140,21 @@ function getAnnotations(text, callback, options, editor) {
         message: message
       };
     });
-    callback(lint);
+    const coverageLint = coverage.map(function (loc) {
+      return {
+        from: CodeMirror.Pos(
+          loc.start.line - 1,
+          loc.start.column - 1,
+        ),
+        to: CodeMirror.Pos(loc.end.line - 1, loc.end.column),
+        severity: 'info',
+        message: 'Not covered by flow'
+      }
+    });
+    callback([
+      ...errorsLint,
+      ...coverageLint,
+    ]);
   });
 }
 getAnnotations.async = true;
@@ -217,6 +244,14 @@ class AsyncLocalFlow {
     return Promise.resolve(this._flow.checkContent(filename, body));
   }
 
+  coverage(filename, body) {
+    return Promise.resolve(this._flow.coverage(filename, body))
+  }
+
+  dumpTypes(filename, body) {
+    return Promise.resolve(this._flow.dumpTypes(filename, body))
+  }
+
   typeAtPos(filename, body, line, col) {
     return Promise.resolve(this._flow.typeAtPos(filename, body, line, col));
   }
@@ -237,6 +272,14 @@ class AsyncWorkerFlow {
 
   checkContent(filename, body) {
     return this._worker.send({ type: 'checkContent', filename, body });
+  }
+
+  coverage(filename, body) {
+    return this._worker.send({ type: 'coverage', filename, body })
+  }
+
+  dumpTypes(filename, body) {
+    return this._worker.send({ type: 'dumpTypes', filename, body })
   }
 
   typeAtPos(filename, body, line, col) {

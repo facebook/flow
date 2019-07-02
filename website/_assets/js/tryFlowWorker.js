@@ -19,11 +19,26 @@ this.onmessage = function(e) {
     case "checkContent":
       getFlow(data.version).then(function(flow) {
         var result = flow.checkContent(data.filename, data.body);
-        postMessage({id: data.id, type: "checkContent", result: result });
+        postMessage({id: data.id, type: "checkContent", result: result});
       })["catch"](function (e) {
         postMessage({id: data.id, type: "checkContent", err: e});
       });
       return;
+    case "dumpTypes":
+      getFlow(data.version).then(function(flow) {
+        var result = flow.dumpTypes(data.filename, data.body);
+        postMessage({id: data.id, type: "dumpTypes", result: result});
+      })["catch"](function (e) {
+        postMessage({id: data.id, type: "dumpTypes", err: e});
+      });
+      return;
+    case "coverage":
+      getFlow(data.version).then(function(flow) {
+        var result = flow.coverage(data.filename, data.body);
+        postMessage({id: data.id, type: "coverage", result: result});
+      })["catch"](function (e) {
+        postMessage({id: data.id, type: "coverage", err: e});
+      })
     case "typeAtPos":
       getFlow(data.version).then(function(flow) {
         var result = flow.typeAtPos(
