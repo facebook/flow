@@ -336,6 +336,63 @@ let types_to_json types ~strip_root =
   ) in
   JSON_Array types_json
 
+let coverage_to_json ~strip_root ~trust (types : (Loc.t * Coverage.expression_coverage) list) content =
+  let accum_coverage (untainted, tainted, empty, total) (_loc, cov) =
+  match cov with
+  | Coverage.Uncovered -> (untainted, tainted, empty, total + 1)
+  | Coverage.Empty     -> (untainted, tainted, empty + 1, total + 1)
+  | Coverage.Untainted -> (untainted + 1, tainted, empty, total + 1)
+  | Coverage.Tainted   -> (untainted, tainted + 1, empty, total + 1)
+  in
+
+  let accum_coverage_locs (untainted, tainted, empty, uncovered) (loc, cov) =
+  match cov with
+  | Coverage.Uncovered -> (untainted, tainted, empty, loc::uncovered)
+  | Coverage.Empty     -> (untainted, tainted, loc::empty, loc::uncovered)
+  | Coverage.Untainted -> (loc::untainted, tainted, empty, uncovered)
+  | Coverage.Tainted   -> (untainted, loc::tainted, empty, uncovered)
+  in
+
+  let offset_table = lazy (Offset_utils.make content) in
+  let untainted, tainted, empty, total =
+    Core_list.fold_left ~f:accum_coverage ~init:(0, 0, 0, 0) types in
+
+  (* In trust mode, we only consider untainted locations covered. In normal mode we consider both *)
+  let covered = if trust then untainted else untainted + tainted in
+  (* let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in *)
+
+  let offset_table = Some (Lazy.force offset_table) in
+  let untainted_locs, tainted_locs, empty_locs, uncovered_locs =
+      let untainted, tainted, empty, uncovered =
+        Core_list.fold_left ~f:accum_coverage_locs ~init:([], [], [], []) types
+      in
+      Core_list.rev untainted, Core_list.rev tainted, Core_list.rev empty, Core_list.rev uncovered
+  in
+  let open Hh_json in
+  let open Reason in
+  let covered_data = if trust then
+      [
+      "untainted_count", int_ untainted;
+      "untainted_locs", JSON_Array (Core_list.map ~f:(json_of_loc ~strip_root ~offset_table) untainted_locs);
+      "tainted_count", int_ tainted;
+      "tainted_locs", JSON_Array (Core_list.map ~f:(json_of_loc ~strip_root ~offset_table) tainted_locs);
+      ]
+    else
+      let covered_locs = untainted_locs @ tainted_locs |> Core_list.sort ~cmp:compare in
+      [
+      "covered_count", int_ covered;
+      "covered_locs", JSON_Array (Core_list.map ~f:(json_of_loc ~strip_root ~offset_table) covered_locs);
+      ]
+  in
+  JSON_Object [
+    "expressions", JSON_Object (covered_data @ [
+      "uncovered_count", int_ (total - covered);
+      "uncovered_locs", JSON_Array (Core_list.map ~f:(json_of_loc ~strip_root ~offset_table) uncovered_locs);
+      "empty_count", int_ empty;
+      "empty_locs", JSON_Array (Core_list.map ~f:(json_of_loc ~strip_root ~offset_table) empty_locs);
+    ]);
+  ]
+
 let dump_types js_file js_content =
     let filename = File_key.SourceFile (Js.to_string js_file) in
     let root = Path.dummy_path in
@@ -351,6 +408,21 @@ let dump_types js_file js_content =
       let types_json = types_to_json types ~strip_root in
 
       js_of_json types_json
+
+let coverage js_file js_content =
+    let filename = File_key.SourceFile (Js.to_string js_file) in
+    let root = Path.dummy_path in
+    let content = Js.to_string js_content in
+    match parse_content filename content with
+    | Error _ -> failwith "parse error"
+    | Ok (ast, file_sig) ->
+      let file_sig = File_sig.abstractify_locs file_sig in
+      let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
+      let types = Query_types.covered_types ~should_check:true ~check_trust:false cx typed_ast in
+      let strip_root = None in
+      let coverage_json = coverage_to_json types content ~trust:false ~strip_root in
+
+      js_of_json coverage_json
 
 let type_at_pos js_file js_content js_line js_col =
   let filename = Js.to_string js_file in
@@ -381,6 +453,8 @@ let () = Js.Unsafe.set exports
   "checkContent" (Js.wrap_callback check_content_js)
 let () = Js.Unsafe.set exports
   "dumpTypes" (Js.wrap_callback dump_types)
+let () = Js.Unsafe.set exports
+  "coverage" (Js.wrap_callback coverage)
 let () = Js.Unsafe.set exports
   "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_version)
 let () = Js.Unsafe.set exports
