@@ -212,6 +212,7 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
+[@@deriving eq]
 
 and reason_desc_function =
   | RAsync
@@ -384,12 +385,14 @@ type 'loc virtual_reason = {
   loc: 'loc;
   def_loc_opt: 'loc option;
   annot_loc_opt: 'loc option;
-}
+} [@@deriving eq]
 
 type reason = ALoc.t virtual_reason
 type concrete_reason = Loc.t virtual_reason
 
 type t = reason
+
+let concretize_equal aloc_tables = equal_virtual_reason (ALoc.concretize_equal aloc_tables)
 
 let in_range loc range = Loc.(
   let line, line1, line2 = loc.start.line, range.start.line, range._end.line in
