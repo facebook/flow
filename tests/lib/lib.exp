@@ -41,8 +41,8 @@ Cannot assign `new TypeError().name` to `z` because string [1] is incompatible w
                        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:451:11
-   451|     name: string;
+   <BUILTINS>/core.js:453:11
+   453|     name: string;
                   ^^^^^^ [1]
    libtest.js:3:7
      3| var z:number = new TypeError().name;

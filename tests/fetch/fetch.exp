@@ -13,8 +13,8 @@ References:
    fetch.js:12:18
      12| const b: Promise<string> = fetch(myRequest); // incorrect
                           ^^^^^^ [2]
-   <BUILTINS>/core.js:649:24
-    649| declare class Promise<+R> {
+   <BUILTINS>/core.js:651:24
+    651| declare class Promise<+R> {
                                 ^ [3]
 
 
@@ -33,8 +33,8 @@ References:
    <BUILTINS>/bom.js:1134:76
    1134| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [2]
-   <BUILTINS>/core.js:649:24
-    649| declare class Promise<+R> {
+   <BUILTINS>/core.js:651:24
+    651| declare class Promise<+R> {
                                 ^ [3]
 
 
@@ -523,11 +523,11 @@ References:
    <BUILTINS>/bom.js:1043:62
    1043| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                                       ^^^^^^^^^^^ [5]
-   <BUILTINS>/core.js:694:25
-    694| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:696:25
+    696| type $ArrayBufferView = $TypedArray | DataView;
                                  ^^^^^^^^^^^ [6]
-   <BUILTINS>/core.js:694:39
-    694| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:696:39
+    696| type $ArrayBufferView = $TypedArray | DataView;
                                                ^^^^^^^^ [7]
    <BUILTINS>/bom.js:1043:95
    1043| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;

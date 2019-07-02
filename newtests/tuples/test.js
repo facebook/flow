@@ -77,8 +77,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            3: function foo(x: [1,2]): string { return x.length; }
                                                       ^^^^^^^^ Cannot return \`x.length\` because number [1] is incompatible with string [2].
            References:
-           250:     +length: number;
-                             ^^^^^^ [1]. See lib: [LIB] core.js:250
+           251:     +length: number;
+                             ^^^^^^ [1]. See lib: [LIB] core.js:251
              3: function foo(x: [1,2]): string { return x.length; }
                                         ^^^^^^ [2]
        `,
