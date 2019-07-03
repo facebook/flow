@@ -150,19 +150,25 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
-Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in property `type`.
+Cannot assign `<Foo />` to `foo` because:
+ - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
+ - class `Foo` [3] is incompatible with number [1] in property `type`.
 
    classes.js:39:25
-   39| var foo: $jsx<number> = <Foo/>;
-                               ^^^^^^
+    39| var foo: $jsx<number> = <Foo/>;
+                                ^^^^^^
 
 References:
-   classes.js:7:7
-    7| class Foo extends React.Component<Props, State> {
-             ^^^ [1]
    classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [2]
+    39| var foo: $jsx<number> = <Foo/>;
+                      ^^^^^^ [1]
+   <BUILTINS>/react.js:170:5
+   170|   | string
+            ^^^^^^ [2]
+   classes.js:7:7
+     7| class Foo extends React.Component<Props, State> {
+              ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
@@ -177,25 +183,6 @@ References:
    classes.js:7:35
     7| class Foo extends React.Component<Props, State> {
                                          ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:39:25
-
-Cannot instantiate `React.Element` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
-
-   classes.js:39:25
-    39| var foo: $jsx<number> = <Foo/>;
-                                ^^^^^^
-
-References:
-   classes.js:39:15
-    39| var foo: $jsx<number> = <Foo/>;
-                      ^^^^^^ [1]
-   <BUILTINS>/react.js:170:5
-   170|   | string
-            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:57:21
@@ -263,67 +250,62 @@ References:
                          ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:79:17
-
-Cannot instantiate `$jsx` because number [1] is not an object in type argument `ElementType`.
-
-   classes.js:79:17
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                       ^^^^^^^^^^^^
-
-References:
-   classes.js:78:26
-   78| FooLegacy.defaultProps = 0;
-                                ^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
-Cannot assign `<FooLegacy />` to `foo_legacy` because class React component [1] is incompatible with number [2] in
-property `type`.
+Cannot assign `<FooLegacy />` to `foo_legacy` because:
+ - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
+ - class React component [3] is incompatible with number [1] in property `type`.
+ - number [4] is not an object in type argument `ElementType`.
 
    classes.js:79:32
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                      ^^^^^^^^^^^^
+    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                       ^^^^^^^^^^^^
 
 References:
-   classes.js:43:17
-                       v------------------
-   43| var FooLegacy = React.createClass({
-   44|   is_mounted: (undefined: ?boolean),
-   45|
-   46|   propTypes: {
-   47|     x: React.PropTypes.number.isRequired
-   48|   },
-   49|
-   50|   getDefaultProps(): DefaultProps { return {} },
-   51|
-   52|   statics: {
-   53|     bar(): void {}
-   54|   },
-   55|
-   56|   qux(): void {
-   57|     var _: string = this.props.x;
-     :
-   62|   },
-   63|
-   64|   setState(o: { y_: string }): void { },
-   65|
-   66|   componentDidMount(): void {
-   67|     this.is_mounted = true;
-   68|   },
-   69|
-   70|   componentWillReceiveProps(
-   71|     nextProps: Object,
-   72|     nextContext: any
-   73|   ): void {
-   74|     this.qux();
-   75|   },
-   76| });
-       -^ [1]
    classes.js:79:22
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                            ^^^^^^ [2]
+    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                             ^^^^^^ [1]
+   <BUILTINS>/react.js:170:5
+   170|   | string
+            ^^^^^^ [2]
+   classes.js:43:17
+                        v------------------
+    43| var FooLegacy = React.createClass({
+    44|   is_mounted: (undefined: ?boolean),
+    45|
+    46|   propTypes: {
+    47|     x: React.PropTypes.number.isRequired
+    48|   },
+    49|
+    50|   getDefaultProps(): DefaultProps { return {} },
+    51|
+    52|   statics: {
+    53|     bar(): void {}
+    54|   },
+    55|
+    56|   qux(): void {
+    57|     var _: string = this.props.x;
+      :
+    62|   },
+    63|
+    64|   setState(o: { y_: string }): void { },
+    65|
+    66|   componentDidMount(): void {
+    67|     this.is_mounted = true;
+    68|   },
+    69|
+    70|   componentWillReceiveProps(
+    71|     nextProps: Object,
+    72|     nextContext: any
+    73|   ): void {
+    74|     this.qux();
+    75|   },
+    76| });
+        -^ [3]
+   classes.js:78:26
+    78| FooLegacy.defaultProps = 0;
+                                 ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
@@ -346,25 +328,6 @@ References:
    47|     x: React.PropTypes.number.isRequired
    48|   },
          ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:79:32
-
-Cannot instantiate `React.Element` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
-
-   classes.js:79:32
-    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                       ^^^^^^^^^^^^
-
-References:
-   classes.js:79:22
-    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                             ^^^^^^ [1]
-   <BUILTINS>/react.js:170:5
-   170|   | string
-            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- import-react.js:16:1

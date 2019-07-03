@@ -2542,6 +2542,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
     | DefT (_, _, PolyT (tparams_loc1, xs1, t1, id1)),
       ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (DefT (_, _, PolyT (tparams_loc2, xs2, t2, id2)), ts2, op2, r2), false) ->
+      let op1, op2 = match root_of_use_op use_op with
+        | UnknownUse -> op1, op2
+        | _ -> use_op, use_op
+      in
+
       let t1 = mk_typeapp_instance_of_poly cx trace ~use_op:op2 ~reason_op:r2 ~reason_tapp:r1
         id1 tparams_loc1 xs1 t1 ts1 in
       let t2 = mk_typeapp_instance_of_poly cx trace ~use_op:op1 ~reason_op:r1 ~reason_tapp:r2
