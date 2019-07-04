@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,6 +30,7 @@ val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 val hd: 'a t -> 'a
 val tl: 'a t -> 'a list
 val nth: 'a t -> int -> 'a
+val dedup: ?compare:('a -> 'a -> int) -> 'a t -> 'a t
 
 val result_all: ('a, 'b) result t -> ('a t, 'b) result
 val cat_maybes: 'a option t -> 'a t option

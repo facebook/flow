@@ -7,6 +7,7 @@
  *
  *)
 
+open Core_kernel
 (****************************************************************************)
 (* Moduling Making buckets.
  * When we parallelize, we need to create "buckets" of tasks for the

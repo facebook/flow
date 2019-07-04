@@ -20,7 +20,7 @@
    *    its fate to the next client.
 *)
 
-open Hh_core
+open Core_kernel
 open ServerProcess
 open ServerMonitorUtils
 
@@ -104,6 +104,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     server_start_options: SC.server_start_options;
     (** How many times have we tried to relaunch it? *)
     retries: int;
+    sql_retries: int;
+    watchman_retries: int;
     max_purgatory_clients: int;
     (** Version of this running server, as specified in the config file. *)
     current_version: string option;
@@ -116,6 +118,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) Queue.t;
     (** Whether to ignore hh version mismatches *)
     ignore_hh_version : bool;
+    (* What server is doing now *)
+    server_progress : string option;
+    (* Why what it is doing now might not be going as well as it could *)
+    server_progress_warning : string option;
   }
 
   type t = env * ServerMonitorUtils.monitor_config * Unix.file_descr
@@ -151,9 +157,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
     ready_socket_l <> []
 
-  let start_server ?target_mini_state ~informant_managed options exit_status =
+  let start_server ?target_saved_state ~informant_managed options exit_status =
     let server_process = SC.start_server
-      ?target_mini_state
+      ?target_saved_state
       ~prior_exit_status:exit_status
       ~informant_managed options in
     setup_autokill_server_on_exit server_process;
@@ -192,8 +198,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
    * version specified in there matches our currently running version. *)
   let is_config_version_matching env =
     let filename = Relative_path.from_root Config_file.file_path_relative_to_repo_root in
-    let contents = Sys_utils.cat (Relative_path.to_absolute filename) in
-    let config = Config_file.parse_contents contents in
+    let _hash, config = Config_file.parse_hhconfig
+      ~silent:true
+      (Relative_path.to_absolute filename)
+    in
     let new_version = SMap.get "version" config in
     match env.current_version, new_version with
     | None, None -> true
@@ -204,9 +212,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       String.equal cv nv
 
   (** Actually starts a new server. *)
-  let start_new_server ?target_mini_state env exit_status =
+  let start_new_server ?target_saved_state env exit_status =
     let informant_managed = Informant.is_managing env.informant in
-    let new_server = start_server ?target_mini_state
+    let new_server = start_server ?target_saved_state
       ~informant_managed env.server_start_options exit_status in
     { env with
       server = new_server;
@@ -216,14 +224,21 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   (** Kill the server (if it's running) and restart it - maybe. Obeying the rules
    * of state transitions. See docs on the ServerProcess.server_process ADT for
    * state transitions.  *)
-  let kill_and_maybe_restart_server ?target_mini_state env exit_status =
+  let kill_and_maybe_restart_server ?target_saved_state env exit_status =
+    (* Ideally, all restarts should be triggered by Changed_merge_base notification
+     * which generate target mini state. There are other kind of restarts too, mostly
+     * related to server crashing - if we just restart and keep going, we risk
+     * Changed_merge_base eventually arriving and restarting the already started server
+     * for no reason. Re-issuing merge base query here should bring the Monitor and Server
+     * understanding of current revision to be the same *)
+    if Option.is_none target_saved_state then Informant.reinit env.informant;
     kill_server_and_wait_for_exit env;
     let version_matches = is_config_version_matching env in
     match env.server, version_matches with
     | Died_config_changed, _ ->
       (** Now we can start a new instance safely.
        * See diagram on ServerProcess.server_process docs. *)
-      start_new_server ?target_mini_state env exit_status
+      start_new_server ?target_saved_state env exit_status
     | Not_yet_started, false
     | Alive _, false
     | Informant_killed, false
@@ -238,7 +253,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     | Died_unexpectedly _, true ->
       (** Start new server instance because config matches.
        * See diagram on ServerProcess.server_process docs. *)
-      start_new_server ?target_mini_state env exit_status
+      start_new_server ?target_saved_state env exit_status
 
   let read_version fd =
     let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -261,6 +276,12 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       kill_server_with_check env.server;
       wait_for_server_exit_with_check env.server kill_signal_time;
       Exit_status.(exit No_error)
+    | MonitorRpc.SERVER_PROGRESS ->
+      msg_to_channel client_fd
+        (env.server_progress, env.server_progress_warning);
+      Unix.close client_fd;
+      env
+
 
   and hand_off_client_connection server_fd client_fd =
     let status = Libancillary.ancil_send_fd server_fd client_fd in
@@ -315,7 +336,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * monitor, even if messaging to channel or event logger fails. *)
     (try client_out_of_date_ client_fd mismatch_info with
      | e -> Hh_logger.log
-         "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
+         "Handling client_out_of_date threw with: %s" (Exn.to_string e));
     wait_for_server_exit_with_check env.server kill_signal_time;
     Exit_status.exit Exit_status.Build_id_mismatch
 
@@ -332,7 +353,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       (** TODO: Send this to client so it is visible. *)
       Hh_logger.log "Got %s request for typechecker. Prior request %.1f seconds ago"
         handoff_options.MonitorRpc.pipe_name since_last_request;
-      msg_to_channel client_fd PH.Sentinel;
+      msg_to_channel client_fd (PH.Sentinel server.finale_file);
       hand_off_client_connection_with_retries server_fd 8 client_fd;
       HackEventLogger.client_connection_sent ();
       server.last_request_handoff := Unix.time ();
@@ -380,8 +401,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           client_fd PH.Server_dormant_connections_limit_reached in
         env
       else
-        let () = Queue.add (handoff_options, client_fd)
-          env.purgatory_clients in
+        let () = Queue.enqueue env.purgatory_clients
+          (handoff_options, client_fd) in
         env
 
   and ack_and_handoff_client env client_fd =
@@ -396,9 +417,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       )
     with
     | Malformed_build_id as e ->
+      let stack = Caml.Printexc.get_raw_backtrace () in
       HackEventLogger.malformed_build_id ();
       Hh_logger.log "Malformed Build ID";
-      raise e
+      Caml.Printexc.raise_with_backtrace e stack
 
   and push_purgatory_clients env =
     (** We create a queue and transfer all the purgatory clients to it before
@@ -406,15 +428,15 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * an EBADF. Control flow is easier this way than trying to manage an
      * immutable env in the face of exceptions. *)
     let clients = Queue.create () in
-    Queue.transfer env.purgatory_clients clients;
-    let env = Queue.fold begin
+    Queue.blit_transfer ~src:env.purgatory_clients ~dst:clients ();
+    let env = Queue.fold ~f:begin
       fun env (handoff_options, client_fd) ->
         try client_prehandoff ~is_purgatory_client:true env handoff_options client_fd with
         | Unix.Unix_error(Unix.EPIPE, _, _)
         | Unix.Unix_error(Unix.EBADF, _, _) ->
           Hh_logger.log "Purgatory client disconnected. Dropping.";
           env
-    end env clients in
+    end ~init:env clients in
     env
 
   and maybe_push_purgatory_clients env =
@@ -432,6 +454,17 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _->
       env
 
+  let rec read_server_messages process env =
+    let msg = ServerProgress.(make_pipe_from_server process.in_fd |> read_from_server) in
+    match msg with
+    | None -> env
+    | Some msg ->
+      let env = match msg with
+        | MonitorRpc.PROGRESS msg -> { env with server_progress = msg }
+        | MonitorRpc.PROGRESS_WARNING msg -> { env with server_progress_warning = msg }
+      in
+      read_server_messages process env
+
   (** Kill command from client is handled by server server, so the monitor
    * needs to check liveness of the server process to know whether
    * to stop itself. *)
@@ -442,7 +475,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         (match pid, proc_stat with
           | 0, _ ->
             (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
-            env
+            read_server_messages process env
           | _, _ ->
             (* "pid<>0" means the pid has died or received a stop signal *)
             let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
@@ -452,7 +485,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
             SC.on_server_exit monitor_config;
             ServerProcessTools.check_exit_status proc_stat process monitor_config;
             { env with server = Died_unexpectedly (proc_stat, was_oom) })
-      | _ -> env
+      | _ -> { env with
+          server_progress = None;
+          server_progress_warning = None;
+        }
     in
     let exit_status, server_state = match env.server with
       | Alive _ ->
@@ -467,70 +503,90 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         None, Informant_sig.Server_dead in
     env, exit_status, server_state
 
+  let server_not_started env = { env with server = Not_yet_started }
+
   let update_status env monitor_config =
-     let env, exit_status, server_state = update_status_ env monitor_config in
-     let informant_report = Informant.report env.informant server_state in
-     let is_watchman_fresh_instance = match exit_status with
-       | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
-       | _ -> false in
-     let is_watchman_failed = match exit_status with
-       | Some c when c = Exit_status.(exit_code Watchman_failed) -> true
-       | _ -> false in
-     let is_config_changed = match exit_status with
-       | Some c when c = Exit_status.(exit_code Hhconfig_changed) -> true
-       | _ -> false in
-     let is_file_heap_stale = match exit_status with
-       | Some c when c = Exit_status.(exit_code File_heap_stale) -> true
-       | _ -> false in
-     let is_sql_assertion_failure = match exit_status with
-       | Some c
+    let env, exit_status, server_state = update_status_ env monitor_config in
+    let informant_report = Informant.report env.informant server_state in
+    let is_watchman_fresh_instance = match exit_status with
+      | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
+      | _ -> false in
+    let is_watchman_failed = match exit_status with
+      | Some c when c = Exit_status.(exit_code Watchman_failed) -> true
+      | _ -> false in
+    let is_config_changed = match exit_status with
+      | Some c when c = Exit_status.(exit_code Hhconfig_changed) -> true
+      | _ -> false in
+    let is_heap_stale = match exit_status with
+      | Some c
+          when c = Exit_status.(exit_code File_provider_stale) ||
+               c = Exit_status.(exit_code Decl_not_found) -> true
+      | _ -> false in
+    let is_sql_assertion_failure = match exit_status with
+      | Some c
           when c = Exit_status.(exit_code Sql_assertion_failure) ||
                c = Exit_status.(exit_code Sql_cantopen) ||
                c = Exit_status.(exit_code Sql_corrupt) ||
                c = Exit_status.(exit_code Sql_misuse) -> true
-       | _ -> false in
-     let is_big_rebase = match exit_status with
-       | Some c when c =  Exit_status.(exit_code Big_rebase_detected) -> true
-       | _ -> false in
-     let max_watchman_retries = 3 in
-     let max_sql_retries = 3 in
-     if (is_watchman_failed || is_watchman_fresh_instance)
-       && (env.retries < max_watchman_retries) then begin
-       Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
-         (env.retries + 1);
-       kill_and_maybe_restart_server env exit_status
-     end
-     else match informant_report with
-     | Informant_sig.Restart_server target_mini_state ->
-       Hh_logger.log "Informant directed server restart. Restarting server.";
-       HackEventLogger.informant_induced_restart ();
-       kill_and_maybe_restart_server ?target_mini_state env exit_status
-     | Informant_sig.Move_along ->
-       if is_config_changed then begin
-         Hh_logger.log "hh_server died from hh config change. Restarting";
-         kill_and_maybe_restart_server env exit_status
-       end else if is_file_heap_stale then begin
-         Hh_logger.log
-          "Several large rebases caused FileHeap to be stale. Restarting";
-         kill_and_maybe_restart_server env exit_status
-        end else if is_big_rebase then begin
-          (* Server detected rebase sooner than monitor. If we keep going,
-           * monitor will eventually discover the same rebase and restart the
-           * server again for no reason. Reinitializing informant to bring it to
-           * the same understanding of current revision as server. *)
-          Informant.reinit env.informant;
-          Hh_logger.log
-           "Server exited because of big rebase. Restarting";
-          kill_and_maybe_restart_server env exit_status
+      | _ -> false in
+    let is_worker_error = match exit_status with
+      | Some c
+          when c = Exit_status.(exit_code Worker_not_found_exception) ||
+               c = Exit_status.(exit_code Worker_busy) ||
+               c = Exit_status.(exit_code Worker_failed_to_send_job) -> true
+      | _ -> false in
+    let is_decl_heap_elems_bug = match exit_status with
+      | Some c when c = Exit_status.(exit_code Decl_heap_elems_bug) -> true
+      | _ -> false in
+    let is_big_rebase = match exit_status with
+      | Some c when c =  Exit_status.(exit_code Big_rebase_detected) -> true
+      | _ -> false in
+    let max_watchman_retries = 3 in
+    let max_sql_retries = 3 in
+    match informant_report with
+    | Informant_sig.Move_along when env.server = Died_config_changed ->
+      env
+    | Informant_sig.Restart_server _ when env.server = Died_config_changed ->
+      Hh_logger.log "%s" @@ "Ignoring Informant directed restart - waiting for next client " ^
+        "connection to verify server version first";
+      env
+    | Informant_sig.Restart_server target_saved_state ->
+      Hh_logger.log "Informant directed server restart. Restarting server.";
+      HackEventLogger.informant_induced_restart ();
+      kill_and_maybe_restart_server ?target_saved_state env exit_status
+    | Informant_sig.Move_along ->
+      if (is_watchman_failed || is_watchman_fresh_instance)
+        && (env.watchman_retries < max_watchman_retries) then begin
+        Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
+          (env.watchman_retries + 1);
+        let env = { env with watchman_retries = env.watchman_retries + 1} in
+        server_not_started env
+      end else if is_decl_heap_elems_bug then begin
+        Hh_logger.log "hh_server died due to Decl_heap_elems_bug. Restarting";
+        server_not_started env
+      end else if is_worker_error then begin
+        Hh_logger.log "hh_server died due to worker error. Restarting";
+        server_not_started env
+      end else if is_config_changed then begin
+        Hh_logger.log "hh_server died from hh config change. Restarting";
+        server_not_started env
+      end else if is_heap_stale then begin
+        Hh_logger.log
+          "Several large rebases caused shared heap to be stale. Restarting";
+        server_not_started env
+      end else if is_big_rebase then begin
+        Hh_logger.log
+          "Server exited because of big rebase. Restarting";
+        server_not_started env
       end else if is_sql_assertion_failure
-      && (env.retries < max_sql_retries) then begin
+          && (env.sql_retries < max_sql_retries) then begin
         Hh_logger.log
           "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
-          (env.retries + 1);
-        kill_and_maybe_restart_server env exit_status
-      end
-       else
-         env
+          (env.sql_retries + 1);
+        let env = { env with sql_retries = env.sql_retries + 1} in
+        server_not_started env
+      end else
+        env
 
   let rec check_and_run_loop ?(consecutive_throws=0) env monitor_config
       (socket: Unix.file_descr) =
@@ -540,7 +596,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         let stack = Printexc.get_backtrace () in
         ignore (Hh_logger.log
           "check_and_run_loop_ threw with Unix.ECHILD. Exiting. - %s" stack);
-        Exit_status.exit Exit_status.No_server_running
+        Exit_status.exit Exit_status.No_server_running_should_retry
+      | Watchman.Watchman_restarted ->
+        Exit_status.exit Exit_status.Watchman_fresh_instance
       | Exit_status.Exit_with _ as e -> raise e
       | e ->
         let stack = Printexc.get_backtrace () in
@@ -551,7 +609,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           Exit_status.exit Exit_status.Uncaught_exception
         end;
         Hh_logger.log "check_and_run_loop_ threw with exception: %s - %s"
-          (Printexc.to_string e) stack;
+          (Exn.to_string e) stack;
         env, consecutive_throws + 1
       in
       check_and_run_loop ~consecutive_throws env monitor_config socket
@@ -605,13 +663,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     Option.iter waiting_client begin fun fd ->
       let oc = Unix.out_channel_of_descr fd in
       try
-        output_string oc (ServerMonitorUtils.ready^"\n");
-        close_out oc;
+        Out_channel.output_string oc (ServerMonitorUtils.ready^"\n");
+        Out_channel.close oc;
       with
       | Sys_error _
       | Unix.Unix_error _ as e ->
         Printf.eprintf "Caught exception while waking client: %s\n%!"
-          (Printexc.to_string e)
+          (Exn.to_string e)
     end;
     (** It is essential that we initiate the Informant before the server if we
      * want to give the opportunity for the Informant to truly take
@@ -634,7 +692,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server = server_process;
       server_start_options;
       retries = 0;
+      sql_retries = 0;
+      watchman_retries = 0;
       ignore_hh_version = Informant.should_ignore_hh_version informant_init_env;
+      server_progress_warning = None;
+      server_progress = None;
     } in
     env, monitor_config, socket
 

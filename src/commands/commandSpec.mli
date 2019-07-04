@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,6 +14,7 @@ module ArgSpec : sig
   | Arg
   | Arg_List
   | Arg_Rest
+  | Arg_Command
 
   type flag_metadata = {
     doc : string;
@@ -33,6 +34,7 @@ module ArgSpec : sig
   val bool : bool option flag_t
   val int : int option flag_t
   val enum : (string * 't) list -> 't option flag_t
+  val command : (string * 'cmd) list -> ('cmd * string list) option flag_t
 
   val required : ?default:'a -> 'a option flag_t -> 'a flag_t
   val optional : 'a option flag_t -> 'a option flag_t

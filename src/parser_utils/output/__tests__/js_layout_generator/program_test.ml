@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,32 +19,32 @@ let tests = [
     let layout = Js_layout_generator.program ~checksum:None ~preserve_docblock:false ast in
     assert_layout ~ctxt
       L.(program (group [
-        loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=0; offset=0}; _end={Loc.line=1; column=10; offset=10}} (fused [
-          loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=0; offset=0}; _end={Loc.line=1; column=10; offset=10}} (fused [
+        loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=0}; _end={Loc.line=1; column=10}} (fused [
+          loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=0}; _end={Loc.line=1; column=10}} (fused [
             atom "var";
             space;
-            loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=4; offset=4}; _end={Loc.line=1; column=9; offset=9}} (fused [
-              loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=4; offset=4}; _end={Loc.line=1; column=5; offset=5}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=4; offset=4}; _end={Loc.line=1; column=5; offset=5}} "x");
+            loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=4}; _end={Loc.line=1; column=9}} (fused [
+              loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=4}; _end={Loc.line=1; column=5}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=4}; _end={Loc.line=1; column=5}} "x");
               pretty_space;
               atom "=";
               pretty_space;
-              loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=8; offset=8}; _end={Loc.line=1; column=9; offset=9}} (atom "1");
+              loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=8}; _end={Loc.line=1; column=9}} (atom "1");
             ]);
           ]);
           atom ";";
         ]);
         pretty_hardline;
         pretty_hardline;
-        loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
-          loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
+        loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0}; _end={Loc.line=4; column=10}} (fused [
+          loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0}; _end={Loc.line=4; column=10}} (fused [
             atom "var";
             space;
-            loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=9; offset=22}} (fused [
-              loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=5; offset=18}} (id ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=5; offset=18}} "y");
+            loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4}; _end={Loc.line=4; column=9}} (fused [
+              loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4}; _end={Loc.line=4; column=5}} (id ~loc:{Loc.none with Loc.start={Loc.line=4; column=4}; _end={Loc.line=4; column=5}} "y");
               pretty_space;
               atom "=";
               pretty_space;
-              loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=8; offset=21}; _end={Loc.line=4; column=9; offset=22}} (atom "2");
+              loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=8}; _end={Loc.line=4; column=9}} (atom "2");
             ]);
           ]);
           atom ";";
@@ -110,8 +110,8 @@ let tests = [
     end;
 
   "preserve_docblock" >:: begin fun ctxt ->
-    let c_loc = Loc.({ none with start = { line = 1; column = 1; offset = 0 }}) in
-    let s_loc = Loc.({ none with start = { line = 2; column = 1; offset = 0 }}) in
+    let c_loc = Loc.({ none with start = { line = 1; column = 1 }}) in
+    let s_loc = Loc.({ none with start = { line = 2; column = 1 }}) in
     let ast =
       let comments = [
         Ast_builder.Comments.line ~loc:c_loc " hello world";

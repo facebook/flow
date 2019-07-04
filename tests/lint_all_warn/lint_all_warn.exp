@@ -16,6 +16,14 @@ References:
                      ^^^^^^^ [2]
 
 
+Warning ----------------------------------------------------------------------------------------- dynamic-export.js:3:23
+
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
+
+   3| module.exports = (3 : any); // should only report unclear type, not dynamic-export
+                            ^^^
+
+
 Warning -------------------------------------------------------------------------------------------- sketchy_null.js:8:5
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
@@ -35,4 +43,4 @@ References:
 
 
 
-Found 1 error and 1 warning
+Found 1 error and 2 warnings

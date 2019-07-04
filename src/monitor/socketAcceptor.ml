@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -179,13 +179,26 @@ let perform_handshake_and_get_client_handshake ~client_fd =
     assert (server2 = None || client1.client_build_id = server_build_id);
     (* the client will trust our invariant that server2=Some means the client *)
     (* can certainly deserialize server2. *)
-    let server1 = { server_build_id; server_bin; server_intent; } in
+    let server_version = Flow_version.version in
+    let server1 = { server_build_id; server_bin; server_intent; server_version; } in
     let wire : server_handshake_wire = (
       server1 |> monitor_to_client_1__to_json |> Hh_json.json_to_string,
       Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 [])
     ) in
     let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble client_fd wire in
     Lwt.return_unit
+  in
+
+  let error_client () =
+    let%lwt () = respond Server_will_hangup None in
+    failwith "Build mismatch, so rejecting attempted connection"
+  in
+  let stop_server () =
+    let%lwt () = respond Server_will_exit None in
+    let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
+    FlowEventLogger.out_of_date ();
+    Logger.fatal "%s" msg;
+    FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
   in
 
   let fd_as_int = client_fd |> Lwt_unix.unix_file_descr |> Obj.magic in
@@ -198,16 +211,15 @@ let perform_handshake_and_get_client_handshake ~client_fd =
 
   (* Binary version mismatch *)
   end else if client1.client_build_id <> build_revision then begin
-    if client1.server_should_exit_if_version_mismatch then begin
-      let%lwt () = respond Server_will_exit None in
-      let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
-      FlowEventLogger.out_of_date ();
-      Logger.fatal "%s" msg;
-      FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
-    end else begin
-      let%lwt () = respond Server_will_hangup None in
-      failwith "Build mismatch, so rejecting attempted connection"
-    end
+    match client1.version_mismatch_strategy with
+    | Always_stop_server ->
+      stop_server ()
+    | Stop_server_if_older ->
+      if Semver.compare Flow_version.version client1.client_version < 0
+      then stop_server () (* server < client *)
+      else error_client ()
+    | Error_client ->
+      error_client ()
 
   (* Too many clients *)
   end else if Sys.unix && fd_as_int > 500 then begin

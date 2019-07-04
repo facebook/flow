@@ -7,10 +7,10 @@ Rename of an object property:
       "oldRange":{
         "source":"objects.js",
         "type":"SourceFile",
-        "start":{"line":3,"column":8,"offset":17},
-        "end":{"line":3,"column":32,"offset":42}
+        "start":{"line":3,"column":20,"offset":29},
+        "end":{"line":3,"column":22,"offset":32}
       },
-      "newText":"type Foo = {newName: string};"
+      "newText":"newName"
     },
     {
       "oldRange":{

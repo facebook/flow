@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,14 +19,25 @@ type diff_algorithm = Trivial | Standard
 
 type node =
   | Raw of string
+  | Comment of Loc.t Flow_ast.Comment.t
+  | NumberLiteralNode of Flow_ast.NumberLiteral.t
+  | Literal of Loc.t Flow_ast.Literal.t
+  | StringLiteral of Flow_ast.StringLiteral.t
   | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
   | Program of (Loc.t, Loc.t) Flow_ast.program
   | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t
-  | Identifier of Loc.t Flow_ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Flow_ast.Pattern.t
+  | Params of (Loc.t, Loc.t) Flow_ast.Function.Params.t
+  | Variance of (Loc.t) Flow_ast.Variance.t
+  | Type of (Loc.t, Loc.t) Flow_ast.Type.t
+  | TypeParam of (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
+  | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
+  | TemplateLiteral of (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t
+  | JSXChild of (Loc.t, Loc.t) Flow_ast.JSX.child
+  | JSXIdentifier of Loc.t Flow_ast.JSX.Identifier.t
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it

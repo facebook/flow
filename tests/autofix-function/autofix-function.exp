@@ -1,0 +1,14 @@
+> cat a.js
+// @flow
+
+export function f(): number {
+  return 1;
+}
+> cat b.js
+// @flow
+
+const functionArray = (): Array<(x: number) => number> => ([(x: number) => x])
+
+module.exports = functionArray;
+> flow status
+No errors!

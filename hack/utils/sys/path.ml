@@ -7,15 +7,22 @@
  *
  *)
 
+open Reordered_argument_collections
 include Sys
 
-type t = string
+module S = struct
+  type t = string
+  let compare = Pervasives.compare
+  let to_string x = x
+end
+type t = S.t
 
 let dummy_path : t = ""
 
 let cat = Sys_utils.cat
 let compare = Pervasives.compare
 let dirname = Filename.dirname
+let basename = Filename.basename
 
 (**
  * Resolves a path (using realpath)
@@ -88,3 +95,5 @@ let path_of_slash_escaped_string str =
       consume next_i
   in consume 0;
   make (Buffer.contents buf)
+
+module Set = Reordered_argument_set(Set.Make(S))

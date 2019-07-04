@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -58,6 +58,7 @@ and root = {
 
 and constraints =
 | Resolved of Type.t
+| FullyResolved of Type.t
 | Unresolved of bounds
 
 (** The bounds structure carries the evolving constraints on the solution of an
@@ -93,12 +94,3 @@ let new_bounds () = {
 
 let new_unresolved_root () =
   Root { rank = 0; constraints = Unresolved (new_bounds ()) }
-
-let copy_bounds = function
-  | { lower; upper; lowertvars; uppertvars; } ->
-    { lower; upper; lowertvars; uppertvars; }
-
-let copy_node node = match node with
-  | Root { rank; constraints = Unresolved bounds } ->
-    Root { rank; constraints = Unresolved (copy_bounds bounds) }
-  | _ -> node

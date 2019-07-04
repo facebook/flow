@@ -1,10 +1,11 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-open Utils_js
+open Loc_collections
+module Scope_api = Scope_api.With_Loc
 
 let local_find_refs ast loc =
   let open Scope_api in
@@ -22,5 +23,5 @@ let local_find_refs ast loc =
     let def = def_of_use scope_info use in
     let sorted_locs = LocSet.elements @@ uses_of_def scope_info ~exclude_def:false def in
     let name = Def.(def.actual_name) in
-    let sorted_locs = List.map (fun loc -> (FindRefsTypes.Local, loc)) sorted_locs in
+    let sorted_locs = Core_list.map ~f:(fun loc -> (FindRefsTypes.Local, loc)) sorted_locs in
     Some ((name, sorted_locs), Nel.hd def.Def.locs)

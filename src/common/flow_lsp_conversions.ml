@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2018-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,32 @@
 
 module Ast = Flow_ast
 
+let flow_position_to_lsp (line: int) (char: int): Lsp.position =
+  let open Lsp in
+  {
+    line = max 0 (line - 1);
+    character = char;
+  }
+
+let lsp_position_to_flow (position: Lsp.position): int * int =
+  let open Lsp in
+  let line = position.line + 1 in
+  let char = position.character
+  in
+  (line, char)
+
+let loc_to_lsp_range (loc: Loc.t): Lsp.range =
+  let open Loc in
+  let loc_start = loc.start in
+  let loc_end = loc._end in
+  let start = flow_position_to_lsp loc_start.line loc_start.column in
+  (* Flow's end range is inclusive, LSP's is exclusive.
+   * +1 for that, but -1 to make it 0-based *)
+  let end_ = flow_position_to_lsp loc_end.line loc_end.column in
+  { Lsp.start; end_; }
+
 let flow_completion_to_lsp
+    (is_snippet_supported: bool)
     (item: ServerProt.Response.complete_autocomplete_result)
   : Lsp.Completion.completionItem =
   let open Lsp.Completion in
@@ -15,35 +40,52 @@ let flow_completion_to_lsp
   let trunc n s = if String.length s < n then s else (String.sub s 0 n) ^ "..." in
   let trunc80 s = trunc 80 s in
   let flow_params_to_string params =
-    let params = List.map (fun p -> p.param_name ^ ": " ^ p.param_ty) params in
+    let params = Core_list.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
     "(" ^ (String.concat ", " params) ^ ")"
   in
-  let kind, itemType, inlineDetail, detail = match item.func_details with
+  let flow_params_to_lsp_snippet name params =
+    let params = Core_list.mapi ~f:(fun i p -> "${" ^ string_of_int (i +1 ) ^ ":" ^ p.param_name ^ "}") params in
+    name ^ "(" ^ (String.concat ", " params) ^ ")"
+  in
+  let text_edit loc newText : Lsp.TextEdit.t = {
+    Lsp.TextEdit.range = loc_to_lsp_range loc;
+    Lsp.TextEdit.newText = newText;
+  } in
+  let func_snippet item func_details =
+    let newText = flow_params_to_lsp_snippet item.res_name func_details.param_tys in
+    text_edit item.res_loc newText
+  in
+  let itemType, inlineDetail, detail, insertTextFormat, textEdits = match item.func_details with
     | Some func_details ->
-      let kind = Some Function in
       let itemType = Some (trunc 30 func_details.return_ty) in
       let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
-      let detail = Some (trunc80 item.res_ty) in
-      kind, itemType, inlineDetail, detail
+      let (_ty_loc, ty) = item.res_ty in
+      let detail = Some (trunc80 ty) in
+      let (insertTextFormat, textEdits) = match is_snippet_supported with
+        | true -> (Some SnippetFormat, [func_snippet item func_details])
+        | false -> (Some PlainText, [])  in
+      itemType, inlineDetail, detail, insertTextFormat, textEdits
     | None ->
-      let kind = None in
       let itemType = None in
-      let inlineDetail = Some (trunc80 item.res_ty) in
-      let detail = Some (trunc80 item.res_ty) in
-      kind, itemType, inlineDetail, detail
+      let (_ty_loc, ty) = item.res_ty in
+      let inlineDetail = Some (trunc80 ty) in
+      let detail = inlineDetail in
+      let textEdits = [] in
+      itemType, inlineDetail, detail, Some PlainText, textEdits
   in
   {
     label = item.res_name;
-    kind;
+    kind = item.res_kind;
     detail = detail;
     inlineDetail;
     itemType;
     documentation = None; (* This will be filled in by completionItem/resolve. *)
     sortText = None;
     filterText = None;
+    (* deprecated and should not be used *)
     insertText = None;
-    insertTextFormat = Some PlainText;
-    textEdits = [];
+    insertTextFormat;
+    textEdits;
     command = None;
     data = None;
   }
@@ -55,12 +97,6 @@ let file_key_to_uri (file_key_opt: File_key.t option): (string, string) result =
     >>= File_key.to_path
     >>| File_url.create
 
-let loc_to_lsp_range (loc: Loc.t): Lsp.range =
-  { Lsp.
-    start = { Lsp.line=loc.Loc.start.Loc.line-1; character=loc.Loc.start.Loc.column; };
-    end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column; };
-  }
-
 let loc_to_lsp (loc: Loc.t): (Lsp.Location.t, string) result =
   let (>>|) = Core_result.(>>|) in
   file_key_to_uri loc.Loc.source >>| fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc; }
@@ -71,13 +107,6 @@ let loc_to_lsp_with_default (loc: Loc.t) ~(default_uri: string): Lsp.Location.t 
     | Error _ -> default_uri
   in
   { Lsp.Location.uri; range = loc_to_lsp_range loc; }
-
-let lsp_position_to_flow (position: Lsp.position): int * int =
-  let open Lsp in
-  let line = position.line + 1 in
-  let char = position.character
-  in
-  (line, char)
 
 let flow_edit_to_textedit (edit: Loc.t * string): Lsp.TextEdit.t =
   let loc, text = edit in
@@ -112,14 +141,14 @@ module DocumentSymbols = struct
     let open Ast.Expression.Object.Property in
     match key with
     | Literal (_, { Ast.Literal.raw; _ }) -> Some raw
-    | Identifier (_, id) -> Some id
-    | PrivateName (_, (_, id)) -> Some id
+    | Identifier (_, { Ast.Identifier.name= id; comments= _ }) -> Some id
+    | PrivateName (_, (_, { Ast.Identifier.name= id; comments= _ })) -> Some id
     | Computed (_, _) -> None
 
-  let name_of_id ((_, id): Loc.t Ast.Identifier.t) : string =
-    id
+  let name_of_id ((_, { Ast.Identifier.name; comments= _ }): (Loc.t, Loc.t) Ast.Identifier.t) : string =
+    name
 
-  let name_of_id_opt (id_opt: Loc.t Ast.Identifier.t option) : string option =
+  let name_of_id_opt (id_opt: (Loc.t, Loc.t) Ast.Identifier.t option) : string option =
     Option.map id_opt ~f:name_of_id
 
   let ast_name
@@ -144,10 +173,10 @@ module DocumentSymbols = struct
   let ast_key ~uri ~containerName ~acc ~loc ~(key:(Loc.t, Loc.t) Ast.Expression.Object.Property.key) ~kind =
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_key key) ~kind
 
-  let ast_id ~uri ~containerName ~acc ~loc ~(id: Loc.t Ast.Identifier.t) ~kind =
+  let ast_id ~uri ~containerName ~acc ~loc ~(id: (Loc.t, Loc.t) Ast.Identifier.t) ~kind =
     ast_name ~uri ~containerName ~acc ~loc ~name:(name_of_id id) ~kind
 
-  let ast_id_opt ~uri ~containerName ~acc ~loc ~(id_opt: Loc.t Ast.Identifier.t option) ~kind =
+  let ast_id_opt ~uri ~containerName ~acc ~loc ~(id_opt: (Loc.t, Loc.t) Ast.Identifier.t option) ~kind =
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_id_opt id_opt) ~kind
 
   let ast_class_member
@@ -168,7 +197,7 @@ module DocumentSymbols = struct
       ast_key ~uri ~containerName ~acc ~loc ~key ~kind:Lsp.SymbolInformation.Property
     | Body.Property (loc, { Property.key; _ }) ->
       ast_key ~uri ~containerName ~acc ~loc ~key ~kind:Lsp.SymbolInformation.Property
-    | Body.PrivateField (loc, { PrivateField.key = (_, (_, name)); _ }) ->
+    | Body.PrivateField (loc, { PrivateField.key = (_, (_, { Ast.Identifier.name; comments= _ })); _ }) ->
       ast_name ~uri ~containerName ~acc ~loc ~name ~kind:Lsp.SymbolInformation.Field
 
   let ast_class

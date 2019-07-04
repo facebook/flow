@@ -7,12 +7,13 @@
  *
  *)
 
+open Core_kernel
 open ServerMonitorUtils
 
 let server_exists lock_file = not (Lock.check lock_file)
 
-let from_channel_without_buffering tic =
-  Marshal_tools.from_fd_with_preamble (Timeout.descr_of_in_channel tic)
+let from_channel_without_buffering ?timeout tic =
+  Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel tic)
 
 let wait_on_server_restart ic =
   try
@@ -43,13 +44,21 @@ let send_shutdown_rpc oc =
     MonitorRpc.SHUT_DOWN
   |> ignore
 
+let send_server_progress_rpc oc =
+  let _ : int = Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
+    MonitorRpc.SERVER_PROGRESS in
+  ()
+
+let read_server_progress ic : string option * string option=
+  from_channel_without_buffering ic
+
 let establish_connection ~timeout config =
   let sock_name = Socket.get_path config.socket_file in
   let sockaddr =
     if Sys.win32 then
-      let ic = open_in_bin sock_name in
-      let port = input_binary_int ic in
-      close_in ic;
+      let ic = In_channel.create ~binary:true sock_name in
+      let port = Option.value_exn (In_channel.input_binary_int ic) in
+      In_channel.close ic;
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
@@ -93,11 +102,16 @@ let verify_cstate ic cstate =
       failwith "Ancient version of server sent old Build_id_mismatch"
 
 (** Consume sequence of Prehandoff messages. *)
-let rec consume_prehandoff_messages ic oc =
+let rec consume_prehandoff_messages
+    ~(timeout: Timeout.t)
+    (ic: Timeout.in_channel)
+    (oc: Pervasives.out_channel)
+  : (Timeout.in_channel * Pervasives.out_channel * string,
+    ServerMonitorUtils.connection_error) result =
   let module PH = Prehandoff in
-  let m: PH.msg = from_channel_without_buffering ic in
+  let m: PH.msg = from_channel_without_buffering ~timeout ic in
   match m with
-  | PH.Sentinel -> Ok (ic, oc)
+  | PH.Sentinel finale_file -> Ok (ic, oc, finale_file)
   | PH.Server_dormant_connections_limit_reached ->
     Printf.eprintf @@ "Connections limit on dormant server reached."^^
       " Be patient waiting for a server to be started.";
@@ -105,7 +119,7 @@ let rec consume_prehandoff_messages ic oc =
   | PH.Server_not_alive_dormant _ ->
     Printf.eprintf "Waiting for a server to be started...%s\n%!"
       ClientMessages.waiting_for_server_to_be_started_doc;
-    consume_prehandoff_messages ic oc
+    consume_prehandoff_messages ~timeout ic oc
   | PH.Server_died_config_change ->
     Printf.eprintf ("Last server exited due to config change. Please re-run client" ^^
       " to force discovery of the correct version of the client.");
@@ -125,8 +139,19 @@ let rec consume_prehandoff_messages ic oc =
     wait_on_server_restart ic;
     Error Server_died
 
+let consume_prehandoff_messages
+    ~(timeout: int)
+    (ic: Timeout.in_channel)
+    (oc: Pervasives.out_channel)
+  : (Timeout.in_channel * Pervasives.out_channel * string,
+    ServerMonitorUtils.connection_error) result =
+  Timeout.with_timeout
+    ~timeout
+    ~do_:(fun timeout -> consume_prehandoff_messages ~timeout ic oc)
+    ~on_timeout:(fun _ -> Error ServerMonitorUtils.Server_dormant_out_of_retries)
+
 let connect_to_monitor ~timeout config =
-  let open Core_result in
+  let open Result in
   Timeout.with_timeout
     ~timeout
     ~on_timeout:(fun _ ->
@@ -171,7 +196,7 @@ let connect_to_monitor ~timeout config =
     end
 
 let connect_and_shut_down config =
-  let open Core_result in
+  let open Result in
   connect_to_monitor ~timeout:3 config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
   send_shutdown_rpc oc;
@@ -286,8 +311,20 @@ let connect_once ~timeout config handoff_options =
   (*       -> "hh_client lsp" -> raise Lsp.Error_server_start.               *)
   (*   | catch any exception -> unhandled.                                   *)
   (***************************************************************************)
-  let open Core_result in
+  let open Result in
+  let start_t = Unix.gettimeofday () in
   connect_to_monitor ~timeout config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
   send_server_handoff_rpc handoff_options oc;
-  consume_prehandoff_messages ic oc
+  let elapsed_t = int_of_float (Unix.gettimeofday () -. start_t) in
+  let timeout = max (timeout - elapsed_t) 1 in
+  consume_prehandoff_messages ~timeout ic oc
+
+let connect_to_monitor_and_get_server_progress ~timeout config =
+  let open Result in
+  connect_to_monitor ~timeout config >>= fun (ic, oc, cstate) ->
+  verify_cstate ic cstate >>= fun () ->
+  (* This is similar to connect_once up to this point, where instead of
+   * being handed off to server we just get our answer from monitor *)
+  send_server_progress_rpc oc;
+  Ok (read_server_progress ic)

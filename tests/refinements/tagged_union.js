@@ -85,7 +85,7 @@ function nationality(x: Citizen | NonCitizen) {
 let tests = [
   // non-existent props
   function test7(x: A) {
-    if (x.kindTypo === 1) { // typos are allowed to be tested
+    if (x.kindTypo === 1) { // error: kindTypo prop missing
       (x.kindTypo: string); // typos can't be used, though
     }
   },
@@ -127,16 +127,17 @@ let tests = [
       (q.valeuOf: number); // inside the block, it's a number
       (q.valeuOf: string); // error: number literal 0 !~> string
     }
-    if (r.toStirng === 0) { // typos are allowed to be tested
+    if (r.toStirng === 0) { // error: toStirng prop missing
       (r.toStirng: empty); // error, toStirng is refined to 0
     }
     if (s.call === 0) {} // Error
-    if (s.calll === 0) { // typos are allowed to be tested
-      (t.calll: empty); // ok, props on functions are `any` :/
+    if (s.calll === 0) { // error: calll prop missing
+      (s.calll: empty); // error, calll is refined to 0
     }
     if (t.call === 0) {} // Error
-    if (t.calll === 0) { // typos are allowed to be tested
-      (t.calll: empty); // error, calll is refined to 0
+    if (t.calll === 0) { // error: calll prop missing
+      (t.calll: number); // inside the block, it's a number
+      (t.calll: string); // error: number literal 0 !~> string
     }
   },
 

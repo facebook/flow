@@ -1,9 +1,11 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+module Js = Js_of_ocaml.Js
 
 module JsTranslator : sig
   val translation_errors: (Loc.t * Parse_error.t) list ref
@@ -18,6 +20,7 @@ end = struct
   let obj props = Js.Unsafe.inject (Js.Unsafe.obj (Array.of_list props))
   let array arr = Js.Unsafe.inject (Js.array (Array.of_list arr))
   let number x = Js.Unsafe.inject (Js.number_of_float x)
+  let int x = number (float x)
   let null = Js.Unsafe.inject Js.null
   let regexp loc pattern flags =
     let regexp = try
@@ -40,6 +43,7 @@ end = struct
 end
 
 module Translate = Estree_translator.Translate (JsTranslator) (struct
+  let include_interned_comments = false
   let include_comments = true
   let include_locs = true
 end)
@@ -48,6 +52,11 @@ module Token_translator = Token_translator.Translate (JsTranslator)
 
 let parse_options jsopts = Parser_env.(
   let opts = default_parse_options in
+
+  let enums = Js.Unsafe.get jsopts "enums" in
+  let opts = if Js.Optdef.test enums
+    then { opts with enums = Js.to_bool enums; }
+    else opts in
 
   let decorators = Js.Unsafe.get jsopts "esproposal_decorators" in
   let opts = if Js.Optdef.test decorators
@@ -87,8 +96,8 @@ let parse_options jsopts = Parser_env.(
   opts
 )
 
-let translate_tokens tokens =
-  JsTranslator.array (List.rev_map Token_translator.token tokens)
+let translate_tokens offset_table tokens =
+  JsTranslator.array (List.rev_map (Token_translator.token offset_table) tokens)
 
 let parse content options =
   let options =
@@ -114,8 +123,9 @@ let parse content options =
 
   let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options ~token_sink content in
   JsTranslator.translation_errors := [];
-  let ret = Translate.program ocaml_ast in
+  let offset_table = Offset_utils.make content in
+  let ret = Translate.program (Some offset_table) ocaml_ast in
   let translation_errors = !JsTranslator.translation_errors in
   Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));
-  if include_tokens then Js.Unsafe.set ret "tokens" (translate_tokens !rev_tokens);
+  if include_tokens then Js.Unsafe.set ret "tokens" (translate_tokens offset_table !rev_tokens);
   ret

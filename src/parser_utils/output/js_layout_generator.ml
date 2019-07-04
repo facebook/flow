@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@ module Ast = Flow_ast
 
 open Layout
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
    ambiguity. We pass whether we're in one of these special cases down through
@@ -49,26 +49,13 @@ let normal_context = { left = Normal_left; group = Normal_group; }
 let context_after_token ctxt = { ctxt with left = Normal_left }
 
 (* JS layout helpers *)
-let not_supported loc message = failwith (message ^ " at " ^ Loc.to_string loc)
+let not_supported loc message = failwith (message ^ " at " ^ Loc.debug_to_string loc)
 let with_semicolon node = fuse [node; Atom ";"]
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
-let wrap_in_parens item =
-  fuse [
-    Atom "(";
-    Sequence ({ seq with break=Break_if_needed }, [item]);
-    Atom ")";
-  ]
-let wrap_in_parens_on_break item = list
-  ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty))
-  [item]
-let statement_with_test name test body = fuse [
-    Atom name;
-    pretty_space;
-    wrap_in_parens test;
-    pretty_space;
-    body;
-  ]
 
+let wrap_in_parens item = group [Atom "("; item; Atom ")"]
+let wrap_in_parens_on_break item =
+  wrap_and_indent (IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [item]
 let option f = function
   | Some v -> f v
   | None -> Empty
@@ -229,7 +216,7 @@ let definitely_needs_parens =
 (* TODO: this only needs to be shallow; we don't need to walk into function
    or class bodies, for example. *)
 class contains_call_mapper result_ref = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! call _loc expr = result_ref := true; expr
 end
 
@@ -266,12 +253,44 @@ let better_quote =
     if double > single then "'" else "\""
 
 let utf8_escape =
-  let f ~quote buf _i = function
+  (* a null character can be printed as \x00 or \0. but if the next character is an ASCII digit,
+     then using \0 would create \01 (for example), which is a legacy octal 1. so, rather than simply
+     fold over the codepoints, we have to look ahead at the next character as well. *)
+  let lookahead_fold_wtf_8 :
+      ?pos:int ->
+      ?len:int ->
+      (next: (int * Wtf8.codepoint) option -> 'a -> int -> Wtf8.codepoint -> 'a) ->
+      'a -> string -> 'a
+  =
+    let lookahead ~f (prev, buf) i cp =
+      let next = Some (i, cp) in
+      let buf = match prev with
+      | Some (prev_i, prev_cp) -> f ~next buf prev_i prev_cp
+      | None -> buf
+      in
+      (next, buf)
+    in
+    fun ?pos ?len f acc str ->
+      str
+      |> Wtf8.fold_wtf_8 ?pos ?len (lookahead ~f) (None, acc)
+      |> fun (last, acc) ->
+        begin match last with
+        | Some (i, cp) -> f ~next:None acc i cp
+        | None -> acc
+        end
+  in
+  let f ~quote ~next buf _i = function
   | Wtf8.Malformed -> buf
   | Wtf8.Point cp ->
     begin match cp with
     (* SingleEscapeCharacter: http://www.ecma-international.org/ecma-262/6.0/#table-34 *)
-    | 0x0 -> Buffer.add_string buf "\\0"; buf
+    | 0x0 ->
+        let zero = match next with
+        | Some (_i, Wtf8.Point n) when 0x30 <= n && n <= 0x39 -> "\\x00"
+        | _ -> "\\0"
+        in
+        Buffer.add_string buf zero;
+        buf
     | 0x8 -> Buffer.add_string buf "\\b"; buf
     | 0x9 -> Buffer.add_string buf "\\t"; buf
     | 0xA -> Buffer.add_string buf "\\n"; buf
@@ -309,26 +328,26 @@ let utf8_escape =
   in
   fun ~quote str ->
     str
-    |> Wtf8.fold_wtf_8 (f ~quote) (Buffer.create (String.length str))
+    |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str))
     |> Buffer.contents
+
+let layout_from_comment anchor loc_node (loc_cm, comment) =
+  let open Ast.Comment in
+  let comment_text = match comment with
+    | Line txt -> Printf.sprintf "//%s\n" txt
+    | Block txt ->
+      match Loc.lines_intersect loc_node loc_cm, anchor with
+      | false, Preceding -> Printf.sprintf "\n/*%s*/" txt
+      | false, Following -> Printf.sprintf "/*%s*/\n" txt
+      | false, Enclosing -> Printf.sprintf "/*%s*/\n" txt
+      | _ -> Printf.sprintf "/*%s*/" txt
+  in
+  SourceLocation (loc_cm, Atom comment_text)
 
 let with_attached_comments: comment_map option ref = ref None
 
 let layout_node_with_comments current_loc layout_node =
   let open Layout in
-  let open Ast.Comment in
-  let layout_from_comment anchor (loc_st, _) (loc_cm, comment) =
-    let comment_text = match comment with
-      | Line txt -> Printf.sprintf "//%s\n" txt
-      | Block txt ->
-        match Loc.lines_intersect loc_st loc_cm, anchor with
-        | false, Preceding -> Printf.sprintf "\n/*%s*/" txt
-        | false, Following -> Printf.sprintf "/*%s*/\n" txt
-        | false, Enclosing -> Printf.sprintf "/*%s*/\n" txt
-        | _ -> Printf.sprintf "/*%s*/" txt
-    in
-    SourceLocation (loc_cm, Atom comment_text)
-  in
   match !with_attached_comments with
     | None -> layout_node
     | Some attached when LocMap.is_empty attached -> layout_node
@@ -338,54 +357,74 @@ let layout_node_with_comments current_loc layout_node =
         | Some comments ->
           with_attached_comments := Some (LocMap.remove current_loc attached);
           let matched = List.fold_left (fun nodes comment ->
-            let (anchor, statement_attached, comment) = comment in
+            let (anchor, (loc_st, _), comment) = comment in
             match anchor with
               | Preceding ->
-                nodes @ [layout_from_comment anchor statement_attached comment]
+                nodes @ [layout_from_comment anchor loc_st comment]
               | Following ->
-                [layout_from_comment anchor statement_attached comment] @ nodes
+                [layout_from_comment anchor loc_st comment] @ nodes
               | Enclosing ->
-                (* TODO(festevezga)(T29896911) print enclosing comments using statement_attached *)
-                [layout_from_comment anchor statement_attached comment] @ nodes
+                (* TODO(festevezga)(T29896911) print enclosing comments using full statement *)
+                [layout_from_comment anchor loc_st comment] @ nodes
           ) [layout_node] comments in
           Concat matched
 
-let source_location_with_comments (current_loc, layout_node) =
-  layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
+let layout_node_with_simple_comments current_loc comments layout_node =
+  let { Ast.Syntax.leading; trailing; _} = comments in
+  let preceding = List.map (layout_from_comment Preceding current_loc) leading in
+  let following = List.map (layout_from_comment Following current_loc) trailing in
+  Concat (preceding @ [layout_node] @ following)
 
-let identifier_with_comments (current_loc, name) =
-  layout_node_with_comments current_loc (Identifier (current_loc, name))
+let layout_node_with_simple_comments_opt current_loc comments layout_node =
+  match comments with
+  | Some c -> layout_node_with_simple_comments current_loc c layout_node
+  | None -> layout_node
+
+let source_location_with_comments ?comments (current_loc, layout_node) =
+  match comments with
+  | Some comments ->
+    layout_node_with_simple_comments current_loc comments (SourceLocation (current_loc, layout_node))
+  | None ->
+    layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
+
+let identifier_with_comments (current_loc, { Ast.Identifier.name; comments }) =
+  let node = Identifier (current_loc, name) in
+  match comments with
+  | Some comments ->
+    layout_node_with_simple_comments current_loc comments node
+  | None ->
+    node
 
 (* Generate JS layouts *)
 let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
   let nodes =
     if preserve_docblock && comments <> [] then
-      let directives, statements = Ast_utils.partition_directives statements in
+      let directives, statements = Flow_ast_utils.partition_directives statements in
       let comments = match statements with
       | [] -> comments
       | (loc, _)::_ -> comments_before_loc loc comments
       in
       (combine_directives_and_comments directives comments)::
-        (statements_list_with_newlines statements)
+        (statement_list statements)
     else
-      statements_list_with_newlines statements
+      statement_list statements
   in
   let nodes = group [join pretty_hardline nodes] in
   let nodes = maybe_embed_checksum nodes checksum in
-  let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
+  let loc = { loc with Loc.start = { Loc.line = 1; column = 0; }} in
   source_location_with_comments (loc, nodes)
 
 and program_simple (loc, statements, _) =
-  let nodes = group [join pretty_hardline (statements_list_with_newlines statements)] in
-  let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
+  let nodes = group [join pretty_hardline (statement_list statements)] in
+  let loc = { loc with Loc.start = { Loc.line = 1; column = 0; }} in
   source_location_with_comments (loc, nodes)
 
 and combine_directives_and_comments directives comments : Layout.layout_node =
-  let directives = List.map (fun ((loc, _) as x) -> loc, Statement x) directives in
-  let comments = List.map (fun ((loc, _) as x) -> loc, Comment x) comments in
+  let directives = Core_list.map ~f:(fun ((loc, _) as x) -> loc, Statement x) directives in
+  let comments = Core_list.map ~f:(fun ((loc, _) as x) -> loc, Comment x) comments in
   let merged = List.merge (fun (a, _) (b, _) -> Loc.compare a b) directives comments in
-  let nodes = List.map (function
-    | loc, Statement s -> loc, statement ~allow_empty:true s
+  let nodes = Core_list.map ~f:(function
+    | loc, Statement s -> loc, statement s
     | loc, Comment c -> loc, comment c
   ) merged in
   join pretty_hardline (list_with_newlines nodes)
@@ -400,8 +439,8 @@ and comment (loc, comment) =
   let module C = Ast.Comment in
   source_location_with_comments (loc, match comment with
   | C.Block txt -> fuse [
-      Atom "/*"; pretty_hardline;
-      Atom txt; pretty_hardline;
+      Atom "/*";
+      Atom txt;
       Atom "*/";
     ]
   | C.Line txt -> fuse [
@@ -411,21 +450,6 @@ and comment (loc, comment) =
     ]
   )
 
-and statement_list_with_locs ?allow_empty ?(pretty_semicolon=false) (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
-  let rec mapper acc = function
-  | [] -> List.rev acc
-  | ((loc, _) as stmt)::rest ->
-    let pretty_semicolon = pretty_semicolon && rest = [] in
-    let acc = (loc, statement ?allow_empty ~pretty_semicolon stmt)::acc in
-    (mapper [@tailcall]) acc rest
-  in
-  mapper [] stmts
-
-and statement_list ?allow_empty ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
-  stmts
-  |> statement_list_with_locs ?allow_empty ?pretty_semicolon
-  |> List.map (fun (_loc, layout) -> layout)
-
 (**
  * Renders a statement
  *
@@ -433,7 +457,7 @@ and statement_list ?allow_empty ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Sta
  * a semicolon is never required on the last statement of a statement list, so we can set
  * `~pretty_semicolon:true` to only print the unnecessary semicolon in pretty mode.
  *)
-and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement.t) =
+and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement.t) =
   let (loc, stmt) = root_stmt in
   let module E = Ast.Expression in
   let module S = Ast.Statement in
@@ -441,7 +465,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
   source_location_with_comments (
     loc,
     match stmt with
-    | S.Empty -> if allow_empty then Atom ";" else IfPretty(Atom "{}", Atom ";")
+    | S.Empty -> Atom ";"
     | S.Debugger -> with_semicolon (Atom "debugger")
     | S.Block b -> block (loc, b)
     | S.Expression { S.Expression.expression = expr; _ } ->
@@ -451,7 +475,10 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
       begin match alternate with
       | Some alt ->
         fuse [
-          statement_with_test "if" (expression test) (statement consequent);
+          group [
+            statement_with_test "if" (expression test);
+            statement_after_test consequent;
+          ];
           pretty_space;
           fuse_with_space [
             Atom "else";
@@ -459,7 +486,10 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
           ]
         ]
       | None ->
-        statement_with_test "if" (expression test) (statement ~pretty_semicolon consequent)
+        group [
+          statement_with_test "if" (expression test);
+          statement_after_test ~pretty_semicolon consequent;
+        ]
       end
     | S.Labeled { S.Labeled.label; body } ->
       fuse [
@@ -475,32 +505,50 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
         | Some l -> fuse [s_break; space; identifier l]
         | None -> s_break;
       )
-    | S.Continue { S.Continue.label } ->
+    | S.Continue { S.Continue.label; comments } ->
       let s_continue = Atom "continue" in
-      with_semicolon (
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (
         match label with
         | Some l -> fuse [s_continue; space; identifier l]
         | None -> s_continue;
       )
     | S.With { S.With._object; body } ->
-      statement_with_test "with" (expression _object) (statement body)
+      fuse [
+        statement_with_test "with" (expression _object);
+        statement_after_test body;
+      ]
     | S.Switch { S.Switch.discriminant; cases } ->
-      let case_nodes = match cases with
-      | [] -> []
-      | hd::[] -> [switch_case ~last:true hd]
-      | hd::rest ->
-        let rev_rest = List.rev rest in
-        let last = List.hd rev_rest |> switch_case ~last:true in
-        let middle = List.tl rev_rest |> List.map (switch_case ~last:false) in
-        (switch_case ~last:false hd)::(List.rev (last::middle))
+      let case_nodes =
+        let rec helper acc = function
+        | [] -> List.rev acc
+        | case::[] -> List.rev ((switch_case ~last:true case)::acc)
+        | case::next::rest ->
+          let case_node = switch_case ~last:false case in
+          let next_node = switch_case ~last:(rest = []) next in
+          let case_node =
+            let (Loc.{_end = {line = case_end; _}; _}, _) = case in
+            let (Loc.{start = {line = next_start; _}; _}, _) = next in
+            if case_end + 1 < next_start then fuse [case_node; pretty_hardline]
+            else case_node
+          in
+          helper (next_node::case_node::acc) rest
+        in
+        helper [] cases
       in
-      statement_with_test
-        "switch"
-        (expression discriminant)
-        (list ~wrap:(Atom "{", Atom "}") ~break:Break_if_pretty case_nodes)
-    | S.Return { S.Return.argument } ->
+      let cases_node =
+        wrap_and_indent
+          ~break:pretty_hardline
+          (Atom "{", Atom "}")
+          [join pretty_hardline case_nodes]
+      in
+      fuse [
+        statement_with_test "switch" (expression discriminant);
+        pretty_space;
+        cases_node;
+      ]
+    | S.Return { S.Return.argument; comments } ->
       let s_return = Atom "return" in
-      with_semicolon (
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (
         match argument with
         | Some arg ->
           let arg = match arg with
@@ -508,7 +556,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
           | _, E.Binary _
           | _, E.Sequence _
           | _, E.JSXElement _ ->
-            wrap_in_parens_on_break (expression arg)
+            group [wrap_in_parens_on_break (expression arg)]
           | _ ->
             expression arg
           in
@@ -518,7 +566,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
     | S.Throw { S.Throw.argument } ->
       with_semicolon (fuse_with_space [
         Atom "throw";
-        wrap_in_parens_on_break (expression argument);
+        group [wrap_in_parens_on_break (expression argument)];
       ])
     | S.Try { S.Try.block=b; handler; finalizer } ->
       fuse [
@@ -530,9 +578,9 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
           source_location_with_comments (loc, match param with
             | Some p -> fuse [
                 pretty_space;
-                statement_with_test "catch"
-                  (pattern ~ctxt:normal_context p)
-                  (block body)
+                statement_with_test "catch" (pattern ~ctxt:normal_context p);
+                pretty_space;
+                block body;
               ]
             | None -> fuse [
               pretty_space;
@@ -553,7 +601,10 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
         | None -> Empty
       ]
     | S.While { S.While.test; body } ->
-      statement_with_test "while" (expression test) (statement ~pretty_semicolon body);
+      fuse [
+        statement_with_test "while" (expression test);
+        statement_after_test ~pretty_semicolon body;
+      ]
     | S.DoWhile { S.DoWhile.body; test } ->
       with_semicolon (fuse [
         fuse_with_space [
@@ -563,17 +614,13 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
         pretty_space;
         Atom "while";
         pretty_space;
-        wrap_in_parens (expression test)
+        group [wrap_and_indent (Atom "(", Atom ")") [expression test]];
       ])
     | S.For { S.For.init; test; update; body } ->
       fuse [
-        Atom "for";
-        pretty_space;
-        list
-          ~wrap:(Atom "(", Atom ")")
-          ~sep:(Atom ";")
-          ~trailing:false
-          [
+        statement_with_test
+          "for"
+          (join (fuse [Atom ";"; pretty_line]) [
             begin match init with
             | Some (S.For.InitDeclaration decl) ->
               let ctxt = { normal_context with group = In_for_init } in
@@ -591,9 +638,8 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
             | Some expr -> expression expr
             | None -> Empty
             end;
-          ];
-        pretty_space;
-        statement ~pretty_semicolon body;
+          ]);
+        statement_after_test ~pretty_semicolon body;
       ]
     | S.ForIn { S.ForIn.left; right; body; each } ->
       fuse [
@@ -608,13 +654,13 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
           Atom "in";
           expression right;
         ]);
-        pretty_space;
-        statement ~pretty_semicolon body;
+        statement_after_test ~pretty_semicolon body;
       ]
-    | S.FunctionDeclaration func -> function_ ~precedence:max_precedence func
+    | S.FunctionDeclaration func -> function_ func
     | S.VariableDeclaration decl ->
       with_semicolon (variable_declaration (loc, decl))
     | S.ClassDeclaration class_ -> class_base class_
+    | S.EnumDeclaration enum -> enum_declaration enum
     | S.ForOf { S.ForOf.left; right; body; async } ->
       fuse [
         Atom "for";
@@ -628,8 +674,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
           space; Atom "of"; space;
           expression right;
         ]);
-        pretty_space;
-        statement ~pretty_semicolon body;
+        statement_after_test ~pretty_semicolon body;
       ]
     | S.ImportDeclaration import -> import_declaration import
     | S.ExportNamedDeclaration export -> export_declaration export
@@ -649,6 +694,30 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
     | S.DeclareExportDeclaration export -> declare_export_declaration export
   )
 
+(* The beginning of a statement that does a "test", like `if (test)` or `while (test)` *)
+and statement_with_test name test =
+  fuse [
+    Atom name;
+    pretty_space;
+    group [wrap_and_indent (Atom "(", Atom ")") [test]];
+  ]
+
+(* A statement following a "test", like the `statement` in `if (expr) statement` or
+   `for (...) statement`. Better names for this are welcome! *)
+and statement_after_test ?pretty_semicolon = function
+  | _, Ast.Statement.Empty as stmt ->
+    statement ?pretty_semicolon stmt
+  | _, Ast.Statement.Block _ as stmt ->
+    fuse [
+      pretty_space;
+      statement ?pretty_semicolon stmt;
+    ]
+  | stmt ->
+    Indent (fuse [
+      pretty_line;
+      statement ?pretty_semicolon stmt;
+    ])
+
 and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.t) =
   let (loc, expr) = root_expr in
   let module E = Ast.Expression in
@@ -658,68 +727,53 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
     match expr with
     | E.This -> Atom "this"
     | E.Super -> Atom "super"
-    | E.Array { E.Array.elements } ->
-      let last_element = (List.length elements) - 1 in
-      list
-        ~wrap:(Atom "[", Atom "]")
-        ~sep:(Atom ",")
-        (List.mapi
-          (fun i e -> match e with
-            | Some expr -> expression_or_spread ~ctxt:normal_context expr
-            (* If the last item is empty it needs a trailing comma forced so to
-               retain the same AST output. *)
-            | None when i = last_element -> IfBreak (Empty, Atom ",")
-            | None -> Empty
-          )
-          elements
-        )
-    | E.Object { E.Object.properties } ->
-      if properties = [] then Atom "{}" else
-      let properties = object_properties_with_newlines properties in
-      group [
-        Atom "{";
-        Layout.Indent (fuse [
-          pretty_line;
-          join (fuse [Atom ","; pretty_line]) properties;
-          if_break (if_pretty (Atom ",") Layout.Empty) Layout.Empty;
-        ]);
-        pretty_line;
-        Atom "}";
+    | E.Array { E.Array.elements; comments } ->
+      let rev_elements = List.rev_map (function
+        | Some expr -> expression_or_spread ~ctxt:normal_context expr
+        | None -> Empty
+      ) elements in
+
+      (* if the last element is a hole, then we need to manually insert a trailing `,`, even in
+         ugly mode, and disable automatic trailing separators. *)
+      let trailing_sep, rev_elements = match rev_elements with
+        | Empty::tl -> false, (Atom ",")::tl
+        | _ -> true, rev_elements
+      in
+
+      layout_node_with_simple_comments_opt loc comments @@ group [
+        new_list
+          ~wrap:(Atom "[", Atom "]")
+          ~sep:(Atom ",")
+          ~trailing_sep
+          (List.rev rev_elements);
+      ]
+    | E.Object { E.Object.properties; comments } ->
+      layout_node_with_simple_comments_opt loc comments @@ group [
+        new_list
+          ~wrap:(Atom "{", Atom "}")
+          ~sep:(Atom ",")
+          ~wrap_spaces:true
+          (object_properties_with_newlines properties)
       ]
     | E.Sequence { E.Sequence.expressions } ->
       (* to get an AST like `x, (y, z)`, then there must've been parens
          around the right side. we can force that by bumping the minimum
          precedence. *)
       let precedence = precedence + 1 in
-      list
-        ~inline:(true, true)
-        ~sep:(Atom ",")
-        ~indent:0
-        ~trailing:false
-        (List.map (expression_with_parens ~precedence ~ctxt) expressions)
+      let layouts = Core_list.map ~f:(expression_with_parens ~precedence ~ctxt) expressions in
+      group [join (fuse [Atom ","; pretty_line]) layouts]
     | E.Identifier ident -> identifier ident
     | E.Literal lit -> literal lit
-    | E.Function func -> function_ ~precedence func
-    | E.ArrowFunction func -> function_base ~ctxt ~precedence ~arrow:true func
+    | E.Function func -> function_ func
+    | E.ArrowFunction func -> arrow_function ~ctxt ~precedence func
     | E.Assignment { E.Assignment.operator; left; right } ->
       fuse [
         pattern ~ctxt left;
         pretty_space;
-        E.Assignment.(match operator with
-        | Assign -> Atom "="
-        | PlusAssign -> Atom "+="
-        | MinusAssign -> Atom "-="
-        | MultAssign -> Atom "*="
-        | ExpAssign -> Atom "**="
-        | DivAssign -> Atom "/="
-        | ModAssign -> Atom "%="
-        | LShiftAssign -> Atom "<<="
-        | RShiftAssign -> Atom ">>="
-        | RShift3Assign -> Atom ">>>="
-        | BitOrAssign -> Atom "|="
-        | BitXorAssign -> Atom "^="
-        | BitAndAssign -> Atom "&="
-        );
+        begin match operator with
+        | None -> Atom "="
+        | Some op -> Atom (Flow_ast_utils.string_of_assignment_operator op)
+        end;
         pretty_space;
         begin
           let ctxt = context_after_token ctxt in
@@ -730,7 +784,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
       let module B = E.Binary in
       fuse_with_space [
         expression_with_parens ~precedence ~ctxt left;
-        Atom (Ast_utils.string_of_binary_operator operator);
+        Atom (Flow_ast_utils.string_of_binary_operator operator);
         begin match operator, right with
         | E.Binary.Plus,
           (_, E.Unary { E.Unary.operator=E.Unary.Plus; _ })
@@ -761,22 +815,20 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
     | E.OptionalCall { E.OptionalCall.call = c; optional } -> call ~optional ~precedence ~ctxt c
     | E.Conditional { E.Conditional.test; consequent; alternate } ->
       let test_layout =
-        (* conditionals are right-associative *)
-        let precedence = precedence + 1 in
-        expression_with_parens ~precedence ~ctxt test in
-      list
-        ~wrap:(fuse [test_layout; pretty_space], Empty)
-        ~inline:(false, true)
-        [
-          fuse [
-            Atom "?"; pretty_space;
-            expression_with_parens ~precedence:min_precedence ~ctxt consequent
-          ];
-          fuse [
-            Atom ":"; pretty_space;
-            expression_with_parens ~precedence:min_precedence ~ctxt alternate
-          ];
-        ]
+        (* increase precedence since conditionals are right-associative *)
+        expression_with_parens ~precedence:(precedence + 1) ~ctxt test
+      in
+      group [
+        test_layout;
+        Indent (fuse [
+          pretty_line;
+          Atom "?"; pretty_space;
+          expression_with_parens ~precedence:min_precedence ~ctxt consequent;
+          pretty_line;
+          Atom ":"; pretty_space;
+          expression_with_parens ~precedence:min_precedence ~ctxt alternate;
+        ]);
+      ]
     | E.Logical { E.Logical.operator; left; right } ->
       let left = expression_with_parens ~precedence ~ctxt left in
       let operator = match operator with
@@ -804,18 +856,18 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         then wrap_in_parens (expression ~ctxt callee)
         else expression ~ctxt callee
       in
-      fuse [
+      group [
         fuse_with_space [
           Atom "new";
           callee_layout;
         ];
         option type_parameter_instantiation_with_implicit targs;
-        list
+        new_list
           ~wrap:(Atom "(", Atom ")")
           ~sep:(Atom ",")
-          (List.map expression_or_spread arguments);
+          (Core_list.map ~f:expression_or_spread arguments);
       ];
-    | E.Unary { E.Unary.operator; argument } ->
+    | E.Unary { E.Unary.operator; argument; comments } ->
       let s_operator, needs_space = begin match operator with
       | E.Unary.Minus -> Atom "-", false
       | E.Unary.Plus -> Atom "+", false
@@ -835,7 +887,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         } in
         expression_with_parens ~precedence ~ctxt argument
       in
-      fuse [
+      layout_node_with_simple_comments_opt loc comments @@ fuse [
         s_operator;
         if needs_space then begin match argument with
         | (_, E.Sequence _) -> Empty
@@ -897,11 +949,11 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
   (* __d hack, force parens around factory function.
     More details at: https://fburl.com/b1wv51vj
     TODO: This is FB only, find generic way to add logic *)
-  | (_, Ast.Expression.Identifier (_, "__d")), None, [a; b; c; d] ->
+  | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name= "__d"; comments= _ })), None, [a; b; c; d] ->
     let lparen = if optional then ".?(" else "(" in
-    fuse [
+    group [
       Atom "__d";
-      list
+      new_list
         ~wrap:(Atom lparen, Atom ")")
         ~sep:(Atom ",")
         [
@@ -921,19 +973,23 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
       let less_than = if optional then "?.<" else "<" in
       source_location_with_comments (
         loc,
-        list
-          ~wrap:(Atom less_than, Atom ">")
-          ~sep:(Atom ",")
-          (List.map explicit_or_implicit args)
+        group [
+          new_list
+            ~wrap:(Atom less_than, Atom ">")
+            ~sep:(Atom ",")
+            (Core_list.map ~f:explicit_or_implicit args);
+        ]
       ), "("
     in
     fuse [
       expression_with_parens ~precedence ~ctxt callee;
       targs;
-      list
-        ~wrap:(Atom lparen, Atom ")")
-        ~sep:(Atom ",")
-        (List.map expression_or_spread arguments)
+      group [
+        new_list
+          ~wrap:(Atom lparen, Atom ")")
+          ~sep:(Atom ",")
+          (Core_list.map ~f:expression_or_spread arguments);
+      ]
     ]
 
 and expression_with_parens ~precedence ~(ctxt:expression_context) expr =
@@ -957,21 +1013,22 @@ and expression_or_spread ?(ctxt=normal_context) expr_or_spread =
 
 and identifier (loc, name) = identifier_with_comments (loc, name)
 
+and number_literal_type { Ast.NumberLiteral.raw; _ } =
+    Atom raw
+
 and number_literal ~in_member_object raw num =
   let str = Dtoa.shortest_string_of_float num in
-  let if_pretty, if_ugly =
-    if in_member_object then
-      (* `1.foo` is a syntax error, but `1.0.foo`, `1e0.foo` and even `1..foo` are all ok. *)
-      let is_int x = not (String.contains x '.' || String.contains x 'e') in
-      let if_pretty = if is_int raw then wrap_in_parens (Atom raw) else Atom raw in
-      let if_ugly = if is_int str then fuse [Atom str; Atom "."] else Atom str in
-      if_pretty, if_ugly
-    else
-      Atom raw, Atom str
-  in
-  if if_pretty = if_ugly then if_pretty else IfPretty (if_pretty, if_ugly)
+  if in_member_object then begin
+    (* `1.foo` is a syntax error, but `1.0.foo`, `1e0.foo` and even `1..foo` are all ok. *)
+    let is_int x = not (String.contains x '.' || String.contains x 'e') in
+    let if_pretty = if is_int raw then wrap_in_parens (Atom raw) else Atom raw in
+    let if_ugly = if is_int str then fuse [Atom str; Atom "."] else Atom str in
+    if if_pretty = if_ugly then if_pretty else IfPretty (if_pretty, if_ugly)
+  end else begin
+    if String.equal raw str then Atom raw else IfPretty (Atom raw, Atom str)
+  end
 
-and literal { Ast.Literal.raw; value; } =
+and literal { Ast.Literal.raw; value; comments= _ (* handled by caller *) } =
   let open Ast.Literal in
   match value with
   | Number num ->
@@ -984,8 +1041,15 @@ and literal { Ast.Literal.raw; value; } =
     fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
   | _ -> Atom raw
 
+and string_literal_type { Ast.StringLiteral.raw; _ } = Atom raw
+
 and member ?(optional=false) ~precedence ~ctxt member_node =
-  let { Ast.Expression.Member._object; property; computed } = member_node in
+  let { Ast.Expression.Member._object; property } = member_node in
+  let computed = match property with
+  | Ast.Expression.Member.PropertyExpression _ -> true
+  | Ast.Expression.Member.PropertyIdentifier _
+  | Ast.Expression.Member.PropertyPrivateName _ -> false
+  in
   let ldelim, rdelim = begin match computed, optional with
   | false, false -> Atom ".", Empty
   | false, true -> Atom "?.", Empty
@@ -995,17 +1059,17 @@ and member ?(optional=false) ~precedence ~ctxt member_node =
   fuse [
     begin match _object with
     | (_, Ast.Expression.Call _) -> expression ~ctxt _object
-    | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw })
+    | (loc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw; comments })
       when not computed ->
       (* 1.foo would be confused with a decimal point, so it needs parens *)
-      number_literal ~in_member_object:true raw num
+      source_location_with_comments ?comments (loc, number_literal ~in_member_object:true raw num)
     | _ -> expression_with_parens ~precedence ~ctxt _object
     end;
     ldelim;
     begin match property with
-    | Ast.Expression.Member.PropertyIdentifier (loc, id) ->
+    | Ast.Expression.Member.PropertyIdentifier (loc, { Ast.Identifier.name= id; comments= _ }) ->
       source_location_with_comments (loc, Atom id)
-    | Ast.Expression.Member.PropertyPrivateName (loc, (_, id)) ->
+    | Ast.Expression.Member.PropertyPrivateName (loc, (_, { Ast.Identifier.name= id; comments= _ })) ->
       source_location_with_comments (loc, Atom ("#" ^ id))
     | Ast.Expression.Member.PropertyExpression expr ->
       expression ~ctxt expr
@@ -1037,32 +1101,28 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
     loc,
     match pat with
     | P.Object { P.Object.properties; annot } ->
-      fuse [
-        list
+      group [
+        new_list
           ~wrap:(Atom "{", Atom "}")
           ~sep:(Atom ",")
           (* Object rest can have comma but most tooling still apply old
           pre-spec rules that disallow it so omit it to be safe *)
-          ~trailing:false
+          ~trailing_sep:false
           (List.map
             (function
             | P.Object.Property (loc, { P.Object.Property.
-                key; pattern=pat; shorthand
+                key; pattern=pat; default; shorthand
               }) ->
-              source_location_with_comments (loc,
-                begin match pat, shorthand with
-                (* Special case shorthand assignments *)
-                | (_, P.Assignment _), true -> pattern pat
-                (* Shorthand property *)
-                | _, true -> pattern_object_property_key key
-                (*  *)
-                | _, false -> fuse [
-                  pattern_object_property_key key;
-                  Atom ":"; pretty_space;
-                  pattern pat
-                ]
-                end;
-              )
+              let prop = pattern_object_property_key key in
+              let prop = match shorthand with
+              | false -> fuse [prop; Atom ":"; pretty_space; pattern pat]
+              | true -> prop
+              in
+              let prop = match default with
+              | Some expr -> fuse_with_default prop expr
+              | None -> prop
+              in
+              source_location_with_comments (loc, prop)
             | P.Object.RestProperty (loc, { P.Object.RestProperty.argument }) ->
               source_location_with_comments (loc, fuse [Atom "..."; pattern argument])
             )
@@ -1071,15 +1131,24 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
         hint type_annotation annot;
       ]
     | P.Array { P.Array.elements; annot } ->
-      fuse [
-        list
+      group [
+        new_list
           ~wrap:(Atom "[", Atom "]")
           ~sep:(Atom ",")
-          ~trailing:false (* Array rest cannot have trailing *)
+          ~trailing_sep:false (* Array rest cannot have trailing *)
           (List.map
             (function
             | None -> Empty
-            | Some P.Array.Element pat -> pattern pat
+            | Some P.Array.Element (loc, { P.Array.Element.
+                argument;
+                default;
+              }) ->
+              let elem = pattern argument in
+              let elem = match default with
+              | Some expr -> fuse_with_default elem expr
+              | None -> elem
+              in
+              source_location_with_comments (loc, elem)
             | Some P.Array.RestElement (loc, { P.Array.RestElement.
                 argument
               }) ->
@@ -1087,17 +1156,6 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
             )
             elements);
         hint type_annotation annot;
-      ]
-    | P.Assignment { P.Assignment.left; right } ->
-      fuse [
-        pattern left;
-        pretty_space; Atom "="; pretty_space;
-        begin
-          let ctxt = context_after_token ctxt in
-          expression_with_parens
-            ~precedence:precedence_of_assignment
-            ~ctxt right
-        end;
       ]
     | P.Identifier { P.Identifier.name; annot; optional } ->
       fuse [
@@ -1107,6 +1165,16 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
       ]
     | P.Expression expr -> expression ~ctxt expr
   )
+
+and fuse_with_default ?(ctxt=normal_context) node expr =
+  fuse [
+    node;
+    pretty_space; Atom "="; pretty_space;
+    expression_with_parens
+      ~precedence:precedence_of_assignment
+      ~ctxt:(context_after_token ctxt)
+      expr;
+  ]
 
 and template_literal { Ast.Expression.TemplateLiteral.quasis; expressions } =
   let module T = Ast.Expression.TemplateLiteral in
@@ -1129,22 +1197,35 @@ and variable_declaration ?(ctxt=normal_context) (loc, {
   Ast.Statement.VariableDeclaration.declarations;
   kind;
 }) =
-  source_location_with_comments (loc, fuse [
-    begin match kind with
-    | Ast.Statement.VariableDeclaration.Var -> Atom "var"
-    | Ast.Statement.VariableDeclaration.Let -> Atom "let"
-    | Ast.Statement.VariableDeclaration.Const -> Atom "const"
-    end;
-    space;
-    begin match declarations with
-      | [single_decl] -> variable_declarator ~ctxt single_decl
-      | _ ->
-        list
-          ~sep:(Atom ",")
-          ~inline:(false, true)
-          ~trailing:false
-          (List.map (variable_declarator ~ctxt) declarations)
-    end
+  let kind_layout = match kind with
+  | Ast.Statement.VariableDeclaration.Var -> Atom "var"
+  | Ast.Statement.VariableDeclaration.Let -> Atom "let"
+  | Ast.Statement.VariableDeclaration.Const -> Atom "const"
+  in
+  let has_init = List.exists (fun var ->
+    let open Ast.Statement.VariableDeclaration.Declarator in
+    match var with
+    | (_, { id = _; init = Some _ }) -> true
+    | _ -> false
+  ) declarations in
+  let sep = if has_init then pretty_hardline else pretty_line in
+  let decls_layout = match declarations with
+    | [] -> Empty (* impossible *)
+    | single_decl::[] -> variable_declarator ~ctxt single_decl
+    | hd::tl ->
+      let hd = variable_declarator ~ctxt hd in
+      let tl = Core_list.map ~f:(variable_declarator ~ctxt) tl in
+      group [
+        hd; Atom ",";
+        Indent (fuse [
+          sep;
+          join (fuse [Atom ","; sep]) tl;
+        ]);
+      ]
+  in
+  source_location_with_comments (loc, fuse_with_space [
+    kind_layout;
+    decls_layout;
   ]);
 
 and variable_declarator ~ctxt (loc, {
@@ -1162,94 +1243,136 @@ and variable_declarator ~ctxt (loc, {
     | None -> pattern ~ctxt id
   )
 
-and function_ ?(ctxt=normal_context) ~precedence func =
-  let { Ast.Function.id; generator; _ } = func in
-  let s_func = fuse [
-    Atom "function";
-    if generator then Atom "*" else Empty;
-  ] in
-  function_base
-    ~ctxt
-    ~precedence
-    ~id:(match id with
-    | Some id -> fuse [s_func; space; identifier id]
-    | None -> s_func
-    )
-    func
-
-and function_base
-  ~ctxt
-  ~precedence
-  ?(arrow=false)
-  ?(id=Empty)
-  { Ast.Function.
-    params; body; async; predicate; return; tparams;
-    expression=_; generator=_; id=_ (* Handled via `function_` *)
-  } =
+and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
+  params; body; async; predicate; return; tparams;
+  generator=_; id=_; (* arrows don't have ids and can't be generators *) sig_loc = _;
+} =
+  let is_single_simple_param =
+    match params with
+    | (_, { Ast.Function.Params.
+        params = [(_, { Ast.Function.Param.
+          argument = (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+            optional = false;
+            annot = Ast.Type.Missing _;
+            _;
+          });
+          default = None;
+        })];
+        rest = None;
+      }) -> true
+    | _ -> false
+  in
+  let params_and_stuff = match is_single_simple_param, return, predicate, tparams with
+  | true, Ast.Type.Missing _, None, None ->
+      List.hd (function_params ~ctxt params)
+  | _, _, _, _ ->
+    fuse [
+      option type_parameter tparams;
+      arrow_function_params params;
+      function_return return predicate;
+    ]
+  in
   fuse [
-    if async then fuse [Atom "async"; space; id] else id;
-    option type_parameter tparams;
-    begin match arrow, params, return, predicate, tparams with
-    | true, (_, { Ast.Function.Params.params = [(
-      _,
-      Ast.Pattern.Identifier {
-        Ast.Pattern.Identifier.optional=false; annot=Ast.Type.Missing _; _;
-      }
-    )]; rest = None}), Ast.Type.Missing _, None, None -> List.hd (function_params ~ctxt params)
-    | _, _, _, _, _ ->
-      list
-        ~wrap:(Atom "(", Atom ")")
-        ~sep:(Atom ",")
-        (function_params ~ctxt:normal_context params)
+    fuse_with_space [
+      if async then Atom "async" else Empty;
+      params_and_stuff;
+    ];
+    (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
+       unexpected multiply-and-assign operator. Thus, we format this with a
+       space e.g. `():* =>{}`. *)
+    begin match return with
+    | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
+    | _ -> pretty_space
     end;
-    begin match return, predicate with
-    | Ast.Type.Missing _, None -> Empty
-    | Ast.Type.Missing _, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
-    | Ast.Type.Available ret, Some pred -> fuse [
-        type_annotation ret;
-        pretty_space;
-        type_predicate pred;
-      ]
-    | Ast.Type.Available ret, None -> type_annotation ret;
-    end;
-    if arrow then fuse [
-        (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
-           unexpected multiply-and-assign operator. Thus, we format this with a
-           space e.g. `():* =>{}`. *)
-        begin match return with
-        | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
-        | _ -> pretty_space
-        end;
-        Atom "=>";
-    ] else Empty;
+    Atom "=>";
     pretty_space;
     begin match body with
     | Ast.Function.BodyBlock b -> block b
     | Ast.Function.BodyExpression expr ->
-      let ctxt = if arrow then { normal_context with group=In_arrow_func }
-      else normal_context in
+      let ctxt = { normal_context with group=In_arrow_func } in
       expression_with_parens ~precedence ~ctxt expr
     end;
   ]
 
+and arrow_function_params params =
+  group [
+    new_list
+      ~wrap:(Atom "(", Atom ")")
+      ~sep:(Atom ",")
+      (function_params ~ctxt:normal_context params);
+  ];
+
+and function_ func =
+  let {
+    Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
+  } = func in
+  let prefix =
+    let s_func = fuse [
+      Atom "function";
+      if generator then Atom "*" else Empty;
+    ] in
+    let id = match id with
+    | Some id -> fuse [s_func; space; identifier id]
+    | None -> s_func
+    in
+    if async then fuse [Atom "async"; space; id] else id
+  in
+  function_base ~prefix ~params ~body ~predicate ~return ~tparams
+
+and function_base ~prefix ~params ~body ~predicate ~return ~tparams =
+  fuse [
+    prefix;
+    option type_parameter tparams;
+    list
+      ~wrap:(Atom "(", Atom ")")
+      ~sep:(Atom ",")
+      (function_params ~ctxt:normal_context params);
+    function_return return predicate;
+    pretty_space;
+    begin match body with
+    | Ast.Function.BodyBlock b -> block b
+    | Ast.Function.BodyExpression _ -> failwith "Only arrows should have BodyExpressions"
+    end;
+  ]
+
 and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
-  let s_params = List.map (pattern ~ctxt) params in
+  let s_params = Core_list.map ~f:(fun (loc, { Ast.Function.Param.argument; default }) ->
+    let node = pattern ~ctxt argument in
+    let node = match default with
+    | Some expr -> fuse_with_default node expr
+    | None -> node
+    in
+    source_location_with_comments (loc, node)
+  ) params in
   match rest with
-  | Some (loc, {Ast.Function.RestElement.argument}) ->
+  | Some (loc, {Ast.Function.RestParam.argument}) ->
       let s_rest = source_location_with_comments (loc, fuse [
         Atom "..."; pattern ~ctxt argument
       ]) in
       List.append s_params [s_rest]
   | None -> s_params
 
+and function_return return predicate =
+  match return, predicate with
+  | Ast.Type.Missing _, None -> Empty
+  | Ast.Type.Missing _, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
+  | Ast.Type.Available ret, Some pred -> fuse [
+      type_annotation ret;
+      pretty_space;
+      type_predicate pred;
+    ]
+  | Ast.Type.Available ret, None -> type_annotation ret
+
 and block (loc, { Ast.Statement.Block.body }) =
+  let statements = statement_list ~pretty_semicolon:true body in
   source_location_with_comments (
     loc,
-    if List.length body > 0 then
-      body
-      |> statement_list_with_locs ~allow_empty:true ~pretty_semicolon:true
-      |> list_with_newlines
-      |> list ~wrap:(Atom "{", Atom "}") ~break:Break_if_pretty
+    if statements <> [] then
+      group [
+        wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [
+          join pretty_hardline statements;
+        ];
+      ]
     else Atom "{}"
   )
 
@@ -1277,37 +1400,37 @@ and class_method (
   { Ast.Class.Method.kind; key; value=(func_loc, func); static; decorators }
 ) =
   let module M = Ast.Class.Method in
+  let { Ast.Function.
+    params; body; async; generator; predicate; return; tparams;
+    id = _; (* methods don't use id; see `key` *) sig_loc = _;
+  } = func in
   source_location_with_comments (loc, begin
     let s_key = object_property_key key in
-    let s_key =
-      let { Ast.Function.generator; _ } = func in
-      fuse [if generator then Atom "*" else Empty; s_key;]
-    in
-    let s_key = match kind with
+    let s_key = if generator then fuse [Atom "*"; s_key] else s_key in
+    let s_kind = match kind with
     | M.Constructor
-    | M.Method -> s_key
-    | M.Get -> fuse [Atom "get"; space; s_key]
-    | M.Set -> fuse [Atom "set"; space; s_key]
+    | M.Method -> Empty
+    | M.Get -> Atom "get"
+    | M.Set -> Atom "set"
     in
+    (* TODO: getters/setters/constructors will never be async *)
+    let s_async = if async then Atom "async" else Empty in
+    let prefix = fuse_with_space [s_async; s_kind; s_key] in
     fuse [
       decorators_list decorators;
       if static then fuse [Atom "static"; space] else Empty;
       source_location_with_comments (
         func_loc,
-        function_base
-          ~ctxt:normal_context
-          ~precedence:max_precedence
-          ~id:s_key
-          func
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
       )
     ]
     end
   )
 
-and class_property_helper loc key value static annot variance =
+and class_property_helper loc key value static annot variance_ =
   source_location_with_comments (loc, with_semicolon (fuse [
     if static then fuse [Atom "static"; space] else Empty;
-    option variance_ variance;
+    option variance variance_;
     key;
     hint type_annotation annot;
     begin match value with
@@ -1325,28 +1448,45 @@ and class_property (loc, { Ast.Class.Property.
   class_property_helper loc (object_property_key key) value static annot variance
 
 and class_private_field (loc, { Ast.Class.PrivateField.
-  key = (ident_loc, ident); value; static; annot; variance
+  key = (ident_loc, (_, { Ast.Identifier.name; comments= _ })); value; static; annot; variance
 }) =
-  class_property_helper loc (identifier (ident_loc, "#" ^ (snd ident))) value static annot
+  class_property_helper loc (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name))) value static annot
     variance
 
 and class_body (loc, { Ast.Class.Body.body }) =
-  if List.length body > 0 then
+  if body <> [] then
     source_location_with_comments (
       loc,
-      list
-        ~wrap:(Atom "{", Atom "}")
-        ~break:Break_if_pretty
-        (List.map
-          (function
-          | Ast.Class.Body.Method meth -> class_method meth
-          | Ast.Class.Body.Property prop -> class_property prop
-          | Ast.Class.Body.PrivateField field -> class_private_field field
-          )
-          body
-        )
+      group [
+        wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [
+          join pretty_hardline (
+            Core_list.map ~f:(function
+            | Ast.Class.Body.Method meth -> class_method meth
+            | Ast.Class.Body.Property prop -> class_property prop
+            | Ast.Class.Body.PrivateField field -> class_private_field field
+            ) body
+          );
+        ];
+      ]
     )
   else Atom "{}"
+
+and class_implements implements = match implements with
+  | [] -> None
+  | _ -> Some (fuse [
+      Atom "implements"; space;
+      fuse_list
+        ~sep:(Atom ",")
+        (List.map
+          (fun (loc, { Ast.Class.Implements.id; targs }) ->
+            source_location_with_comments (loc, fuse [
+              identifier id;
+              option type_parameter_instantiation targs;
+            ])
+          )
+          implements
+        )
+    ])
 
 and class_base { Ast.Class.
   id; body; tparams; extends;
@@ -1375,23 +1515,7 @@ and class_base { Ast.Class.
         ])
       | None -> None
       end;
-      begin match implements with
-      | [] -> None
-      | _ -> Some (fuse [
-          Atom "implements"; space;
-          fuse_list
-            ~sep:(Atom ",")
-            (List.map
-              (fun (loc, { Ast.Class.Implements.id; targs }) ->
-                source_location_with_comments (loc, fuse [
-                  identifier id;
-                  option type_parameter_instantiation targs;
-                ])
-              )
-              implements
-            )
-        ])
-      end;
+      class_implements implements;
     ] in
     match deoptionalize class_extends with
     | [] -> []
@@ -1416,6 +1540,69 @@ and class_base { Ast.Class.
     group parts;
   ]
 
+and enum_declaration {Ast.Statement.EnumDeclaration.id; body} =
+  let open Ast.Statement.EnumDeclaration in
+  let representation_type name explicit =
+    if explicit then
+      fuse [space; Atom "of"; space; Atom name]
+    else
+      Empty
+  in
+  let wrap_body members =
+    wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
+  in
+  let defaulted_member (_, {DefaultedMember.id}) = fuse [
+    identifier id;
+    Atom ","
+  ] in
+  let initialized_member id value_str = fuse [
+    identifier id;
+    pretty_space;
+    Atom "=";
+    pretty_space;
+    Atom value_str;
+    Atom ","
+  ] in
+  let boolean_member (_, {InitializedMember.id; init = (_, init_value)}) =
+    initialized_member id (if init_value then "true" else "false")
+  in
+  let number_member (_, {InitializedMember.id; init = (_, {Ast.NumberLiteral.raw; _})}) =
+    initialized_member id raw
+  in
+  let string_member (_, {InitializedMember.id; init = (_, {Ast.StringLiteral.raw; _})}) =
+    initialized_member id raw
+  in
+  let body = match body with
+    | BooleanBody {BooleanBody.members; explicitType} -> fuse [
+      representation_type "boolean" explicitType;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:boolean_member members;
+    ]
+    | NumberBody {NumberBody.members; explicitType} -> fuse [
+      representation_type "number" explicitType;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:number_member members;
+    ]
+    | StringBody {StringBody.members; explicitType} -> fuse [
+      representation_type "string" explicitType;
+      pretty_space;
+      wrap_body @@ match members with
+      | StringBody.Defaulted members -> Core_list.map ~f:defaulted_member members
+      | StringBody.Initialized members -> Core_list.map ~f:string_member members
+    ]
+    | SymbolBody {SymbolBody.members} -> fuse [
+      representation_type "symbol" true;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:defaulted_member members;
+    ]
+  in
+  fuse [
+    Atom "enum";
+    space;
+    identifier id;
+    body;
+  ]
+
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)
 and list_with_newlines (nodes: (Loc.t * Layout.layout_node) list) =
   let (nodes, _) = List.fold_left (fun (acc, last_loc) (loc, node) ->
@@ -1435,9 +1622,15 @@ and list_with_newlines (nodes: (Loc.t * Layout.layout_node) list) =
   ) ([], None) nodes in
   List.rev nodes
 
-and statements_list_with_newlines statements =
-  statements
-  |> List.map (fun (loc, s) -> loc, statement ~allow_empty:true (loc, s))
+and statement_list ?(pretty_semicolon=false) statements =
+  let rec mapper acc = function
+  | [] -> List.rev acc
+  | ((loc, _) as stmt)::rest ->
+    let pretty_semicolon = pretty_semicolon && rest = [] in
+    let acc = (loc, statement ~pretty_semicolon stmt)::acc in
+    (mapper [@tailcall]) acc rest
+  in
+  mapper [] statements
   |> list_with_newlines
 
 and object_properties_with_newlines properties =
@@ -1448,7 +1641,7 @@ and object_properties_with_newlines properties =
         begin match v with
         | (_, E.Function _)
         | (_, E.ArrowFunction _) -> true
-        | (_, E.Object { O.properties }) ->
+        | (_, E.Object { O.properties; comments= _ }) ->
           List.exists has_function_decl properties
         | _ -> false
         end
@@ -1511,35 +1704,56 @@ and object_property property =
     )
   | O.Property (loc, O.Property.Method { key; value = (fn_loc, func) }) ->
     let s_key = object_property_key key in
-    let { Ast.Function.generator; _ } = func in
-    let precedence = max_precedence in
-    let ctxt = normal_context in
-    let g_key = fuse [
+    let { Ast.Function.
+      id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
+    } = func in
+    assert (id = None); (* methods don't have ids, see `key` *)
+    let prefix = fuse [
+      if async then fuse [Atom "async"; space] else Empty;
       if generator then Atom "*" else Empty;
       s_key;
     ] in
     source_location_with_comments (loc,
-      source_location_with_comments (fn_loc, function_base ~ctxt ~precedence ~id:g_key func)
+      source_location_with_comments (
+        fn_loc,
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
+      )
     )
   | O.Property (loc, O.Property.Get { key; value = (fn_loc, func) }) ->
-    let s_key = object_property_key key in
-    let precedence = max_precedence in
-    let ctxt = normal_context in
+    let { Ast.Function.
+      id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
+    } = func in
+    assert (id = None); (* getters don't have ids, see `key` *)
+    assert (not async); (* getters can't be async *)
+    assert (not generator); (* getters can't be generators *)
+    let prefix = fuse [
+      Atom "get";
+      space;
+      object_property_key key;
+    ] in
     source_location_with_comments (loc,
-      source_location_with_comments (fn_loc, fuse [
-        Atom "get"; space;
-        function_base ~ctxt ~precedence ~id:s_key func
-      ])
+      source_location_with_comments (
+        fn_loc,
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
+      )
     )
   | O.Property (loc, O.Property.Set { key; value = (fn_loc, func) }) ->
-    let s_key = object_property_key key in
-    let precedence = max_precedence in
-    let ctxt = normal_context in
+    let { Ast.Function.
+      id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
+    } = func in
+    assert (id = None); (* setters don't have ids, see `key` *)
+    assert (not async); (* setters can't be async *)
+    assert (not generator); (* setters can't be generators *)
+    let prefix = fuse [
+      Atom "set";
+      space;
+      object_property_key key;
+    ] in
     source_location_with_comments (loc,
-      source_location_with_comments (fn_loc, fuse [
-        Atom "set"; space;
-        function_base ~ctxt ~precedence ~id:s_key func
-      ])
+      source_location_with_comments (
+        fn_loc,
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
+      )
     )
   | O.SpreadProperty (loc, { O.SpreadProperty.argument }) ->
     source_location_with_comments (loc, fuse [Atom "..."; expression argument])
@@ -1563,13 +1777,11 @@ and jsx_fragment loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_ch
   fuse [
     jsx_fragment_opening frag_openingElement;
     jsx_children loc frag_children;
-    begin match frag_closingElement with
-    | Some closing -> jsx_closing_fragment closing
-    | _ -> Empty
-    end;
+    jsx_closing_fragment frag_closingElement;
   ]
 
-and jsx_identifier (loc, { Ast.JSX.Identifier.name }) = identifier_with_comments (loc, name)
+and jsx_identifier (loc, { Ast.JSX.Identifier.name }) =
+  identifier_with_comments @@ Flow_ast_utils.ident_of_source (loc, name)
 
 and jsx_namespaced_name (loc, { Ast.JSX.NamespacedName.namespace; name }) =
   source_location_with_comments (loc, fuse [
@@ -1654,7 +1866,7 @@ and jsx_opening_helper loc nameOpt attributes =
     if attributes <> [] then
       Layout.Indent (fuse [
         line;
-        join pretty_line (List.map jsx_opening_attr attributes);
+        join pretty_line (Core_list.map ~f:jsx_opening_attr attributes);
       ])
     else Empty;
     Atom ">";
@@ -1663,7 +1875,7 @@ and jsx_opening_helper loc nameOpt attributes =
 and jsx_self_closing (loc, { Ast.JSX.Opening.
   name; attributes; selfClosing=_
 }) =
-  let attributes = List.map jsx_opening_attr attributes in
+  let attributes = Core_list.map ~f:jsx_opening_attr attributes in
   source_location_with_comments (loc, group [
     Atom "<";
     jsx_element_name name;
@@ -1691,9 +1903,9 @@ and jsx_closing_fragment loc =
     Atom "</>";
   ])
 
-and jsx_children loc children =
+and jsx_children loc (_children_loc, children) =
   let open Loc in
-  let processed_children = deoptionalize (List.map jsx_child children) in
+  let processed_children = deoptionalize (Core_list.map ~f:jsx_child children) in
   (* Check for empty children *)
   if List.length processed_children <= 0 then Empty
   (* If start and end lines don't match check inner breaks *)
@@ -1723,7 +1935,7 @@ and jsx_children loc children =
       pretty_hardline;
     ]
   (* Single line *)
-  end else fuse (List.map (fun (loc, child) -> SourceLocation (loc, child)) processed_children)
+  end else fuse (Core_list.map ~f:(fun (loc, child) -> SourceLocation (loc, child)) processed_children)
 
 and jsx_child (loc, child) =
   match child with
@@ -1783,10 +1995,12 @@ and import_named_specifier { Ast.Statement.ImportDeclaration.
   ]
 
 and import_named_specifiers named_specifiers =
-  list
-    ~wrap:(Atom "{", Atom "}")
-    ~sep:(Atom ",")
-    (List.map import_named_specifier named_specifiers)
+  group [
+    new_list
+      ~wrap:(Atom "{", Atom "}")
+      ~sep:(Atom ",")
+      (Core_list.map ~f:import_named_specifier named_specifiers);
+  ]
 
 and import_declaration { Ast.Statement.ImportDeclaration.
   importKind; source; specifiers; default
@@ -1840,7 +2054,7 @@ and export_source ~prefix = function
 
 and export_specifier source = Ast.Statement.ExportNamedDeclaration.(function
   | ExportSpecifiers specifiers -> fuse [
-      list
+      group [new_list
         ~wrap:(Atom "{", Atom "}")
         ~sep:(Atom ",")
         (List.map
@@ -1861,6 +2075,7 @@ and export_specifier source = Ast.Statement.ExportNamedDeclaration.(function
           ))
           specifiers
         );
+      ];
       export_source ~prefix:pretty_space source;
     ]
   | ExportBatchSpecifier (loc, Some ident) -> fuse [
@@ -1912,7 +2127,7 @@ and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.
     );
   ]
 
-and variance_ (loc, var) =
+and variance (loc, var) =
   source_location_with_comments (
     loc,
     match var with
@@ -1933,17 +2148,21 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
     match consequent with
     | [] -> case_left
     | _ ->
-      list
-        ~wrap:(case_left, Empty)
-        ~break:Break_if_pretty
-        (statement_list ~pretty_semicolon:last consequent)
+      let statements = statement_list ~pretty_semicolon:last consequent in
+      fuse [
+        case_left;
+        Indent (fuse [
+          pretty_hardline;
+          join pretty_hardline statements;
+        ]);
+      ]
   )
 
 and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
-  name = (loc, name); bound; variance; default
+  name = (loc, { Ast.Identifier.name; comments= _ }); bound; variance = variance_; default
 }) =
   fuse [
-    option variance_ variance;
+    option variance variance_;
     source_location_with_comments (loc, Atom name);
     hint type_annotation bound;
     begin match default with
@@ -1960,28 +2179,34 @@ and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
 and type_parameter (loc, params) =
   source_location_with_comments (
     loc,
-    list
-      ~wrap:(Atom "<", Atom ">")
-      ~sep:(Atom ",")
-      (List.map type_param params)
+    group [
+      new_list
+        ~wrap:(Atom "<", Atom ">")
+        ~sep:(Atom ",")
+        (Core_list.map ~f:type_param params);
+    ]
   )
 
 and type_parameter_instantiation_with_implicit (loc, args) =
   source_location_with_comments (
     loc,
-    list
-      ~wrap:(Atom "<", Atom ">")
-      ~sep:(Atom ",")
-      (List.map explicit_or_implicit args)
+    group [
+      new_list
+        ~wrap:(Atom "<", Atom ">")
+        ~sep:(Atom ",")
+        (Core_list.map ~f:explicit_or_implicit args);
+    ]
   )
 
 and type_parameter_instantiation (loc, args) =
   source_location_with_comments (
     loc,
-    list
-      ~wrap:(Atom "<", Atom ">")
-      ~sep:(Atom ",")
-      (List.map type_ args)
+    group [
+      new_list
+        ~wrap:(Atom "<", Atom ">")
+        ~sep:(Atom ",")
+        (Core_list.map ~f:type_ args);
+    ]
   )
 
 and type_alias ~declare { Ast.Statement.TypeAlias.id; tparams; right } =
@@ -2007,11 +2232,11 @@ and opaque_type ~declare { Ast.Statement.OpaqueType.id; tparams; impltype; super
     | Some impltype -> [pretty_space; Atom "="; pretty_space; type_ impltype]
     | None -> [])))
 
-and type_annotation (loc, t) =
+and type_annotation ?(parens=false) (loc, t) =
   source_location_with_comments (loc, fuse [
     Atom ":";
     pretty_space;
-    type_ t;
+    if parens then wrap_in_parens (type_ t) else type_ t;
   ])
 
 and type_predicate (loc, pred) =
@@ -2056,7 +2281,7 @@ and type_function ~sep { Ast.Type.Function.
   return;
   tparams;
 } =
-  let params = List.map type_function_param params in
+  let params = Core_list.map ~f:type_function_param params in
   let params = match restParams with
   | Some (loc, { Ast.Type.Function.RestParam.argument }) -> params@[
       source_location_with_comments (loc, fuse [Atom "..."; type_function_param argument]);
@@ -2065,10 +2290,14 @@ and type_function ~sep { Ast.Type.Function.
   in
   fuse [
     option type_parameter tparams;
-    list
-      ~wrap:(Atom "(", Atom ")")
-      ~sep:(Atom ",")
-      params;
+    group [
+      new_list
+        (* Calls should not allow a trailing comma *)
+        ~trailing_sep:false
+        ~wrap:(Atom "(", Atom ")")
+        ~sep:(Atom ",")
+        params;
+    ];
     sep;
     pretty_space;
     type_ return;
@@ -2076,7 +2305,7 @@ and type_function ~sep { Ast.Type.Function.
 
 and type_object_property = Ast.Type.Object.(function
   | Property (loc, { Property.
-      key; value; optional; static; proto; variance; _method;
+      key; value; optional; static; proto; variance = variance_; _method;
     }) ->
     let s_static = if static then fuse [Atom "static"; space] else Empty in
     let s_proto = if proto then fuse [Atom "proto"; space] else Empty in
@@ -2094,7 +2323,7 @@ and type_object_property = Ast.Type.Object.(function
       | Property.Init t, _, _, _ -> fuse [
           s_static;
           s_proto;
-          option variance_ variance;
+          option variance variance_;
           object_property_key key;
           if optional then Atom "?" else Empty;
           Atom ":";
@@ -2118,10 +2347,10 @@ and type_object_property = Ast.Type.Object.(function
       Atom "...";
       type_ argument;
     ])
-  | Indexer (loc, { Indexer.id; key; value; static; variance }) ->
+  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_ }) ->
     source_location_with_comments (loc, fuse [
       if static then fuse [Atom "static"; space] else Empty;
-      option variance_ variance;
+      option variance variance_;
       Atom "[";
       begin match id with
       | Some id -> fuse [
@@ -2150,12 +2379,16 @@ and type_object_property = Ast.Type.Object.(function
     ])
   )
 
-and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties } =
+and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties; inexact} =
   let s_exact = if exact then Atom "|" else Empty in
-  list
-    ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
-    ~sep
-    (List.map type_object_property properties)
+  let props = Core_list.map ~f:type_object_property properties in
+  let props = if inexact then props @ [Atom "..."] else props in
+  group [
+    new_list
+      ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
+      ~sep
+      props;
+  ]
 
 and type_interface { Ast.Type.Interface.extends; body=(loc, obj) } =
   fuse [
@@ -2211,6 +2444,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.Void -> Atom "void"
     | T.Null -> Atom "null"
     | T.Number -> Atom "number"
+    | T.BigInt -> Atom "bigint"
     | T.String -> Atom "string"
     | T.Boolean -> Atom "boolean"
     | T.Nullable t ->
@@ -2232,12 +2466,10 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
       type_union_or_intersection ~sep:(Atom "&") (t1::t2::ts)
     | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
     | T.Tuple ts ->
-      list
-        ~wrap:(Atom "[", Atom "]")
-        ~sep:(Atom ",")
-        (List.map type_ ts)
-    | T.StringLiteral { Ast.StringLiteral.raw; _ }
-    | T.NumberLiteral { Ast.NumberLiteral.raw; _ } -> Atom raw
+      group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
+    | T.StringLiteral lit -> string_literal_type lit
+    | T.NumberLiteral t -> number_literal_type t
+    | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Atom bigint
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
     | T.Exists -> Atom "*"
   )
@@ -2272,26 +2504,55 @@ and declare_interface interface =
   ]) interface
 
 and declare_class ?(s_type=Empty) { Ast.Statement.DeclareClass.
-  id; tparams; body=(loc, obj); extends; mixins=_; implements=_;
+  id; tparams; body=(loc, obj); extends; mixins; implements;
 } =
-  (* TODO: What are mixins? *)
-  (* TODO: Print implements *)
-  fuse [
+  let class_parts = [
     Atom "declare"; space;
     s_type;
     Atom "class"; space;
     identifier id;
     option type_parameter tparams;
-    begin match extends with
-    | None -> Empty
-    | Some (loc, generic) -> fuse [
-        space; Atom "extends"; space;
-        source_location_with_comments (loc, type_generic generic)
-      ]
-    end;
-    pretty_space;
-    source_location_with_comments (loc, type_object ~sep:(Atom ",") obj)
-  ]
+  ] in
+  let extends_parts =
+    let class_extends = [
+      begin match extends with
+      | Some (loc, generic) -> Some (fuse [
+          Atom "extends"; space;
+          source_location_with_comments (loc, type_generic generic)
+        ])
+      | None -> None
+      end;
+      begin match mixins with
+      | [] -> None
+      | xs -> Some (fuse [
+        Atom "mixins"; space;
+        fuse_list
+          ~sep:(Atom ",")
+          (List.map
+            (fun (loc, generic) -> source_location_with_comments (loc, type_generic generic))
+            xs
+          )
+        ])
+      end;
+      class_implements implements;
+    ] in
+    match deoptionalize class_extends with
+    | [] -> Empty
+    | items -> Layout.Indent (fuse [
+      line;
+      join line items;
+    ])
+  in
+  let body = source_location_with_comments (loc, type_object ~sep:(Atom ",") obj) in
+  let parts =
+    []
+    |> List.rev_append class_parts
+    |> List.cons extends_parts
+    |> List.cons pretty_space
+    |> List.cons body
+    |> List.rev
+  in
+  group parts
 
 and declare_function ?(s_type=Empty) { Ast.Statement.DeclareFunction.
   id; annot=(loc, t); predicate

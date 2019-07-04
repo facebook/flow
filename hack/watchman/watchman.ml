@@ -7,7 +7,7 @@
  *
  **)
 
-open Hh_core
+open Core_kernel
 open Utils
 
 (*
@@ -49,19 +49,19 @@ module Watchman_process_helpers = struct
       let warning = J.get_string_val "warning" obj in
       EventLogger.watchman_warning warning;
       Hh_logger.log "Watchman warning: %s\n" warning
-    with Not_found -> ());
+    with Caml.Not_found -> ());
     (try
       let error = J.get_string_val "error" obj in
       EventLogger.watchman_error error;
       raise @@ Watchman_error error
-    with Not_found -> ());
+    with Caml.Not_found -> ());
     (try
       let canceled = J.get_bool_val "canceled" obj in
       if canceled then begin
       EventLogger.watchman_error "Subscription canceled by watchman";
       raise @@ Subscription_canceled_by_watchman
       end else ()
-    with Not_found -> ())
+    with Caml.Not_found -> ())
 
   (* Verifies that a watchman response is valid JSON and free from common errors *)
   let sanitize_watchman_response ~debug_logging output =
@@ -69,10 +69,11 @@ module Watchman_process_helpers = struct
     let response =
     try Hh_json.json_of_string output
     with e ->
-      let stack = Printexc.get_backtrace () in
+      let raw_stack = Caml.Printexc.get_raw_backtrace () in
+      let stack = Caml.Printexc.raw_backtrace_to_string raw_stack in
       Hh_logger.error "Failed to parse string as JSON: %s\nEXCEPTION:%s\nSTACK:%s\n"
-        output (Printexc.to_string e) stack;
-      raise e
+        output (Exn.to_string e) stack;
+      Caml.Printexc.raise_with_backtrace e raw_stack
     in
     assert_no_error response;
     response
@@ -86,7 +87,7 @@ end = struct
   include Watchman_process_helpers
 
   type 'a result = 'a
-  type conn = Buffered_line_reader.t * out_channel
+  type conn = Buffered_line_reader.t * Out_channel.t
 
   let (>>=) a f = f a
   let (>|=) a f = f a
@@ -105,9 +106,9 @@ end = struct
   let send_request ~debug_logging oc json =
     let json_str = Hh_json.(json_to_string json) in
     if debug_logging then Hh_logger.info "Watchman request: %s" json_str ;
-    output_string oc json_str;
-    output_string oc "\n";
-    flush oc
+    Out_channel.output_string oc json_str;
+    Out_channel.output_string oc "\n";
+    Out_channel.flush oc
 
   (***************************************************************************)
   (* Handling requests and responses. *)
@@ -168,8 +169,9 @@ end = struct
     let conn = open_connection ~timeout in
     let result = try f conn with
       | e ->
+        let stack = Caml.Printexc.get_raw_backtrace () in
         Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
-        raise e
+        Caml.Printexc.raise_with_backtrace e stack
     in
     Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
     result
@@ -212,7 +214,7 @@ end = struct
   let get_reader (reader, _) = reader
 
   module Testing = struct
-    let get_test_conn () = (Buffered_line_reader.get_null_reader (), open_out "/dev/null")
+    let get_test_conn () = (Buffered_line_reader.get_null_reader (), Out_channel.create "/dev/null")
   end
 end
 
@@ -349,6 +351,16 @@ struct
       ~extra_expressions:([Hh_json.JSON_String "exists"])
       Query env
 
+  let get_changes_since_mergebase_query env =
+    let extra_kv = [
+      "since", Hh_json.JSON_Object [
+        ("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")])
+      ]
+    ] in
+    request_json
+      ~extra_kv
+      Query env
+
   let since_query env =
     request_json
       ~extra_kv: ["since", Hh_json.JSON_String env.clockspec;
@@ -420,7 +432,14 @@ struct
   let with_crash_record_opt source f =
     Watchman_process.catch
       ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
-      ~catch:(fun ~stack:_ _exn -> Watchman_process.return None)
+      ~catch:(fun ~stack:_ e ->
+        let exn = Exception.wrap e in
+        match e with
+        (* Avoid swallowing these *)
+        | Exit_status.Exit_with _
+        | Watchman_restarted -> Exception.reraise exn
+        | _ -> Watchman_process.return None
+      )
 
   let has_capability name capabilities =
     (** Projects down from the boolean error monad into booleans.
@@ -437,6 +456,56 @@ struct
       >>= get_bool name
       |> project_bool
 
+  (* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
+   * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
+   * the new Watchman, then we may miss updates. It is important for Flow and Hack to restart
+   * in that case.
+   *
+   * Unfortunately, the response to "subscribe" doesn't have the "is_fresh_instance" field. So
+   * we'll instead send a small "query" request. It should always return 0 files, but it should
+   * tell us whether the Watchman service has restarted since clockspec.
+   *)
+  let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
+    let hard_to_match_name = "irrelevant.potato" in
+    let query = Hh_json.(JSON_Array [
+      JSON_String "query";
+      JSON_String watch_root;
+      JSON_Object [
+        "since", JSON_String clockspec;
+        "empty_on_fresh_instance", JSON_Bool true;
+        "expression", JSON_Array [ JSON_String "name"; JSON_String hard_to_match_name ]
+      ]
+    ]) in
+    Watchman_process.request ~debug_logging ~conn query
+    >>= fun response ->
+      match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
+      | Some false -> Watchman_process.return ()
+      | Some true ->
+        Hh_logger.error "Watchman server restarted so we may have missed some updates";
+        raise Watchman_restarted
+      | None ->
+        (* The response to this query **always** should include the `is_fresh_instance` boolean
+         * property. If it is missing then something has gone wrong with Watchman. Since we can't
+         * prove that Watchman has not restarted, we must treat this as an error. *)
+         Hh_logger.error "Invalid Watchman response to `empty_on_fresh_instance` query:\n%s"
+          (Hh_json.json_to_string ~pretty:true response);
+         raise Exit_status.(Exit_with Watchman_failed)
+
+  let prepend_relative_path_term ~relative_path ~terms =
+    match terms with
+    | None -> None
+    | Some _ when relative_path = "" ->
+      (* If we're watching the watch root directory, then there's no point in specifying a list of
+       * files and directories to watch. We're already subscribed to any change in this watch root
+       * anyway *)
+      None
+    | Some terms ->
+      (* So lets say we're being told to watch foo/bar. Is foo/bar a directory? Is it a file? If it
+       * is a file now, might it become a directory later? I'm not aware of aterm which will watch for either a file or a directory, so let's add two terms *)
+      Some (
+        J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms
+      )
+
   let re_init ?prior_clockspec
     { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
 
@@ -450,32 +519,43 @@ struct
     let subscribe_mode = if supports_flush then subscribe_mode else None in
 
     Watchman_process.list_fold_values roots
-      ~init:(Some [], SSet.empty)
-      ~f: (fun (terms, watch_roots) path ->
-        (* Watch this root *)
-        Watchman_process.request
-          ~debug_logging ~conn (watch_project (Path.to_string path)) >|= fun response ->
-        let watch_root = J.get_string_val "watch" response in
-        let relative_path = J.get_string_val "relative_path" ~default:"" response in
+      ~init:(Some [], SSet.empty, SSet.empty)
+      ~f: (fun (terms, watch_roots, failed_paths) path ->
+        (* Watch this root. If the path doesn't exist, watch_project will throw. In that case catch
+         * the error and continue for now. *)
+        Watchman_process.catch
+          ~f:(fun () ->
+            Watchman_process.request
+              ~debug_logging ~conn (watch_project (Path.to_string path))
+            >|= fun response -> Some response)
+          ~catch:(fun ~stack:_ _ -> Watchman_process.return None)
+        >|= fun response ->
+          match response with
+          | None ->
+            terms, watch_roots, SSet.add (Path.to_string path) failed_paths
+          | Some response ->
+            let watch_root = J.get_string_val "watch" response in
+            let relative_path = J.get_string_val "relative_path" ~default:"" response in
 
-        let terms = match terms with
-        | None -> None
-        | Some _ when relative_path = "" ->
-          (* If we're watching the watch root directory, then there's no point in specifying a list
-           * of files and directories to watch. We're already subscribed to any change in this
-           * watch root anyway *)
-          None
-        | Some terms ->
-          (* So lets say we're being told to watch foo/bar. Is foo/bar a directory? Is it a file?
-           * If it is a file now, might it become a directory later? I'm not aware of a term which
-           * will watch for either a file or a directory, so let's add two terms *)
-          Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
-        in
+            let terms = prepend_relative_path_term ~relative_path ~terms in
 
-        let watch_roots = SSet.add watch_root watch_roots in
-        terms, watch_roots
+            let watch_roots = SSet.add watch_root watch_roots in
+            terms, watch_roots, failed_paths
       )
-    >>= fun (watched_path_expression_terms, watch_roots) ->
+    >>= fun (watched_path_expression_terms, watch_roots, failed_paths) ->
+
+    (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
+     * returned an error. Let's do a best effort attempt to infer the watch root and relative
+     * path for each bad include *)
+    let watched_path_expression_terms = SSet.fold (fun path terms ->
+      let open String_utils in
+      match SSet.find_first_opt (fun root -> string_starts_with path root) watch_roots with
+      | None ->
+        failwith (spf "Cannot deduce watch root for path %s" path)
+      | Some root ->
+        let relative_path = lstrip (lstrip path root) Filename.dir_sep in
+        prepend_relative_path_term ~relative_path ~terms
+    ) failed_paths watched_path_expression_terms in
 
     (* All of our watched paths should have the same watch root. Let's assert that *)
     let watch_root = match SSet.elements watch_roots with
@@ -490,7 +570,9 @@ struct
 
     (* If we don't have a prior clockspec, grab the current clock *)
     (match prior_clockspec with
-      | Some s -> Watchman_process.return s
+      | Some clockspec ->
+        assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
+        >>= fun () -> Watchman_process.return clockspec
       | None ->
         Watchman_process.request ~debug_logging ~conn (clock watch_root)
         >|= J.get_string_val "clock"
@@ -530,7 +612,7 @@ struct
     let files = try J.get_array_val "files" json with
       (** When an hg.update happens, it shows up in the watchman subscription
        * as a notification with no files key present. *)
-      | Not_found -> []
+      | Caml.Not_found -> []
     in
     let files = List.map files begin fun json ->
       let s = Hh_json.get_string_exn json in
@@ -569,10 +651,21 @@ struct
       else
         Watchman_process.return instance
 
+  let close env = Watchman_process.close_connection env.conn
+
   let close_channel_on_instance env =
-    Watchman_process.close_connection env.conn >|= fun () ->
+    close env >|= fun () ->
     EventLogger.watchman_died_caught ();
     Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+
+
+  let with_instance instance ~try_to_restart ~on_alive ~on_dead =
+    (if try_to_restart
+    then maybe_restart_instance instance
+    else Watchman_process.return instance)
+    >>= function
+    | Watchman_dead dead_env -> on_dead dead_env
+    | Watchman_alive env -> on_alive env
 
   (** Calls f on the instance, maybe restarting it if its dead and maybe
    * reverting it to a dead state if things go south. For example, if watchman
@@ -581,12 +674,12 @@ struct
    * Alternatively, we also proactively revert to a dead instance if it appears
    * to be unresponsive (Timeout), and if reading the payload from it is
    * taking too long. *)
-  let call_on_instance instance source f =
-    maybe_restart_instance instance >>= fun instance ->
-    match instance with
-    | Watchman_dead _ ->
-      Watchman_process.return (instance, Watchman_unavailable)
-    | Watchman_alive env -> begin
+  let call_on_instance =
+    let on_dead dead_env =
+      Watchman_process.return (Watchman_dead dead_env, Watchman_unavailable)
+    in
+
+    let on_alive source f env =
       Watchman_process.catch
         ~f:(fun () ->
           with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
@@ -626,11 +719,14 @@ struct
             Hh_logger.log "Watchman error: %s. Closing channel" msg;
             close_channel_on_instance env
           | e ->
-            let msg = Printf.sprintf "%s\n%s" (Printexc.to_string e) stack in
+            let msg = Printf.sprintf "%s\n%s" (Exn.to_string e) stack in
             EventLogger.watchman_uncaught_failure msg;
             raise Exit_status.(Exit_with Watchman_failed)
         )
-    end
+    in
+
+    fun instance source f ->
+      with_instance instance ~try_to_restart:true ~on_dead ~on_alive:(on_alive source f)
 
   (** This is a large >50MB payload, which could longer than 2 minutes for
    * Watchman to generate and push down the channel. *)
@@ -655,19 +751,30 @@ struct
     | `Leave ->
       State_leave (name, metadata)
 
-  let make_mergebase_changed_response env data =
+  let extract_mergebase data =
     let open Hh_json.Access in
     let accessor = return data in
-    accessor >>=
+    let ret =
+      accessor >>=
       get_obj "clock" >>=
-      get_string "clock" >>= fun (clock, _) ->
-    accessor >>= get_obj "clock" >>=
-      get_obj "scm" >>=
-      get_string "mergebase" >>= fun (mergebase, keytrace) ->
-    let files = set_of_list @@ extract_file_names env data in
-    env.clockspec <- clock;
-    let response = Changed_merge_base (mergebase, files, clock) in
-    Ok ((env, response), keytrace)
+      get_string "clock" >>=
+      fun (clock, _) ->
+        accessor >>= get_obj "clock" >>=
+        get_obj "scm" >>=
+        get_string "mergebase" >>=
+        fun (mergebase, _) ->
+          return (clock, mergebase)
+    in
+    to_option ret
+
+  let make_mergebase_changed_response env data =
+    match extract_mergebase data with
+    | None -> Error "Failed to extract mergebase"
+    | Some (clock, mergebase) ->
+      let files = set_of_list @@ extract_file_names env data in
+      env.clockspec <- clock;
+      let response = Changed_merge_base (mergebase, files, clock) in
+      Ok (env, response)
 
   let transform_asynchronous_get_changes_response env data = match data with
     | None ->
@@ -675,16 +782,16 @@ struct
     | Some data -> begin
 
       match make_mergebase_changed_response env data with
-      | Ok ((env, response), _) -> env, response
+      | Ok (env, response) -> env, response
       | Error _ ->
         env.clockspec <- J.get_string_val "clock" data;
         assert_no_fresh_instance data;
         try env, make_state_change_response `Enter
           (J.get_string_val "state-enter" data) data with
-        | Not_found ->
+        | Caml.Not_found ->
         try env, make_state_change_response `Leave
           (J.get_string_val "state-leave" data) data with
-        | Not_found ->
+        | Caml.Not_found ->
           env, Files_changed (set_of_list @@ extract_file_names env data)
     end
 
@@ -706,6 +813,23 @@ struct
         >|= fun response ->
         let env, changes = transform_asynchronous_get_changes_response env (Some response) in
         env, Watchman_synchronous [changes]
+
+  let get_changes_since_mergebase ?timeout env =
+    Watchman_process.request
+      ?timeout
+      ~debug_logging:env.settings.debug_logging
+      (get_changes_since_mergebase_query env)
+    >|= extract_file_names env
+
+  let get_mergebase ?timeout env =
+    Watchman_process.request
+      ?timeout
+      ~debug_logging:env.settings.debug_logging
+      (get_changes_since_mergebase_query env)
+    >|= fun response ->
+      match extract_mergebase response with
+      | Some (_clock, mergebase) -> mergebase
+      | None -> raise (Watchman_error "Failed to extract mergebase from response")
 
   let flush_request ~(timeout:int) watch_root =
     let open Hh_json in
@@ -881,6 +1005,16 @@ module Watchman_mock = struct
     Mocking.all_files := [];
     result
 
+  let get_changes_since_mergebase ?timeout:_ _  = []
+
+  let get_mergebase ?timeout:_ _ = "mergebase"
+
+  let close _ = ()
+
+  let with_instance instance ~try_to_restart:_ ~on_alive ~on_dead =
+    match instance with
+    | Watchman_dead dead_env -> on_dead dead_env
+    | Watchman_alive env -> on_alive env
 end
 
 module type S = sig

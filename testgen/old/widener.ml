@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,7 +25,7 @@ let rec widen_type (t : T.t') : T.t' =
 
   (* Add a type into the existing union type *)
   | T.Union ((l1, t1), (l2, t2), trest) ->
-    let tlist = List.map snd trest in
+    let tlist = Core_list.map ~f:snd trest in
     let used_set = of_list (t1 :: t2 :: tlist) in
     let available_set = diff FTypes.primitive_types used_set in
     if is_empty available_set then
@@ -39,7 +39,7 @@ let rec widen_type (t : T.t') : T.t' =
   | T.BooleanLiteral _ -> T.Boolean
   | T.Tuple tlist ->
     (* Randomly select a type and widen that *)
-    let tarray = Array.of_list (List.map snd tlist) in
+    let tarray = Array.of_list (Core_list.map ~f:snd tlist) in
     let old_t_index = FRandom.rint (Array.length tarray) in
     let old_t = (Array.get tarray old_t_index) in
     let new_t = widen_type old_t in

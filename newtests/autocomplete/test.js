@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -14,10 +13,10 @@ export default suite(({addFile, flowCmd}) => [
       'foo_parse_fail.js',
     ).stdout(
        `
-         hasOwnProperty (prop: any) => boolean
-         isPrototypeOf (o: any) => boolean
+         hasOwnProperty (prop: mixed) => boolean
+         isPrototypeOf (o: mixed) => boolean
          num number
-         propertyIsEnumerable (prop: any) => boolean
+         propertyIsEnumerable (prop: mixed) => boolean
          str string
          toLocaleString () => string
          toString () => string
@@ -38,39 +37,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
+               "line": 76,
+               "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
+               "line": 77,
+               "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "num",
@@ -84,21 +83,21 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
+               "line": 78,
+               "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "str",
@@ -118,8 +117,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
+               "line": 79,
+               "endline": 79,
                "start": 5,
                "end": 28
              },
@@ -131,8 +130,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
+               "line": 80,
+               "endline": 80,
                "start": 5,
                "end": 22
              },
@@ -144,8 +143,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
+               "line": 81,
+               "endline": 81,
                "start": 5,
                "end": 20
              }
@@ -205,8 +204,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 291,
-               "endline": 291,
+               "line": 313,
+               "endline": 313,
                "start": 5,
                "end": 34
              },
@@ -223,8 +222,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 292,
-               "endline": 292,
+               "line": 314,
+               "endline": 314,
                "start": 5,
                "end": 32
              },
@@ -241,8 +240,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 293,
-               "endline": 293,
+               "line": 315,
+               "endline": 315,
                "start": 5,
                "end": 31
              },
@@ -259,8 +258,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 294,
-               "endline": 294,
+               "line": 316,
+               "endline": 316,
                "start": 5,
                "end": 37
              },
@@ -277,8 +276,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 295,
-               "endline": 295,
+               "line": 317,
+               "endline": 317,
                "start": 5,
                "end": 38
              },
@@ -295,8 +294,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 296,
-               "endline": 296,
+               "line": 318,
+               "endline": 318,
                "start": 5,
                "end": 45
              },
@@ -317,8 +316,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 298,
-               "endline": 298,
+               "line": 320,
+               "endline": 320,
                "start": 5,
                "end": 62
              },
@@ -339,8 +338,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 299,
-               "endline": 299,
+               "line": 321,
+               "endline": 321,
                "start": 5,
                "end": 62
              },
@@ -361,8 +360,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 300,
-               "endline": 300,
+               "line": 322,
+               "endline": 322,
                "start": 5,
                "end": 60
              },
@@ -383,8 +382,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 301,
-               "endline": 301,
+               "line": 323,
+               "endline": 323,
                "start": 5,
                "end": 64
              },
@@ -393,8 +392,8 @@ export default suite(({addFile, flowCmd}) => [
                "type": "number",
                "func_details": null,
                "path": "[LIB] core.js",
-               "line": 325,
-               "endline": 325,
+               "line": 349,
+               "endline": 349,
                "start": 13,
                "end": 18
              },
@@ -411,8 +410,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 302,
-               "endline": 302,
+               "line": 324,
+               "endline": 324,
                "start": 5,
                "end": 30
              },
@@ -437,8 +436,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 303,
-               "endline": 303,
+               "line": 325,
+               "endline": 325,
                "start": 5,
                "end": 105
              },
@@ -455,8 +454,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 304,
-               "endline": 304,
+               "line": 326,
+               "endline": 326,
                "start": 5,
                "end": 61
              },
@@ -473,8 +472,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 305,
-               "endline": 305,
+               "line": 327,
+               "endline": 327,
                "start": 5,
                "end": 38
              },
@@ -495,8 +494,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 306,
-               "endline": 306,
+               "line": 328,
+               "endline": 328,
                "start": 5,
                "end": 60
              },
@@ -517,8 +516,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 307,
-               "endline": 307,
+               "line": 329,
+               "endline": 329,
                "start": 5,
                "end": 62
              },
@@ -535,8 +534,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 308,
-               "endline": 308,
+               "line": 330,
+               "endline": 330,
                "start": 5,
                "end": 33
              },
@@ -557,8 +556,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 309,
-               "endline": 309,
+               "line": 331,
+               "endline": 331,
                "start": 5,
                "end": 124
              },
@@ -575,8 +574,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 310,
-               "endline": 310,
+               "line": 332,
+               "endline": 332,
                "start": 5,
                "end": 43
              },
@@ -597,8 +596,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 311,
-               "endline": 311,
+               "line": 333,
+               "endline": 333,
                "start": 5,
                "end": 47
              },
@@ -619,8 +618,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 312,
-               "endline": 312,
+               "line": 334,
+               "endline": 334,
                "start": 5,
                "end": 69
              },
@@ -641,8 +640,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 313,
-               "endline": 313,
+               "line": 335,
+               "endline": 335,
                "start": 5,
                "end": 64
              },
@@ -663,8 +662,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 314,
-               "endline": 314,
+               "line": 336,
+               "endline": 336,
                "start": 5,
                "end": 49
              },
@@ -685,8 +684,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 315,
-               "endline": 315,
+               "line": 337,
+               "endline": 337,
                "start": 5,
                "end": 50
              },
@@ -703,8 +702,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 316,
-               "endline": 316,
+               "line": 338,
+               "endline": 338,
                "start": 5,
                "end": 62
              },
@@ -721,8 +720,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 317,
-               "endline": 317,
+               "line": 339,
+               "endline": 339,
                "start": 5,
                "end": 62
              },
@@ -734,8 +733,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 318,
-               "endline": 318,
+               "line": 340,
+               "endline": 340,
                "start": 5,
                "end": 25
              },
@@ -747,8 +746,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 324,
-               "endline": 324,
+               "line": 348,
+               "endline": 348,
                "start": 5,
                "end": 22
              },
@@ -760,8 +759,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 319,
-               "endline": 319,
+               "line": 341,
+               "endline": 341,
                "start": 5,
                "end": 25
              },
@@ -773,10 +772,23 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 320,
-               "endline": 320,
+               "line": 342,
+               "endline": 342,
                "start": 5,
                "end": 18
+             },
+             {
+               "name": "trimEnd",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 343,
+               "endline": 343,
+               "start": 5,
+               "end": 21
              },
              {
                "name": "trimLeft",
@@ -786,8 +798,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 321,
-               "endline": 321,
+               "line": 344,
+               "endline": 344,
                "start": 5,
                "end": 22
              },
@@ -799,8 +811,21 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 322,
-               "endline": 322,
+               "line": 345,
+               "endline": 345,
+               "start": 5,
+               "end": 23
+             },
+             {
+               "name": "trimStart",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 346,
+               "endline": 346,
                "start": 5,
                "end": 23
              },
@@ -812,8 +837,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 323,
-               "endline": 323,
+               "line": 347,
+               "endline": 347,
                "start": 5,
                "end": 21
              }
@@ -844,8 +869,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 140,
-               "endline": 140,
+               "line": 154,
+               "endline": 154,
                "start": 5,
                "end": 50
              },
@@ -862,8 +887,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 141,
-               "endline": 141,
+               "line": 155,
+               "endline": 155,
                "start": 5,
                "end": 44
              },
@@ -884,8 +909,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 142,
-               "endline": 142,
+               "line": 156,
+               "endline": 156,
                "start": 5,
                "end": 96
              },
@@ -902,8 +927,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 143,
-               "endline": 143,
+               "line": 157,
+               "endline": 157,
                "start": 5,
                "end": 43
              },
@@ -920,8 +945,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 144,
-               "endline": 144,
+               "line": 158,
+               "endline": 158,
                "start": 5,
                "end": 36
              },
@@ -933,8 +958,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 145,
-               "endline": 145,
+               "line": 159,
+               "endline": 159,
                "start": 5,
                "end": 21
              }
@@ -960,8 +985,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 120,
-               "endline": 120,
+               "line": 134,
+               "endline": 134,
                "start": 5,
                "end": 22
              },
@@ -973,8 +998,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 119,
-               "endline": 119,
+               "line": 133,
+               "endline": 133,
                "start": 5,
                "end": 22
              }
@@ -1004,57 +1029,57 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
+               "line": 76,
+               "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
+               "line": 77,
+               "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
+               "line": 78,
+               "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -1064,8 +1089,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
+               "line": 79,
+               "endline": 79,
                "start": 5,
                "end": 28
              },
@@ -1077,8 +1102,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
+               "line": 80,
+               "endline": 80,
                "start": 5,
                "end": 22
              },
@@ -1090,8 +1115,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
+               "line": 81,
+               "endline": 81,
                "start": 5,
                "end": 20
              }
@@ -1108,101 +1133,8 @@ export default suite(({addFile, flowCmd}) => [
     ).stdout(
        `
          {
-           "result": [
-             {
-               "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
-               "start": 5,
-               "end": 38
-             },
-             {
-               "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
-               "start": 5,
-               "end": 34
-             },
-             {
-               "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
-               "start": 5,
-               "end": 44
-             },
-             {
-               "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
-               "start": 5,
-               "end": 28
-             },
-             {
-               "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
-               "start": 5,
-               "end": 22
-             },
-             {
-               "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
-               "start": 5,
-               "end": 20
-             }
-           ]
+           "error": "not enough type information to autocomplete",
+           "result": []
          }
        `,
      ).exitCodes([0]),
@@ -1215,207 +1147,8 @@ export default suite(({addFile, flowCmd}) => [
     ).stdout(
        `
          {
-           "result": [
-             {
-               "name": "apply",
-               "type": "(thisArg: any, argArray?: any) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "argArray?",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 106,
-               "endline": 106,
-               "start": 18,
-               "end": 41
-             },
-             {
-               "name": "arguments",
-               "type": "any",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 110,
-               "endline": 110,
-               "start": 16,
-               "end": 18
-             },
-             {
-               "name": "bind",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...argArray",
-                     "type": "Array<any>"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 107,
-               "endline": 107,
-               "start": 17,
-               "end": 39
-             },
-             {
-               "name": "call",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...argArray",
-                     "type": "Array<any>"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 108,
-               "endline": 108,
-               "start": 17,
-               "end": 39
-             },
-             {
-               "name": "caller",
-               "type": "Function | null",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 111,
-               "endline": 111,
-               "start": 13,
-               "end": 27
-             },
-             {
-               "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
-               "start": 5,
-               "end": 38
-             },
-             {
-               "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
-               "start": 5,
-               "end": 34
-             },
-             {
-               "name": "length",
-               "type": "number",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 112,
-               "endline": 112,
-               "start": 13,
-               "end": 18
-             },
-             {
-               "name": "name",
-               "type": "string",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 113,
-               "endline": 113,
-               "start": 11,
-               "end": 16
-             },
-             {
-               "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
-               "start": 5,
-               "end": 44
-             },
-             {
-               "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
-               "start": 5,
-               "end": 28
-             },
-             {
-               "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
-               "start": 5,
-               "end": 22
-             },
-             {
-               "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
-               "start": 5,
-               "end": 20
-             }
-           ]
+           "error": "not enough type information to autocomplete",
+           "result": []
          }
        `,
      ).exitCodes([0]),
@@ -1430,164 +1163,58 @@ export default suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
-               "name": "apply",
-               "type": "(thisArg: any, argArray?: any) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "argArray?",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 106,
-               "endline": 106,
-               "start": 18,
-               "end": 41
-             },
-             {
-               "name": "arguments",
-               "type": "any",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 110,
-               "endline": 110,
-               "start": 16,
-               "end": 18
-             },
-             {
-               "name": "bind",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...argArray",
-                     "type": "Array<any>"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 107,
-               "endline": 107,
-               "start": 17,
-               "end": 39
-             },
-             {
-               "name": "call",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "thisArg",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...argArray",
-                     "type": "Array<any>"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 108,
-               "endline": 108,
-               "start": 17,
-               "end": 39
-             },
-             {
-               "name": "caller",
-               "type": "Function | null",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 111,
-               "endline": 111,
-               "start": 13,
-               "end": 27
-             },
-             {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
+               "line": 76,
+               "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
+               "line": 77,
+               "endline": 77,
                "start": 5,
-               "end": 34
-             },
-             {
-               "name": "length",
-               "type": "number",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 112,
-               "endline": 112,
-               "start": 13,
-               "end": 18
-             },
-             {
-               "name": "name",
-               "type": "string",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 113,
-               "endline": 113,
-               "start": 11,
-               "end": 16
+               "end": 36
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
+               "line": 78,
+               "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -1597,8 +1224,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
+               "line": 79,
+               "endline": 79,
                "start": 5,
                "end": 28
              },
@@ -1610,8 +1237,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
+               "line": 80,
+               "endline": 80,
                "start": 5,
                "end": 22
              },
@@ -1623,8 +1250,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
+               "line": 81,
+               "endline": 81,
                "start": 5,
                "end": 20
              }
@@ -1705,8 +1332,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 140,
-               "endline": 140,
+               "line": 154,
+               "endline": 154,
                "start": 5,
                "end": 50
              },
@@ -1723,8 +1350,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 141,
-               "endline": 141,
+               "line": 155,
+               "endline": 155,
                "start": 5,
                "end": 44
              },
@@ -1745,8 +1372,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 142,
-               "endline": 142,
+               "line": 156,
+               "endline": 156,
                "start": 5,
                "end": 96
              },
@@ -1763,8 +1390,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 143,
-               "endline": 143,
+               "line": 157,
+               "endline": 157,
                "start": 5,
                "end": 43
              },
@@ -1781,8 +1408,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 144,
-               "endline": 144,
+               "line": 158,
+               "endline": 158,
                "start": 5,
                "end": 36
              },
@@ -1794,8 +1421,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 145,
-               "endline": 145,
+               "line": 159,
+               "endline": 159,
                "start": 5,
                "end": 21
              }
@@ -1825,57 +1452,57 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
+               "line": 76,
+               "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
+               "line": 77,
+               "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
+               "line": 78,
+               "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -1885,8 +1512,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
+               "line": 79,
+               "endline": 79,
                "start": 5,
                "end": 28
              },
@@ -1898,8 +1525,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
+               "line": 80,
+               "endline": 80,
                "start": 5,
                "end": 22
              },
@@ -1911,8 +1538,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
+               "line": 81,
+               "endline": 81,
                "start": 5,
                "end": 20
              }
@@ -1950,39 +1577,39 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
+               "line": 76,
+               "endline": 76,
                "start": 5,
-               "end": 38
+               "end": 40
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
+               "type": "(o: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "o",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
+               "line": 77,
+               "endline": 77,
                "start": 5,
-               "end": 34
+               "end": 36
              },
              {
                "name": "o",
@@ -1996,21 +1623,21 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
+               "type": "(prop: mixed) => boolean",
                "func_details": {
                  "return_type": "boolean",
                  "params": [
                    {
                      "name": "prop",
-                     "type": "any"
+                     "type": "mixed"
                    }
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
+               "line": 78,
+               "endline": 78,
                "start": 5,
-               "end": 44
+               "end": 46
              },
              {
                "name": "toLocaleString",
@@ -2020,8 +1647,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
+               "line": 79,
+               "endline": 79,
                "start": 5,
                "end": 28
              },
@@ -2033,8 +1660,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
+               "line": 80,
+               "endline": 80,
                "start": 5,
                "end": 22
              },
@@ -2046,8 +1673,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
+               "line": 81,
+               "endline": 81,
                "start": 5,
                "end": 20
              },
@@ -2076,99 +1703,6 @@ export default suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
-               "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
-               "start": 5,
-               "end": 38
-             },
-             {
-               "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
-               "start": 5,
-               "end": 34
-             },
-             {
-               "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
-               "start": 5,
-               "end": 44
-             },
-             {
-               "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
-               "start": 5,
-               "end": 28
-             },
-             {
-               "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
-               "start": 5,
-               "end": 22
-             },
-             {
-               "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
-               "start": 5,
-               "end": 20
-             },
-             {
                "name": "x",
                "type": "number",
                "func_details": null,
@@ -2192,99 +1726,6 @@ export default suite(({addFile, flowCmd}) => [
        `
          {
            "result": [
-             {
-               "name": "hasOwnProperty",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 63,
-               "endline": 63,
-               "start": 5,
-               "end": 38
-             },
-             {
-               "name": "isPrototypeOf",
-               "type": "(o: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 64,
-               "endline": 64,
-               "start": 5,
-               "end": 34
-             },
-             {
-               "name": "propertyIsEnumerable",
-               "type": "(prop: any) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 65,
-               "endline": 65,
-               "start": 5,
-               "end": 44
-             },
-             {
-               "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 66,
-               "endline": 66,
-               "start": 5,
-               "end": 28
-             },
-             {
-               "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 67,
-               "endline": 67,
-               "start": 5,
-               "end": 22
-             },
-             {
-               "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 68,
-               "endline": 68,
-               "start": 5,
-               "end": 20
-             },
              {
                "name": "x",
                "type": "number",
@@ -2361,7 +1802,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "idx",
-               "type": "<IdxObject: Object, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
+               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
                "func_details": {
                  "return_type": "?IdxResult",
                  "params": [
@@ -2385,7 +1826,7 @@ export default suite(({addFile, flowCmd}) => [
                "name": "exports",
                "type": "{||}",
                "func_details": null,
-               "path": "",
+               "path": "customfun.js",
                "line": 0,
                "endline": 0,
                "start": 1,
@@ -2451,39 +1892,39 @@ export default suite(({addFile, flowCmd}) => [
          "result": [
            {
              "name": "hasOwnProperty",
-             "type": "(prop: any) => boolean",
+             "type": "(prop: mixed) => boolean",
              "func_details": {
                "return_type": "boolean",
                "params": [
                  {
                    "name": "prop",
-                   "type": "any"
+                   "type": "mixed"
                  }
                ]
              },
              "path": "[LIB] core.js",
-             "line": 63,
-             "endline": 63,
+             "line": 76,
+             "endline": 76,
              "start": 5,
-             "end": 38
+             "end": 40
            },
            {
              "name": "isPrototypeOf",
-             "type": "(o: any) => boolean",
+             "type": "(o: mixed) => boolean",
              "func_details": {
                "return_type": "boolean",
                "params": [
                  {
                    "name": "o",
-                   "type": "any"
+                   "type": "mixed"
                  }
                ]
              },
              "path": "[LIB] core.js",
-             "line": 64,
-             "endline": 64,
+             "line": 77,
+             "endline": 77,
              "start": 5,
-             "end": 34
+             "end": 36
            },
            {
              "name": "num",
@@ -2497,21 +1938,21 @@ export default suite(({addFile, flowCmd}) => [
            },
            {
              "name": "propertyIsEnumerable",
-             "type": "(prop: any) => boolean",
+             "type": "(prop: mixed) => boolean",
              "func_details": {
                "return_type": "boolean",
                "params": [
                  {
                    "name": "prop",
-                   "type": "any"
+                   "type": "mixed"
                  }
                ]
              },
              "path": "[LIB] core.js",
-             "line": 65,
-             "endline": 65,
+             "line": 78,
+             "endline": 78,
              "start": 5,
-             "end": 44
+             "end": 46
            },
            {
              "name": "str",
@@ -2531,8 +1972,8 @@ export default suite(({addFile, flowCmd}) => [
                "params": []
              },
              "path": "[LIB] core.js",
-             "line": 66,
-             "endline": 66,
+             "line": 79,
+             "endline": 79,
              "start": 5,
              "end": 28
            },
@@ -2544,8 +1985,8 @@ export default suite(({addFile, flowCmd}) => [
                "params": []
              },
              "path": "[LIB] core.js",
-             "line": 67,
-             "endline": 67,
+             "line": 80,
+             "endline": 80,
              "start": 5,
              "end": 22
            },
@@ -2557,8 +1998,8 @@ export default suite(({addFile, flowCmd}) => [
                "params": []
              },
              "path": "[LIB] core.js",
-             "line": 68,
-             "endline": 68,
+             "line": 81,
+             "endline": 81,
              "start": 5,
              "end": 20
            }
@@ -2589,7 +2030,7 @@ export default suite(({addFile, flowCmd}) => [
               "name": "exports",
               "type": "{||}",
               "func_details": null,
-              "path": "",
+              "path": "exact.js",
               "line": 0,
               "endline": 0,
               "start": 1,

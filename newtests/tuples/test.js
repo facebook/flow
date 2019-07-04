@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -78,8 +77,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            3: function foo(x: [1,2]): string { return x.length; }
                                                       ^^^^^^^^ Cannot return \`x.length\` because number [1] is incompatible with string [2].
            References:
-           235:     +length: number;
-                             ^^^^^^ [1]. See lib: [LIB] core.js:235
+           251:     +length: number;
+                             ^^^^^^ [1]. See lib: [LIB] core.js:251
              3: function foo(x: [1,2]): string { return x.length; }
                                         ^^^^^^ [2]
        `,
@@ -103,8 +102,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             6:           readOnlyRef.push(123);
                                      ^^^^ Cannot call \`readOnlyRef.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1].
             References:
-            207:     forEach(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => any, thisArg?: any): void;
-                                                                          ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:207
+            222:     forEach(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg?: any): void;
+                                                                          ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:222
 
           test.js:7
             7:           (readOnlyRef[0]: 1);

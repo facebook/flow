@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,10 +13,6 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let exe_name = Filename.basename Sys.executable_name
 
-module LocSet = Set.Make(Loc)
-
-module LocMap = MyMap.Make(Loc)
-
 module FilenameSet = Set.Make(File_key)
 
 module FilenameMap = MyMap.Make (File_key)
@@ -28,7 +24,7 @@ module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
 end)
 
 let assert_false s =
-  let callstack = Printexc.(get_callstack 10 |> raw_backtrace_to_string) in
+  let callstack = Exception.get_current_callstack_string 10 in
   prerr_endline (spf "%s%s\n%s:\n%s%s%s"
     (* this clowny shit is to evade hg's conflict marker detection *)
     "<<<<" "<<<<" s callstack ">>>>" ">>>>"
@@ -48,15 +44,12 @@ let call_succeeds try_function function_input =
                    false
   | _ -> false
 
-(* quick exception format *)
-
-let fmt_exc exc = Printexc.((to_string exc) ^ "\n" ^ (get_backtrace ()))
-
-let fmt_file_exc file exc = file ^ ": " ^ (fmt_exc exc)
-
 let map_pair f g (a,b) = (f a, g b)
 let map_fst f (a,b) = (f a, b)
 let map_snd g (a,b) = (a, g b)
+let swap (a, b) = (b, a)
+let mk_tuple x y = (x, y)
+let mk_tuple_swapped x y = (y, x)
 
 let rec iter2opt f = function
   | x::xs, y::ys ->
@@ -78,6 +71,18 @@ let uncurry f (x,y) = f x y
 let curry f x y = f (x, y)
 
 let ( %> ) f g x = g (f x)
+
+(**
+ * Given a list of lazy "option" expressions, evaluate each in the list
+ * sequentially until one produces a `Some` (and do not evaluate any remaining).
+ *)
+let lazy_seq (lst: 'a option Lazy.t list): 'a option =
+  List.fold_left (fun acc lazy_expr ->
+    match acc with
+    | None -> Lazy.force lazy_expr
+    | Some _ -> acc
+  ) None lst
+
 
 (**
  * Useful for various places where a user might have typoed a string and the
@@ -236,30 +241,32 @@ let (%>>|)
 let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
 let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
 
-let to_exn_string backtrace exn =
-  let backtrace = String.trim backtrace in
-  Printf.sprintf "%s%s%s"
-    (Printexc.to_string exn)
-    (if backtrace = "" then "" else "\n")
-    backtrace
-
 let try_with_json f =
-  try%lwt f () with exn ->
-    let backtrace = Printexc.get_backtrace () in
-    Lwt.return (Error (to_exn_string backtrace exn, None))
+  try%lwt f ()
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn, None))
 
 let try_with f =
-  try%lwt f () with exn ->
-    let backtrace = Printexc.get_backtrace () in
-    Lwt.return (Error (to_exn_string backtrace exn))
+  try%lwt f ()
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn))
 
 let split_result = function
 | Ok (success, extra) -> Ok success, extra
 | Error (error, extra) -> Error error, extra
 
 let debug_print_current_stack_trace () =
-  let open Printexc in
-  get_callstack 200 |> raw_backtrace_to_string |> Hh_logger.info "Current backtrace:\n%s"
+   Hh_logger.info "Current backtrace:\n%s" (Exception.get_current_callstack_string 200)
 
 (* Pass through a result; logging if it is an Error. Includes the provided string context, which is
  * computed lazily under the assumption that the error case is the uncommon case *)
@@ -286,3 +293,12 @@ let id_print context f x =
 let debug_string_of_result string_of_val = function
   | Ok x -> Printf.sprintf "Ok (%s)" (string_of_val x)
   | Error err -> Printf.sprintf "Error (%s)" err
+
+let get_next_power_of_two x =
+  let rec f y =
+    if y >= x then
+      y
+    else
+      f (y * 2)
+  in
+  f 1

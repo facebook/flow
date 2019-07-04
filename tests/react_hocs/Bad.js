@@ -10,11 +10,11 @@ type Props = {
 
 const Bad = (props: Props) => null;
 
-export default compose(
+export default (compose(
   mapProps(({ buz }) => ({ // Error: Missing foo
     buz: (buz * 2).toString(), // Error: string ~> number
   })),
   withProps(({ buz }) => ({
     bar: buz,
   })),
-)(Bad);
+)(Bad): React.ComponentType<empty>);

@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -12,6 +11,7 @@ export default suite(
     ideRequestAndWaitUntilResponse,
     ideNotification,
     addFile,
+    addFiles,
     modifyFile,
     lspIgnoreStatusAndCancellation,
   }) => [
@@ -175,6 +175,119 @@ function fred(): number {return 1+2;}
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [],
         ),
+    ]),
+    test('pseudo parse errors', [
+      ideStartAndConnect(),
+      addFile('pseudo_parse_error.js')
+        .waitUntilIDEMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot return}',
+        )
+        .verifyAllIDEMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        )
+        .newErrors(
+          `
+                pseudo_parse_error.js:6
+                  6: obj?.foo(); // Error
+                     ^^^^^^^^^^ Flow does not yet support method or property calls in optional chains.
+              `,
+        ),
+      ideNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>pseudo_parse_error.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+
+const obj = {};
+// Flow does not yet support method or property calls in optional chains, so
+// this will produce a pseudo parse error
+obj?.foo(); // Error
+`,
+        },
+      })
+        .waitUntilIDEMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot return}',
+        )
+        .verifyAllIDEMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+    ]),
+    test('Errors with Loc.none', [
+      ideStartAndConnect(),
+      addFiles('empty.js', 'importsFakeSymbol.js').waitUntilIDEMessage(
+        9000,
+        (() => {
+          const expectedMessage = {
+            uri: '<PLACEHOLDER_PROJECT_URL_SLASH>importsFakeSymbol.js',
+            diagnostics: [
+              {
+                range: {
+                  start: {
+                    line: 2,
+                    character: 7,
+                  },
+                  end: {
+                    line: 2,
+                    character: 10,
+                  },
+                },
+                severity: 1,
+                code: 'InferError',
+                source: 'Flow',
+                message: 'property `foo` is missing in  exports [1].',
+                relatedInformation: [
+                  {
+                    location: {
+                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      range: {
+                        start: {
+                          line: 0,
+                          character: 0,
+                        },
+                        end: {
+                          line: 0,
+                          character: 0,
+                        },
+                      },
+                    },
+                    message: '[1] exports',
+                  },
+                ],
+                relatedLocations: [
+                  {
+                    location: {
+                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      range: {
+                        start: {line: 0, character: 0},
+                        end: {line: 0, character: 0},
+                      },
+                    },
+                    message: '[1] exports',
+                  },
+                ],
+              },
+            ],
+          };
+          return `textDocument/publishDiagnostics${JSON.stringify(
+            expectedMessage,
+          )}`;
+        })(),
+      ),
     ]),
   ],
 );

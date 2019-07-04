@@ -1,0 +1,23 @@
+(library
+  (name watchman)
+  (wrapped false)
+  (modules
+    watchman
+    watchman_sig)
+  (libraries
+    buffered_line_reader
+    core_kernel
+    hh_json
+    logging_common
+    sys_utils
+    utils_core))
+
+(library
+  (name watchman_utils)
+  (wrapped false)
+  (modules
+    watchman_utils)
+  (libraries
+    hh_json
+    logging
+    utils_core))

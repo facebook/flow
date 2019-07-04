@@ -1,0 +1,8 @@
+> cat a.js
+// @flow
+
+declare function f(): React$Element<'a'> | React$Element<'b'>;
+
+module.exports = (f(): React$Element<"a"> | React$Element<"b">);
+> flow status
+No errors!

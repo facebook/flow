@@ -145,6 +145,7 @@ import * as React from 'react';
 
 type Props = {
   foo: number, // foo is required.
+  bar: string, // bar is required.
 };
 
 class MyComponent extends React.Component<Props> {
@@ -154,7 +155,7 @@ class MyComponent extends React.Component<Props> {
 }
 
 // So we don't need to include foo.
-<MyComponent />
+<MyComponent bar={"abc"} />
 ```
 
 Flow will infer the type of your default props from `static defaultProps` so you
@@ -162,6 +163,22 @@ don't have to add any type annotations to use default props.
 
 > **Note:** You don't need to make `foo` nullable in your `Props` type. Flow
 > will make sure that `foo` is optional if you have a default prop for `foo`.
+
+If you would like to add a type annotation to `defaultProps` you can define the
+type as
+```js
+type DefaultProps = {|
+  foo: number,
+|}
+```
+and spread that into the `Props` type:
+```js
+type Props = {
+  ...DefaultProps,
+  bar: string,
+}
+```
+This way you avoid duplicating the properties that happen to have a default value.
 
 ## Stateless Functional Components <a class="toc" id="toc-stateless-functional-components" href="#toc-stateless-functional-components"></a>
 

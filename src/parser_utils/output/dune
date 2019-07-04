@@ -1,0 +1,11 @@
+(library
+  (name flow_parser_utils_output)
+  (wrapped false)
+  (libraries
+    hh_json ; hack
+    imported_core ; hack/third-party/core
+    flow_common_utils
+    flow_common_utils_loc_utils
+    flow_parser
+    flow_parser_utils
+    flow_third_party_sourcemaps))

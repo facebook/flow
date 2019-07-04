@@ -1,11 +1,9 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-
-module LocMap = Utils_js.LocMap
 
 type expression_context = {
   left: expression_context_left;
@@ -29,7 +27,7 @@ type comment_attach =
 
 type comment_map =
   (comment_attach * (Loc.t, Loc.t) Flow_ast.Statement.t * Loc.t Flow_ast.Comment.t)
-  list LocMap.t
+  list Loc_collections.LocMap.t
 
 val normal_context: expression_context
 
@@ -41,9 +39,11 @@ val program:
   (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
 val program_simple:
   (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
+val literal: Loc.t Flow_ast.Literal.t -> Layout.layout_node
+val number_literal_type: Flow_ast.NumberLiteral.t -> Layout.layout_node
+val string_literal_type: Flow_ast.StringLiteral.t -> Layout.layout_node
 val expression: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Expression.t -> Layout.layout_node
 val statement:
-  ?allow_empty:bool ->
   ?pretty_semicolon:bool ->
   (Loc.t, Loc.t) Flow_ast.Statement.t -> Layout.layout_node
 val object_property: (Loc.t, Loc.t) Flow_ast.Expression.Object.property -> Layout.layout_node
@@ -51,10 +51,16 @@ val class_method: (Loc.t, Loc.t) Flow_ast.Class.Method.t -> Layout.layout_node
 val class_property: (Loc.t, Loc.t) Flow_ast.Class.Property.t -> Layout.layout_node
 val class_private_field: (Loc.t, Loc.t) Flow_ast.Class.PrivateField.t -> Layout.layout_node
 val type_: (Loc.t, Loc.t) Flow_ast.Type.t -> Layout.layout_node
-val type_annotation: (Loc.t, Loc.t) Flow_ast.Type.annotation -> Layout.layout_node
-val identifier: Loc.t Flow_ast.Identifier.t -> Layout.layout_node
+val variance: Loc.t Flow_ast.Variance.t -> Layout.layout_node
+val type_param: (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.TypeParam.t -> Layout.layout_node
+val type_annotation: ?parens:bool -> (Loc.t, Loc.t) Flow_ast.Type.annotation -> Layout.layout_node
+val identifier: (Loc.t, Loc.t) Flow_ast.Identifier.t -> Layout.layout_node
 val pattern: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Pattern.t -> Layout.layout_node
 val comment: Loc.t Flow_ast.Comment.t -> Layout.layout_node
+val template_literal: (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t -> Layout.layout_node
+val jsx_identifier: Loc.t Flow_ast.JSX.Identifier.t -> Layout.layout_node
+val jsx_child: (Loc.t, Loc.t) Flow_ast.JSX.child -> (Loc.t * Layout.layout_node) option
+val arrow_function_params: (Loc.t, Loc.t) Flow_ast.Function.Params.t -> Layout.layout_node
 
 val better_quote: string -> string
 val utf8_escape: quote:string -> string -> string

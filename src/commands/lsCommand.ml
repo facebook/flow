@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -109,7 +109,7 @@ let rec iter_get_next ~f get_next =
       iter_get_next ~f get_next
 
 let make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
-  let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+  let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
   let temp_dir = FlowConfig.temp_dir flowconfig in
   let includes = CommandUtils.list_of_string_arg include_flag in
   let ignores = CommandUtils.list_of_string_arg ignore_flag in
@@ -178,13 +178,12 @@ let get_next_append_const get_next const =
 
 let main
   base_flags strip_root ignore_flag include_flag untyped_flag declaration_flag root_flag json pretty
-  from all imaginary reason
+  all imaginary reason
   input_file root_or_files () =
 
   let files_or_dirs = get_filenames_from_input ~allow_imaginary:true input_file root_or_files in
 
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
-  FlowEventLogger.set_from from;
   let root = guess_root flowconfig_name (
     match root_flag with
     | Some root -> Some root
@@ -211,7 +210,7 @@ let main
       get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary None
   | files_or_dirs ->
       files_or_dirs
-      |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
+      |> Core_list.map ~f:(fun f -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
       |> concat_get_next) in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
@@ -236,11 +235,14 @@ let main
       if reason
       then
         files
-        |> List.map (explain ~flowconfig_name ~root ~options ~libs)
-        |> List.map (fun (f, r) -> normalize_filename f, r)
+        (* Mapping may cause a stack overflow. To avoid that, we always use rev_map.
+         * Since the amount of rev_maps we use is odd, we reverse the list once more
+         * at the end *)
+        |> List.rev_map (explain ~flowconfig_name ~root ~options ~libs)
+        |> List.rev_map (fun (f, r) -> normalize_filename f, r)
         |> json_of_files_with_explanations
       else JSON_Array (
-        List.map (fun f -> JSON_String (normalize_filename f)) files
+        List.rev (List.rev_map (fun f -> JSON_String (normalize_filename f)) files)
       ) in
     print_json_endline ~pretty json
   end) else begin

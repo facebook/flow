@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,6 +12,8 @@ type t = {
   main: string option;
 }
 
+type 'a t_or_error = (t, 'a * string) result
+
 let (>>=) = Core_result.(>>=)
 
 let empty = { name = None; main = None; }
@@ -20,26 +22,26 @@ let main package = package.main
 
 let statement_of_program = function
   | (_, [statement], _) -> Ok statement
-  | _ -> Error "Expected a single statement."
+  | (loc, _, _) -> Error (loc, "Expected a single statement.")
 
 let object_of_statement statement =
   let open Ast in
   match statement with
   | _, Statement.Expression { Statement.Expression.
       expression = _, Expression.Assignment { Expression.Assignment.
-        operator = Expression.Assignment.Assign;
+        operator = None;
         left = _;
         right = obj;
       };
       directive = _;
     } -> Ok obj
-  | _ -> Error "Expected an assignment"
+  | (loc, _) -> Error (loc, "Expected an assignment")
 
 let properties_of_object = function
-  | (_, Ast.Expression.Object {Ast.Expression.Object.properties}) -> Ok properties
-  | _ -> Error "Expected an object literal"
+  | (_, Ast.Expression.Object {Ast.Expression.Object.properties; comments=_}) -> Ok properties
+  | (loc, _) -> Error (loc, "Expected an object literal")
 
-let parse ast =
+let parse ast : 'a t_or_error =
   statement_of_program ast
   >>= object_of_statement
   >>= properties_of_object

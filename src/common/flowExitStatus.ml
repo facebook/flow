@@ -1,3 +1,9 @@
+(**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 type t =
   (* Signaled *)
   | Interrupted
@@ -53,6 +59,8 @@ type t =
   | Killed_by_monitor
   (* The saved state file is invalid and we're running with --saved-state-no-fallback *)
   | Invalid_saved_state
+  (* The server would like to restart, likely since re-init'ing is faster than a recheck *)
+  | Restart
 
   (* The hack code might throw this *)
   | Socket_error
@@ -60,6 +68,9 @@ type t =
   | Dfind_died
   (* The hack code might throw this *)
   | Dfind_unresponsive
+
+  (* A fatal error with Watchman *)
+  | Watchman_error
 
   (* A generic something-else-went-wrong *)
   | Unknown_error
@@ -99,6 +110,7 @@ let error_code = function
   | Autostop -> 18
   | Killed_by_monitor -> 19
   | Invalid_saved_state -> 20
+  | Restart -> 21
   | Commandline_usage_error -> 64
   | No_input -> 66
   | Server_start_failed _ -> 78
@@ -106,6 +118,7 @@ let error_code = function
   | Socket_error -> 98
   | Dfind_died -> 99
   | Dfind_unresponsive -> 100
+  | Watchman_error -> 101
   | Unknown_error -> 110
 
 
@@ -133,6 +146,7 @@ let error_type = function
   | 18 -> Autostop
   | 19 -> Killed_by_monitor
   | 20 -> Invalid_saved_state
+  | 21 -> Restart
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -141,6 +155,7 @@ let error_type = function
   | 98 -> Socket_error
   | 99 -> Dfind_died
   | 100 -> Dfind_unresponsive
+  | 101 -> Watchman_error
   | 110 -> Unknown_error
   | _ -> raise Not_found
 
@@ -176,6 +191,7 @@ let to_string = function
   | Missing_flowlib -> "Missing_flowlib"
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
+  | Watchman_error -> "Watchman_error"
   | Unknown_error -> "Unknown_error"
   | Commandline_usage_error -> "Commandline_usage_error"
   | No_input -> "No_input"
@@ -183,6 +199,7 @@ let to_string = function
   | Autostop -> "Autostop"
   | Killed_by_monitor -> "Killed_by_monitor"
   | Invalid_saved_state -> "Invalid_saved_state"
+  | Restart -> "Restart"
 
 exception Exit_with of t
 
@@ -192,7 +209,10 @@ let json_mode = ref None
 let set_json_mode ~pretty =
   json_mode := Some { pretty }
 
-let format_json ~msg t =
+let unset_json_mode () =
+  json_mode := None
+
+let json_props_of_t ?msg t =
   let open Hh_json in
 
   let exit_props = [
@@ -200,14 +220,12 @@ let format_json ~msg t =
     "reason", JSON_String (to_string t);
   ] @ Option.value_map msg ~default:[] ~f:(fun msg -> [ "msg", JSON_String msg ]) in
 
-  let props = [
+  [
     "flowVersion", JSON_String Flow_version.version;
     "exit", JSON_Object exit_props;
-  ] in
+  ]
 
-  JSON_Object props
-
-let print_json ~msg t =
+let print_json ?msg t =
   match t with
   (* Commands that exit with these exit codes handle json output themselves *)
   | No_error | Type_error -> ()
@@ -215,13 +233,14 @@ let print_json ~msg t =
     match !json_mode with
     | None -> ()
     | Some { pretty } ->
-      format_json ~msg t |> Hh_json.print_json_endline ~pretty
+      let json = Hh_json.JSON_Object (json_props_of_t ?msg t) in
+      Hh_json.print_json_endline ~pretty json
   end
 
 let exit ?msg t =
   (match msg with
   | Some msg -> prerr_endline msg
   | None -> ());
-  print_json ~msg t;
+  print_json ?msg t;
   FlowEventLogger.exit msg (to_string t);
   Pervasives.exit (error_code t)

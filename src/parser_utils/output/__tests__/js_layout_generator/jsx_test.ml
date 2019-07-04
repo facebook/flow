@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,8 +18,8 @@ module L = Layout_builder
 
 let make_loc start_line end_line = Loc.{
     source = None;
-    start = { line = start_line; column = 0; offset = 0; };
-    _end = { line = end_line; column = 0; offset = 0; };
+    start = { line = start_line; column = 0; };
+    _end = { line = end_line; column = 0; };
   }
 
 let tests = [

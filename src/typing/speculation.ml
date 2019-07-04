@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,22 +15,24 @@ module Action = struct
   type t =
   | Flow of Type.t * Type.use_t
   | Unify of Type.use_op * Type.t * Type.t
-  | Error of Flow_error.error_message
+  | Error of Error_message.t
 
   (* Extract tvars involved in an action. *)
-  let tvars =
+  let tvars cx =
     let open Type in
-    let f t acc = match t with
-    | OpenT (r, id) -> IMap.add id r acc
+    let f cx t acc = match t with
+    | OpenT (r, id) ->
+      let root_id, _ = Context.find_root cx id in
+      IMap.add root_id r acc
     | _ -> acc
     in
     function
-    | Flow ((DefT (_, AnyT) | DefT (_, EmptyT)), _)
-    | Flow (_, UseT (_, (DefT (_, AnyT) | DefT (_, MixedT _))))
+    | Flow ((AnyT _ | DefT (_, _, EmptyT _)), _)
+    | Flow (_, UseT (_, (AnyT _ | DefT (_, _, MixedT _))))
       -> IMap.empty
-    | Flow (t1, UseT (_, t2)) -> f t1 (f t2 IMap.empty)
-    | Flow (t1, _) -> f t1 IMap.empty
-    | Unify (_, t1, t2) -> f t1 (f t2 IMap.empty)
+    | Flow (t1, UseT (_, t2)) -> f cx t1 (f cx t2 IMap.empty)
+    | Flow (t1, _) -> f cx t1 IMap.empty
+    | Unify (_, t1, t2) -> f cx t1 (f cx t2 IMap.empty)
     | Error _ -> failwith "tvars of error actions don't make sense"
 
   (* Decide when two actions are the same. We use reasonless compare for types
@@ -84,7 +86,7 @@ module Case = struct
      constrained," i.e., whether it's failure would also imply the failure of
      the later case. This is approximated by diff'ing the set of unresolved
      tvars that are involved in non-benign actions in the two cases. *)
-  let diff case1 case2 =
+  let diff cx case1 case2 =
     let { unresolved = ts1; actions = actions1; _ } = case1 in
     let { actions = actions2; _ } = case2 in
     (* collect those actions in actions1 that are not benign and don't appear in
@@ -103,7 +105,7 @@ module Case = struct
           if ISet.mem id1 ts1
           then IMap.add id1 r1 acc
           else acc
-        ) (Action.tvars diff_action1) acc
+        ) (Action.tvars cx diff_action1) acc
       ) IMap.empty diff_actions1 in
     (* return *)
     IMap.elements diff_ts1
@@ -117,8 +119,9 @@ let init_speculation cx speculation_id =
     (IMap.add speculation_id ISet.empty (Context.all_unresolved cx))
 
 let add_unresolved_to_speculation cx speculation_id id =
+  let root_id, _ = Context.find_root cx id in
   Context.all_unresolved cx
-  |> IMap.add speculation_id (ISet.singleton id) ~combine:ISet.union
+  |> IMap.add speculation_id (ISet.singleton root_id) ~combine:ISet.union
   |> Context.set_all_unresolved cx
 
 (* Actions that involve some "ignored" unresolved tvars are considered
@@ -143,7 +146,7 @@ type branch = {
 (* The state maintained by speculative_matches when trying each case of a
    union/intersection in turn. *)
 type match_state =
-| NoMatch of Flow_error.error_message list
+| NoMatch of Error_message.t list
 | ConditionalMatch of Case.t
 
 module State : sig
@@ -189,7 +192,7 @@ end = struct
       case.actions <- case.actions @ [true, action];
       true
     | _ ->
-      let action_tvars = Action.tvars action in
+      let action_tvars = Action.tvars cx action in
       let all_unresolved =
         IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
       let relevant_action_tvars =

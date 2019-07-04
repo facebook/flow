@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,11 +8,11 @@
 open Ty_symbol
 
 class ['self] iter_ty_base = object (_: 'self)
-  method private on_string    : 'env . 'env -> string     -> unit = fun _env _x -> ()
-  method private on_bool      : 'env . 'env -> bool       -> unit = fun _env _x -> ()
-  method private on_int       : 'env . 'env -> int        -> unit = fun _env _x -> ()
-  method private on_symbol    : 'env . 'env -> symbol     -> unit = fun _env _x -> ()
-  method private on_identifier: 'env . 'env -> identifier -> unit = fun _env _x -> ()
+  method private on_string: 'env . 'env -> string     -> unit = fun _env _x -> ()
+  method private on_bool  : 'env . 'env -> bool       -> unit = fun _env _x -> ()
+  method private on_int   : 'env . 'env -> int        -> unit = fun _env _x -> ()
+  method private on_symbol: 'env . 'env -> symbol     -> unit = fun _env _x -> ()
+  method private on_aloc  : 'env . 'env -> ALoc.t     -> unit = fun _env _x -> ()
 
   method private on_option: 'env 'a 'b . ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option
     = fun f env -> Option.map ~f:(f env)
@@ -21,26 +21,26 @@ class ['self] iter_ty_base = object (_: 'self)
 end
 
 class ['self] map_ty_base = object (_: 'self)
-  method private on_string    : 'env -> string     -> string     = fun _ x -> x
-  method private on_bool      : 'env -> bool       -> bool       = fun _ x -> x
-  method private on_int       : 'env -> int        -> int        = fun _ x -> x
-  method private on_symbol    : 'env -> symbol     -> symbol     = fun _ x -> x
-  method private on_identifier: 'env -> identifier -> identifier = fun _ x -> x
+  method private on_string: 'env -> string     -> string     = fun _ x -> x
+  method private on_bool  : 'env -> bool       -> bool       = fun _ x -> x
+  method private on_int   : 'env -> int        -> int        = fun _ x -> x
+  method private on_symbol: 'env -> symbol     -> symbol     = fun _ x -> x
+  method private on_aloc  : 'env -> ALoc.t     -> ALoc.t     = fun _ x -> x
 
   method private on_list
     : 'env 'a 'b . ('env -> 'a -> 'b) -> 'env -> 'a list -> 'b list
-    = fun f env -> List.map (f env)
+    = fun f env -> Core_list.map ~f:(f env)
   method private on_option
     : 'env 'a 'b . ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option
     = fun f env -> Option.map ~f:(f env)
 end
 
 class ['self] endo_ty_base = object (_self : 'self)
-  method private on_string    : 'env -> string     -> string     = fun _ x -> x
-  method private on_bool      : 'env -> bool       -> bool       = fun _ x -> x
-  method private on_int       : 'env -> int        -> int        = fun _ x -> x
-  method private on_symbol    : 'env -> symbol     -> symbol     = fun _ x -> x
-  method private on_identifier: 'env -> identifier -> identifier = fun _ x -> x
+  method private on_string: 'env -> string     -> string     = fun _ x -> x
+  method private on_bool  : 'env -> bool       -> bool       = fun _ x -> x
+  method private on_int   : 'env -> int        -> int        = fun _ x -> x
+  method private on_symbol: 'env -> symbol     -> symbol     = fun _ x -> x
+  method private on_aloc  : 'env -> ALoc.t     -> ALoc.t     = fun _ x -> x
 
   (* Copied from
    * https://github.com/facebook/hhvm/blob/master/hphp/hack/src/ast/ast_defs_visitors_ancestors.ml
@@ -123,11 +123,11 @@ end
 
 class virtual ['self] reduce_ty_base = object (self : 'self)
   inherit ['acc] monoid
-  method private on_string    : 'env . 'env -> string     -> 'acc = fun _ _ -> self#zero
-  method private on_int       : 'env . 'env -> int        -> 'acc = fun _ _ -> self#zero
-  method private on_bool      : 'env . 'env -> bool       -> 'acc = fun _ _ -> self#zero
-  method private on_symbol    : 'env . 'env -> symbol     -> 'acc = fun _ _ -> self#zero
-  method private on_identifier: 'env . 'env -> identifier -> 'acc = fun _ _ -> self#zero
+  method private on_string: 'env . 'env -> string     -> 'acc = fun _ _ -> self#zero
+  method private on_int   : 'env . 'env -> int        -> 'acc = fun _ _ -> self#zero
+  method private on_bool  : 'env . 'env -> bool       -> 'acc = fun _ _ -> self#zero
+  method private on_symbol: 'env . 'env -> symbol     -> 'acc = fun _ _ -> self#zero
+  method private on_aloc  : 'env . 'env -> ALoc.t     -> 'acc = fun _ _ -> self#zero
 
   method private on_list: 'env 'a . ('env -> 'a -> 'acc) -> 'env -> 'a list -> 'acc
     = fun f env xs -> self#list_fold_left f env self#zero xs
@@ -142,4 +142,39 @@ class virtual ['self] reduce_ty_base = object (self : 'self)
       | y::ys ->
         let acc = self#plus acc (f env y) in
         self#list_fold_left f env acc ys
+end
+
+class virtual ['self] mapreduce_ty_base = object (self: 'self)
+  inherit ['acc] monoid
+  method private on_string: 'env -> string -> string * 'acc = fun _ x -> x, self#zero
+  method private on_bool  : 'env -> bool   -> bool   * 'acc = fun _ x -> x, self#zero
+  method private on_int   : 'env -> int    -> int    * 'acc = fun _ x -> x, self#zero
+  method private on_symbol: 'env -> symbol -> symbol * 'acc = fun _ x -> x, self#zero
+  method private on_aloc  : 'env -> ALoc.t -> ALoc.t * 'acc = fun _ x -> x, self#zero
+
+  method private on_list:
+    'a 'b . ('env -> 'a -> 'b * 'acc) -> 'env -> 'a list -> 'b list * 'acc =
+    fun f env -> self#list_fold_left f env ([], self#zero)
+
+  method private on_option:
+    'a 'b . ('env -> 'a -> 'b * 'acc) -> 'env -> 'a option -> 'b option * 'acc =
+    fun f env x ->
+      match x with
+      | None -> None, self#zero
+      | Some x ->
+        let x', acc = f env x in
+        Some x', acc
+
+  method private list_fold_left:
+    'a 'b . ('env -> 'a -> 'b * 'acc) -> 'env -> ('b list * 'acc) -> 'a list -> 'b list * 'acc =
+    fun f env acc xs ->
+      match xs with
+      | [] ->
+        let ys_rev, acc = acc in
+        List.rev ys_rev, acc
+      | y::ys ->
+        let acc_ys, acc = acc in
+        let y', acc' = f env y in
+        let acc'' = self#plus acc acc' in
+        self#list_fold_left f env (y'::acc_ys, acc'') ys
 end

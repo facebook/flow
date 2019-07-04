@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,7 +20,7 @@ module Flow = Flow_js
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
-let parse_lib_file options file =
+let parse_lib_file ~reader options file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
   (* lib files are always "use strict" *)
@@ -32,15 +32,16 @@ let parse_lib_file options file =
     let%lwt results = Parsing.parse_with_defaults
       ~types_mode
       ~use_strict
+      ~reader
       options
       (* workers *) None
       next
     in
     Lwt.return (
       if not (FilenameMap.is_empty results.Parsing.parse_ok) then
-        let ast = Parsing_heaps.get_ast_unsafe lib_file in
-        let file_sig = Parsing_heaps.get_file_sig_unsafe lib_file in
-        Parsing.Parse_ok (ast, file_sig)
+        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
+        let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
+        Parsing.Parse_ok (Parsing.Classic (ast, file_sig))
       else if List.length results.Parsing.parse_fails > 0 then
         let _, _, parse_fails = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
@@ -62,7 +63,7 @@ let parse_lib_file options file =
 
    returns list of (filename, success, errors, suppressions) tuples
  *)
-let load_lib_files ~master_cx ~options files =
+let load_lib_files ~sig_cx ~options ~reader files =
 
   let verbose = Options.verbose options in
 
@@ -75,48 +76,44 @@ let load_lib_files ~master_cx ~options files =
         let lib_file = File_key.LibFile file in
         let lint_severities = options.Options.opt_lint_severities in
         let file_options = Options.file_options options in
-        let%lwt result = parse_lib_file options file in
+        let%lwt result = parse_lib_file ~reader options file in
         Lwt.return (match result with
-        | Parsing.Parse_ok (ast, file_sig) ->
-
+        | Parsing.Parse_ok parse_ok ->
+          let ast, file_sig = Parsing.basic parse_ok in
+          let file_sig = File_sig.abstractify_locs file_sig in
           let metadata =
             let open Context in
             let metadata = metadata_of_options options in
             { metadata with checked = false; weak = false }
           in
 
-          let sig_cx = Context.make_sig () in
-          let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
-          Flow.mk_builtins cx;
+          (* Lib files use only concrete locations, so this is not needed. *)
+          let aloc_tables = FilenameMap.empty in
+          let cx = Context.make sig_cx metadata lib_file aloc_tables Files.lib_module_ref in
 
           let syms = Infer.infer_lib_file cx ast
             ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig
           in
 
-          Context.merge_into (Context.sig_cx master_cx) sig_cx;
-
-          let () =
-            let from_t = Context.find_module master_cx Files.lib_module_ref in
-            let to_t = Context.find_module cx Files.lib_module_ref in
-            Flow.flow_t master_cx (from_t, to_t)
-          in
-
           let errors = Context.errors cx in
           let errors =
-            if options.Options.opt_enforce_well_formed_exports then
-              Inference_utils.set_of_file_sig_tolerable_errors
-                ~source_file:lib_file
-                file_sig.File_sig.tolerable_errors
-              |> Errors.ErrorSet.union errors
+            if Inference_utils.well_formed_exports_enabled options lib_file then
+              file_sig.File_sig.With_ALoc.tolerable_errors
+              |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
+              |> Flow_error.ErrorSet.union errors
             else
               errors
           in
           let suppressions = Context.error_suppressions cx in
           let severity_cover = Context.severity_cover cx in
+          let include_suppressions = Context.include_suppressions cx in
+
+          let errors, warnings, suppressions =
+            Error_suppressions.filter_lints ~include_suppressions suppressions errors
+            (Context.aloc_tables cx) severity_cover in
 
           Context.remove_all_errors cx;
           Context.remove_all_error_suppressions cx;
-          Context.remove_all_lint_severities cx;
 
           (if verbose != None then
             prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -125,7 +122,7 @@ let load_lib_files ~master_cx ~options files =
           (* symbols loaded from this file are suppressed
              if found in later ones *)
           let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-          let result = (lib_file, true, errors, suppressions, severity_cover) in
+          let result = (lib_file, true, errors, warnings, suppressions) in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_fail fail ->
@@ -137,25 +134,16 @@ let load_lib_files ~master_cx ~options files =
           | Parsing.File_sig_error error ->
             Inference_utils.set_of_file_sig_error ~source_file:lib_file error
           in
-          let severity_cover =
-            Utils_js.FilenameMap.singleton
-              lib_file
-              (ExactCover.file_cover lib_file lint_severities)
-          in
-          let result = lib_file, false, errors, Error_suppressions.empty, severity_cover in
+          let result = lib_file, false, errors, Flow_error.ErrorSet.empty, Error_suppressions.empty in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_skip
             (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
           (* should never happen *)
-          let errs = Errors.ErrorSet.empty in
+          let errs = Flow_error.ErrorSet.empty in
+          let warnings = Flow_error.ErrorSet.empty in
           let suppressions = Error_suppressions.empty in
-          let severity_cover =
-            Utils_js.FilenameMap.singleton
-              lib_file
-              (ExactCover.file_cover lib_file lint_severities)
-          in
-          let result = lib_file, false, errs, suppressions, severity_cover in
+          let result = lib_file, false, errs, warnings, suppressions in
           exclude_syms, (result :: results)
         )
       ) (SSet.empty, [])
@@ -166,20 +154,22 @@ let load_lib_files ~master_cx ~options files =
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
-let init ~options lib_files =
+let init ~options ~reader lib_files =
+  let sig_cx = Context.make_sig () in
   let master_cx =
-    let sig_cx = Context.make_sig () in
     let metadata =
       let open Context in
       let metadata = metadata_of_options options in
       { metadata with checked = false; weak = false }
     in
-    Context.make sig_cx metadata File_key.Builtins Files.lib_module_ref
+    (* Builtins use only concrete locations, so this is not needed. *)
+    let aloc_tables = FilenameMap.empty in
+    Context.make sig_cx metadata File_key.Builtins aloc_tables Files.lib_module_ref
   in
 
   Flow_js.mk_builtins master_cx;
 
-  let%lwt result = load_lib_files ~master_cx ~options lib_files in
+  let%lwt result = load_lib_files ~sig_cx ~options ~reader lib_files in
 
   Flow.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
@@ -187,6 +177,7 @@ let init ~options lib_files =
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 
+  Context.remove_all_lint_severities master_cx;
   Context.clear_intermediates master_cx;
 
   (* store master signature context to heap *)

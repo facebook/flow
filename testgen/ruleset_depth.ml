@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -55,23 +55,23 @@ class ruleset_depth = object(self)
       let prop =
         let open E.Object.Property in
         E.Object.Property (Loc.none, Init {
-          key = Identifier (Loc.none, pname);
+          key = Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
           value = Loc.none, expr;
           shorthand = false
         }) in
       let properties = [prop] in
-      E.Object.(E.Object {properties}) in
+      E.Object.(E.Object {properties; comments = Flow_ast_utils.mk_comments_opt ()}) in
     let obj_type =
       let open T.Object.Property in
       let prop_type =
-        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, pname);
+        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
                                       value = Init (Loc.none, etype);
                                       optional = false;
                                       static = false;
                                       proto = false;
                                       _method = false;
                                       variance = None;}) in
-      T.Object.(T.Object {exact = false; properties = [prop_type]}) in
+      T.Object.(T.Object {exact = false; properties = [prop_type]; inexact = true}) in
       obj_expr, obj_type
 
   (* property update rule *)
@@ -166,7 +166,7 @@ class ruleset_depth = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 

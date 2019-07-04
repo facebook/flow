@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -67,17 +67,17 @@ type def =
 type hook_state_t = {
   id_hook:
      (Context.t ->
-      string -> Loc.t ->
+      string -> ALoc.t ->
       bool);
 
   lval_hook:
     (Context.t ->
-      string -> Loc.t -> def ->
+      string -> ALoc.t -> def ->
       unit);
 
   member_hook:
      (Context.t ->
-      string -> Loc.t -> Type.t ->
+      string -> ALoc.t -> Type.t ->
       bool);
 
 (* TODO: This is inconsistent with the way the id/member hooks work, but we
@@ -85,42 +85,36 @@ type hook_state_t = {
          things a bit *)
   call_hook:
      (Context.t ->
-      string -> Loc.t -> Type.t ->
+      string -> ALoc.t -> Type.t ->
       unit);
 
   import_hook:
       (Context.t ->
        (* Location of the string identifiying the imported module, and the contents of that string. *)
-       (Loc.t * string) ->
+       (ALoc.t * string) ->
        (* Location of the entire import statement/require call *)
-       Loc.t ->
+       ALoc.t ->
        unit);
 
   jsx_hook:
       (Context.t ->
-       string -> Loc.t -> Type.t ->
+       string -> ALoc.t -> Type.t ->
        bool);
-
-  ref_hook:
-      (Context.t ->
-       Loc.t ->
-       Loc.t ->
-       unit);
 
   class_member_decl_hook:
      (Context.t ->
       Type.t (* self *) ->
       bool (* static *) ->
-      string -> Loc.t ->
+      string -> ALoc.t ->
       unit);
 
   obj_prop_decl_hook:
       (Context.t ->
-        string -> Loc.t ->
+        string -> ALoc.t ->
         unit);
 
   require_pattern_hook:
-    Loc.t -> unit;
+    ALoc.t -> unit;
 
   (* Called when ObjT 1 ~> ObjT 2 *)
   obj_to_obj_hook:
@@ -137,7 +131,7 @@ type hook_state_t = {
         unit);
 
   (* Dispatched with "default" for default exports *)
-  export_named_hook: string (* name *) -> Loc.t -> unit;
+  export_named_hook: string (* name *) -> ALoc.t -> unit;
 }
 
 let nop_hook_state = {
@@ -147,7 +141,6 @@ let nop_hook_state = {
   call_hook = call_nop;
   import_hook = import_nop;
   jsx_hook = jsx_nop;
-  ref_hook = ref_nop;
   class_member_decl_hook = class_member_decl_nop;
   obj_prop_decl_hook = obj_prop_decl_nop;
   require_pattern_hook = require_pattern_nop;
@@ -175,9 +168,6 @@ let set_import_hook hook =
 
 let set_jsx_hook hook =
   hook_state := { !hook_state with jsx_hook = hook }
-
-let set_ref_hook hook =
-  hook_state := { !hook_state with ref_hook = hook }
 
 let set_class_member_decl_hook hook =
   hook_state := { !hook_state with class_member_decl_hook = hook }
@@ -217,9 +207,6 @@ let dispatch_import_hook cx name loc =
 
 let dispatch_jsx_hook cx name loc this_t =
   !hook_state.jsx_hook cx name loc this_t
-
-let dispatch_ref_hook cx loc =
-    !hook_state.ref_hook cx loc
 
 let dispatch_class_member_decl_hook cx self static name loc =
   !hook_state.class_member_decl_hook cx self static name loc

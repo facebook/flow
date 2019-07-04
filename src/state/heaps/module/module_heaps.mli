@@ -1,20 +1,14 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-val get_file: (Modulename.t -> File_key.t option) Expensive.t
-val get_file_unsafe: (Modulename.t -> File_key.t) Expensive.t
-val module_exists: Modulename.t -> bool
-
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
 }
-
-val get_resolved_requires_unsafe: (File_key.t -> resolved_requires) Expensive.t
 
 type info = {
   module_name: Modulename.t;
@@ -22,13 +16,29 @@ type info = {
   parsed: bool;             (* if false, it's a tracking record only *)
 }
 
-(* given a filename, returns module info *)
-val get_info_unsafe: (File_key.t -> info) Expensive.t
-val get_info: (File_key.t -> info option) Expensive.t
-val is_tracked_file: File_key.t -> bool
+module type READER = sig
+  type reader
 
-val get_package: string -> Package_json.t option
-val get_package_directory: string -> string option
+  val get_file: reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
+  val get_file_unsafe: reader:reader -> (Modulename.t -> File_key.t) Expensive.t
+  val module_exists: reader:reader -> Modulename.t -> bool
+
+  val get_resolved_requires_unsafe: reader:reader -> (File_key.t -> resolved_requires) Expensive.t
+
+  (* given a filename, returns module info *)
+  val get_info_unsafe: reader:reader -> (File_key.t -> info) Expensive.t
+  val get_info: reader:reader -> (File_key.t -> info option) Expensive.t
+  val is_tracked_file: reader:reader -> File_key.t -> bool
+
+  val get_package: reader:reader -> string -> (Package_json.t, unit) result option
+  val get_package_directory: reader:reader -> string -> string option
+end
+
+module Mutator_reader: READER with type reader = Mutator_state_reader.t
+
+module Reader: READER with type reader = State_reader.t
+
+module Reader_dispatcher: READER with type reader = Abstract_state_reader.t
 
 module Commit_modules_mutator : sig
   type t
@@ -55,6 +65,7 @@ end
 
 module Package_heap_mutator : sig
   val add_package_json: string -> Package_json.t -> unit
+  val add_error: string -> unit
 end
 
 module From_saved_state : sig

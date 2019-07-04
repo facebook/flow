@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2018-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,6 +12,7 @@ type error_kind =
   | BadBoundT
   | BadCallProp
   | BadClassT
+  | BadThisClassT
   | BadPoly
   | BadTypeAlias
   | BadTypeApp
@@ -22,6 +23,7 @@ type error_kind =
   | ShadowTypeParam
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
+  | TypeTooBig
 
 type error = error_kind * string
 
@@ -52,7 +54,7 @@ val from_schemes:
 
 val fold_hashtbl:
   options:options -> genv:genv ->
-  f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) ->
+  f:('a -> ('loc * (Ty.t, error) result) -> 'a) ->
   g:('b -> Type.TypeScheme.t) ->
-  htbl: (Loc.t, 'b) Hashtbl.t ->
+  htbl: ('loc, 'b) Hashtbl.t ->
   'a -> 'a

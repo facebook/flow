@@ -98,7 +98,7 @@ function check_ast(env, ast) {
   }
 }
 
-function compare(env, ast, spec) {
+function compare(env, ast, spec, skip_comments) {
   if (Array.isArray(spec)) {
     if (Array.isArray(ast)) {
       if (spec.length != ast.length) {
@@ -108,7 +108,7 @@ function compare(env, ast, spec) {
         if (spec.hasOwnProperty(i)) {
           if (ast.hasOwnProperty(i)) {
             env.push_path(i);
-            compare(env, ast[i], spec[i]);
+            compare(env, ast[i], spec[i], skip_comments);
             env.pop_path();
           }
         }
@@ -118,23 +118,29 @@ function compare(env, ast, spec) {
     }
   } else if (spec != null && typeof spec == "object") {
     for (var prop in spec) {
+      var is_comments_prop =
+        prop === "trailingComments" || prop === "leadingComments";
+      if (skip_comments && is_comments_prop) {
+        continue;
+      }
       if (spec.hasOwnProperty(prop)) {
         var path = prop.split(".");
         var sub_ast = ast;
         var found = true;
         var i;
         for (i = 0; i < path.length; i++) {
-          if (sub_ast && sub_ast.hasOwnProperty(path[i])) {
-            sub_ast = sub_ast[path[i]];
+          var pathProp = path[i];
+          if (sub_ast && sub_ast.hasOwnProperty(pathProp)) {
+            sub_ast = sub_ast[pathProp];
           } else {
-            env.diff('Missing property "'+path[i]+'"');
+            env.diff('Missing property "'+pathProp+'"');
             found = false;
             break;
           }
-          env.push_path(path[i]);
+          env.push_path(pathProp);
         }
         if (found) {
-          compare(env, sub_ast, spec[prop]);
+          compare(env, sub_ast, spec[prop], skip_comments);
         }
         for (; i > 0; i--) {
           env.pop_path();
@@ -177,7 +183,7 @@ function runTest(test, parse_options, test_options) {
     // there are no parse errors.
     check_ast(env, flow_ast);
   }
-  compare(env, flow_ast, test.expected_ast);
+  compare(env, flow_ast, test.expected_ast, true);
 
   var diffs = env.get_diffs();
   if (test_options.jsonErrors) {

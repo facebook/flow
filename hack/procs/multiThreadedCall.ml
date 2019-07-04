@@ -7,16 +7,17 @@
  *
  *)
 
-open Hh_core
+module Hh_bucket = Bucket
+open Core_kernel
 
 exception Coalesced_failures of (WorkerController.worker_failure list)
 
 let coalesced_failures_to_string failures =
   let failure_strings =
     List.map failures ~f:WorkerController.failure_to_string in
-  Printf.sprintf "Coalesced_failures[%s]" (String.concat ", " failure_strings)
+  Printf.sprintf "Coalesced_failures[%s]" (String.concat ~sep:", " failure_strings)
 
-let () = Printexc.register_printer @@ function
+let () = Caml.Printexc.register_printer @@ function
   | Coalesced_failures failures -> Some (coalesced_failures_to_string failures)
   | _ -> None
 
@@ -56,7 +57,7 @@ let multi_threaded_call
   (job: c -> a -> b)
   (merge: worker_id * b -> c -> c)
   (neutral: c)
-  (next: a Bucket.next)
+  (next: a Hh_bucket.next)
   ?(on_cancelled : (unit -> a list) option)
   (interrupt: d interrupt_config) =
 
@@ -88,9 +89,9 @@ let multi_threaded_call
   let handler_fds (_, _, handlers) = List.map handlers ~f:fst in
 
   let rec add_pending acc = match next () with
-    | Bucket.Done -> acc
-    | Bucket.Job a -> add_pending (a::acc)
-    | Bucket.Wait ->
+    | Hh_bucket.Done -> acc
+    | Hh_bucket.Job a -> add_pending (a::acc)
+    | Hh_bucket.Wait ->
       (* There's not really a good solution to generically getting the pending
          work items when attempting to cancel a job that's in the Wait state,
          so we depend on those jobs to determine their own state in the
@@ -104,7 +105,7 @@ let multi_threaded_call
     let env, decision, handlers = List.fold handlers
       ~init:(env, Continue, handlers)
       ~f:begin fun (env, decision, handlers) (fd, handler) ->
-        if decision = Cancel || not @@ List.mem ready_fds fd
+        if decision = Cancel || not @@ List.mem ~equal:(=) ready_fds fd
           then env, decision, handlers else
         let env, decision = handler env in
         (* Re-raise the exception even if handler have caught and ignored it *)
@@ -142,11 +143,11 @@ let multi_threaded_call
     | Some (worker :: workers) ->
         (* At least one worker is available... *)
         match next () with
-        | Bucket.Wait -> collect (worker :: workers) handles acc
-        | Bucket.Done ->
+        | Hh_bucket.Wait -> collect (worker :: workers) handles acc
+        | Hh_bucket.Done ->
             (* ... but no more job to be distributed, let's collect results. *)
             dispatch None handles acc
-        | Bucket.Job bucket ->
+        | Hh_bucket.Job bucket ->
             (* ... send a job to the worker.*)
             let handle =
               WorkerController.call ~call_id worker

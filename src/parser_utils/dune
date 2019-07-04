@@ -1,0 +1,12 @@
+(library
+  (name flow_parser_utils)
+  (wrapped false)
+  (flags -w +a-4-6-29-35-44-48-50)
+  (libraries
+    dtoa
+    flow_common
+    flow_common_utils
+    flow_common_utils_loc_utils
+    flow_parser
+    hh_json ; hack
+    ))

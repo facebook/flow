@@ -1,7 +1,6 @@
 /**
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import colors from 'colors/safe';
@@ -69,7 +68,7 @@ function startWatchAndRun(suites, args) {
 
   const startListeningForShortcuts = () => {
     if (typeof process.stdin.setRawMode === 'function') {
-      process.stdin.setRawMode(true);
+      (process.stdin.setRawMode: any).call(process.stdin, true);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
       process.stdin.on('data', keydown);
@@ -80,7 +79,7 @@ function startWatchAndRun(suites, args) {
 
   const stopListeningForShortcuts = () => {
     if (typeof process.stdin.setRawMode === 'function') {
-      process.stdin.setRawMode(false);
+      (process.stdin.setRawMode: any).call(process.stdin, false);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
       process.stdin.removeListener('data', keydown);

@@ -7,6 +7,8 @@
  *
  *)
 
+open Core_kernel
+
 (*****************************************************************************)
 (* Module building workers.
  * A worker is a subprocess executing an arbitrary function.

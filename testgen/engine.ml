@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -143,9 +143,9 @@ class virtual ['a, 'b, 'c] engine = object(self)
   (* Shuffle a list. This is from
      https://stackoverflow.com/questions/15095541/how-to-shuffle-list-in-on-in-ocaml *)
   method shuffle (d : 'a list) : 'a list =
-    let nd = List.map (fun c -> (Random.bits (), c)) d in
+    let nd = Core_list.map ~f:(fun c -> (Random.bits (), c)) d in
     let sond = List.sort compare nd in
-    List.map snd sond
+    Core_list.map ~f:snd sond
 
   (* A method for printing the stack *)
   method virtual print_stack : unit -> unit

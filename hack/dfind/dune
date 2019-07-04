@@ -1,0 +1,13 @@
+(library
+  (name dfind)
+  (wrapped false)
+  (modules
+    :standard \
+      dfindLibLwt)
+  (libraries
+    avl
+    collections
+    fsnotify
+    logging_common
+    marshal_tools
+    sys_utils))

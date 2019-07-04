@@ -1,0 +1,4 @@
+(library
+  (name flow_logging_stubs)
+  (modules flowEventLogger flow_server_profile)
+  (wrapped false))

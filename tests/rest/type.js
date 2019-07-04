@@ -13,7 +13,7 @@ declare var o1: O1;
 (o1: {|x: X, y?: Y|}); // Error: y is not in O1
 (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
 (o1: {|x: Y|}); // Error: X = Y
-({}: O1); // Error: missing x
+({y}: O1); // Error: missing x
 ({x}: O1); // OK
 ({x, y}: O1); // Error: y is not in O1
 ({x: y}: O1); // Error: Y ~> X
@@ -43,7 +43,7 @@ declare var o4: O4;
 (o4: {|x: X, y?: Y|}); // OK
 (o4: {|x?: X, y?: Y|}); // Error: x is not optional
 (o4: {|x: Y|}); // Error: X = Y, and missing y
-({}: O4); // Error: missing x
+({y}: O4); // Error: missing x
 ({x}: O4); // OK
 ({x, y}: O4); // OK
 ({x: y}: O4); // Error: Y ~> X

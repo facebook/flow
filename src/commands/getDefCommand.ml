@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,6 +30,7 @@ let spec = {
     |> strip_root_flag
     |> from_flag
     |> path_flag
+    |> wait_for_recheck_flag
     |> anon "args" (required (list_of string))
   )
 }
@@ -56,8 +57,7 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
  *)
-let main base_flags option_values json pretty root strip_root from path args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root path wait_for_recheck args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -67,7 +67,9 @@ let main base_flags option_values json pretty root strip_root from path args () 
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.Request.GET_DEF (file, line, column) in
+  let request =
+    ServerProt.Request.GET_DEF { filename = file; line; char = column; wait_for_recheck; }
+  in
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.GET_DEF (Ok loc) ->
@@ -81,7 +83,8 @@ let main base_flags option_values json pretty root strip_root from path args () 
         JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
       print_json_endline ~pretty json
     ) else
-      if option_values.from = "vim" || option_values.from = "emacs"
+      let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
+      if from = Some "vim" || from = Some "emacs"
       then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
       else print_endline (range_string_of_loc ~strip_root loc)
   | ServerProt.Response.GET_DEF (Error exn_msg) ->

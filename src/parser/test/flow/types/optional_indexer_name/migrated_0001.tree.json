@@ -21,6 +21,7 @@
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":39}},
         "range":[9,39],
         "exact":false,
+        "inexact":false,
         "properties":[],
         "indexers":[
           {

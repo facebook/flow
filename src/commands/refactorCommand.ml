@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -55,12 +55,12 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let print_json result ~pretty ~strip_root =
+let print_json result ~stdin_file ~pretty ~strip_root =
   let open Hh_json in
   let open ServerProt.Response in
   let json_of_edit (loc, text) =
     JSON_Object [
-      "oldRange", (Reason.json_of_loc ~strip_root loc);
+      "oldRange", (json_of_loc_with_offset ~stdin_file ~strip_root loc);
       "newText", JSON_String text;
     ]
   in
@@ -70,19 +70,20 @@ let print_json result ~pretty ~strip_root =
     | Some {refactor_edits} ->
       JSON_Object [
         "kind", JSON_String "refactor-performed";
-        "edits", JSON_Array (List.map json_of_edit refactor_edits);
+        "edits", JSON_Array (Core_list.map ~f:json_of_edit refactor_edits);
       ]
   in
   print_json_endline ~pretty json
 
-let to_string result option_values ~strip_root =
+let to_string result ~strip_root =
   let open ServerProt.Response in
   let edits = match result with
     | None -> []
     | Some {refactor_edits} -> refactor_edits
   in
   let string_of_loc =
-    if option_values.from = "vim" || option_values.from = "emacs" then
+    let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
+    if from = Some "vim" || from = Some "emacs" then
       Errors.Vim_emacs_output.string_of_loc ~strip_root
     else
       range_string_of_loc ~strip_root
@@ -90,10 +91,9 @@ let to_string result option_values ~strip_root =
   let string_of_edit (loc, new_text) =
     Printf.sprintf "%s: %s" (string_of_loc loc) new_text
   in
-  String.concat "\n" @@ List.map string_of_edit edits
+  String.concat "\n" @@ Core_list.map ~f:string_of_edit edits
 
-let main base_flags option_values json pretty root strip_root from path rename args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root path rename args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -108,14 +108,19 @@ let main base_flags option_values json pretty root strip_root from path rename a
     | None -> usage "The kind of refactor (e.g. rename) must be specified with a flag"
   in
 
-  let request = ServerProt.Request.REFACTOR (file, line, column, refactor_variant) in
+  let request = ServerProt.Request.REFACTOR {
+    input = file;
+    line;
+    char = column;
+    refactor_variant;
+  } in
   (* command result will be a position structure with full file path *)
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.REFACTOR (Ok result) ->
     (* format output *)
     if json || pretty
-    then print_json result ~pretty ~strip_root
-    else print_endline (to_string result option_values ~strip_root)
+    then print_json result ~stdin_file:file ~pretty ~strip_root
+    else print_endline (to_string result ~strip_root)
   | ServerProt.Response.REFACTOR (Error exn_msg) ->
     Utils_js.prerr_endlinef
       "Could not refactor for %s:%d:%d\n%s"

@@ -34,7 +34,7 @@ type O4 = {...{|p:T|}};
 declare var o4: O4;
 (o4: {p:T}); // ok
 (o4: {|p:T|}); // error: not exact
-({}: O4); // error: property `p` not found
+(({}:{}): O4); // error: property `p` not found
 ({p:x}: O4); // ok
 ({p:y}: O4); // error: y ~> T
 ({p:x,q:y}: O4); // ok
@@ -53,7 +53,7 @@ declare var o5: O5;
 type O6 = {...{p:T},...{|p:U|}};
 declare var o6: O6;
 (o6: {p:U}); // ok
-({}: O6); // error: property `p` not found
+(({}:{}): O6); // error: property `p` not found
 ({p:x}: O6); // error: x ~> U
 ({p:y}: O6); // ok
 ({p:y,q:x}: O6); // ok

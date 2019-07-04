@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -90,12 +90,12 @@ end = struct
     let lex_env = t.la_lex_env in
     let lex_env, lex_result =
       match t.la_lex_mode with
-      | Lex_mode.NORMAL -> Lexer.token lex_env
-      | Lex_mode.TYPE -> Lexer.type_token lex_env
-      | Lex_mode.JSX_TAG -> Lexer.jsx_tag lex_env
-      | Lex_mode.JSX_CHILD -> Lexer.jsx_child lex_env
-      | Lex_mode.TEMPLATE -> Lexer.template_tail lex_env
-      | Lex_mode.REGEXP -> Lexer.regexp lex_env
+      | Lex_mode.NORMAL -> Flow_lexer.token lex_env
+      | Lex_mode.TYPE -> Flow_lexer.type_token lex_env
+      | Lex_mode.JSX_TAG -> Flow_lexer.jsx_tag lex_env
+      | Lex_mode.JSX_CHILD -> Flow_lexer.jsx_child lex_env
+      | Lex_mode.TEMPLATE -> Flow_lexer.template_tail lex_env
+      | Lex_mode.REGEXP -> Flow_lexer.regexp lex_env
     in
     let cloned_env = Lex_env.clone lex_env in
     t.la_lex_env <- lex_env;
@@ -138,6 +138,7 @@ type token_sink_result = {
 }
 
 type parse_options = {
+  enums: bool;
   esproposal_class_instance_fields: bool;
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
@@ -148,6 +149,7 @@ type parse_options = {
   use_strict: bool;
 }
 let default_parse_options = {
+  enums = false;
   esproposal_class_instance_fields = false;
   esproposal_class_static_fields = false;
   esproposal_decorators = false;
@@ -276,7 +278,7 @@ let error_at env (loc, e) =
   match env.error_callback with
   | None -> ()
   | Some callback -> callback env e
-let record_export env (loc, export_name) =
+let record_export env (loc, { Identifier.name= export_name; comments= _ }) =
   if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
   if SSet.mem export_name exports
@@ -439,7 +441,7 @@ let is_reserved str_val =
 
 let is_reserved_type str_val =
   match str_val with
-  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number"
+  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number" | "bigint"
   | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends" | "_"
     -> true
   | _ -> false
@@ -469,11 +471,14 @@ module Peek = struct
   let lex_env env = ith_lex_env ~i:0 env
 
   (* True if there is a line terminator before the next token *)
-  let is_line_terminator env =
-    match last_loc env with
+  let ith_is_line_terminator ~i env =
+    let loc = if i > 0 then Some (ith_loc ~i:(i - 1) env) else last_loc env in
+    match loc with
       | None -> false
       | Some loc' ->
-          (loc env).start.line > loc'.start.line
+          (ith_loc ~i env).start.line > loc'.start.line
+
+  let is_line_terminator env = ith_is_line_terminator ~i:0 env
 
   let is_implicit_semicolon env =
     match token env with
@@ -517,10 +522,12 @@ module Peek = struct
       | T_MIXED_TYPE
       | T_EMPTY_TYPE
       | T_NUMBER_TYPE
+      | T_BIGINT_TYPE
       | T_STRING_TYPE
       | T_VOID_TYPE
       | T_BOOLEAN_TYPE _
       | T_NUMBER_SINGLETON_TYPE _
+      | T_BIGINT_SINGLETON_TYPE _
 
       (* identifier-ish *)
       | T_ASYNC
@@ -644,6 +651,7 @@ module Peek = struct
 
       (* literals *)
       | T_NUMBER _
+      | T_BIGINT _
       | T_STRING _
       | T_TEMPLATE_PART _
       | T_REGEXP _

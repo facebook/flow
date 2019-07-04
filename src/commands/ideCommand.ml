@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ let protocol_options = [
   "human-readable", `Human_readable;
 ]
 
-let protocol_options_string = String.concat ", " (List.map fst protocol_options)
+let protocol_options_string = String.concat ", " (Core_list.map ~f:fst protocol_options)
 
 let spec = {
   CommandSpec.
@@ -77,15 +77,15 @@ module HumanReadable: ClientProtocol = struct
     | Ok completions ->
         print_endline "Autocomplete results:";
         completions |>
-        List.map (fun r -> r.ServerProt.Response.res_name) |>
+        Core_list.map ~f:(fun r -> r.ServerProt.Response.res_name) |>
         List.iter (Printf.printf "  %s\n");
         flush stdout
 
 
   let handle_server_response ~strip_root:_ ~json_version:_ = function
-    | Prot.Errors {errors; warnings} ->
-      let err_count = Errors.ErrorSet.cardinal errors in
-      let warn_count = Errors.ErrorSet.cardinal warnings in
+    | Prot.Errors {errors; warnings; errors_reason=_; } ->
+      let err_count = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
+      let warn_count = Errors.ConcreteLocPrintableErrorSet.cardinal warnings in
       print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
         ^ (string_of_int warn_count) ^ " warnings")
     | Prot.ServerExit _code -> () (* ignored here; used in lspCommand *)
@@ -106,7 +106,7 @@ module VeryUnstable: ClientProtocol = struct
      * we display, we don't want the printer removing them. *)
     let json_errors = Errors.Json_output.full_status_json_of_errors
       ~strip_root ?version:json_version
-      ~suppressed_errors:([]) ~errors ~warnings ()
+      ~suppressed_errors:([]) ~errors ~warnings () None
     in
     let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" [json_errors] in
     let json_string = Hh_json.json_to_string json_message in
@@ -130,7 +130,7 @@ module VeryUnstable: ClientProtocol = struct
       |> Http_lite.write_message stdout
 
   let handle_server_response ~strip_root ~json_version = function
-    | Prot.Errors {errors; warnings} ->
+    | Prot.Errors {errors; warnings; errors_reason=_; } ->
       print_errors ~strip_root ~json_version errors warnings
     | Prot.ServerExit _code -> () (* ignored here, but used in lspCommand *)
     | Prot.Please_hold _status -> () (* ignored here, but used in lspCommand *)
@@ -367,16 +367,17 @@ end
 module VeryUnstableProtocol = ProtocolFunctor(VeryUnstable)
 module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 
-let main base_flags option_values root from protocol strip_root json_version () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values root protocol strip_root json_version () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = CommandUtils.guess_root flowconfig_name root in
   let strip_root = if strip_root then Some root else None in
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
+    client_version = Flow_version.version;
     is_stop_request = false;
     server_should_hangup_if_still_initializing = false;
-    server_should_exit_if_version_mismatch = true; }, {
+    version_mismatch_strategy = Stop_server_if_older;
+  }, {
     client_type = Persistent { logging_context = FlowEventLogger.get_context (); lsp = None; };
   }) in
   Printf.eprintf "Connecting to server...\n%!";

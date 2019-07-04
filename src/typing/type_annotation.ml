@@ -1,120 +1,178 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 module Ast = Flow_ast
+module Tast_utils = Typed_ast_utils
 
 open Utils_js
 open Reason
 open Type
 open Env.LookupMode
+open Trust_helpers
 
-module FlowError = Flow_error
 module Flow = Flow_js
 module T = Ast.Type
+
+module Func_type_params = Func_params.Make (struct
+  type 'T ast = (ALoc.t, 'T) Ast.Type.Function.Params.t
+  type 'T param_ast = (ALoc.t, 'T) Ast.Type.Function.Param.t
+  type 'T rest_ast = (ALoc.t, 'T) Ast.Type.Function.RestParam.t
+
+  type param = Type.t * (ALoc.t * Type.t) param_ast
+  type rest = Type.t * (ALoc.t * Type.t) rest_ast
+
+  let id_name (_, { Ast.Identifier.name; _ }) = name
+
+  let param_type (t, (_, { Ast.Type.Function.Param.name; optional; _ })) =
+    let name = Option.map name ~f:id_name in
+    let t = if optional then Type.optional t else t in
+    name, t
+
+  let rest_type (t, (loc, { Ast.Type.Function.RestParam.argument })) =
+    let (_, { Ast.Type.Function.Param.name; _ }) = argument in
+    let name = Option.map name ~f:id_name in
+    name, loc, t
+
+  let subst_param cx map (t, tast) =
+    let t = Flow.subst cx map t in
+    t, tast
+
+  let subst_rest cx map (t, tast) =
+    let t = Flow.subst cx map t in
+    t, tast
+
+  let eval_param _cx (_, tast) = tast
+
+  let eval_rest _cx (_, tast) = tast
+end)
+module Func_type_sig = Func_sig.Make (Func_type_params)
+module Class_type_sig = Class_sig.Make (Func_type_sig)
+
+module Object_freeze = struct
+  let freeze_object cx loc t =
+    let reason_arg = mk_reason (RFrozen RObjectLit) loc in
+    Tvar.mk_derivable_where cx reason_arg (fun tvar ->
+      Flow.flow cx (t, ObjFreezeT (reason_arg, tvar));
+    )
+end
 
 (* AST helpers *)
 
 let qualified_name =
   let rec loop acc = Ast.Type.Generic.Identifier.(function
-    | Unqualified (_, name) ->
+    | Unqualified (_, { Ast.Identifier.name; comments= _ }) ->
       let parts = name::acc in
       String.concat "." parts
-    | Qualified (_, { qualification; id = (_, name) }) ->
+    | Qualified (_, { qualification; id = (_, { Ast.Identifier.name; comments= _ }) }) ->
       loop (name::acc) qualification
   ) in
   loop []
 
-let ident_name (_, name) = name
+let ident_name (_, { Ast.Identifier.name; comments= _ }) = name
 
-let error_type cx loc msg =
+let error_type cx loc msg t_in =
   Flow.add_output cx msg;
-  (loc, AnyT.at (loc |> ALoc.of_loc)), Typed_ast.Type.error
+  let t_out = Tast_utils.error_mapper#type_ t_in |> snd in
+  (loc, AnyT.at AnyError loc), t_out
 
 let is_suppress_type cx type_name =
   SSet.mem type_name (Context.suppress_types cx)
 
-let check_type_arg_arity cx loc params n f =
+let check_type_arg_arity cx loc t_ast params n f =
   match params with
   | None ->
     if n = 0 then
       f ()
     else
-      error_type cx loc (FlowError.ETypeParamArity (loc, n))
+      error_type cx loc (Error_message.ETypeParamArity (loc, n)) t_ast
   | Some (_, l) ->
     if n = List.length l && n <> 0 then
       f ()
     else
-      error_type cx loc (FlowError.ETypeParamArity (loc, n))
+      error_type cx loc (Error_message.ETypeParamArity (loc, n)) t_ast
 
-let mk_custom_fun cx loc targs (id_loc, name) kind =
-  check_type_arg_arity cx loc targs 0 (fun () ->
-    let reason = mk_reason RFunctionType (loc |> ALoc.of_loc) in
+let mk_custom_fun cx loc t_ast targs (id_loc, name, comments) kind =
+  check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+    let reason = mk_reason RFunctionType loc in
     let t = CustomFunT (reason, kind) in
     (loc, t),
     Ast.Type.(Generic {
-      Generic.id = Generic.Identifier.Unqualified ((id_loc, t), name);
+      Generic.id = Generic.Identifier.Unqualified (
+        (id_loc, t),
+        { Ast.Identifier.name; comments }
+      );
       targs = None
     })
   )
 
-let mk_react_prop_type cx loc targs id kind =
-  mk_custom_fun cx loc targs id
+let mk_react_prop_type cx loc t_ast targs id kind =
+  mk_custom_fun cx loc t_ast targs id
     (ReactPropType (React.PropType.Complex kind))
 
-let add_unclear_type_error_if_not_lib_file cx loc = Loc.(
-  match loc.source with
+let add_unclear_type_error_if_not_lib_file cx loc =
+  match ALoc.source loc with
     | Some file when not @@ File_key.is_lib_file file ->
-      Flow_js.add_output cx (FlowError.EUnclearType loc)
+      Flow_js.add_output cx (Error_message.EUnclearType loc)
     | _ -> ()
-)
 
-let add_deprecated_type_error_if_not_lib_file cx loc = Loc.(
-  match loc.source with
+let add_deprecated_type_error_if_not_lib_file cx loc =
+  match ALoc.source loc with
     | Some file when not @@ File_key.is_lib_file file ->
-      Flow_js.add_output cx (FlowError.EDeprecatedType loc)
+      Flow_js.add_output cx (Error_message.EDeprecatedType loc)
     | _ -> ()
-)
+
+let polarity = function
+  | Some (_, Ast.Variance.Plus) -> Polarity.Positive
+  | Some (_, Ast.Variance.Minus) -> Polarity.Negative
+  | None -> Polarity.Neutral
 
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
+
+exception UnexpectedTemporaryObject
 
 (* converter *)
 let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, (Any as t_ast) ->
   add_unclear_type_error_if_not_lib_file cx loc;
-  (loc, AnyT.at (loc |> ALoc.of_loc)), t_ast
+  (loc, AnyT.at Annotated loc), t_ast
 
-| loc, (Mixed as t_ast) -> (loc, MixedT.at (loc |> ALoc.of_loc)), t_ast
+| loc, (Mixed as t_ast) -> (loc, MixedT.at loc |> with_trust_inference cx), t_ast
 
-| loc, (Empty as t_ast) -> (loc, EmptyT.at (loc |> ALoc.of_loc)), t_ast
+| loc, (Empty as t_ast) -> (loc, EmptyT.at loc |> with_trust_inference cx), t_ast
 
-| loc, (Void as t_ast) -> (loc, VoidT.at (loc |> ALoc.of_loc)), t_ast
+| loc, (Void as t_ast) -> (loc, VoidT.at loc |> with_trust_inference cx), t_ast
 
-| loc, (Null as t_ast) -> (loc, NullT.at (loc |> ALoc.of_loc)), t_ast
+| loc, (Null as t_ast) -> (loc, NullT.at loc |> with_trust_inference cx), t_ast
 
-| loc, (Number as t_ast) -> (loc, NumT.at (loc |> ALoc.of_loc)), t_ast
+| loc, (Number as t_ast) -> (loc, NumT.at loc |> with_trust_inference cx), t_ast
 
-| loc, (String as t_ast) -> (loc, StrT.at (loc |> ALoc.of_loc)), t_ast
+| loc, (BigInt as t_ast) ->
+  let reason = annot_reason (mk_reason RBigInt loc) in
+  Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+  (loc, AnyT.why AnyError reason), t_ast
 
-| loc, (Boolean as t_ast) -> (loc, BoolT.at (loc |> ALoc.of_loc)), t_ast
+| loc, (String as t_ast) -> (loc, StrT.at loc |> with_trust_inference cx), t_ast
+
+| loc, (Boolean as t_ast) -> (loc, BoolT.at loc |> with_trust_inference cx), t_ast
 
 | loc, Nullable t ->
     let (_, t), _ as t_ast = convert cx tparams_map t in
-    let reason = annot_reason (mk_reason (RMaybe (desc_of_t t)) (loc |> ALoc.of_loc)) in
-    (loc, DefT (reason, MaybeT t)), Nullable t_ast
+    let reason = annot_reason (mk_reason (RMaybe (desc_of_t t)) loc) in
+    (loc, MaybeT (reason, t)), Nullable t_ast
 
 | loc, Union (t0, t1, ts) ->
   let (_, t0), _ as t0_ast = convert cx tparams_map t0 in
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
   let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = UnionRep.make t0 t1 (ts) in
-  (loc, DefT (mk_reason RUnionType (loc |> ALoc.of_loc), UnionT rep)),
+  (loc, UnionT (mk_reason RUnionType loc, rep)),
   Union (t0_ast, t1_ast, ts_ast)
 
 | loc, Intersection (t0, t1, ts) ->
@@ -122,10 +180,10 @@ let rec convert cx tparams_map = Ast.Type.(function
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
   let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = InterRep.make t0 t1 ts in
-  (loc, DefT (mk_reason RIntersectionType (loc |> ALoc.of_loc), IntersectionT rep)),
+  (loc, IntersectionT (mk_reason RIntersectionType loc, rep)),
   Intersection (t0_ast, t1_ast, ts_ast)
 
-| loc, Typeof x ->
+| loc, Typeof x as t_ast ->
   begin match x with
   | q_loc, Generic {
       Generic.id = qualification;
@@ -134,19 +192,19 @@ let rec convert cx tparams_map = Ast.Type.(function
       let valtype, qualification_ast = convert_qualification
         ~lookup_mode:ForTypeof cx "typeof-annotation" qualification in
       let desc = RTypeof (qualified_name qualification) in
-      let reason = mk_reason desc (loc |> ALoc.of_loc) in
+      let reason = mk_reason desc loc in
       (loc, Flow.mk_typeof_annotation cx reason valtype),
       Typeof ((q_loc, valtype), Generic { Generic.id = qualification_ast; targs = None })
-  | loc, _ ->
-    error_type cx loc (FlowError.EUnexpectedTypeof loc)
+  | q_loc, _ ->
+    error_type cx loc (Error_message.EUnexpectedTypeof q_loc) t_ast
   end
 
 | loc, Tuple ts ->
   let tuple_types, ts_ast = convert_list cx tparams_map ts in
-  let reason = annot_reason (mk_reason RTupleType (loc |> ALoc.of_loc)) in
-  let element_reason = mk_reason RTupleElement (loc |> ALoc.of_loc) in
+  let reason = annot_reason (mk_reason RTupleType loc) in
+  let element_reason = mk_reason RTupleElement loc in
   let elemt = match tuple_types with
-  | [] -> EmptyT.why element_reason
+  | [] -> EmptyT.why element_reason |> with_trust bogus_trust
   | [t] -> t
   | t0::t1::ts ->
     (* If a tuple should be viewed as an array, what would the element type of
@@ -165,36 +223,39 @@ let rec convert cx tparams_map = Ast.Type.(function
        that, we use the following closest approximation, that behaves like a
        union as a lower bound but `any` as an upper bound.
     *)
-    AnyWithLowerBoundT (DefT (element_reason, UnionT (UnionRep.make t0 t1 ts)))
+    AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make t0 t1 ts))
   in
-  (loc, DefT (reason, ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast
+  (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast
 
 | loc, Array t ->
-  let r = mk_reason RArrayType (loc |> ALoc.of_loc) in
+  let r = mk_reason RArrayType loc in
   let (_, elemt), _ as t_ast = convert cx tparams_map t in
-  (loc, DefT (r, ArrT (ArrayAT (elemt, None)))), Array t_ast
+  (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))), Array t_ast
 
 | loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast) ->
-  (loc, mk_singleton_string loc value), t_ast
+  (loc, mk_singleton_string cx loc value), t_ast
 
 | loc, (NumberLiteral { Ast.NumberLiteral.value; raw } as t_ast) ->
-  (loc, mk_singleton_number loc value raw), t_ast
+  (loc, mk_singleton_number cx loc value raw), t_ast
+
+| loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast) ->
+  let reason = annot_reason (mk_reason (RBigIntLit bigint) loc) in
+  Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+  (loc, AnyT.why AnyError reason), t_ast
 
 | loc, (BooleanLiteral value as t_ast) ->
-  (loc, mk_singleton_boolean loc value), t_ast
+  (loc, mk_singleton_boolean cx loc value), t_ast
 
 (* TODO *)
 | loc, Generic { Generic.id = (Generic.Identifier.Qualified (qid_loc,
        { Generic.Identifier.qualification; id; }) as qid); targs } ->
   let m, qualification_ast =
     convert_qualification cx "type-annotation" qualification in
-  let id_loc, name = id in
-  let reason = mk_reason (RType name) (loc |> ALoc.of_loc) in
-  let id_reason = mk_reason (RType name) (id_loc |> ALoc.of_loc) in
-  let qid_reason = mk_reason (RType (qualified_name qid)) (qid_loc |> ALoc.of_loc) in
+  let id_loc, ({ Ast.Identifier.name; comments = _ } as id_name) = id in
+  let reason = mk_reason (RType name) loc in
+  let id_reason = mk_reason (RType name) id_loc in
+  let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
   let t_unapplied = Tvar.mk_where cx qid_reason (fun t ->
-    let id_info = name, t, Type_table.Other in
-    Type_table.set_info id_loc id_info (Context.type_table cx);
     let use_op = Op (GetProperty qid_reason) in
     Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, name), t));
   ) in
@@ -203,60 +264,331 @@ let rec convert cx tparams_map = Ast.Type.(function
   Generic {
     Generic.id = Generic.Identifier.Qualified (qid_loc, {
       Generic.Identifier.qualification = qualification_ast;
-      id = (id_loc, t_unapplied), name;
+      id = (id_loc, t_unapplied), id_name
     });
     targs
   }
 
 (* type applications: name < params > *)
 | loc, Generic {
-    Generic.id = Generic.Identifier.Unqualified (name_loc, name as ident);
+    Generic.id = Generic.Identifier.Unqualified (
+      name_loc,
+      ({ Ast.Identifier.name; comments } as id_name)
+    );
     targs
-  } ->
+  } as t_ast ->
+
+  (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
+  let ident =
+    (name_loc, name, comments)
+  in
 
   let convert_type_params () =
     match targs with
     | None -> [], None
-    | Some ((loc: Loc.t), targs) ->
+    | Some (loc, targs) ->
       let elemts, targs = convert_list cx tparams_map targs in
       elemts, Some (loc, targs)
   in
 
   let reconstruct_ast t ?id_t targs =
     (loc, t), Generic { Generic.
-      id = Generic.Identifier.Unqualified ((name_loc, Option.value id_t ~default:t), name);
+      id = Generic.Identifier.Unqualified ((name_loc, Option.value id_t ~default:t), id_name);
       targs;
   } in
 
   let use_op reason =
     Op (TypeApplication { type' = reason }) in
 
+  (* NOTE: The following two functions implement the currently broken "value spread" logic in the
+     `Statement` module, adapted to operate on object literal types instead of object literal
+     values. This code is used in the implementation of `$TEMPORARY$object`, which in turn wraps an
+     encoding of object literal values as object literal types created by the signature generator
+     (or, regrettably, the inadvertent user).
+
+     TODO: When the value spread logic in the `Statement` module is fixed to match the "type spread"
+     logic, this code should be updated. *)
+
+  (************ (begin) adaptation of code in statement.ml *****************)
+
+  let object_prop cx map prop = Ast.Type.Object.(
+    match prop with
+    (* named prop or method *)
+    | { Property.
+        key =
+          (Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments= _ }) |
+          Ast.Expression.Object.Property.Literal (loc, {
+            Ast.Literal.value = Ast.Literal.String name;
+            _;
+          }));
+        value = Property.Init v;
+        optional;
+        _ } ->
+      let (_, t), _ = convert cx tparams_map v in
+      let t = if optional then Type.optional t else t in
+      Properties.add_field name Polarity.Neutral (Some loc) t map
+
+    (* We enable some unsafe support for getters and setters. The main unsafe bit
+    *  is that we don't properly havok refinements when getter and setter methods
+    *  are called. *)
+
+    (* unsafe getter property *)
+    | { Property.
+        key =
+          (Ast.Expression.Object.Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ }) |
+          Ast.Expression.Object.Property.Literal (id_loc, {
+            Ast.Literal.value = Ast.Literal.String name;
+            _;
+          }));
+        value = Property.Get (func_loc, func);
+        _
+      } ->
+      Flow_js.add_output cx (Error_message.EUnsafeGettersSetters func_loc);
+      let (_, function_type), _ = convert cx tparams_map (func_loc, Ast.Type.Function func) in
+      let return_t = Type.extract_getter_type function_type in
+      Properties.add_getter name (Some id_loc) return_t map
+
+    (* unsafe setter property *)
+    | { Property.
+        key =
+          (Ast.Expression.Object.Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ }) |
+          Ast.Expression.Object.Property.Literal (id_loc, {
+            Ast.Literal.value = Ast.Literal.String name;
+            _;
+          }));
+        value = Property.Set (func_loc, func);
+        _
+      } ->
+      Flow_js.add_output cx (Error_message.EUnsafeGettersSetters func_loc);
+      let (_, function_type), _ = convert cx tparams_map (func_loc, Ast.Type.Function func) in
+      let param_t = Type.extract_setter_type function_type in
+      Properties.add_setter name (Some id_loc) param_t map
+
+    | _ -> raise UnexpectedTemporaryObject
+  )
+  in
+
+  let object_ cx reason ?(allow_sealed=true) props =
+    let open Ast.Type.Object in
+
+    (* Use the same reason for proto and the ObjT so we can walk the proto chain
+       and use the root proto reason to build an error. *)
+    let obj_proto = ObjProtoT reason in
+
+    (* Return an object with specified sealing. *)
+    let mk_object ?(proto=obj_proto) ?(sealed=false) props =
+      Obj_type.mk_with_proto cx reason ~sealed ~props proto
+    in
+
+    (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
+       not sealed. *)
+    let mk_spread from_obj to_obj ~assert_exact =
+      let use_op = Op (ObjectSpread {op = (reason_of_t from_obj)}) in
+      Tvar.mk_where cx reason (fun t ->
+        Flow.flow cx (to_obj, ObjAssignToT(use_op, reason, from_obj, t, ObjAssign { assert_exact }));
+      )
+    in
+
+    (* When there's no result, return a new object with specified sealing. When
+       there's result, copy a new object into it, sealing the result when
+       necessary.
+
+       When building an object incrementally, only the final call to this function
+       may be with sealed=true, so we will always have an unsealed object to copy
+       properties to. *)
+    let eval_object ?(proto=obj_proto) ?(sealed=false) (map, result) =
+      match result with
+      | None -> mk_object ~proto ~sealed map
+      | Some result ->
+        let result =
+          if not (SMap.is_empty map)
+          then mk_spread (mk_object ~proto map) result ~assert_exact:false
+          else result
+        in
+        if not sealed then result else
+          Tvar.mk_where cx reason (fun t ->
+            Flow.flow cx (result, ObjSealT (reason, t))
+          )
+    in
+
+    let sealed, map, proto, result = List.fold_left (
+      fun (sealed, map, proto, result) -> function
+      (* Enforce that the only way to make unsealed object literals is ...{} (spreading empty object
+         literals). Otherwise, spreading always returns sealed object literals.
+
+         Also enforce that a spread of an inexact object can only appear as the first element of an
+         object literal, because otherwise we cannot determine the type of the object literal without
+         significantly losing precision about elements preceding that spread.
+
+         Finally, the exactness of an object literal type is determined solely by its sealedness.
+
+         TODO: This treatment of spreads is oblivious to issues that arise when spreading expressions
+         of union type.
+      *)
+      | SpreadProperty (_prop_loc, { SpreadProperty.argument }) ->
+          let (_, spread), _ = convert cx tparams_map argument in
+          let not_empty_object_literal_argument = match spread with
+            | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.sealed
+            | _ -> true in
+          let obj = eval_object (map, result) in
+          let result = mk_spread spread obj
+            ~assert_exact:(not (SMap.is_empty map && result = None)) in
+          sealed && not_empty_object_literal_argument,
+          SMap.empty,
+          proto,
+          Some result
+      | Property (_prop_loc, prop) ->
+          let map = object_prop cx map prop in
+          sealed, map, proto, result
+      | _ -> raise UnexpectedTemporaryObject
+    ) (allow_sealed, SMap.empty, None, None) props in
+
+    let sealed = match result with
+      | Some _ -> sealed
+      | None -> sealed && not (SMap.is_empty map)
+    in
+    eval_object ?proto ~sealed (map, result)
+  in
+  (************ (end) adaptation of code in statement.ml *****************)
+
   begin match name with
 
-  (* Array<T> *)
-  | "Array" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+  (* Temporary base types with literal information *)
+  | "$TEMPORARY$number" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      match List.hd elemts with
+        | DefT (r, trust, SingletonNumT num_lit) ->
+          reconstruct_ast
+            (DefT (replace_reason_const RNumber r, trust, NumT (Literal (None, num_lit))))
+            targs
+        | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
+    )
+
+  | "$TEMPORARY$string" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      match List.hd elemts with
+        | DefT (r, trust, SingletonStrT str_lit) ->
+          reconstruct_ast
+            (DefT (replace_reason_const RString r, trust, StrT (Literal (None, str_lit))))
+            targs
+        | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
+    )
+
+  | "$TEMPORARY$boolean" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      match List.hd elemts with
+        | DefT (r, trust, SingletonBoolT bool) ->
+          reconstruct_ast
+            (DefT (replace_reason_const RBoolean r, trust, BoolT (Some bool)))
+            targs
+        | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
+    )
+
+  | "$TEMPORARY$Object$freeze" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let ts, targs = convert_type_params () in
+      let t = List.hd ts in
+      let t = Object_freeze.freeze_object cx loc t in
+      (* TODO fix targs *)
+      reconstruct_ast t targs
+    )
+
+  | "$TEMPORARY$module$exports$assign" ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+      let ts, targs = convert_type_params () in
+      match ts with
+      | [annot; assign] ->
+         let reason = reason_of_t annot in
+         let tout = Tvar.mk_where cx reason (fun tvar ->
+           Flow.flow cx (annot, ModuleExportsAssignT (reason, assign, tvar));
+         ) in
+         reconstruct_ast tout targs
+      | _ -> assert false
+    )
+
+  | "$TEMPORARY$function" ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+      let ts, targs = convert_type_params () in
+      match ts with
+      | [annot; assign] ->
+        begin match annot, assign with
+        | DefT (r, trust, FunT (statics, proto, ft)), DefT (_, objtrust, ObjT objtype) ->
+          let reason = reason_of_t statics in
+          let statics' = DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason }) in
+          let t = DefT (r, trust, FunT (statics', proto, ft)) in
+          reconstruct_ast t targs
+        | DefT (poly_r, poly_trust, PolyT (tparams_loc, tparams,
+            DefT (r, trust, FunT (statics, proto, ft)),
+          id)), DefT (_, objtrust, ObjT objtype) ->
+          let reason = reason_of_t statics in
+          let statics' = DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason }) in
+          let t = DefT (poly_r, poly_trust, PolyT (tparams_loc, tparams,
+            DefT (r, trust, FunT (statics', proto, ft)),
+          id)) in
+          reconstruct_ast t targs
+        | _ ->
+          (* fall back *)
+          reconstruct_ast annot targs
+        end
+      | _ -> assert false
+    )
+
+  | "$TEMPORARY$object" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let fake_ts, fake_targs = convert_type_params () in
+      let t_object =
+        try match targs with
+        | Some (_,
+            [loc, Ast.Type.Object { Ast.Type.Object.properties; _ }]
+          ) ->
+           let reason = mk_reason RObjectLit loc in
+           object_ cx reason properties
+        | _ -> raise UnexpectedTemporaryObject
+        with
+        | UnexpectedTemporaryObject ->
+          (* TODO: lint error *)
+          List.hd fake_ts
+      in
+      reconstruct_ast t_object fake_targs
+  )
+
+  | "$TEMPORARY$array" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let elemts, targs = convert_type_params () in
       let elemt = List.hd elemts in
       reconstruct_ast
-        (DefT (mk_reason RArrayType (loc |> ALoc.of_loc), ArrT (ArrayAT (elemt, None))))
+        (DefT (mk_reason RArrayLit loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
+        targs
+  )
+
+  (* Array<T> *)
+  | "Array" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      let elemt = List.hd elemts in
+      reconstruct_ast
+        (DefT (mk_reason RArrayType loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
         targs
     )
 
   (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
   | "$ReadOnlyArray" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let elemts, targs = convert_type_params () in
       let elemt = List.hd elemts in
       reconstruct_ast
-        (DefT (annot_reason (mk_reason RROArrayType (loc |> ALoc.of_loc)), ArrT (ROArrayAT (elemt))))
+        (DefT (annot_reason (mk_reason RROArrayType loc), infer_trust cx, ArrT (ROArrayAT (elemt))))
         targs
     )
 
+  (* These utilities are no longer supported *)
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->
-    add_unclear_type_error_if_not_lib_file cx loc;
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    Error_message.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       reconstruct_ast (AnyWithLowerBoundT t) targs
@@ -264,8 +596,8 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Subtype<T> acts as any over subtypes of T *)
   | "$Subtype" ->
-    add_unclear_type_error_if_not_lib_file cx loc;
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    Error_message.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       reconstruct_ast (AnyWithUpperBoundT t) targs
@@ -273,25 +605,25 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
   | "$PropertyType" ->
-    check_type_arg_arity cx loc targs 2 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       match convert_type_params () with
-      | ([t; DefT (_, SingletonStrT key)], targs) ->
-        let reason = mk_reason (RType "$PropertyType") (loc |> ALoc.of_loc) in
+      | ([t; DefT (_, _, SingletonStrT key)], targs) ->
+        let reason = mk_reason (RType "$PropertyType") loc in
         reconstruct_ast
           (EvalT (t, TypeDestructorT
             (use_op reason, reason, PropertyType key), mk_id()))
           targs
       | _ ->
-        error_type cx loc (FlowError.EPropertyTypeAnnot loc)
+        error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast
     )
 
   (* $ElementType<T, string> acts as the type of the string elements in object
      type T *)
   | "$ElementType" ->
-    check_type_arg_arity cx loc targs 2 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       match convert_type_params () with
       | ([t; e], targs) ->
-        let reason = mk_reason (RType "$ElementType") (loc |> ALoc.of_loc) in
+        let reason = mk_reason (RType "$ElementType") loc in
         reconstruct_ast
           (EvalT (t, TypeDestructorT
             (use_op reason, reason, ElementType e), mk_id()))
@@ -301,10 +633,10 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $NonMaybeType<T> acts as the type T without null and void *)
   | "$NonMaybeType" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason = mk_reason (RType "$NonMaybeType") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "$NonMaybeType") loc in
       reconstruct_ast
         (EvalT (t, TypeDestructorT
           (use_op reason, reason, NonMaybeType), mk_id()))
@@ -313,7 +645,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Shape<T> matches the shape of T *)
   | "$Shape" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       reconstruct_ast (ShapeT t) targs
@@ -321,11 +653,11 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Diff<T, S> *)
   | "$Diff" ->
-    check_type_arg_arity cx loc targs 2 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       let t1, t2, targs = match convert_type_params () with
       | [t1; t2], targs -> t1, t2, targs
       | _ -> assert false in
-      let reason = mk_reason (RType "$Diff") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "$Diff") loc in
       reconstruct_ast
         (EvalT (t1, TypeDestructorT (use_op reason, reason,
           RestType (Type.Object.Rest.IgnoreExactAndOwn, t2)), mk_id ()))
@@ -334,10 +666,10 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $ReadOnly<T> *)
   | "$ReadOnly" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason = mk_reason (RType "$ReadOnly") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "$ReadOnly") loc in
       reconstruct_ast
         (EvalT (
           t,
@@ -354,20 +686,22 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* $Keys<T> is the set of keys of T *)
   (** TODO: remove $Enum **)
   | "$Keys" | "$Enum" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    if name = "$Enum" then
+      Error_message.EDeprecatedEnumUtility loc |> Flow_js.add_output cx;
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       reconstruct_ast
-        (KeysT (mk_reason RKeySet (loc |> ALoc.of_loc), t))
+        (KeysT (mk_reason RKeySet loc, t))
         targs
     )
 
   (* $Values<T> is a union of all the own enumerable value types of T *)
   | "$Values" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason = mk_reason (RType "$Values") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "$Values") loc in
       reconstruct_ast
         (EvalT (t, TypeDestructorT
           (use_op reason, reason, ValuesType), mk_id()))
@@ -375,19 +709,19 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$Exact" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       let desc = RExactType (desc_of_t t) in
-      reconstruct_ast (ExactT (mk_reason desc (loc |> ALoc.of_loc), t)) targs
+      reconstruct_ast (ExactT (mk_reason desc loc, t)) targs
     )
 
   | "$Rest" ->
-    check_type_arg_arity cx loc targs 2 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       let t1, t2, targs = match convert_type_params () with
       | [t1; t2], targs -> t1, t2, targs
       | _ -> assert false in
-      let reason = mk_reason (RType "$Rest") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "$Rest") loc in
       reconstruct_ast
         (EvalT (t1, TypeDestructorT (use_op reason, reason,
           RestType (Type.Object.Rest.Sound, t2)), mk_id ()))
@@ -397,15 +731,15 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* $Exports<'M'> is the type of the exports of module 'M' *)
   (** TODO: use `import typeof` instead when that lands **)
   | "$Exports" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match targs with
       | Some (targs_loc, (str_loc, StringLiteral { Ast.StringLiteral.value; raw })::_) ->
           let desc = RModule value in
-          let reason = mk_reason desc (loc |> ALoc.of_loc) in
+          let reason = mk_reason desc loc in
           let remote_module_t =
             Env.get_var_declared_type cx (internal_module_name value) loc
           in
-          let str_t = mk_singleton_string str_loc value in
+          let str_t = mk_singleton_string cx str_loc value in
           reconstruct_ast
             (Tvar.mk_where cx reason (fun t ->
               Flow.flow cx (remote_module_t, CJSRequireT(reason, t, Context.is_strict cx))
@@ -415,68 +749,68 @@ let rec convert cx tparams_map = Ast.Type.(function
               [ (str_loc, str_t),  StringLiteral { Ast.StringLiteral.value; raw } ]
             ))
       | _ ->
-          error_type cx loc (FlowError.EExportsAnnot loc)
+          error_type cx loc (Error_message.EExportsAnnot loc) t_ast
     )
 
   | "$Call" ->
     (match convert_type_params () with
     | fn::args, targs ->
-      let reason = mk_reason RFunctionCallType (loc |> ALoc.of_loc) in
+      let reason = mk_reason RFunctionCallType loc in
       reconstruct_ast
         (EvalT (fn, TypeDestructorT (use_op reason, reason, CallType args), mk_id ()))
         targs
     | _ ->
-      error_type cx loc (FlowError.ETypeParamMinArity (loc, 1)))
+      error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast)
 
   | "$TupleMap" ->
-    check_type_arg_arity cx loc targs 2 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       let t1, t2, targs = match convert_type_params () with
       | [t1; t2], targs -> t1, t2, targs
       | _ -> assert false in
-      let reason = mk_reason RTupleMap (loc |> ALoc.of_loc) in
+      let reason = mk_reason RTupleMap loc in
       reconstruct_ast
         (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (TupleMap t2)), mk_id ()))
         targs
     )
 
   | "$ObjMap" ->
-    check_type_arg_arity cx loc targs 2 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       let t1, t2, targs = match convert_type_params () with
       | [t1; t2], targs -> t1, t2, targs
       | _ -> assert false in
-      let reason = mk_reason RObjectMap (loc |> ALoc.of_loc) in
+      let reason = mk_reason RObjectMap loc in
       reconstruct_ast
         (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap t2)), mk_id ()))
         targs
     )
 
   | "$ObjMapi" ->
-    check_type_arg_arity cx loc targs 2 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       let t1, t2, targs = match convert_type_params () with
       | [t1; t2], targs -> t1, t2, targs
       | _ -> assert false in
-      let reason = mk_reason RObjectMapi (loc |> ALoc.of_loc) in
+      let reason = mk_reason RObjectMapi loc in
       reconstruct_ast
         (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi t2)), mk_id ()))
         targs
     )
 
   | "$CharSet" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match targs with
     | Some (targs_loc, [ str_loc, StringLiteral { Ast.StringLiteral.value; raw } ]) ->
-        let str_t = mk_singleton_string str_loc value in
+        let str_t = mk_singleton_string cx str_loc value in
         let chars = String_utils.CharSet.of_string value in
         let char_str = String_utils.CharSet.to_string chars in (* sorts them *)
-        let reason = mk_reason (RCustom (spf "character set `%s`" char_str)) (loc |> ALoc.of_loc) in
+        let reason = mk_reason (RCustom (spf "character set `%s`" char_str)) loc in
         reconstruct_ast
-          (DefT (reason, CharSetT chars))
+          (DefT (reason, infer_trust cx, CharSetT chars))
           (Some (
             targs_loc,
             [ (str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw } ]
           ))
       | _ ->
-        error_type cx loc (FlowError.ECharSetAnnot loc)
+        error_type cx loc (Error_message.ECharSetAnnot loc) t_ast
     )
 
   | "this" ->
@@ -485,105 +819,144 @@ let rec convert cx tparams_map = Ast.Type.(function
          type reflects the interface of `this` exposed in the current
          environment. Currently, we only support this types in a class
          environment: a this type in class C is bounded by C. *)
-      check_type_arg_arity cx loc targs 0 (fun () ->
+      check_type_arg_arity cx loc t_ast targs 0 (fun () ->
         reconstruct_ast (Flow.reposition cx loc (SMap.find_unsafe "this" tparams_map)) None
       )
     else (
-      Flow.add_output cx (FlowError.EUnexpectedThisType loc);
-      (loc, Locationless.AnyT.t), Any (* why locationless? *)
+      Flow.add_output cx (Error_message.EUnexpectedThisType loc);
+      Tast_utils.error_mapper#type_ t_ast
+
     )
 
   (* Class<T> is the type of the class whose instances are of type T *)
   | "Class" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason = mk_reason (RStatics (desc_of_t t)) (loc |> ALoc.of_loc) in
-      reconstruct_ast (DefT (reason, ClassT t)) targs
+      let reason = mk_reason (RStatics (desc_of_t t)) loc in
+      reconstruct_ast (DefT (reason, infer_trust cx, ClassT t)) targs
     )
 
   | "Function" | "function" ->
     add_unclear_type_error_if_not_lib_file cx loc;
-    check_type_arg_arity cx loc targs 0 (fun () ->
-      let reason = mk_reason RFunctionType (loc |> ALoc.of_loc) in
-      reconstruct_ast (DefT (reason, AnyFunT)) None
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+      let reason = mk_reason RFunctionType loc in
+      reconstruct_ast (AnyT.make Annotated reason) None
     )
 
   | "Object" ->
     add_unclear_type_error_if_not_lib_file cx loc;
-    check_type_arg_arity cx loc targs 0 (fun () ->
-      let reason = mk_reason RObjectType (loc |> ALoc.of_loc) in
-      reconstruct_ast (DefT (reason, AnyObjT)) None
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+      let reason = mk_reason RObjectType loc in
+      reconstruct_ast (AnyT.make Annotated reason) None
     )
 
   | "Function$Prototype$Apply" ->
-    check_type_arg_arity cx loc targs 0 (fun () ->
-      let reason = mk_reason RFunctionType (loc |> ALoc.of_loc) in
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+      let reason = mk_reason RFunctionType loc in
       reconstruct_ast (FunProtoApplyT reason) None
     )
 
   | "Function$Prototype$Bind" ->
-    check_type_arg_arity cx loc targs 0 (fun () ->
-      let reason = mk_reason RFunctionType (loc |> ALoc.of_loc) in
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+      let reason = mk_reason RFunctionType loc in
       reconstruct_ast (FunProtoBindT reason) None
     )
 
   | "Function$Prototype$Call" ->
-    check_type_arg_arity cx loc targs 0 (fun () ->
-      let reason = mk_reason RFunctionType (loc |> ALoc.of_loc) in
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+      let reason = mk_reason RFunctionType loc in
       reconstruct_ast (FunProtoCallT reason) None
     )
 
   | "Object$Assign" ->
-      mk_custom_fun cx loc targs ident ObjectAssign
+      mk_custom_fun cx loc t_ast targs ident ObjectAssign
   | "Object$GetPrototypeOf" ->
-      mk_custom_fun cx loc targs ident ObjectGetPrototypeOf
+      mk_custom_fun cx loc t_ast targs ident ObjectGetPrototypeOf
   | "Object$SetPrototypeOf" ->
-      mk_custom_fun cx loc targs ident ObjectSetPrototypeOf
+      mk_custom_fun cx loc t_ast targs ident ObjectSetPrototypeOf
 
   | "$Compose" ->
-      mk_custom_fun cx loc targs ident (Compose false)
+      mk_custom_fun cx loc t_ast targs ident (Compose false)
   | "$ComposeReverse" ->
-      mk_custom_fun cx loc targs ident (Compose true)
+      mk_custom_fun cx loc t_ast targs ident (Compose true)
+
+  | "React$AbstractComponent" ->
+      check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+        let ts, targs = convert_type_params () in
+        let config = List.nth ts 0 in
+        let instance = List.nth ts 1 in
+        reconstruct_ast (DefT (mk_reason (RCustom "AbstractComponent") loc, infer_trust cx,
+          ReactAbstractComponentT {config; instance})) targs
+      )
+  | "React$Config" ->
+      check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+        let ts, targs = convert_type_params () in
+        let props = List.nth ts 0 in
+        let default_props = List.nth ts 1 in
+        let reason = mk_reason RReactConfig loc in
+        reconstruct_ast
+          (EvalT (props, TypeDestructorT
+          (use_op reason, reason,
+            ReactConfigType default_props), mk_id ()))
+          targs
+      )
 
   | "React$PropType$Primitive" ->
-      check_type_arg_arity cx loc targs 1 (fun () ->
-        let ts, targs = convert_type_params () in
+      check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+        let ts, typed_targs = convert_type_params () in
         let t = List.hd ts in
         let prop_type = (ReactPropType (React.PropType.Primitive (false, t))) in
-        let (_, prop_t), _ = mk_custom_fun cx loc None ident prop_type in
-        reconstruct_ast prop_t targs
+        let targ = match targs with
+          | Some (_, [t]) -> t
+          | Some _ | None -> assert false in
+        let (_, prop_t), _ = mk_custom_fun cx loc targ None ident prop_type in
+        reconstruct_ast prop_t typed_targs
+      )
+  | "React$PropType$Primitive$Required" ->
+      check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+        let ts, typed_targs = convert_type_params () in
+        let t = List.hd ts in
+        let prop_type = (ReactPropType (React.PropType.Primitive (true, t))) in
+        let targ = match targs with
+          | Some (_, [t]) -> t
+          | Some _ | None -> assert false in
+        let (_, prop_t), _ = mk_custom_fun cx loc targ None ident prop_type in
+        reconstruct_ast prop_t typed_targs
       )
   | "React$PropType$ArrayOf" ->
-      mk_react_prop_type cx loc targs ident React.PropType.ArrayOf
+      mk_react_prop_type cx loc t_ast targs ident React.PropType.ArrayOf
   | "React$PropType$InstanceOf" ->
-      mk_react_prop_type cx loc targs ident React.PropType.InstanceOf
+      mk_react_prop_type cx loc t_ast targs ident React.PropType.InstanceOf
   | "React$PropType$ObjectOf" ->
-      mk_react_prop_type cx loc targs ident React.PropType.ObjectOf
+      mk_react_prop_type cx loc t_ast targs ident React.PropType.ObjectOf
   | "React$PropType$OneOf" ->
-      mk_react_prop_type cx loc targs ident React.PropType.OneOf
+      mk_react_prop_type cx loc t_ast targs ident React.PropType.OneOf
   | "React$PropType$OneOfType" ->
-      mk_react_prop_type cx loc targs ident React.PropType.OneOfType
+      mk_react_prop_type cx loc t_ast targs ident React.PropType.OneOfType
   | "React$PropType$Shape" ->
-      mk_react_prop_type cx loc targs ident React.PropType.Shape
+      mk_react_prop_type cx loc t_ast targs ident React.PropType.Shape
   | "React$CreateClass" ->
-      mk_custom_fun cx loc targs ident ReactCreateClass
+      mk_custom_fun cx loc t_ast targs ident ReactCreateClass
   | "React$CreateElement" ->
-      mk_custom_fun cx loc targs ident ReactCreateElement
+      mk_custom_fun cx loc t_ast targs ident ReactCreateElement
   | "React$CloneElement" ->
-      mk_custom_fun cx loc targs ident ReactCloneElement
+      mk_custom_fun cx loc t_ast targs ident ReactCloneElement
   | "React$ElementFactory" ->
-      check_type_arg_arity cx loc targs 1 (fun () ->
+      check_type_arg_arity cx loc t_ast targs 1 (fun () ->
         let t = match convert_type_params () with
           | [t], _ -> t
           | _ -> assert false in
-        mk_custom_fun cx loc None ident (ReactElementFactory t)
+        let targ = match targs with
+          | Some (_, [t]) -> t
+          | Some _ | None -> assert false in
+        mk_custom_fun cx loc targ None ident (ReactElementFactory t)
       )
   | "React$ElementProps" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason = mk_reason (RType "React$ElementProps") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "React$ElementProps") loc in
       reconstruct_ast
         (EvalT (t, TypeDestructorT
         (use_op reason, reason,
@@ -591,10 +964,10 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
   | "React$ElementConfig" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason = mk_reason (RType "React$ElementConfig") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "React$ElementConfig") loc in
       reconstruct_ast
         (EvalT (t, TypeDestructorT (
           use_op reason, reason, ReactElementConfigType), mk_id ()
@@ -602,10 +975,10 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
   | "React$ElementRef" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
-      let reason = mk_reason (RType "React$ElementRef") (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RType "React$ElementRef") loc in
       reconstruct_ast
         (EvalT (t, TypeDestructorT (
           use_op reason, reason, ReactElementRefType), mk_id ()
@@ -614,20 +987,20 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$Facebookism$Idx" ->
-      mk_custom_fun cx loc targs ident Idx
-  | "$Facebookism$TypeAssertIs" ->
-      mk_custom_fun cx loc targs ident TypeAssertIs
-  | "$Facebookism$TypeAssertThrows" ->
-      mk_custom_fun cx loc targs ident TypeAssertThrows
-  | "$Facebookism$TypeAssertWraps" ->
-      mk_custom_fun cx loc targs ident TypeAssertWraps
+      mk_custom_fun cx loc t_ast targs ident Idx
+  | "$Facebookism$TypeAssertIs" when Context.type_asserts cx ->
+      mk_custom_fun cx loc t_ast targs ident TypeAssertIs
+  | "$Facebookism$TypeAssertThrows" when Context.type_asserts cx ->
+      mk_custom_fun cx loc t_ast targs ident TypeAssertThrows
+  | "$Facebookism$TypeAssertWraps" when Context.type_asserts cx ->
+      mk_custom_fun cx loc t_ast targs ident TypeAssertWraps
 
   | "$Flow$DebugPrint" ->
-      mk_custom_fun cx loc targs ident DebugPrint
+      mk_custom_fun cx loc t_ast targs ident DebugPrint
   | "$Flow$DebugThrow" ->
-      mk_custom_fun cx loc targs ident DebugThrow
+      mk_custom_fun cx loc t_ast targs ident DebugThrow
   | "$Flow$DebugSleep" ->
-      mk_custom_fun cx loc targs ident DebugSleep
+      mk_custom_fun cx loc t_ast targs ident DebugSleep
 
   (* You can specify in the .flowconfig the names of types that should be
    * treated like any<actualType>. So if you have
@@ -642,42 +1015,34 @@ let rec convert cx tparams_map = Ast.Type.(function
   | type_name when is_suppress_type cx type_name ->
     (* Optional type params are info-only, validated then forgotten. *)
     let _, targs = convert_type_params () in
-    reconstruct_ast (AnyT.at (loc |> ALoc.of_loc)) targs
-
-  (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
-     as well: e.g., where AnyT is used to model prototypes and statics we
-     don't care about; but then again, some of these uses may be internal,
-     so while using AnyObjT may offer some sanity checking it might not
-     reveal user-facing errors. *)
+    reconstruct_ast (AnyT.at Annotated loc) targs
 
   (* in-scope type vars *)
   | _ when SMap.mem name tparams_map ->
-    check_type_arg_arity cx loc targs 0 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
       let t = Flow.reposition cx loc (SMap.find_unsafe name tparams_map) in
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info name_loc id_info (Context.type_table cx);
       reconstruct_ast t None
     )
 
   | "$Pred" ->
-    let fun_reason = mk_reason (RCustom "abstract predicate function") (loc |> ALoc.of_loc) in
-    let static_reason = mk_reason (RCustom "abstract predicate static") (loc |> ALoc.of_loc) in
-    let out_reason = mk_reason (RCustom "open predicate") (loc |> ALoc.of_loc) in
+    let fun_reason = mk_reason (RCustom "abstract predicate function") loc in
+    let static_reason = mk_reason (RCustom "abstract predicate static") loc in
+    let out_reason = mk_reason (RCustom "open predicate") loc in
 
-    check_type_arg_arity cx loc targs 1 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match convert_type_params () with
-      | [DefT (_, SingletonNumT (f, _))], targs ->
+      | [DefT (_, _, SingletonNumT (f, _))], targs ->
         let n = Pervasives.int_of_float f in
         let key_strs =
           ListUtils.range 0 n |>
-          List.map (fun i -> Some ("x_" ^ Pervasives.string_of_int i)) in
+          Core_list.map ~f:(fun i -> Some ("x_" ^ Pervasives.string_of_int i)) in
         let emp = Key_map.empty in
-        let tins = ListUtils.repeat n (AnyT.at (loc |> ALoc.of_loc)) in
-        let tout = OpenPredT (out_reason, MixedT.at (loc |> ALoc.of_loc), emp, emp) in
+        let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
+        let tout = OpenPredT (out_reason, MixedT.at loc |> with_trust bogus_trust, emp, emp) in
         reconstruct_ast
-          (DefT (fun_reason, FunT (
+          (DefT (fun_reason, infer_trust cx, FunT (
             dummy_static static_reason,
-            DefT (mk_reason RPrototype (loc |> ALoc.of_loc), AnyT),
+            mk_reason RPrototype loc |> Unsoundness.function_proto_any,
             mk_functiontype fun_reason tins tout
               ~rest_param:None ~def_reason:fun_reason
               ~params_names:key_strs ~is_predicate:true
@@ -685,29 +1050,56 @@ let rec convert cx tparams_map = Ast.Type.(function
           targs
 
       | _ ->
-        error_type cx loc (FlowError.EPredAnnot loc)
+        error_type cx loc (Error_message.EPredAnnot loc) t_ast
     )
 
   | "$Refine" ->
-    check_type_arg_arity cx loc targs 3 (fun () ->
+    check_type_arg_arity cx loc t_ast targs 3 (fun () ->
       match convert_type_params () with
-      | [base_t; fun_pred_t; DefT (_, SingletonNumT (f, _))], targs ->
+      | [base_t; fun_pred_t; DefT (_, _, SingletonNumT (f, _))], targs ->
           let idx = Pervasives.int_of_float f in
-          let reason = mk_reason (RCustom "refined type") (loc |> ALoc.of_loc) in
+          let reason = mk_reason (RCustom "refined type") loc in
           let pred = LatentP (fun_pred_t, idx) in
           reconstruct_ast
-            (EvalT (base_t, DestructuringT (reason, Refine pred), mk_id()))
+            (EvalT (base_t, LatentPredT (reason, pred), mk_id()))
             targs
       | _ ->
-        error_type cx loc (FlowError.ERefineAnnot loc)
+        error_type cx loc (Error_message.ERefineAnnot loc) t_ast
     )
-
+  | "$Trusted" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      match convert_type_params () with
+      | [AnyT _], _ ->
+          error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
+      | [DefT (rs, trust, ty)], targs ->
+          let trust = make_trusted cx trust (Error_message.ETrustedAnnot loc) in
+          reconstruct_ast
+            (DefT (annot_reason
+              (mk_reason (RTrusted (desc_of_reason rs)) loc),
+                trust, ty))
+            targs
+      | _ ->
+        error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
+    )
+  | "$Private" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      match convert_type_params () with
+      | [AnyT _], _ ->
+          error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
+      | [DefT (rs, trust, ty)], targs ->
+          let trust = make_private cx trust (Error_message.EPrivateAnnot loc) in
+          reconstruct_ast
+            (DefT (annot_reason
+              (mk_reason (RPrivate (desc_of_reason rs)) loc),
+                trust, ty))
+            targs
+      | _ ->
+        error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
+    )
   (* other applications with id as head expr *)
   | _ ->
-    let reason = mk_reason (RType name) (loc |> ALoc.of_loc) in
+    let reason = mk_reason (RType name) loc in
     let c = type_identifier cx name name_loc in
-    let id_info = name, c, Type_table.Other in
-    Type_table.set_info name_loc id_info (Context.type_table cx);
     let t, targs = mk_nominal_type cx reason tparams_map (c, targs) in
     reconstruct_ast t ~id_t:c targs
 
@@ -721,17 +1113,11 @@ let rec convert cx tparams_map = Ast.Type.(function
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx ~tparams_map tparams in
 
-  let tparams_list = Type.TypeParams.to_list tparams in
-
   let rev_params, rev_param_asts = List.fold_left (fun (params_acc, asts_acc) (param_loc, param) ->
     let { Function.Param.name; annot; optional } = param in
     let (_, t), _ as annot_ast = convert cx tparams_map annot in
     let t = if optional then Type.optional t else t in
-    let name = Option.map ~f:(fun (loc, name) ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info ~extra_tparams:tparams_list loc id_info (Context.type_table cx);
-      (loc, t), name
-    ) name in
+    let name = Option.map ~f:(fun (loc, id_name) -> (loc, t), id_name) name in
     (Option.map ~f:ident_name name, t) :: params_acc,
     (param_loc, {
       Function.Param.name;
@@ -740,7 +1126,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     }) :: asts_acc
   ) ([], []) params in
 
-  let reason = mk_reason RFunctionType (loc |> ALoc.of_loc) in
+  let reason = mk_reason RFunctionType loc in
 
   let rest_param, rest_param_ast = match rest with
   | Some (rest_loc, { Function.RestParam.argument = (param_loc, param) }) ->
@@ -749,7 +1135,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     Some (Option.map ~f:ident_name name, loc_of_t rest, rest),
     Some (rest_loc, {
       Function.RestParam.argument = (param_loc, {
-        Function.Param.name = Option.map ~f:(fun (loc, name) -> (loc, rest), name) name;
+        Function.Param.name =
+          Option.map ~f:(fun (loc, id_name) -> (loc, rest), id_name) name;
         annot = annot_ast;
         optional
       });
@@ -757,12 +1144,17 @@ let rec convert cx tparams_map = Ast.Type.(function
   | None -> None, None in
 
   let (_, return_t), _ as return_ast = convert cx tparams_map return in
+  let statics_t =
+    let reason = replace_reason (fun d -> RStatics d) reason in
+    Obj_type.mk_with_proto cx reason (FunProtoT reason)
+      ~sealed:true ~exact:false ?call:None
+  in
   let ft =
-    DefT (reason, FunT (
-      dummy_static reason,
-      DefT (mk_reason RPrototype (loc |> ALoc.of_loc), AnyT),
+    DefT (reason, infer_trust cx, FunT (
+      statics_t,
+      mk_reason RPrototype loc |> Unsoundness.function_proto_any,
       {
-        this_t = DefT (mk_reason RThis (loc |> ALoc.of_loc), AnyT);
+        this_t = bound_function_dummy_this;
         params = List.rev rev_params;
         rest_param;
         return_t;
@@ -772,8 +1164,8 @@ let rec convert cx tparams_map = Ast.Type.(function
         def_reason = reason;
       }))
   in
-  let id = Context.make_nominal cx in
-  (loc, poly_type_of_tparams id tparams ft),
+  let t = poly_type_of_tparams (Context.make_nominal cx) tparams ft in
+  (loc, t),
   Function {
     Function.params = (params_loc, {
       Function.Params.params = List.rev rev_param_asts;
@@ -783,288 +1175,19 @@ let rec convert cx tparams_map = Ast.Type.(function
     tparams = tparams_ast;
   }
 
-| loc, Object { Object.exact; properties } ->
-  let reason_desc = RObjectType in
-  let callable = List.exists (function
-    | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
-    | _ -> false
-  ) properties in
-  let mk_object ~exact (call_props, dict, props_map, proto, call_deprecated) =
-    let call = match List.rev call_props with
-      | [] ->
-        (* Note that call properties using the call property syntax always override
-           $call properties. Previously, if both were present, the $call property
-           was ignored, but is now left as a named property. *)
-        call_deprecated
-      | [t] -> Some t
-      | t0::t1::ts ->
-        let callable_reason = mk_reason (RCustom "callable object type") (loc |> ALoc.of_loc) in
-        let rep = InterRep.make t0 t1 ts in
-        let t = DefT (callable_reason, IntersectionT rep) in
-        Some t
-    in
-    (* Previously, call properties were stored in the props map under the key
-       $call. Unfortunately, this made it possible to specify call properties
-       using this syntax in object types, and some libraries adopted this
-       syntax.
-
-       Note that call properties using the call property syntax always override
-       $call properties. Previously, if both were present, the $call property
-       was ignored, but is now left as a named property. *)
-    let props_map, call =
-      if call <> None then props_map, call
-      else match SMap.get "$call" props_map with
-      | Some (Field (_, t, (Positive | Neutral))) ->
-        SMap.remove "$call" props_map, Some t
-      | _ -> props_map, call
-    in
-    (* Use the same reason for proto and the ObjT so we can walk the proto chain
-       and use the root proto reason to build an error. *)
-    let props_map, proto = match proto with
-      | Some t ->
-        (* The existence of a callable property already implies that
-         * __proto__ = Function.prototype. Treat __proto__ as a property *)
-        if callable
-        then
-          SMap.add "__proto__" (Field (None, t, Neutral)) props_map,
-          FunProtoT (locationless_reason RFunctionPrototype)
-        else
-          props_map, t
-      | None ->
-        props_map,
-        if callable
-        then FunProtoT (locationless_reason RFunctionPrototype)
-        else ObjProtoT (locationless_reason RObjectPrototype)
-    in
-    let call = Option.map call ~f:(Context.make_call_prop cx) in
-    let pmap = Context.make_property_map cx props_map in
-    let flags = {
-      sealed = Sealed;
-      exact;
-      frozen = false
-    } in
-    DefT (mk_reason reason_desc (loc |> ALoc.of_loc),
-      ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
-  in
-  let property loc prop props proto call_deprecated =
-    match prop with
-    | { Object.Property.
-        key; value = Object.Property.Init value; optional; variance; _method; _
-      } ->
-      begin match key with
-      (* Previously, call properties were stored in the props map under the key
-         $call. Unfortunately, this made it possible to specify call properties
-         using this syntax in object types, and some libraries adopted this
-         syntax.
-
-         Note that call properties using the call property syntax always override
-         $call properties. Previously, if both were present, the $call property
-         was ignored, but is now left as a named property. *)
-      | Ast.Expression.Object.Property.Identifier (loc, "$call") ->
-          Flow.add_output cx Flow_error.(EDeprecatedCallSyntax loc);
-          let (_, t), _ as value_ast = convert cx tparams_map value in
-          let t = if optional then Type.optional t else t in
-          let key = Ast.Expression.Object.Property.Identifier ((loc, t), "$call") in
-          props, proto, Some t,
-          { prop with Object.Property.key; value = Object.Property.Init value_ast }
-      | Ast.Expression.Object.Property.Literal
-          (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
-      | Ast.Expression.Object.Property.Identifier (loc, name) ->
-          Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc;
-          let (_, t), _ as value_ast = convert cx tparams_map value in
-          let prop_ast t = { prop with Object.Property.
-            key = begin match key with
-              | Ast.Expression.Object.Property.Literal (_, lit) ->
-                Ast.Expression.Object.Property.Literal ((loc, t), lit)
-              | Ast.Expression.Object.Property.Identifier _ ->
-                Ast.Expression.Object.Property.Identifier ((loc, t), name)
-              | _ -> assert_false "branch invariant"
-            end;
-            value = Object.Property.Init value_ast;
-          } in
-          if name = "__proto__" && not (_method || optional) && variance = None
-          then
-            let reason = mk_reason RPrototype (fst value |> ALoc.of_loc) in
-            let proto = Tvar.mk_where cx reason (fun tout ->
-              Flow.flow cx (t, ObjTestProtoT (reason, tout))
-            ) in
-            let prop_ast = prop_ast proto in
-            let proto = Some (Flow.mk_typeof_annotation cx reason proto) in
-            props, proto, call_deprecated, prop_ast
-          else
-            let t = if optional then Type.optional t else t in
-            let id_info = name, t, Type_table.Other in
-            Type_table.set_info loc id_info (Context.type_table cx);
-            let polarity = if _method then Positive else polarity variance in
-            let props = SMap.add name (Field (Some loc, t, polarity)) props in
-            props, proto, call_deprecated, (prop_ast t)
-      | Ast.Expression.Object.Property.Literal (loc, _)
-      | Ast.Expression.Object.Property.PrivateName (loc, _)
-      | Ast.Expression.Object.Property.Computed (loc, _)
-          ->
-        Flow.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
-        props, proto, call_deprecated, Typed_ast.Type.Object.Property.error
-      end
-
-    (* unsafe getter property *)
-    | { Object.Property.
-        key = Ast.Expression.Object.Property.Identifier (id_loc, name);
-        value = Object.Property.Get (loc, f);
-        _method; _ } ->
-      Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
-      let function_type, f_ast =
-        match convert cx tparams_map (loc, Ast.Type.Function f) with
-        | (_, function_type), Ast.Type.Function f_ast -> function_type, f_ast
-        | _ -> assert false
-      in
-      let return_t = Type.extract_getter_type function_type in
-      let id_info = name, return_t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
-      let props = Properties.add_getter name (Some id_loc) return_t props in
-      props, proto, call_deprecated,
-      { prop with Object.Property.
-        key = Ast.Expression.Object.Property.Identifier ((id_loc, return_t), name);
-        value = Object.Property.Get (loc, f_ast);
-      }
-    (* unsafe setter property *)
-    | { Object.Property.
-        key = Ast.Expression.Object.Property.Identifier (id_loc, name);
-        value = Object.Property.Set (loc, f);
-        _method; _ } ->
-      Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
-      let function_type, f_ast =
-        match convert cx tparams_map (loc, Ast.Type.Function f) with
-        | (_, function_type), Ast.Type.Function f_ast -> function_type, f_ast
-        | _ -> assert false
-      in
-      let param_t = Type.extract_setter_type function_type in
-      let id_info = name, param_t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
-      let props = Properties.add_setter name (Some id_loc) param_t props in
-      props, proto, call_deprecated,
-      { prop with Object.Property.
-        key = Ast.Expression.Object.Property.Identifier ((id_loc, param_t), name);
-        value = Object.Property.Set (loc, f_ast);
-      }
-    | { Object.Property.
-        value = Object.Property.Get _ | Object.Property.Set _; _ } ->
-      Flow.add_output cx
-        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
-      props, proto, call_deprecated, Typed_ast.Type.Object.Property.error
-  in
-  let add_call c = function
-    | None -> Some ([c], None, SMap.empty, None, None)
-    | Some (cs, d, pmap, proto, _) ->
-      (* Note that call properties using the call property syntax always override
-         $call properties. Previously, if both were present, the $call property
-         was ignored, but is now left as a named property. *)
-      Some (c::cs, d, pmap, proto, None)
-  in
-  let make_dict ({ Object.Indexer.id; key; value; variance; _ } as indexer) =
-    let (_, key), _ as key_ast = convert cx tparams_map key in
-    let (_, value), _ as value_ast = convert cx tparams_map value in
-    Some { Type.
-      dict_name = Option.map ~f:snd id;
-      key;
-      value;
-      dict_polarity = polarity variance;
-    },
-    { indexer with Object.Indexer.key = key_ast; value = value_ast; }
-  in
-  let add_dict loc indexer = function
-    | None ->
-      let dict, indexer_ast = make_dict indexer in
-      Some ([], dict, SMap.empty, None, None), indexer_ast
-    | Some (cs, None, pmap, proto, call_deprecated) ->
-      let dict, indexer_ast = make_dict indexer in
-      Some (cs, dict, pmap, proto, call_deprecated), indexer_ast
-    | Some (_, Some _, _, _, _) as o ->
-      Flow.add_output cx
-        FlowError.(EUnsupportedSyntax (loc, MultipleIndexers));
-      o, Typed_ast.Type.Object.Indexer.error
-  in
-  let add_prop loc p = function
-    | None ->
-      let pmap, proto, call_deprecated, p_ast = property loc p SMap.empty None None in
-      Some ([], None, pmap, proto, call_deprecated), p_ast
-    | Some (cs, d, pmap, proto, call_deprecated) ->
-      let pmap, proto, call_deprecated, p_ast = property loc p pmap proto call_deprecated in
-      Some (cs, d, pmap, proto, call_deprecated), p_ast
-  in
-  let o, ts, spread, rev_prop_asts = List.fold_left Object.(
-    fun (o, ts, spread, rev_prop_asts) -> function
-    | CallProperty (loc, { CallProperty.value = (value_loc, ft); static }) ->
-      let t, ft_ast = match convert cx tparams_map (loc, Ast.Type.Function ft) with
-        | (_, t), Ast.Type.Function ft_ast -> t, ft_ast
-        | _ -> assert false
-      in
-      let prop_ast = CallProperty (loc, { CallProperty.value = value_loc, ft_ast; static }) in
-      add_call t o, ts, spread, prop_ast::rev_prop_asts
-    | Indexer (loc, i) ->
-      let o, i_ast = add_dict loc i o in
-      o, ts, spread, Indexer (loc, i_ast)::rev_prop_asts
-    | Property (loc, p) ->
-      let o, p_ast = add_prop loc p o in
-      o, ts, spread, Property (loc, p_ast)::rev_prop_asts
-    | InternalSlot (loc, slot) ->
-      let { Object.InternalSlot.
-        id = (_, name);
-        value;
-        static=_; (* object props are never static *)
-        optional;
-        _method=_;
-      } = slot in
-      if name = "call" then
-        let (_, t), _ as value_ast = convert cx tparams_map value in
-        let t = if optional then Type.optional t else t in
-        add_call t o, ts, spread,
-        InternalSlot (loc, { slot with Object.InternalSlot.value = value_ast })::rev_prop_asts
-      else (
-        Flow.add_output cx FlowError.(
-          EUnsupportedSyntax (loc, UnsupportedInternalSlot {
-            name;
-            static = false;
-          }));
-        o, ts, spread, InternalSlot (loc, Typed_ast.Type.Object.InternalSlot.error)::rev_prop_asts
-      )
-    | SpreadProperty (loc, { Object.SpreadProperty.argument }) ->
-      let ts = match o with
-      | None -> ts
-      | Some o -> (mk_object ~exact:true o)::ts
-      in
-      let (_, o), _ as argument_ast = convert cx tparams_map argument in
-      None, o::ts, true,
-      SpreadProperty (loc, { SpreadProperty.argument = argument_ast })::rev_prop_asts
-  ) (None, [], false, []) properties in
-  let ts = match o with
-  | None -> ts
-  | Some o -> mk_object ~exact:spread o::ts
-  in (
-  loc,
-  match ts with
-  | [] ->
-    let t = mk_object ~exact ([], None, SMap.empty, None, None) in
-    if exact
-    then ExactT (mk_reason (RExactType reason_desc) (loc |> ALoc.of_loc), t)
-    else t
-  | [t] when not spread ->
-    if exact
-    then ExactT (mk_reason (RExactType reason_desc) (loc |> ALoc.of_loc), t)
-    else t
-  | t::ts ->
-    let open Type.Object.Spread in
-    let reason = mk_reason RObjectType (loc |> ALoc.of_loc) in
-    let target = Annot {make_exact = exact} in
-    EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
-  ), Object { Object.exact; properties = List.rev rev_prop_asts }
+| loc, Object { Object.exact; properties; inexact } ->
+  let t, properties = convert_object cx tparams_map loc ~exact properties in
+  if (not exact) && (not inexact) then
+    Flow.add_output cx Error_message.(EImplicitInexactObject loc);
+  (loc, t), Object { Object.exact; properties; inexact }
 
 | loc, Interface {Interface.extends; body} ->
-  let body_loc, {Ast.Type.Object.properties; exact} = body in
-  let reason = mk_reason RInterfaceType (loc |> ALoc.of_loc) in
+  let body_loc, {Ast.Type.Object.properties; exact; inexact = _inexact } = body in
+  let reason = mk_reason RInterfaceType loc in
   let iface_sig, extend_asts =
-    let id = Context.make_nominal cx in
+    let id = ALoc.none in
     let extends, extend_asts = extends
-      |> List.map (mk_interface_super cx tparams_map)
+      |> Core_list.map ~f:(mk_interface_super cx tparams_map)
       |> List.split
     in
     let super =
@@ -1072,20 +1195,21 @@ let rec convert cx tparams_map = Ast.Type.(function
         | CallProperty (_, { CallProperty.static; _ }) -> not static
         | _ -> false
       ) properties in
-      Class_sig.Interface { extends; callable }
+      Class_type_sig.Interface { extends; callable }
     in
-    Class_sig.empty id reason None tparams_map super, extend_asts
+    Class_type_sig.empty id reason None tparams_map super, extend_asts
   in
   let iface_sig, property_asts =
     add_interface_properties cx tparams_map properties iface_sig in
-  Class_sig.generate_tests cx (fun iface_sig ->
-    Class_sig.check_super cx reason iface_sig;
-    Class_sig.check_implements cx reason iface_sig
+  Class_type_sig.generate_tests cx (fun iface_sig ->
+    Class_type_sig.check_super cx reason iface_sig;
+    Class_type_sig.check_implements cx reason iface_sig
   ) iface_sig |> ignore;
-  (loc, Class_sig.thistype cx iface_sig),
+  (loc, Class_type_sig.thistype cx iface_sig),
   Interface { Interface.
     body = body_loc, { Object.
       exact;
+      inexact = false;
       properties = property_asts;
     };
     extends = extend_asts;
@@ -1097,10 +1221,9 @@ let rec convert cx tparams_map = Ast.Type.(function
      ensures that existential type variables under a polymorphic type remain
      unevaluated until the polymorphic type is applied. *)
   let force = SMap.is_empty tparams_map in
-  let reason = derivable_reason (mk_reason RExistential (loc |> ALoc.of_loc)) in
+  let reason = derivable_reason (mk_reason RExistential loc) in
   if force then begin
     let tvar = Tvar.mk cx reason in
-    Type_table.set_info loc ("Star", tvar, Type_table.Exists) (Context.type_table cx);
     (loc, tvar), Exists
   end
   else (loc, ExistsT reason), Exists
@@ -1126,77 +1249,375 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
   | Qualified (loc, { qualification; id; }) as qualified ->
     let m, qualification =
       convert_qualification ~lookup_mode cx reason_prefix qualification in
-    let id_loc, name = id in
+    let id_loc, id_name = id in
+    let { Ast.Identifier.name; comments = _ } = id_name in
     let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
-    let reason = mk_reason desc (loc |> ALoc.of_loc) in
-    let id_reason = mk_reason desc (id_loc |> ALoc.of_loc) in
+    let reason = mk_reason desc loc in
+    let id_reason = mk_reason desc id_loc in
     let t = Tvar.mk_where cx reason (fun t ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
-      let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) (loc |> ALoc.of_loc))) in
+      let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
       Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
     ) in
-    t, Qualified (loc, { qualification; id = (id_loc, t), name; })
+    t, Qualified (loc, { qualification; id = (id_loc, t), id_name })
 
-  | Unqualified (loc, name) ->
+  | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
     let t = Env.get_var ~lookup_mode cx name loc in
-    let id_info = name, t, Type_table.Other in
-    Type_table.set_info loc id_info (Context.type_table cx);
-    t, Unqualified ((loc, t), name)
+    t, Unqualified ((loc, t), id_name)
 )
+
+and convert_object =
+  let obj_proto_t = ObjProtoT (locationless_reason RObjectPrototype) in
+  let fun_proto_t = FunProtoT (locationless_reason RFunctionPrototype) in
+  let module Acc = struct
+    type element =
+      | Spread of Type.t
+      | Slice of {
+          dict: Type.dicttype option;
+          pmap: Type.Properties.t;
+        }
+
+    type t = {
+      dict: Type.dicttype option;
+      pmap: Type.Properties.t;
+      tail: element list;
+      proto: Type.t option;
+      calls: Type.t list;
+    }
+
+    let empty = {
+      dict = None;
+      pmap = SMap.empty;
+      tail = [];
+      proto = None;
+      calls = [];
+    }
+
+    let empty_slice = Slice {dict = None; pmap = SMap.empty}
+
+    let head_slice {dict; pmap; _}  =
+      if dict = None && SMap.is_empty pmap
+      then None
+      else Some (Slice {dict; pmap})
+
+    let add_call c = function
+      | {proto = Some _; _} -> Error Error_message.ExplicitCallAfterProto
+      | acc -> Ok { acc with calls = c::acc.calls }
+
+    let add_dict d = function
+      | {dict = Some _; _} -> Error Error_message.MultipleIndexers
+      | acc -> Ok { acc with dict = Some d }
+
+    let add_prop f acc =
+      {acc with pmap = f acc.pmap}
+
+    let add_proto p = function
+      | {proto = Some _; _} -> Error Error_message.MultipleProtos
+      | {calls = _::_; _} -> Error Error_message.ExplicitProtoAfterCall
+      | acc -> Ok {acc with proto = Some p}
+
+    let add_spread t acc =
+      let tail = match head_slice acc with
+      | None -> acc.tail
+      | Some slice -> slice::acc.tail
+      in
+      {acc with dict = None; pmap = SMap.empty; tail = (Spread t)::tail}
+
+    let elements_rev acc =
+      match head_slice acc with
+      | Some slice -> slice, acc.tail
+      | None ->
+        match acc.tail with
+        | [] -> empty_slice, []
+        | x::xs -> x, xs
+
+    let elements acc = Nel.rev (elements_rev acc)
+
+    let proto = function
+      | {proto = Some t; _} -> t
+      | {calls = _::_; _} -> fun_proto_t
+      | _ -> obj_proto_t
+
+    let calls_rev acc = acc.calls
+  end in
+
+  let mk_object cx loc ~exact call dict pmap proto =
+    let pmap = Context.make_property_map cx pmap in
+    let call = Option.map ~f:(Context.make_call_prop cx) call in
+    let flags = {sealed = Sealed; exact; frozen = false} in
+    DefT (mk_reason RObjectType loc, infer_trust cx,
+      ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
+  in
+
+  let mk_object_annot cx loc ~exact call dict pmap proto =
+    let t = mk_object cx loc ~exact call dict pmap proto in
+    if exact
+    then ExactT (mk_reason (RExactType RObjectType) loc, t)
+    else t
+  in
+
+  let open Ast.Type in
+  let named_property cx tparams_map loc acc prop =
+    match prop with
+    | { Object.Property.
+        key; value = Object.Property.Init value; optional; variance; _method; _
+      } ->
+      begin match key with
+      | Ast.Expression.Object.Property.Literal
+          (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
+      | Ast.Expression.Object.Property.Identifier (
+          loc, { Ast.Identifier.name; comments = _ }
+        ) ->
+          Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc;
+          let (_, t), _ as value_ast = convert cx tparams_map value in
+          let prop_ast t = { prop with Object.Property.
+            key = begin match key with
+              | Ast.Expression.Object.Property.Literal (_, lit) ->
+                Ast.Expression.Object.Property.Literal ((loc, t), lit)
+              | Ast.Expression.Object.Property.Identifier (
+                  _loc,
+                  { Ast.Identifier.name = _; comments = comments_inner }
+                ) ->
+                Ast.Expression.Object.Property.Identifier (
+                  (loc, t),
+                  { Ast.Identifier.name; comments = comments_inner }
+                )
+              | _ -> assert_false "branch invariant"
+            end;
+            value = Object.Property.Init value_ast;
+          } in
+          if name = "__proto__" && not (_method || optional) && variance = None
+          then
+            let reason = mk_reason RPrototype (fst value) in
+            let proto = Tvar.mk_where cx reason (fun tout ->
+              Flow.flow cx (t, ObjTestProtoT (reason, tout))
+            ) in
+            let acc = match Acc.add_proto (Flow.mk_typeof_annotation cx reason proto) acc with
+            | Ok acc -> acc
+            | Error err ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+              acc
+            in
+            acc, prop_ast proto
+          else
+            let t = if optional then Type.optional t else t in
+            let polarity = if _method then Polarity.Positive else polarity variance in
+            Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc,
+            prop_ast t
+      | Ast.Expression.Object.Property.Literal (loc, _)
+      | Ast.Expression.Object.Property.PrivateName (loc, _)
+      | Ast.Expression.Object.Property.Computed (loc, _)
+          ->
+        Flow.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
+        let _, prop_ast = Tast_utils.error_mapper#object_property_type (loc, prop) in
+        acc, prop_ast
+      end
+
+    (* unsafe getter property *)
+    | { Object.Property.
+        key = Ast.Expression.Object.Property.Identifier (
+          id_loc,
+          ({ Ast.Identifier.name; comments = _ } as id_name)
+        );
+        value = Object.Property.Get (loc, f);
+        _method; _ } ->
+      Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+      let function_type, f_ast =
+        match convert cx tparams_map (loc, Ast.Type.Function f) with
+        | (_, function_type), Ast.Type.Function f_ast -> function_type, f_ast
+        | _ -> assert false
+      in
+      let return_t = Type.extract_getter_type function_type in
+      Acc.add_prop (Properties.add_getter name (Some id_loc) return_t) acc,
+      { prop with Object.Property.
+        key = Ast.Expression.Object.Property.Identifier ((id_loc, return_t), id_name);
+        value = Object.Property.Get (loc, f_ast);
+      }
+    (* unsafe setter property *)
+    | { Object.Property.
+        key = Ast.Expression.Object.Property.Identifier (
+          id_loc,
+          ({ Ast.Identifier.name; comments = _ } as id_name)
+        );
+        value = Object.Property.Set (loc, f);
+        _method; _ } ->
+      Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+      let function_type, f_ast =
+        match convert cx tparams_map (loc, Ast.Type.Function f) with
+        | (_, function_type), Ast.Type.Function f_ast -> function_type, f_ast
+        | _ -> assert false
+      in
+      let param_t = Type.extract_setter_type function_type in
+      Acc.add_prop (Properties.add_setter name (Some id_loc) param_t) acc,
+      { prop with Object.Property.
+        key = Ast.Expression.Object.Property.Identifier ((id_loc, param_t), id_name);
+        value = Object.Property.Set (loc, f_ast);
+      }
+    | { Object.Property.
+        value = Object.Property.Get _ | Object.Property.Set _; _ } ->
+      Flow.add_output cx
+        Error_message.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      let _, prop_ast = Tast_utils.error_mapper#object_property_type (loc, prop) in
+      acc, prop_ast
+  in
+
+  let make_call cx tparams_map loc call =
+    let { Object.CallProperty.value = (fn_loc, fn); static } = call in
+    let t, fn = match convert cx tparams_map (loc, Ast.Type.Function fn) with
+      | (_, t), Ast.Type.Function fn -> t, fn
+      | _ -> assert false
+    in
+    t, { Object.CallProperty.value = (fn_loc, fn); static }
+  in
+
+  let make_dict cx tparams_map indexer =
+    let { Object.Indexer.id; key; value; static; variance; } = indexer in
+    let (_, key), _ as key_ast = convert cx tparams_map key in
+    let (_, value), _ as value_ast = convert cx tparams_map value in
+    { Type.
+      dict_name = Option.map ~f:ident_name id;
+      key;
+      value;
+      dict_polarity = polarity variance;
+    },
+    { Object.Indexer.id; key = key_ast; value = value_ast; static; variance }
+  in
+
+  let property cx tparams_map acc =
+    let open Object in
+    function
+    | CallProperty (loc, call) ->
+      let t, call = make_call cx tparams_map loc call in
+      let acc = match Acc.add_call t acc with
+      | Ok acc -> acc
+      | Error err ->
+        Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+        acc
+      in
+      acc, CallProperty (loc, call)
+    | Indexer (loc, i) ->
+      let d, i = make_dict cx tparams_map i in
+      let acc = match Acc.add_dict d acc with
+      | Ok acc -> acc
+      | Error err ->
+        Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+        acc
+      in
+      acc, Indexer (loc, i)
+    | Property (loc, p) ->
+      let acc, p = named_property cx tparams_map loc acc p in
+      acc, Property (loc, p)
+    | InternalSlot (loc, slot) as prop ->
+      let { Object.InternalSlot.
+        id = (_, { Ast.Identifier.name; comments= _ });
+        value;
+        static=_; (* object props are never static *)
+        optional;
+        _method=_;
+      } = slot in
+      if name = "call" then
+        let (_, t), _ as value_ast = convert cx tparams_map value in
+        let t = if optional then Type.optional t else t in
+        let acc = match Acc.add_call t acc with
+        | Ok acc -> acc
+        | Error err ->
+          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+          acc
+        in
+        acc, InternalSlot (loc, { slot with Object.InternalSlot.value = value_ast })
+      else (
+        Flow.add_output cx Error_message.(
+          EUnsupportedSyntax (loc, UnsupportedInternalSlot {
+            name;
+            static = false;
+          }));
+        acc, (Tast_utils.error_mapper#object_type_property prop)
+      )
+    | SpreadProperty (loc, { Object.SpreadProperty.argument }) ->
+      let (_, t), _ as argument_ast = convert cx tparams_map argument in
+      Acc.add_spread t acc,
+      SpreadProperty (loc, { SpreadProperty.argument = argument_ast })
+  in
+
+  fun cx tparams_map loc ~exact properties ->
+    let acc, rev_prop_asts =
+      List.fold_left (fun (acc, rev_prop_asts) p ->
+        let acc, prop_ast = property cx tparams_map acc p in
+        acc, prop_ast::rev_prop_asts
+      ) (Acc.empty, []) properties
+    in
+    let proto = Acc.proto acc in
+    let calls_rev = Acc.calls_rev acc in
+    let t = match Acc.elements acc with
+    | Acc.Slice {dict; pmap}, [] ->
+      let ts = List.rev_map (fun call ->
+        mk_object_annot cx loc ~exact (Some call) dict pmap proto
+      ) calls_rev in
+      (match ts with
+      | [] -> mk_object_annot cx loc ~exact None dict pmap proto
+      | [t] -> t
+      | t0::t1::ts ->
+        let callable_reason = mk_reason (RCustom "callable object type") loc in
+        let rep = InterRep.make t0 t1 ts in
+        IntersectionT (callable_reason, rep))
+    | os ->
+      let open Type.Object.Spread in
+      let reason = mk_reason RObjectType loc in
+      let target = Annot {make_exact = exact} in
+      let t, ts = Nel.rev_map (function
+        | Acc.Spread t -> t
+        | Acc.Slice {dict; pmap} ->
+          mk_object cx loc ~exact:true None dict pmap obj_proto_t
+      ) os in
+      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
+    in
+    t, List.rev rev_prop_asts
+
 
 and mk_func_sig =
   let open Ast.Type.Function in
-  let add_param cx tparams_map (x, rev_param_asts) (loc, param) =
-    let { Param.name = id; annot; optional } = param in
+  let add_param cx tparams_map x param =
+    let (loc, { Param.name; annot; optional }) = param in
     let (_, t), _ as annot = convert cx tparams_map annot in
-    Func_params.add_simple cx ~optional loc id t x,
-    (loc, { Param.
-      name = Option.map ~f:(fun (loc, name) -> (loc, t), name) id;
-      annot;
-      optional
-    })::rev_param_asts
+    let name = Option.map ~f:(fun (loc, id_name) -> (loc, t), id_name) name in
+    let param = t, (loc, { Param.name; annot; optional }) in
+    Func_type_params.add_param param x
   in
-  let add_rest cx tparams_map (loc, param) x =
-    let { Param.name = id; annot; optional } = param in
+  let add_rest cx tparams_map x rest_param =
+    let (rest_loc, { RestParam.
+      argument = (loc, { Param.name; annot; optional });
+    }) = rest_param in
     let (_, t), _ as annot = convert cx tparams_map annot in
-    Func_params.add_rest cx loc id t x,
-    (loc, { Param.
-      name = Option.map ~f:(fun (loc, name) -> (loc, t), name) id;
-      annot;
-      optional
-    })
+    let name = Option.map ~f:(fun (loc, id_name) -> (loc, t), id_name) name in
+    let rest = t, (rest_loc, { RestParam.
+      argument = (loc, { Param.name; annot; optional });
+    }) in
+    Func_type_params.add_rest rest x
   in
   let convert_params cx tparams_map (loc, {Params.params; rest}) =
-    let params, rev_param_asts =
-      List.fold_left (add_param cx tparams_map) (Func_params.empty, []) params in
-    match rest with
-    | Some (rest_loc, { RestParam.argument }) ->
-      let params, argument = add_rest cx tparams_map argument params in
-      params, (
-        loc,
-        { Params.
-          params = List.rev rev_param_asts;
-          rest = Some (rest_loc, { RestParam.argument; })
-        }
-      )
-    | None ->
-      params, (loc, { Params.params = List.rev rev_param_asts; rest = None; })
+    let fparams = Func_type_params.empty (fun params rest ->
+      Some (loc, { Params.params; rest })
+    ) in
+    let fparams = List.fold_left (add_param cx tparams_map) fparams params in
+    let fparams = Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
+    let params_ast = Func_type_params.eval cx fparams in
+    fparams, Option.value_exn params_ast
   in
   fun cx tparams_map loc func ->
     let tparams, tparams_map, tparams_ast =
       mk_type_param_declarations cx ~tparams_map func.tparams in
-    Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
     let fparams, params_ast = convert_params cx tparams_map func.Ast.Type.Function.params in
     let (_, return_t), _ as return_ast = convert cx tparams_map func.return in
-    { Func_sig.
-      reason = mk_reason RFunctionType loc;
+    let reason = mk_reason RFunctionType loc in
+    let knot = Tvar.mk cx reason in
+    { Func_type_sig.
+      reason;
       kind = Func_sig.Ordinary;
       tparams;
       tparams_map;
       fparams;
       body = None;
       return_t;
+      knot;
     }, { Ast.Type.Function.
       tparams = tparams_ast;
       params = params_ast;
@@ -1207,10 +1628,9 @@ and mk_type cx tparams_map reason = function
   | None ->
       let t =
         if Context.is_weak cx
-        then AnyT.why reason
+        then Unsoundness.why WeakContext reason
         else Tvar.mk cx reason
       in
-      Hashtbl.replace (Context.annot_table cx) (aloc_of_reason reason |> ALoc.to_loc) t;
       t, None
 
   | Some annot ->
@@ -1225,21 +1645,31 @@ and mk_type_annotation cx tparams_map reason = function
   let t, ast_annot = mk_type_available_annotation cx tparams_map annot in
   t, T.Available ast_annot
 
+and mk_return_type_annotation cx tparams_map reason ~definitely_returns_void annot =
+  match annot with
+  | T.Missing loc when definitely_returns_void ->
+    let t = VoidT.why reason |> with_trust literal_trust in
+    t, T.Missing (loc, t)
+  (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
+  and no explicit returns *)
+  | _ ->
+    mk_type_annotation cx tparams_map reason annot
+
 and mk_type_available_annotation cx tparams_map (loc, annot) =
   let (_, t), _ as annot_ast = convert cx tparams_map annot in
   t, (loc, annot_ast)
 
-and mk_singleton_string loc key =
-  let reason = mk_reason (RStringLit key) (loc |> ALoc.of_loc) in
-  DefT (reason, SingletonStrT key)
+and mk_singleton_string cx loc key =
+  let reason = mk_reason (RStringLit key) loc in
+  DefT (reason, infer_trust cx, SingletonStrT key)
 
-and mk_singleton_number loc num raw =
-  let reason = mk_reason (RNumberLit raw) (loc |> ALoc.of_loc) in
-  DefT (reason, SingletonNumT (num, raw))
+and mk_singleton_number cx loc num raw =
+  let reason = mk_reason (RNumberLit raw) loc in
+  DefT (reason, infer_trust cx, SingletonNumT (num, raw))
 
-and mk_singleton_boolean loc b =
-  let reason = mk_reason (RBooleanLit b) (loc |> ALoc.of_loc) in
-  DefT (reason, SingletonBoolT b)
+and mk_singleton_boolean cx loc b =
+  let reason = mk_reason (RBooleanLit b) loc in
+  DefT (reason, infer_trust cx, SingletonBoolT b)
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
@@ -1249,7 +1679,7 @@ and mk_nominal_type cx reason tparams_map (c, targs) =
   | None ->
       Flow.mk_instance cx reason c, None
   | Some (loc, targs) ->
-      let annot_loc = aloc_of_reason reason |> ALoc.to_loc in
+      let annot_loc = aloc_of_reason reason in
       let targs, targs_ast = convert_list cx tparams_map targs in
       typeapp ~annot_loc c targs, Some (loc, targs_ast)
 
@@ -1258,11 +1688,11 @@ and mk_nominal_type cx reason tparams_map (c, targs) =
 and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
   let open Ast.Type.ParameterDeclaration in
   let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
-    let { TypeParam.name = name_loc, name as id; bound; variance; default; } = type_param in
-    let reason = mk_reason (RType name) (name_loc |> ALoc.of_loc) in
+    let { TypeParam.name = name_loc, ({ Ast.Identifier.name; comments= _ }) as id; bound; variance; default; } = type_param in
+    let reason = mk_reason (RType name) name_loc in
     let bound, bound_ast = match bound with
     | Ast.Type.Missing loc ->
-        let t = DefT (reason, MixedT Mixed_everything) in
+        let t = DefT (reason, infer_trust cx, MixedT Mixed_everything) in
         t, Ast.Type.Missing (loc, t)
     | Ast.Type.Available (bound_loc, u) ->
         let bound, bound_ast = mk_type cx tparams_map reason (Some u) in
@@ -1282,11 +1712,10 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let polarity = polarity variance in
     let tparam = { reason; name; bound; polarity; default; } in
     let t = BoundT (reason, name, polarity) in
-    let id_info = name, t, Type_table.Other in
 
     let name_ast =
-      let loc, ident = id in
-      (loc, t), ident
+      let loc, id_name = id in
+      (loc, t), id_name
     in
 
     let ast = (loc, t), {
@@ -1296,7 +1725,6 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
       default = default_ast
     } in
     let tparams = tparam :: tparams in
-    Type_table.set_info ~extra_tparams:tparams name_loc id_info (Context.type_table cx);
     tparams,
     SMap.add name t tparams_map,
     SMap.add name (Flow.subst cx bounds_map bound) bounds_map,
@@ -1311,22 +1739,16 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let tparams_ast = Some (tparams_loc, List.rev rev_asts) in
     let tparams = match List.rev rev_tparams with
     | [] -> None
-    | hd::tl -> Some (tparams_loc |> ALoc.of_loc, (hd, tl))
+    | hd::tl -> Some (tparams_loc, (hd, tl))
     in
     tparams, tparams_map, tparams_ast
 
 and type_identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
-  then AnyT.at (loc |> ALoc.of_loc)
+  then Unsoundness.at InferenceHooks loc
   else if name = "undefined"
-  then VoidT.at (loc |> ALoc.of_loc)
+  then VoidT.at loc |> with_trust_inference cx
   else Env.var_ref ~lookup_mode:ForType cx name loc
-
-and polarity = Ast.Variance.(function
-  | Some (_, Plus) -> Positive
-  | Some (_, Minus) -> Negative
-  | None -> Neutral
-)
 
 and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   let lookup_mode = Env.LookupMode.ForType in
@@ -1340,7 +1762,7 @@ and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   typeapp, (loc, { Ast.Type.Generic.id; targs })
 
 and add_interface_properties cx tparams_map properties s =
-  let open Class_sig in
+  let open Class_type_sig in
   let x, rev_prop_asts =
     List.fold_left Ast.Type.Object.(fun (x, rev_prop_asts) -> function
     | CallProperty (loc, { CallProperty.value = value_loc, ft; static }) ->
@@ -1351,11 +1773,11 @@ and add_interface_properties cx tparams_map properties s =
         value = value_loc, ft;
         static;
       })::rev_prop_asts
-    | Indexer (loc, { Indexer.static; _ })
+    | Indexer (loc, { Indexer.static; _ }) as indexer_prop
       when mem_field ~static "$key" x ->
       Flow.add_output cx
-        Flow_error.(EUnsupportedSyntax (loc, MultipleIndexers));
-      x, Indexer (loc, Typed_ast.Type.Object.Indexer.error)::rev_prop_asts
+        Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
+      x, (Tast_utils.error_mapper#object_type_property indexer_prop)::rev_prop_asts
     | Indexer (loc, indexer) ->
       let { Indexer.key; value; static; variance; _ } = indexer in
       let k, _ as key = convert cx tparams_map key in
@@ -1367,99 +1789,81 @@ and add_interface_properties cx tparams_map properties s =
         key; value; static; proto; optional; _method; variance;
       } as prop)) ->
       if optional && _method
-      then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
+      then Flow.add_output cx Error_message.(EInternal (loc, OptionalMethod));
       let polarity = polarity variance in
       let x, prop = Ast.Expression.Object.(
         match _method, key, value with
         | _, Property.Literal (loc, _), _
         | _, Property.PrivateName (loc, _), _
         | _, Property.Computed (loc, _), _ ->
-            Flow.add_output cx (Flow_error.EUnsupportedSyntax (loc, Flow_error.IllegalName));
-            x, (loc, Typed_ast.Type.Object.Property.error)
+            Flow.add_output cx (Error_message.EUnsupportedSyntax (loc, Error_message.IllegalName));
+            x, Tast_utils.error_mapper#object_property_type (loc, prop)
 
-        (* Previously, call properties were stored in the props map under the key
-           $call. Unfortunately, this made it possible to specify call properties
-           using this syntax in interfaces, declared classes, and even normal classes.
-
-           Note that $call properties always override the call property syntax.
-           As before, if both are present, the $call property is used and the call
-           property is ignored. *)
-        | _, (Property.Identifier (id_loc, "$call")),
-            Ast.Type.Object.Property.Init value when not proto ->
-            Flow.add_output cx Flow_error.(EDeprecatedCallSyntax id_loc);
-            let (_, t), _ as value_ast = convert cx tparams_map value in
-            let t = if optional then Type.optional t else t in
-            add_call_deprecated ~static t x,
-            Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, t), "$call");
-              value = Object.Property.Init value_ast;
-            })
-
-        | true, (Property.Identifier (id_loc, name)),
+        | true, (Property.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name))),
             Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func) ->
-            let fsig, func_ast = mk_func_sig cx tparams_map (loc |> ALoc.of_loc) func in
-            let ft = Func_sig.methodtype cx fsig in
+            let fsig, func_ast = mk_func_sig cx tparams_map loc func in
+            let ft = Func_type_sig.methodtype cx fsig in
             let append_method = match static, name with
             | false, "constructor" -> append_constructor (Some id_loc)
             | _ -> append_method ~static name id_loc
             in
             append_method fsig x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, ft), name);
+              key = Property.Identifier ((id_loc, ft), id_name);
               value = Object.Property.Init ((func_loc, ft), Function func_ast);
             })
 
         | true, Property.Identifier _, _ ->
             Flow.add_output cx
-              Flow_error.(EInternal (loc, MethodNotAFunction));
-            x, (loc, Typed_ast.Type.Object.Property.error)
+              Error_message.(EInternal (loc, MethodNotAFunction));
+            x, Tast_utils.error_mapper#object_property_type (loc, prop)
 
-        | false, (Property.Identifier (id_loc, name)),
+        | false, (Property.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name))),
             Ast.Type.Object.Property.Init value ->
             let (_, t), _ as value_ast = convert cx tparams_map value in
             let t = if optional then Type.optional t else t in
             let add = if proto then add_proto_field else add_field ~static in
             add name id_loc polarity (Annot t) x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, t), name);
+              key = Property.Identifier ((id_loc, t), id_name);
               value = Object.Property.Init value_ast;
             })
 
         (* unsafe getter property *)
-        | _, (Property.Identifier (id_loc, name)),
+        | _, (Property.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name))),
             Ast.Type.Object.Property.Get (get_loc, func) ->
-            Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
-            let fsig, func_ast = mk_func_sig cx tparams_map (loc |> ALoc.of_loc) func in
-            let prop_t = fsig.Func_sig.return_t in
+            Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+            let fsig, func_ast = mk_func_sig cx tparams_map loc func in
+            let prop_t = fsig.Func_type_sig.return_t in
             add_getter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, prop_t), name);
+              key = Property.Identifier ((id_loc, prop_t), id_name);
               value = Object.Property.Get (get_loc, func_ast);
             })
 
         (* unsafe setter property *)
-        | _, (Property.Identifier (id_loc, name)),
+        | _, (Property.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name))),
             Ast.Type.Object.Property.Set (set_loc, func) ->
-            Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
-            let fsig, func_ast = mk_func_sig cx tparams_map (loc |> ALoc.of_loc) func in
+            Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
+            let fsig, func_ast = mk_func_sig cx tparams_map loc func in
             let prop_t = match fsig with
-            | { Func_sig.tparams=None; fparams; _ } ->
-              (match Func_params.value fparams with
+            | { Func_type_sig.tparams=None; fparams; _ } ->
+              (match Func_type_params.value fparams with
               | [_, t] -> t
-              | _ -> AnyT.at (id_loc |> ALoc.of_loc) (* error case: report any ok *))
-            | _ -> AnyT.at (id_loc |> ALoc.of_loc) (* error case: report any ok *) in
+              | _ -> AnyT.at AnyError id_loc (* error case: report any ok *))
+            | _ -> AnyT.at AnyError id_loc (* error case: report any ok *) in
             add_setter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, prop_t), name);
+              key = Property.Identifier ((id_loc, prop_t), id_name);
               value = Object.Property.Set (set_loc, func_ast);
             })
         )
       in
       x, Ast.Type.Object.Property prop :: rev_prop_asts
 
-    | InternalSlot (loc, slot) ->
+    | InternalSlot (loc, slot) as prop ->
       let { InternalSlot.
-        id = _, name;
+        id = _, { Ast.Identifier.name; comments= _ };
         value;
         optional;
         static;
@@ -1471,18 +1875,17 @@ and add_interface_properties cx tparams_map properties s =
         append_call ~static t x,
         InternalSlot (loc, { slot with InternalSlot.value })::rev_prop_asts
       else (
-        Flow.add_output cx Flow_error.(
+        Flow.add_output cx Error_message.(
           EUnsupportedSyntax (loc, UnsupportedInternalSlot {
             name;
             static;
           }));
-        x, InternalSlot (loc, Typed_ast.Type.Object.InternalSlot.error)::rev_prop_asts
+        x, (Tast_utils.error_mapper#object_type_property prop)::rev_prop_asts
       )
 
-    | SpreadProperty (loc, _) ->
-      Flow.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
-      x,
-      SpreadProperty (loc, Typed_ast.Type.Object.SpreadProperty.error)::rev_prop_asts
+    | SpreadProperty (loc, _)  as prop ->
+      Flow.add_output cx Error_message.(EInternal (loc, InterfaceTypeSpread));
+      x, (Tast_utils.error_mapper#object_type_property prop)::rev_prop_asts
   ) (s, []) properties
   in
   x, List.rev rev_prop_asts
@@ -1495,11 +1898,11 @@ let mk_super cx tparams_map loc c targs =
     (loc, c, Some ts), Some (targs_loc, targs_ast)
 
 let mk_interface_sig cx reason decl =
-  let open Class_sig in
+  let open Class_type_sig in
   let { Ast.Statement.Interface.
     id = id_loc, id_name;
     tparams;
-    body = (body_loc, { Ast.Type.Object.properties; exact });
+    body = (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact });
     extends;
     _;
   } = decl in
@@ -1509,14 +1912,12 @@ let mk_interface_sig cx reason decl =
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx tparams in
 
-  let id_info = id_name, self, Type_table.Other in
-  Type_table.set_info id_loc id_info (Context.type_table cx);
 
   let iface_sig, extends_ast =
-    let id = Context.make_nominal cx in
+    let id = id_loc in
     let extends, extends_ast =
       extends
-      |> List.map (mk_interface_super cx tparams_map)
+      |> Core_list.map ~f:(mk_interface_super cx tparams_map)
       |> List.split in
     let super =
       let callable = List.exists Ast.Type.Object.(function
@@ -1538,15 +1939,15 @@ let mk_interface_sig cx reason decl =
     id = (id_loc, self), id_name;
     tparams = tparams_ast;
     extends = extends_ast;
-    body = body_loc, { Ast.Type.Object.exact; properties };
+    body = body_loc, { Ast.Type.Object.exact; properties; inexact = false };
   }
 
 let mk_declare_class_sig =
-  let open Class_sig in
+  let open Class_type_sig in
 
   let mk_mixins cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
     let name = qualified_name id in
-    let r = mk_reason (RType name) (loc |> ALoc.of_loc) in
+    let r = mk_reason (RType name) loc in
     let i, id =
       let lookup_mode = Env.LookupMode.ForValue in
       convert_qualification ~lookup_mode cx "mixins" id
@@ -1558,9 +1959,9 @@ let mk_declare_class_sig =
     t, (loc, { Ast.Type.Generic.id; targs })
   in
 
-  let is_object_builtin_libdef (loc, name) =
+  let is_object_builtin_libdef (loc, { Ast.Identifier.name; comments= _ }) =
     name = "Object" &&
-    match Loc.source loc with
+    match ALoc.source loc with
     | None -> false
     | Some source -> File_key.is_lib_file source
   in
@@ -1569,46 +1970,55 @@ let mk_declare_class_sig =
     let { Ast.Statement.DeclareClass.
       id = (id_loc, id_name) as ident;
       tparams;
-      body = body_loc, { Ast.Type.Object.properties; exact };
+      body = body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact };
       extends;
       mixins;
       implements;
     } = decl in
-
     let self = Tvar.mk cx reason in
 
     let tparams, tparams_map, tparam_asts =
       mk_type_param_declarations cx tparams in
 
-    let id_info = id_name, self, Type_table.Other in
-    Type_table.set_info id_loc id_info (Context.type_table cx);
 
-    let _, tparams, tparams_map = Class_sig.add_this self cx reason tparams tparams_map in
+    let _, tparams, tparams_map = Class_type_sig.add_this self cx reason tparams tparams_map in
 
-    Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
 
     let iface_sig, extends_ast, mixins_ast, implements_ast =
-      let id = Context.make_nominal cx in
+      let id = id_loc in
       let extends, extends_ast =
         match extends with
         | Some (loc, {Ast.Type.Generic.id; targs}) ->
-          let lookup_mode = Env.LookupMode.ForValue in
-          let i, id =
-            convert_qualification ~lookup_mode cx "mixins" id in
-          let t, targs = mk_super cx tparams_map loc i targs in
-          Some t, Some (loc, { Ast.Type.Generic.id; targs })
+          begin match id, targs with
+          | Ast.Type.Generic.Identifier.Unqualified (id_loc, ({
+              Ast.Identifier.name = "$TEMPORARY$Super$FlowFixMe"; comments = _
+            } as id_name)), None ->
+            let ty = AnyT.at Annotated id_loc in
+            let t = loc, ty, None in
+            let id =
+              let id_loc_ty = id_loc, ty in
+              Ast.Type.Generic.Identifier.Unqualified (id_loc_ty, id_name) in
+            Some t, Some (loc, { Ast.Type.Generic.id; targs = None })
+          | _ ->
+            let lookup_mode = Env.LookupMode.ForValue in
+            let i, id =
+              convert_qualification ~lookup_mode cx "mixins" id in
+            let t, targs = mk_super cx tparams_map loc i targs in
+            Some t, Some (loc, { Ast.Type.Generic.id; targs })
+          end
         | None ->
           None, None
       in
       let mixins, mixins_ast =
         mixins
-        |> List.map (mk_mixins cx tparams_map)
+        |> Core_list.map ~f:(mk_mixins cx tparams_map)
         |> List.split
       in
       let implements, implements_ast =
         implements
-        |> List.map (fun (loc, i) ->
-            let { Ast.Class.Implements.id = (id_loc, name); targs } = i in
+        |> Core_list.map ~f:(fun (loc, i) ->
+            let { Ast.Class.Implements.id = (id_loc, id_name_inner); targs } = i in
+            let { Ast.Identifier.name; comments = _ } = id_name_inner in
             let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
             let typeapp, targs = match targs with
             | None -> (loc, c, None), None
@@ -1616,7 +2026,7 @@ let mk_declare_class_sig =
               let ts, targs_ast = convert_list cx tparams_map targs in
               (loc, c, Some ts), Some (targs_loc, targs_ast)
             in
-            typeapp, (loc, { Ast.Class.Implements.id = (id_loc, c), name; targs })
+            typeapp, (loc, { Ast.Class.Implements.id = (id_loc, c), id_name_inner; targs })
         )
         |> List.split in
       let super =
@@ -1648,7 +2058,7 @@ let mk_declare_class_sig =
     { Ast.Statement.DeclareClass.
       id = (id_loc, self), id_name;
       tparams = tparam_asts;
-      body = body_loc, { Ast.Type.Object.properties; exact };
+      body = body_loc, { Ast.Type.Object.properties; exact; inexact = false };
       extends = extends_ast;
       mixins = mixins_ast;
       implements = implements_ast;

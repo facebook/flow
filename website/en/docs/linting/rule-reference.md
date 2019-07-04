@@ -19,6 +19,8 @@ layout: guide
 * [`nonstrict-import`](#toc-nonstrict-import)
 * [`unnecessary-optional-chain`](#toc-unnecessary-optional-chain)
 * [`unnecessary-invariant`](#toc-unnecessary-invariant)
+* [`deprecated-utility`](#toc-deprecated-utility)
+* [`dynamic-export`](#toc-dynamic-export)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -208,3 +210,18 @@ This makes it clear to the reader that `bar` is not a potentially nullish proper
 Triggers when you use `invariant` to check a condition which we know must be truthy based on the available type information. This is quite conservative: for example, if all we know about the condition is that it is a `boolean`, then the lint will not fire even if the condition must be `true` at runtime.
 
 Note that this lint does not trigger when we know a condition is always `false`. It is a common idiom to use `invariant()` or `invariant(false, ...)` to throw in code that should be unreachable.
+
+#### `deprecated-utility` <a class="toc" id="toc-deprecated-utility" href="#toc-deprecated-utility"></a>
+Triggers when you use the `$Supertype` or `$Subtype` utility types, as these types are
+unsafe and usually just equivalent to `any`. If the utilities were being used in a sound manner, the
+desired behavior can usually be recovered through the [`$Shape`](../../types/utilities/#toc-shape) utility or [bounded generics](../../types/generics/#toc-generic-types-act-as-bounds).
+
+#### `deprecated-type` <a class="toc" id="toc-deprecated-type" href="#toc-deprecated-type"></a>
+Triggers when you use the `*` (existential) utility type, as this type is
+unsafe and usually just equivalent to `any`.
+The effect of `*` can generally be achieved by simply not providing a type annotation.
+
+#### `dynamic-export` <a class="toc" id="toc-dynamic-export" href="#toc-dynamic-export"></a>
+Triggers when a dynamic type (usually `any`) appears in a position exported from a file. Note that this is a very noisy lint, and can be triggered even
+when exporting types that are defined in our library definitions to include `any` types. For this reason we recommend turning it on on a per-file or even
+per-line basis using [flowlint comments](../flowlint-comments/#toc-flowlint) rather than for your whole repository in the `flowconfig`.

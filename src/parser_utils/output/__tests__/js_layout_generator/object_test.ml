@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,7 +24,7 @@ let expected_object2_layout prop1 prop2 =
       atom ",";
       pretty_line;
       prop2_layout;
-      Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+      Layout.IfBreak (atom ",", empty);
     ]);
     pretty_line;
     atom "}";
@@ -34,7 +34,7 @@ let tests = [
   "empty_object" >:: begin fun ctxt ->
     let ast = E.object_ [] in
     let layout = Js_layout_generator.expression ast in
-    assert_layout ~ctxt L.(loc (atom "{}")) layout;
+    assert_layout ~ctxt L.(loc (group [atom "{"; atom "}"])) layout;
     assert_output ~ctxt "{}" layout;
     assert_output ~ctxt ~pretty:true "{}" layout;
   end;
@@ -86,7 +86,7 @@ let tests = [
           pretty_line;
           pretty_hardline;
           prop3_layout;
-          Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+          Layout.IfBreak (atom ",", empty);
         ]));
         pretty_line;
         atom "}";
@@ -167,7 +167,7 @@ let tests = [
             pretty_space;
             loc (atom "123");
           ]);
-          Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+          Layout.IfBreak (atom ",", empty);
         ]));
         pretty_line;
         atom "}";
@@ -214,7 +214,7 @@ let tests = [
             pretty_space;
             loc (atom "123");
           ]);
-          Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+          Layout.IfBreak (atom ",", empty);
         ]));
         pretty_line;
         atom "}";

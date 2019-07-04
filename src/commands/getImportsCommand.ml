@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -29,16 +29,16 @@ let spec = {
     |> root_flag
     |> strip_root_flag
     |> from_flag
+    |> wait_for_recheck_flag
     |> anon "modules" (required (list_of string))
   )
 }
 
-let main base_flags option_values json pretty root strip_root from modules () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root wait_for_recheck modules () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
 
-  let request = ServerProt.Request.GET_IMPORTS modules in
+  let request = ServerProt.Request.GET_IMPORTS { module_names = modules; wait_for_recheck; } in
   let (requirements_map, non_flow) = match connect_and_make_request flowconfig_name option_values
     root request with
   | ServerProt.Response.GET_IMPORTS response -> response
@@ -77,7 +77,7 @@ let main base_flags option_values json pretty root strip_root from modules () =
         Nel.fold_left (fun acc loc ->
           JSON_Object (
             ("import", JSON_String req) ::
-            ("loc", Reason.json_of_loc ~strip_root loc) ::
+            ("loc", json_of_loc_with_offset ~strip_root loc) ::
             (Errors.deprecated_json_props_of_loc ~strip_root loc)
           ) :: acc
         ) acc locs

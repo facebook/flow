@@ -35,9 +35,9 @@ Cannot declare `Baz` [1] because the name is already bound.
            ^^^
 
 References:
-   bad_shadowing.js:6:19
+   bad_shadowing.js:6:26
     6| import type {Foo, Bar as Baz} from "./A.js";
-                         ^^^^^^^^^^ [1]
+                                ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- bad_shadowing.js:18:5
@@ -105,9 +105,9 @@ Cannot declare `Baz` [1] because the name is already bound.
            ^^^
 
 References:
-   good_shadowing.js:6:19
+   good_shadowing.js:6:26
     6| import type {Foo, Bar as Baz} from "./A.js";
-                         ^^^^^^^^^^ [1]
+                                ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ good_shadowing.js:10:11
@@ -161,9 +161,9 @@ Cannot reference type `Baz` [1] from a value position.
                ^^^
 
 References:
-   good_shadowing.js:6:19
+   good_shadowing.js:6:26
     6| import type {Foo, Bar as Baz} from "./A.js";
-                         ^^^^^^^^^^ [1]
+                                ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ good_shadowing.js:18:18
@@ -245,9 +245,9 @@ Cannot reference type `Baz` [1] from a value position.
                ^^^
 
 References:
-   import_type.js:6:19
+   import_type.js:6:26
     6| import type {Foo, Bar as Baz} from "./A.js";
-                         ^^^^^^^^^^ [1]
+                                ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ type_alias.js:8:9

@@ -6,22 +6,22 @@ Cannot resolve module `somewhere`.
                               ^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- enum-crash.js:13:5
+Error ----------------------------------------------------------------------------------------------- enum-crash.js:11:5
 
 Cannot refine `Enum` as a value. 
 
            v-------------
-   13|     case Enum.FOO:
-   14|       return 0;
+   11|     case Enum.FOO:
+   12|       return 0;
              --------^
 
 
-Error ---------------------------------------------------------------------------------------------- enum-crash.js:13:10
+Error ---------------------------------------------------------------------------------------------- enum-crash.js:11:10
 
 Cannot reference type `Enum` [1] from a value position.
 
-   enum-crash.js:13:10
-   13|     case Enum.FOO:
+   enum-crash.js:11:10
+   11|     case Enum.FOO:
                 ^^^^
 
 References:

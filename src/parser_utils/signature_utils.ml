@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@ open Flow_ast_visitor
 
 module Procedure_decider = struct
   class decider = object(this)
-    inherit [bool] visitor ~init:true
+    inherit [bool, Loc.t] visitor ~init:true
 
     method private no =
       this#update_acc (fun _ -> false)
@@ -19,7 +19,7 @@ module Procedure_decider = struct
 
     method! return _loc (stmt: (Loc.t, Loc.t) Flow_ast.Statement.Return.t) =
       let open Flow_ast.Statement.Return in
-      let { argument } = stmt in
+      let { argument; comments = _ } = stmt in
       begin match argument with
         | None -> ()
         | Some _ -> this#no

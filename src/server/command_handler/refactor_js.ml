@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,15 +15,15 @@ let (>>|) = Core_result.(>>|)
 let get_ref_kinds refs loc =
   refs
   |> List.filter (fun (_, ref_loc) -> ref_loc = loc)
-  |> List.map fst
+  |> Core_list.map ~f:fst
 
 class rename_mapper refs new_name = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-  method! identifier (expr: Loc.t Ast.Identifier.t) =
+  method! identifier (expr: (Loc.t, Loc.t) Ast.Identifier.t) =
     let loc, _ = expr in
     if List.exists (fun (_, ref_loc) -> ref_loc = loc) refs then
-      loc, new_name
+      Flow_ast_utils.ident_of_source (loc, new_name)
     else
       expr
 
@@ -43,7 +43,7 @@ class rename_mapper refs new_name = object(this)
 
   method! pattern_object_property ?kind (prop: (Loc.t, Loc.t) Ast.Pattern.Object.Property.t') =
     let open Ast.Pattern.Object.Property in
-    let { key; pattern; shorthand } = prop in
+    let { key; pattern; default; shorthand } = prop in
     if not shorthand then
       super#pattern_object_property prop
     else begin
@@ -63,11 +63,13 @@ class rename_mapper refs new_name = object(this)
         else
           pattern
       in
-      if key == key' && pattern == pattern' then
+      (* TODO *)
+      let default' = default in
+      if key == key' && pattern == pattern' && default == default' then
         prop
       else
         (* TODO if both changed (e.g. destructuring requires) then retain shorthand *)
-        { key = key'; pattern = pattern'; shorthand = false }
+        { key = key'; pattern = pattern'; default = default'; shorthand = false }
     end
 
   method! object_property (prop: (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
@@ -81,6 +83,7 @@ class rename_mapper refs new_name = object(this)
           Literal (x, _) | Identifier (x, _) | PrivateName (x, _) | Computed (x, _) -> x
         in
         let ref_kinds = get_ref_kinds refs key_loc in
+        (* What about computed properties? *)
         let key' =
           if List.mem FindRefsTypes.PropertyDefinition ref_kinds then
             this#object_key key
@@ -102,7 +105,7 @@ class rename_mapper refs new_name = object(this)
     | _ -> super#object_property prop
 end
 
-let mapper_to_edits (ast_mapper: Flow_ast_mapper.mapper) (ast: (Loc.t, Loc.t) Ast.program) =
+let mapper_to_edits (ast_mapper: Loc.t Flow_ast_mapper.mapper) (ast: (Loc.t, Loc.t) Ast.program) =
   let new_ast = ast_mapper#program ast in
   let changes = Flow_ast_differ.program Flow_ast_differ.Standard ast new_ast in
   Ast_diff_printer.edits_of_changes None changes
@@ -125,10 +128,10 @@ let apply_rename_to_file _file ast refs new_name =
   let mapper = new rename_mapper refs new_name in
   mapper_to_edits mapper ast
 
-let apply_rename_to_files refs_by_file new_name =
+let apply_rename_to_files ~reader refs_by_file new_name =
   FilenameMap.fold begin fun file refs acc ->
     acc >>= fun edits ->
-    FindRefsUtils.get_ast_result file
+    FindRefsUtils.get_ast_result ~reader file
     >>| fun (ast, _, _) ->
     let file_edits = apply_rename_to_file file ast refs new_name in
     List.rev_append file_edits edits
@@ -137,11 +140,12 @@ let apply_rename_to_files refs_by_file new_name =
 
 type refactor_result = ((Loc.t * string) list option, string) result Lwt.t
 
-let rename ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
+let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
   (* TODO verify that new name is a valid identifier *)
   (* TODO maybe do something with the json? *)
   (* TODO support rename based on multi-hop find-refs *)
   let%lwt find_refs_response, _ = FindRefs_js.find_refs
+    ~reader
     ~genv
     ~env
     ~profiling
@@ -158,13 +162,14 @@ let rename ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
     (* TODO only rename renameable locations (e.g. not `default` in `export default`) *)
     split_by_source refs
     %>>= begin fun refs_by_file ->
-      apply_rename_to_files refs_by_file new_name
+      apply_rename_to_files ~reader refs_by_file new_name
       %>>= fun (edits: (Loc.t * string) list) ->
       Lwt.return @@ Ok (Some edits)
     end
   end
 
-let refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant : refactor_result =
+let refactor
+    ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant : refactor_result =
   match refactor_variant with
   | ServerProt.Request.RENAME new_name ->
-    rename ~genv ~env ~profiling ~file_input ~line ~col ~new_name
+    rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name

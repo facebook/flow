@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,6 +8,7 @@
 let (>>|) = Core_result.(>>|)
 
 open Utils_js
+open Loc_collections
 
 let locmap_of_bindings =
   List.fold_left begin fun map (loc, x) ->
@@ -21,16 +22,16 @@ let sort_and_dedup =
         (* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
          * if we ever need to report multiple ref kinds for a single location. *)
         refs
-        |> List.map (fun ((_, loc) as reference) -> (loc, reference))
+        |> Core_list.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
         |> locmap_of_bindings
         |> LocMap.bindings
-        |> List.map snd
+        |> Core_list.map ~f:snd
       in
       name, refs
     end
   end
 
-let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
+let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
@@ -38,10 +39,13 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   | Error err -> Lwt.return (Error err, None)
   | Ok content ->
     let%lwt result =
-      FindRefsUtils.compute_ast_result file_key content %>>= fun (ast, _, _) ->
+      let options = genv.ServerEnv.options in
+      FindRefsUtils.compute_ast_result options file_key content %>>= fun (ast, _, _) ->
       let property_find_refs start_loc =
-        let%lwt def_info = GetDefUtils.get_def_info genv env profiling file_key content start_loc in
-        PropertyFindRefs.find_refs genv env ~content file_key def_info ~global ~multi_hop
+        let%lwt def_info =
+          GetDefUtils.get_def_info ~reader genv (!env) profiling file_key content start_loc
+        in
+        PropertyFindRefs.find_refs ~reader genv env ~content file_key def_info ~global ~multi_hop
       in
       (* Start by running local variable find references *)
       match VariableFindRefs.local_find_refs ast loc with

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -28,23 +28,26 @@ val exported_module:
 
 type resolution_acc = {
   mutable paths: SSet.t;
-  mutable errors: Flow_error.error_message list;
+  mutable errors: Error_message.t list;
 }
 val imported_module:
   options: Options.t ->
+  reader:Abstract_state_reader.t ->
   node_modules_containers: SSet.t ->
-  File_key.t -> Loc.t Nel.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
+  File_key.t -> ALoc.t Nel.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
+  reader:Abstract_state_reader.t ->
   (File_key.t -> string -> Modulename.t) Expensive.t
 
-val checked_file: (File_key.t -> bool) Expensive.t
+val checked_file: reader:Abstract_state_reader.t -> (File_key.t -> bool) Expensive.t
 
 (* add module records for given files;
    returns the set of modules added
 *)
 val introduce_files:
   mutator:Module_heaps.Introduce_files_mutator.t ->
+  reader: Mutator_state_reader.t ->
   all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
@@ -59,14 +62,25 @@ val calc_old_modules:
   MultiWorkerLwt.worker list option ->
   all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   options:Options.t ->
+  reader:Mutator_state_reader.t ->
   FilenameSet.t ->
     (Modulename.t * File_key.t option) list Lwt.t
+
+(* Given a set of files which haven't changed, return the modules currently being provided by these
+ * modules.
+*)
+val calc_unchanged_modules:
+  reader:Mutator_state_reader.t ->
+  MultiWorkerLwt.worker list option ->
+  FilenameSet.t ->
+  Modulename.Set.t Lwt.t
 
 (* repick providers for old and new modules *)
 val commit_modules:
   transaction: Transaction.t ->
   workers: MultiWorkerLwt.worker list option ->
   options: Options.t ->
+  reader: Mutator_state_reader.t ->
   is_init: bool ->
   FilenameSet.t ->                    (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list -> (* dirty modules *)
@@ -77,14 +91,15 @@ val commit_modules:
 (* resolve and add requires from context to store *)
 val add_parsed_resolved_requires:
   mutator:Module_heaps.Resolved_requires_mutator.t ->
+  reader: Mutator_state_reader.t ->
   options:Options.t ->
   node_modules_containers: SSet.t ->
   File_key.t ->
-  Errors.ErrorSet.t
+  Flow_error.ErrorSet.t
 
-val add_package: string -> (Loc.t, Loc.t) Flow_ast.program -> unit
+val add_package: string -> Loc.t Package_json.t_or_error -> unit
 
-val package_incompatible: string -> (Loc.t, Loc.t) Flow_ast.program -> bool
+val package_incompatible: reader:State_reader.t -> string -> (Loc.t, Loc.t) Flow_ast.program -> bool
 
 (***************************************************)
 

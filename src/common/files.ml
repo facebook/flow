@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -178,7 +178,7 @@ let max_files = 1000
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
-  let prefix_checkers = List.map is_prefix paths in
+  let prefix_checkers = Core_list.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
       ((acc, symlinks), S_Dir (files, dir, stack))
@@ -233,7 +233,7 @@ let make_next_files_following_symlinks
   ~realpath_filter
   ~error_filter
   paths =
-  let paths = List.map Path.to_string paths in
+  let paths = Core_list.map ~f:Path.to_string paths in
   let cb = ref (make_next_files_and_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths
   ) in
@@ -288,7 +288,8 @@ let init ?(flowlibs_only=false) (options: options) =
     else
       let get_next lib =
         let lib_str = Path.to_string lib in
-        let filter' path = path = lib_str || filter path in
+        (* TODO: better to parse json files, not ignore them *)
+        let filter' path = (path = lib_str || filter path) && (not (is_json_file path)) in
         make_next_files_following_symlinks
           ~node_module_filter
           ~path_filter:filter'
@@ -297,7 +298,7 @@ let init ?(flowlibs_only=false) (options: options) =
           [lib]
       in
       libs
-      |> List.map (fun lib -> SSet.elements (get_all (get_next lib)))
+      |> Core_list.map ~f:(fun lib -> SSet.elements (get_all (get_next lib)))
       |> List.flatten
   in
   (libs, SSet.of_list libs)
@@ -316,32 +317,39 @@ let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
+let is_matching path pattern_list =
+  List.fold_left (
+    fun current (pattern, rx) ->
+      if String_utils.string_starts_with pattern "!" then (
+        current && not (Str.string_match rx path 0)
+      ) else (
+        current || (Str.string_match rx path 0)
+      )
+    ) false pattern_list
+
 (* true if a file path matches an [ignore] entry in config *)
 let is_ignored (options: options) =
-  let list = List.map snd options.ignores in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
     let path = Sys_utils.normalize_filename_dir_sep path in
-    List.exists (fun rx -> Str.string_match rx path 0) list
+    is_matching path options.ignores
 
 (* true if a file path matches an [untyped] entry in config *)
 let is_untyped (options: options) =
-  let list = List.map snd options.untyped in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
     let path = Sys_utils.normalize_filename_dir_sep path in
-    List.exists (fun rx -> Str.string_match rx path 0) list
+    is_matching path options.untyped
 
 (* true if a file path matches a [declarations] entry in config *)
 let is_declaration (options: options) =
-  let list = List.map snd options.declarations in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
     let path = Sys_utils.normalize_filename_dir_sep path in
-    List.exists (fun rx -> Str.string_match rx path 0) list
+    is_matching path options.declarations
 
 (* true if a file path matches an [include] path in config *)
 let is_included options f =
@@ -552,10 +560,21 @@ let imaginary_realpath =
     | Some abs -> List.fold_left Filename.concat abs rev_suffix
 
 let canonicalize_filenames ~cwd ~handle_imaginary filenames =
-  List.map (fun filename ->
+  Core_list.map ~f:(fun filename ->
     let filename = Sys_utils.expanduser filename in (* normalize ~ *)
     let filename = normalize_path cwd filename in (* normalize ./ and ../ *)
     match Sys_utils.realpath filename with (* normalize symlinks *)
     | Some abs -> abs
     | None -> handle_imaginary filename
   ) filenames
+
+let expand_project_root_token_to_string ~root str =
+  let root = Path.to_string root
+    |> Sys_utils.normalize_filename_dir_sep in
+  str
+    |> Str.split_delim project_root_token
+    |> String.concat root
+
+let expand_project_root_token_to_regexp ~root str =
+  expand_project_root_token_to_string ~root str
+    |> Str.regexp

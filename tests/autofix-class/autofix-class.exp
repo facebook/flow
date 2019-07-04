@@ -1,0 +1,31 @@
+> cat a.js
+// @flow
+
+class C {}
+// XYZXYZ
+export default class {
+  array: Array<empty> = [];
+  num: number = 1;
+}
+> cat b.js
+// @flow
+
+class C {
+  m(): number {
+    return 1;
+  }
+}
+module.exports = C;
+> cat c.js
+// @flow
+
+class A {
+  f: ((x: string) => string) = (x: string) => x;
+}
+
+module.exports = {
+  a: A,
+  b: (x: string): string => x,
+};
+> flow status
+No errors!

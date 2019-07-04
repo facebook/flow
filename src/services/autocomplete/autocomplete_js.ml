@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@ type autocomplete_type =
 
 type autocomplete_state = {
   ac_name: string;
-  ac_loc: Loc.t;
+  ac_loc: ALoc.t;
   ac_type: autocomplete_type;
 }
 

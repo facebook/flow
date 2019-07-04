@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@
 open OUnit2
 open Test_utils
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 let mk_ssa_builder_test contents expected_values =
   begin fun ctxt ->
@@ -744,6 +744,31 @@ let tests = "ssa_builder" >::: [
       ] |>
       add (mk_loc (1, 28) (1, 31)) [
         mk_write (1, 6) (1, 9);
+      ]
+    );
+  "new" >:: mk_ssa_builder_test
+    "(function() { \
+      var x; \
+      new Y(x = 1); \
+      return x; \
+    })"
+    LocMap.(
+      empty
+      |> add (mk_loc (1, 42) (1, 43)) [
+        mk_write (1, 27) (1, 28);
+      ]
+    );
+  "new_closure" >:: mk_ssa_builder_test
+    "(function() { \
+      var x; \
+      new Y(function() { x = 1; }); \
+      return x; \
+    })"
+    LocMap.(
+      empty
+      |> add (mk_loc (1, 58) (1, 59)) [
+        Ssa_api.uninitialized;
+        mk_write (1, 40) (1, 41);
       ]
     );
 ]

@@ -1,0 +1,38 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   8|   p: number;
+        ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   12|   p1: number;
+         ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   13|   p2: number;
+         ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   19|   #priv;
+         ^^^^^
+
+
+
+Found 4 errors

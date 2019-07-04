@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -114,6 +114,36 @@ let fuse_list =
       snd wrap;
     ]
 
+let wrap_and_indent ?break (before, after) items =
+  let break = match break with
+  | Some break -> break
+  | None -> softline
+  in
+  let layout =
+    if items = [] then Empty else
+    fuse [
+      Indent (fuse (break::items));
+      break;
+    ]
+  in
+  fuse [before; layout; after]
+
+let new_list
+  ?(wrap=(Empty, Empty))
+  ?(sep=Empty)
+  ?(wrap_spaces=false)
+  ?(trailing_sep=true)
+  items =
+  let items_layout =
+    if items = [] then items else
+    [
+      join (fuse [sep; pretty_line]) items;
+      if trailing_sep then if_break (Atom ",") Empty else Empty;
+    ]
+  in
+  let break = if wrap_spaces then Some pretty_line else None in
+  wrap_and_indent ?break wrap items_layout
+
 (* All purpose list *)
 let list
   ?(break=Break_if_needed)
@@ -187,6 +217,10 @@ let fuse_with_space =
   | _ -> false
   in
   let rec helper acc = function
+  | Empty::rest ->
+    helper acc rest
+  | a::Empty::rest ->
+    helper acc (a::rest)
   | a::b::rest ->
     let prev = ugly_char ~mode:`Last a |> opt_punctuator in
     let next = ugly_char ~mode:`First b |> opt_punctuator in
@@ -224,7 +258,7 @@ end = struct
     | Concat items ->
       let items =
         items
-        |> List.map string_of_layout
+        |> Core_list.map ~f:string_of_layout
         |> String.concat "; "
       in
       spf "Concat [%s]" items
@@ -232,7 +266,7 @@ end = struct
     | Group items ->
       let items =
         items
-        |> List.map string_of_layout
+        |> Core_list.map ~f:string_of_layout
         |> String.concat "; "
       in
       spf "Group [%s]" items
@@ -246,7 +280,7 @@ end = struct
       in
       let nodes =
         node_list
-        |> List.map string_of_layout
+        |> Core_list.map ~f:string_of_layout
         |> String.concat "; "
       in
       spf "Sequence (%s, [%s])" config nodes
@@ -285,7 +319,7 @@ end = struct
         Atom "Concat";
         pretty_space;
         list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
-          (List.map layout_of_layout items);
+          (Core_list.map ~f:layout_of_layout items);
       ]
 
     | Group items ->
@@ -293,7 +327,7 @@ end = struct
         Atom "Group";
         pretty_space;
         list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
-          (List.map layout_of_layout items);
+          (Core_list.map ~f:layout_of_layout items);
       ]
 
     | Sequence ({ break; inline=(inline_before, inline_after); indent; }, node_list) ->
@@ -303,7 +337,7 @@ end = struct
         Atom (spf "indent=%d" indent);
       ] in
       let nodes = list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
-        (List.map layout_of_layout node_list) in
+        (Core_list.map ~f:layout_of_layout node_list) in
       Concat [
         Atom "Sequence";
         pretty_space;

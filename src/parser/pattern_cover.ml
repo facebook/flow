@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -38,7 +38,7 @@ module Cover
     then error_at env (fst expr, err);
 
     (match expr with
-    | loc, Flow_ast.Expression.Identifier (_, name)
+    | loc, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; comments= _ })
       when is_restricted name ->
         strict_error_at env (loc, Error.StrictLHSAssignment)
     | _ -> ());

@@ -1,3 +1,17 @@
+Error ----------------------------------------------------------------------------------------------------- annot.js:3:5
+
+Cannot assign `42` to `p` because number [1] is incompatible with string [2].
+
+   annot.js:3:5
+   3| p = 42; // error: number ~> string
+          ^^ [1]
+
+References:
+   annot.js:4:14
+   4| type T = {p: string};
+                   ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ array_rest.js:7:2
 
 Cannot cast `a` to undefined because number [1] is incompatible with undefined [2].
@@ -284,7 +298,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:56:5
 
-Cannot assign object literal to variable because number [1] is incompatible with string [2] in property `p`.
+Cannot assign object literal to destructuring because number [1] is incompatible with string [2] in property `p`.
 
    defaults.js:56:5
            v
@@ -349,7 +363,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:63:24
 
-An indexer property is missing in null [1].
+An index signature declaring the expected key / value type is missing in null [1].
 
    defaults.js:63:24
    63| function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
@@ -610,7 +624,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:20:15
 
-Cannot assign array literal to `c` because `c` [1] is incompatible with string [2].
+Cannot assign array literal to `c` because rest of array pattern [1] is incompatible with string [2].
 
    destructuring.js:20:15
    20| [a,,b,...c] = [0,1,true,3];
@@ -627,7 +641,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:23:37
 
-Cannot assign `z` to `o` because property `x` is missing in `z` [1] but exists in object type [2].
+Cannot assign `z` to `o` because property `x` is missing in rest of object pattern [1] but exists in object type [2].
 
    destructuring.js:23:37
    23|     var o:{x: string; y: number;} = z;
@@ -694,7 +708,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:35:23
 
-Cannot assign object literal to variable because string [1] is incompatible with number [2] in property `n`.
+Cannot assign object literal to destructuring because string [1] is incompatible with number [2] in property `n`.
 
    destructuring.js:35:23
    35| var {n}:{n: number} = {n: ""}
@@ -753,7 +767,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:46:4
 
-Cannot get `rest.baz` because property `baz` is missing in `rest` [1].
+Cannot get `rest.baz` because property `baz` is missing in rest of object pattern [1].
 
    destructuring.js:46:4
    46|   (rest.baz: string); // error, rest is sealed
@@ -865,7 +879,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_rest.js:5:1
 
-Cannot assign `0` to `o1_rest.x` because property `x` is missing in `o1_rest` [1].
+Cannot assign `0` to `o1_rest.x` because property `x` is missing in rest of object pattern [1].
 
    object_rest.js:5:1
    5| o1_rest.x = 0; // error: rest result is sealed
@@ -879,7 +893,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:11:1
 
-Cannot assign `0` to `o2_rest.x` because property `x` is missing in `o2_rest` [1].
+Cannot assign `0` to `o2_rest.x` because property `x` is missing in rest of object pattern [1].
 
    object_rest.js:11:1
    11| o2_rest.x = 0; // error: rest result is sealed
@@ -893,7 +907,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:16:1
 
-Cannot assign `0` to `o3_rest.x` because property `x` is missing in `o3_rest` [1].
+Cannot assign `0` to `o3_rest.x` because property `x` is missing in rest of object pattern [1].
 
    object_rest.js:16:1
    16| o3_rest.x = 0; // error: rest result is sealed
@@ -937,4 +951,4 @@ References:
 
 
 
-Found 69 errors
+Found 70 errors

@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -153,18 +152,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     `).noNewErrors(),
 
     addCode(`var o: {p: string} = Object.create(proto);`)
-      .newErrors(
-        `
-          test.js:8
-            8: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Cannot assign \`Object.create(...)\` to \`o\` because number [1] is incompatible with string [2] in property \`p\`.
-            References:
-              5:       proto.p = 0;
-                                 ^ [1]
-              8: var o: {p: string} = Object.create(proto);
-                            ^^^^^^ [2]
-        `,
-      ),
+      .noNewErrors(),
   ]),
 
   test('derived object subtyping -- read before write', [
@@ -176,32 +164,10 @@ export default suite(({addFile, addFiles, addCode}) => [
        inconsistent with GetPropT/MethodT. It would be confusing if this
        didn't error, though: var o: { p: string } = {} */
     addCode(`var o: {p: string} = Object.create(proto);`)
-      .newErrors(
-        `
-          test.js:7
-            7: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Cannot assign \`Object.create(...)\` to \`o\` because property \`p\` is missing in \`Object.create\` [1] but exists in object type [2].
-            References:
-              7: var o: {p: string} = Object.create(proto);
-                                      ^^^^^^^^^^^^^^^^^^^^ [1]
-              7: var o: {p: string} = Object.create(proto);
-                        ^^^^^^^^^^^ [2]
-        `,
-      ),
+      .noNewErrors(),
 
     addCode(`proto.p = 0;`)
-      .newErrors(
-        `
-          test.js:9
-            9: proto.p = 0;
-                         ^ Cannot assign \`0\` to \`proto.p\` because number [1] is incompatible with string [2].
-            References:
-              9: proto.p = 0;
-                           ^ [1]
-              7: var o: {p: string} = Object.create(proto);
-                            ^^^^^^ [2]
-        `,
-      ),
+      .noNewErrors(),
   ]),
 
   /* Because shadow operations execute on failure, a builtin or import can cause

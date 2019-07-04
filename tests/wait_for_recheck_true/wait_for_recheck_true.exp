@@ -1,0 +1,134 @@
+
+
+Trigger a 1000s recheck
+
+
+autocomplete with --wait-for-recheck false runs immediately:
+{
+  "result":[
+    {
+      "name":"x",
+      "type":"string",
+      "func_details":null,
+      "path":"focused.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"val",
+      "type":"number",
+      "func_details":null,
+      "path":"focused.js",
+      "line":3,
+      "endline":3,
+      "start":8,
+      "end":10
+    },
+    {
+      "name":"exports",
+      "type":"{||}",
+      "func_details":null,
+      "path":"focused.js",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    }
+  ]
+}
+
+
+check-contents with --wait-for-recheck false runs immediately:
+Error -------------------------------------------------------------------------------------------------- focused.js:5:17
+
+Cannot assign `val` to `x` because number [1] is incompatible with string [2].
+
+   focused.js:5:17
+   5| var x: string = val;
+                      ^^^
+
+References:
+   dependency.js:3:16
+   3| export default 123;
+                     ^^^ [1]
+   focused.js:5:8
+   5| var x: string = val;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+coverage with --wait-for-recheck false runs immediately:
+Covered: 100.00% (3 of 3 expressions)
+
+
+
+dump-types with --wait-for-recheck false runs immediately:
+focused.js:3:8-10: number
+focused.js:5:5: string
+focused.js:5:5-13: string
+focused.js:5:8-13: string
+focused.js:5:17-19: number
+focused.js:5:17-19: number
+
+
+find-module with --wait-for-recheck false runs immediately:
+dependency.js
+
+
+get-def with --wait-for-recheck false runs immediately:
+{"path":"dependency.js","line":3,"endline":3,"start":16,"end":18}
+
+
+get-imports with --wait-for-recheck false runs immediately:
+{
+  "focused.js":{
+    "not_flow":false,
+    "requirements":[
+      {
+        "import":"dependency.js",
+        "loc":{
+          "source":"focused.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":17,"offset":26},
+          "end":{"line":3,"column":33,"offset":43}
+        },
+        "path":"focused.js",
+        "line":3,
+        "endline":3,
+        "start":17,
+        "end":33
+      }
+    ]
+  }
+}
+
+
+suggest with --wait-for-recheck false runs immediately:
+// @flow
+
+import val from "./dependency.js"
+
+var x: string = val;
+
+
+type-at-pos with --wait-for-recheck false runs immediately:
+{
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"focused.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":17,"offset":61},
+    "end":{"line":5,"column":19,"offset":64}
+  },
+  "path":"focused.js",
+  "line":5,
+  "endline":5,
+  "start":17,
+  "end":19
+}

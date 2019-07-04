@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -118,7 +117,7 @@ export default suite(
         ),
     ]),
 
-/*
+    /*
     TODO(ljw): fix race. The following test is fine in theory...
     But on AppVeyor, what happens 1 in 50 runs is that 'flow force-recheck --no-auto-start .flowconfig'
     sends a message to the monitor and thence the server telling it to force-recheck,

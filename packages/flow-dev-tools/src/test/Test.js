@@ -1,7 +1,6 @@
 /**
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {defaultFlowConfigName} from '../constants';
@@ -14,6 +13,7 @@ export default class Test {
   steps: StepList;
   tags: Array<string>;
   lazyMode: 'ide' | 'fs' | null = null;
+  shouldWaitForRecheck: boolean = true;
 
   constructor(name: string, steps: StepList) {
     this.name = name;
@@ -33,6 +33,11 @@ export default class Test {
 
   lazy(mode: 'ide' | 'fs'): this {
     this.lazyMode = mode;
+    return this;
+  }
+
+  waitForRecheck(wait_for_recheck: boolean): this {
+    this.shouldWaitForRecheck = wait_for_recheck;
     return this;
   }
 }

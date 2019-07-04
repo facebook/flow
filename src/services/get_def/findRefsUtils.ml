@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,19 +21,28 @@ let compute_docblock file content =
  * case for local find-refs requests, where the client may pipe in file contents rather than just
  * specifying a filename. For global find-refs, we assume that all dependent files are the same as
  * what's on disk, so we can grab the AST from the heap instead. *)
-let compute_ast_result file content =
+let compute_ast_result options file content =
+  let module_ref_prefix = Options.haste_module_ref_prefix options in
+  let facebook_fbt = Options.facebook_fbt options in
+  let arch = Options.arch options in
   let docblock = compute_docblock file content in
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
-  let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock content file in
+  let parse_options = make_parse_options
+      ~fail:false ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ()
+  in
+  let result = do_parse ~parse_options ~info:docblock content file in
   match result with
-    | Parse_ok (ast, file_sig) -> Ok (ast, file_sig, docblock)
+    | Parse_ok parse_ok ->
+      let ast, file_sig = basic parse_ok in
+      Ok (ast, file_sig, docblock)
     (* The parse should not fail; we have passed ~fail:false *)
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
 
-let get_ast_result file : ((Loc.t, Loc.t) Flow_ast.program * File_sig.t * Docblock.t, string) result =
+let get_ast_result ~reader file
+    : ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result =
   let open Parsing_heaps in
   let get_result f kind =
     let error =
@@ -43,25 +52,25 @@ let get_ast_result file : ((Loc.t, Loc.t) Flow_ast.program * File_sig.t * Docblo
     in
     Result.of_option ~error (f file)
   in
-  let ast_result = get_result get_ast "AST" in
-  let file_sig_result = get_result get_file_sig "file sig" in
-  let docblock_result = get_result get_docblock "docblock" in
+  let ast_result = get_result (Reader.get_ast ~reader) "AST" in
+  let file_sig_result = get_result (Reader.get_file_sig ~reader) "file sig" in
+  let docblock_result = get_result (Reader.get_docblock ~reader) "docblock" in
   ast_result >>= fun ast ->
   file_sig_result >>= fun file_sig ->
   docblock_result >>= fun docblock ->
   Ok (ast, file_sig, docblock)
 
-let get_dependents options workers env file_key content =
+let get_all_dependents ~reader options workers env file_key content =
   let docblock = compute_docblock file_key content in
-  let modulename = Module_js.exported_module options file_key docblock in
-  Dep_service.dependent_files
+  let reader = Abstract_state_reader.State_reader reader in
+  let modulename = Module_js.exported_module ~options file_key docblock in
+  let%lwt direct_deps = Dep_service.calc_direct_dependents
+    ~reader
     workers
     (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
     probably worth looking at if you are searching for optimizations *)
-    ~unchanged:ServerEnv.(CheckedSet.all !env.checked_files)
-    ~new_or_changed:(FilenameSet.singleton file_key)
-    ~changed_modules:(Modulename.Set.singleton modulename)
-
-let lazy_mode_focus genv env path =
-  let%lwt env, _ = Lazy_mode_utils.focus_and_check genv env (Nel.one path) in
-  Lwt.return env
+    ~candidates:ServerEnv.(CheckedSet.all !env.checked_files)
+    ~root_files:(FilenameSet.singleton file_key)
+    ~root_modules:(Modulename.Set.singleton modulename)
+  in
+  Lwt.return (Dep_service.calc_all_dependents !env.ServerEnv.dependency_info direct_deps)

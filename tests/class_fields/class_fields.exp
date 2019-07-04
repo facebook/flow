@@ -202,7 +202,7 @@ Error --------------------------------------------------------------------------
 Classes may not have fields named `constructor`.
 
    8|   constructor: T = e; // error
-        ^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------- declared_class_constructor_property.js:8:3

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -122,12 +122,9 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     (* If `prom`  in `Lwt.async (fun () -> prom)` resolves to an exception, this function will be
      * called *)
     Lwt.async_exception_hook := (fun exn ->
-      let bt = Printexc.get_backtrace () in
-      let msg = Utils.spf "Uncaught async exception: %s%s"
-        (Printexc.to_string exn)
-        (if bt = "" then bt else "\n"^bt)
-      in
-      Logger.fatal ~exn "Uncaught async exception. Exiting";
+      let exn = Exception.wrap exn in
+      let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+      Logger.fatal_s ~exn "Uncaught async exception. Exiting";
       FlowExitStatus.(exit ~msg Unknown_error)
     );
 

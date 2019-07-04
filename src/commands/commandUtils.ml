@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,33 @@
 
 open Utils_js
 
+let run_command command argv =
+  try
+    let args = CommandSpec.args_of_argv command argv in
+    CommandSpec.run command args
+  with
+  | CommandSpec.Show_help ->
+    print_endline (CommandSpec.string_of_usage command);
+    FlowExitStatus.(exit No_error)
+  | CommandSpec.Failed_to_parse (arg_name, msg) ->
+    begin try
+      let json_arg = Core_list.find_exn ~f:(fun s ->
+        String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json")
+        argv in
+      let pretty = String_utils.string_starts_with json_arg "--pretty" in
+      FlowExitStatus.set_json_mode ~pretty
+    with Not_found -> () end;
+    let msg = Utils_js.spf
+      "%s: %s %s\n%s"
+      (Filename.basename Sys.executable_name)
+      arg_name
+      msg
+      (CommandSpec.string_of_usage command)
+    in
+    FlowExitStatus.(exit ~msg Commandline_usage_error)
+
 let expand_file_list ?options filenames =
-  let paths = List.map Path.make filenames in
+  let paths = Core_list.map ~f:Path.make filenames in
   let next_files = match paths with
   | [] -> fun () -> []
   | _ ->
@@ -19,8 +44,8 @@ let expand_file_list ?options filenames =
       end in
     Find.make_next_files
       ~filter
-      ~others:(List.tl paths)
-      (List.hd paths) in
+      ~others:(Core_list.tl_exn paths)
+      (Core_list.hd_exn paths) in
     Files.get_all next_files
 
 let get_filenames_from_input ?(allow_imaginary=false) input_file filenames =
@@ -162,19 +187,28 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
 )
 
 let collect_lazy_flags main lazy_ lazy_mode =
-  main (match lazy_mode with
-  | None when lazy_ -> Some Options.LAZY_MODE_FILESYSTEM
-  | Some `Fs -> Some Options.LAZY_MODE_FILESYSTEM
-  | Some `Ide -> Some Options.LAZY_MODE_IDE
-  | _ -> None)
+  let lazy_mode =
+    if lazy_ && lazy_mode = None
+    then Some (Options.LAZY_MODE_FILESYSTEM) (* --lazy === --lazy-mode fs *)
+    else lazy_mode
+  in
+  main lazy_mode
 
 let lazy_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_lazy_flags
   |> flag "--lazy" no_arg
-      ~doc:"EXPERIMENTAL: Don't run a full check"
-  |> flag "--lazy-mode" (enum ["fs", `Fs; "ide", `Ide])
-      ~doc:"EXPERIMENTAL: Which type of lazy mode to use: fs or ide (default: fs, implies --lazy)"
+      ~doc:"Don't run a full check. Shorthand for `--lazy-mode fs`"
+  |> flag "--lazy-mode"
+      (enum [
+        "fs", Options.LAZY_MODE_FILESYSTEM;
+        "ide", Options.LAZY_MODE_IDE;
+        "watchman", Options.LAZY_MODE_WATCHMAN;
+        "none", Options.NON_LAZY_MODE;
+      ])
+      ~doc:("Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to " ^
+            "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
+      ~env:"FLOW_LAZY_MODE"
 )
 
 let input_file_flag verb prev = CommandSpec.ArgSpec.(
@@ -223,31 +257,64 @@ let shm_config shm_flags flowconfig =
   let shm_dirs = Option.value_map shm_flags.shm_dirs
     ~default:(FlowConfig.shm_dirs flowconfig)
     ~f:(Str.split (Str.regexp ","))
-    |> List.map Path.(fun dir -> dir |> make |> to_string) in
+    |> Core_list.map ~f:Path.(make %> to_string) in
   let shm_min_avail = Option.value shm_flags.shm_min_avail
     ~default:(FlowConfig.shm_min_avail flowconfig) in
   let log_level = Option.value shm_flags.shm_log_level
     ~default:(FlowConfig.shm_log_level flowconfig) in
+  let sample_rate = 0.0 in
   { SharedMem_js.
-    global_size = FlowConfig.shm_global_size flowconfig;
+    global_size = 0; (* we don't use GlobalStorage, don't waste space on it *)
     heap_size = FlowConfig.shm_heap_size flowconfig;
     dep_table_pow;
     hash_table_pow;
     shm_dirs;
     shm_min_avail;
     log_level;
+    sample_rate;
   }
 
-let from_flag prev = CommandSpec.ArgSpec.(
-  prev
-  |> flag "--from" (optional string)
-      ~doc:"Specify client (for use by editor plugins)"
+let from_flag =
+  let collector main from =
+    let from = match from with
+    | Some from -> Some from
+    | None -> begin
+      let open Core_result in
+      let parent_cmdline =
+        Proc.get_proc_stat (Unix.getpid ())
+        >>= fun proc_stat ->
+          let ppid = proc_stat.Proc.ppid in
+          Proc.get_proc_stat ppid
+        >>| fun parent_proc_stat ->
+          String.trim parent_proc_stat.Proc.cmdline
+      in
+      match parent_cmdline with
+      | Ok cmdline -> Some ("parent cmdline: " ^ cmdline)
+      | Error _ -> None
+    end in
+
+    FlowEventLogger.set_from from;
+    main
+  in
+
+  fun prev ->CommandSpec.ArgSpec.(
+    prev
+    |> collect collector
+    |> flag "--from" (optional string)
+        ~doc:"Specify who is calling this CLI command (used by logging)"
 )
 
 let strip_root_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--strip-root" no_arg
       ~doc:"Print paths without the root"
+)
+
+let wait_for_recheck_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--wait-for-recheck" (optional bool)
+      ~doc:("If the server is rechecking, wait for it to complete rather than run sooner using " ^
+            "outdated data")
 )
 
 let path_flag prev = CommandSpec.ArgSpec.(
@@ -296,6 +363,24 @@ let quiet_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Suppress output about server startup"
 )
 
+type on_mismatch_behavior =
+  | Choose_newest
+  | Stop_server
+  | Restart_client
+  | Error_client
+
+let on_mismatch_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--on-mismatch"
+  (required ~default:Choose_newest (enum [
+    "choose-newest", Choose_newest;
+    "stop-server", Stop_server;
+    "restart-client", Restart_client;
+    "error-client", Error_client;
+  ]))
+  ~doc:("What to do when the client and server are different versions (choose-newest, stop-server, restart-client, error-client) (default: choose-newest)")
+)
+
 let root_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--root" string
@@ -331,11 +416,49 @@ let log_file_flags =
         ~env:"FLOW_MONITOR_LOG_FILE"
   )
 
+let flowconfig_multi_error rev_errs =
+  let msg =
+    rev_errs
+    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> String.concat "\n"
+  in
+  FlowExitStatus.(exit ~msg Invalid_flowconfig)
+
+let flowconfig_multi_warn rev_errs =
+  let msg =
+    rev_errs
+    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> String.concat "\n"
+  in
+  prerr_endline msg
+
+let read_config_or_exit ?(enforce_warnings=true) ?allow_cache flowconfig_path =
+  match FlowConfig.get ?allow_cache flowconfig_path with
+  | Ok (config, []) -> config
+  | Ok (config, warnings) ->
+    if enforce_warnings then flowconfig_multi_error warnings
+    else flowconfig_multi_warn warnings;
+    config
+  | Error err -> flowconfig_multi_error [err]
+
 let check_version required_version =
   match required_version with
   | None -> Ok ()
   | Some version_constraint ->
-    if Semver.satisfies version_constraint Flow_version.version then
+    (* For the purposes of checking whether the *currently-running* version of Flow is compatible
+       with the given project, we'll include pre-releases. For example, this means that 0.61.0-beta
+       is compatible with >0.60.0, because it presumably implements the minimum necessary features
+       of 0.60.0.
+
+       This is subtly different than determining which version of Flow to run in the first place,
+       like when npm/yarn is solving the `flow-bin` constraint. In that case, we do not want
+       >0.60.0 to opt into pre-releases automatically. Those sorts of checks should not pass
+       `~includes_prereleases`.
+
+       So, if you've explicitly run v0.61.0-beta, and the flowconfig says `>0.60.0`, we'll allow it;
+       but if we were looking at the flowconfig to decide which version to run, you should not
+       choose the beta. *)
+    if Semver.satisfies ~include_prereleases:true version_constraint Flow_version.version then
       Ok ()
     else
       let msg = Utils_js.spf
@@ -377,6 +500,11 @@ let collect_flowconfig_flags main ignores_str untyped_str declarations_str inclu
   let raw_lint_severities = list_of_string_arg lints_str in
   main { ignores; includes; libs; raw_lint_severities; untyped; declarations; }
 
+let remove_exclusion pattern =
+  if String_utils.string_starts_with pattern "!" then (
+    String.sub pattern 1 ((String.length pattern) - 1)
+  ) else pattern
+
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
     let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
@@ -388,11 +516,12 @@ let file_options =
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
   let ignores_of_arg root patterns extras =
-    let patterns = List.rev_append extras patterns in
-    List.map (fun s ->
+    let patterns = Core_list.rev_append extras patterns in
+    Core_list.map ~f:(fun s ->
      let root = Path.to_string root
        |> Sys_utils.normalize_filename_dir_sep in
      let reg = s
+       |> remove_exclusion
        |> Str.split_delim Files.project_root_token
        |> String.concat root
        |> Str.regexp in
@@ -401,27 +530,27 @@ let file_options =
   in
   let includes_of_arg ~root ~lib_paths paths =
     (* Explicitly included paths are always added to the path_matcher *)
-    let path_matcher = List.fold_left (fun acc path ->
+    let path_matcher = Core_list.fold_left ~f:(fun acc path ->
       Path_matcher.add acc (Files.make_path_absolute root path)
-    ) Path_matcher.empty paths in
+    ) ~init:Path_matcher.empty paths in
     (* Implicitly included paths are added only if they're not already being watched *)
     let path_len path = path |> Path.to_string |> String.length in
     let implicitly_included_paths_sorted =
-      List.sort (fun a b -> (path_len a) - (path_len b)) (root::lib_paths) (* Shortest path first *)
+      Core_list.sort ~cmp:(fun a b -> (path_len a) - (path_len b)) (root::lib_paths) (* Shortest path first *)
     in
-    List.fold_left (fun acc path ->
+    Core_list.fold_left ~f:(fun acc path ->
       (* If this include is already covered by an explicit include or a shorter implicit include,
        * then skip it *)
       if Path_matcher.matches acc (Path.to_string path)
       then acc
       else Path_matcher.add acc path
-    ) path_matcher implicitly_included_paths_sorted
+    ) ~init:path_matcher implicitly_included_paths_sorted
   in
   let lib_paths ~root flowconfig extras =
     let flowtyped_path = Files.get_flowtyped_path root in
     let has_explicit_flowtyped_lib = ref false in
     let config_libs =
-      List.fold_right (fun lib abs_libs ->
+      Core_list.fold_right ~f:(fun lib abs_libs ->
         let abs_lib = Files.make_path_absolute root lib in
         (**
          * "flow-typed" is always included in the libs list for convenience,
@@ -429,7 +558,7 @@ let file_options =
          *)
         if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
         abs_lib::abs_libs
-      ) (FlowConfig.libs flowconfig) []
+      ) (FlowConfig.libs flowconfig) ~init:[]
     in
     let config_libs =
       if !has_explicit_flowtyped_lib = false
@@ -439,7 +568,7 @@ let file_options =
     in
     match extras with
     | [] -> config_libs
-    | _ -> config_libs @ (List.map (Files.make_path_absolute root) extras)
+    | _ -> config_libs @ (Core_list.map ~f:(Files.make_path_absolute root) extras)
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
@@ -461,7 +590,7 @@ let file_options =
     let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes
-      |> List.rev_append (FlowConfig.includes flowconfig)
+      |> Core_list.rev_append (FlowConfig.includes flowconfig)
       |> includes_of_arg ~root ~lib_paths in
     { Files.
       default_lib_dir;
@@ -529,7 +658,6 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
 )
 
 type connect_params = {
-  from               : string;
   retries            : int;
   retry_if_init      : bool;
   timeout            : int option;
@@ -540,45 +668,47 @@ type connect_params = {
   shm_flags          : shared_mem_params;
   ignore_version     : bool;
   quiet              : bool;
+  on_mismatch        : on_mismatch_behavior;
 }
 
 let collect_connect_flags
     main
+    lazy_mode
     timeout
     retries
     retry_if_init
     no_auto_start
     temp_dir
     shm_flags
-    from
     ignore_version
-    quiet =
+    quiet
+    on_mismatch =
   let default def = function
   | Some x -> x
   | None -> def in
-  FlowEventLogger.set_from from;
   (match timeout with
   | Some n when n <= 0 ->
     let msg = spf "Timeout must be a positive integer. Got %d" n in
     FlowExitStatus.(exit ~msg Commandline_usage_error)
   | _ -> ());
   main {
-    from = (default "" from);
     retries = (default 3 retries);
     retry_if_init = (default true retry_if_init);
     timeout = timeout;
     no_auto_start = no_auto_start;
     temp_dir;
     autostop = false;
-    lazy_mode = None;
+    lazy_mode;
     shm_flags;
     ignore_version;
     quiet;
+    on_mismatch;
   }
 
-let connect_flags prev = CommandSpec.ArgSpec.(
-  prev
-  |> collect collect_connect_flags
+let collect_connect_flags_without_lazy main = collect_connect_flags main None
+
+let connect_flags_with_lazy_collector collector = CommandSpec.ArgSpec.(
+  collector
   |> flag "--timeout" (optional int)
       ~doc:"Maximum time to wait, in seconds"
   |> flag "--retries" (optional int)
@@ -592,6 +722,20 @@ let connect_flags prev = CommandSpec.ArgSpec.(
   |> from_flag
   |> ignore_version_flag
   |> quiet_flag
+  |> on_mismatch_flag
+)
+
+let connect_flags_no_lazy prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_connect_flags_without_lazy
+  |> connect_flags_with_lazy_collector
+)
+
+let connect_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_connect_flags
+  |> lazy_flags
+  |> connect_flags_with_lazy_collector
 )
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
@@ -610,10 +754,10 @@ let connect_and_json_flags =
 let server_log_file ~flowconfig_name ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x
-  | None -> Path.make (Server_files_js.file_of_root ~flowconfig_name "log" ~tmp_dir root)
+  | None -> Path.make (Server_files_js.log_file ~flowconfig_name ~tmp_dir root)
 
 let monitor_log_file ~flowconfig_name ~tmp_dir root =
-  Path.make (Server_files_js.file_of_root ~flowconfig_name "monitor_log" ~tmp_dir root)
+  Path.make (Server_files_js.monitor_log_file ~flowconfig_name ~tmp_dir root)
 
 module Options_flags = struct
   type t = {
@@ -630,12 +774,18 @@ module Options_flags = struct
     profile: bool;
     quiet: bool;
     saved_state_fetcher: Options.saved_state_fetcher option;
+    saved_state_force_recheck: bool;
     saved_state_no_fallback: bool;
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
+    trust_mode: Options.trust_mode option;
+    types_first: bool;
+    abstract_locations: bool;
     verbose: Verbose.t option;
+    wait_for_recheck: bool option;
     weak: bool;
+    include_suppressions: bool;
   }
 end
 
@@ -648,7 +798,7 @@ end
 let parse_lints_flag =
   let number =
     let rec number' index acc = function
-      | [] -> List.rev acc
+      | [] -> Core_list.rev acc
       | head::tail -> number' (index + 1) ((index, head)::acc) tail
     in number' 1 []
   in
@@ -663,9 +813,10 @@ let parse_lints_flag =
 
 let options_flags =
   let collect_options_flags main
-    debug profile all weak traces no_flowlib munge_underscore_members max_workers
+    debug profile all wait_for_recheck weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
-    merge_timeout saved_state_fetcher saved_state_no_fallback no_saved_state =
+    merge_timeout saved_state_fetcher saved_state_force_recheck saved_state_no_fallback
+    no_saved_state types_first abstract_locations include_suppressions trust_mode =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -675,6 +826,7 @@ let options_flags =
       debug;
       profile;
       all;
+      wait_for_recheck;
       weak;
       traces;
       no_flowlib;
@@ -689,8 +841,13 @@ let options_flags =
       quiet;
       merge_timeout;
       saved_state_fetcher;
+      saved_state_force_recheck;
       saved_state_no_fallback;
       no_saved_state;
+      trust_mode;
+      types_first;
+      abstract_locations;
+      include_suppressions;
    }
   in
   fun prev ->
@@ -702,6 +859,8 @@ let options_flags =
     |> profile_flag
     |> flag "--all" no_arg
         ~doc:"Typecheck all files, not just @flow"
+    |> flag "--wait-for-recheck" (optional bool)
+        ~doc:"If true, always wait for rechecks to finish before serving commands (default: false)"
     |> flag "--weak" no_arg
         ~doc:"Typecheck with weak inference, assuming dynamic types by default"
     |> flag "--traces" (optional int)
@@ -730,10 +889,33 @@ let options_flags =
         "fb", Options.Fb_fetcher;
       ])
       ~doc:("Which saved state fetcher Flow should use (none, local) (default: none)")
+    |> flag "--saved-state-force-recheck" no_arg
+      ~doc:"Force a lazy server to recheck the changes since the saved state was generated"
     |> flag "--saved-state-no-fallback" no_arg
       ~doc:"If saved state fails to load, exit (normally fallback is to initialize from scratch)"
     |> flag "--no-saved-state" no_arg
       ~doc:"Do not load from a saved state even if one is available"
+    |> flag "--types-first" no_arg
+        ~doc:"[EXPERIMENTAL] types-first architecture"
+    |> flag "--abstract-locations" no_arg
+        ~doc:"[EXPERIMENTAL] Use abstract locations to improve recheck times. Has no effect unless types-first is also enabled"
+    |> flag "--include-suppressed" no_arg
+        ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
+    |> flag "--trust-mode"
+      (optional (enum [
+        "check", Options.CheckTrust;
+        "silent", Options.SilentTrust;
+        "none", Options.NoTrust;
+      ]))
+      ~doc:""
+
+
+let flowconfig_name_flag prev =
+  let open CommandSpec.ArgSpec in
+  prev
+  |> flag "--flowconfig-name" (required ~default:Server_files_js.default_flowconfig_name string)
+    ~doc:(Printf.sprintf "Set the name of the flow configuration file. (default: %s)"
+      Server_files_js.default_flowconfig_name)
 
 let base_flags =
   let collect_base_flags main flowconfig_name =
@@ -745,9 +927,7 @@ let base_flags =
     let open CommandSpec.ArgSpec in
     prev
     |> collect collect_base_flags
-    |> flag "--flowconfig-name" (required ~default:Server_files_js.default_flowconfig_name string)
-    ~doc:(Printf.sprintf "Set the name of the flow configuration file. (default: %s)"
-      Server_files_js.default_flowconfig_name)
+    |> flowconfig_name_flag
 
 let file_watcher_flag prev =
   let open CommandSpec.ArgSpec in
@@ -832,22 +1012,34 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     ~default:(FlowConfig.saved_state_fetcher flowconfig)
   in
 
-  (* We need cancelable rechecks for saved state. This can be deleted when
-   * experimental.cancelable_rechecks is deleted *)
-  let opt_enable_cancelable_rechecks =
-    FlowConfig.enable_cancelable_rechecks flowconfig
-      || opt_saved_state_fetcher <> Options.Dummy_fetcher
+
+  let opt_lazy_mode =
+    let default = Option.value (FlowConfig.lazy_mode flowconfig) ~default:(Options.NON_LAZY_MODE) in
+    Option.value lazy_mode ~default
+  in
+
+  let opt_arch =
+    if options_flags.types_first || FlowConfig.types_first flowconfig
+    then Options.TypesFirst
+    else Options.Classic
+  in
+
+  let opt_abstract_locations = options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig in
+
+  let opt_wait_for_recheck =
+    Option.value options_flags.wait_for_recheck ~default:(FlowConfig.wait_for_recheck flowconfig)
   in
 
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
     opt_flowconfig_name = flowconfig_name;
-    opt_lazy_mode = lazy_mode;
+    opt_lazy_mode;
     opt_root = root;
     opt_root_name = FlowConfig.root_name flowconfig;
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;
     opt_all = options_flags.all || FlowConfig.all flowconfig;
+    opt_wait_for_recheck;
     opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
     opt_traces = Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
     opt_quiet = options_flags.Options_flags.quiet;
@@ -868,12 +1060,14 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
-    opt_enable_cancelable_rechecks;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports = FlowConfig.enforce_well_formed_exports flowconfig;
+    opt_enforce_well_formed_exports_whitelist = FlowConfig.enforce_well_formed_exports_whitelist flowconfig;
+    opt_enums = FlowConfig.enums flowconfig;
     opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
+    opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
     opt_include_warnings =
@@ -886,6 +1080,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;
     opt_esproposal_nullish_coalescing = FlowConfig.esproposal_nullish_coalescing flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
+    opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
     opt_haste_paths_blacklist = FlowConfig.haste_paths_blacklist flowconfig;
     opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
@@ -895,20 +1090,28 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
     opt_saved_state_fetcher;
+    opt_saved_state_force_recheck = options_flags.saved_state_force_recheck;
     opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
     opt_no_saved_state = options_flags.no_saved_state;
+    opt_arch;
+    opt_abstract_locations;
+    opt_include_suppressions = options_flags.include_suppressions;
+    opt_trust_mode = Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
+    opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
+    opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
+    opt_type_asserts = FlowConfig.type_asserts flowconfig;
   }
 
 let make_env flowconfig_name connect_flags root =
   let flowconfig_path = Server_files_js.config_file flowconfig_name root in
-  let flowconfig = FlowConfig.get flowconfig_path in
+  let flowconfig = read_config_or_exit flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir = Option.value_map
     ~f:normalize
     ~default:(FlowConfig.temp_dir flowconfig)
     connect_flags.temp_dir in
   let shm_dirs = Option.map
-    ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
+    ~f:(Str.split (Str.regexp ",") %> Core_list.map ~f:normalize)
     connect_flags.shm_flags.shm_dirs in
   let log_file =
     Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
@@ -916,6 +1119,14 @@ let make_env flowconfig_name connect_flags root =
   let expiry = match connect_flags.timeout with
   | None -> None
   | Some n -> Some (Unix.gettimeofday () +. float n)
+  in
+  let rerun_on_mismatch = match connect_flags.on_mismatch with
+  | Choose_newest
+  | Restart_client ->
+    true
+  | Stop_server
+  | Error_client ->
+    false
   in
   { CommandConnect.
     root;
@@ -935,6 +1146,7 @@ let make_env flowconfig_name connect_flags root =
     emoji = FlowConfig.emoji flowconfig;
     quiet = connect_flags.quiet;
     flowconfig_name;
+    rerun_on_mismatch;
   }
 
 let connect ~flowconfig_name ~client_handshake connect_flags root =
@@ -976,6 +1188,35 @@ let guess_root flowconfig_name dir_or_file =
         FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   )
 
+(* Favor the root argument, over the input file, over the current directory
+   as the place to begin searching for the root. *)
+let find_a_root ?input ~base_flags root_arg =
+  let flowconfig_name = Base_flags.(base_flags.flowconfig_name) in
+  guess_root flowconfig_name (match root_arg, input with
+    | Some provided_root, _ -> Some provided_root
+    | None, Some provided_input -> File_input.path_of_file_input provided_input
+    | None, None -> None)
+
+(* If a root is given then validate it and use it. Otherwise, favor the input file
+   over the current directory as the place to begin searching for the root. *)
+let get_the_root ?input ~base_flags root_arg =
+  match root_arg with
+  | Some provided_root ->
+    let root_dir = Path.make provided_root in
+    if Path.file_exists root_dir && Path.is_directory root_dir then
+      let flowconfig_name = Base_flags.(base_flags.flowconfig_name) in
+      let root_config = Path.concat root_dir flowconfig_name in
+      if Path.file_exists root_config then
+        root_dir
+      else
+        let msg = spf "Failed to open %s" @@ Path.to_string root_config in
+        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    else
+      let msg = spf "Invalid root directory %s" provided_root in
+      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+  | None -> find_a_root ?input ~base_flags None
+
+
 (* convert 1,1 based line/column to 1,0 for internal use *)
 let convert_input_pos (line, column) =
   let column =
@@ -998,7 +1239,13 @@ let get_path_of_file file =
 
 let get_file_from_filename_or_stdin ~cmd path = function
   | Some filename ->
-      if Sys.is_directory filename then
+      if not (Sys.file_exists filename) then
+        let msg = spf
+          "Could not find file %s; canceling.\
+          \nSee \"flow %s --help\" for more info"
+          filename cmd in
+        FlowExitStatus.(exit ~msg No_input)
+      else if Sys.is_directory filename then
         let msg = spf
           "Provided argument %s is not a file; canceling.\
           \nSee \"flow %s --help\" for more info"
@@ -1014,6 +1261,29 @@ let get_file_from_filename_or_stdin ~cmd path = function
         | Some str -> Some (get_path_of_file str)
       ) in
       File_input.FileContent (filename, contents)
+
+(* Takes a list of strings. If there are 2 then they are both parsed as intengers
+   and stdin is read from. If there are 3 then the first is treated as a input file
+   and the following 2 are parsed as integers. *)
+let parse_location_with_optional_filename spec path args =
+  let exit () =
+      CommandSpec.usage spec;
+      FlowExitStatus.(exit Commandline_usage_error) in
+  let (file, line, column) =
+    begin match args with
+    | [file; line; column] ->
+      let file = expand_path file in
+      File_input.FileName file, line, column
+    | [line; column] ->
+      get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
+      line,
+      column
+    | _ -> exit ()
+    end in
+  let (line, column) = try (int_of_string line), (int_of_string column)
+    with Failure(_) -> exit () in
+  let (line, column) = convert_input_pos (line, column) in
+  file, line, column
 
 let range_string_of_loc ~strip_root loc = Loc.(
   let file = match loc.source with
@@ -1056,7 +1326,7 @@ let rec connect_and_make_request flowconfig_name =
   let rec wait_for_response ?timeout ~quiet ~root (ic: Timeout.in_channel) =
     let use_emoji = Tty.supports_emoji () &&
       Server_files_js.config_file flowconfig_name root
-      |> FlowConfig.get
+      |> read_config_or_exit
       |> FlowConfig.emoji in
 
     let response: MonitorProt.monitor_to_client_message = try
@@ -1105,12 +1375,20 @@ let rec connect_and_make_request flowconfig_name =
     if retries < 0
     then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
 
+    let version_mismatch_strategy = match connect_flags.on_mismatch with
+    | Choose_newest -> SocketHandshake.Stop_server_if_older
+    | Stop_server -> SocketHandshake.Always_stop_server
+    | Restart_client -> SocketHandshake.Error_client
+    | Error_client -> SocketHandshake.Error_client
+    in
+
     let quiet = connect_flags.quiet in
     let client_handshake = ({ SocketHandshake.
       client_build_id = SocketHandshake.build_revision;
+      client_version = Flow_version.version;
       is_stop_request = false;
       server_should_hangup_if_still_initializing = not connect_flags.retry_if_init;
-      server_should_exit_if_version_mismatch = true;
+      version_mismatch_strategy;
     }, { SocketHandshake.
       client_type = SocketHandshake.Ephemeral;
     }) in
@@ -1151,9 +1429,43 @@ let failwith_bad_response ~request ~response =
 let get_check_or_status_exit_code errors warnings max_warnings =
   let open FlowExitStatus in
   let open Errors in
-  if ErrorSet.is_empty errors then begin
+  if ConcreteLocPrintableErrorSet.is_empty errors then begin
     match max_warnings with
-    | Some x when ErrorSet.cardinal warnings > x -> Type_error
+    | Some x when ConcreteLocPrintableErrorSet.cardinal warnings > x -> Type_error
     | None | Some _ -> No_error
   end else
     Type_error
+
+let choose_file_watcher ~options ~file_watcher ~flowconfig =
+  match Options.lazy_mode options, file_watcher with
+  | Options.LAZY_MODE_WATCHMAN, (None | Some Options.Watchman) ->
+    (* --lazy-mode watchman implies --file-watcher watchman *)
+    Options.Watchman
+  | Options.LAZY_MODE_WATCHMAN, Some _ ->
+    (* Error on something like --lazy-mode watchman --file-watcher dfind *)
+    let msg =
+      "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
+      ^ "but you tried to use a different file watcher via the `--file-watcher` flag."
+    in
+    raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
+  | _, Some file_watcher ->
+    file_watcher
+  | _, None ->
+    Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
+
+(* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
+ * has changed since the location was constructed, the offset could be incorrect. If the file has
+ * changed such that the contents no longer have text at the given line/column, the offset is not
+ * included in the JSON output. *)
+let json_of_loc_with_offset ?stdin_file ~strip_root loc =
+  let open Option in
+  let file_content =
+    let path = Loc.source loc >>= (File_key.to_path %> Core_result.ok) in
+    match stdin_file with
+    | Some fileinput when path = File_input.path_of_file_input fileinput ->
+      Some (File_input.content_of_file_input_unsafe fileinput)
+    | _ ->
+      path >>= Sys_utils.cat_or_failed
+  in
+  let offset_table = Option.map file_content ~f:Offset_utils.make in
+  Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc

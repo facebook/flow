@@ -16,4 +16,4 @@ type O = { foo: string; }
 declare var o: O;
 (o: C);
 
-(Object.create(({}: Object)): C); // OK: AnyObjT might be C, who knows
+(Object.create(({}: Object)): C); // OK: AnyT might be C, who knows

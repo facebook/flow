@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -35,7 +35,7 @@ let remove ~request_id =
 let remove_all () =
   (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
-    let ret = SMap.elements !map |> List.map snd in
+    let ret = SMap.elements !map |> Core_list.map ~f:snd in
     map := SMap.empty;
     Lwt.return ret
   )

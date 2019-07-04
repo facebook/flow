@@ -11,6 +11,7 @@ let tests = "sourcemaps" >::: [
   Compose_test.tests;
   Json_test.tests;
   Original_loc_test.tests;
+  Original_loc_frozen_test.tests;
 ]
 
 let () = run_test_tt_main tests

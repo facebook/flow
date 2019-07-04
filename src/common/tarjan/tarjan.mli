@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,5 +21,4 @@ module Make
   *)
   val topsort: roots:NSet.t -> NSet.t NMap.t -> N.t Nel.t list
   val log: N.t Nel.t list -> unit
-  val reverse: NSet.t NMap.t -> NSet.t NMap.t
 end

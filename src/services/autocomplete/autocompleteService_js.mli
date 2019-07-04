@@ -1,13 +1,15 @@
 (**
- * Copyright (c) 2018-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 val autocomplete_get_results:
+  reader:Parsing_heaps.Reader.reader ->
   Context.t ->
-  File_sig.t ->
+  File_sig.With_Loc.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   Autocomplete_js.autocomplete_state option ref ->
   Docblock.t ->
   (ServerProt.Response.complete_autocomplete_result list * Hh_json.json option,

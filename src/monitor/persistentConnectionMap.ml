@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,4 +23,4 @@ let remove ~client_id =
 let cardinal () =
   IMap.cardinal !map
 
-let get_all_clients () = IMap.bindings !map |> List.map snd
+let get_all_clients () = IMap.bindings !map |> Core_list.map ~f:snd

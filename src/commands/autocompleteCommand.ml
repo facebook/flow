@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -36,6 +36,7 @@ let spec = {
     |> root_flag
     |> strip_root_flag
     |> from_flag
+    |> wait_for_recheck_flag
     |> anon "args" (optional (list_of string))
   )
 }
@@ -68,8 +69,7 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main base_flags option_values json pretty root strip_root from args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root wait_for_recheck args () =
   let file = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -78,7 +78,7 @@ let main base_flags option_values json pretty root strip_root from args () =
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  let request = ServerProt.Request.AUTOCOMPLETE file in
+  let request = ServerProt.Request.AUTOCOMPLETE { input = file; wait_for_recheck; } in
   let results = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.AUTOCOMPLETE response -> response
   | response -> failwith_bad_response ~request ~response
@@ -95,7 +95,7 @@ let main base_flags option_values json pretty root strip_root from args () =
     | Ok completions ->
       List.iter (fun res ->
         let name = res.ServerProt.Response.res_name in
-        let ty = res.ServerProt.Response.res_ty in
+        let (_ty_loc, ty) = res.ServerProt.Response.res_ty in
         print_endline (Printf.sprintf "%s %s" name ty)
       ) completions
   )

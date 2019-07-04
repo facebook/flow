@@ -1,0 +1,138 @@
+Error ---------------------------------------------------------------------------------------------------- basic.js:2:28
+
+Cannot assign `42` to `x` because explicit 'any' [1] is incompatible with trusted number [2].
+
+   basic.js:2:28
+   2| var x: $Trusted<number> = (42: any); //Fail
+                                 ^^^^^^^
+
+References:
+   basic.js:2:32
+   2| var x: $Trusted<number> = (42: any); //Fail
+                                     ^^^ [1]
+   basic.js:2:8
+   2| var x: $Trusted<number> = (42: any); //Fail
+             ^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:24:27
+
+Cannot assign `d` to `e` because explicit 'any' [1] is incompatible with trusted number [2].
+
+   basic.js:24:27
+   24| var e: $Trusted<number> = d; // fail
+                                 ^
+
+References:
+   basic.js:23:15
+   23| d = ('Hello': any) // ok
+                     ^^^ [1]
+   basic.js:24:8
+   24| var e: $Trusted<number> = d; // fail
+              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- errmsg.js:3:28
+
+Cannot assign `42` to `a` because explicit 'any' [1] is incompatible with trusted number [2].
+
+   errmsg.js:3:28
+   3| var a: $Trusted<number> = (42: any)
+                                 ^^^^^^^
+
+References:
+   errmsg.js:3:32
+   3| var a: $Trusted<number> = (42: any)
+                                     ^^^ [1]
+   errmsg.js:3:8
+   3| var a: $Trusted<number> = (42: any)
+             ^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- errmsg.js:4:15
+
+Cannot assign `42` to `b` because private number [1] is incompatible with explicit 'any' [2].
+
+   errmsg.js:4:15
+   4| var b: any = (42: $Private<number>)
+                    ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errmsg.js:4:19
+   4| var b: any = (42: $Private<number>)
+                        ^^^^^^^^^^^^^^^^ [1]
+   errmsg.js:4:8
+   4| var b: any = (42: $Private<number>)
+             ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_types.js:6:26
+
+Cannot assign `a` to `b` because explicit 'any' [1] is incompatible with trusted number [2] in the first argument.
+
+   function_types.js:6:26
+   6| var b: (any => number) = a; //fail
+                               ^
+
+References:
+   function_types.js:6:9
+   6| var b: (any => number) = a; //fail
+              ^^^ [1]
+   function_types.js:5:9
+   5| var a: ($Trusted<number> => number) = f;
+              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_types.js:9:14
+
+Cannot assign `a` to `e` because explicit 'any' [1] is incompatible with trusted number [2].
+
+   function_types.js:9:14
+   9| var e: any = a; //fail
+                   ^
+
+References:
+   function_types.js:9:8
+   9| var e: any = a; //fail
+             ^^^ [1]
+   function_types.js:5:9
+   5| var a: ($Trusted<number> => number) = f;
+              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_types.js:10:49
+
+Cannot assign `a` to `h` because `any` may have been passed into number [1] and `any` is incompatible with trusted
+number [2] in the return value.
+
+   function_types.js:10:49
+   10| var h: ($Trusted<number> => $Trusted<number>) = a; //fails with inference
+                                                       ^
+
+References:
+   function_types.js:5:29
+    5| var a: ($Trusted<number> => number) = f;
+                                   ^^^^^^ [1]
+   function_types.js:10:29
+   10| var h: ($Trusted<number> => $Trusted<number>) = a; //fails with inference
+                                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- syntax.js:5:16
+
+Not a valid type to mark as `$Trusted`.
+
+   5| declare var y: $Trusted<any>;
+                     ^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- syntax.js:7:16
+
+Not a valid type to mark as `$Trusted`.
+
+   7| declare var z: $Trusted<T>
+                     ^^^^^^^^^^^
+
+
+
+Found 9 errors

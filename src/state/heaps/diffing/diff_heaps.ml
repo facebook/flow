@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,6 +15,7 @@ type key = File_key.t
 
 module DiffPatchHeap =
   SharedMem_js.NoCache
+    (SharedMem_js.Immediate)
     (File_key)
     (struct
       type t = patch
@@ -22,8 +23,6 @@ module DiffPatchHeap =
       let prefix = Prefix.make ()
 
       let description = "DiffPatch"
-
-      let use_sqlite_fallback () = false
     end)
 
 let set_diff = Expensive.wrap DiffPatchHeap.add

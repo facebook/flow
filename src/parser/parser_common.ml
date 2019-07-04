@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -31,10 +31,10 @@ module type PARSER = sig
   val assignment : env -> (Loc.t, Loc.t) Expression.t
   val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
   val object_initializer : env -> Loc.t * (Loc.t, Loc.t) Expression.Object.t * pattern_errors
-  val identifier : ?restricted_error:Error.t -> env -> Loc.t Identifier.t
+  val identifier : ?restricted_error:Error.t -> env -> (Loc.t, Loc.t) Identifier.t
   val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
   val assert_identifier_name_is_identifier :
-    ?restricted_error:Error.t -> env -> Loc.t * string -> unit
+    ?restricted_error:Error.t -> env -> (Loc.t, Loc.t) Identifier.t -> unit
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
   val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
   val jsx_element_or_fragment :
@@ -45,12 +45,14 @@ module type PARSER = sig
   val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
   val class_expression : env -> (Loc.t, Loc.t) Expression.t
   val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
+  val number: env -> Token.number_type -> string -> float
 end
 
 (* IdentifierName - https://tc39.github.io/ecma262/#prod-IdentifierName *)
 let identifier_name env =
   let open Token in
   let loc = Peek.loc env in
+  let leading = Peek.comments env in
   let name = match Peek.token env with
   (* obviously, Identifier is a valid IdentifierName *)
   | T_IDENTIFIER { value; _ } -> value
@@ -114,6 +116,7 @@ let identifier_name env =
   | T_BOOLEAN_TYPE BOOL -> "bool"
   | T_BOOLEAN_TYPE BOOLEAN -> "boolean"
   | T_NUMBER_TYPE -> "number"
+  | T_BIGINT_TYPE -> "bigint"
   | T_STRING_TYPE -> "string"
   | T_VOID_TYPE -> "void"
   (* Contextual stuff *)
@@ -123,7 +126,9 @@ let identifier_name env =
   | _ -> error_unexpected env; ""
   in
   Eat.token env;
-  loc, name
+  let trailing = Peek.comments env in
+  let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+  (loc, { Identifier.name; comments })
 
 (**
  * The abstract operation IsLabelledFunction

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,78 +10,120 @@ module Request = struct
     | RENAME of string (* new name *)
 
   type command =
-  | AUTOCOMPLETE of File_input.t
-  | CHECK_FILE of
-      File_input.t *
-      Verbose.t option *
-      bool * (* force *)
-      bool (* include_warnings *)
-  | COVERAGE of File_input.t * bool (* force *)
-  | CYCLE of string
-  | DUMP_TYPES of File_input.t
-  | FIND_MODULE of string * string
-  | FIND_REFS of File_input.t * int * int * bool * bool (* filename, line, char, global, multi_hop *)
-  | GEN_FLOW_FILES of File_input.t list * bool (* include_warnings *)
-  | GET_DEF of File_input.t * int * int (* filename, line, char *)
-  | GET_IMPORTS of string list
-  | INFER_TYPE of
-      File_input.t * (* filename|content *)
-      int * (* line *)
-      int * (* char *)
-      Verbose.t option *
-      bool (* expand type aliases *)
-  | PORT of string list
-  | REFACTOR of File_input.t * int * int * refactor_variant (* filename, line, char, refactor variant *)
-  | STATUS of Path.t * bool (* include_warnings *)
-  | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
-  | SUGGEST of File_input.t
-  | SAVE_STATE of Path.t
+  | AUTOCOMPLETE of { input: File_input.t; wait_for_recheck: bool option; }
+  | CHECK_FILE of {
+      input: File_input.t;
+      verbose: Verbose.t option;
+      force: bool;
+      include_warnings: bool;
+      wait_for_recheck: bool option;
+    }
+  | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; trust : bool }
+  | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; trust : bool }
+  | CYCLE of { filename: string; types_only: bool }
+  | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
+  | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
+  | FIND_REFS of {
+      filename: File_input.t;
+      line: int;
+      char: int;
+      global: bool;
+      multi_hop: bool;
+    }
+  | FORCE_RECHECK of { files: string list; focus: bool; profile: bool; }
+  | GET_DEF of {
+      filename: File_input.t;
+      line: int;
+      char: int;
+      wait_for_recheck: bool option;
+    }
+  | GET_IMPORTS of { module_names: string list; wait_for_recheck: bool option; }
+  | GRAPH_DEP_GRAPH of {
+      root: string;
+      strip_root: bool;
+      outfile: string;
+    }
+  | INFER_TYPE of {
+      input: File_input.t;
+      line: int;
+      char: int;
+      verbose: Verbose.t option;
+      expand_aliases: bool;
+      omit_targ_defaults: bool;
+      wait_for_recheck: bool option;
+    }
+  | INSERT_TYPE of {
+      input: File_input.t;
+      target: Loc.t;
+      verbose: Verbose.t option;
+      location_is_strict: bool;
+      wait_for_recheck: bool option;
+      expand_aliases: bool;
+      omit_targ_defaults: bool;
+    }
+  | RAGE of { files: string list }
+  | REFACTOR of {
+      input: File_input.t;
+      line: int;
+      char: int;
+      refactor_variant: refactor_variant;
+    }
+  | SAVE_STATE of { outfile: Path.t; }
+  | STATUS of { client_root: Path.t; include_warnings: bool; }
+  | SUGGEST of { input: File_input.t; wait_for_recheck: bool option; }
 
   let string_of_refactor_variant = function
     | RENAME new_name -> Printf.sprintf "rename(%s)" new_name
 
   let to_string = function
-  | AUTOCOMPLETE fn ->
-    Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input fn)
-  | CHECK_FILE (fn, _, _, _) ->
-    Printf.sprintf "check %s" (File_input.filename_of_file_input fn)
-  | COVERAGE (fn, _) ->
-      Printf.sprintf "coverage %s" (File_input.filename_of_file_input fn)
-  | CYCLE fn ->
-      Printf.sprintf "cycle %s" fn
-  | DUMP_TYPES (fn) ->
-      Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
-  | FIND_MODULE (moduleref, filename) ->
+  | AUTOCOMPLETE { input; wait_for_recheck=_; } ->
+    Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
+  | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; wait_for_recheck=_; } ->
+    Printf.sprintf "check %s" (File_input.filename_of_file_input input)
+  | BATCH_COVERAGE { batch=_; wait_for_recheck=_; trust=_ } ->
+      Printf.sprintf "%s" "batch-coverage"
+  | COVERAGE { input; force=_; wait_for_recheck=_; trust=_ } ->
+      Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
+  | CYCLE { filename; types_only } ->
+      Printf.sprintf "cycle (types_only: %b) %s" types_only filename
+  | GRAPH_DEP_GRAPH _ ->
+      Printf.sprintf "dep-graph"
+  | DUMP_TYPES { input; wait_for_recheck=_; } ->
+      Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
+  | FIND_MODULE { moduleref; filename; wait_for_recheck=_; } ->
       Printf.sprintf "find-module %s %s" moduleref filename
-  | FIND_REFS (fn, line, char, global, multi_hop) ->
-      Printf.sprintf "find-refs %s:%d:%d:%B:%B" (File_input.filename_of_file_input fn) line char global multi_hop
-  | FORCE_RECHECK {files; focus; profile=_} ->
+  | FIND_REFS { filename; line; char; global; multi_hop; } ->
+      Printf.sprintf "find-refs %s:%d:%d:%B:%B"
+        (File_input.filename_of_file_input filename) line char global multi_hop
+  | FORCE_RECHECK { files; focus; profile=_; } ->
       Printf.sprintf
         "force-recheck %s (focus = %b)" (String.concat " " files) focus
-  | GEN_FLOW_FILES (files, _) ->
-      Printf.sprintf "gen-flow-files %s"
-        (files |> List.map File_input.filename_of_file_input |> String.concat " ")
-  | GET_DEF (fn, line, char) ->
+  | GET_DEF { filename; line; char; wait_for_recheck=_; } ->
       Printf.sprintf "get-def %s:%d:%d"
-        (File_input.filename_of_file_input fn) line char
-  | GET_IMPORTS module_names ->
+        (File_input.filename_of_file_input filename) line char
+  | GET_IMPORTS { module_names; wait_for_recheck=_; } ->
       Printf.sprintf "get-imports %s" (String.concat " " module_names)
-  | INFER_TYPE (fn, line, char, _, _) ->
+  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
-        (File_input.filename_of_file_input fn) line char
-  | PORT (files) ->
-      Printf.sprintf "port %s" (String.concat " " files)
-  | REFACTOR (fn, line, char, kind) ->
+        (File_input.filename_of_file_input input) line char
+  | INSERT_TYPE { input; target; _} ->
+    let open Loc in
+    Printf.sprintf "autofix insert-type %s:%d:%d-%d:%d"
+      (File_input.filename_of_file_input input)
+      target.start.line target.start.column target._end.line target._end.column
+  | RAGE { files; } -> Printf.sprintf "rage %s" (String.concat " " files)
+  | REFACTOR { input; line; char; refactor_variant; } ->
       Printf.sprintf "refactor %s:%d:%d:%s"
-        (File_input.filename_of_file_input fn)
+        (File_input.filename_of_file_input input)
         line
         char
-        (string_of_refactor_variant kind)
-  | STATUS (_, _) ->
+        (string_of_refactor_variant refactor_variant)
+  | STATUS { client_root=_; include_warnings=_; } ->
       "status"
-  | SUGGEST (_) ->
+  | SUGGEST _ ->
       "suggest"
-  | SAVE_STATE out -> Printf.sprintf "save-state %s" (Path.to_string out)
+  | SAVE_STATE { outfile; } ->
+      Printf.sprintf "save-state %s" (Path.to_string outfile)
 
   type command_with_context = {
     client_logging_context: FlowEventLogger.logging_context;
@@ -91,6 +133,11 @@ end
 
 module Response = struct
 
+  type lazy_stats = {
+    lazy_mode: Options.lazy_mode;
+    checked_files: int;
+    total_files: int;
+  }
   (* Details about functions to be added in json output *)
   type func_param_result = {
       param_name     : string;
@@ -105,7 +152,8 @@ module Response = struct
   (* Results ready to be displayed to the user *)
   type complete_autocomplete_result = {
       res_loc      : Loc.t;
-      res_ty       : string;
+      res_ty       : Loc.t * string;
+      res_kind     : Lsp.Completion.completionItemKind option;
       res_name     : string;
       func_details : func_details_result option;
     }
@@ -116,7 +164,12 @@ module Response = struct
   ) result
 
   type coverage_response = (
-    (Loc.t * bool) list,
+    (Loc.t * Coverage.expression_coverage) list,
+    string
+  ) result
+
+  type batch_coverage_response = (
+    (File_key.t * Coverage.file_coverage) list,
     string
   ) result
 
@@ -136,40 +189,33 @@ module Response = struct
     string
   ) result
 
+  type insert_type_response = (Replacement_printer.patch, string) result
+
   type textedit = Loc.t * string
   type refactor_ok = {
     refactor_edits: textedit list;
   }
 
+  type rage_response = (string * string) list
+
   type refactor_response = (refactor_ok option, string) result
 
   type suggest_result =
   | Suggest_Ok of {
-      tc_errors: Errors.ErrorSet.t;
-      tc_warnings: Errors.ErrorSet.t;
-      suggest_warnings: Errors.ErrorSet.t;
-      annotated_program: (Loc.t, Loc.t) Flow_ast.program;
+      tc_errors: Errors.ConcreteLocPrintableErrorSet.t;
+      tc_warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      suggest_warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      file_patch: Replacement_printer.patch;
     }
-  | Suggest_Error of Errors.ErrorSet.t
+  | Suggest_Error of Errors.ConcreteLocPrintableErrorSet.t
 
   type suggest_response = (
     suggest_result,
     string
   ) result
 
-  type cycle_response = (cycle_response_subgraph, string) result
-  and cycle_response_subgraph = (string * string list) list
-
-  type gen_flow_files_error =
-    | GenFlowFiles_TypecheckError of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
-    | GenFlowFiles_UnexpectedError of string
-  type gen_flow_files_result =
-    | GenFlowFiles_FlowFile of string
-    | GenFlowFiles_NonFlowFile
-  type gen_flow_files_response =
-    ((string * gen_flow_files_result) list, gen_flow_files_error) result
-
-  type port_response = (string, exn) result SMap.t
+  type graph_response = (graph_response_subgraph, string) result
+  and graph_response_subgraph = (string * string list) list
 
   type directory_mismatch = {
     server: Path.t;
@@ -178,15 +224,13 @@ module Response = struct
 
   type status_response =
   | DIRECTORY_MISMATCH of directory_mismatch
-  | ERRORS of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
+  | ERRORS of {
+      errors: Errors.ConcreteLocPrintableErrorSet.t;
+      warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      suppressed_errors: (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list;
+    }
   | NO_ERRORS
   | NOT_COVERED
-
-  type lazy_stats = {
-    lazy_mode: Options.lazy_mode option;
-    checked_files: int;
-    total_files: int;
-  }
 
   type check_file_response = status_response
 
@@ -196,18 +240,20 @@ module Response = struct
   | AUTOCOMPLETE of autocomplete_response
   | CHECK_FILE of check_file_response
   | COVERAGE of coverage_response
-  | CYCLE of cycle_response
+  | BATCH_COVERAGE of batch_coverage_response
+  | CYCLE of graph_response
+  | GRAPH_DEP_GRAPH of (unit, string) result
   | DUMP_TYPES of dump_types_response
   | FIND_MODULE of find_module_response
   | FIND_REFS of find_refs_response
-  | GEN_FLOW_FILES of gen_flow_files_response
+  | FORCE_RECHECK of Profiling_js.finished option
   | GET_DEF of get_def_response
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
-  | PORT of port_response
+  | INSERT_TYPE of insert_type_response
+  | RAGE of rage_response
   | REFACTOR of refactor_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
-  | FORCE_RECHECK of Profiling_js.finished option
   | SUGGEST of suggest_response
   | SAVE_STATE of (unit, string) result
 
@@ -215,18 +261,20 @@ module Response = struct
   | AUTOCOMPLETE _ -> "autocomplete response"
   | CHECK_FILE _ -> "check_file response"
   | COVERAGE _ -> "coverage response"
-  | CYCLE _ -> "cycle reponse"
+  | BATCH_COVERAGE _ -> "batch-coverage response"
+  | CYCLE _ -> "cycle response"
+  | GRAPH_DEP_GRAPH _ -> "dep-graph response"
   | DUMP_TYPES _ -> "dump_types response"
   | FIND_MODULE _ -> "find_module response"
   | FIND_REFS _ -> "find_refs response"
-  | GEN_FLOW_FILES _ -> "gen_flow_files response"
+  | FORCE_RECHECK _ -> "force_recheck response"
   | GET_DEF _ -> "get_def response"
   | GET_IMPORTS _ -> "get_imports response"
   | INFER_TYPE _ -> "infer_type response"
-  | PORT _ -> "port response"
+  | INSERT_TYPE _ -> "insert_type response"
+  | RAGE _ -> "rage response"
   | REFACTOR _ -> "refactor response"
   | STATUS _ -> "status response"
-  | FORCE_RECHECK _ -> "force_recheck response"
   | SUGGEST _ -> "suggest response"
   | SAVE_STATE _ -> "save_state response"
 end

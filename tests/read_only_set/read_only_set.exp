@@ -1,0 +1,30 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:10:36
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+
+   test.js:10:36
+   10|     bad (x: number) : $ReadOnlySet<T> { // Error: T in invariant position
+                                          ^
+
+References:
+   test.js:9:12
+    9| class Foo<+T> {
+                  ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:36
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+
+   test.js:16:36
+   16|     bad (x: number) : $ReadOnlySet<T> {// Error: T in invariant position
+                                          ^
+
+References:
+   test.js:15:12
+   15| class Baz<-T> {
+                  ^ [1]
+
+
+
+Found 2 errors

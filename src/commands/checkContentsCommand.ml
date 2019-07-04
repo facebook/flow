@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -34,15 +34,15 @@ let spec = {
     |> strip_root_flag
     |> verbose_flags
     |> from_flag
+    |> wait_for_recheck_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
     |> anon "filename" (optional string)
   )
 }
 
-let main base_flags option_values json pretty json_version root error_flags strip_root verbose from
-  respect_pragma all file () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty json_version root error_flags strip_root verbose
+  wait_for_recheck respect_pragma all file () =
   let file = get_file_from_filename_or_stdin file
     ~cmd:CommandSpec.(spec.name) None in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -70,7 +70,13 @@ let main base_flags option_values json pretty json_version root error_flags stri
 
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-  let request = ServerProt.Request.CHECK_FILE (file, verbose, all, include_warnings) in
+  let request = ServerProt.Request.CHECK_FILE {
+    input = file;
+    verbose;
+    force = all;
+    include_warnings;
+    wait_for_recheck;
+  } in
   let response = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CHECK_FILE response -> response
   | response -> failwith_bad_response ~request ~response
@@ -87,12 +93,12 @@ let main base_flags option_values json pretty json_version root error_flags stri
   let print_json = Errors.Json_output.print_errors
     ~out_channel:stdout ~strip_root ~pretty
     ?version:json_version
-    ~stdin_file ~suppressed_errors:([]) in
+    ~stdin_file in
   match response with
-  | ServerProt.Response.ERRORS {errors; warnings} ->
+  | ServerProt.Response.ERRORS {errors; warnings; suppressed_errors} ->
       if json
       then
-        print_json ~errors ~warnings ()
+        print_json ~errors ~warnings ~suppressed_errors ()
       else (
         Errors.Cli_output.print_errors
           ~out_channel:stdout
@@ -109,12 +115,20 @@ let main base_flags option_values json pretty json_version root error_flags stri
       )
   | ServerProt.Response.NO_ERRORS ->
       if json then
-        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
+        print_json
+          ~errors:Errors.ConcreteLocPrintableErrorSet.empty
+          ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+          ~suppressed_errors:[]
+          ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | ServerProt.Response.NOT_COVERED ->
       if json then
-        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
+        print_json
+          ~errors:Errors.ConcreteLocPrintableErrorSet.empty
+          ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+          ~suppressed_errors:[]
+          ()
       else Printf.printf "File is not @flow!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

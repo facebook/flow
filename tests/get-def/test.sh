@@ -120,7 +120,6 @@ printf "non-shorthand destructuring = "
 assert_ok "$FLOW" get-def objects.js 20 11 --strip-root --pretty
 printf "destructuring without type alias = "
 assert_ok "$FLOW" get-def objects.js 22 11 --strip-root --pretty
-# TODO this should return results
 printf "destructuring a shadow prop = "
 assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
 # This one should return no results

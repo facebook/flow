@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,7 +24,7 @@ val flow_p:
   Type.propref ->
   (Type.property * Type.property) -> unit
 
-val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+val reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
 (* constraint utils *)
 val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
@@ -52,11 +52,11 @@ val generate_tests: Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) ->
 val match_this_binding: Type.t SMap.t -> (Type.t -> bool) -> bool
 
 val check_polarity:
-  Context.t -> ?trace:Trace.t -> Type.polarity -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
 
 (* selectors *)
 
-val eval_selector : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> int -> Type.t
+val eval_selector : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
 (* destructors *)
@@ -67,16 +67,14 @@ val mk_type_destructor : Context.t -> trace:Trace.t -> Type.use_op -> Reason.t -
 
 (* ... *)
 
-val mk_default: Context.t -> reason ->
-  expr:(Context.t -> 'a -> Type.t) ->
-  'a Default.t -> Type.t
+val mk_default: Context.t -> reason -> Type.t Default.t -> Type.t
 
 (* val graph: bounds IMap.t ref *)
 val lookup_module: Context.t -> string -> Type.t
 
 (* contexts *)
 val mk_builtins: Context.t -> unit
-val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
+val add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit
 
 (* builtins *)
 
@@ -84,40 +82,18 @@ val builtins: Context.t -> Type.t
 val get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
 val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
-val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 val set_builtin: Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
 
 val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
 (* strict *)
+val types_of: Constraint.constraints -> Type.t list
 val enforce_strict: Context.t -> Type.t -> unit
-val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
-val resolve_type: Context.t -> Type.t -> Type.t
-val resolve_tvar: Context.t -> Type.tvar -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
 val possible_uses: Context.t -> Constraint.ident -> Type.use_t list
 
-module Members : sig
-  type ('success, 'success_module) generic_t =
-    | Success of 'success
-    | SuccessModule of 'success_module
-    | FailureNullishType
-    | FailureAnyType
-    | FailureUnhandledType of Type.t
-
-  type t = (
-    (* Success *) (Loc.t option * Type.t) SMap.t,
-    (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
-  ) generic_t
-
-  (* For debugging purposes *)
-  val string_of_extracted_type: (Type.t, Type.t) generic_t -> string
-
-  val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
-
-  val extract: Context.t -> Type.t -> t
-  val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
-  val extract_members: Context.t -> (Type.t, Type.t) generic_t -> t
-end
+(* trust *)
+val mk_trust_var: Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
+val strengthen_trust: Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit

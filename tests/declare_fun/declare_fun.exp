@@ -1,3 +1,17 @@
+Error ----------------------------------------------------------------------------------------------------- scope.js:3:5
+
+Cannot call `bar` with `0` bound to `y` because number [1] is incompatible with string [2].
+
+   scope.js:3:5
+   3| bar(0);
+          ^ [1]
+
+References:
+   scope.js:1:25
+   1| declare function bar(y: T): string;
+                              ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `foo(...)` to undefined because boolean [1] is incompatible with undefined [2].
@@ -16,4 +30,4 @@ References:
 
 
 
-Found 1 error
+Found 2 errors

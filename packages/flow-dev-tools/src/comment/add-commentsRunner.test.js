@@ -12,12 +12,12 @@ test('addCommentsToCode', async () => {
       longComment,
       testInput,
       /* Intentionally made these out of order to test that they are still inserted properly */
-      [1, 5, 3].map(makeLoc),
+      [1, 6, 5, 3].map(makeLoc),
       flowBinPath,
     )
   ).toEqual([
     testOutput,
-    3
+    4
   ]);
 });
 
@@ -26,11 +26,13 @@ const testInput =
 `const bar = 4;
 const foo = 4;
 const baz = 3;
-<div>
-  <span>
-    foo
-  </span>
-</div>
+<>
+  <div>
+    <span>
+      foo
+    </span>
+  </div>
+</>
 `;
 
 const testOutput =
@@ -41,13 +43,17 @@ const foo = 4;
 /* this is a really long comment that definitely goes over the line length
  * limit so the tool has to wrap it */
 const baz = 3;
-<div>
+<>
   {/* this is a really long comment that definitely goes over the line length
     * limit so the tool has to wrap it */}
-  <span>
-    foo
-  </span>
-</div>
+  <div>
+    {/* this is a really long comment that definitely goes over the line length
+      * limit so the tool has to wrap it */}
+    <span>
+      foo
+    </span>
+  </div>
+</>
 `;
 
 // This simulates an error location spanning the entire line. The code looks for AST nodes that are

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,9 +11,17 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
+type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option
+type parse_ok =
+  | Classic of t
+  | TypesFirst of t * aloc_t (* sig *)
+
+val basic: parse_ok -> t
+
 (* result of individual parse *)
 type result =
-  | Parse_ok of (Loc.t, Loc.t) Flow_ast.program * File_sig.t
+  | Parse_ok of parse_ok
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -24,7 +32,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
-  | File_sig_error of File_sig.error
+  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -36,7 +44,7 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: (File_sig.tolerable_error list) FilenameMap.t;
+  parse_ok: (File_sig.With_Loc.tolerable_error list) FilenameMap.t;
 
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
@@ -51,6 +59,29 @@ type results = {
   parse_unchanged: FilenameSet.t;
 }
 
+type parse_options = {
+  parse_fail: bool;
+  parse_types_mode: types_mode;
+  parse_use_strict: bool;
+  parse_prevent_munge: bool;
+  parse_module_ref_prefix: string option;
+  parse_facebook_fbt: string option;
+  parse_arch: Options.arch;
+  parse_abstract_locations: bool;
+}
+
+val make_parse_options:
+  ?fail: bool ->
+  ?arch: Options.arch ->
+  ?abstract_locations: bool ->
+  ?prevent_munge: bool ->
+  types_mode: types_mode ->
+  use_strict: bool ->
+  module_ref_prefix: string option ->
+  facebook_fbt: string option ->
+  unit ->
+  parse_options
+
 val docblock_max_tokens: int
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
@@ -58,6 +89,7 @@ individually *)
 val parse_with_defaults:
   ?types_mode: types_mode ->
   ?use_strict: bool ->
+  reader: Mutator_state_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
   File_key.t list Bucket.next ->
@@ -65,6 +97,7 @@ val parse_with_defaults:
 
 val reparse_with_defaults:
   transaction: Transaction.t ->
+  reader: Mutator_state_reader.t ->
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   ?with_progress: bool ->
@@ -75,6 +108,7 @@ val reparse_with_defaults:
   (FilenameSet.t * results) Lwt.t
 
 val ensure_parsed:
+  reader: Mutator_state_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
@@ -94,11 +128,8 @@ val parse_json_file :
 
 (* parse contents of a file *)
 val do_parse:
-  ?fail:bool ->
-  types_mode: types_mode ->
-  use_strict: bool ->
+  parse_options: parse_options ->
   info: Docblock.t ->
-  ?prevent_munge: bool ->
   string ->                 (* contents of the file *)
   File_key.t ->               (* filename *)
   result
@@ -110,4 +141,8 @@ val next_of_filename_set:
   FilenameSet.t ->
   File_key.t list Bucket.next
 
-val does_content_match_file_hash: File_key.t -> string -> bool
+val does_content_match_file_hash:
+  reader:State_reader.t ->
+  File_key.t ->
+  string ->
+  bool

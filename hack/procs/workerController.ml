@@ -7,7 +7,7 @@
  *
  *)
 
-open Hh_core
+open Core_kernel
 open Worker
 
 (*****************************************************************************
@@ -57,9 +57,9 @@ let failure_to_string f = match f with
   | Worker_oomed -> "Worker_oomed"
   | Worker_quit s -> Printf.sprintf "(Worker_quit %s)" (status_string s)
 
-let () = Printexc.register_printer @@ function
+let () = Caml.Printexc.register_printer @@ function
   | Worker_failed_to_send_job Other_send_job_failure exn ->
-    Some (Printf.sprintf "Other_send_job_failure: %s" (Printexc.to_string exn))
+    Some (Printf.sprintf "Other_send_job_failure: %s" (Exn.to_string exn))
   | Worker_failed_to_send_job Worker_already_exited status ->
     Some (Printf.sprintf "Worker_already_exited: %s" (status_string status))
   | Worker_failed (id, failure) ->
@@ -82,9 +82,13 @@ type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
  *****************************************************************************)
 
 type worker = {
-  id: int; (* Simple id for the worker. This is not the worker pid: on
-              Windows, we spawn a new worker for each job. *)
-
+  (* Simple id for the worker. This is not the worker pid: on Windows, we spawn
+   * a new worker for each job.
+   *
+   * This is also an offset into the shared heap segment, used to access
+   * worker-local data. As such, the numbering is important. The IDs must be
+   * dense and start at 1. (0 is the master process offset.) *)
+  id: int;
 
   (** The call wrapper will wrap any workload sent to the worker (via "call"
    * below) before invoking the workload.
@@ -189,15 +193,15 @@ let wrap_request w f x = match w.call_wrapper with
   | Some { wrap } -> Request (fun { send } -> send (wrap f x))
   | None -> Request (fun { send } -> send (f x))
 
-type 'a entry_state = 'a * Gc.control * SharedMem.handle
+type 'a entry_state = 'a * Gc.control * SharedMem.handle * int
 type 'a entry = ('a entry_state * (Unix.file_descr option), request, void) Daemon.entry
 
 let entry_counter = ref 0
 let register_entry_point ~restore =
   incr entry_counter;
-  let restore (st, gc_control, heap_handle) =
+  let restore (st, gc_control, heap_handle, worker_id) =
     restore st;
-    SharedMem.connect heap_handle ~is_master:false;
+    SharedMem.connect heap_handle ~worker_id;
     Gc.set gc_control in
   let name = Printf.sprintf "slave_%d" !entry_counter in
   Daemon.register_entry_point
@@ -246,14 +250,14 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
       (** We don't use the side channel on Windows. *)
       None, None
   in
-  let spawn name child_fd () =
+  let spawn worker_id name child_fd () =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     (** Daemon.spawn runs exec after forking. We explicitly *do* want to "leak"
      * child_fd to this one spawned process because it will be using that FD to
      * send messages back up to us. Close_on_exec is probably already false, but
      * we force it again to be false here just in case. *)
     Option.iter child_fd ~f:Unix.clear_close_on_exec;
-    let state = (saved_state, gc_control, heap_handle) in
+    let state = (saved_state, gc_control, heap_handle, worker_id) in
     let handle =
       Daemon.spawn
         ~name
@@ -271,7 +275,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   for n = 1 to nbr_procs do
     let controller_fd, child_fd = setup_controller_fd () in
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pid in
-    made_workers := make_one ?call_wrapper controller_fd (spawn name child_fd) n :: !made_workers
+    made_workers := make_one ?call_wrapper controller_fd (spawn n name child_fd) n :: !made_workers
   done;
   !made_workers
 
@@ -466,13 +470,13 @@ let select ds additional_fds =
     else
       Sys_utils.select_non_intr (fds @ additional_fds) [] [] ~-.1. in
   let additional_ready_fds =
-    List.filter ~f:(List.mem ready_fds) additional_fds in
+    List.filter ~f:(List.mem ~equal:(=) ready_fds) additional_fds in
   List.fold_right
     ~f:(fun d acc ->
       match snd !d with
       | Cached _ | Canceled | Failed _ ->
           { acc with readys = d :: acc.readys }
-      | Processing s when List.mem ready_fds s.infd ->
+      | Processing s when List.mem ~equal:(=) ready_fds s.infd ->
           { acc with readys = d :: acc.readys }
       | Processing _ ->
           { acc with waiters = d :: acc.waiters})

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -28,16 +28,24 @@ let set_hh_logger_min_level ?(min_level=Hh_logger.Level.Info) options =
       | None -> min_level
   )
 
-let init_loggers ~from ~options ?min_level () =
-  FlowEventLogger.set_from from;
+let init_loggers ~options ?min_level () =
   set_hh_logger_min_level ?min_level options
 
 let set_server_options ~server_options =
-  let lazy_mode = Option.value_map
-    (Options.lazy_mode server_options) ~default:"off" ~f:Options.lazy_mode_to_string
+  let lazy_mode = match Options.lazy_mode server_options with
+  | Options.LAZY_MODE_FILESYSTEM -> "fs"
+  | Options.LAZY_MODE_IDE -> "ide"
+  | Options.LAZY_MODE_WATCHMAN -> "watchman"
+  | Options.NON_LAZY_MODE -> "off"
   in
-  let cancelable_rechecks =
-    if Options.enable_cancelable_rechecks server_options then "on" else "off"
+  let arch = match Options.arch server_options with
+  | Options.Classic -> "classic"
+  | Options.TypesFirst -> "types_first"
   in
 
-  FlowEventLogger.set_server_options ~lazy_mode ~cancelable_rechecks
+  FlowEventLogger.set_server_options ~lazy_mode ~arch
+
+let disable_logging () =
+  EventLogger.disable_logging ();
+  FlowInteractionLogger.disable_logging ();
+  Flow_server_profile.disable_logging ()

@@ -1,24 +1,31 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast_utils = Flow_ast_utils
+
 module Ast = Flow_ast
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
 
-module Deps = Signature_builder_deps
+module Deps = Signature_builder_deps.With_Loc
+module File_sig = File_sig.With_Loc
 module Error = Deps.Error
 module Dep = Deps.Dep
+module EASort = Signature_builder_deps.ExpectedAnnotationSort
 
 module type EvalEnv = sig
   val prevent_munge: bool
+  val facebook_fbt: string option
+  (* hacks *)
   val ignore_static_propTypes: bool
+  val facebook_keyMirror: bool
 end
 
 (* A signature of a module is described by exported expressions / definitions, but what we're really
@@ -67,6 +74,72 @@ end
 *)
 module Eval(Env: EvalEnv) = struct
 
+  class predicate_visitor = object(this)
+    inherit [Deps.t, Loc.t] Flow_ast_visitor.visitor ~init:Deps.bot as super
+
+    val mutable params_ = SSet.empty
+
+    method toplevel_expression params expr =
+      this#set_acc Deps.bot;
+      params_ <- params;
+      this#expression expr
+
+    method! expression expr =
+      match snd expr with
+      | Ast.Expression.Array _
+      | Ast.Expression.ArrowFunction _
+      | Ast.Expression.Assignment _
+      | Ast.Expression.Class _
+      | Ast.Expression.Comprehension _
+      | Ast.Expression.Function _
+      | Ast.Expression.Generator _
+      | Ast.Expression.Import _
+      | Ast.Expression.JSXElement _
+      | Ast.Expression.JSXFragment _
+      | Ast.Expression.MetaProperty _
+      | Ast.Expression.New _
+      | Ast.Expression.Object _
+      | Ast.Expression.OptionalCall _
+      | Ast.Expression.TaggedTemplate _
+      | Ast.Expression.TemplateLiteral _
+      | Ast.Expression.TypeCast _
+      | Ast.Expression.Update _
+      | Ast.Expression.Yield _
+        ->
+        this#update_acc (fun deps ->
+          Deps.join (deps, Deps.top (Error.UnsupportedPredicateExpression (fst expr)))
+        );
+        expr
+
+      | Ast.Expression.Binary _
+      | Ast.Expression.Call _
+      | Ast.Expression.Conditional _
+      | Ast.Expression.Logical _
+      | Ast.Expression.Member _
+      | Ast.Expression.OptionalMember _
+      | Ast.Expression.Sequence _
+      | Ast.Expression.Unary _
+        ->
+        super#expression expr
+
+      | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ }) ->
+        if not (SSet.mem name params_) then
+          this#update_acc (fun deps ->
+            Deps.join (deps, Deps.value name);
+          );
+        expr
+
+      | Ast.Expression.Literal _
+      | Ast.Expression.Super
+      | Ast.Expression.This ->
+        expr
+  end
+
+  let predicate_expression =
+    let visitor = new predicate_visitor in
+    fun params expr ->
+      visitor#eval (visitor#toplevel_expression params) expr
+
   let rec type_ tps t =
     let open Ast.Type in
     match t with
@@ -76,10 +149,12 @@ module Eval(Env: EvalEnv) = struct
       | _, Void
       | _, Null
       | _, Number
+      | _, BigInt
       | _, String
       | _, Boolean
       | _, StringLiteral _
       | _, NumberLiteral _
+      | _, BigIntLiteral _
       | _, BooleanLiteral _ -> Deps.bot
       | _, Nullable t -> type_ tps t
       | _, Function ft -> function_type tps ft
@@ -112,9 +187,10 @@ module Eval(Env: EvalEnv) = struct
 
     in fun tps ft ->
       let open Ast.Type.Function in
-      let { params; return; _ } = ft in
+      let { tparams; params; return } = ft in
+      let tps, deps = type_params tps tparams in
       let _, { Params.params; rest; } = params in
-      let deps = List.fold_left (Deps.reduce_join (function_type_param tps)) Deps.bot params in
+      let deps = List.fold_left (Deps.reduce_join (function_type_param tps)) deps params in
       let deps = match rest with
       | None -> deps
       | Some (_, { RestParam.argument }) -> Deps.join (deps, function_type_param tps argument)
@@ -170,7 +246,7 @@ module Eval(Env: EvalEnv) = struct
     let rec qualified_type_ref tps qualification =
       let open Identifier in
       match qualification with
-        | Unqualified (_, name) ->
+        | Unqualified (_, { Ast.Identifier.name; comments= _ }) ->
           if SSet.mem name tps then Deps.bot else Deps.type_ name
         | Qualified (_, { qualification; _ }) -> qualified_type_ref tps qualification
     in
@@ -184,7 +260,7 @@ module Eval(Env: EvalEnv) = struct
     let rec qualified_value_ref tps qualification =
       let open Identifier in
       match qualification with
-        | Unqualified (loc, name) ->
+        | Unqualified (loc, { Ast.Identifier.name; comments= _ }) ->
           if SSet.mem name tps then Deps.top (Error.InvalidTypeParamUse loc) else Deps.value name
         | Qualified (_, { qualification; _ }) -> qualified_value_ref tps qualification
     in
@@ -197,15 +273,10 @@ module Eval(Env: EvalEnv) = struct
     | None -> Deps.bot
     | Some (_, ts) -> List.fold_left (Deps.reduce_join (type_ tps)) Deps.bot ts
 
-  let opaque_type tps supertype =
-    match supertype with
-      | None -> Deps.bot
-      | Some t -> type_ tps t
-
-  let type_params =
+  and type_params =
     let type_param tps tparam =
       let open Ast.Type.ParameterDeclaration.TypeParam in
-      let _, { name = (_, x); bound; default; _ } = tparam in
+      let _, { name = (_, { Ast.Identifier.name= x; comments= _ }); bound; default; _ } = tparam in
       let deps = match bound with
         | Ast.Type.Missing _ -> Deps.bot
         | Ast.Type.Available (_, t) -> type_ tps t in
@@ -223,25 +294,30 @@ module Eval(Env: EvalEnv) = struct
           SSet.add tp tps, Deps.join (deps, deps')
         ) init tparams
 
+  let opaque_type tps supertype =
+    match supertype with
+      | None -> Deps.bot
+      | Some t -> type_ tps t
+
   let rec annot_path tps = function
     | Kind.Annot_path.Annot (_, t) -> type_ tps t
-    | Kind.Annot_path.Object (path, _) -> annot_path tps path
+    | Kind.Annot_path.Object (_, (path, _)) -> annot_path tps path
 
   let rec init_path tps = function
     | Kind.Init_path.Init expr -> literal_expr tps expr
     | Kind.Init_path.Object (_, (path, _)) -> init_path tps path
 
-  and annotation ?init tps (loc, annot) =
+  and annotation ~sort ?init tps (loc, annot) =
     match annot with
       | Some path -> annot_path tps path
       | None ->
         begin match init with
           | Some path -> init_path tps path
-          | None -> Deps.top (Error.ExpectedAnnotation loc)
+          | None -> Deps.top (Error.ExpectedAnnotation (loc, sort))
         end
 
-  and annotated_type tps loc = function
-    | Ast.Type.Missing _ -> Deps.top (Error.ExpectedAnnotation loc)
+  and annotated_type ~sort tps loc = function
+    | Ast.Type.Missing _ -> Deps.top (Error.ExpectedAnnotation (loc, sort))
     | Ast.Type.Available (_, t) -> type_ tps t
 
   and pattern tps patt =
@@ -250,17 +326,17 @@ module Eval(Env: EvalEnv) = struct
       | loc, Identifier { Identifier.annot; _ }
       | loc, Object { Object.annot; _ }
       | loc, Array { Array.annot; _ }
-        -> annotated_type tps loc annot
-      | _, Assignment { Assignment.left; _ } -> pattern tps left
+        -> annotated_type ~sort:EASort.ArrayPattern tps loc annot
       | loc, Expression _ -> Deps.todo loc "Expression"
 
   and literal_expr tps =
     let open Ast.Expression in
     function
-      | loc, Literal { Ast.Literal.value; raw = _ } ->
+      | loc, Literal { Ast.Literal.value; raw = _; comments = _ } ->
         begin match value with
           | Ast.Literal.String _
           | Ast.Literal.Number _
+          | Ast.Literal.BigInt _
           | Ast.Literal.Boolean _
           | Ast.Literal.Null
             -> Deps.bot
@@ -270,25 +346,29 @@ module Eval(Env: EvalEnv) = struct
       | _, Identifier stuff -> identifier stuff
       | _, Class stuff ->
         let open Ast.Class in
-        let { id = _; body; tparams; extends; implements; _ } = stuff in
+        let { id; body; tparams; extends; implements; _ } = stuff in
         let super, super_targs = match extends with
           | None -> None, None
           | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-        class_ tparams body super super_targs implements
+        let deps = class_ tparams body super super_targs implements in
+        begin match id with
+          | None -> deps
+          | Some x -> Deps.replace_local_with_dynamic_class (Flow_ast_utils.source_of_ident x) deps
+        end
       | _, Function stuff
       | _, ArrowFunction stuff
         ->
         let open Ast.Function in
-        let { id = _; generator; tparams; params; return; body; _ } = stuff in
-        function_ tps generator tparams params return body
+        let { id = _; generator; tparams; params; return; body; predicate; _ } = stuff in
+        function_ tps generator tparams params return body predicate
       | loc, Object stuff ->
         let open Ast.Expression.Object in
-        let { properties } = stuff in
+        let { properties; comments= _ } = stuff in
         if properties = [] then Deps.top (Error.EmptyObject loc)
-        else object_ tps properties
+        else object_ tps loc properties
       | loc, Array stuff ->
         let open Ast.Expression.Array in
-        let { elements } = stuff in
+        let { elements; comments= _ } = stuff in
         begin match elements with
           | [] -> Deps.top (Error.EmptyArray loc)
           | e::es -> array_ tps loc (e, es)
@@ -300,13 +380,26 @@ module Eval(Env: EvalEnv) = struct
         type_ tps t
       | loc, Member stuff -> member loc stuff
       | loc, Import _ -> Deps.dynamic_import loc
-      | loc, Call stuff
-          when begin
-            let { Ast.Expression.Call.callee; _ } = stuff in
-            match callee with
-              | _, Identifier (_, "require") -> true
-              | _ -> false
-          end -> Deps.dynamic_require loc
+      | loc, Call {
+          Ast.Expression.Call.
+          callee = (_, Identifier (_, { Ast.Identifier.name= "require"; comments= _ }));
+          _
+        } -> Deps.dynamic_require loc
+      | _, Call {
+          Ast.Expression.Call.
+          callee = (_, Member {
+            Ast.Expression.Member._object = (_, Identifier (_, { Ast.Identifier.name= "Object"; comments= _ }));
+            property = Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name= "freeze"; comments= _ });
+          });
+          targs = None;
+          arguments = [Expression ((_, Object _) as expr)]
+        } -> literal_expr tps expr
+      | _, Call {
+          Ast.Expression.Call.
+          callee = (_, Identifier (_, { Ast.Identifier.name= "keyMirror"; comments= _ }));
+          targs = None;
+          arguments = [Expression ((_, Object _) as expr)]
+        } when Env.facebook_keyMirror -> literal_expr tps expr
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
         let { operator; argument; _ } = stuff in
@@ -326,14 +419,23 @@ module Eval(Env: EvalEnv) = struct
         let open Ast.Expression.Assignment in
         let { operator; left = _; right } = stuff in
         begin match operator with
-          | Assign -> literal_expr tps right
-          | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
+          | None -> literal_expr tps right
+          | Some _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
         end
       | _, Update stuff ->
         let open Ast.Expression.Update in
         (* This operation has a simple result type. *)
         let { argument = _; _ } = stuff in
         Deps.bot
+
+      | loc, JSXElement e ->
+        let open Ast.JSX in
+        let { openingElement; closingElement = _; children = _ } = e in
+        let _loc, { Opening.name; selfClosing = _; attributes = _ } = openingElement in
+        begin match name, Env.facebook_fbt with
+          | Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"}), Some _ -> Deps.bot
+          | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXElement))
+        end
 
       | loc, Call _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
@@ -343,8 +445,6 @@ module Eval(Env: EvalEnv) = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Conditional))
       | loc, Generator _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Generator))
-      | loc, JSXElement _ ->
-        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXElement))
       | loc, JSXFragment _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXFragment))
       | loc, Logical _ ->
@@ -367,7 +467,7 @@ module Eval(Env: EvalEnv) = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Yield))
 
   and identifier stuff =
-    let _, name = stuff in
+    let _, { Ast.Identifier.name; comments= _ } = stuff in
     Deps.value name
 
   and member loc stuff =
@@ -381,20 +481,25 @@ module Eval(Env: EvalEnv) = struct
     match property with
       | PropertyIdentifier _
       | PropertyPrivateName _ -> deps
-      | PropertyExpression _ -> Deps.top (Error.UnexpectedObjectKey loc)
+      | PropertyExpression (key_loc, _) -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
 
   and arith_unary tps operator loc argument =
     let open Ast.Expression.Unary in
     match operator with
-      | Minus
       | Plus
-      | Not
       | BitNot
       | Typeof
       | Void
       | Delete
         ->
         (* These operations have simple result types. *)
+        ignore tps; ignore argument; Deps.bot
+      | Minus
+      | Not
+        ->
+        (* TODO: These operations are evaluated by Flow; they may or may not have simple result
+           types. Ideally we'd be verifying the argument. Unfortunately, we don't (see below). The
+           generator does some basic constant evaluation to compensate, but it's not enough. *)
         ignore tps; ignore argument; Deps.bot
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
@@ -431,46 +536,110 @@ module Eval(Env: EvalEnv) = struct
         (* The result type of this operation depends in a complicated way on the left/right types. *)
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Binary))
 
-  and function_ =
-    let open Ast.Function in
-    let function_params tps params =
-      let _, { Params.params; rest; } = params in
-      let deps = List.fold_left (Deps.reduce_join (pattern tps)) Deps.bot params in
-      match rest with
-        | None -> deps
-        | Some (_, { RestElement.argument }) -> Deps.join (deps, pattern tps argument)
+  and function_param tps (_, { Ast.Function.Param.argument; default = _ }) =
+    pattern tps argument
 
-    in fun tps generator tparams params return body ->
-      let tps, deps = type_params tps tparams in
-      let deps = Deps.join (deps, function_params tps params) in
-      match return with
-        | Ast.Type.Missing loc ->
-          if not generator && Signature_utils.Procedure_decider.is body then deps
-          else Deps.top (Error.ExpectedAnnotation loc)
-        | Ast.Type.Available (_, t) -> Deps.join (deps, type_ tps t)
+  and function_rest_param tps (_, { Ast.Function.RestParam.argument }) =
+    pattern tps argument
+
+  and function_params tps params =
+    let open Ast.Function in
+    let _, { Params.params; rest; } = params in
+    let deps = List.fold_left (Deps.reduce_join (function_param tps)) Deps.bot params in
+    match rest with
+      | None -> deps
+      | Some param -> Deps.join (deps, function_rest_param tps param)
+
+  and function_return tps ~is_missing_ok return =
+    match return with
+    | Ast.Type.Missing loc ->
+      if is_missing_ok () then Deps.bot
+      else Deps.top (Error.ExpectedAnnotation (loc, EASort.FunctionReturn))
+    | Ast.Type.Available (_, t) -> type_ tps t
+
+  and function_static tps (_id_prop, right) =
+    literal_expr tps right
+
+  and function_predicate params body predicate =
+    match predicate, body with
+    | Some (_, Ast.Type.Predicate.Declared e), _
+    | Some (_, Ast.Type.Predicate.Inferred), (
+        Ast.Function.BodyBlock (_, {
+          Ast.Statement.Block.body = [
+            _, Ast.Statement.Return {
+              Ast.Statement.Return.argument = Some e; _
+            }
+          ]
+        }) |
+        Ast.Function.BodyExpression e
+      ) ->
+      let _, { Ast.Function.Params.params; _ } = params in
+      let params = List.fold_left (fun acc param ->
+        let _, { Ast.Function.Param.argument; _ } = param in
+        match argument with
+        | _, Ast.Pattern.Identifier {
+            Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _
+          } -> name::acc
+        | _ -> acc
+      ) [] params in
+      let params = SSet.of_list params in
+      predicate_expression params e
+    | _ ->
+      (* We check for the form of the body of predicate functions in file_sig.ml *)
+      Deps.bot
+
+  and declare_function_predicate t predicate =
+    match t, predicate with
+    | (_, Ast.Type.Function { Ast.Type.Function.params = (_, {
+        Ast.Type.Function.Params.params; _
+      }); _ }),
+      Some (_, Ast.Type.Predicate.Declared e)
+      ->
+      let params = List.fold_left (fun acc param ->
+        match param with
+        | _, { Ast.Type.Function.Param.name = Some (_, { Ast.Identifier.name; _ }); _ } ->
+          name::acc
+        | _ -> acc
+      ) [] params in
+      let params = SSet.of_list params in
+      predicate_expression params e
+    | _ ->
+      (* TODO better error messages when the predicate is ignored *)
+      Deps.bot
+
+  and function_ tps generator tparams params return body predicate =
+    let tps, deps = type_params tps tparams in
+    let deps = Deps.join (deps, function_params tps params) in
+    let deps =
+      let is_missing_ok () = not generator && Signature_utils.Procedure_decider.is body in
+      Deps.join (deps, function_return tps ~is_missing_ok return)
+    in
+    let deps = Deps.join (deps, function_predicate params body predicate) in
+    deps
 
   and class_ =
     let class_element tps element =
       let open Ast.Class in
       match element with
         (* special cases *)
-        | Body.Method (_, { Method.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
-        | Body.Property (_, { Property.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
+        | Body.Method (_, { Method.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ })); _ })
+        | Body.Property (_, { Property.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ })); _ })
             when not Env.prevent_munge && Signature_utils.is_munged_property_name name ->
           Deps.bot
         | Body.Property (_, {
-            Property.key = (Ast.Expression.Object.Property.Identifier (_, "propTypes"));
+            Property.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name= "propTypes"; comments= _ }));
             static = true; _
           }) when Env.ignore_static_propTypes ->
           Deps.bot
 
         (* general cases *)
         | Body.Method (_, { Method.value; _ }) ->
-          let _, { Ast.Function.generator; tparams; params; return; body; _ } = value in
-          function_ tps generator tparams params return body
-        | Body.Property (loc, { Property.annot; _ })
-        | Body.PrivateField (loc, { PrivateField.annot; _ }) ->
-          annotated_type tps loc annot
+          let _, { Ast.Function.generator; tparams; params; return; body; predicate; _ } = value in
+          function_ tps generator tparams params return body predicate
+        | Body.Property (loc, { Property.annot; key; _ }) ->
+          annotated_type ~sort:(EASort.Property key) tps loc annot
+        | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
+          annotated_type ~sort:(EASort.PrivateField key) tps loc annot
 
     in fun tparams body super super_targs implements ->
       let open Ast.Class in
@@ -489,27 +658,27 @@ module Eval(Env: EvalEnv) = struct
       match expr_or_spread_opt with
         | None -> Deps.top (Error.UnexpectedArrayHole loc)
         | Some (Expression expr) -> literal_expr tps expr
-        | Some (Spread (loc, _spread)) -> Deps.top (Error.UnexpectedArraySpread loc)
+        | Some (Spread (spread_loc, _spread)) -> Deps.top (Error.UnexpectedArraySpread (loc, spread_loc))
     in
     fun tps loc elements ->
       Nel.fold_left (Deps.reduce_join (array_element tps loc)) Deps.bot elements
 
   and implement tps implement =
     let open Ast.Class.Implements in
-    let _, { id = (_, name); targs } = implement in
+    let _, { id = (_, { Ast.Identifier.name; comments= _ }); targs } = implement in
     let deps = if SSet.mem name tps then Deps.bot else Deps.type_ name in
     Deps.join (deps, type_args tps targs)
 
   and object_ =
-    let object_property tps =
+    let object_property tps loc =
       let open Ast.Expression.Object.Property in
-      let object_key (loc, key) =
+      let object_key (key_loc, key) =
         let open Ast.Expression.Object.Property in
         match key with
           | Literal _
           | Identifier _
           | PrivateName _ -> Deps.bot
-          | Computed _ -> Deps.top (Error.UnexpectedObjectKey loc)
+          | Computed _ -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
       in function
         | loc, Init { key; value; _ } ->
           let deps = object_key (loc, key) in
@@ -519,16 +688,20 @@ module Eval(Env: EvalEnv) = struct
         | loc, Set { key; value = (_, fn) }
           ->
           let deps = object_key (loc, key) in
-          let open Ast.Function in
-          let { generator; tparams; params; return; body; _ } = fn in
-          Deps.join (deps, function_ tps generator tparams params return body)
+          let { Ast.Function.generator; tparams; params; return; body; predicate; _ } = fn in
+          Deps.join (deps, function_ tps generator tparams params return body predicate)
     in
-    fun tps properties ->
+    let object_spread_property tps prop =
+      let open Ast.Expression.Object.SpreadProperty in
+      let _, { argument } = prop in
+      literal_expr tps argument
+    in
+    fun tps loc properties ->
       let open Ast.Expression.Object in
       List.fold_left (fun deps prop ->
         match prop with
-          | Property p -> Deps.join (deps, object_property tps p)
-          | SpreadProperty (loc, _p) -> Deps.top (Error.UnexpectedObjectSpread loc)
+          | Property p -> Deps.join (deps, object_property tps loc p)
+          | SpreadProperty p -> Deps.join (deps, object_spread_property tps p)
       ) Deps.bot properties
 
 end
@@ -537,14 +710,28 @@ module Verifier(Env: EvalEnv) = struct
 
   module Eval = Eval(Env)
 
-  let eval id_loc (loc, kind) =
+  let rec eval id_loc (loc, kind) =
     match kind with
-      | Kind.VariableDef { annot; init } ->
-        Eval.annotation ?init SSet.empty (id_loc, annot)
-      | Kind.FunctionDef { generator; tparams; params; return; body; } ->
-        Eval.function_ SSet.empty generator tparams params return body
-      | Kind.DeclareFunctionDef { annot = (_, t) } ->
-        Eval.type_ SSet.empty t
+      | Kind.WithPropertiesDef { base; properties } ->
+        begin match Kind.get_function_kind_info base with
+        | Some (generator, tparams, params, return, body) ->
+          let deps = Eval.function_ SSet.empty generator tparams params return body None in
+          let deps =
+            List.fold_left
+              (Deps.reduce_join (fun (_id_prop, expr) -> Eval.literal_expr SSet.empty expr))
+              deps properties in
+          deps
+        | None -> eval id_loc (loc, base)
+        end
+      | Kind.VariableDef { id; annot; init } ->
+        Eval.annotation ~sort:(EASort.VariableDefinition id) ?init
+          SSet.empty (id_loc, annot)
+      | Kind.FunctionDef { generator; tparams; params; return; body; predicate } ->
+        Eval.function_ SSet.empty generator tparams params return body predicate
+      | Kind.DeclareFunctionDef { annot = (_, t); predicate } ->
+        let deps = Eval.type_ SSet.empty t in
+        let deps = Deps.join (deps, Eval.declare_function_predicate t predicate) in
+        deps
       | Kind.ClassDef { tparams; body; super; super_targs; implements } ->
         Eval.class_ tparams body super super_targs implements
       | Kind.DeclareClassDef { tparams; body = (_, body); extends; mixins; implements } ->
@@ -569,8 +756,8 @@ module Verifier(Env: EvalEnv) = struct
         Deps.import_named (Kind.Sort.of_import_kind kind) source name
       | Kind.ImportStarDef { kind; source } ->
         Deps.import_star (Kind.Sort.of_import_kind kind) source
-      | Kind.RequireDef { source; _ } ->
-        Deps.require source
+      | Kind.RequireDef { source; name } ->
+        Deps.require ?name source
       | Kind.SketchyToplevelDef ->
         Deps.top (Deps.Error.SketchyToplevelDef loc)
 
@@ -606,12 +793,11 @@ module Verifier(Env: EvalEnv) = struct
   let eval_function_declaration loc function_declaration =
     eval_entry (Entry.function_declaration loc function_declaration)
 
+  let eval_function_expression loc function_expression =
+    eval_entry (Entry.function_expression loc function_expression)
+
   let eval_class loc class_ =
     eval_entry (Entry.class_ loc class_)
-
-  let eval_variable_declaration loc variable_declaration =
-    List.fold_left (Deps.reduce_join eval_entry) Deps.bot @@
-      Entry.variable_declaration loc variable_declaration
 
   let eval_declare_export_declaration = Ast.Statement.DeclareExportDeclaration.(function
     | Variable (loc, declare_variable) -> eval_declare_variable loc declare_variable
@@ -628,10 +814,10 @@ module Verifier(Env: EvalEnv) = struct
         ({ Ast.Function.id = Some _; _ } as function_declaration)
       ) ->
       eval_function_declaration loc function_declaration
-    | Declaration (_, Ast.Statement.FunctionDeclaration
-        ({ Ast.Function.id = None; generator; tparams; params; return; body; _ })
-      ) ->
-      Eval.function_ SSet.empty generator tparams params return body
+    | Declaration (_, Ast.Statement.FunctionDeclaration ({ Ast.Function.
+        id = None; generator; tparams; params; return; body; predicate; _
+      })) ->
+      Eval.function_ SSet.empty generator tparams params return body predicate
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       eval_class loc class_
     | Declaration (_, Ast.Statement.ClassDeclaration
@@ -643,57 +829,73 @@ module Verifier(Env: EvalEnv) = struct
       Eval.class_ tparams body super super_targs implements
     | Declaration _stmt -> Deps.unreachable
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-      eval_function_declaration loc function_
+      eval_function_expression loc function_
     | Expression expr -> Eval.literal_expr SSet.empty expr
   )
 
   let eval_export_value_bindings named named_infos =
     let open File_sig in
-    SMap.fold (fun n export deps ->
-      Deps.join (
-        deps,
-      let export_def = SMap.get n named_infos in
-      let _, export = export in
+    let named, ns = List.partition (function
+      | _, (_, ExportNamed { kind = NamedSpecifier _; _ })
+      | _, (_, ExportNs _)
+        -> false
+      | _, (_, _) -> true
+    ) named in
+    let deps = List.fold_left2 (fun deps (n, (_, export)) export_def ->
+      Deps.join (deps,
       match export, export_def with
-        | ExportDefault { local; _ }, Some (DeclareExportDef decl) ->
+        | ExportDefault { local; _ }, DeclareExportDef decl ->
           begin match local with
             | Some id -> Deps.value (snd id)
             | None -> eval_declare_export_declaration decl
           end
-        | ExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
+        | ExportNamed { kind = NamedDeclaration; _ }, DeclareExportDef _decl ->
           Deps.value n
-        | ExportDefault { local; _ }, Some (ExportDefaultDef decl) ->
+        | ExportDefault { local; _ }, ExportDefaultDef decl ->
           begin match local with
             | Some id -> Deps.value (snd id)
             | None -> eval_export_default_declaration decl
           end
-        | ExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef _stmt) ->
+        | ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt ->
           Deps.value n
-        | ExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
+        | _ -> assert false
+      )
+    ) Deps.bot named named_infos in
+    List.fold_left (fun deps (_, (_, export)) ->
+      Deps.join (deps,
+      match export with
+        | ExportNamed { kind = NamedSpecifier { local; source }; _ } ->
           begin match source with
             | None -> Deps.value (snd local)
             | Some source ->
               Deps.import_named Kind.Sort.Value source local
           end
-        | ExportNs { source; _ }, None ->
+        | ExportNs { source; _ } ->
           Deps.import_star Kind.Sort.Value source
         | _ -> assert false
       )
-    ) named Deps.bot
+    ) deps ns
 
   let eval_export_type_bindings type_named type_named_infos =
     let open File_sig in
-    SMap.fold (fun n export deps ->
-      Deps.join (
-        deps,
-      let export_def = SMap.get n type_named_infos in
-      let _, export = export in
+    let type_named, type_ns = List.partition (function
+      | _, (_, TypeExportNamed { kind = NamedSpecifier _; _ }) -> false
+      | _, (_, _) -> true
+    ) type_named in
+    let deps = List.fold_left2 (fun deps (n, (_, export)) export_def ->
+      Deps.join (deps,
       match export, export_def with
-        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
+        | TypeExportNamed { kind = NamedDeclaration; _ }, DeclareExportDef _decl ->
           Deps.type_ n
-        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef _stmt) ->
+        | TypeExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt ->
           Deps.type_ n
-        | TypeExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
+        | _ -> assert false
+      )
+    ) Deps.bot type_named type_named_infos in
+    List.fold_left (fun deps (_, (_, export)) ->
+      Deps.join (deps,
+      match export with
+        | TypeExportNamed { kind = NamedSpecifier { local; source }; _ } ->
           begin match source with
             | None -> Deps.type_ (snd local)
             | Some source ->
@@ -701,7 +903,7 @@ module Verifier(Env: EvalEnv) = struct
           end
         | _ -> assert false
       )
-    ) type_named Deps.bot
+    ) deps type_ns
 
   let exports file_sig =
     let open File_sig in
@@ -725,7 +927,11 @@ module Verifier(Env: EvalEnv) = struct
       eval_export_type_bindings type_exports_named type_exports_named_info
     )
 
-  let dynamic_validator (dynamic_imports, dynamic_requires) = function
+  let dynamic_validator env (dynamic_imports, dynamic_requires) = function
+    | Dep.Class (loc, x) ->
+      if SMap.mem x env
+      then Deps.top (Deps.Error.SketchyToplevelDef loc)
+      else Deps.bot
     | Dep.DynamicImport loc ->
       begin match LocMap.get loc dynamic_imports with
         | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
@@ -744,7 +950,7 @@ module Verifier(Env: EvalEnv) = struct
         begin match SMap.get x env with
           | Some entries ->
             let validate = Kind.validator sort in
-            Utils_js.LocMap.fold (fun loc kind deps ->
+            Loc_collections.LocMap.fold (fun loc kind deps ->
               Deps.join (
                 deps,
                 if validate (snd kind) then eval loc kind
@@ -754,13 +960,13 @@ module Verifier(Env: EvalEnv) = struct
           | None -> Deps.global local
         end
       | Dep.Remote _ -> Deps.unit dep
-      | Dep.Dynamic dynamic -> dynamic_validator dynamic_sources dynamic
+      | Dep.Dynamic dynamic -> dynamic_validator env dynamic_sources dynamic
 
   let rec check cache env dynamic_sources deps =
     Deps.recurse (check_dep cache env dynamic_sources) deps
 
   and check_dep cache env dynamic_sources dep =
-    if Deps.DepSet.mem dep !cache then Deps.ErrorSet.empty
+    if Deps.DepSet.mem dep !cache then Deps.PrintableErrorSet.empty
     else begin
       cache := Deps.DepSet.add dep !cache;
       check cache env dynamic_sources (validate_and_eval env dynamic_sources dep)

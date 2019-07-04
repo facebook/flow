@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,7 +11,7 @@ let spf = Printf.sprintf
 
 type error = { msg: string; exit_status: FlowExitStatus.t; }
 
-let is_incompatible_package_json =
+let is_incompatible_package_json ~reader =
   (* WARNING! Be careful when adding new incompatibilities to this function. While dfind will
    * return any file which changes within the watched directories, watchman only watches for
    * specific extensions and files. Make sure to update the watchman_expression_terms in our
@@ -23,7 +23,7 @@ let is_incompatible_package_json =
     | Some content ->
       try
         let ast = Parsing_service_js.parse_json_file ~fail:true content filename in
-        Module_js.package_incompatible filename_str ast
+        Module_js.package_incompatible ~reader filename_str ast
       with _ -> true (* Failed to parse package.json *)
   in
 
@@ -43,8 +43,9 @@ let is_incompatible_package_json =
  * 2. If we do care, are we unable to incrementally check this change. For example, maybe a libdef
  *    changed or the .flowconfig changed. Maybe one day we'll learn to incrementally check those
  *    changes, but for now we just need to exit and restart from scratch *)
-let process_updates ~options ~libs updates =
+let process_updates ?(skip_incompatible=false) ~options ~libs updates =
   let open Core_result in
+  let reader = State_reader.create () in
   let file_options = Options.file_options options in
   let all_libs =
     let known_libs = libs in
@@ -59,7 +60,7 @@ let process_updates ~options ~libs updates =
   Ok ()
   >>= fun () ->
     (* Die if the .flowconfig changed *)
-    if SSet.mem config_path updates
+    if not skip_incompatible && SSet.mem config_path updates
     then
       Error {
         msg = spf "%s changed in an incompatible way. Exiting." config_path;
@@ -67,11 +68,13 @@ let process_updates ~options ~libs updates =
       }
     else Ok ()
   >>= fun () ->
-    let is_incompatible_package_json = is_incompatible_package_json ~want ~sroot ~file_options in
+    let is_incompatible_package_json =
+      is_incompatible_package_json ~reader ~want ~sroot ~file_options
+    in
 
     (* Die if a package.json changed in an incompatible way *)
     let incompatible_packages = SSet.filter is_incompatible_package_json updates in
-    if not (SSet.is_empty incompatible_packages)
+    if not skip_incompatible && not (SSet.is_empty incompatible_packages)
     then
       let messages = SSet.elements incompatible_packages
       |> List.rev_map (spf "Modified package: %s")
@@ -84,7 +87,7 @@ let process_updates ~options ~libs updates =
   >>= fun () ->
     Option.value_map (Options.module_resolver options) ~default:(Ok ()) ~f:(fun module_resolver ->
       let str_module_resolver = Path.to_string module_resolver in
-      if SSet.mem str_module_resolver updates
+      if not skip_incompatible && SSet.mem str_module_resolver updates
       then
         Error {
           msg = Printf.sprintf "Module resolver %s changed in an incompatible way. Exiting.\n%!"
@@ -104,12 +107,12 @@ let process_updates ~options ~libs updates =
         | None -> true (* Failed to read lib file *)
         | Some content ->
           (* Check if the lib file's hash has changed *)
-          not (Parsing_service_js.does_content_match_file_hash file content)
+          not (Parsing_service_js.does_content_match_file_hash ~reader file content)
     in
 
     (* Die if a lib file changed *)
     let libs = updates |> SSet.filter is_changed_lib in
-    if not (SSet.is_empty libs)
+    if not skip_incompatible && not (SSet.is_empty libs)
     then
       let messages = SSet.elements libs
       |> List.rev_map (spf "Modified lib file: %s")

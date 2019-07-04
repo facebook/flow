@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -37,5 +37,14 @@ val dump_use_t: ?depth:int -> Context.t -> Type.use_t -> string
 val dump_tvar: ?depth:int -> Context.t -> Constraint.ident -> string
 val dump_prop: ?depth:int -> Context.t -> Type.Property.t -> string
 val dump_reason: Context.t -> Reason.t -> string
-val dump_flow_error: Context.t -> Flow_error.error_message -> string
+val dump_error_message: Context.t -> Error_message.t -> string
 val dump_flow: ?depth:int -> Context.t -> Type.t * Type.use_t -> string
+
+module Verbose : sig
+  val print_if_verbose_lazy: Context.t -> Trace.t ->
+    ?delim: string -> ?indent: int -> string Lazy.t list -> unit
+  val print_if_verbose: Context.t -> Trace.t ->
+    ?delim: string -> ?indent: int -> string list -> unit
+  val print_types_if_verbose: Context.t -> Trace.t -> ?note: string ->
+      (Type.t * Type.use_t) -> unit
+end

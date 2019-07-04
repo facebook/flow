@@ -1,0 +1,64 @@
+Error --------------------------------------------------------------------------------------------------------- b.js:7:2
+
+Cannot cast `a.x` to string because number [1] is incompatible with string [2].
+
+   b.js:7:2
+   7| (a.x: string);
+       ^^^
+
+References:
+   a.js:7:20
+   7| module.exports.x = 1;
+                         ^ [1]
+   b.js:7:7
+   7| (a.x: string);
+            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- b.js:8:2
+
+Cannot get `a.other` because property `other` is missing in statics of function type [1].
+
+   b.js:8:2
+   8| (a.other: number);
+       ^^^^^^^
+
+References:
+   a.js:5:18
+   5| module.exports = foo;
+                       ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------------- b.js:15:2
+
+Cannot cast `poly_a.x` to string because number [1] is incompatible with string [2].
+
+   b.js:15:2
+   15| (poly_a.x: string);
+        ^^^^^^^^
+
+References:
+   poly_a.js:7:20
+    7| module.exports.x = 1;
+                          ^ [1]
+   b.js:15:12
+   15| (poly_a.x: string);
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- b.js:16:2
+
+Cannot get `poly_a.other` because property `other` is missing in statics of function type [1].
+
+   b.js:16:2
+   16| (poly_a.other: number);
+        ^^^^^^^^^^^^
+
+References:
+   poly_a.js:3:1
+    3| function foo<T>() {}
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 4 errors

@@ -1,11 +1,12 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 val find_refs:
+  reader: State_reader.t ->
   genv: ServerEnv.genv ->
   env: ServerEnv.env ref ->
   profiling: Profiling_js.running ->

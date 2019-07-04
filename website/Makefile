@@ -1,4 +1,4 @@
-# Copyright (c) 2013-present, Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 # All rights reserved.
 
 .PHONY: start install serve build i18n-upload i18n-download
@@ -23,24 +23,24 @@ flow_js:
 
 static/master/flow.js:
 	mkdir -p $(dir $@)
-	(cd $(dir $@); ln -sf "../../../bin/flow.js" "flow.js")
+	(cd $(dir $@); cp "../../../bin/flow.js" "flow.js")
 
 static/master/flowlib:
 	mkdir -p $(dir $@)
-	(cd $(dir $@); ln -sf "../../../lib" "flowlib")
+	(cd $(dir $@); cp -r "../../../lib" "flowlib")
 
-symlinks: static/master/flow.js static/master/flowlib
+copies: static/master/flow.js static/master/flowlib
 
-serve: test-jekyll symlinks
+serve: test-jekyll flow_js copies
 	@bundle exec jekyll serve --host="::" --port=8080
 
-build: test-jekyll symlinks
+build: test-jekyll copies
 	bundle exec jekyll build $(BUILD_FLAGS)
 
-serve-production: test-jekyll flow_js symlinks
+serve-production: test-jekyll flow_js copies
 	@JEKYLL_ENV=production bundle exec jekyll serve --host="::" --port=8080
 
-build-production: test-jekyll flow_js symlinks
+build-production: test-jekyll flow_js copies
 	@JEKYLL_ENV=production bundle exec jekyll build $(BUILD_FLAGS)
 
 # crowdin-sync: test-crowdin

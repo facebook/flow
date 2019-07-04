@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,7 +14,7 @@ module Ast = Flow_ast
  * It assumes that the comments are in the same file as the statements
  *)
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 module CommentAttachCandidate = struct
   type 'M t =
@@ -26,14 +26,13 @@ end
 let node_list_of_option ~f = Option.value_map ~default:[] ~f
 
 (* comments.js#findExpressionIndexForComment *)
-let find_expression_index_for_node quasis ({Loc.start= {Loc.offset; _}; _}, _) =
-  let start_offset = offset in
+let find_expression_index_for_node quasis ({Loc.start=orig_start; _}, _) =
   try
     let found, _ =
       List.tl quasis
       |> List.mapi (fun i q -> (i, q))
-      |> List.find (fun (_, ({Loc.start= {Loc.offset; _}; _}, _)) ->
-             start_offset < offset )
+      |> List.find (fun (_, ({Loc.start; _}, _)) ->
+             Loc.pos_cmp orig_start start < 0)
     in
     found - 1
   with Not_found -> 0
@@ -116,11 +115,11 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
               node_list_of_option ~f:get_children_nodes_expr test
             in
             let consequent_nodes =
-              consequent |> List.map get_children_nodes |> List.flatten
+              consequent |> Core_list.map ~f:get_children_nodes |> List.flatten
             in
             nodes @ test_nodes @ consequent_nodes )
           [] cases
-  | Return {Return.argument} ->
+  | Return {Return.argument; comments = _} ->
       node_list_of_option ~f:statement_list_of_expression argument
   | Throw {Throw.argument} -> statement_list_of_expression argument
   | Try {Try.block= _, {Block.body}; handler; finalizer} ->
@@ -197,6 +196,7 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
   | Expression {Expression.expression; _} -> get_children_nodes_expr expression
   | Debugger -> []
   | Empty -> []
+  | EnumDeclaration _ -> []
   | Break _ -> []
   | ClassDeclaration clazz -> get_children_nodes_class clazz
   | Continue _ -> []
@@ -211,7 +211,7 @@ and get_children_nodes_expr expression =
   let loc, expr = expression in
   let open Ast.Expression in
   match expr with
-  | Array {Array.elements} ->
+  | Array {Array.elements; comments= _} ->
       List.fold_left
         (fun nodes element ->
           nodes
@@ -258,7 +258,7 @@ and get_children_nodes_expr expression =
       @ List.fold_left
           (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
           [] arguments
-  | Object {Object.properties} ->
+  | Object {Object.properties; comments= _} ->
       List.fold_left
         (fun nodes property ->
           nodes
@@ -292,7 +292,7 @@ and get_children_nodes_expr expression =
       get_children_nodes_expr tag
       @ get_children_nodes_expr (loc, TemplateLiteral quasi)
   | TemplateLiteral {TemplateLiteral.expressions; _} ->
-      expressions |> List.map get_children_nodes_expr |> List.flatten
+      expressions |> Core_list.map ~f:get_children_nodes_expr |> List.flatten
   | This -> []
   | TypeCast {TypeCast.expression; _} -> get_children_nodes_expr expression
   | Unary {Unary.argument; _} -> get_children_nodes_expr argument
@@ -316,9 +316,9 @@ and get_children_nodes_pattern (_loc, pattern) =
   match pattern with
   | Object {Object.properties; _} ->
       properties
-      |> List.map (fun property ->
+      |> Core_list.map ~f:(fun property ->
              match property with
-             | Object.Property (_, {Object.Property.key; pattern; _}) ->
+             | Object.Property (_, {Object.Property.key; pattern; default; shorthand = _}) ->
                  let key_nodes =
                    match key with
                    | Object.Property.Literal _ -> []
@@ -327,22 +327,23 @@ and get_children_nodes_pattern (_loc, pattern) =
                        get_children_nodes_expr expr
                  in
                  let pattern_nodes = get_children_nodes_pattern pattern in
-                 key_nodes @ pattern_nodes
+                 let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
+                 key_nodes @ pattern_nodes @ default_nodes
              | Object.RestProperty (_, {Object.RestProperty.argument}) ->
                  get_children_nodes_pattern argument )
       |> List.flatten
   | Array {Array.elements; _} ->
       elements
-      |> List.map (fun element_opt ->
+      |> Core_list.map ~f:(fun element_opt ->
              match element_opt with
-             | Some (Array.Element pattern) ->
-                 get_children_nodes_pattern pattern
+             | Some (Array.Element (_, {Array.Element.argument; default})) ->
+                 let pattern_nodes = get_children_nodes_pattern argument in
+                 let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
+                 pattern_nodes @ default_nodes
              | Some (Array.RestElement (_, {Array.RestElement.argument})) ->
                  get_children_nodes_pattern argument
              | None -> [] )
       |> List.flatten
-  | Assignment {Assignment.left; right} ->
-      get_children_nodes_pattern left @ get_children_nodes_expr right
   | Identifier _ -> []
   | Expression expr -> get_children_nodes_expr expr
 
@@ -372,14 +373,14 @@ and get_children_nodes_comprehension_block_list
     (blocks: (Loc.t, Loc.t) Ast.Expression.Comprehension.Block.t list) =
   let open Ast.Expression.Comprehension in
   blocks
-  |> List.map (fun (_, {Block.left; right; _}) ->
+  |> Core_list.map ~f:(fun (_, {Block.left; right; _}) ->
          get_children_nodes_pattern left @ get_children_nodes_expr right )
   |> List.flatten
 
 and get_children_nodes_jsx_opening (_loc, {Ast.JSX.Opening.attributes; _}) =
   let open Ast.JSX in
   attributes
-  |> List.map (fun attr ->
+  |> Core_list.map ~f:(fun attr ->
          match attr with
          | Opening.Attribute (_, {Attribute.value; _}) ->
              node_list_of_option
@@ -395,10 +396,10 @@ and get_children_nodes_jsx_opening (_loc, {Ast.JSX.Opening.attributes; _}) =
          | Opening.SpreadAttribute _ -> [] )
   |> List.flatten
 
-and get_children_nodes_jsx_child_list children =
+and get_children_nodes_jsx_child_list (_children_loc, children) =
   let open Ast.JSX in
   children
-  |> List.map (fun (loc, child) ->
+  |> Core_list.map ~f:(fun (loc, child) ->
          match child with
          | Element e ->
              get_children_nodes_expr (loc, Ast.Expression.JSXElement e)

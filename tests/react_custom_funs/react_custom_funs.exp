@@ -23,14 +23,14 @@ Property `key` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:177:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   177| declare type React$Element<+ElementType: React$ElementType> = {|
+   178|   +type: ElementType,
+   179|   +props: React$ElementProps<ElementType>,
+   180|   +key: React$Key | null,
+   181|   +ref: any,
+   182| |};
         -^ [2]
 
 
@@ -43,14 +43,14 @@ Property `props` is missing in object literal [1] but exists in `React.Element` 
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:177:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   177| declare type React$Element<+ElementType: React$ElementType> = {|
+   178|   +type: ElementType,
+   179|   +props: React$ElementProps<ElementType>,
+   180|   +key: React$Key | null,
+   181|   +ref: any,
+   182| |};
         -^ [2]
 
 
@@ -63,14 +63,14 @@ Property `ref` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:177:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   177| declare type React$Element<+ElementType: React$ElementType> = {|
+   178|   +type: ElementType,
+   179|   +props: React$ElementProps<ElementType>,
+   180|   +key: React$Key | null,
+   181|   +ref: any,
+   182| |};
         -^ [2]
 
 
@@ -141,17 +141,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:40:1
 
-Cannot call `React.cloneElement` because property `bar` is missing in props [1] but exists in call of method
-`cloneElement` [2].
+Cannot call `React.cloneElement` because property `bar` is missing in call of method `cloneElement` [1] but exists in
+props [2].
 
    clone_element.js:40:1
    40| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    clone_element.js:40:23
    40| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-                             ^^^^^^^^^^^^^^^^ [1]
+                             ^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:41:1

@@ -12,7 +12,7 @@ type t = {
   file: string option;
   source_root: string option;
   names: SSet.t;
-  mappings: mapping list; (* assumed to be sorted. switch to a Map? *)
+  mappings: mapping_holder; (* assumed to be sorted. switch to a Map? *)
   sources_contents: string SMap.t;
 }
 and mapping = {
@@ -27,6 +27,13 @@ and original = {
 and line_col = {
   line: int;
   col: int;
+}
+and mapping_holder =
+  | Addition of mapping list
+  | Lookup of lookup_context
+and lookup_context = {
+  mapping_arr: mapping array;
+  mutable last_ind: int;
 }
 
 type mapping_state = {
@@ -43,12 +50,36 @@ let create ?file ?source_root () = {
   file;
   source_root;
   names = SSet.empty;
-  mappings = [];
+  mappings = Addition [];
   sources_contents = SMap.empty;
 }
 
+module MappingHolder = struct
+  exception MappingHolderException of string
+
+  let fold_left func init holder =
+    match holder with
+    | Addition l -> List.fold_left func init l
+    | Lookup {mapping_arr; _} -> Array.fold_left func init mapping_arr
+
+  let make_lookup mapping_arr = Lookup {
+    mapping_arr;
+    last_ind = -1;
+  }
+
+  let addition_list holder =
+    match holder with
+    | Addition l -> l
+    | _ -> raise (MappingHolderException "Cannot get list from frozen holder")
+end
+
+let freeze_for_lookup map =
+  match map.mappings with
+  | Addition l -> { map with mappings = MappingHolder.make_lookup (Array.of_list l) }
+  | _ -> map
+
 let sources_set map =
-  List.fold_left (fun acc mapping ->
+  MappingHolder.fold_left (fun acc mapping ->
     match mapping with
     | { original = Some { source; _ }; _ } -> SSet.add source acc
     | { original = None; _ } -> acc
@@ -56,49 +87,112 @@ let sources_set map =
 
 let sources map = SSet.elements (sources_set map)
 
-(* Searches for `needle` in `arr`. If `needle` doesn't exist, returns the closest lower bound. *)
+(* Searches for `needle` and the index it's found at in `arr`. If `needle` doesn't exist,
+   returns the closest lower bound. *)
 let rec binary_search ~cmp needle arr l u =
   let len = Array.length arr in
   if len = 0 then None
-  else if l >= len then Some arr.(len - 1)
-  else if u < l then Some arr.(l)
+  else if l >= len then Some (arr.(len - 1), len - 1)
+  else if u < l then Some (arr.(l), l)
   else
     let i = (l + u) / 2 in
     let k = cmp needle arr.(i) in
-    if k = 0 then Some arr.(i)
+    if k = 0 then Some (arr.(i), i)
     else if k < 0 then binary_search ~cmp needle arr l (i - 1)
     else binary_search ~cmp needle arr (i + 1) u
 
-let find_original map generated =
-  let mappings = Array.of_list map.mappings in
-  let len = Array.length mappings in
+let original_from_found = function
+  | Some ({ original; _ },_) -> original
+  | None -> None
+
+let find_original_unknown_arr mappings_arr generated =
+  let len = Array.length mappings_arr in
   let cmp = fun { line = a_line; col = a_col } { generated_loc = { line = b_line; col = b_col }; _ } ->
     let k = b_line - a_line in
     if k = 0 then b_col - a_col
     else k
   in
-  match binary_search ~cmp generated mappings 0 (len - 1) with
-  | Some { original; _ } -> original
-  | None -> None
+  binary_search ~cmp generated mappings_arr 0 (len - 1)
+
+(* Try to inform local search based on last found index, else binary search *)
+let find_original_from_context c generated =
+  let len = Array.length c.mapping_arr in
+  if len = 0 then None else
+  let line_for_index ind = c.mapping_arr.(ind).generated_loc.line in
+  let column_for_index ind = c.mapping_arr.(ind).generated_loc.col in
+  let try_local_search =
+    if c.last_ind < 0 then None else
+    let recent_line = line_for_index c.last_ind in
+    if generated.line <> recent_line then None else
+    let look_distance = 5 in
+    (* Left and right can be deceiving. The array is sorted descending. *)
+    let rec look_right cur_ind looks_remaining =
+      if cur_ind = (len - 1) ||
+         (line_for_index (cur_ind + 1)) <> recent_line
+      then
+        Some (c.mapping_arr.(cur_ind), cur_ind)
+      else if (column_for_index (cur_ind + 1)) <= generated.col
+      then
+        Some (c.mapping_arr.(cur_ind + 1), cur_ind + 1)
+      else if looks_remaining = 0 then None
+      else look_right (cur_ind + 1) (looks_remaining - 1) in
+    let rec look_left cur_ind looks_remaining =
+      if cur_ind = 0 ||
+         (line_for_index (cur_ind - 1)) <> recent_line ||
+         (column_for_index (cur_ind - 1)) > generated.col
+      then
+        Some (c.mapping_arr.(cur_ind), cur_ind)
+      else if looks_remaining = 0 then None
+      else look_left (cur_ind - 1) (looks_remaining - 1) in
+    let cur_col = column_for_index c.last_ind in
+    if generated.col < cur_col then
+      look_right c.last_ind look_distance
+    else
+      look_left c.last_ind look_distance
+  in
+  let findings =
+    match try_local_search with
+    | Some _ -> try_local_search
+    | _ -> find_original_unknown_arr c.mapping_arr generated
+  in
+  let () = match findings with
+    | Some (_, ind) -> c.last_ind <- ind
+    | None -> ()
+  in
+  original_from_found findings
+
+
+let find_original map generated =
+  match map.mappings with
+  | Addition l ->
+      let found = find_original_unknown_arr (Array.of_list l) generated in
+      original_from_found found
+  | Lookup c -> find_original_from_context c generated
 
 (* for each mapping in `map`, update to the `original` info corresponding to
    that loc in map2 *)
 let compose map map2 =
-  let mappings, names = List.fold_left (fun (mappings, names) mapping ->
-    let mapping, names = match mapping.original with
-    | Some { original_loc; _ } ->
-      begin match find_original map2 original_loc with
-      | Some ({ name; _ } as original) ->
-        let mapping = { mapping with original = Some original } in
-        let names = match name with Some name -> SSet.add name names | None -> names in
-        mapping, names
-      | None -> mapping, names
-      end
-    | None -> mapping, names
-    in
-    mapping::mappings, names
-  ) ([], map.names) map.mappings in
-  { map with mappings = List.rev mappings; names }
+  let mappings, names, sources_contents =
+    List.fold_left (fun (mappings, names, sources_contents) mapping ->
+      match mapping.original with
+      | Some { original_loc; _ } ->
+        begin match find_original map2 original_loc with
+        | Some ({ name; source; _ } as original) ->
+          let mapping = { mapping with original = Some original } in
+          let names = match name with Some name -> SSet.add name names | None -> names in
+          let sources_contents =
+            match SMap.find_opt source map2.sources_contents with
+            | Some content -> SMap.add source content sources_contents
+            | _ -> sources_contents
+          in
+          mapping::mappings, names, sources_contents
+        | None -> mappings, names, sources_contents
+        end
+      | None -> mappings, names, sources_contents
+  ) ([], SSet.empty, SMap.empty) (MappingHolder.addition_list map.mappings) in
+  { map with mappings = Addition (List.rev mappings); names; sources_contents;
+    source_root = map2.source_root }
+
 
 let add_mapping ~original ~generated map =
   let names = match original.name with
@@ -109,8 +203,8 @@ let add_mapping ~original ~generated map =
     original = Some original;
     generated_loc = generated;
   } in
-  let mappings = mapping::map.mappings in
-  { map with mappings; names }
+  let mappings = mapping::(MappingHolder.addition_list map.mappings) in
+  { map with mappings = Addition mappings; names }
 
 let add_source_content ~source ~content map =
   let sources_contents = SMap.add source content map.sources_contents in
@@ -204,7 +298,7 @@ let string_of_mappings map =
       end
     in
     (buf, { state with prev_mapping = Some mapping })
-  ) (buf, state) (List.rev map.mappings) in
+  ) (buf, state) (List.rev (MappingHolder.addition_list map.mappings)) in
   Buffer.contents buf
 
 let mappings_of_stream =
@@ -291,6 +385,7 @@ let sources_contents map =
 let version _map = "3"
 let names map = SSet.elements map.names
 let source_root map = map.source_root
+let file map = map.file
 
 module type Json_writer_intf = sig
   type t
@@ -390,7 +485,7 @@ module Make_json_reader (Json : Json_reader_intf) : (Json_reader with type json 
       file;
       source_root;
       names = SSet.of_list names;
-      mappings;
+      mappings = Addition mappings;
       sources_contents = match sources_contents with Some x -> x | None -> SMap.empty;
     }
 end

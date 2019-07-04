@@ -1,0 +1,651 @@
+Error ----------------------------------------------------------------------------------------------------- HOC.js:26:24
+
+Cannot get `x.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
+
+   HOC.js:26:24
+   26|   C.defaultProps = {...x.defaultProps};
+                              ^^^^^^^^^^^^^^
+
+References:
+   HOC.js:19:6
+   19|   x: React.AbstractComponent<Props, Instance>,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- HOC.js:41:24
+
+Cannot get `x.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
+
+   HOC.js:41:24
+   41|   C.defaultProps = {...x.defaultProps, baz: 3};
+                              ^^^^^^^^^^^^^^
+
+References:
+   HOC.js:34:6
+   34|   x: React.AbstractComponent<Props, Instance>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:16:10
+
+Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
+
+   abstract_vs_abstract.js:16:10
+   16|   return x;
+                ^
+
+References:
+   abstract_vs_abstract.js:15:95
+   15| function test3(x: React$AbstractComponent<{foo: number}, Component>): React$AbstractComponent<{}, Component> { // Error missing props
+                                                                                                     ^^ [1]
+   abstract_vs_abstract.js:15:43
+   15| function test3(x: React$AbstractComponent<{foo: number}, Component>): React$AbstractComponent<{}, Component> { // Error missing props
+                                                 ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:20:10
+
+Cannot return `x` because `Component` [1] is incompatible with `Subcomponent` [2].
+
+   abstract_vs_abstract.js:20:10
+   20|   return x;
+                ^
+
+References:
+   abstract_vs_abstract.js:19:47
+   19| function test4(x: React$AbstractComponent<{}, Component>): React$AbstractComponent<{}, Subcomponent> { // Error instance is covariant
+                                                     ^^^^^^^^^ [1]
+   abstract_vs_abstract.js:19:88
+   19| function test4(x: React$AbstractComponent<{}, Component>): React$AbstractComponent<{}, Subcomponent> { // Error instance is covariant
+                                                                                              ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- arity.js:3:19
+
+Cannot use type without exactly 2 type arguments.
+
+   3| function test1(x: React$AbstractComponent<any>) { // Not enough targs
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- arity.js:11:19
+
+Cannot use type without exactly 2 type arguments.
+
+   11| function test3(x: React$AbstractComponent<any,any,any>) { // Too many targs
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- classes_lower.js:15:21
+
+Cannot use type without exactly 2 type arguments.
+
+   15| (ComponentNarrower: React$AbstractComponent<any, any, any>);
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:17:2
+
+Cannot cast `ComponentNarrower` to AbstractComponent because:
+ - property `bar` is missing in object type [1] but exists in object type [2].
+ - property `foo` is missing in object type [1] but exists in object type [2].
+
+   classes_lower.js:17:2
+   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:17:45
+   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
+                                                   ^^ [1]
+   classes_lower.js:11:49
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:18:2
+
+Cannot cast `ComponentNarrower` to AbstractComponent because property `bar` is missing in object type [1] but exists in
+object type [2].
+
+   classes_lower.js:18:2
+   18| (ComponentNarrower: React$AbstractComponent<{+foo?: number}, any>); // Error missing bar in config
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:18:45
+   18| (ComponentNarrower: React$AbstractComponent<{+foo?: number}, any>); // Error missing bar in config
+                                                   ^^^^^^^^^^^^^^^ [1]
+   classes_lower.js:11:49
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:19:2
+
+Cannot cast `ComponentNarrower` to AbstractComponent because `ComponentNarrower` [1] is incompatible with
+`Component` [2].
+
+   classes_lower.js:19:2
+   19| (ComponentNarrower: React$AbstractComponent<any, Component>); // Error instance type is wrong
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:11:7
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+             ^^^^^^^^^^^^^^^^^ [1]
+   classes_lower.js:19:50
+   19| (ComponentNarrower: React$AbstractComponent<any, Component>); // Error instance type is wrong
+                                                        ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:25:2
+
+Cannot cast `Component` to AbstractComponent because `Component` [1] is incompatible with `Subclass` [2].
+
+   classes_lower.js:25:2
+   25| (Component: React$AbstractComponent<any, Subclass>); // Ok, Instance is covariant
+        ^^^^^^^^^
+
+References:
+   classes_lower.js:5:7
+    5| class Component extends React.Component<{}> {}
+             ^^^^^^^^^ [1]
+   classes_lower.js:25:42
+   25| (Component: React$AbstractComponent<any, Subclass>); // Ok, Instance is covariant
+                                                ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:13:2
+
+Cannot cast `y` to `NotTheRightConfig` because:
+ - property `baz` is missing in `Props` [1] but exists in `NotTheRightConfig` [2].
+ - property `qux` is missing in `Props` [1] but exists in `NotTheRightConfig` [2].
+
+   config.js:13:2
+   13| (y: NotTheRightConfig); // Error, configs don't match
+        ^
+
+References:
+   config.js:8:29
+    8| declare var y: React$Config<Props, DefaultProps>;
+                                   ^^^^^ [1]
+   config.js:13:5
+   13| (y: NotTheRightConfig); // Error, configs don't match
+           ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:16:2
+
+Cannot cast `z` to config of React component because:
+ - property `bar` is missing in `NotTheRightConfig` [1] but exists in `Props` [2].
+ - property `foo` is missing in `NotTheRightConfig` [1] but exists in `Props` [2].
+
+   config.js:16:2
+   16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+        ^
+
+References:
+   config.js:15:16
+   15| declare var z: NotTheRightConfig;
+                      ^^^^^^^^^^^^^^^^^ [1]
+   config.js:16:18
+   16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+                        ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- config.js:39:12
+
+Cannot create `WrappedComponent` element because property `bar` is missing in props [1] but exists in object type [2].
+
+   config.js:39:12
+   39| const _c = <WrappedComponent foo={3} />; // Error missing bar
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   config.js:30:41
+   30| class Component extends React.Component<{foo: number, bar: number}> {
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- create_element.js:9:12
+
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
+
+   create_element.js:9:12
+   9| const _c = <C baz={4} />; // Error missing bar
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   create_element.js:5:40
+   5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:10:12
+
+Cannot create `C` element because property `baz` is missing in props [1] but exists in object type [2].
+
+   create_element.js:10:12
+   10| const _d = <C bar={3} />; // Error missing baz
+                  ^^^^^^^^^^^^^ [1]
+
+References:
+   create_element.js:5:40
+    5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:16:12
+
+Cannot create `C` element because in property `ref`:
+ - Either number [1] is incompatible with string [2] in property `current`.
+ - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
+   function type [4].
+
+   create_element.js:16:12
+    16| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   create_element.js:5:94
+     5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
+                                                                                                     ^^^^^^ [1]
+   create_element.js:15:32
+    15| const refBad = React.createRef<string>();
+                                       ^^^^^^ [2]
+   <BUILTINS>/react.js:246:6
+   246|   ): {|current: null | T|};
+             ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:197:6
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:19:12
+
+Cannot create `C` element because in property `key`:
+ - Either object literal [1] is incompatible with string [2].
+ - Or object literal [1] is incompatible with number [3].
+
+   create_element.js:19:12
+    19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   create_element.js:19:49
+    19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
+                                                        ^^^^^^^^ [1]
+   <BUILTINS>/react.js:190:26
+   190| declare type React$Key = string | number;
+                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:190:35
+   190| declare type React$Key = string | number;
+                                          ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- destructors.js:9:12
+
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
+
+   destructors.js:9:12
+   9| const _b = <C baz={3} />; // Error, bar missing
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   destructors.js:5:40
+   5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, void>;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- destructors.js:14:2
+
+Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with undefined [2].
+
+   destructors.js:14:2
+   14| (3 : React$ElementRef<typeof C>); // Error, 3 is not void.
+        ^ [1]
+
+References:
+   destructors.js:5:69
+    5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, void>;
+                                                                           ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- destructors.js:21:2
+
+Cannot cast object literal to `React.ElementConfig` because property `bar` is missing in object literal [1] but exists
+in object type [2].
+
+   destructors.js:21:2
+   21| ({baz: 3}: React$ElementConfig<typeof C>); // Error, bar missing
+        ^^^^^^^^ [1]
+
+References:
+   destructors.js:5:40
+    5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, void>;
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:12
+
+Cannot create `WrappedBoth` element because property `bar` is missing in object type [1] but exists in props [2].
+
+   double_wrapped.js:23:12
+   23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   double_wrapped.js:4:43
+    4| class MyComponent extends React.Component<{| foo: number |}> {
+                                                 ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:12
+
+Cannot create `WrappedBoth` element because property `foo` is missing in props [1] but exists in object type [2].
+
+   double_wrapped.js:24:12
+   24| const _b = <WrappedBoth />; // Error, missing prop foo
+                  ^^^^^^^^^^^^^^^ [1]
+
+References:
+   double_wrapped.js:4:43
+    4| class MyComponent extends React.Component<{| foo: number |}> {
+                                                 ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------- error_positioning/error_positioning.js:31:28
+
+`MockFn` [1] is not a React component.
+
+   error_positioning/error_positioning.js:31:28
+   31| let RefetchContainer = HOC(Component); // Error, mock is not a Component
+                                  ^^^^^^^^^
+
+References:
+   error_positioning/error_positioning.js:24:4
+   24| ): MockFn<TArguments, TReturn>
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------- error_positioning/error_positioning.js:39:12
+
+Cannot create `C` element because property `component` is missing in object type [1] but exists in props [2] in property
+`component`.
+
+   error_positioning/error_positioning.js:39:12
+   39| const _a = <C component={View}></ C>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   error_positioning/View.js:4:54
+    4| type ViewNativeComponentType = Class<React.Component<{||}>>;
+                                                            ^^^^ [1]
+   error_positioning/C.js:16:7
+   16|       <Component {...this.props} />
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_lower.js:7:2
+
+Cannot cast `Component` to AbstractComponent because property `foo` is missing in props [1] but exists in `Props` [2].
+
+   function_lower.js:7:2
+   7| (Component: React$AbstractComponent<{}, void>); // Error, missing foo
+       ^^^^^^^^^
+
+References:
+   function_lower.js:7:37
+   7| (Component: React$AbstractComponent<{}, void>); // Error, missing foo
+                                          ^^ [1]
+   function_lower.js:4:23
+   4| function Component(x: Props): React$Node { return null; }
+                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:10:2
+
+Cannot cast `Component` to AbstractComponent because undefined [1] is incompatible with number [2].
+
+   function_lower.js:10:2
+   10| (Component: React$AbstractComponent<Props, number>); // Error void ~> number
+        ^^^^^^^^^ [1]
+
+References:
+   function_lower.js:10:44
+   10| (Component: React$AbstractComponent<Props, number>); // Error void ~> number
+                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:18:2
+
+Cannot cast `ComponentWithDefaultProps` to AbstractComponent because property `bar` is missing in props [1] but exists
+in `Props2` [2].
+
+   function_lower.js:18:2
+   18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   function_lower.js:18:53
+   18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
+                                                           ^^ [1]
+   function_lower.js:14:39
+   14| function ComponentWithDefaultProps(x: Props2) { return null; }
+                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:20:2
+
+Cannot cast `ComponentWithDefaultProps` to AbstractComponent because undefined [1] is incompatible with number [2].
+
+   function_lower.js:20:2
+   20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   function_lower.js:20:62
+   20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
+                                                                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:22:7
+
+Cannot assign class `NotAComponent` to `NotAComponent` because:
+ - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
+ - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+
+   function_lower.js:22:7
+   22| class NotAComponent {}; // Error, not a component
+             ^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
+
+Cannot cast `NotAFunctionComponent` to AbstractComponent because:
+ - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
+ - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+
+   function_lower.js:28:2
+   28| (NotAFunctionComponent: React$AbstractComponent<Props, void>);
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   function_lower.js:22:7
+   22| class NotAComponent {}; // Error, not a component
+             ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
+
+Cannot call `x.displayName.toString` because:
+ - property `toString` is missing in null or undefined [1].
+ - property `toString` is missing in undefined [1].
+ - property `toString` is missing in null [2].
+
+   get_set_props.js:8:3
+     8|   x.displayName.toString(); // Error maybe null or undefined
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:131:17
+   131|   displayName?: ?string,
+                        ^^^^^^^ [1]
+   get_set_props.js:6:21
+     6|     x.displayName = null;
+                            ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- get_set_props.js:9:3
+
+Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing in
+`React.AbstractComponentStatics` [1].
+
+   get_set_props.js:9:3
+     9|   x.definitelyNotHere.toString(); // Error missing prop
+          ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:130:47
+                                                      v
+   130| declare type React$AbstractComponentStatics = {
+   131|   displayName?: ?string,
+   132|   // This is only on function components, but trying to access name when
+   133|   // displayName is undefined is a common pattern.
+   134|   name?: ?string,
+   135|   ...
+   136| };
+        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- get_set_props.js:11:19
+
+Cannot assign `3` to `x.displayName` because number [1] is incompatible with string [2].
+
+   get_set_props.js:11:19
+    11|   x.displayName = 3; // Error num ~> string
+                          ^ [1]
+
+References:
+   <BUILTINS>/react.js:131:18
+   131|   displayName?: ?string,
+                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- no_annot_fun.js:3:29
+
+Cannot get `props.LOL` because property `LOL` is missing in props [1].
+
+   no_annot_fun.js:3:29
+   3| function Component(props) { props.LOL ; return null} // Error, missing LOL
+                                  ^^^^^^^^^
+
+References:
+   no_annot_fun.js:4:37
+   4| (Component: React$AbstractComponent<{}, void>);
+                                          ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- strict.js:4:11
+
+Cannot create `Component` element because props [1] is incompatible with empty [2].
+
+   strict.js:4:11
+     4| const c = <Component f = {3}/>;
+                  ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:171:29
+   171|   | React$AbstractComponent<empty, mixed>;
+                                    ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
+
+Cannot call `foo` with `ref` bound to `a` because:
+ - `HTMLElement` [1] is incompatible with `React.Component` [2].
+ - mixed [3] is incompatible with `React.Component` [2].
+
+   strict.js:9:5
+     9| foo(ref);
+            ^^^
+
+References:
+   <BUILTINS>/react-dom.js:781:13
+   781|   instance: HTMLElement,
+                    ^^^^^^^^^^^ [1]
+   strict.js:7:26
+     7| declare function foo(a: ?React$Component<any, any>): void;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:171:36
+   171|   | React$AbstractComponent<empty, mixed>;
+                                           ^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
+
+Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` [1].
+
+   test_prop.js:5:7
+     5|   if (x.notOnEitherSFCOrClass) {} // Error Not on any component
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:130:47
+                                                      v
+   130| declare type React$AbstractComponentStatics = {
+   131|   displayName?: ?string,
+   132|   // This is only on function components, but trying to access name when
+   133|   // displayName is undefined is a common pattern.
+   134|   name?: ?string,
+   135|   ...
+   136| };
+        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- type_visitor.js:10:18
+
+Missing type annotation for `Config`. `Config` is a type parameter declared in function type [1] and was implicitly
+instantiated at call of `HOC` [2].
+
+   type_visitor.js:10:18
+   10| module.exports = HOC(A); // Error, missing annotation only for Config
+                        ^^^^^^ [2]
+
+References:
+   type_visitor.js:4:21
+                           v----------------------
+    4| declare function HOC<Config: {}, Instance>(
+    5|     x: React.AbstractComponent<Config, Instance>,
+    6| ): React.AbstractComponent<Config, Instance>;
+       -------------------------------------------^ [1]
+
+
+
+Found 45 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

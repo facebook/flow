@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -52,7 +52,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let print_json result ~pretty ~strip_root =
+let print_json result ~stdin_file ~pretty ~strip_root =
   let open Hh_json in
   let json = match result with
     | None -> JSON_Object ["kind", JSON_String "no-symbol-found"]
@@ -60,20 +60,21 @@ let print_json result ~pretty ~strip_root =
       JSON_Object [
         "kind", JSON_String "symbol-found";
         "name", JSON_String name;
-        "locs", JSON_Array (List.map (Reason.json_of_loc ~strip_root) locs)
+        "locs", JSON_Array (Core_list.map ~f:(json_of_loc_with_offset ~stdin_file ~strip_root) locs)
       ]
   in
   print_json_endline ~pretty json
 
-let to_string result option_values ~strip_root =
+let to_string result ~strip_root =
   let locs = match result with
     | None -> []
     | Some (_, locs) -> locs
   in
+  let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
   String.concat "\n" @@
-    if option_values.from = "vim" || option_values.from = "emacs"
-    then List.map (Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
-    else List.map (range_string_of_loc ~strip_root) locs
+    if from = Some "vim" || from = Some "emacs"
+    then Core_list.map ~f:(Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
+    else Core_list.map ~f:(range_string_of_loc ~strip_root) locs
 
 
     (* find-refs command handler.
@@ -84,8 +85,7 @@ let to_string result option_values ~strip_root =
    - multi_hop indicates whether to include properties on related objects (even slower)
    - args is mandatory command args; see parse_args above
     *)
-let main base_flags option_values json pretty root strip_root from path global multi_hop args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root path global multi_hop args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -95,14 +95,20 @@ let main base_flags option_values json pretty root strip_root from path global m
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.Request.FIND_REFS (file, line, column, global, multi_hop) in
+  let request = ServerProt.Request.FIND_REFS {
+    filename = file;
+    line;
+    char = column;
+    global;
+    multi_hop;
+  } in
   (* command result will be a position structure with full file path *)
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.FIND_REFS (Ok result) ->
     (* format output *)
     if json || pretty
-    then print_json result ~pretty ~strip_root
-    else print_endline (to_string result option_values ~strip_root)
+    then print_json result ~stdin_file:file ~pretty ~strip_root
+    else print_endline (to_string result ~strip_root)
   | ServerProt.Response.FIND_REFS (Error exn_msg) ->
     Utils_js.prerr_endlinef
       "Could not find refs for %s:%d:%d\n%s"

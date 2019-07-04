@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,28 +11,31 @@ open Core_result
 open Ty
 module T = Flow_ast.Type
 
-let mapM f ts = all (List.map f ts)
+let mapM f ts = all (Core_list.map ~f:f ts)
 
 let opt f t =
   match t with
   | Some t -> f t >>| fun t -> Some t
   | _ -> return None
 
-let identifier x = (Loc.none, x)
+let id_from_string x = Flow_ast_utils.ident_of_source (Loc.none, x)
 
-let builtin x =
-  return (Loc.none, T.Generic {
-    T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier x);
-    targs = None;
-  })
+let id_from_symbol x =
+  let { name; anonymous; _ } = x in
+  if anonymous
+  then Error (Utils_js.spf "Cannot output anonymous elements.")
+  else Ok (id_from_string name)
 
-let generic_builtin x targs =
-  return (Loc.none, T.Generic {
+let mk_generic x targs =
+  Loc.none, T.Generic {
     T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier x);
-    targs = Some targs;
-  })
+    id = T.Generic.Identifier.Unqualified x;
+    targs;
+  }
+
+let builtin_from_string ?targs x =
+  let x = id_from_string x in
+  mk_generic x targs
 
 let tvar (RVar _) = Error "Unsupported recursive variables."
 
@@ -45,18 +48,25 @@ let rec type_ t =
   let just t = return (Loc.none, t) in
   match t with
   | TVar (v, _) -> tvar v
-  | Bound (Symbol (_, s)) -> builtin s
+  | Bound (_, name) -> Ok (builtin_from_string name)
   | Generic (x, _, ts) -> generic x ts
-  | Any -> just T.Any
-  | AnyObj -> builtin "Object"
-  | AnyFun -> builtin "Function"
+  | Any _ -> just T.Any
   | Top -> just T.Mixed
-  | Bot -> just T.Empty
+  | Bot _ -> just T.Empty
   | Void -> just T.Void
   | Null -> just T.Null
-  | Num -> just T.Number
-  | Str -> just T.String
-  | Bool -> just T.Boolean
+  | Num (Some lit) ->
+    return (builtin_from_string "$TEMPORARY$number"
+      ~targs:(Loc.none, [Loc.none, T.NumberLiteral (num_lit lit)]))
+  | Num None -> just T.Number
+  | Str (Some lit) ->
+    return (builtin_from_string "$TEMPORARY$string"
+      ~targs:(Loc.none, [Loc.none, T.StringLiteral (str_lit lit)]))
+  | Str None -> just T.String
+  | Bool (Some lit) ->
+    return (builtin_from_string "$TEMPORARY$boolean"
+      ~targs:(Loc.none, [Loc.none, (T.BooleanLiteral lit)]))
+  | Bool None -> just T.Boolean
   | NumLit lit -> just (T.NumberLiteral (num_lit lit))
   | StrLit lit -> just (T.StringLiteral (str_lit lit))
   | BoolLit lit -> just (T.BooleanLiteral lit)
@@ -66,31 +76,32 @@ let rec type_ t =
   | Tup ts -> mapM type_ ts >>| fun ts -> (Loc.none, T.Tuple ts)
   | Union (t0, t1, ts) as t -> union t (t0,t1,ts)
   | Inter (t0, t1, ts) -> intersection (t0,t1,ts)
-  | Class (s, _, _) -> class_ s
+  | ClassDecl (s, _) -> class_decl s
+  | Utility s -> utility s
 
+  | InterfaceDecl _
   | TypeOf _
   | TypeAlias _
-  | Exists
   | Mu _
   | Module _
     ->
     Error (Utils_js.spf "Unsupported type constructor `%s`."
       (Ty_debug.string_of_ctor t))
 
-and generic (Symbol (_, id)) targs =
+and generic x targs =
+  id_from_symbol x >>= fun id ->
   opt type_arguments targs >>| fun targs ->
-  (Loc.none, T.Generic {
-    T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier id);
-    targs
-  })
+  mk_generic id targs
 
 and union t (t0, t1, rest) =
-  let ts = bk_union t in
+  let ts = bk_union t |> Nel.to_list in
   if List.mem Null ts && List.mem Void ts then
-    let ts = List.filter (fun t -> not (t = Null || t = Void)) ts in
-    type_ (mk_union ts) >>| fun ts ->
-    (Loc.none, T.Nullable ts)
+    match List.filter (fun t -> not (t = Null || t = Void)) ts with
+    | [] ->
+      return (Loc.none, T.Union ((Loc.none, T.Null), (Loc.none, T.Void), []))
+    | hd::tl ->
+      type_ (mk_union (hd, tl)) >>| fun ts ->
+      (Loc.none, T.Nullable ts)
   else
     type_ t0 >>= fun t0 ->
     type_ t1 >>= fun t1 ->
@@ -123,10 +134,11 @@ and fun_params params rest_param =
   })
 
 and fun_param (name, t, {prm_optional}) =
+  let name = Option.map ~f:id_from_string name in
   type_ t >>| fun annot ->
   (Loc.none, {
     T.Function.Param.
-    name = Option.map ~f:identifier name;
+    name;
     annot;
     optional = prm_optional;
   })
@@ -143,6 +155,7 @@ and obj_ o =
   (Loc.none, T.Object {
     T.Object.
     exact = o.obj_exact;
+    inexact = false;
     properties;
   })
 
@@ -153,15 +166,17 @@ and obj_prop = function
     obj_index_prop d >>| fun p -> T.Object.Indexer (Loc.none, p)
   | CallProp f ->
     obj_call_prop f >>| fun p -> T.Object.CallProperty (Loc.none, p)
+  | SpreadProp t ->
+    obj_spread_prop t >>| fun p -> T.Object.SpreadProperty p
 
 and obj_named_prop =
   let to_key x =
     if Ty_printer.property_key_quotes_needed x then
       let raw = x in
       let value = Ast.Literal.String raw in
-      Ast.Expression.Object.Property.Literal (Loc.none, { Ast.Literal.value; raw })
+      Ast.Expression.Object.Property.Literal (Loc.none, { Ast.Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt () })
     else
-      Ast.Expression.Object.Property.Identifier (Loc.none, x)
+      Ast.Expression.Object.Property.Identifier (id_from_string x)
   in
   fun x prop ->
   match prop with
@@ -203,10 +218,11 @@ and obj_named_prop =
     }
 
 and obj_index_prop d =
+  let id = Option.map ~f:id_from_string d.dict_name in
   type_ d.dict_key >>= fun key ->
   type_ d.dict_value >>| fun value -> {
     T.Object.Indexer.
-    id = Option.map ~f:identifier d.dict_name;
+    id;
     key;
     value;
     static = false;
@@ -220,11 +236,17 @@ and obj_call_prop f =
   static = false;
 }
 
-and arr { arr_readonly; arr_elt_t } =
-  type_ arr_elt_t >>= fun t ->
+and obj_spread_prop t =
+  type_ t >>| fun t -> Loc.none, {
+    T.Object.SpreadProperty.
+    argument = t;
+  }
+
+and arr { arr_readonly; arr_elt_t; _ } =
+  type_ arr_elt_t >>| fun t ->
   if arr_readonly
-  then generic_builtin "$ReadOnlyArray" (Loc.none, [t])
-  else return (Loc.none, T.Array t)
+  then builtin_from_string "$ReadOnlyArray" ~targs:(Loc.none, [t])
+  else (Loc.none, T.Array t)
 
 and type_params ts =
   mapM type_param ts >>| fun ts -> (Loc.none, ts)
@@ -234,7 +256,7 @@ and type_param tp =
   opt type_ tp.tp_default >>| fun default ->
   (Loc.none, {
     T.ParameterDeclaration.TypeParam.
-    name = Loc.none, tp.tp_name;
+    name = id_from_string tp.tp_name;
     bound = (match bound with
     | Some t -> T.Available t
     | None -> T.Missing Loc.none);
@@ -271,12 +293,15 @@ and setter t = function_ {
   fun_type_params = None;
 }
 
-and class_ t =
-  generic t None >>| fun t ->
-  (Loc.none, T.Generic {
-    T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier "Class");
-    targs = Some (Loc.none, [t])
-  })
+and class_decl name =
+  generic name None >>| fun name ->
+  (Loc.none, T.Typeof name)
+
+and utility u =
+  let ctor = Ty.string_of_utility_ctor u in
+  let ts = Ty.types_of_utility u in
+  let id = id_from_string ctor in
+  opt type_arguments ts >>| fun ts ->
+  mk_generic id ts
 
 and annotation t = type_ t >>| fun t -> (Loc.none, t)

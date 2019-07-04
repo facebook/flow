@@ -58,15 +58,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:214:41
+   <BUILTINS>/react.js:227:41
                                                 v---
-   214|   declare export function checkPropTypes<V>(
-   215|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-   216|     values: V,
-   217|     location: string,
-   218|     componentName: string,
-   219|     getStack: ?(() => ?string)
-   220|   ) : void;
+   227|   declare export function checkPropTypes<V>(
+   228|     propTypes : any,
+   229|     values: V,
+   230|     location: string,
+   231|     componentName: string,
+   232|     getStack: ?(() => ?string)
+   233|   ) : void;
           -------^ [1]
 
 
@@ -79,25 +79,16 @@ Cannot call `checkPropTypes` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:214:41
+   <BUILTINS>/react.js:227:41
                                                 v---
-   214|   declare export function checkPropTypes<V>(
-   215|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-   216|     values: V,
-   217|     location: string,
-   218|     componentName: string,
-   219|     getStack: ?(() => ?string)
-   220|   ) : void;
+   227|   declare export function checkPropTypes<V>(
+   228|     propTypes : any,
+   229|     values: V,
+   230|     location: string,
+   231|     componentName: string,
+   232|     getStack: ?(() => ?string)
+   233|   ) : void;
           -------^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ checkPropTypes.js:10:43
-
-Cannot call `checkPropTypes` with object literal bound to `values` because property `bar` is missing in object
-literal [1].
-
-   10| checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
-                                                 ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ checkPropTypes.js:12:85
@@ -113,9 +104,98 @@ References:
    checkPropTypes.js:12:91
     12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
                                                                                                   ^^^ [1]
-   <BUILTINS>/react.js:219:24
-   219|     getStack: ?(() => ?string)
+   <BUILTINS>/react.js:232:24
+   232|     getStack: ?(() => ?string)
                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:12:12
+
+Cannot create `Component2` element because:
+ - property `bar` is missing in `Props` [1] but exists in props [2].
+ - property `foo` is missing in `Props` [1] but exists in props [2].
+
+   inexact_config.js:12:12
+   12| const _c = <Component2 foo={3} bar={3} />; // error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_config.js:10:29
+   10| function Component2(props : Props) : React$Node { return null; }
+                                   ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:13:12
+
+Cannot create `Component2` element because property `children` is missing in `Props` [1] but exists in props [2].
+
+   inexact_config.js:13:12
+   13| const _d = <Component2>{"foo"}</Component2>; //error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_config.js:10:29
+   10| function Component2(props : Props) : React$Node { return null; }
+                                   ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:22:12
+
+Cannot create `Component4` element because property `bar` is missing in object type [1] but exists in props [2].
+
+   inexact_config.js:22:12
+   22| const _g = <Component4 foo={3} bar={3} />; //error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_config.js:20:29
+   20| function Component4(props : {| foo : number |}) : React$Node { return null; }
+                                   ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:23:12
+
+Cannot create `Component4` element because property `foo` is missing in props [1] but exists in object type [2].
+
+   inexact_config.js:23:12
+   23| const _h = <Component4></Component4>; //error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inexact_config.js:20:29
+   20| function Component4(props : {| foo : number |}) : React$Node { return null; }
+                                   ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- inexact_props.js:19:1
+
+Cannot create `B` element because property `z` is missing in `Props2` [1] but exists in props [2].
+
+   inexact_props.js:19:1
+   19| <B x={4} y={"hello"} z={3}></B>; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_props.js:16:33
+   16| class B extends React$Component<Props2> {}
+                                       ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- inexact_props.js:44:1
+
+Cannot create `YComponent` element because null or undefined [1] is incompatible with string [2] in property `p3`.
+
+   inexact_props.js:44:1
+   44| <YComponent p1={true} p2={3} p3={s}></YComponent>
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   inexact_props.js:42:17
+   42| declare var s : ?string;
+                       ^^^^^^^ [1]
+   inexact_props.js:35:9
+   35|   p3? : string,
+               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ propTypes.js:15:1
@@ -138,5 +218,56 @@ References:
          ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
-Found 9 errors
+`D` [1] is incompatible with `React.Component` [2].
+
+   subclassComponent.js:29:2
+   29| <D></D>; // error
+        ^
+
+References:
+   subclassComponent.js:21:15
+   21| declare class D extends React$Component2<Props2, void> {}
+                     ^ [1]
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
+
+`E` [1] is incompatible with `React.Component` [2].
+
+   subclassComponent.js:30:2
+   30| <E></E>; // error
+        ^
+
+References:
+   subclassComponent.js:23:15
+   23| declare class E extends D {}
+                     ^ [1]
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
+
+`F` [1] is incompatible with `React.Component` [2].
+
+   subclassComponent.js:31:2
+   31| <F></F>; // error
+        ^
+
+References:
+   subclassComponent.js:25:15
+   25| declare class F {
+                     ^ [1]
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 18 errors

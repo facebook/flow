@@ -1,28 +1,30 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 open OUnit2
-open File_sig
+open File_sig.With_Loc
 
-let visit ?parse_options source =
+let visit ?parse_options ?(module_ref_prefix = None) source =
   let ast, _ = Parser_flow.program ~parse_options source in
-  match program ast with
+  match program ~ast ~module_ref_prefix with
   | Ok fsig -> fsig
   | Error _ -> assert_failure "Unexpected error"
 
-let visit_err ?parse_options source =
+let visit_err ?parse_options ?(module_ref_prefix = None) source =
   let ast, _ = Parser_flow.program ~parse_options source in
-  match program ast with
+  match program ~ast ~module_ref_prefix with
   | Error e -> e
   | Ok _ -> assert_failure "Unexpected success"
 
 let substring_loc s loc =
   let open Loc in
-  let {start={offset=a; _}; _end={offset=b; _}; _} = loc in
+  let table = Offset_utils.make s in
+  let a = Offset_utils.offset table loc.start in
+  let b = Offset_utils.offset table loc._end in
   String.sub s a (b - a)
 
 let call_opt x = function Some f -> f x | None -> ()
@@ -34,11 +36,13 @@ let assert_es ?assert_named ?assert_star = function
   | CommonJS _ ->
     assert_failure "Unexpected module kind"
 
-let assert_cjs ?assert_export_loc = function
+let assert_cjs ~source ?assert_export_loc = function
   | CommonJS { mod_exp_loc } ->
-    let offsets =
-      Option.map mod_exp_loc ~f:Loc.(fun { start={offset=a;_}; _end={offset=b;_}; _} -> (a, b))
-    in
+    let table = Offset_utils.make source in
+    let offset_pair_of_loc loc = Loc.(
+      (Offset_utils.offset table loc.start, Offset_utils.offset table loc._end)
+    ) in
+    let offsets = Option.map mod_exp_loc ~f:offset_pair_of_loc in
     call_opt offsets assert_export_loc
   | ES _ ->
     assert_failure "Unexpected module kind"
@@ -56,6 +60,13 @@ let assert_singleton_nel nel =
   match nel with
   | x, [] -> x
   | _ -> assert_failure "Expected singleton nel"
+
+let assert_singleton_assoc ~ctxt key assoc =
+  match assoc with
+  | (x, v)::_ ->
+    assert_equal ~ctxt key x;
+    v
+  | _ -> assert_failure "Expected singleton list"
 
 let assert_substring_equal ~ctxt expected source loc =
   assert_equal ~ctxt expected (substring_loc source loc)
@@ -151,17 +162,15 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 2 (SMap.cardinal map);
-      let foo_loc, foo_loc' = match SMap.find_unsafe "foo" map with
-      | locals when SMap.mem "foo" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "foo" locals in
-        loc, loc'
+      assert_equal ~ctxt 2 (List.length map);
+      let foo_loc, foo_loc' = match List.find_all (fun ((_, x), _) -> x = "foo") map with
+      | [(foo_loc', _), BindIdent (foo_loc, "foo")] ->
+        foo_loc, foo_loc'
       | _ -> assert_failure "Unexpected requires"
       in
-      let baz_loc, bar_loc = match SMap.find_unsafe "bar" map with
-      | locals when SMap.mem "baz" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "baz" locals in
-        loc, loc'
+      let baz_loc, bar_loc = match List.find_all (fun ((_, x), _) -> x = "bar") map with
+      | [(bar_loc, _), BindIdent (baz_loc, "baz")] ->
+        baz_loc, bar_loc
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "foo" source foo_loc;
@@ -182,17 +191,10 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 1 (SMap.cardinal map);
-      let bar_loc, foo_loc = match SMap.find_unsafe "foo" map with
-      | locals when SMap.mem "bar" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "bar" locals in
-        loc, loc'
-      | _ -> assert_failure "Unexpected requires"
-      in
-      let baz_loc, foo_loc' = match SMap.find_unsafe "foo" map with
-      | locals when SMap.mem "baz" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "baz" locals in
-        loc, loc'
+      assert_equal ~ctxt 2 (List.length map);
+      let bar_loc, foo_loc, baz_loc, foo_loc' = match List.find_all (fun ((_, x), _) -> x = "foo") map with
+      | [(foo_loc', _), BindIdent (baz_loc, "baz"); (foo_loc, _), BindIdent (bar_loc, "bar")] ->
+        bar_loc, foo_loc, baz_loc, foo_loc'
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "foo" source foo_loc;
@@ -213,11 +215,10 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 2 (SMap.cardinal map);
-      let bar_loc, baz_loc = match SMap.find_unsafe "baz" map with
-      | locals when SMap.mem "bar" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "bar" locals in
-        loc, loc'
+      assert_equal ~ctxt 2 (List.length map);
+      let bar_loc, baz_loc = match List.find_all (fun ((_, x), _) -> x = "baz") map with
+      | [(baz_loc, _), BindIdent (bar_loc, "bar")] ->
+        bar_loc, baz_loc
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "bar" source bar_loc;
@@ -238,6 +239,20 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
+  "cjs_module_ref" >:: begin fun ctxt ->
+    let source = "moduleRefConsumer('m#foo')" in
+    let {module_sig = {requires; _}; _} = visit source ~module_ref_prefix:(Some "m#") in
+    match requires with
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        _
+      }] ->
+      assert_substring_equal ~ctxt "'m#foo'" source source_loc;
+      assert_substring_equal ~ctxt "'m#foo'" source require_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -432,75 +447,76 @@ let tests = "require" >::: [
   end;
 
   "cjs_default" >:: begin fun ctxt ->
-    let {module_sig = {module_kind; _}; _} = visit "" in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt None)
+    let source = "" in
+    let {module_sig = {module_kind; _}; _} = visit source in
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
   end;
 
   "cjs_clobber" >:: begin fun ctxt ->
     let source = "module.exports = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_clobber_rebound" >:: begin fun ctxt ->
     let source = "var module = {}; module.exports = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
   end;
 
   "cjs_exports_named_rebound" >:: begin fun ctxt ->
     let source = "var module = {}; module.exports.bar = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
   end;
 
   "cjs_exports_named_rebound2" >:: begin fun ctxt ->
     let source = "var exports = {}; exports.bar = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
   end;
 
   "cjs_exports" >:: begin fun ctxt ->
     let source = "exports = {foo: bar}; exports.baz = qux;" in
     let {module_sig = {module_kind; _}; _} = visit source in
     (* TODO report an export loc here *)
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (22, 29)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (22, 29)))
   end;
 
   "cjs_export_named" >:: begin fun ctxt ->
     let source = "module.exports.foo = 0; module.exports.bar = baz;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_object" >:: begin fun ctxt ->
     let source = "module.exports = {foo: bar, baz: 0, qux};" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_ident" >:: begin fun ctxt ->
     let source = "module.exports = foo;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_ident_then_props" >:: begin fun ctxt ->
     let source = "module.exports = foo; module.exports.bar = baz;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_props_then_ident" >:: begin fun ctxt ->
     let source = "module.exports.foo = bar; module.exports = baz;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "export_named_type" >:: begin fun ctxt ->
     let source = "export type ty = string" in
     let {module_sig = {type_exports_named; _}; _} = visit source in
-    let type_export =  assert_singleton_smap ~ctxt "ty" type_exports_named in
+    let type_export =  assert_singleton_assoc ~ctxt "ty" type_exports_named in
     match type_export with
     | _, TypeExportNamed { loc; kind = NamedDeclaration } ->
       assert_substring_equal ~ctxt "type ty = string" source loc
@@ -510,7 +526,7 @@ let tests = "require" >::: [
   "export_named_opaque_type" >:: begin fun ctxt ->
     let source = "export opaque type ty = string" in
     let {module_sig = {type_exports_named; _}; _} = visit source in
-    let type_export =  assert_singleton_smap ~ctxt "ty" type_exports_named in
+    let type_export =  assert_singleton_assoc ~ctxt "ty" type_exports_named in
     match type_export with
     | _, TypeExportNamed { loc; kind = NamedDeclaration } ->
       assert_substring_equal ~ctxt "opaque type ty = string" source loc
@@ -520,7 +536,7 @@ let tests = "require" >::: [
   "export_named_interface" >:: begin fun ctxt ->
     let source = "export interface I {}" in
     let {module_sig = {type_exports_named; _}; _} = visit source in
-    let type_export =  assert_singleton_smap ~ctxt "I" type_exports_named in
+    let type_export =  assert_singleton_assoc ~ctxt "I" type_exports_named in
     match type_export with
     | _, TypeExportNamed { loc; kind = NamedDeclaration } ->
       assert_substring_equal ~ctxt "interface I {}" source loc
@@ -531,7 +547,7 @@ let tests = "require" >::: [
     let source = "export default 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "default" named in
+      let export = assert_singleton_assoc ~ctxt "default" named in
       match export with
       | _, ExportDefault { default_loc; local = None } ->
         assert_substring_equal ~ctxt "default" source default_loc
@@ -543,7 +559,7 @@ let tests = "require" >::: [
     let source = "export default function() {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "default" named in
+      let export = assert_singleton_assoc ~ctxt "default" named in
       match export with
       | _, ExportDefault { default_loc; local = None } ->
         assert_substring_equal ~ctxt "default" source default_loc
@@ -555,7 +571,7 @@ let tests = "require" >::: [
     let source = "export default function foo() {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "default" named in
+      let export = assert_singleton_assoc ~ctxt "default" named in
       match export with
       | _, ExportDefault { default_loc; local = Some (loc, "foo") } ->
         assert_substring_equal ~ctxt "default" source default_loc;
@@ -568,7 +584,7 @@ let tests = "require" >::: [
     let source = "export default function C() {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "default" named in
+      let export = assert_singleton_assoc ~ctxt "default" named in
       match export with
       | _, ExportDefault { default_loc; local = Some (loc, "C") } ->
         assert_substring_equal ~ctxt "default" source default_loc;
@@ -581,7 +597,7 @@ let tests = "require" >::: [
     let source = "export function foo() {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "foo" named in
+      let export = assert_singleton_assoc ~ctxt "foo" named in
       match export with
       | _, ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "foo" source loc
@@ -593,7 +609,7 @@ let tests = "require" >::: [
     let source = "export class C {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "C" named in
+      let export = assert_singleton_assoc ~ctxt "C" named in
       match export with
       | _, ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "C" source loc
@@ -605,20 +621,20 @@ let tests = "require" >::: [
     let source = "export var x, y = 0, [a] = [], {p} = {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 4 (SMap.cardinal named);
-      let x_loc = match SMap.find_unsafe "x" named with
+      assert_equal ~ctxt 4 (List.length named);
+      let x_loc = match List.assoc "x" named with
       | _, ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
-      let y_loc = match SMap.find_unsafe "y" named with
+      let y_loc = match List.assoc "y" named with
       | _, ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
-      let a_loc = match SMap.find_unsafe "a" named with
+      let a_loc = match List.assoc "a" named with
       | _, ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
-      let p_loc = match SMap.find_unsafe "p" named with
+      let p_loc = match List.assoc "p" named with
       | _, ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
@@ -633,13 +649,13 @@ let tests = "require" >::: [
     let source = "export {x, y as z}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 2 (SMap.cardinal named);
-      let x_loc = match SMap.find_unsafe "x" named with
+      assert_equal ~ctxt 2 (List.length named);
+      let x_loc = match List.assoc "x" named with
       | _, ExportNamed { loc; kind = NamedSpecifier ({local = (x_loc, "x"); source = None }) } when
           x_loc = loc -> loc
       | _ -> assert_failure "Unexpected export"
       in
-      let y_loc, z_loc = match SMap.find_unsafe "z" named with
+      let y_loc, z_loc = match List.assoc "z" named with
       | _, ExportNamed { loc; kind = NamedSpecifier ({local = (y_loc, "y"); source = None }) } -> y_loc, loc
       | _ -> assert_failure "Unexpected export"
       in
@@ -668,7 +684,7 @@ let tests = "require" >::: [
     }) in
     let {module_sig = {module_kind; _}; _} = visit ~parse_options source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "ns" named in
+      let export = assert_singleton_assoc ~ctxt "ns" named in
       match export with
       | _, ExportNs { loc; source = (source_loc, "foo"); _ } ->
         assert_substring_equal ~ctxt "ns" source loc;
@@ -681,14 +697,14 @@ let tests = "require" >::: [
     let source = "declare module.exports: ty" in
     let {module_sig = {module_kind; _}; _} = visit source in
     (* TODO use just the `module.exports` location *)
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 26)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 26)))
   end;
 
   "declare_export_default" >:: begin fun ctxt ->
     let source = "declare export default string" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "default" named in
+      let export = assert_singleton_assoc ~ctxt "default" named in
       match export with
       | _, ExportDefault { default_loc; local = None } ->
         assert_substring_equal ~ctxt "default" source default_loc
@@ -700,7 +716,7 @@ let tests = "require" >::: [
     let source = "declare export default function foo(): void" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "default" named in
+      let export = assert_singleton_assoc ~ctxt "default" named in
       match export with
       | _, ExportDefault { default_loc; local = Some (loc, "foo") } ->
         assert_substring_equal ~ctxt "default" source default_loc;
@@ -713,8 +729,7 @@ let tests = "require" >::: [
     let source = "declare export default class C {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 1 (SMap.cardinal named);
-      let export = assert_singleton_smap ~ctxt "default" named in
+      let export = assert_singleton_assoc ~ctxt "default" named in
       match export with
       | _, ExportDefault { default_loc; local = Some (loc, "C") } ->
         assert_substring_equal ~ctxt "default" source default_loc;
@@ -727,7 +742,7 @@ let tests = "require" >::: [
     let source = "declare export function foo(): void" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "foo" named in
+      let export = assert_singleton_assoc ~ctxt "foo" named in
       match export with
       | _, ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "foo" source loc;
@@ -739,7 +754,7 @@ let tests = "require" >::: [
     let source = "declare export class C {}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "C" named in
+      let export = assert_singleton_assoc ~ctxt "C" named in
       match export with
       | _, ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "C" source loc;
@@ -751,7 +766,7 @@ let tests = "require" >::: [
     let source = "declare export var foo: string" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      let export = assert_singleton_smap ~ctxt "foo" named in
+      let export = assert_singleton_assoc ~ctxt "foo" named in
       match export with
       | _, ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "foo" source loc;
@@ -763,13 +778,13 @@ let tests = "require" >::: [
     let source = "declare export {x, y as z}" in
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 2 (SMap.cardinal named);
-      let x_loc = match SMap.find_unsafe "x" named with
+      assert_equal ~ctxt 2 (List.length named);
+      let x_loc = match List.assoc "x" named with
       | _, ExportNamed { loc; kind = NamedSpecifier ({ local = (x_loc, "x"); source = None }) }
           when x_loc = loc -> loc
       | _ -> assert_failure "Unexpected export"
       in
-      let y_loc, z_loc = match SMap.find_unsafe "z" named with
+      let y_loc, z_loc = match List.assoc "z" named with
       | _, ExportNamed { loc; kind = NamedSpecifier ({ local = (y_loc, "y"); source = None }) } -> y_loc, loc
       | _ -> assert_failure "Unexpected export"
       in
@@ -798,8 +813,8 @@ let tests = "require" >::: [
     }) in
     let {module_sig = {module_kind; _}; _} = visit ~parse_options source in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 1 (SMap.cardinal named);
-      let loc, source_loc = match SMap.find_unsafe "ns" named with
+      assert_equal ~ctxt 1 (List.length named);
+      let loc, source_loc = match List.assoc "ns" named with
       | _, ExportNs { loc; source = (source_loc, "foo"); _ } -> loc, source_loc
       | _ -> assert_failure "Unexpected export"
       in
@@ -817,8 +832,8 @@ let tests = "require" >::: [
       SMap.find_unsafe "foo" modules in
     assert_substring_equal ~ctxt source source loc;
     assert_equal ~ctxt 0 (List.length requires);
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt None);
-    assert_equal ~ctxt 0 (SMap.cardinal type_exports_named);
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None);
+    assert_equal ~ctxt 0 (List.length type_exports_named);
     assert_equal ~ctxt 0 (List.length type_exports_star);
   end;
 
@@ -828,8 +843,8 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { type_exports_named; _ } =
       SMap.find_unsafe "foo" declare_modules in
-    assert_equal ~ctxt 1 (SMap.cardinal type_exports_named);
-    let loc = match SMap.find_unsafe "bar" type_exports_named with
+    assert_equal ~ctxt 1 (List.length type_exports_named);
+    let loc = match List.assoc "bar" type_exports_named with
     | _, TypeExportNamed { loc; kind = NamedDeclaration } -> loc
     | _ -> assert_failure "Unexpected type export"
     in
@@ -842,8 +857,8 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 1 (SMap.cardinal named);
-      match SMap.find_unsafe "default" named with
+      assert_equal ~ctxt 1 (List.length named);
+      match List.assoc "default" named with
       | _, ExportDefault { default_loc; local = None } ->
         assert_substring_equal ~ctxt "default" source default_loc
       | _ -> assert_failure "Unexpected export"
@@ -856,8 +871,8 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 1 (SMap.cardinal named);
-      match SMap.find_unsafe "default" named with
+      assert_equal ~ctxt 1 (List.length named);
+      match List.assoc "default" named with
       | _, ExportDefault { default_loc; local = Some (loc, "bar") } ->
         assert_substring_equal ~ctxt "default" source default_loc;
         assert_substring_equal ~ctxt "bar" source loc
@@ -871,8 +886,8 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
     assert_es module_kind ~assert_named:(fun named ->
-      assert_equal ~ctxt 1 (SMap.cardinal named);
-      let loc = match SMap.find_unsafe "bar" named with
+      assert_equal ~ctxt 1 (List.length named);
+      let loc = match List.assoc "bar" named with
       | _, ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
@@ -899,7 +914,7 @@ let tests = "require" >::: [
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
     (* TODO use o0nly the location of `module.exports` *)
-    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (21, 47)))
+    assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (21, 47)))
   end;
 
   "err_indeterminate_clobber_after_export" >:: begin fun ctxt ->

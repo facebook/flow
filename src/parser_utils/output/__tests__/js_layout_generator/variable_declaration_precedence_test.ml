@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,10 +19,10 @@ let test ctxt =
     L.(loc (fused [
       loc (fused [
         atom "var"; atom " ";
-        loc (fused (
-          [loc (id "x"); pretty_space; atom "="; pretty_space] @
-          wrap_in_parens_raw (expression seq)
-        ));
+        loc (fused [
+          loc (id "x"); pretty_space; atom "="; pretty_space;
+          wrap_in_parens (expression seq);
+        ]);
       ]);
       atom ";";
     ]))

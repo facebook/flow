@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,7 +24,8 @@ type 'a logger_fn =
   ('a, unit, string, unit) format4 ->
   'a
 
-type 'a logger_noexn_fn =
+type 'a logger_fn_s =
+  ?exn : Exception.t ->
   ('a, unit, string, unit) format4 ->
   'a
 
@@ -50,11 +51,9 @@ module WriteLoop = LwtLoop.Make (struct
   (* If we failed to write to an fd throw an exception and exit. I'm not 100% sure this is the
    * best behavior - should logging errors cause the monitor (and server) to crash? *)
   let catch _ exn =
-    Printf.eprintf
-      "Logger.WriteLoop exception:\n%s\n%s"
-      (Printexc.to_string exn)
-      (Printexc.get_backtrace ());
-    raise exn
+    let exn = Exception.wrap exn in
+    Printf.eprintf "Logger.WriteLoop exception:\n%s" (Exception.to_string exn);
+    Exception.reraise exn
 end)
 
 let initialized = ref false
@@ -87,7 +86,7 @@ let init_logger log_fd =
   (* Format the messages and write the to the log and stderr *)
   let output section level messages =
     let buffer = Buffer.create 42 in
-    let formatted_messages = List.map (fun message ->
+    let formatted_messages = Core_list.map ~f:(fun message ->
       Buffer.clear buffer;
       Lwt_log.render ~buffer ~template ~section ~level ~message;
       Buffer.add_char buffer '\n';

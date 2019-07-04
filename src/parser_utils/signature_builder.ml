@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,6 +13,8 @@ module Entry = Signature_builder_entry
 module Env = Signature_builder_env
 module V = Signature_builder_verify.Verifier
 module G = Signature_builder_generate.Generator
+module Signature_builder_deps = Signature_builder_deps.With_Loc
+module File_sig = File_sig.With_Loc
 
 module Signature = struct
   type t = Env.t * File_sig.exports_info File_sig.t'
@@ -28,6 +30,9 @@ module Signature = struct
 
   let add_function_declaration env loc function_declaration =
     add_env env (Entry.function_declaration loc function_declaration)
+
+  let add_function_expression env loc function_expression =
+    add_env env (Entry.function_expression loc function_expression)
 
   let add_class env loc class_ =
     add_env env (Entry.class_ loc class_)
@@ -69,7 +74,7 @@ module Signature = struct
       add_class env loc class_
     | Declaration _ -> assert false
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-      add_function_declaration env loc function_
+      add_function_expression env loc function_
     | Expression _ -> assert false (* TODO: class? *)
   )
 
@@ -107,6 +112,7 @@ module Signature = struct
     | _, DeclareModule _
     | _, DeclareModuleExports _
     | _, Empty
+    | _, EnumDeclaration _ (* TODO(T44736715) Support enums in signature builder/verifier/etc. *)
     | _, Expression _
     | _, Break _
     | _, Continue _
@@ -119,9 +125,13 @@ module Signature = struct
 
   let add_export_value_bindings named named_infos env =
     let open File_sig in
-    SMap.fold (fun n export_def env ->
-      let export = SMap.find n named in
-      let _, export = export in
+    let named = List.filter (function
+      | _, (_, ExportNamed { kind = NamedSpecifier _; _ })
+      | _, (_, ExportNs _)
+        -> false
+      | _, (_, _) -> true
+    ) named in
+    List.fold_left2 (fun env (_n, (_, export)) export_def ->
       match export, export_def with
         | ExportDefault { local; _ }, DeclareExportDef declare_export_declaration ->
           begin match local with
@@ -144,13 +154,15 @@ module Signature = struct
             | NamedSpecifier _ -> assert false
           end
         | _ -> assert false
-    ) named_infos env
+    ) env named named_infos
 
   let add_export_type_bindings type_named type_named_infos env =
     let open File_sig in
-    SMap.fold (fun n export_def env ->
-      let export = SMap.find n type_named in
-      let _, export = export in
+    let type_named = List.filter (function
+      | _, (_, TypeExportNamed { kind = NamedSpecifier _; _ }) -> false
+      | _, (_, _) -> true
+    ) type_named in
+    List.fold_left2 (fun env (_n, (_, export)) export_def ->
       match export, export_def with
         | TypeExportNamed { kind; _ }, DeclareExportDef declare_export_declaration ->
           begin match kind with
@@ -163,27 +175,32 @@ module Signature = struct
             | NamedSpecifier _ -> assert false
           end
         | _ -> assert false
-    ) type_named_infos env
+    ) env type_named type_named_infos
 
-  let add_named_imports import_loc ?(filter=(fun _ -> true)) source kind named_imports env =
+  let add_named_imports import_loc source kind named_imports env =
     SMap.fold (fun remote ids env ->
       SMap.fold (fun local locs env ->
         Nel.fold_left (fun env { File_sig.remote_loc; local_loc } ->
-          let id = local_loc, local in
+          let id = Flow_ast_utils.ident_of_source (local_loc, local) in
           let name = remote_loc, remote in
-          if filter id then add_env env (Entry.import_named import_loc id name kind source) else env
+          add_env env (Entry.import_named import_loc id name kind source)
         ) env locs
       ) ids env
     ) named_imports env
 
-  let add_require_bindings toplevel_names require_loc source require_bindings env =
+  let rec add_require_bindings toplevel_names require_loc source ?name require_bindings env =
     let filter (_, x) = SSet.mem x toplevel_names in
     let open File_sig in
     match require_bindings with
-      | BindIdent id -> if filter id then add_env env (Entry.require require_loc id source) else env
-      | BindNamed named_imports ->
-        let kind = Ast.Statement.ImportDeclaration.ImportValue in
-        add_named_imports require_loc ~filter source kind named_imports env
+      | BindIdent id ->
+        if filter id then add_env env (Entry.require require_loc (Flow_ast_utils.ident_of_source id) ?name source) else env
+      | BindNamed named_requires ->
+        List.fold_left (fun env (remote, require_bindings) ->
+          let name = match name with
+            | None -> Nel.one remote
+            | Some name -> Nel.cons remote name in
+          add_require_bindings toplevel_names require_loc source ~name require_bindings env
+        ) env named_requires
 
   let add_ns_imports import_loc source kind ns_imports env =
     match ns_imports with
@@ -216,40 +233,56 @@ module Signature = struct
       | Import { import_loc; source; named; ns; types; typesof; typesof_ns } ->
         let open Ast.Statement.ImportDeclaration in
         let env = add_named_imports import_loc source ImportValue named env in
-        let env = add_ns_imports import_loc source ImportValue ns env in
+        let env = add_ns_imports import_loc source ImportValue (Option.map ~f:Flow_ast_utils.ident_of_source ns) env in
         let env = add_named_imports import_loc source ImportType types env in
         let env = add_named_imports import_loc source ImportTypeof typesof env in
-        add_ns_imports import_loc source ImportTypeof typesof_ns env
+        add_ns_imports import_loc source ImportTypeof (Option.map ~f:Flow_ast_utils.ident_of_source typesof_ns) env
       | _ -> env
     ) env imports_info in
     env, file_sig
 
-  let verify ?(prevent_munge=false) ?(ignore_static_propTypes=false) (env, file_sig) =
+  let verify ?(prevent_munge=false) ?(facebook_fbt=None)
+        ?(ignore_static_propTypes=false) ?(facebook_keyMirror=false)
+        (env, file_sig) =
     let module Verify = V(struct
       let prevent_munge = prevent_munge
+      let facebook_fbt = facebook_fbt
       let ignore_static_propTypes = ignore_static_propTypes
+      let facebook_keyMirror = facebook_keyMirror
     end) in
     Verify.check env file_sig @@ Verify.exports file_sig
 
-  let verify_and_generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) (env, file_sig) program =
-    let errors, _, env = verify ~prevent_munge ~ignore_static_propTypes (env, file_sig) in
-    if Signature_builder_deps.ErrorSet.is_empty errors then
-      let module Generate = G(struct
-        let prevent_munge = prevent_munge
-        let ignore_static_propTypes = ignore_static_propTypes
-      end) in
-      try Ok (Generate.make env file_sig program)
-      with _ ->
-        let program_loc, _, _ = program in
-        Error (Signature_builder_deps.ErrorSet.singleton (
-          Signature_builder_deps.Error.TODO ("signature generation failed", program_loc)
-        ))
+  let generate ?(prevent_munge=false) ?(facebook_fbt=None)
+        ?(ignore_static_propTypes=false) ?(facebook_keyMirror=false)
+        (env, file_sig) program =
+    let module Generate = G(struct
+      let prevent_munge = prevent_munge
+      let facebook_fbt = facebook_fbt
+      let ignore_static_propTypes = ignore_static_propTypes
+      let facebook_keyMirror = facebook_keyMirror
+    end) in
+    Generate.make env file_sig program
+
+  let verify_and_generate ?(prevent_munge=false) ?(facebook_fbt=None)
+        ?(ignore_static_propTypes=false) ?(facebook_keyMirror=false)
+        (env, file_sig) program =
+    let errors, _, pruned_env =
+      verify ~prevent_munge ~facebook_fbt
+        ~ignore_static_propTypes ~facebook_keyMirror
+        (env, file_sig) in
+    errors,
+    if Signature_builder_deps.PrintableErrorSet.is_empty errors then
+      generate ~prevent_munge ~facebook_fbt
+        ~ignore_static_propTypes ~facebook_keyMirror
+        (pruned_env, file_sig) program
     else
-      Error errors
+      generate ~prevent_munge ~facebook_fbt
+        ~ignore_static_propTypes ~facebook_keyMirror
+        (env, file_sig) program
 end
 
 class type_hoister = object(this)
-  inherit [Env.t] visitor ~init:Env.empty as super
+  inherit [Env.t, Loc.t] visitor ~init:Env.empty as super
 
   (* tracks the current block scope level; for now, this can only take on values 0 and 1 *)
   val mutable level = 0
@@ -269,6 +302,24 @@ class type_hoister = object(this)
         Entry.sketchy_toplevel loc id
     in
     this#update_acc (Env.add entry)
+
+  method private update_binding (x, id, expr) =
+    this#update_acc (fun env ->
+      match SMap.get x env with
+      | None -> env
+      | Some u ->
+        SMap.add x (Loc_collections.LocMap.map (function
+          | (loc, Signature_builder_kind.WithPropertiesDef def) ->
+            (loc, Signature_builder_kind.WithPropertiesDef { def with
+              properties = (id, expr)::def.properties
+            })
+          | (loc, base) ->
+            (loc, Signature_builder_kind.WithPropertiesDef {
+              base;
+              properties = [(id, expr)]
+            })
+        ) u) env
+    )
 
   method private add_binding_opt = function
     | None, _ -> ()
@@ -291,6 +342,7 @@ class type_hoister = object(this)
       | _, DeclareFunction _
       | _, ClassDeclaration _
       | _, DeclareClass _
+      | _, EnumDeclaration _
       | _, TypeAlias _
       | _, DeclareTypeAlias _
       | _, OpaqueType _
@@ -312,6 +364,18 @@ class type_hoister = object(this)
       | _, While _
         ->
         this#next (lazy (ignore @@ super#statement stmt));
+        stmt
+
+      | _, Expression {
+          Expression.expression = (_, Ast.Expression.Assignment { Ast.Expression.Assignment.
+            operator = None;
+            left = (_, Ast.Pattern.Expression (_, Ast.Expression.Member { Ast.Expression.Member.
+              _object = _, Ast.Expression.Identifier (_, { Ast.Identifier.name = x; _ });
+              property = Ast.Expression.Member.PropertyIdentifier id;
+            }));
+            right = expr;
+        }); _ } ->
+        this#update_binding (x, id, expr);
         stmt
 
       (* shortcut *)
@@ -338,6 +402,7 @@ class type_hoister = object(this)
     (* ignore block-scoped bindings and type bindings *)
     | _, ClassDeclaration _
     | _, DeclareClass _
+    | _, EnumDeclaration _
     | _, TypeAlias _
     | _, DeclareTypeAlias _
     | _, OpaqueType _
@@ -421,7 +486,7 @@ class type_hoister = object(this)
     this#add_binding (Entry.opaque_type loc otype);
     otype
 
-  method! interface_declaration loc (interface: (Loc.t, Loc.t) Ast.Statement.Interface.t) =
+  method! interface loc (interface: (Loc.t, Loc.t) Ast.Statement.Interface.t) =
     this#add_binding (Entry.interface loc interface);
     interface
 
@@ -431,12 +496,15 @@ class type_hoister = object(this)
 
 end
 
-let program program =
+let program program ~module_ref_prefix =
   let env =
     let hoist = new type_hoister in
     hoist#eval hoist#program program in
   let { File_sig.toplevel_names; exports_info } =
-    File_sig.program_with_toplevel_names_and_exports_info program in
+    File_sig.program_with_toplevel_names_and_exports_info
+    ~ast:program
+    ~module_ref_prefix
+  in
   match exports_info with
     | Ok exports_info -> Ok (Signature.mk env toplevel_names exports_info)
     | Error e -> Error e

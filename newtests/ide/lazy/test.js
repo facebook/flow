@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -1771,7 +1770,7 @@ export default suite(({
 
           Found 1 error
 
-          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          The Flow server is currently in IDE lazy mode and is only checking 3/4 files.
           To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,

@@ -1,0 +1,5 @@
+(library
+  (name file_content)
+  (wrapped false)
+  (libraries
+    utils_core))

@@ -47,8 +47,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:293:27
-   293|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:413:27
+   413|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +155,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:293:27
-   293|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:413:27
+   413|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -186,25 +186,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
                           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:271:26
+   <BUILTINS>/react.js:376:26
                                  v-
-   271|   declare export default {|
-   272|     +DOM: typeof DOM,
-   273|     +PropTypes: typeof PropTypes,
-   274|     +version: typeof version,
-   275|     +checkPropTypes: typeof checkPropTypes,
-   276|     +createClass: typeof createClass,
-   277|     +createContext: typeof createContext,
-   278|     +createElement: typeof createElement,
-   279|     +cloneElement: typeof cloneElement,
-   280|     +createFactory: typeof createFactory,
-   281|     +createRef: typeof createRef,
-   282|     +isValidElement: typeof isValidElement,
-   283|     +Component: typeof Component,
-   284|     +PureComponent: typeof PureComponent,
-   285|     +Fragment: typeof Fragment,
-   286|     +Children: typeof Children,
-   287|   |};
+   376|   declare export default {|
+   377|     +DOM: typeof DOM,
+   378|     +PropTypes: typeof PropTypes,
+   379|     +version: typeof version,
+   380|     +checkPropTypes: typeof checkPropTypes,
+   381|     +memo: typeof memo,
+   382|     +lazy: typeof lazy,
+   383|     +createClass: typeof createClass,
+   384|     +createContext: typeof createContext,
+   385|     +createElement: typeof createElement,
+   386|     +cloneElement: typeof cloneElement,
+   387|     +createFactory: typeof createFactory,
+   388|     +createRef: typeof createRef,
+   389|     +forwardRef: typeof forwardRef,
+   390|     +isValidElement: typeof isValidElement,
+      :
+   393|     +Fragment: typeof Fragment,
+   394|     +Children: typeof Children,
+   395|     +ConcurrentMode: typeof ConcurrentMode,
+   396|     +StrictMode: typeof StrictMode,
+   397|     +Suspense: typeof Suspense,
+   398|     +useContext: typeof useContext,
+   399|     +useState: typeof useState,
+   400|     +useReducer: typeof useReducer,
+   401|     +useRef: typeof useRef,
+   402|     +useEffect: typeof useEffect,
+   403|     +useLayoutEffect: typeof useLayoutEffect,
+   404|     +useCallback: typeof useCallback,
+   405|     +useMemo: typeof useMemo,
+   406|     +useImperativeHandle: typeof useImperativeHandle,
+   407|   |};
           -^ [1]
 
 
@@ -217,25 +231,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
              ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:271:26
+   <BUILTINS>/react.js:376:26
                                  v-
-   271|   declare export default {|
-   272|     +DOM: typeof DOM,
-   273|     +PropTypes: typeof PropTypes,
-   274|     +version: typeof version,
-   275|     +checkPropTypes: typeof checkPropTypes,
-   276|     +createClass: typeof createClass,
-   277|     +createContext: typeof createContext,
-   278|     +createElement: typeof createElement,
-   279|     +cloneElement: typeof cloneElement,
-   280|     +createFactory: typeof createFactory,
-   281|     +createRef: typeof createRef,
-   282|     +isValidElement: typeof isValidElement,
-   283|     +Component: typeof Component,
-   284|     +PureComponent: typeof PureComponent,
-   285|     +Fragment: typeof Fragment,
-   286|     +Children: typeof Children,
-   287|   |};
+   376|   declare export default {|
+   377|     +DOM: typeof DOM,
+   378|     +PropTypes: typeof PropTypes,
+   379|     +version: typeof version,
+   380|     +checkPropTypes: typeof checkPropTypes,
+   381|     +memo: typeof memo,
+   382|     +lazy: typeof lazy,
+   383|     +createClass: typeof createClass,
+   384|     +createContext: typeof createContext,
+   385|     +createElement: typeof createElement,
+   386|     +cloneElement: typeof cloneElement,
+   387|     +createFactory: typeof createFactory,
+   388|     +createRef: typeof createRef,
+   389|     +forwardRef: typeof forwardRef,
+   390|     +isValidElement: typeof isValidElement,
+      :
+   393|     +Fragment: typeof Fragment,
+   394|     +Children: typeof Children,
+   395|     +ConcurrentMode: typeof ConcurrentMode,
+   396|     +StrictMode: typeof StrictMode,
+   397|     +Suspense: typeof Suspense,
+   398|     +useContext: typeof useContext,
+   399|     +useState: typeof useState,
+   400|     +useReducer: typeof useReducer,
+   401|     +useRef: typeof useRef,
+   402|     +useEffect: typeof useEffect,
+   403|     +useLayoutEffect: typeof useLayoutEffect,
+   404|     +useCallback: typeof useCallback,
+   405|     +useMemo: typeof useMemo,
+   406|     +useImperativeHandle: typeof useImperativeHandle,
+   407|   |};
           -^ [1]
 
 
@@ -248,25 +276,39 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:271:26
+   <BUILTINS>/react.js:376:26
                                  v-
-   271|   declare export default {|
-   272|     +DOM: typeof DOM,
-   273|     +PropTypes: typeof PropTypes,
-   274|     +version: typeof version,
-   275|     +checkPropTypes: typeof checkPropTypes,
-   276|     +createClass: typeof createClass,
-   277|     +createContext: typeof createContext,
-   278|     +createElement: typeof createElement,
-   279|     +cloneElement: typeof cloneElement,
-   280|     +createFactory: typeof createFactory,
-   281|     +createRef: typeof createRef,
-   282|     +isValidElement: typeof isValidElement,
-   283|     +Component: typeof Component,
-   284|     +PureComponent: typeof PureComponent,
-   285|     +Fragment: typeof Fragment,
-   286|     +Children: typeof Children,
-   287|   |};
+   376|   declare export default {|
+   377|     +DOM: typeof DOM,
+   378|     +PropTypes: typeof PropTypes,
+   379|     +version: typeof version,
+   380|     +checkPropTypes: typeof checkPropTypes,
+   381|     +memo: typeof memo,
+   382|     +lazy: typeof lazy,
+   383|     +createClass: typeof createClass,
+   384|     +createContext: typeof createContext,
+   385|     +createElement: typeof createElement,
+   386|     +cloneElement: typeof cloneElement,
+   387|     +createFactory: typeof createFactory,
+   388|     +createRef: typeof createRef,
+   389|     +forwardRef: typeof forwardRef,
+   390|     +isValidElement: typeof isValidElement,
+      :
+   393|     +Fragment: typeof Fragment,
+   394|     +Children: typeof Children,
+   395|     +ConcurrentMode: typeof ConcurrentMode,
+   396|     +StrictMode: typeof StrictMode,
+   397|     +Suspense: typeof Suspense,
+   398|     +useContext: typeof useContext,
+   399|     +useState: typeof useState,
+   400|     +useReducer: typeof useReducer,
+   401|     +useRef: typeof useRef,
+   402|     +useEffect: typeof useEffect,
+   403|     +useLayoutEffect: typeof useLayoutEffect,
+   404|     +useCallback: typeof useCallback,
+   405|     +useMemo: typeof useMemo,
+   406|     +useImperativeHandle: typeof useImperativeHandle,
+   407|   |};
           -^ [1]
 
 

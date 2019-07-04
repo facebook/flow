@@ -31,19 +31,30 @@ let push t x =
     length = t.length + 1;
   }
 
-let pop t =
-  let t = match t.outgoing with
+let prepare_for_read t =
+  match t.outgoing with
     | [] -> { t with incoming = []; outgoing = List.rev t.incoming }
     | _ -> t
-  in
+
+let pop t =
+  let t = prepare_for_read t in
   match t.outgoing with
     | [] -> (None, t)
     | hd::tl -> (Some hd, { t with outgoing = tl; length = t.length - 1 })
+
+let peek t =
+  let t = prepare_for_read t in
+  match t.outgoing with
+    | [] -> (None, t)
+    | hd::_ -> (Some hd, t)
 
 let pop_unsafe t =
   match pop t with
     | (Some x, t) -> (x, t)
     | (None, _) -> raise Empty
+
+let exists t ~f =
+  (List.exists f t.outgoing) || (List.exists f t.incoming)
 
 let iter t ~f =
   List.iter f t.outgoing;

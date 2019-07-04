@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,7 +17,7 @@ open Parser_common
    a reversed list of errors and returns the list in forward order with dupes
    removed. This differs from a set because the original order is preserved. *)
 let filter_duplicate_errors =
-  let module ErrorSet = Set.Make(struct
+  let module PrintableErrorSet = Set.Make(struct
     type t = Loc.t * Error.t
     let compare (a_loc, a_error) (b_loc, b_error) =
       let loc = Loc.compare a_loc b_loc in
@@ -28,9 +28,9 @@ let filter_duplicate_errors =
   fun errs ->
     let errs = List.rev errs in
     let _, deduped = List.fold_left (fun (set, deduped) err ->
-      if ErrorSet.mem err set then (set, deduped)
-      else (ErrorSet.add err set, err::deduped)
-    ) (ErrorSet.empty, []) errs in
+      if PrintableErrorSet.mem err set then (set, deduped)
+      else (PrintableErrorSet.add err set, err::deduped)
+    ) (PrintableErrorSet.empty, []) errs in
     List.rev deduped
 
 module rec Parse : PARSER = struct
@@ -148,13 +148,14 @@ module rec Parse : PARSER = struct
     (* Remember kids, these look like statements but they're not
       * statements... (see section 13) *)
     | T_LET -> let_ env
-    | T_CONST -> var_or_const env
+    | T_CONST -> const env
     | _ when Peek.is_function env -> Declaration._function env
     | _ when Peek.is_class env -> class_declaration env decorators
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env
+    | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
     | _ -> statement env)
 
   and statement env =
@@ -164,7 +165,7 @@ module rec Parse : PARSER = struct
         Peek.loc env, Ast.Statement.Empty
     | T_SEMICOLON -> empty env
     | T_LCURLY -> block env
-    | T_VAR -> var_or_const env
+    | T_VAR -> var env
     | T_BREAK -> break env
     | T_CONTINUE -> continue env
     | T_DEBUGGER -> debugger env
@@ -252,10 +253,10 @@ module rec Parse : PARSER = struct
   and object_key = Object.key
   and class_declaration = Object.class_declaration
   and class_expression = Object.class_expression
-
   and is_assignable_lhs = Expression.is_assignable_lhs
+  and number = Expression.number
 
-  and assert_identifier_name_is_identifier ?restricted_error env (loc, name) =
+  and assert_identifier_name_is_identifier ?restricted_error env (loc, { Ast.Identifier.name; comments= _ }) =
     match name with
     | "let" ->
       (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
@@ -342,6 +343,20 @@ let do_parse env parser fail =
   if fail && error_list <> []
   then raise (Error.Error error_list);
   ast, error_list
+
+(* Makes the input parser expect EOF at the end. Use this to error on trailing
+ * junk when parsing non-Program nodes. *)
+let with_eof parser =
+  fun env ->
+    let ast = parser env in
+    Expect.token env T_EOF;
+    ast
+
+let parse_statement env fail =
+  do_parse env (with_eof Parse.statement_list_item) fail
+
+let parse_expression env fail =
+  do_parse env (with_eof Parse.expression) fail
 
 let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
   let env = init_env ~token_sink ~parse_options filename content in

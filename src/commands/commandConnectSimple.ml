@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,8 +12,14 @@ type busy_reason =
 | Not_responding
 | Fail_on_init of (ServerStatus.status * FileWatcherStatus.status)
 
+type mismatch_behavior =
+  (* The server exited due to the build id mismatch *)
+  | Server_exited
+  (* The server is still alive but the client should error *)
+  | Client_should_error of { server_bin: string; server_version: string; }
+
 type error =
-  | Build_id_mismatch
+  | Build_id_mismatch of mismatch_behavior
   | Server_busy of busy_reason
   | Server_missing
   | Server_socket_missing (* pre-server-monitor versions used a different socket *)
@@ -140,10 +146,9 @@ let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
     Error (Server_busy Too_many_clients)
   | ({server_intent = Server_will_hangup; _}, Some (Server_still_initializing status)) ->
     Error (Server_busy (Fail_on_init status))
-  | ({server_intent = Server_will_hangup; _}, None) ->
+  | ({server_intent = Server_will_hangup; server_bin; server_version; _}, None) ->
     if client1.client_build_id <> server1.server_build_id then
-      Error Build_id_mismatch
-      (* TODO(glevi) - let server survive, and have client exec a matching client. *)
+      Error (Build_id_mismatch (Client_should_error { server_bin; server_version; }))
     else
       failwith "Don't know why server closed the connection"
   | ({server_intent = Server_will_exit; _}, None) ->
@@ -151,7 +156,7 @@ let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
       Ok ()
     else
       (* either the build ids were different, or client1 wasn't valid for server *)
-      Error Build_id_mismatch
+      Error (Build_id_mismatch Server_exited)
   | _ ->
     failwith "Monitor sent incorrect handshake"
 
@@ -191,7 +196,8 @@ let busy_reason_to_string (busy_reason: busy_reason) : string =
 
 let error_to_string (error: error) : string =
   match error with
-  | Build_id_mismatch -> "Build_id_mismatch"
+  | Build_id_mismatch Server_exited -> "Build_id_mismatch(Server_exited)"
+  | Build_id_mismatch (Client_should_error _) -> "Build_id_mismatch(Client_should_error)"
   | Server_busy busy_reason -> "Server_busy(" ^ (busy_reason_to_string busy_reason) ^ ")"
   | Server_missing -> "Server_missing"
   | Server_socket_missing -> "Server_socket_missing"

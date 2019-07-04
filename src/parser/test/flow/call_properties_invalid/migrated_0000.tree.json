@@ -36,6 +36,7 @@
                 "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":2,"column":0}},
                 "range":[8,15],
                 "exact":false,
+                "inexact":false,
                 "properties":[],
                 "indexers":[],
                 "callProperties":[

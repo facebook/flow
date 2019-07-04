@@ -14,6 +14,8 @@
  *)
 type t [@@deriving show]
 
+val reset_global_state : unit -> unit
+
 (* Creates a line break map from/for the given string. *)
 val make : string -> t
 

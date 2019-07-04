@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:23:10
 
-Cannot call `f` because a callable signature is missing in object type [1].
+Cannot call `f` because a call signature declaring the expected parameter / return type is missing in object type [1].
 
    A.js:23:10
    23|   return f();
@@ -59,7 +59,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:29:10
 
-Cannot call `x` because a callable signature is missing in object literal [1].
+Cannot call `x` because a call signature declaring the expected parameter / return type is missing in object
+literal [1].
 
    A.js:29:10
    29|   return x();
@@ -175,7 +176,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:23:10
 
-Cannot return `x` because a callable signature is missing in object type [1] but exists in function type [2].
+Cannot return `x` because a call signature declaring the expected parameter / return type is missing in object type [1]
+but exists in function type [2].
 
    C.js:23:10
    23|   return x;
@@ -188,23 +190,6 @@ References:
    C.js:22:20
    22| function e(x: {}): () => string {
                           ^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------- C.js:33:10
-
-Cannot return `x` because a callable signature is missing in object type [1] but exists in function type [2].
-
-   C.js:33:10
-   33|   return x; // error
-                ^
-
-References:
-   C.js:32:15
-   32| function g(x: {}): Function {
-                     ^^ [1]
-   C.js:32:20
-   32| function g(x: {}): Function {
-                          ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- D.js:12:3
@@ -226,7 +211,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
-Cannot return `x` because string [1] is incompatible with number [2] in the return value of the callable signature.
+Cannot return `x` because string [1] is incompatible with number [2] in the return value.
 
    D.js:21:10
    21|   return x;
@@ -291,7 +276,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- G.js:5:1
 
-Cannot call `o` because a callable signature is missing in `Object.create` [1].
+Cannot call `o` because a call signature declaring the expected parameter / return type is missing in
+`Object.create` [1].
 
    G.js:5:1
    5| o(); // error: o is not callable
@@ -303,33 +289,12 @@ References:
               ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ deprecated.js:2:3
-
-Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
-
-   2|   $call: () => void;
-        ^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ deprecated.js:6:3
-
-Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
-
-   6|   $call: () => void;
-        ^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- deprecated.js:10:3
-
-Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
-
-   10|   $call: () => void;
-         ^^^^^
-
-
 Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
 
-Cannot cast object literal to `O` because a callable signature is missing in object literal [1] but exists in `O` [2].
+Cannot cast object literal to `O` because:
+ - object literal [1] is incompatible with function prototype [2].
+ - a call signature declaring the expected parameter / return type is missing in object literal [1] but exists in
+   `O` [2].
 
    internal_slot.js:5:2
    5| ({}: O); // err: no callable property
@@ -360,7 +325,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:13:2
 
-Cannot cast object literal to `I` because a callable signature is missing in object literal [1] but exists in `I` [2].
+Cannot cast object literal to `I` because a call signature declaring the expected parameter / return type is missing in
+object literal [1] but exists in `I` [2].
 
    internal_slot.js:13:2
    13| ({}: I); // err: no callable property
@@ -453,8 +419,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
-Cannot cast `a` to `B` because a callable signature is missing in object type [1] but exists in function type [2] in
-property `p`.
+Cannot cast `a` to `B` because a call signature declaring the expected parameter / return type is missing in object
+type [1] but exists in function type [2] in property `p`.
 
    use_ops.js:4:2
    4| (a: B); // error HERE and preserve use ops
@@ -470,7 +436,7 @@ References:
 
 
 
-Found 31 errors
+Found 28 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

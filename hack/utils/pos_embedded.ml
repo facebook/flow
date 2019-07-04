@@ -13,6 +13,7 @@ type b = Pos_source.t
 (* Note: While Pos.string and Pos.info_pos return positions as closed intervals,
  * pos_start and pos_end actually form a half-open interval (i.e. pos_end points
  * to the character *after* the last character of the relevant lexeme.) *)
+[@@@warning "-32"]
 type 'a pos =
 | Pos_small of {
   pos_file: 'a ;
@@ -28,6 +29,7 @@ type 'a pos =
 type t = Relative_path.t pos [@@deriving show]
 
 type absolute = string pos [@@deriving show]
+[@@@warning "+32"]
 
 let none = Pos_small {
   pos_file = Relative_path.default ;
@@ -159,6 +161,11 @@ let json pos =
     "char_end",   Hh_json.int_ end_;
   ]
 
+(*
+ * !!! Be careful !!!
+ * This method returns zero-based column numbers, but one-based line numbers.
+ * Consider using info_pos instead.
+ *)
 let line_column p =
   match p with
   | Pos_small { pos_start; _ } -> File_pos_small.line_column pos_start
@@ -195,10 +202,11 @@ let contains pos_container pos =
     pend <= cend
 
 let overlaps pos1 pos2 =
-  let _start1, end1 = info_raw pos1 in
-  let start2, _end2 = info_raw pos2 in
+  let start1, end1 = info_raw pos1 in
+  let start2, end2 = info_raw pos2 in
   filename pos1 = filename pos2 &&
-  end1 > start2
+  end1 > start2 &&
+  start1 < end2
 
 let make_from_lexing_pos pos_file pos_start pos_end =
   match File_pos_small.of_lexing_pos pos_start, File_pos_small.of_lexing_pos pos_end with
@@ -356,6 +364,55 @@ let destruct_range (p : 'a pos) : (int * int * int * int) =
   let line_end,   col_end_minus1   = end_line_column p in
   line_start, col_start_minus1 + 1,
   line_end,   col_end_minus1 + 1
+
+let advance_one (p : 'a pos): 'a pos =
+  match p with
+  | Pos_small { pos_file; pos_start; pos_end } ->
+    Pos_small {
+      pos_file;
+      pos_start;
+      pos_end =
+        let column = File_pos_small.column pos_end in
+        File_pos_small.set_column (column + 1) pos_end
+    }
+  | Pos_large { pos_file; pos_start; pos_end } ->
+    Pos_large {
+      pos_file;
+      pos_start;
+      pos_end =
+        let column = File_pos_large.column pos_end in
+        File_pos_large.set_column (column + 1) pos_end
+    }
+
+(* This function is used when we have captured a position that includes
+ * outside boundary characters like apostrophes.  If we need to remove these
+ * apostrophes, this function shrinks by one character in each direction. *)
+let shrink_by_one_char_both_sides (p : 'a pos): 'a pos =
+  match p with
+  | Pos_small { pos_file; pos_start; pos_end } ->
+    let new_pos_start =
+      (let column = File_pos_small.column pos_start in
+      File_pos_small.set_column (column + 1) pos_start) in
+    let new_pos_end =
+      (let column = File_pos_small.column pos_end in
+      File_pos_small.set_column (column - 1) pos_end) in
+    Pos_small {
+      pos_file;
+      pos_start = new_pos_start;
+      pos_end = new_pos_end;
+    }
+  | Pos_large { pos_file; pos_start; pos_end } ->
+    let new_pos_start =
+      (let column = File_pos_large.column pos_start in
+      File_pos_large.set_column (column + 1) pos_start) in
+    let new_pos_end =
+      (let column = File_pos_large.column pos_end in
+      File_pos_large.set_column (column - 1) pos_end) in
+    Pos_large {
+      pos_file;
+      pos_start = new_pos_start;
+      pos_end = new_pos_end;
+    }
 
 (* This returns a half-open interval. *)
 let multiline_string t =

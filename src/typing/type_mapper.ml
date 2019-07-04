@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,26 +17,46 @@ let maybe_known f x =
     | Unknown x -> Unknown x
   end
 
+let unwrap_type =
+  let rec unwrap seen cx t =
+  match t with
+  | OpenT (_, id) ->
+    if ISet.mem id !seen then t
+    else begin
+      seen := ISet.add id !seen;
+      let open Constraint in
+      match Context.find_graph cx id with
+      | Resolved t' | FullyResolved t' -> unwrap seen cx t'
+      | Unresolved _ -> t
+    end
+  | AnnotT (_, t, _)
+  | ReposT (_, t) -> unwrap seen cx t
+  | t -> t in
+  fun cx -> unwrap (ref ISet.empty) cx
+
 (* NOTE: While union flattening could be performed at any time, it is most effective when we know
    that all tvars have been resolved. *)
 let union_flatten =
-  let rec union_flatten cx seen ts =
-    List.flatten @@ List.map (flatten cx seen) ts
+  let rec union_flatten cx seen ts = Core_list.(ts >>= flatten cx seen)
   and flatten cx seen t = match t with
     | OpenT (_, id) ->
       if ISet.mem id !seen then []
       else begin
         seen := ISet.add id !seen;
+        let open Constraint in
         match Context.find_graph cx id with
-        | Constraint.Resolved t' -> flatten cx seen t'
-        | _ -> [t]
+        | Resolved t' | FullyResolved t' -> flatten cx seen t'
+        | Unresolved _ -> [t]
       end
     | AnnotT (_, t, _) -> flatten cx seen t
     | ReposT (_, t) -> flatten cx seen t
-    | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
-    | DefT (r, MaybeT t) -> (DefT (r, NullT))::(DefT (r, VoidT))::(flatten cx seen t)
-    | DefT (r, OptionalT t) -> (DefT (r, VoidT))::(flatten cx seen t)
-    | DefT (_, EmptyT) -> []
+    | UnionT (_, rep) -> union_flatten cx seen @@ UnionRep.members rep
+    | MaybeT (r, t) ->
+      (DefT (r, Trust.bogus_trust (), NullT))::(DefT (r,  Trust.bogus_trust (), VoidT))::
+        (flatten cx seen t)
+    | OptionalT (r, t) ->
+      (DefT (r,  Trust.bogus_trust (), VoidT))::(flatten cx seen t)
+    | DefT (_, _, EmptyT _) -> []
     | _ -> [t]
   in
   fun cx ts -> union_flatten cx (ref ISet.empty) ts
@@ -52,9 +72,9 @@ class virtual ['a] t = object(self)
       | OpenT (r, id) ->
           let id' = self#tvar cx map_cx r id in
           if id' == id then t else OpenT (r, id')
-      | DefT (r, t') ->
+      | DefT (r, trust, t') ->
           let t'' = self#def_type cx map_cx t' in
-          if t' == t'' then t else DefT (r, t'')
+          if t' == t'' then t else DefT (r, trust, t'')
       | EvalT (t', dt, id) ->
           let t'' = self#type_ cx map_cx t' in
           let dt' = self#defer_use_type cx map_cx dt in
@@ -73,6 +93,11 @@ class virtual ['a] t = object(self)
           let tlist_opt' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tlist_opt in
           if t1' == t1 && t2' == t2 && tlist_opt' == tlist_opt then t
           else ThisTypeAppT(r, t1', t2', tlist_opt')
+      | TypeAppT (r, op, t', ts) ->
+          let t'' = self#type_ cx map_cx t' in
+          let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
+          if t' == t'' && ts == ts' then t
+          else TypeAppT (r, op, t'', ts')
       | ExactT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -157,7 +182,24 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else InternalT (ReposUpperT (r, t''))
+      | AnyT _ -> t
       | InternalT (OptionalChainVoidT _) -> t
+      | OptionalT (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else OptionalT (r, t'')
+      | MaybeT (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else MaybeT (r, t'')
+      | IntersectionT (r, irep) ->
+          let irep' = InterRep.ident_map (self#type_ cx map_cx) irep in
+          if irep == irep' then t
+          else IntersectionT (r, irep')
+      | UnionT (r, urep) ->
+          let urep' = UnionRep.ident_map (self#type_ cx map_cx) urep in
+          if urep' == urep then t
+          else UnionT (r, urep')
 
   method virtual tvar: Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
 
@@ -174,7 +216,7 @@ class virtual ['a] t = object(self)
       | NumT _
       | StrT _
       | BoolT _
-      | EmptyT
+      | EmptyT _
       | MixedT _
       | NullT
       | VoidT -> t
@@ -211,46 +253,28 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else TypeT (s, t'')
-      | AnyT -> t
-      | OptionalT t' ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else OptionalT t''
       | PolyT (tparams_loc, tparamlist, t', _) ->
           let tparamlist' = Nel.ident_map (self#type_param cx map_cx) tparamlist in
           let t'' = self#type_ cx map_cx t' in
           if tparamlist == tparamlist' && t' == t'' then t
-          else PolyT (tparams_loc, tparamlist', t'', Reason.mk_id ())
-      | TypeAppT (op, t', ts) ->
-          let t'' = self#type_ cx map_cx t' in
-          let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
-          if t' == t'' && ts == ts' then t
-          else TypeAppT (op, t'', ts')
-      | MaybeT t' ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else MaybeT t''
-      | IntersectionT irep ->
-          let irep' = InterRep.ident_map (self#type_ cx map_cx) irep in
-          if irep == irep' then t
-          else IntersectionT irep'
-      | UnionT urep ->
-          let urep' = UnionRep.ident_map (self#type_ cx map_cx) urep in
-          if urep' == urep then t
-          else UnionT urep'
-      | AnyObjT
-      | AnyFunT -> t
+          else PolyT (tparams_loc, tparamlist', t'', Context.make_nominal cx)
       | IdxWrapper t' ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t
           else IdxWrapper t''
+      | ReactAbstractComponentT {config; instance} ->
+          let config' = self#type_ cx map_cx config in
+          let instance' = self#type_ cx map_cx instance in
+          if config' == config && instance' == instance
+          then t
+          else ReactAbstractComponentT {config = config'; instance = instance'}
 
   method defer_use_type cx map_cx t =
     match t with
-    | DestructuringT (r, s) ->
-        let s' = self#selector cx map_cx s in
-        if s' == s then t
-        else DestructuringT (r, s')
+    | LatentPredT (r, p) ->
+      let p' = self#predicate cx map_cx p in
+      if p' == p then t
+      else LatentPredT (r, p')
     | TypeDestructorT (u, r, d) ->
         let d' = self#destructor cx map_cx d in
         if d == d' then t
@@ -351,12 +375,7 @@ class virtual ['a] t = object(self)
           else Elem t''
       | ObjRest _
       | ArrRest _
-      | Default
-      | Become -> t
-      | Refine p ->
-          let p' = self#predicate cx map_cx p in
-          if p' == p then t
-          else Refine p'
+      | Default -> t
 
   method destructor cx map_cx t =
     match t with
@@ -388,6 +407,10 @@ class virtual ['a] t = object(self)
           let tmap' = self#type_map cx map_cx tmap in
           if tmap' == tmap then t
           else TypeMap tmap'
+      | ReactConfigType default_props ->
+          let default_props' = self#type_ cx map_cx default_props in
+          if default_props' == default_props then t
+          else ReactConfigType default_props'
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType
@@ -477,7 +500,7 @@ class virtual ['a] t = object(self)
       t.upper <- upper';
     t
 
-  method virtual use_type: Context.t -> 'a -> Type.UseTypeMap.key -> Type.UseTypeMap.key
+  method virtual use_type: Context.t -> 'a -> Type.use_t -> Type.use_t
 
   method predicate cx map_cx p =
     match p with
@@ -514,6 +537,7 @@ class virtual ['a] t = object(self)
     | NumP
     | ObjP
     | StrP
+    | SymbolP
     | VoidP
     | ArrP
     | PropExistsP _ -> p
@@ -521,14 +545,6 @@ class virtual ['a] t = object(self)
         let t' = self#type_ cx map_cx t in
         if t' == t then p
         else LatentP (t', i)
-
-  method private read_write cx map_cx rw =
-    match rw with
-    | Read -> rw
-    | Write (wr_ctx, prop_t) ->
-      let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
-      if prop_t' == prop_t then rw
-      else Write (wr_ctx, prop_t')
 
   method type_map cx map_cx t =
     match t with
@@ -547,7 +563,7 @@ class virtual ['a] t = object(self)
 
   method virtual props: Context.t -> 'a -> Properties.id -> Properties.id
 
-  method virtual eval_id: Context.t -> 'a -> IMap.key -> IMap.key
+  method virtual eval_id: Context.t -> 'a -> int -> int
 
   method prop cx map_cx prop =
     match prop with
@@ -776,16 +792,16 @@ class virtual ['a] t_with_uses = object(self)
           let action' = self#lookup_action cx map_cx action in
           if lookup' == lookup && tlist' == tlist && prop' == prop && action' == action then t
           else LookupT (r, lookup', tlist', prop', action')
-      | ObjAssignToT (r, t1, t2, obj_assign) ->
+      | ObjAssignToT (op, r, t1, t2, obj_assign) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
-          else ObjAssignToT (r, t1', t2', obj_assign)
-      | ObjAssignFromT (r, t1, t2, obj_assign) ->
+          else ObjAssignToT (op, r, t1', t2', obj_assign)
+      | ObjAssignFromT (op, r, t1, t2, obj_assign) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
-          else ObjAssignFromT (r, t1', t2', obj_assign)
+          else ObjAssignFromT (op, r, t1', t2', obj_assign)
       | ObjFreezeT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -829,6 +845,14 @@ class virtual ['a] t_with_uses = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else GetValuesT (r, t'')
+      | ReactPropsToOut (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else ReactPropsToOut (r, t'')
+      | ReactInToProps (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else ReactInToProps (r, t'')
       | ElemT (use_op, r, t', action) ->
           let t'' = self#type_ cx map_cx t' in
           let action' = self#elem_action cx map_cx action in
@@ -878,7 +902,7 @@ class virtual ['a] t_with_uses = object(self)
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
           else CopyTypeExportsT (r, t1', t2')
-      | ExportNamedT (r, skip, tmap, t') ->
+      | ExportNamedT (r, skip, tmap, export_kind, t') ->
           let map_loc_type_pair ((loc, t) as orig) =
             let t' = self#type_ cx map_cx t in
             if t == t' then orig else (loc, t')
@@ -886,17 +910,21 @@ class virtual ['a] t_with_uses = object(self)
           let tmap' = SMap.ident_map map_loc_type_pair tmap in
           let t'' = self#type_ cx map_cx t' in
           if tmap' == tmap && t'' == t' then t
-          else ExportNamedT (r, skip, tmap', t'')
+          else ExportNamedT (r, skip, tmap', export_kind, t'')
       | ExportTypeT (r, skip, name, t1, t2) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
           else ExportTypeT (r, skip, name, t1', t2')
-      | MapTypeT (r, tmap, t') ->
+      | AssertExportIsTypeT (r, name, t1) ->
+          let t1' = self#type_ cx map_cx t1 in
+          if t1' == t1 then t
+          else AssertExportIsTypeT (r, name, t1')
+      | MapTypeT (use_op, r, tmap, t') ->
           let tmap' = self#type_map cx map_cx tmap in
           let t'' = self#type_ cx map_cx t' in
           if tmap' == tmap && t'' == t' then t
-          else MapTypeT (r, tmap', t'')
+          else MapTypeT (use_op, r, tmap', t'')
       | ReactKitT (use_op, r, react_tool) ->
           let react_tool' = self#react_tool cx map_cx react_tool in
           if react_tool' == react_tool then t
@@ -973,6 +1001,16 @@ class virtual ['a] t_with_uses = object(self)
         let t2' = self#type_ cx map_cx t2 in
         if tlist' == tlist && t1' == t1 && t2' == t2 then t
         else ExtendsUseT (use_op, r, tlist', t1', t2')
+      | ModuleExportsAssignT (r, t', t_out) ->
+        let t'' = self#type_ cx map_cx t' in
+        let t_out' = self#type_ cx map_cx t_out in
+        if t' == t'' && t_out == t_out' then t
+        else ModuleExportsAssignT (r, t'', t_out')
+      | DestructuringT (r, s, t') ->
+        let s' = self#selector cx map_cx s in
+        let t'' = self#type_ cx map_cx t' in
+        if s' == s && t'' == t' then t
+        else DestructuringT (r, s', t'')
 
     method private opt_use_type cx map_cx t = match t with
     | OptCallT (op, r, funcall) ->
@@ -1154,12 +1192,23 @@ class virtual ['a] t_with_uses = object(self)
 
   method lookup_action cx map_cx t =
     match t with
-    | RWProp (use_op, t1, t2, rw) ->
-        let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
-        let rw' = self#read_write cx map_cx rw in
-        if t1' == t1 && t2' == t2 && rw' == rw then t
-        else RWProp (use_op, t1', t2', rw')
+    | ReadProp { use_op; obj_t; tout } ->
+        let obj_t' = self#type_ cx map_cx obj_t in
+        let tout' = self#type_ cx map_cx tout in
+        if obj_t' == obj_t && tout' == tout then t
+        else ReadProp { use_op; obj_t =  obj_t'; tout = tout' }
+    | WriteProp { use_op; obj_t; prop_tout; tin; write_ctx } ->
+        let obj_t' = self#type_ cx map_cx obj_t in
+        let tin' = self#type_ cx map_cx tin in
+        let prop_tout' = OptionUtils.ident_map (self#type_ cx map_cx) prop_tout in
+        if obj_t' == obj_t && tin' == tin && prop_tout' == prop_tout then t
+        else WriteProp {
+          use_op;
+          obj_t = obj_t';
+          prop_tout = prop_tout';
+          tin = tin';
+          write_ctx;
+        }
     | LookupProp (use, prop) ->
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t
@@ -1211,6 +1260,10 @@ class virtual ['a] t_with_uses = object(self)
         children_spread' == children_spread &&
         tout' == tout
       ) then t else CreateElement (clone, component', config', (children', children_spread'), tout')
+    | ConfigCheck config ->
+      let config' = self#type_ cx map_cx config in
+      if config' == config then t
+      else ConfigCheck config'
     | GetProps tout ->
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t
@@ -1219,6 +1272,11 @@ class virtual ['a] t_with_uses = object(self)
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t
       else GetConfig tout'
+    | GetConfigType (default_props, tout) ->
+      let default_props' = self#type_ cx map_cx default_props in
+      let tout' = self#type_ cx map_cx tout in
+      if tout' == tout && default_props' == default_props then t
+      else GetConfigType (default_props', tout')
     | GetRef tout ->
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t
@@ -1253,6 +1311,7 @@ class virtual ['a] t_with_uses = object(self)
     let open Object in
     match tool with
     | ReadOnly -> tool
+    | ObjectRep -> tool
     | Spread (options, state) ->
       let open Object.Spread in
       let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) state.todo_rev in

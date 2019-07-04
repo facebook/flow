@@ -29,51 +29,6 @@ References:
                        ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- sanity-ordering.js:7:4
-
-Cannot cast `obj.page` to object type because null or undefined [1] is incompatible with object type [2].
-
-   sanity-ordering.js:7:4
-   7|   (obj.page: Object);
-         ^^^^^^^^
-
-References:
-   sanity-ordering.js:4:26
-   4| declare var obj: { page: ?Object; };
-                               ^^^^^^^ [1]
-   sanity-ordering.js:7:14
-   7|   (obj.page: Object);
-                   ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:12
-
-Cannot get `head[key]` because an indexer property is missing in undefined [1].
-
-   sanity-ordering.js:15:12
-   15|     head = head[key] || create && (head[key] = {});
-                  ^^^^^^^^^
-
-References:
-   sanity-ordering.js:6:5
-    6| if (dotAccess(obj)) {
-           ^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:36
-
-Cannot assign object literal to `head[key]` because an indexer property is missing in undefined [1].
-
-   sanity-ordering.js:15:36
-   15|     head = head[key] || create && (head[key] = {});
-                                          ^^^^^^^^^
-
-References:
-   sanity-ordering.js:6:5
-    6| if (dotAccess(obj)) {
-           ^^^^^^^^^^^^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:13:12
 
 Cannot return `x` because array type [1] is incompatible with string [2].
@@ -126,4 +81,4 @@ Invalid body for predicate function. Expected a simple return statement as body.
 
 
 
-Found 9 errors
+Found 6 errors

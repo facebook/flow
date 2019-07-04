@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,13 +9,14 @@ module Ast = Flow_ast
 
 module Kind = Signature_builder_kind
 
-type t = Loc.t Ast.Identifier.t * Kind.t
+type t = (Loc.t, Loc.t) Ast.Identifier.t * Kind.t
 
 let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
   let open Ast.Pattern in
   begin match p with
     | _, Identifier { Identifier.name; annot; _ } ->
       [name, (loc, Kind.VariableDef {
+        id = name;
         annot = Kind.Annot_path.mk_annot ?annot_path annot;
         init = init_path;
       })]
@@ -25,12 +26,12 @@ let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
       List.fold_left (fun acc -> function
         | Property (prop_loc, { Property.key; pattern = p; _ }) ->
           begin match key with
-            | Property.Identifier (key_loc, x) ->
-              let annot_path = Kind.Annot_path.mk_object ?annot_path x in
+            | Property.Identifier (key_loc, { Ast.Identifier.name= x; comments= _ }) ->
+              let annot_path = Kind.Annot_path.mk_object prop_loc ?annot_path (key_loc, x) in
               let init_path = Kind.Init_path.mk_object prop_loc ?init_path (key_loc, x) in
               acc @ (pattern loc ?annot_path ?init_path p)
             | Property.Literal (key_loc, { Ast.Literal.raw; _ }) ->
-              let annot_path = Kind.Annot_path.mk_object ?annot_path raw in
+              let annot_path = Kind.Annot_path.mk_object prop_loc ?annot_path (key_loc, raw) in
               let init_path = Kind.Init_path.mk_object prop_loc ?init_path (key_loc, raw) in
               acc @ (pattern loc ?annot_path ?init_path p)
             | Property.Computed _ ->
@@ -43,12 +44,11 @@ let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
       let open Array in
       List.fold_left (fun acc -> function
         | None -> acc
-        | Some (Element p) ->
+        | Some (Element (_, { Element.argument = p; default = _})) ->
           acc @ (pattern loc p)
         | Some (RestElement (_, { RestElement.argument = p })) ->
           acc @ (pattern loc p)
       ) [] elements
-    | _, Assignment { Assignment.left; _ } -> pattern loc ?annot_path ?init_path left
     | _, Expression _ -> [] (* TODO *)
   end
 
@@ -62,10 +62,19 @@ let variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclara
     acc @ (pattern loc ?init_path:(Kind.Init_path.mk_init init) id)
   ) [] declarations
 
-let function_declaration loc function_declaration =
-  let open Ast.Function in
-  let { id; generator; tparams; params; return; body; _ } = function_declaration in
-  Option.value_exn id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
+let function_declaration loc { Ast.Function.
+  id; generator; tparams; params; return; body; predicate; _
+} =
+  Option.value_exn id, (loc, Kind.FunctionDef {
+    generator; tparams; params; return; body; predicate
+  })
+
+let function_expression loc { Ast.Function.
+  id; generator; tparams; params; return; body; predicate; _
+} =
+  Option.value_exn id, (loc, Kind.FunctionDef {
+    generator; tparams; params; return; body; predicate
+  })
 
 let class_ loc class_ =
   let open Ast.Class in
@@ -81,12 +90,16 @@ let class_ loc class_ =
 let declare_variable loc declare_variable =
   let open Ast.Statement.DeclareVariable in
   let { id; annot } = declare_variable in
-  id, (loc, Kind.VariableDef { annot = Kind.Annot_path.mk_annot annot; init = None })
+  id, (loc, Kind.VariableDef {
+    id;
+    annot = Kind.Annot_path.mk_annot annot;
+    init = None
+  })
 
 let declare_function loc declare_function =
   let open Ast.Statement.DeclareFunction in
-  let { id; annot; _ } = declare_function in
-  id, (loc, Kind.DeclareFunctionDef { annot })
+  let { id; annot; predicate; _ } = declare_function in
+  id, (loc, Kind.DeclareFunctionDef { annot; predicate })
 
 let declare_class loc declare_class =
   let open Ast.Statement.DeclareClass in
@@ -118,8 +131,8 @@ let import_star loc id kind source =
 let import_named loc id name kind source =
   id, (loc, Kind.ImportNamedDef { kind; source; name })
 
-let require loc id source =
-  id, (loc, Kind.RequireDef { source })
+let require loc id ?name source =
+  id, (loc, Kind.RequireDef { source; name })
 
 let sketchy_toplevel loc id =
   id, (loc, Kind.SketchyToplevelDef)

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -46,7 +46,7 @@ type args = {
 }
 
 let force_recheck flowconfig_name (args:args) connect_flags =
-  let files = List.map get_path_of_file args.files in
+  let files = Core_list.map ~f:get_path_of_file args.files in
   let request = ServerProt.Request.FORCE_RECHECK {files; focus=args.focus; profile=args.profile} in
 
   let profiling = begin match connect_and_make_request flowconfig_name connect_flags args.root
@@ -79,9 +79,7 @@ let rec find_parent_that_exists path =
     else find_parent_that_exists newpath
   end
 
-let main base_flags connect_flags json pretty root from profile focus input_file files () =
-  FlowEventLogger.set_from from;
-
+let main base_flags connect_flags json pretty root profile focus input_file files () =
   begin match input_file, files with
   | None, (None | Some []) ->
     CommandSpec.usage spec;

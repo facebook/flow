@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,11 +9,13 @@
 open OUnit2
 open Test_utils
 
+module Scope_api = Scope_api.With_Loc
+
 let mk_scope_builder_all_uses_test contents expected_all_uses =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
-    let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
-    let printer = print_list Loc.to_string in
+    let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
+    let printer = print_list Loc.debug_to_string in
     assert_equal ~ctxt
       ~cmp:(eq printer)
       ~printer
@@ -24,12 +26,12 @@ let mk_scope_builder_all_uses_test contents expected_all_uses =
 let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_defs =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
-    let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
-    let defs = List.map (Scope_api.def_of_use info) all_uses in
-    let locs_of_defs = List.map (
+    let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
+    let defs = Core_list.map ~f:(Scope_api.def_of_use info) all_uses in
+    let locs_of_defs = Core_list.map ~f:(
       fun { Scope_api.Def.locs; _ } -> Nel.to_list locs
     ) defs in
-    let printer = print_list @@ print_list Loc.to_string in
+    let printer = print_list @@ print_list Loc.debug_to_string in
     assert_equal ~ctxt
       ~cmp:(eq printer)
       ~printer
@@ -40,12 +42,12 @@ let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_def
 let mk_scope_builder_uses_of_all_uses_test contents expected_uses =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
-    let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
-    let uses = List.map (fun use ->
-      Utils_js.LocSet.elements @@ Scope_api.uses_of_use ~exclude_def:true info use
+    let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
+    let uses = Core_list.map ~f:(fun use ->
+      Loc_collections.LocSet.elements @@ Scope_api.uses_of_use ~exclude_def:true info use
     ) all_uses in
     let printer = print_list @@ (fun list ->
-      Printf.sprintf "[%s]" (print_list Loc.to_string list)
+      Printf.sprintf "[%s]" (print_list Loc.debug_to_string list)
     ) in
     assert_equal ~ctxt
       ~cmp:(eq printer)
@@ -65,7 +67,7 @@ let mk_scope_builder_scope_loc_test contents expected_scope_locs =
     in
     let scope_locs = List.rev scope_locs in
     let printer = (fun list ->
-      Printf.sprintf "[%s]" (print_list (fun (id, loc) -> Printf.sprintf "%d: %s" id (Loc.to_string loc)) list)
+      Printf.sprintf "[%s]" (print_list (fun (id, loc) -> Printf.sprintf "%d: %s" id (Loc.debug_to_string loc)) list)
     ) in
     assert_equal ~ctxt
       ~cmp:(eq printer)
@@ -76,13 +78,18 @@ let mk_scope_builder_scope_loc_test contents expected_scope_locs =
 
 let tests = "scope_builder" >::: [
   "let_all_uses" >:: mk_scope_builder_all_uses_test
-    "function foo() { \
-       let x = 0; \
-       return x; \
-     }"
-    [mk_loc (1, 9) (1, 12);
-     mk_loc (1, 21) (1, 22);
-     mk_loc (1, 35) (1, 36)];
+    ("function foo(x, ...y) {\n"^
+     "  let z = 0;\n"^
+     "  x, y;\n"^
+     "  return z;\n"^
+     "}")
+    [mk_loc (1, 9) (1, 12); (* foo *)
+     mk_loc (1, 13) (1, 14); (* x def *)
+     mk_loc (1, 19) (1, 20); (* y def *)
+     mk_loc (2, 6) (2, 7); (* z def *)
+     mk_loc (3, 2) (3, 3); (* x use *)
+     mk_loc (3, 5) (3, 6); (* y use *)
+     mk_loc (4, 9) (4, 10)]; (* z use *)
   "let_locs_of_defs_of_all_uses" >:: mk_scope_builder_locs_of_defs_of_all_uses_test
     "function foo() { \
        let x = 0; \
@@ -194,6 +201,13 @@ let tests = "scope_builder" >::: [
      mk_loc (1, 38) (1, 41);
      mk_loc (1, 44) (1, 47);
      mk_loc (1, 51) (1, 52)];
+  "switch" >:: mk_scope_builder_all_uses_test
+    "switch ('') { case '': const foo = ''; foo; };"
+    [];
+    (* TODO this should be the output, but there is a bug:
+    [mk_loc (1, 29) (1, 32);
+     mk_loc (1, 39) (1, 42)];
+    *)
   "scope_loc_function_declaration" >:: mk_scope_builder_scope_loc_test
     "function a() {};"
     [0, mk_loc (1, 0) (1, 16); (* program *)

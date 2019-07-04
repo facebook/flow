@@ -1,7 +1,6 @@
 /**
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {execSync, spawn} from 'child_process';
@@ -67,6 +66,7 @@ export class TestBuilder {
   testErrors = [];
   allowFlowServerToDie = false;
   logStream: stream$Writable | null;
+  waitForRecheck: boolean;
 
   constructor(
     bin: string,
@@ -76,6 +76,7 @@ export class TestBuilder {
     testNum: number,
     flowConfigFilename: string,
     lazyMode: 'ide' | 'fs' | null,
+    wait_for_recheck: boolean,
   ) {
     this.bin = bin;
     // If we're testing lazy mode, then we must use status
@@ -90,6 +91,7 @@ export class TestBuilder {
     this.lazyMode = lazyMode;
     this.ide = null;
     this.ideMessages = [];
+    this.waitForRecheck = wait_for_recheck;
   }
 
   getFileName(): string {
@@ -118,7 +120,7 @@ export class TestBuilder {
         format(fmt, ...args),
       );
       return new Promise((resolve, reject) => {
-        logStream.write(msg, 'utf8', resolve);
+        logStream.write(msg, 'utf8', err => (err ? reject(err) : resolve()));
       });
     }
   }
@@ -337,6 +339,8 @@ export class TestBuilder {
       '--no-auto-restart',
       '--file-watcher',
       'none',
+      '--wait-for-recheck',
+      String(this.waitForRecheck),
     ]
       .concat(lazyMode)
       .concat([this.dir]);
@@ -755,19 +759,20 @@ export class TestBuilder {
         }
         alreadyDone = true;
         const duration = new Date().getTime() - startTime;
-        emitter && emitter.removeListener('message', checkLastMessage);
+        emitter && emitter.removeListener('message', checkMessages);
         timeout && clearTimeout(timeout);
         await this.log('%s message %s in %dms', verb, expected, duration);
         resolve();
       };
 
-      const checkMessage = message => {
-        if (Builder.doesMessageMatch(message, expected)) {
-          doneWithVerb('Got');
+      let nextMessageIndex = 0;
+      const checkMessages = () => {
+        for (; nextMessageIndex < ideMessages.length; nextMessageIndex++) {
+          const message = ideMessages[nextMessageIndex];
+          if (Builder.doesMessageMatch(message, expected)) {
+            doneWithVerb('Got');
+          }
         }
-      };
-      const checkLastMessage = () => {
-        checkMessage(ideMessages.slice(-1)[0]);
       };
 
       // It's unavoidably racey whether the log message gets printed
@@ -777,10 +782,10 @@ export class TestBuilder {
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
       // let's account for them
-      ideMessages.forEach(checkMessage);
+      checkMessages();
 
       // And account for all further messages that arrive
-      emitter = ide.messageEmitter.on('message', checkLastMessage);
+      emitter = ide.messageEmitter.on('message', checkMessages);
 
       // ... until our stopping condition
       timeout = setTimeout(() => doneWithVerb('Failed to get'), timeoutMs);
@@ -1083,6 +1088,7 @@ export default class Builder {
     testNum: number,
     flowConfigFilename: string,
     lazyMode: 'fs' | 'ide' | null,
+    wait_for_recheck: boolean,
   ): Promise<TestBuilder> {
     const testBuilder = new TestBuilder(
       bin,
@@ -1092,6 +1098,7 @@ export default class Builder {
       testNum,
       flowConfigFilename,
       lazyMode,
+      wait_for_recheck,
     );
     Builder.builders.push(testBuilder);
     await testBuilder.createFreshDir();

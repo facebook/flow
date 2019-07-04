@@ -1,25 +1,27 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+module Ast_utils = Flow_ast_utils
 
 module Ast = Flow_ast
 
 module Annot_path = struct
   type t =
     | Annot of (Loc.t, Loc.t) Ast.Type.annotation
-    | Object of t * string
+    | Object of Loc.t * (t * (Loc.t * string))
 
   let mk_annot ?annot_path = function
     | Ast.Type.Missing _ -> annot_path
     | Ast.Type.Available annot -> Some (Annot (annot))
 
-  let mk_object ?annot_path x =
+  let mk_object prop_loc ?annot_path (loc, x) =
     match annot_path with
       | None -> None
-      | Some annot_path -> Some (Object (annot_path, x))
+      | Some annot_path -> Some (Object (prop_loc, (annot_path, (loc, x))))
 end
 
 module Init_path = struct
@@ -63,7 +65,12 @@ module Sort = struct
 end
 
 type t =
+  | WithPropertiesDef of {
+      properties: ((Loc.t, Loc.t) Ast.Identifier.t * (Loc.t, Loc.t) Ast.Expression.t) list;
+      base: t;
+    }
   | VariableDef of {
+      id: (Loc.t, Loc.t) Ast.Identifier.t;
       annot: Annot_path.t option;
       init: Init_path.t option;
     }
@@ -73,9 +80,11 @@ type t =
       params: (Loc.t, Loc.t) Ast.Function.Params.t;
       return: (Loc.t, Loc.t) Ast.Type.annotation_or_hint;
       body: (Loc.t, Loc.t) Ast.Function.body;
+      predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
     }
   | DeclareFunctionDef of {
       annot: (Loc.t, Loc.t) Ast.Type.annotation;
+      predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
     }
   | ClassDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
@@ -106,19 +115,21 @@ type t =
     }
   | ImportNamedDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: Ast_utils.source;
-      name: Ast_utils.ident;
+      source: Loc.t Ast_utils.source;
+      name: Loc.t Ast_utils.ident;
     }
   | ImportStarDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: Ast_utils.source;
+      source: Loc.t Ast_utils.source;
     }
   | RequireDef of {
-      source: Ast_utils.source;
+      source: Loc.t Ast_utils.source;
+      name: Loc.t Ast_utils.ident Nel.t option;
     }
   | SketchyToplevelDef
 
-let to_string = function
+let rec to_string = function
+  | WithPropertiesDef { base; _ } -> Printf.sprintf "WithPropertiesDef(%s)" (to_string base)
   | VariableDef _ -> "VariableDef"
   | FunctionDef _ -> "FunctionDef"
   | DeclareFunctionDef _  -> "DeclareFunctionDef"
@@ -132,7 +143,8 @@ let to_string = function
   | RequireDef _ -> "RequireDef"
   | SketchyToplevelDef -> "SketchyToplevelDef"
 
-let is_type = function
+let rec is_type = function
+  | WithPropertiesDef { base; _ } -> is_type base
   | VariableDef _ -> true (* conditional *)
   | FunctionDef _ -> false
   | DeclareFunctionDef _  -> true
@@ -146,7 +158,8 @@ let is_type = function
   | RequireDef _ -> true (* conditional *)
   | SketchyToplevelDef -> true (* don't care *)
 
-let is_value = function
+let rec is_value = function
+  | WithPropertiesDef { base; _ } -> is_value base
   | VariableDef _ -> true
   | FunctionDef _ -> true
   | DeclareFunctionDef _ -> true
@@ -163,3 +176,16 @@ let is_value = function
 let validator = function
   | Sort.Type -> is_type
   | Sort.Value -> is_value
+
+let get_function_kind_info = function
+  | FunctionDef { generator; tparams; params; return; body; predicate = _ } ->
+    Some (generator, tparams, params, return, body)
+  | VariableDef {
+      id = _;
+      annot = None;
+      init = Some (Init_path.Init (_, Ast.Expression.(Function stuff | ArrowFunction stuff)))
+    } ->
+    let open Ast.Function in
+    let { id = _; generator; tparams; params; return; body; _ } = stuff in
+    Some (generator, tparams, params, return, body)
+  | _ -> None

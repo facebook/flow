@@ -1,3 +1,9 @@
+(**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 (** Reposition cache to prevent repositioning loops
 
   Repositioning improves error messages by changing reasons to positions close

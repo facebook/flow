@@ -7,6 +7,8 @@
  *
  *)
 
+module Hh_bucket = Bucket
+open Core_kernel
 (* The protocol for a next function is to return a list of elements.
  * It will be called repeatedly until it returns an empty list.
  *)
@@ -21,7 +23,7 @@ module type CALLER = sig
     ('c -> 'a -> 'b) ->
     (WorkerController.worker_id * 'b -> 'c -> 'c) ->
     'c ->
-    'a Bucket.next ->
+    'a Hh_bucket.next ->
     'c result
 end
 
@@ -30,7 +32,7 @@ module CallFunctor : functor (Caller: CALLER) -> sig
     WorkerController.worker list option ->
     job:('c -> 'a -> 'b) ->
     merge:(WorkerController.worker_id * 'b -> 'c -> 'c) -> neutral:'c ->
-    next:'a Bucket.next ->
+    next:'a Hh_bucket.next ->
     'c Caller.result
 end
 
@@ -45,14 +47,14 @@ val next :
   ?max_size: int ->
   worker list option ->
   'a list ->
-  'a list Bucket.next
+  'a list Hh_bucket.next
 
 (** Can raise MultiThreadedCall.Coalesced_failures unless in single-threaded mode. *)
 val call :
   worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
-  next:'a Bucket.next ->
+  next:'a Hh_bucket.next ->
   'c
 
 (** Can raise MultiThreadedCall.Coalesced_failures unless in single-threaded mode. *)
@@ -60,18 +62,18 @@ val call_with_worker_id :
   worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:(WorkerController.worker_id * 'b -> 'c -> 'c) -> neutral:'c ->
-  next:'a Bucket.next ->
+  next:'a Hh_bucket.next ->
   'c
 
 val call_with_interrupt :
   (* [on_cancelled] should be specified if your [next] function ever returns
-     [Bucket.Wait], and it should return the list of all jobs that haven't
+     [Hh_bucket.Wait], and it should return the list of all jobs that haven't
      finished or started yet. *)
   ?on_cancelled:(unit -> 'a list) ->
   worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
-  next:'a Bucket.next ->
+  next:'a Hh_bucket.next ->
   interrupt:'d interrupt_config ->
   'c * 'd * 'a list
 

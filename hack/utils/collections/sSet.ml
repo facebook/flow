@@ -8,11 +8,11 @@
  *)
 
 include Set.Make (StringKey)
-let to_string sset =
-  "{" ^ (String.concat "," (elements sset)) ^ "}"
 
 let pp fmt sset =
   Format.fprintf fmt "@[<2>{";
+  let elements = elements sset in
+  (match elements with [] -> () | _ -> Format.fprintf fmt " ");
   ignore
     (List.fold_left
       (fun sep s ->
@@ -20,5 +20,10 @@ let pp fmt sset =
         Format.fprintf fmt "%S" s;
         true)
       false
-      (elements sset));
+      elements);
+  (match elements with [] -> () | _ -> Format.fprintf fmt " ");
   Format.fprintf fmt "@,}@]"
+
+let show sset = Format.asprintf "%a" pp sset
+
+let to_string = show

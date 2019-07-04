@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -39,11 +39,12 @@ let open_log_file file =
       then Sys.remove old_file;
       Sys.rename file old_file
     with e ->
+      let e = Exception.wrap e in
       Utils.prerr_endlinef
         "Log rotate: failed to move '%s' to '%s'\n%s"
         file
         old_file
-        (Printexc.to_string e)
+        (Exception.to_string e)
     )
   end;
   Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
@@ -76,9 +77,7 @@ let register_entry_point
       LoggingUtils.set_hh_logger_min_level options;
       Hh_logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
 
-      (* This server might have been started by a monitor process which is already pretty old, so
-      * the start_time might be way out of date. *)
-      FlowEventLogger.(restore_context {logging_context with start_time = Unix.gettimeofday (); });
+      FlowEventLogger.restore_context logging_context;
       (* It makes the logs easier if all server logs have the "command" column set to "server",
        * regardless of whether they were started with `flow start` or `flow server` *)
       FlowEventLogger.set_command (Some "server");

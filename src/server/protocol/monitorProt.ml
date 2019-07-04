@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,6 +12,18 @@ module PersistentProt = Persistent_connection_prot
 (* Ephemeral socket connections expect a response to their requests. We use request_id to indicate
  * to which request a given response is replying *)
 type request_id = string
+
+type file_watcher_metadata = {
+  total_update_distance: int;
+  changed_mergebase: bool;
+}
+
+let empty_file_watcher_metadata = { total_update_distance = 0; changed_mergebase = false; }
+
+let merge_file_watcher_metadata a b = {
+  total_update_distance = a.total_update_distance + b.total_update_distance;
+  changed_mergebase = a.changed_mergebase || b.changed_mergebase;
+}
 
 type please_die_reason =
 | MonitorExiting of (FlowExitStatus.t * string)
@@ -28,7 +40,7 @@ type monitor_to_server_message =
 (* A notification that a persistent socket connection is dead *)
 | DeadPersistentConnection of PersistentProt.client_id
 (* The file watcher has noticed changes *)
-| FileWatcherNotification of SSet.t
+| FileWatcherNotification of SSet.t * file_watcher_metadata option
 (* Monitor wants to kill the server but first asks nicely for the server to honorably kill itself *)
 | PleaseDie of please_die_reason
 

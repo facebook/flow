@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -36,6 +36,8 @@ let spec = {
         ~doc:"Checks whether the file parses, returning any errors but not the AST"
     |> flag "--debug" no_arg
         ~doc:"" (* undocumented *)
+    |> flag "--pattern" no_arg
+        ~doc:"Prints the AST structurally without locations to be used in pattern matching"
     |> flag "--type" (enum ["js", File_js; "json", File_json])
         ~doc:"Type of input file (js or json)"
     |> flag "--strict" no_arg
@@ -57,14 +59,16 @@ let get_file path = function
 
 module Translate = Estree_translator.Translate (Json_of_estree) (struct
   (* TODO: make these configurable via CLI flags *)
+  let include_interned_comments = false
   let include_comments = true
   let include_locs = true
 end)
 
 module Token_translator = Token_translator.Translate (Json_of_estree)
 
-let main include_tokens pretty check debug file_type_opt use_strict from path filename () =
-  FlowEventLogger.set_from from;
+let pp_underscore_loc fmt _ = Format.pp_print_string fmt "_"
+
+let main include_tokens pretty check debug pattern file_type_opt use_strict path filename () =
   let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in
@@ -85,9 +89,10 @@ let main include_tokens pretty check debug file_type_opt use_strict from path fi
    * order.
    *)
   let tokens = ref [] in
+  let offset_table = lazy (Offset_utils.make content) in
   let token_sink =
     if not include_tokens then None else (Some(fun token_data ->
-    tokens := (Token_translator.token token_data)::!tokens
+    tokens := (Token_translator.token (Lazy.force offset_table) token_data)::!tokens
   )) in
 
   let open Hh_json in
@@ -96,6 +101,7 @@ let main include_tokens pretty check debug file_type_opt use_strict from path fi
       (* Make the parser as permissive as possible.
          TODO: make these CLI flags *)
       let parse_options = Some Parser_env.({
+        enums = true;
         esproposal_class_instance_fields = true;
         esproposal_class_static_fields = true;
         esproposal_decorators = true;
@@ -122,6 +128,10 @@ let main include_tokens pretty check debug file_type_opt use_strict from path fi
             Ast.pp_program Loc.pp Loc.pp Format.err_formatter ocaml_ast;
             Printf.eprintf "\n%!"
           end;
+          if pattern then begin
+            Ast.pp_program pp_underscore_loc pp_underscore_loc Format.err_formatter ocaml_ast;
+            Printf.eprintf "\n%!"
+          end;
           Ast_js ocaml_ast, errors
         | File_json ->
           let filekey = Option.map filename ~f:(fun s -> File_key.JsonFile s) in
@@ -132,6 +142,10 @@ let main include_tokens pretty check debug file_type_opt use_strict from path fi
             Ast.Expression.pp Loc.pp Loc.pp Format.err_formatter ocaml_ast;
             Printf.eprintf "\n%!"
           end;
+          if pattern then begin
+            Ast.Expression.pp pp_underscore_loc pp_underscore_loc Format.err_formatter ocaml_ast;
+            Printf.eprintf "\n%!"
+          end;
           Ast_json ocaml_ast, errors
       in
       if check then
@@ -140,9 +154,10 @@ let main include_tokens pretty check debug file_type_opt use_strict from path fi
           "tokens", JSON_Array (List.rev !tokens);
         ]
       else
+        let offset_table = Some (Offset_utils.make content) in
         let translated_ast = match ast with
-        | Ast_js ast -> Translate.program ast
-        | Ast_json ast -> Translate.expression ast
+        | Ast_js ast -> Translate.program offset_table ast
+        | Ast_json ast -> Translate.expression offset_table ast
         in
         match translated_ast with
         | JSON_Object params ->

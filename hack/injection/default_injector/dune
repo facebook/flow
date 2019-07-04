@@ -1,0 +1,3 @@
+(library
+  (name default_injector_config)
+  (implements injector_config))

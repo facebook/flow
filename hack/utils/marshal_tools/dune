@@ -1,0 +1,18 @@
+(library
+  (name marshal_tools)
+  (wrapped false)
+  (modules
+    marshal_tools)
+  (libraries
+    sys_utils))
+
+(library
+  (name marshal_tools_lwt)
+  (wrapped false)
+  (modules
+    marshal_tools_lwt)
+  (libraries
+    marshal_tools
+    lwt
+    lwt.unix
+    lwt_log))

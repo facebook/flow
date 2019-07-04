@@ -136,11 +136,12 @@ let unescape_literal literal_kind s =
         idx := !idx + unicode_count;
         if next () <> '}' then
           raise (Invalid_string "Invalid UTF-8 escape sequence")
-      | 'x' | 'X' ->
+      | 'x' | 'X' as c ->
         let hex_count = count_f is_hex ~max:2 0 in
-        if hex_count = 0 then
-          Buffer.add_string buf "\\x"
-        else
+        if hex_count = 0 then begin
+          Buffer.add_char buf '\\';
+          Buffer.add_char buf c
+        end else
           let c = parse_numeric_escape ("0x" ^ String.sub s (!idx) hex_count) in
           Buffer.add_char buf c;
           idx := !idx + hex_count

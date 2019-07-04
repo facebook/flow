@@ -1,1 +1,2 @@
+// @providesModule ImplicitProvidesModule
 declare export function fun(): number;

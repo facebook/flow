@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,8 +20,8 @@ let parse contents =
 let eq printer v1 v2 =
   printer v1 = printer v2
 
-let name ?prevent_munge ?ignore_static_propTypes x =
-  prevent_munge, ignore_static_propTypes, x
+let name ?prevent_munge ?facebook_fbt ?ignore_static_propTypes ?facebook_keyMirror x =
+  prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, x
 
 let tests_data = [
   name "export_number_literal",
@@ -36,12 +36,12 @@ let tests_data = [
 
   name "export_function_literal_check1",
   ["export default function(x): number { return x };"],
-  ["Expected annotation @ (1, 24) to (1, 25)"],
+  ["Expected annotation at array pattern @ (1, 24) to (1, 25)"],
   [];
 
   name "export_function_literal_check2",
   ["export default function(x: number) { return x };"],
-  ["Expected annotation @ (1, 34) to (1, 34)"],
+  ["Expected annotation at function return @ (1, 34) to (1, 34)"],
   [];
 
   name "export_function_reference",
@@ -53,13 +53,13 @@ let tests_data = [
   name "export_function_reference_check1",
   ["function foo(x): number { return x }";
    "export default foo;"],
-  ["Expected annotation @ (1, 13) to (1, 14)"],
+  ["Expected annotation at array pattern @ (1, 13) to (1, 14)"],
   ["Reachable: foo"];
 
   name "export_function_reference_check2",
   ["function foo(x: number) { return x }";
    "export default foo;"],
-  ["Expected annotation @ (1, 23) to (1, 23)"],
+  ["Expected annotation at function return @ (1, 23) to (1, 23)"],
   ["Reachable: foo"];
 
   name "export_object_literal_property_literal",
@@ -76,12 +76,12 @@ let tests_data = [
   name "export_object_literal_property_reference_check",
   ["var x = 0;";
    "export default { p: x };"],
-  ["Expected annotation @ (1, 4) to (1, 5)"],
+  ["Expected annotation at declaration of variable `x` @ (1, 4) to (1, 5)"],
   ["Reachable: x"];
 
   name "empty_object_literal",
   ["export default { };"],
-  ["Cannot determine types of initialized properties of empty object @ (1, 15) to (1, 18)"],
+  ["Cannot determine types of initialized properties of an empty object @ (1, 15) to (1, 18)"],
   [];
 
   name "export_class_reference",
@@ -99,7 +99,7 @@ let tests_data = [
    "  m(x: number): number { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 8)"],
+  ["Expected annotation at property `f` @ (2, 2) to (2, 8)"],
   ["Reachable: C"];
 
   name "export_class_reference_check2",
@@ -108,7 +108,7 @@ let tests_data = [
    "  m(x): number { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (3, 4) to (3, 5)"],
+  ["Expected annotation at array pattern @ (3, 4) to (3, 5)"],
   ["Reachable: C"];
 
   name "export_class_reference_check3",
@@ -117,7 +117,7 @@ let tests_data = [
    "  m(x: number) { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (3, 14) to (3, 14)"],
+  ["Expected annotation at function return @ (3, 14) to (3, 14)"],
   ["Reachable: C"];
 
   name "type_alias_dependencies",
@@ -149,7 +149,7 @@ let tests_data = [
    "  m(x: D): D { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (1, 10) to (1, 16)"],
+  ["Expected annotation at property `f` @ (1, 10) to (1, 16)"],
   ["Reachable: C, D"];
 
   name "export_new_typecast",
@@ -169,7 +169,7 @@ let tests_data = [
    "  m(x: D): D { return x; }";
    "}";
    "export default (new C: C);"],
-  ["Expected annotation @ (1, 10) to (1, 16)"],
+  ["Expected annotation at property `f` @ (1, 10) to (1, 16)"],
   ["Reachable: C, D"];
 
   name "recursive_dependencies",
@@ -187,7 +187,7 @@ let tests_data = [
    "  m(x: C): C { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 12)"],
+  ["Expected annotation at property `f` @ (2, 2) to (2, 12)"],
   ["Reachable: C"];
 
   name "typeof_dependencies",
@@ -205,7 +205,7 @@ let tests_data = [
    "  p: typeof x = 0";
    "}";
    "export default (new C: C);"],
-  ["Expected annotation @ (1, 4) to (1, 5)"],
+  ["Expected annotation at declaration of variable `x` @ (1, 4) to (1, 5)"],
   ["Reachable: C, x"];
 
   name "const_initializer",
@@ -216,14 +216,14 @@ let tests_data = [
 
   name "empty_array_literal",
   ["export default [ ];"],
-  ["Cannot determine element type of empty array @ (1, 15) to (1, 18)"],
+  ["Cannot determine the element type of an empty array @ (1, 15) to (1, 18)"],
   [];
 
   name "non_empty_array_literal",
   ["const x = 0";
    "var y = false";
    "export default [ x, y ];"],
-  ["Expected annotation @ (2, 4) to (2, 5)"],
+  ["Expected annotation at declaration of variable `y` @ (2, 4) to (2, 5)"],
   ["Reachable: x, y"];
 
   name "void_function",
@@ -235,7 +235,7 @@ let tests_data = [
   name "void_generator",
   ["function* foo() { yield 0; }";
    "export default foo;"],
-  ["Expected annotation @ (1, 15) to (1, 15)"],
+  ["Expected annotation at function return @ (1, 15) to (1, 15)"],
   ["Reachable: foo"];
 
   name "import_default_dependencies",
@@ -285,10 +285,10 @@ let tests_data = [
    "  f: D = 0;";
    "}";
    "module.exports = C;"],
-  ["Expected annotation @ (7, 4) to (7, 5)"],
-  ["import { D } from './hoisted_requires_helper'";
-   "import { D } from './hoisted_requires_helper'";
-   "require('./hoisted_requires_helper')";
+  ["Expected annotation at declaration of variable `D` @ (7, 4) to (7, 5)"],
+  ["require('./hoisted_requires_helper')";
+   "require('./hoisted_requires_helper').D";
+   "require('./hoisted_requires_helper').D";
    "Reachable: C, D, M"];
 
   name "hoisted_locals",
@@ -348,8 +348,8 @@ let tests_data = [
    "  a: A,                     // A";
    "  b: (x: string) => x,      // B";
    "};"],
-  ["Expected annotation @ (2, 2) to (2, 23)";
-   "Expected annotation @ (6, 16) to (6, 16)"],
+  ["Expected annotation at property `f` @ (2, 2) to (2, 23)";
+   "Expected annotation at function return @ (6, 16) to (6, 16)"],
   ["Reachable: A"];
 
   name "munged_methods_ignored",
@@ -365,7 +365,7 @@ let tests_data = [
    "  _method() { return 1; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 11) to (2, 11)"],
+  ["Expected annotation at function return @ (2, 11) to (2, 11)"],
   ["Reachable: C"];
 
   name "munged_fields_ignored",
@@ -381,7 +381,7 @@ let tests_data = [
    "  _method = () => { return 1; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 31)"],
+  ["Expected annotation at property `_method` @ (2, 2) to (2, 31)"],
   ["Reachable: C"];
 
   name "propTypes_static_ignored" ~ignore_static_propTypes:true,
@@ -397,7 +397,7 @@ let tests_data = [
    "  propTypes = {}";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 16)"],
+  ["Expected annotation at property `propTypes` @ (2, 2) to (2, 16)"],
   ["Reachable: C"];
 
   name "array_spread",
@@ -412,7 +412,7 @@ let tests_data = [
 
   name "object_spread",
   ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"],
-  ["Unexpected object spread @ (1, 27) to (1, 40)"],
+  [],
   [];
 
   name "reference_expression1",
@@ -422,7 +422,7 @@ let tests_data = [
 
   name "reference_expression2",
   ["module.exports = 'x'.length"],
-  ["Expected literal expression instead of Member @ (1, 17) to (1, 27)"],
+  ["Cannot determine the type of this member expression @ (1, 17) to (1, 27)"],
   [];
 
   name "arith_expression1",
@@ -432,7 +432,7 @@ let tests_data = [
 
   name "arith_expression2",
   ["module.exports = 6+7"],
-  ["Expected literal expression instead of Binary @ (1, 17) to (1, 20)"],
+  ["Cannot determine the type of this binary expression @ (1, 17) to (1, 20)"],
   [];
 
   name "named_class_expression",
@@ -444,20 +444,144 @@ let tests_data = [
   ["module.exports = function foo() { }"],
   [],
   [];
+
+  name "interface_coverage",
+  ["declare interface Foo<X> { }";
+   "declare export class C {";
+   "  foo: Foo<any>;";
+   "}"],
+  [],
+  ["Reachable: C, Foo"];
+
+  name "bound_coverage",
+  ["type Foo = number";
+   "export type T = <X: Foo> (X) => void"],
+  [],
+  ["Reachable: Foo, T"];
+
+  name "recursive_class_coverage",
+  ["module.exports = class C { x: C; }"],
+  [],
+  [];
+
+  name "shadowed_class_expression",
+  ["class C { }";
+   "module.exports = class C { }"],
+  ["Unexpected toplevel definition that needs hoisting @ (2, 23) to (2, 24)"],
+  [];
+
+  name "frozen_object",
+  ["module.exports = Object.freeze({ foo: 42, bar: 'hello' })"],
+  [],
+  [];
+
+  name "fbt_empty_open_close" ~facebook_fbt:(Some "FbtElement"),
+  ["module.exports = <fbt></fbt>"],
+  [],
+  [];
+
+  name "fbt_empty_open" ~facebook_fbt:(Some "FbtElement"),
+  ["module.exports = <fbt/>"],
+  [],
+  [];
+
+  name "fbt_with_child" ~facebook_fbt:(Some "FbtElement"),
+  ["function foo(){}";
+   "module.exports = <fbt desc={foo()}></fbt>"],
+  [],
+  [];
+
+  name "keymirror" ~facebook_keyMirror:true,
+  ["module.exports = keyMirror({";
+   "  a: null,";
+   "  b: null,";
+   "})"],
+  [],
+  [];
+
+  name "jsx_div",
+  ["module.exports = <div></div>"],
+  ["Cannot determine the type of this JSX element @ (1, 17) to (1, 28)"],
+  [];
+
+  name "function_return",
+  ["var n = false;";
+   "export function foo<X: typeof n>(x: X) { return 1; };"],
+  ["Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
+   "Expected annotation at function return @ (2, 38) to (2, 38)"],
+  ["Reachable: foo, n"];
+
+  name "function_return_2",
+  ["var n = false;";
+   "export function bar(x: (typeof n) => void) { return 1; };"],
+  ["Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
+   "Expected annotation at function return @ (2, 42) to (2, 42)"],
+  ["Reachable: bar, n"];
+
+  name "function_statics",
+  ["function bar(): void { };";
+   "const x = 42;";
+   "bar.x = x;";
+   "module.exports = bar;"],
+  [],
+  ["Reachable: bar, x"];
+
+  name "function_predicates_1",
+  ["class A {}";
+   "export function foo(x: mixed): boolean %checks {";
+   "  return x === new A;";
+   "}"],
+  ["Unsupported predicate expression @ (3, 15) to (3, 20)"],
+  ["Reachable: foo"];
+
+  name "function_predicates_2",
+  ["declare function bar(x: mixed): boolean %checks(x === null);";
+   "export function foo(x: mixed): boolean %checks {";
+   "  return bar(x);";
+   "}"],
+  [],
+  ["Reachable: bar, foo"];
+
+  name "function_predicates_3",
+  ["function bar(x: mixed): %checks { return x === null; }";
+   "declare export function foo(x: mixed): boolean %checks(bar(x));"],
+  ["Expected annotation at function return @ (1, 31) to (1, 31)"],
+  ["Reachable: bar, foo"];
+
+  name "function_predicates_4",
+  ["function one() { return 1; }";
+   "const n = one()";
+   "export function isOne(x: mixed): boolean %checks {";
+   "  return x === n;";
+   "}"],
+  ["Cannot determine the type of this call expression @ (2, 10) to (2, 15)"],
+  ["Reachable: isOne, n"];
+
+  name "function_predicates_5",
+  ["const one = 1;";
+   "export function isOne(x: mixed): boolean %checks {";
+   "  return x === one;";
+   "}"],
+  [],
+  ["Reachable: isOne, one"];
+
 ]
 
-let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =
+let mk_signature_verifier_test ?prevent_munge ?facebook_fbt
+      ?ignore_static_propTypes ?facebook_keyMirror
+      contents expected_msgs =
   begin fun ctxt ->
     let contents = String.concat "\n" contents in
-    let signature = match Signature_builder.program (parse contents) with
+    let signature = match Signature_builder.program ~module_ref_prefix:None (parse contents) with
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
     let errors, remote_dependencies, env =
-      Signature_builder.Signature.verify ?prevent_munge ?ignore_static_propTypes signature
+      Signature_builder.Signature.verify ?prevent_munge ?facebook_fbt
+        ?ignore_static_propTypes ?facebook_keyMirror signature
     in
-    let error_msgs = List.map Signature_builder_deps.Error.to_string @@
-      Signature_builder_deps.ErrorSet.elements errors in
-    let remote_dependency_msgs = List.map Signature_builder_deps.Dep.to_string @@
+    let error_msgs = Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
+      Signature_builder_deps.PrintableErrorSet.elements errors in
+    let remote_dependency_msgs = Core_list.map ~f:Signature_builder_deps.Dep.to_string @@
       Signature_builder_deps.DepSet.elements remote_dependencies in
     let reachable_msg_opt =
       if SMap.is_empty env then []
@@ -472,11 +596,12 @@ let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents 
   end
 
 let tests = "signature_verifier" >:::
-  (List.map (fun (
-    (prevent_munge, ignore_static_propTypes, name),
+  (Core_list.map ~f:(fun (
+    (prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, name),
     contents,
     error_msgs,
     other_msgs) ->
-    name >:: mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes
-      contents (error_msgs @ other_msgs)
+      name >:: mk_signature_verifier_test ?prevent_munge ?facebook_fbt
+                 ?ignore_static_propTypes ?facebook_keyMirror
+                 contents (error_msgs @ other_msgs)
    ) tests_data)

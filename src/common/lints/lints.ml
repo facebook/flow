@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -22,11 +22,16 @@ type lint_kind =
   | NonstrictImport
   | UnclearType
   | DeprecatedType
+  | DeprecatedUtility
+  | DeprecatedEnumUtility
+  | DynamicExport
   | UnsafeGettersSetters
   | InexactSpread
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
-  | DeprecatedCallSyntax
+  | SignatureVerificationFailure
+  | ImplicitInexactObject
+  | UninitializedInstanceProperty
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
@@ -45,11 +50,16 @@ let string_of_kind = function
   | NonstrictImport -> "nonstrict-import"
   | UnclearType -> "unclear-type"
   | DeprecatedType -> "deprecated-type"
+  | DeprecatedUtility -> "deprecated-utility"
+  | DeprecatedEnumUtility -> "deprecated-enum-utility"
+  | DynamicExport -> "dynamic-export"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | InexactSpread -> "inexact-spread"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
-  | DeprecatedCallSyntax -> "deprecated-call-syntax"
+  | SignatureVerificationFailure -> "signature-verification-failure"
+  | ImplicitInexactObject -> "implicit-inexact-object"
+  | UninitializedInstanceProperty -> "uninitialized-instance-property"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
@@ -71,11 +81,16 @@ let kinds_of_string = function
   | "untyped-import" -> Some [UntypedImport]
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" -> Some [DeprecatedType]
+  | "deprecated-utility" -> Some [DeprecatedUtility]
+  | "deprecated-enum-utility" -> Some [DeprecatedEnumUtility]
+  | "dynamic-export" -> Some [DynamicExport]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "inexact-spread" -> Some [InexactSpread]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
-  | "deprecated-call-syntax" -> Some [DeprecatedCallSyntax]
+  | "signature-verification-failure" -> Some [SignatureVerificationFailure]
+  | "implicit-inexact-object" -> Some [ImplicitInexactObject]
+  | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | _ -> None
 
 module LintKind = struct

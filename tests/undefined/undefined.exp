@@ -58,7 +58,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:22:7
 
-Cannot get `x[0]` because an indexer property is missing in `Number` [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
 
    undefined2.js:22:7
    22|       x[0]; // should error, could be void

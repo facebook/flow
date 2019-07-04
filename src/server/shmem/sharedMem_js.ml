@@ -1,15 +1,17 @@
+(**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 include SharedMem
 
-module Prefix = struct
-  include Prefix
-end
+module Prefix = Prefix
 
-module Ident = struct
-  include Ident
-end
+module Ident = Ident
 
 module Collect : sig
-  val collect: [ `aggressive | `gentle ] -> unit
+  val collect: [ `gentle | `aggressive | `always_TEST ] -> unit
   val with_memory_profiling_lwt:
     profiling:Profiling_js.running ->
     collect_at_end:bool ->

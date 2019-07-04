@@ -120,4 +120,4 @@ mutate();
 let isString: string = foo; // Error!
 ```
 
-As Flow gets smarter and smarter there should be less of these scenarios.
+As Flow gets smarter and smarter, there should be fewer instances of these scenarios.

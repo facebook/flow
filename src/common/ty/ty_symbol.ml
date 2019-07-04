@@ -1,20 +1,37 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
+type import_mode =
+ | ValueMode
+ | TypeMode
+ | TypeofMode
+
+type imported_ident = ALoc.t * string * import_mode
+
+type remote_info = {
+  imported_as: imported_ident option;
+}
+
 type provenance =
-  | Local of Loc.t      (* Defined locally *)
-  | Imported of Loc.t   (* Defined remotely, imported to file *)
-  | Remote of Loc.t     (* Defined remotely, NOT imported to file *)
-  | Library of Loc.t    (* Defined in library *)
+  | Local
+  | Remote of remote_info
+  | Library
   | Builtin
 
-type identifier = string
+type symbol = {
+  provenance: provenance;
+  def_loc: ALoc.t;
+  name: string;
+  anonymous: bool;
+}
 
-type symbol = Symbol of (provenance * identifier) [@@unboxed]
-
-let builtin_symbol name =
-  Symbol (Builtin, name)
+let builtin_symbol name = {
+  provenance = Builtin;
+  def_loc = ALoc.none;
+  name;
+  anonymous = false;
+}

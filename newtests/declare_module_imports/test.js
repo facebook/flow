@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -56,57 +55,13 @@ export default suite(({addFile, addFiles, addCode}) => [
 
     addCode('(cVal: CT);').noNewErrors(),
     addCode('(cVal.D: DT);').noNewErrors(),
-    addCode('(cVal: DT);').newErrors(
-                            `
-                              test.js:18
-                               18: (cVal: DT);
-                                    ^^^^ Cannot cast \`cVal\` to \`DT\` because property \`C\` is missing in object literal [1] but exists in \`DT\` [2].
-                                References:
-                                  8:       const cVal = {};
-                                                        ^^ [1]
-                                 18: (cVal: DT);
-                                            ^^ [2]
-                            `,
-                          ),
-    addCode('(cVal.D: CT);').newErrors(
-                              `
-                                test.js:20
-                                 20: (cVal.D: CT);
-                                      ^^^^^^ Cannot cast \`cVal.D\` to \`CT\` because property \`D\` is missing in object literal [1] but exists in \`CT\` [2].
-                                  References:
-                                    9:       const dVal = {};
-                                                          ^^ [1]
-                                   20: (cVal.D: CT);
-                                                ^^ [2]
-                              `,
-                            ),
+    addCode('(cVal: DT);').noNewErrors(),
+    addCode('(cVal.D: CT);').noNewErrors(),
 
     addCode('(dVal: DT);').noNewErrors(),
     addCode('(dVal.C: CT);').noNewErrors(),
-    addCode('(dVal: CT);').newErrors(
-                            `
-                              test.js:26
-                               26: (dVal: CT);
-                                    ^^^^ Cannot cast \`dVal\` to \`CT\` because property \`D\` is missing in object literal [1] but exists in \`CT\` [2].
-                                References:
-                                  9:       const dVal = {};
-                                                        ^^ [1]
-                                 26: (dVal: CT);
-                                            ^^ [2]
-                            `,
-                          ),
-    addCode('(dVal.C: DT);').newErrors(
-                              `
-                                test.js:28
-                                 28: (dVal.C: DT);
-                                      ^^^^^^ Cannot cast \`dVal.C\` to \`DT\` because property \`C\` is missing in object literal [1] but exists in \`DT\` [2].
-                                  References:
-                                    8:       const cVal = {};
-                                                          ^^ [1]
-                                   28: (dVal.C: DT);
-                                                ^^ [2]
-                              `,
-                            ),
+    addCode('(dVal: CT);').noNewErrors(),
+    addCode('(dVal.C: DT);').noNewErrors(),
   ]),
 
   /**

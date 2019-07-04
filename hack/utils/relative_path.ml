@@ -17,6 +17,7 @@ type prefix =
   | Hhi
   | Dummy
   | Tmp
+  [@@deriving show, enum]
 
 
 let root = ref None
@@ -29,14 +30,19 @@ let path_ref_of_prefix = function
   | Tmp -> tmp
   | Dummy -> ref (Some "")
 
-let path_of_prefix x =
-  unsafe_opt_note "Prefix has not been set!" !(path_ref_of_prefix x)
-
 let string_of_prefix = function
   | Root -> "root"
   | Hhi -> "hhi"
   | Tmp -> "tmp"
   | Dummy -> ""
+
+let path_of_prefix prefix =
+  match !(path_ref_of_prefix prefix) with
+  | Some path -> path
+  | None ->
+    let message = Printf.sprintf "Prefix '%s' has not been set!"
+      (string_of_prefix prefix) in
+    raise (Invalid_argument message)
 
 let set_path_prefix prefix v =
   let v = Path.to_string v in
@@ -50,8 +56,8 @@ let set_path_prefix prefix v =
   | Dummy -> raise (Failure "Dummy is always represented by an empty string")
   | _ -> path_ref_of_prefix prefix := Some v
 
-type relative_path = prefix * string
-type t = relative_path
+type t = prefix * string [@@deriving show]
+type relative_path = t
 
 let prefix (p : t) = fst p
 
@@ -99,10 +105,26 @@ let to_tmp (_, rest) = (Tmp, rest)
 
 let to_root (_, rest) = (Root, rest)
 
-let pp fmt rp = Format.pp_print_string fmt (S.to_string rp)
+module Set = struct
+  include Reordered_argument_set(Set.Make(S))
 
-module Set = Reordered_argument_set(Set.Make(S))
-module Map = Reordered_argument_map(MyMap.Make(S))
+  let pp fmt x =
+    Format.fprintf fmt "@[<2>{";
+    ignore @@ List.fold_left (elements x) ~init:false ~f:begin fun sep s ->
+      if sep then Format.fprintf fmt ";@ ";
+      pp fmt s;
+      true
+    end;
+    Format.fprintf fmt "@,}@]"
+
+  let show x = Format.asprintf "%a" pp x
+end
+
+module Map = struct
+  include Reordered_argument_map(MyMap.Make(S))
+  let pp pp_data = make_pp pp pp_data
+  let show pp_data x = Format.asprintf "%a" (pp pp_data) x
+end
 
 let create prefix s =
   let prefix_s = path_of_prefix prefix in
@@ -132,8 +154,8 @@ let strip_root_if_possible s =
   let prefix_s = path_of_prefix Root in
   let prefix_len = String.length prefix_s in
   if not (string_starts_with s prefix_s)
-  then s else
-  String.sub s prefix_len (String.length s - prefix_len)
+  then None
+  else Some (String.sub s prefix_len (String.length s - prefix_len))
 
 
 let from_root (s : string) : t = Root, s

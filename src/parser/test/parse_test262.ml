@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -113,7 +113,7 @@ let print_error err =
   | Missing_parse_error ->
     Printf.printf "  Missing parse error\n%!"
   | Unexpected_parse_error (loc, err) ->
-    Printf.printf "  %s at %s\n%!" (Parse_error.PP.error err) (Loc.to_string loc)
+    Printf.printf "  %s at %s\n%!" (Parse_error.PP.error err) (Loc.debug_to_string loc)
 
 module Frontmatter = struct
   type t = {
@@ -280,7 +280,17 @@ let parse_test acc filename =
 
 let run_test (name, frontmatter, content) =
   let (filename, use_strict) = name in
-  let parse_options = Parser_env.({ default_parse_options with use_strict }) in
+  let parse_options = { Parser_env.
+      enums = true;
+      esproposal_class_instance_fields = true;
+      esproposal_class_static_fields = true;
+      esproposal_decorators = false;
+      esproposal_export_star_as = false;
+      esproposal_optional_chaining = false;
+      esproposal_nullish_coalescing = false;
+      types = false;
+      use_strict;
+  } in
   let (_ast, errors) = Parser_flow.program_file
     ~fail:false ~parse_options:(Some parse_options)
     content (Some (File_key.SourceFile filename)) in

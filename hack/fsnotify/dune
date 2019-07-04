@@ -1,0 +1,16 @@
+(* -*- tuareg -*- *)
+
+let () =
+  let system = List.assoc "system" Jbuild_plugin.V1.ocamlc_config in
+  let fsnotify_impl= match system with
+  | "macosx" -> "fsnotify_Darwin"
+  | "linux" -> "fsnotify_Linux"
+  | x -> "fsnotify_"^x
+  in
+  Printf.ksprintf Jbuild_plugin.V1.send "\
+
+(library
+  (name fsnotify)
+  (wrapped false)
+  (libraries %s))
+" fsnotify_impl

@@ -21,6 +21,7 @@
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":20}},
         "range":[9,20],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeSpreadProperty",
