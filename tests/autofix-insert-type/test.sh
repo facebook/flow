@@ -5,7 +5,6 @@
 # Dump the generated file in a temporary folder and in the end Flow check them
 TEMP_DIR=tmp
 mkdir $TEMP_DIR
-assert_ok "$FLOW" init $TEMP_DIR
 
 do_file() {
   FILE="$1"; shift;
@@ -15,7 +14,8 @@ do_file() {
     "$TEMP_DIR/$FILE" "$@"
   cat "$TEMP_DIR/out.js"
   rm "$TEMP_DIR/$FILE"
-  assert_ok "$FLOW" check "$TEMP_DIR/out.js"
+  assert_ok "$FLOW" force-recheck "$TEMP_DIR/out.js"
+  assert_ok "$FLOW" status
   rm "$TEMP_DIR/out.js"
 }
 

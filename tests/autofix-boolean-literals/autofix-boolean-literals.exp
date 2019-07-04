@@ -1,0 +1,8 @@
+> cat a.js
+// @flow
+
+declare var cond: boolean;
+
+module.exports = (): boolean => (cond ? true : false);
+> flow status
+No errors!
