@@ -52,19 +52,20 @@ let insert_type ~options ~env ~profiling ~file_key
       ~file_content ~target ~expand_aliases ~omit_targ_defaults ~location_is_strict:(strict) =
   let open Insert_type in
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-  | (Some (full_cx, ast, file_sig, typed_ast), _tc_errors, _tc_warnings) ->
+  | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
     let file_sig = (File_sig.abstractify_locs file_sig) in
     let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
     let ty_lookup = type_lookup_at_location typed_ast in
-    begin try
-      let new_ast = (new mapper ~normalize ~ty_lookup ~strict target)#program ast in
-      let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
-      let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff ast file_content in
-      Ok file_patch
-      with FailedToInsertType err -> Error err
+    begin
+      try
+        let new_ast = (new mapper ~normalize ~ty_lookup ~strict target)#program ast in
+        let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
+        let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff ast file_content in
+        Ok file_patch
+      with FailedToInsertType err -> Error (error_to_string err)
     end
-  | (None, errors, _) ->
-    Error (Unexpected (FailedToTypeCheck errors))
+  | (None, errs, _) ->
+    Error (error_to_string (Expected (FailedToTypeCheck errs)))
 
 
 let dump_types ~options ~env ~profiling file content =

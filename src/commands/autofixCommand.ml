@@ -48,7 +48,7 @@ module InsertType = struct
   let rec parse_args args : Loc.t =
     let parse_pos line col : Loc.position =
       let (line, column) = try convert_input_pos (int_of_string line, int_of_string col)
-        with | Failure _ -> handle_error "Failed to parse position" in
+        with | Failure _ -> handle_error "flow autofix insert-type: failed to parse position" in
       Loc.{line; column;} in
     match args with
     | [start_line; start_col; end_line; end_col] ->
@@ -61,8 +61,8 @@ module InsertType = struct
     | file :: (([_;_]|[_;_;_;_]) as loc) ->
       let loc = parse_args loc in
       Loc.{loc with source=Some (File_key.SourceFile(expand_path file))}
-    | [] -> handle_error "Flow autofix insert-type: No position given"
-    | _ -> handle_error "Flow autofix insert-type: Invalid position given"
+    | [] -> handle_error "flow autofix insert-type: No position given"
+    | _ -> handle_error "flow autofix insert-type: Invalid position given"
 
   let select_output_channel in_place path source_path =
     match in_place, path, source_path with

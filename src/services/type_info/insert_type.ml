@@ -9,17 +9,19 @@ module Utils = Insert_type_utils
 
 type unexpected =
   | UnknownTypeAtPoint of Loc.t
-  | FailedToSerialize of {ty:Ty.t; error_message:string}
-  | FailedToNormalize of ((Loc.t * string) option)
-  | FailedToTypeCheck of Errors.ConcreteLocPrintableErrorSet.t
+  | FailedToSerialize of  {ty:Ty.t; error_message:string}
+  | FailedToNormalizeNoMatch
 
 type expected =
   | TypeAnnotationAtPoint of {location:Loc.t; type_ast: (Loc.t, Loc.t) Flow_ast.Type.t}
   | InvalidAnnotationTarget of Loc.t
   | UnsupportedAnnotation of {location:Loc.t; error_message:string}
   | TypeSizeLimitExceeded of {size_limit:int; size:int option;}
-  | MulipleTypesPossibleAtPoint of {generalized:Ty.t; specialized:Ty.t}
+  | MulipleTypesPossibleAtPoint of {generalized:(Loc.t, Loc.t) Flow_ast.Type.t;
+                                    specialized:(Loc.t, Loc.t) Flow_ast.Type.t}
   | FailedToValidateType of {error:Utils.validation_error; error_message:string}
+  | FailedToTypeCheck of Errors.ConcreteLocPrintableErrorSet.t
+  | FailedToNormalize of (Loc.t * string)
 
 type errors =
   | Unexpected of unexpected
@@ -192,7 +194,52 @@ let normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults 
   match insert_type_normalize ~full_cx ~file_sig ~typed_ast
     ~expand_aliases ~omit_targ_defaults loc scheme
   with
-  | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalize None
+  | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalizeNoMatch
   | FailureUnparseable (loc, _, msg) ->
-    raise @@ unexpected @@ FailedToNormalize (Some (loc, msg))
+    raise @@ expected @@ FailedToNormalize (loc, msg)
   | Success (_, ty) -> ty
+
+let type_to_string t =
+  Js_layout_generator.type_ t
+  |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+  |> Source.contents
+
+let unexpected_error_to_string = function
+  | UnknownTypeAtPoint _ ->
+    "Couldn't locate a type for this annotation"
+  | FailedToSerialize {error_message=msg; _} ->
+    "couldn't print type: " ^ msg
+  | FailedToNormalizeNoMatch ->
+    "couldn't print type: couldn't locate a type for this annotation"
+
+
+let expected_error_to_string = function
+  | TypeAnnotationAtPoint {location; type_ast;} ->
+    "Preexisiting type annotation at " ^ (Loc.to_string_no_source location)
+    ^ ":" ^ (type_to_string type_ast)
+  | InvalidAnnotationTarget location ->
+    "Did not find an annotation at " ^ (Loc.to_string_no_source location)
+  | UnsupportedAnnotation {location; error_message;} ->
+    error_message ^ " found at " ^ (Loc.to_string_no_source location)
+    ^ " is not currently supported"
+  | TypeSizeLimitExceeded {size_limit; size;} ->
+    "The type that would be generated "
+    ^ (match size with
+        | Some n -> "(size: " ^ (string_of_int n) ^ ") "
+        | None -> "")
+    ^ "exceeds the size limit (" ^ (string_of_int size_limit) ^ ")"
+  | FailedToTypeCheck _ ->
+    "Failed to typecheck file"
+  | MulipleTypesPossibleAtPoint {generalized; specialized;} ->
+    "Multiple types possible at point:\n" ^
+    "    generalized type: " ^ (type_to_string generalized) ^ "\n" ^
+    "    specialized type: " ^ (type_to_string specialized)
+  | FailedToValidateType {error_message=msg; _} ->
+    "Failed to validate type: " ^ msg
+  | FailedToNormalize (_,msg) ->
+    "couldn't print type: " ^ msg
+
+
+let error_to_string = function
+  | Unexpected err -> "flow autofix insert-type: " ^ (unexpected_error_to_string err)
+  | Expected err -> "flow autofix insert-type: " ^ (expected_error_to_string err)

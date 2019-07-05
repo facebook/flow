@@ -134,12 +134,8 @@ let insert_type ~options ~env ~profiling ~file_input ~target
     %>>= fun file_content -> try_with (fun _ ->
       let%lwt result =
         Type_info_service.insert_type ~options ~env ~profiling ~file_key ~file_content ~target
-          ~expand_aliases ~omit_targ_defaults ~location_is_strict
-      in
-      (* TODO After we figure out the error return value change the Server Result to match *)
-      match result with
-      | Ok ty -> Lwt.return @@ Ok ty
-      | Error _ -> Lwt.return @@ Error "Flow: server failed to insert type")
+          ~expand_aliases ~omit_targ_defaults ~location_is_strict in
+          Lwt.return result)
 
 let collect_rage ~options ~reader ~env ~files =
   let items = [] in
