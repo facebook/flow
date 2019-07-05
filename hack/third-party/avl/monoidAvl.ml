@@ -136,7 +136,7 @@ module Make(Ord: MonoidOrderedType) = struct
 
   let rec add x = function
       Empty -> Node(Ord.make x, Empty, x, Empty, 1)
-    | Node(_, l, v, r, h) ->
+    | Node(_, l, v, r, _) ->
         let c = Ord.compare x v in
         if c = 0 then create l x r else
         if c < 0 then bal (add x l) v r else bal l v (add x r)
@@ -153,18 +153,18 @@ module Make(Ord: MonoidOrderedType) = struct
 
   let rec min_elt = function
       Empty -> raise Not_found
-    | Node(_, Empty, v, r, _) -> v
-    | Node(_, l, v, r, _) -> min_elt l
+    | Node(_, Empty, v, _, _) -> v
+    | Node(_, l, _, _, _) -> min_elt l
 
   let rec max_elt = function
       Empty -> raise Not_found
-    | Node(_, l, v, Empty, _) -> v
-    | Node(_, l, v, r, _) -> max_elt r
+    | Node(_, _, v, Empty, _) -> v
+    | Node(_, _, _, r, _) -> max_elt r
 
 
   let rec remove_min_elt = function
       Empty -> invalid_arg "Set.remove_min_elt"
-    | Node(_, Empty, v, r, _) -> r
+    | Node(_, Empty, _, r, _) -> r
     | Node(_, l, v, r, _) -> bal (remove_min_elt l) v r
 
 
@@ -231,8 +231,8 @@ module Make(Ord: MonoidOrderedType) = struct
 
   let rec inter s1 s2 =
     match (s1, s2) with
-      (Empty, t2) -> Empty
-    | (t1, Empty) -> Empty
+      (Empty, _) -> Empty
+    | (_, Empty) -> Empty
     | (Node(_, l1, v1, r1, _), t2) ->
         match split v1 t2 with
           (l2, false, r2) ->
@@ -242,7 +242,7 @@ module Make(Ord: MonoidOrderedType) = struct
 
   let rec diff s1 s2 =
     match (s1, s2) with
-      (Empty, t2) -> Empty
+      (Empty, _) -> Empty
     | (t1, Empty) -> t1
     | (Node(_, l1, v1, r1, _), t2) ->
         match split v1 t2 with
@@ -325,7 +325,7 @@ module Make(Ord: MonoidOrderedType) = struct
 
   let rec cardinal = function
       Empty -> 0
-    | Node(_, l, v, r, _) -> cardinal l + 1 + cardinal r
+    | Node(_, l, _, r, _) -> cardinal l + 1 + cardinal r
 
   let rec elements_aux accu = function
       Empty -> accu
@@ -341,7 +341,7 @@ module Make(Ord: MonoidOrderedType) = struct
     | Empty -> ()
     | Node (elt, _, _, _, _) when cut_branch elt ->
         ()
-    | Node (elt, l, key, r, _) -> 
+    | Node (_, l, key, r, _) ->
         walk cut_branch work l;
         if cut_branch (Ord.make key)
         then ()
