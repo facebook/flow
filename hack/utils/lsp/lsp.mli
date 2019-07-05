@@ -48,6 +48,14 @@ module TextDocumentItem :
       text : string;
     }
   end
+module CodeLens :
+  sig
+    type t = {
+      range : range;
+      command : Command.t;
+      data : Hh_json.json option;
+    }
+  end
 module TextDocumentPositionParams :
   sig
     type t = {
@@ -196,6 +204,11 @@ module Rage :
   sig
     type result = rageItem list
     and rageItem = { title : string option; data : string; }
+  end
+module CodeLensResolve :
+  sig
+    type params = CodeLens.t
+    and result = CodeLens.t
   end
 module Hover :
   sig
@@ -483,6 +496,16 @@ module Rename :
       newName: string;
     }
   end
+module DocumentCodeLens :
+  sig
+    type params = codelensParams
+
+    and result = CodeLens.t list
+
+    and codelensParams = {
+      textDocument: TextDocumentIdentifier.t;
+    }
+  end
 module LogMessage :
   sig
     type params = logMessageParams
@@ -587,6 +610,7 @@ type lsp_request =
   | InitializeRequest of Initialize.params
   | RegisterCapabilityRequest of RegisterCapability.params
   | ShutdownRequest
+  | CodeLensResolveRequest of CodeLensResolve.params
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
   | TypeDefinitionRequest of TypeDefinition.params
@@ -604,10 +628,12 @@ type lsp_request =
   | ShowStatusRequest of ShowStatus.params
   | RageRequest
   | RenameRequest of Rename.params
+  | DocumentCodeLensRequest of DocumentCodeLens.params
   | UnknownRequest of string * Hh_json.json option
 type lsp_result =
   | InitializeResult of Initialize.result
   | ShutdownResult
+  | CodeLensResolveResult of CodeLensResolve.result
   | HoverResult of Hover.result
   | DefinitionResult of Definition.result
   | TypeDefinitionResult of TypeDefinition.result
@@ -625,6 +651,7 @@ type lsp_result =
   | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
   | RenameResult of Rename.result
+  | DocumentCodeLensResult of DocumentCodeLens.result
   | ErrorResult of Error.t * string (* the string is a stacktrace *)
 type lsp_notification =
   | ExitNotification
