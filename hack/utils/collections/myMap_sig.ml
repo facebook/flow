@@ -21,7 +21,7 @@ module type S = sig
   val merge_env: 'a -> 'b t -> 'c t ->
     combine:('a -> key -> 'b option -> 'c option -> 'a * 'd option) ->
     'a * 'd t
-  val compare: 'a t -> 'a t -> int
+  val compare: ?cmp:('a -> 'a -> int) -> 'a t -> 'a t -> int
   val equal: 'a t -> 'a t -> bool
   val keys: 'a t -> key list
   val ordered_keys: 'a t -> key list
