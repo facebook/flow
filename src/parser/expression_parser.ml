@@ -250,13 +250,36 @@ module Expression
     if op <> None then Eat.token env;
     op
 
+  and pipeline_cover =
+    let open Expression in
+    let make_binary env left right operator loc =
+      let left = as_expression env left in
+      let right = as_expression env right in
+      Cover_expr (loc, Binary {
+        Binary.operator;
+        left;
+        right;
+      })
+    in let rec pipeline_expr env left lloc =
+      (* let options = parse_options env in *)
+      match Peek.token env with
+      | T_PIPELINE ->
+          Expect.token env T_PIPELINE;
+          let rloc, right = with_loc logical_cover env in
+          let loc = Loc.btwn lloc rloc in
+          pipeline_expr env (make_binary env left right Binary.Pipeline loc) loc
+      | _ -> left
+    in fun env ->
+      let loc, left = with_loc logical_cover env in
+      pipeline_expr env left loc
+
   (* ConditionalExpression :
    *   LogicalExpression
    *   LogicalExpression ? AssignmentExpression : AssignmentExpression
    *)
   and conditional_cover env =
     let start_loc = Peek.loc env in
-    let expr = logical_cover env in
+    let expr = pipeline_cover env in
     if Peek.token env = T_PLING
     then begin
       Expect.token env T_PLING;
@@ -267,7 +290,9 @@ module Expression
       let end_loc, alternate = with_loc assignment env in
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr (loc, Expression.(Conditional { Conditional.
-        test = as_expression env expr;
+        test = as_expression
+          env
+          expr;
         consequent;
         alternate;
       }))
