@@ -80,7 +80,7 @@ module Expression
   let as_pattern = Pattern_cover.as_pattern
 
   (* AssignmentExpression :
-   *   YieldExpression
+   *   [+Yield] YieldExpression
    *   ConditionalExpression
    *   LeftHandSideExpression = AssignmentExpression
    *   LeftHandSideExpression AssignmentOperator AssignmentExpression
