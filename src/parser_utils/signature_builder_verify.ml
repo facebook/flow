@@ -532,7 +532,8 @@ module Eval(Env: EvalEnv) = struct
         ->
         (* These operations have simple result types. *)
         ignore tps; ignore left; ignore right; Deps.bot
-      | Plus ->
+      | Plus
+      | Pipeline ->
         (* The result type of this operation depends in a complicated way on the left/right types. *)
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Binary))
 

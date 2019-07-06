@@ -1065,6 +1065,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
   and arith_binary operator loc _left _right =
     let open Ast.Expression.Binary in
     match operator with
+      | Pipeline
       | Plus ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
         T.FixMe.mk_expr_type loc

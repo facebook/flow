@@ -863,6 +863,7 @@ and Expression : sig
       | BitAnd
       | In
       | Instanceof
+      | Pipeline
 
     and ('M, 'T) t = {
       operator: operator;
