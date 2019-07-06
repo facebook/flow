@@ -186,6 +186,17 @@ and Type : sig
       }
       [@@deriving show]
     end
+    module Mapped: sig
+      type ('M, 'T) t' = {
+        name: ('M, 'T) Type.t;
+        bound: ('M, 'T) Type.t;
+        value: ('M, 'T) Type.t;
+        static: bool;
+        variance: 'M Variance.t option;
+      }
+      and ('M, 'T) t = 'M * ('M, 'T) t'
+      [@@deriving show]
+    end
     module InternalSlot: sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
       and ('M, 'T) t' = {
@@ -214,6 +225,7 @@ and Type : sig
       | Property of ('M, 'T) Property.t
       | SpreadProperty of ('M, 'T) SpreadProperty.t
       | Indexer of ('M, 'T) Indexer.t
+      | Mapped of ('M, 'T) Mapped.t
       | CallProperty of ('M, 'T) CallProperty.t
       | InternalSlot of ('M, 'T) InternalSlot.t
     [@@deriving show]

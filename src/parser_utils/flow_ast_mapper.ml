@@ -671,6 +671,15 @@ class ['loc] mapper = object(this)
     if key' == key && value' == value then opt
     else loc, { id; key = key'; value = value'; static; variance; }
 
+  method object_mapped_type (opt: ('loc, 'loc) Ast.Type.Object.Mapped.t) =
+    let open Ast.Type.Object.Mapped in
+    let loc, { name = name_; bound; value; static; variance; } = opt in
+    let name' = this#type_ name_ in
+    let bound' = this#type_ bound in
+    let value' = this#type_ value in
+    if name' == name_ && bound' == bound && value' == value then opt
+    else loc, { name = name'; bound = bound'; value = value'; static; variance; }
+
   method object_type _loc (ot: ('loc, 'loc) Ast.Type.Object.t) =
     let open Ast.Type.Object in
     let { properties ; exact; inexact } = ot in
@@ -678,6 +687,7 @@ class ['loc] mapper = object(this)
       | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
       | SpreadProperty p' -> id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
       | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
+      | Mapped p' -> id this#object_mapped_type p' p (fun p' -> Mapped p')
       | CallProperty _
       | InternalSlot _ -> p (* TODO *)
     ) properties in

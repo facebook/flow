@@ -699,6 +699,16 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     this#on_loc_annot annot, { id = id'; key = key'; value = value'; static; variance = variance' }
 
+  method object_mapped_type (oit: ('M, 'T) Ast.Type.Object.Mapped.t)
+                                 : ('N, 'U) Ast.Type.Object.Mapped.t =
+    let open Ast.Type.Object.Mapped in
+    let annot, { name = name_; bound; value; static; variance } = oit in
+    let name' = this#type_ name_ in
+    let bound' = this#type_ bound in
+    let value' = this#type_ value in
+    let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
+    this#on_loc_annot annot, { name = name'; bound = bound'; value = value'; static; variance = variance' }
+
   method object_internal_slot_type (islot: ('M, 'T) Ast.Type.Object.InternalSlot.t)
                                          : ('N, 'U) Ast.Type.Object.InternalSlot.t =
     let open Ast.Type.Object.InternalSlot in
@@ -722,6 +732,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let argument' = this#type_ argument in
       SpreadProperty (this#on_loc_annot annot, { SpreadProperty.argument = argument' })
     | Indexer indexer -> Indexer (this#object_indexer_type indexer)
+    | Mapped mapped -> Mapped (this#object_mapped_type mapped)
     | CallProperty (annot, { CallProperty.value; static }) ->
       let open CallProperty in
       let value' = (this#on_loc_annot * this#function_type) value in

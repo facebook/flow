@@ -1194,28 +1194,32 @@ end with type t = Impl.t) = struct
       inexact;
     }) =
       let open Type.Object in
-      let props, ixs, calls, slots = List.fold_left (fun (props, ixs, calls, slots) ->
+      let props, mappeds, ixs, calls, slots = List.fold_left (fun (props, mappeds, ixs, calls, slots) ->
         function
         | Property p ->
           let prop = object_type_property p in
-          prop::props, ixs, calls, slots
+          prop::props, mappeds, ixs, calls, slots
         | SpreadProperty p ->
           let prop = object_type_spread_property p in
-          prop::props, ixs, calls, slots
+          prop::props, mappeds, ixs, calls, slots
         | Indexer i ->
           let ix = object_type_indexer i in
-          props, ix::ixs, calls, slots
+          props, mappeds, ix::ixs, calls, slots
+        | Mapped m ->
+          let mapped = object_type_mapped m in
+          props, mapped::mappeds, ixs, calls, slots
         | CallProperty c ->
           let call = object_type_call_property c in
-          props, ixs, call::calls, slots
+          props, mappeds, ixs, call::calls, slots
         | InternalSlot s ->
           let slot = object_type_internal_slot s in
-          props, ixs, calls, slot::slots
-      ) ([], [], [], []) properties in
+          props, mappeds, ixs, calls, slot::slots
+      ) ([], [], [], [], []) properties in
       let fields = [
         "exact", bool exact;
         "properties", array (List.rev props);
         "indexers", array (List.rev ixs);
+        "mappeds", array (List.rev mappeds);
         "callProperties", array (List.rev calls);
         "internalSlots", array (List.rev slots);
       ] in
@@ -1263,6 +1267,17 @@ end with type t = Impl.t) = struct
       node "ObjectTypeIndexer" loc [
         "id", option identifier id;
         "key", _type key;
+        "value", _type value;
+        "static", bool static;
+        "variance", option variance variance_;
+      ]
+
+    and object_type_mapped (loc, { Type.Object.Mapped.
+      name; bound; value; static; variance = variance_
+    }) =
+      node "ObjectTypeIndexer" loc [
+        "name", _type name;
+        "bound", _type bound;
         "value", _type value;
         "static", bool static;
         "variance", option variance variance_;

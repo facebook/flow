@@ -295,6 +295,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Expression.New.t -> ('N, 'U) Ast.Expression.New.t
     method object_ :
       ('M, 'T) Ast.Expression.Object.t -> ('N, 'U) Ast.Expression.Object.t
+    method object_mapped_type :
+      ('M, 'T) Ast.Type.Object.Mapped.t ->
+      ('N, 'U) Ast.Type.Object.Mapped.t
     method object_indexer_type :
       ('M, 'T) Ast.Type.Object.Indexer.t ->
       ('N, 'U) Ast.Type.Object.Indexer.t
