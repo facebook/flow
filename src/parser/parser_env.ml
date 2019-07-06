@@ -622,6 +622,7 @@ module Peek = struct
       | T_COLON
       | T_OR
       | T_AND
+      | T_PIPELINE
       | T_BIT_OR
       | T_BIT_XOR
       | T_BIT_AND
