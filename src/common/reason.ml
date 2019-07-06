@@ -1121,18 +1121,19 @@ and code_desc_of_operation = Ast.Expression.(
   in
   let should_flatten = Binary.(
     let precedence = function
-    | `Logical Logical.Or -> 0
-    | `Logical Logical.NullishCoalesce -> 0
-    | `Logical Logical.And -> 1
-    | `Binary BitOr -> 2
-    | `Binary Xor -> 3
-    | `Binary BitAnd -> 4
-    | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> 5
-    | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof) -> 6
-    | `Binary (LShift | RShift | RShift3) -> 7
-    | `Binary (Plus | Minus) -> 8
-    | `Binary (Mult | Div | Mod) -> 9
-    | `Binary Exp -> 10
+    | `Binary Pipeline -> 0
+    | `Logical Logical.Or -> 1
+    | `Logical Logical.NullishCoalesce -> 1
+    | `Logical Logical.And -> 2
+    | `Binary BitOr -> 3
+    | `Binary Xor -> 4
+    | `Binary BitAnd -> 5
+    | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> 6
+    | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof) -> 7
+    | `Binary (LShift | RShift | RShift3) -> 8
+    | `Binary (Plus | Minus) -> 9
+    | `Binary (Mult | Div | Mod) -> 10
+    | `Binary Exp -> 11
     in
     let equality = function
     | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> true
