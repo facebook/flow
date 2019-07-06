@@ -880,6 +880,7 @@ let token (env: Lex_env.t) lexbuf : result =
   | "?" -> Token (env, T_PLING)
   | "&&" -> Token (env, T_AND)
   | "||" -> Token (env, T_OR)
+  | "|>" -> Token (env, T_PIPELINE)
   | "===" -> Token (env, T_STRICT_EQUAL)
   | "!==" -> Token (env, T_STRICT_NOT_EQUAL)
   | "<=" -> Token (env, T_LESS_THAN_EQUAL)
