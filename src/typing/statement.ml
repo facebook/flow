@@ -4523,6 +4523,11 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
       ),
       { operator; left = left_ast; right = right_ast }
 
+  | Pipeline ->
+      let left_ast = expression cx left in
+      let right_ast = expression cx right in
+      EmptyT.at loc |> with_trust literal_trust, { operator; left = left_ast; right = right_ast }
+
 and logical cx loc { Ast.Expression.Logical.operator; left; right } =
   let open Ast.Expression.Logical in
   match operator with
