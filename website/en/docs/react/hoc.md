@@ -50,28 +50,31 @@ that prop. For example, consider a navigation prop, or in the case of
 
 [`react-redux` a `store` prop]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
 
-To remove a prop from the config, we can use `$Diff`. Let's make some small
-adjustments to our `trivialHoc`:
+To remove a prop from the config, we can take a component that includes the
+prop and return a component that does not. It's best to construct these
+types using object type spread.
 
 ```js
 //@flow
 import * as React from 'react';
 
-function injectProp<Config: {}>(
-  Component: React.AbstractComponent<Config>
-): React.AbstractComponent<$Diff<Config, {foo: number | void}>> {
+type InjectedProps = {| foo: number |}
+
+function injectProp<Config>(
+  Component: React.AbstractComponent<{| ...Config, ...InjectedProps |}>
+): React.AbstractComponent<Config> {
   return function WrapperComponent(
-    props: $Diff<Config, {foo: number | void}>,
+    props: Config,
   ) {
     return <Component {...props} foo={42} />;
   };
 }
 
-class MyComponent extends React.Component<{
+class MyComponent extends React.Component<{|
   a: number,
   b: number,
-  foo: number,
-}> {}
+  ...InjectedProps,
+|}> {}
 
 const MyEnhancedComponent = injectProp(MyComponent);
 
@@ -89,21 +92,23 @@ type `void`.
 //@flow
 import * as React from 'react';
 
-function injectProp<Config: {}>(
-  Component: React.AbstractComponent<Config>
-): React.AbstractComponent<$Diff<Config, {foo: number | void}>> {
+type InjectedProps = {| foo: number |}
+
+function injectProp<Config>(
+  Component: React.AbstractComponent<{| ...Config, ...InjectedProps |}>
+): React.AbstractComponent<Config> {
   return function WrapperComponent(
-    props: $Diff<Config, {foo: number | void}>,
+    props: Config,
   ) {
     return <Component {...props} foo={42} />;
   };
 }
 
-class MyComponent extends React.Component<{
+class MyComponent extends React.Component<{|
   a: number,
   b: number,
-  foo: number,
-}> {}
+  ...InjectedProps,
+|}> {}
 
 const MyEnhancedComponent = injectProp(MyComponent);
 
@@ -123,15 +128,21 @@ of the component, we can use [`React.forwardRef`](https://reactjs.org/docs/forwa
 //@flow
 import * as React from 'react';
 
-function injectAndPreserveInstance<Config: {}, Instance>(
-  Component: React.AbstractComponent<Config, Instance>,
+type InjectedProps = {| foo: number |}
+
+function injectAndPreserveInstance<Config, Instance>(
+  Component: React.AbstractComponent<{| ...Config, ...InjectedProps |}, Instance>
 ): React.AbstractComponent<Config, Instance> {
   return React.forwardRef<Config, Instance>((props, ref) =>
-      <Component ref={ref} {...props} />
+      <Component ref={ref} foo={3} {...props} />
   );
 }
 
-class MyComponent extends React.Component<{}> {}
+class MyComponent extends React.Component<{
+  a: number,
+  b: number,
+  ...InjectedProps,
+}> {}
 
 const MyEnhancedComponent = injectAndPreserveInstance(MyComponent);
 
