@@ -4549,6 +4549,7 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right } =
       ),
       { operator = And; left; right; }
   | NullishCoalesce ->
+      warn_or_ignore_nullish_coalescing cx loc;
       let (_, t1), _ as left = expression cx left in
       let (_, t2), _ as right = expression cx right in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
@@ -6957,3 +6958,9 @@ and warn_or_ignore_optional_chaining optional cx loc =
   | Options.ESPROPOSAL_IGNORE -> ()
   | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
   else ()
+
+and warn_or_ignore_nullish_coalescing cx loc =
+  match Context.esproposal_nullish_coalescing cx with
+  | Options.ESPROPOSAL_ENABLE
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalNullishCoalescing loc)

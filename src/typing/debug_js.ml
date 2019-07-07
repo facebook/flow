@@ -2868,6 +2868,8 @@ let dump_error_message =
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->
         spf "EExperimentalOptionalChaining (%s)" (string_of_aloc loc)
+    | EExperimentalNullishCoalescing loc ->
+        spf "EExperimentalNullishCoalescing (%s)" (string_of_aloc loc)
     | EOptionalChainingMethods loc ->
         spf "EOptionalChainingMethods (%s)" (string_of_aloc loc)
     | EUnnecessaryOptionalChain (loc, _) ->
