@@ -255,26 +255,60 @@ module Expression
     let make_binary env left right operator loc =
       let left = as_expression env left in
       let right = as_expression env right in
-      if (in_fsharp_pipeline_direct_body env) then
-        Cover_expr left
-      else
-        Cover_expr (loc, Binary {
-          Binary.operator;
-          left;
-          right;
-        })
+      Cover_expr (loc, Binary {
+        Binary.operator;
+        left;
+        right;
+      })
     in let rec pipeline_expr env left lloc =
       (* let options = parse_options env in *)
       match Peek.token env with
       | T_PIPELINE ->
           Expect.token env T_PIPELINE;
           let env' = env |> with_in_fsharp_pipeline_direct_body true in
-          let rloc, right = with_loc logical_cover env' in
+          let rloc, right = with_loc pipeline_body_cover env' in
           let loc = Loc.btwn lloc rloc in
           pipeline_expr env (make_binary env left right Binary.Pipeline loc) loc
       | _ -> left
+    and error_callback _ = function
+      (* Don't rollback on these errors. *)
+      | Error.StrictReservedWord -> ()
+      (* Everything else causes a rollback *)
+      | _ -> raise Try.Rollback
+    and try_logical_cover_but_not_arrow_function env =
+      let env = env |> with_error_callback error_callback in
+      let ret = logical_cover env in
+      match Peek.token env with
+      | T_ARROW -> (* x => 123 *)
+        raise Try.Rollback
+      | T_COLON when last_token env = Some T_RPAREN -> (* (x): number => 123 *)
+        raise Try.Rollback
+      (* async x => 123 -- and we've already parsed async as an identifier
+       * expression *)
+      | _ when Peek.is_identifier env -> begin match ret with
+        | Cover_expr (_, Expression.Identifier (_, { Identifier.name= "async"; comments= _ }))
+            when not (Peek.is_line_terminator env) ->
+          raise Try.Rollback
+        | _ -> ret
+        end
+      | _ -> ret
+    and pipeline_body_cover env =
+      match Peek.token env, Peek.is_identifier env with
+      | T_LPAREN, _
+      | T_LESS_THAN, _
+      | _, true ->
+        (match Try.to_parse env try_logical_cover_but_not_arrow_function with
+        | Try.ParsedSuccessfully expr -> expr
+        | Try.FailedToParse ->
+          (match Try.to_parse env try_arrow_function with
+            | Try.ParsedSuccessfully expr -> expr
+            | Try.FailedToParse ->
+                logical_cover env
+          )
+        )
+      | _ -> logical_cover env
     in fun env ->
-      let loc, left = with_loc logical_cover env in
+      let loc, left = with_loc pipeline_body_cover env in
       pipeline_expr env left loc
 
   (* ConditionalExpression :
