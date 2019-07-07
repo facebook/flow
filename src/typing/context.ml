@@ -39,6 +39,7 @@ type metadata = {
   esproposal_export_star_as: Options.esproposal_feature_mode;
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  esproposal_fsharp_pipeline_operator: Options.esproposal_feature_mode;
   facebook_fbs: string option;
   facebook_fbt: string option;
   haste_module_ref_prefix: string option;
@@ -166,6 +167,7 @@ let metadata_of_options options = {
   esproposal_export_star_as = Options.esproposal_export_star_as options;
   esproposal_optional_chaining = Options.esproposal_optional_chaining options;
   esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
+  esproposal_fsharp_pipeline_operator = Options.esproposal_fsharp_pipeline_operator options;
   facebook_fbs = Options.facebook_fbs options;
   facebook_fbt = Options.facebook_fbt options;
   haste_module_ref_prefix = Options.haste_module_ref_prefix options;
@@ -284,6 +286,7 @@ let esproposal_decorators cx = cx.metadata.esproposal_decorators
 let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
 let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
 let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
+let esproposal_fsharp_pipeline_operator cx = cx.metadata.esproposal_fsharp_pipeline_operator
 let evaluated cx = cx.sig_cx.evaluated
 let file cx = cx.file
 let aloc_tables cx = cx.aloc_tables

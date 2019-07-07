@@ -35,6 +35,7 @@ type parse_options = {
   esproposal_export_star_as: bool;
   esproposal_optional_chaining: bool;
   esproposal_nullish_coalescing: bool;
+  esproposal_fsharp_pipeline_operator: bool;
   types: bool;
   use_strict: bool;
 }
@@ -70,6 +71,7 @@ val allow_yield : env -> bool
 val allow_await: env -> bool
 val allow_directive : env -> bool
 val allow_super : env -> allowed_super
+val allow_solo_await : env -> bool
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
@@ -79,7 +81,6 @@ val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
 val source : env -> File_key.t option
 val should_parse_types : env -> bool
-val in_fsharp_pipeline_direct_body : env -> bool
 
 (* mutators: *)
 val error_at : env -> Loc.t * Parse_error.t -> unit
@@ -105,6 +106,7 @@ val with_allow_yield : bool -> env -> env
 val with_allow_await : bool -> env -> env
 val with_allow_directive : bool -> env -> env
 val with_allow_super : allowed_super -> env -> env
+val with_allow_solo_await : bool -> env -> env
 val with_no_let : bool -> env -> env
 val with_in_loop : bool -> env -> env
 val with_no_in : bool -> env -> env
@@ -114,7 +116,6 @@ val with_in_switch : bool -> env -> env
 val with_in_export : bool -> env -> env
 val with_no_call : bool -> env -> env
 val with_error_callback : (env -> Parse_error.t -> unit) -> env -> env
-val with_in_fsharp_pipeline_direct_body : bool -> env -> env
 
 val without_error_callback : env -> env
 

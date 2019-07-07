@@ -145,6 +145,7 @@ type parse_options = {
   esproposal_export_star_as: bool;
   esproposal_optional_chaining: bool;
   esproposal_nullish_coalescing: bool;
+  esproposal_fsharp_pipeline_operator: bool;
   types: bool;
   use_strict: bool;
 }
@@ -156,6 +157,7 @@ let default_parse_options = {
   esproposal_export_star_as = false;
   esproposal_optional_chaining = false;
   esproposal_nullish_coalescing = false;
+  esproposal_fsharp_pipeline_operator = false;
   types = true;
   use_strict = false;
 }
@@ -177,7 +179,6 @@ type env = {
   in_switch             : bool;
   in_formal_parameters  : bool;
   in_function           : bool;
-  in_fsharp_pipeline_direct_body : bool;
   no_in                 : bool;
   no_call               : bool;
   no_let                : bool;
@@ -187,6 +188,7 @@ type env = {
   allow_await           : bool;
   allow_directive       : bool;
   allow_super           : allowed_super;
+  allow_solo_await      : bool;
   error_callback        : (env -> Error.t -> unit) option;
   lex_mode_stack        : Lex_mode.t list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
@@ -230,7 +232,6 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     in_switch = false;
     in_formal_parameters = false;
     in_function = false;
-    in_fsharp_pipeline_direct_body = false;
     no_in = false;
     no_call = false;
     no_let = false;
@@ -240,6 +241,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     allow_await = false;
     allow_directive = false;
     allow_super = No_super;
+    allow_solo_await = false;
     error_callback = None;
     lex_mode_stack = ref [Lex_mode.NORMAL];
     lex_env = ref lex_env;
@@ -264,6 +266,7 @@ let allow_yield env = env.allow_yield
 let allow_await env = env.allow_await
 let allow_directive env = env.allow_directive
 let allow_super env = env.allow_super
+let allow_solo_await env = env.allow_solo_await
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
@@ -273,7 +276,6 @@ let errors env = !(env.errors)
 let parse_options env = env.parse_options
 let source env = env.source
 let should_parse_types env = env.parse_options.types
-let in_fsharp_pipeline_direct_body env = env.in_fsharp_pipeline_direct_body
 
 (* mutators: *)
 let error_at env (loc, e) =
@@ -341,6 +343,7 @@ let with_allow_yield allow_yield env = { env with allow_yield }
 let with_allow_await allow_await env = { env with allow_await }
 let with_allow_directive allow_directive env = { env with allow_directive }
 let with_allow_super allow_super env = { env with allow_super }
+let with_allow_solo_await allow_solo_await env = { env with allow_solo_await }
 let with_no_let no_let env = { env with no_let }
 let with_in_loop in_loop env = { env with in_loop }
 let with_no_in no_in env = { env with no_in }
@@ -352,8 +355,6 @@ let with_in_export in_export env = { env with in_export }
 let with_no_call no_call env = { env with no_call }
 let with_error_callback error_callback env =
   { env with error_callback = Some error_callback }
-let with_in_fsharp_pipeline_direct_body in_fsharp_pipeline_direct_body env =
-  { env with in_fsharp_pipeline_direct_body }
 
 (* other helper functions: *)
 let error_list env = List.iter (error_at env)

@@ -204,6 +204,7 @@ and 'loc t' =
   | ESketchyNumberLint of Lints.sketchy_number_kind * 'loc virtual_reason
   | EInvalidPrototype of 'loc virtual_reason
   | EExperimentalOptionalChaining of 'loc
+  | EExperimentalFSharpPipelineOperator of 'loc
   | EOptionalChainingMethods of 'loc
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
@@ -552,6 +553,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ESketchyNumberLint (kind, r) -> ESketchyNumberLint (kind, map_reason r)
   | EInvalidPrototype r -> EInvalidPrototype (map_reason r)
   | EExperimentalOptionalChaining loc -> EExperimentalOptionalChaining (f loc)
+  | EExperimentalFSharpPipelineOperator loc -> EExperimentalFSharpPipelineOperator (f loc)
   | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
@@ -694,6 +696,7 @@ let util_use_op_of_msg nope util = function
 | ESketchyNumberLint _
 | EInvalidPrototype (_)
 | EExperimentalOptionalChaining _
+| EExperimentalFSharpPipelineOperator _
 | EOptionalChainingMethods _
 | EUnnecessaryOptionalChain _
 | EUnnecessaryInvariant _
@@ -756,6 +759,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EUnnecessaryInvariant (loc, _)
   | EOptionalChainingMethods loc
   | EExperimentalOptionalChaining loc
+  | EExperimentalFSharpPipelineOperator loc
   | EUnusedSuppression loc
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
@@ -888,6 +892,7 @@ let kind_of_msg = Errors.(function
   | EDocblockError _
   | ELintSetting _
   | EExperimentalOptionalChaining _
+  | EExperimentalFSharpPipelineOperator _
   | EOptionalChainingMethods _      -> PseudoParseError
   | _ -> InferError
 )
@@ -1951,6 +1956,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Optional chaining is an active early-stage feature proposal that ";
         text "may change. You may opt in to using it anyway by putting ";
         code "esproposal.optional_chaining=enable"; text " into the ";
+        code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+      ]
+
+    | EExperimentalFSharpPipelineOperator _ ->
+      Normal [
+        text "Experimental F# pipeline operator ("; code "|>"; text ") usage. ";
+        text "Pipeline operator is an active early-stage feature proposal that ";
+        text "may change. You may opt in to using it anyway by putting ";
+        code "esproposal.fsharp_pipeline_operator=enable"; text " into the ";
         code "[options]"; text " section of your "; code ".flowconfig"; text ".";
       ]
 

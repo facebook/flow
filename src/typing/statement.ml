@@ -4524,6 +4524,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
       { operator; left = left_ast; right = right_ast }
 
   | Pipeline ->
+      warn_or_ignore_fsharp_pipeline_operator cx loc;
       let (_, arg), _ as arg_ast = expression cx left in
       let (_, f), _ as callee = expression cx right in
       let open Ast.Expression in
@@ -6977,3 +6978,9 @@ and warn_or_ignore_optional_chaining optional cx loc =
   | Options.ESPROPOSAL_IGNORE -> ()
   | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
   else ()
+
+and warn_or_ignore_fsharp_pipeline_operator cx loc =
+  match Context.esproposal_fsharp_pipeline_operator cx with
+  | Options.ESPROPOSAL_ENABLE
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalFSharpPipelineOperator loc)

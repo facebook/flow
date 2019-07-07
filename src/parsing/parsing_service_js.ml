@@ -127,6 +127,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
     esproposal_export_star_as = true;
     esproposal_optional_chaining = true;
     esproposal_nullish_coalescing = true;
+    esproposal_fsharp_pipeline_operator = true;
     types = types;
     use_strict;
   }) in
@@ -144,6 +145,7 @@ let parse_json_file ~fail content file =
     esproposal_export_star_as = false;
     esproposal_optional_chaining = false;
     esproposal_nullish_coalescing = false;
+    esproposal_fsharp_pipeline_operator = false;
     types = true;
     use_strict = false;
   }) in

@@ -108,6 +108,7 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
         esproposal_export_star_as = true;
         esproposal_optional_chaining = true;
         esproposal_nullish_coalescing = true;
+        esproposal_fsharp_pipeline_operator = true;
         types = true;
         use_strict;
       }) in

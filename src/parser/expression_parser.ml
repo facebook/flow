@@ -261,11 +261,14 @@ module Expression
         right;
       })
     in let rec pipeline_expr env left lloc =
-      (* let options = parse_options env in *)
+      let options = parse_options env in
       match Peek.token env with
       | T_PIPELINE ->
+          if not options.esproposal_fsharp_pipeline_operator
+          then error env Parse_error.FSharpPipelineOperatorDisabled;
+
           Expect.token env T_PIPELINE;
-          let env' = env |> with_in_fsharp_pipeline_direct_body true in
+          let env' = env |> with_allow_solo_await true in
           let rloc, right = with_loc pipeline_body_cover env' in
           let loc = Loc.btwn lloc rloc in
           pipeline_expr env (make_binary env left right Binary.Pipeline loc) loc
@@ -526,7 +529,7 @@ module Expression
         }
       in
       let end_loc, argument = with_loc (
-        if (in_fsharp_pipeline_direct_body env) then
+        if (allow_solo_await env) then
           null
         else
           unary

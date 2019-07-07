@@ -52,6 +52,7 @@ val esproposal_decorators: config -> Options.esproposal_feature_mode
 val esproposal_export_star_as: config -> Options.esproposal_feature_mode
 val esproposal_nullish_coalescing: config -> Options.esproposal_feature_mode
 val esproposal_optional_chaining: config -> Options.esproposal_feature_mode
+val esproposal_fsharp_pipeline_operator: config -> Options.esproposal_feature_mode
 val facebook_fbs: config -> string option
 val facebook_fbt: config -> string option
 val file_watcher: config -> Options.file_watcher option

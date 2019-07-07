@@ -39,6 +39,7 @@ type metadata = {
   esproposal_export_star_as: Options.esproposal_feature_mode;
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  esproposal_fsharp_pipeline_operator: Options.esproposal_feature_mode;
   facebook_fbs: string option;
   facebook_fbt: string option;
   haste_module_ref_prefix: string option;
@@ -84,6 +85,7 @@ val esproposal_decorators: t -> Options.esproposal_feature_mode
 val esproposal_export_star_as: t -> Options.esproposal_feature_mode
 val esproposal_optional_chaining: t -> Options.esproposal_feature_mode
 val esproposal_nullish_coalescing: t -> Options.esproposal_feature_mode
+val esproposal_fsharp_pipeline_operator: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
 val aloc_tables: t -> ALoc.table Lazy.t Utils_js.FilenameMap.t

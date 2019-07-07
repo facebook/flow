@@ -35,6 +35,7 @@ let parse_content file content =
     esproposal_export_star_as = true;
     esproposal_optional_chaining = true;
     esproposal_nullish_coalescing = true;
+    esproposal_fsharp_pipeline_operator = true;
     types = true;
     use_strict = false;
   }) in
@@ -153,6 +154,7 @@ let stub_metadata ~root ~checked = { Context.
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  esproposal_fsharp_pipeline_operator = Options.ESPROPOSAL_ENABLE;
   facebook_fbs = None;
   facebook_fbt = None;
   haste_module_ref_prefix = None;
