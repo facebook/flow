@@ -4524,9 +4524,24 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
       { operator; left = left_ast; right = right_ast }
 
   | Pipeline ->
-      let left_ast = expression cx left in
-      let right_ast = expression cx right in
-      EmptyT.at loc |> with_trust literal_trust, { operator; left = left_ast; right = right_ast }
+      let (_, arg), _ as arg_ast = expression cx left in
+      let (_, f), _ as callee = expression cx right in
+      let open Ast.Expression in
+      let f = match callee with
+      | _, Unary { Unary.operator = Unary.Await; _ } ->
+        let reason = mk_reason (RCustom "await") loc in
+        Flow.get_builtin cx "$await" reason
+      | _ -> f
+      in
+      let use_op = Op (FunCall {
+        op = mk_reason (RCustom "|>") loc;
+        fn = mk_expression_reason right;
+        args = mk_initial_arguments_reason [Expression left];
+        local = true;
+      }) in
+      let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
+      let lhs_t = func_call cx reason ~use_op f None [Arg arg] in
+      lhs_t, { operator; left = arg_ast; right = callee }
 
 and logical cx loc { Ast.Expression.Logical.operator; left; right } =
   let open Ast.Expression.Logical in
