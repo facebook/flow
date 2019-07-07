@@ -79,6 +79,7 @@ val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
 val source : env -> File_key.t option
 val should_parse_types : env -> bool
+val in_fsharp_pipeline_direct_body : env -> bool
 
 (* mutators: *)
 val error_at : env -> Loc.t * Parse_error.t -> unit
@@ -113,6 +114,7 @@ val with_in_switch : bool -> env -> env
 val with_in_export : bool -> env -> env
 val with_no_call : bool -> env -> env
 val with_error_callback : (env -> Parse_error.t -> unit) -> env -> env
+val with_in_fsharp_pipeline_direct_body : bool -> env -> env
 
 val without_error_callback : env -> env
 

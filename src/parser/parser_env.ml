@@ -177,6 +177,7 @@ type env = {
   in_switch             : bool;
   in_formal_parameters  : bool;
   in_function           : bool;
+  in_fsharp_pipeline_direct_body : bool;
   no_in                 : bool;
   no_call               : bool;
   no_let                : bool;
@@ -229,6 +230,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     in_switch = false;
     in_formal_parameters = false;
     in_function = false;
+    in_fsharp_pipeline_direct_body = false;
     no_in = false;
     no_call = false;
     no_let = false;
@@ -271,6 +273,7 @@ let errors env = !(env.errors)
 let parse_options env = env.parse_options
 let source env = env.source
 let should_parse_types env = env.parse_options.types
+let in_fsharp_pipeline_direct_body env = env.in_fsharp_pipeline_direct_body
 
 (* mutators: *)
 let error_at env (loc, e) =
@@ -349,6 +352,8 @@ let with_in_export in_export env = { env with in_export }
 let with_no_call no_call env = { env with no_call }
 let with_error_callback error_callback env =
   { env with error_callback = Some error_callback }
+let with_in_fsharp_pipeline_direct_body in_fsharp_pipeline_direct_body env =
+  { env with in_fsharp_pipeline_direct_body }
 
 (* other helper functions: *)
 let error_list env = List.iter (error_at env)
