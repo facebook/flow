@@ -255,17 +255,21 @@ module Expression
     let make_binary env left right operator loc =
       let left = as_expression env left in
       let right = as_expression env right in
-      Cover_expr (loc, Binary {
-        Binary.operator;
-        left;
-        right;
-      })
+      if (in_fsharp_pipeline_direct_body env) then
+        Cover_expr left
+      else
+        Cover_expr (loc, Binary {
+          Binary.operator;
+          left;
+          right;
+        })
     in let rec pipeline_expr env left lloc =
       (* let options = parse_options env in *)
       match Peek.token env with
       | T_PIPELINE ->
           Expect.token env T_PIPELINE;
-          let rloc, right = with_loc logical_cover env in
+          let env' = env |> with_in_fsharp_pipeline_direct_body true in
+          let rloc, right = with_loc logical_cover env' in
           let loc = Loc.btwn lloc rloc in
           pipeline_expr env (make_binary env left right Binary.Pipeline loc) loc
       | _ -> left
@@ -480,7 +484,20 @@ module Expression
       end
     | Some operator ->
       Eat.token env;
-      let end_loc, argument = with_loc unary env in
+      let null (_env : Parser_env.env) : (Loc.t, Loc.t) Flow_ast.Expression.t =
+        Peek.loc env, Expression.Literal {
+          Literal.value = Literal.Null;
+          comments = None;
+          raw = "null";
+        }
+      in
+      let end_loc, argument = with_loc (
+        if (in_fsharp_pipeline_direct_body env) then
+          null
+        else
+          unary
+        ) env
+      in
       let loc = Loc.btwn begin_loc end_loc in
       Expression.(match operator, argument with
       | Unary.Delete, (_, Identifier _) ->
