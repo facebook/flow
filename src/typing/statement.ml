@@ -1875,6 +1875,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; sig_loc; _} = func in
       let fn_type, func_ast = mk_function_declaration None cx sig_loc func in
+      Flow.check_polarity cx Polarity.Positive fn_type;
       (match id with
       | Some(_, { Ast.Identifier.name; comments= _ }) ->
         let use_op = Op (AssignVar {
