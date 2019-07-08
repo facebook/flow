@@ -3249,7 +3249,9 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), Function func
 
   | ArrowFunction func ->
-      let t, f = mk_arrow cx loc func in (loc, t), ArrowFunction f
+      let t, f = mk_arrow cx loc func in
+      Flow.check_polarity cx Polarity.Positive t;
+      (loc, t), ArrowFunction f
 
   | TaggedTemplate {
       TaggedTemplate.tag;
