@@ -153,6 +153,9 @@ var removeFlowVisitor = {
   TypeParameterDeclaration: removeNode,
   TypeParameterInstantiation: removeNode,
   InferredPredicate: removeNode,
+  OpaqueType: removeNode,
+  DeclareOpaqueType: removeNode,
+  DeclareExportDeclaration: removeNode,
 
   ClassDeclaration: removeImplementedInterfaces,
   ClassExpression: removeImplementedInterfaces,

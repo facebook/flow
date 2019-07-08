@@ -193,3 +193,16 @@ function testit(arg: mixed): boolean %checks {
 
 // Test function with default type parameter
 function f<T, S = T>() {}
+
+// Opaque types
+opaque type A = number;
+opaque type B: string = string;
+declare opaque type A;
+declare opaque type B: string;
+export opaque type A = number;
+
+// Declare export
+declare export opaque type B;
+declare export var x;
+declare export function x(): void;
+declare export default T;
