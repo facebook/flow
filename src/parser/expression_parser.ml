@@ -80,6 +80,7 @@ module Expression
   let as_pattern = Pattern_cover.as_pattern
 
   (* AssignmentExpression :
+   *   [+Yield] YieldExpression
    *   ConditionalExpression
    *   LeftHandSideExpression = AssignmentExpression
    *   LeftHandSideExpression AssignmentOperator AssignmentExpression
@@ -249,6 +250,10 @@ module Expression
     if op <> None then Eat.token env;
     op
 
+  (* ConditionalExpression :
+   *   LogicalExpression
+   *   LogicalExpression ? AssignmentExpression : AssignmentExpression
+   *)
   and conditional_cover env =
     let start_loc = Peek.loc env in
     let expr = logical_cover env in
@@ -270,6 +275,19 @@ module Expression
 
   and conditional env = as_expression env (conditional_cover env)
 
+  (*
+   * LogicalANDExpression :
+   *   BinaryExpression
+   *   LogicalANDExpression && BitwiseORExpression
+   *
+   * LogicalORExpression :
+   *   LogicalANDExpression
+   *   LogicalORExpression || LogicalANDExpression
+   *   LogicalORExpression ?? LogicalANDExpression
+   *
+   * LogicalExpression :
+   *   LogicalORExpression
+   *)
   and logical_cover =
     let open Expression in
     let make_logical env left right operator loc =
