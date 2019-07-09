@@ -89,6 +89,7 @@ if !empty(s:languageservers)
 
 Another way to add support for Flow in Vim is to use [LanguageClient-neovim](https://github.com/autozimu/LanguageClient-neovim).
 
+* Suports vim 8 and neovim
 * Adds completions to omnifunc
 * Checks JavaScript files for type errors on save
 * Look up types under cursor
@@ -142,8 +143,7 @@ With Flow build step, using flow-bin
 #### Setup
 ```
 let g:LanguageClient_rootMarkers = {
-\   'javascript': ['tsconfig.json', '.flowconfig', 'package.json'],
-\   'typescript': ['tsconfig.json', '.flowconfig', 'package.json']
+\   'javascript': ['tsconfig.json', '.flowconfig', 'package.json']
 \ }
 " auto start server for these file types
 let g:LSP_ts_command = ['typescript-language-server', '--stdio']
