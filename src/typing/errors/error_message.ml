@@ -212,6 +212,7 @@ and 'loc t' =
   | EBigIntNotYetSupported of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
+  | ENonArraySpread of 'loc virtual_reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -559,6 +560,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification _ as e -> e
+  | ENonArraySpread r -> ENonArraySpread (map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -701,6 +703,7 @@ let util_use_op_of_msg nope util = function
 | EUnexpectedTemporaryBaseType _
 | EBigIntNotYetSupported _
 | ESignatureVerification _
+| ENonArraySpread _
   -> nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -742,7 +745,8 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EImportTypeAsTypeof (reason, _)
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
-  | EDebugPrint (reason, _) ->
+  | EDebugPrint (reason, _)
+  | ENonArraySpread reason ->
         Some (aloc_of_reason reason)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
@@ -870,6 +874,7 @@ let kind_of_msg = Errors.(function
   | ESignatureVerification _        -> LintError Lints.SignatureVerificationFailure
   | EImplicitInexactObject _        -> LintError Lints.ImplicitInexactObject
   | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
+  | ENonArraySpread _               -> LintError Lints.NonArraySpread
   | EBadExportPosition _
   | EBadExportContext _             -> InferWarning ExportKind
   | EUnexpectedTypeof _
@@ -1984,6 +1989,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       Normal [
         text "BigInt "; ref reason; text " is not yet supported."
       ]
+    | ENonArraySpread reason ->
+      Normal [
+        text "Cannot spread non-array iterable "; ref reason; text ". Use ";
+        code "...Array.from(<iterable>)"; text " instead."
+      ]
 )
 
 let is_lint_error = function
@@ -2004,5 +2014,6 @@ let is_lint_error = function
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
   | EUninitializedInstanceProperty _
+  | ENonArraySpread _
       -> true
   | _ -> false

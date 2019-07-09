@@ -3197,6 +3197,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         arrtype
       | _ ->
         (* Non-array non-any iterables *)
+        begin match rrt_resolve_to with
+        (* Spreading iterables in a type context is always OK *)
+        | ResolveSpreadsToMultiflowSubtypeFull _ -> ()
+        (* Otherwise we're spreading values, which we may need to warn about *)
+        | ResolveSpreadsToArray _
+        | ResolveSpreadsToArrayLiteral _
+        | ResolveSpreadsToCallT _
+        | ResolveSpreadsToCustomFunCall _
+        | ResolveSpreadsToMultiflowCallFull _
+        | ResolveSpreadsToMultiflowPartial _
+        | ResolveSpreadsToTuple _ ->
+          add_output cx ~trace (Error_message.ENonArraySpread reason)
+        end;
         let reason = reason_of_t l in
         let element_tvar = Tvar.mk cx reason in
         let iterable =

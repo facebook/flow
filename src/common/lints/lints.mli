@@ -32,6 +32,7 @@ type lint_kind =
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
+  | NonArraySpread
 
 val string_of_kind: lint_kind -> string
 

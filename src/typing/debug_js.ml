@@ -2884,6 +2884,8 @@ let dump_error_message =
       spf "ESignatureVerification (%s)" (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
     | EBigIntNotYetSupported reason ->
       spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
+    | ENonArraySpread reason ->
+        spf "ENonArraySpread (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace
