@@ -1,36 +1,36 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+Error ------------------------------------------------------------------------------------------------------ test.js:6:3
 
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   8|   p: number;
+   6|   p: number; // PropertyNotDefinitivelyInitialized
         ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:12:3
+Error ----------------------------------------------------------------------------------------------------- test.js:10:3
 
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   12|   p1: number;
+   10|   p1: number; // PropertyNotDefinitivelyInitialized
          ^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:3
+Error ----------------------------------------------------------------------------------------------------- test.js:11:3
 
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   13|   p2: number;
+   11|   p2: number; // PropertyNotDefinitivelyInitialized
          ^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:19:3
+Error ----------------------------------------------------------------------------------------------------- test.js:15:3
 
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   19|   #priv;
+   15|   #priv; // PropertyNotDefinitivelyInitialized
          ^^^^^
 
 

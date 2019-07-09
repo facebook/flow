@@ -287,15 +287,6 @@ module Func_stmt_params = Func_params.Make (Func_stmt_config)
 module Func_stmt_sig = Func_sig.Make (Func_stmt_params)
 module Class_stmt_sig = Class_sig.Make (Func_stmt_sig)
 
-module Class_property = struct
-  type t =
-    | Public of string
-    | Private of string
-
-  let compare = compare
-end
-module Class_property_map = Map.Make(Class_property)
-
 (************)
 (* Visitors *)
 (************)
@@ -6231,32 +6222,47 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
 )
 
 and check_properties_initialized_before_use cx class_ast: unit =
-  let (_, body) = class_ast.Ast.Class.body in
-  let elements = body.Ast.Class.Body.body in
-
-  let uninitialized: ALoc.t Class_property_map.t =
-    List.fold_left (fun uninited -> Ast.Class.(function
+  let open Ast.Class in
+  let class_body = (snd class_ast.body).Body.body in
+  let properties =
+    Core_list.filter_map ~f:(function
       | Body.Property (_, {
-          Property.key = Ast.Expression.Object.Property.Identifier (
-            loc, { Ast.Identifier.name; _ }
-          );
-          Property.value = None;
-          Property.static = false;
-          _
-        }) -> Class_property_map.add (Class_property.Public name) loc uninited
+          Property.key = Ast.Expression.Object.Property.Identifier ((loc, _) as id);
+          value = None;
+          static = false;
+          annot = _;
+          variance = _;
+        }) -> Some (Property_assignment.public_property loc id)
       | Body.PrivateField (_, {
-          PrivateField.key = (loc, ident);
-          PrivateField.value = None;
-          PrivateField.static = false;
-          _
-        }) -> Class_property_map.add (Class_property.Private (ident_name ident)) loc uninited
-      | _ -> uninited
-      )
-    ) Class_property_map.empty elements
+          PrivateField.key = (loc, _) as id;
+          value = None;
+          static = false;
+          annot = _;
+          variance = _;
+        }) -> Some (Property_assignment.private_property loc id)
+      | _ -> None
+    ) class_body
+  in
+  let ctor_body: (ALoc.t, ALoc.t) Ast.Statement.Block.t =
+    Core_list.find_map ~f:(function
+      | Body.Method (_, {
+          Method.kind = Method.Constructor;
+          value = (_, {
+            Ast.Function.body = Ast.Function.BodyBlock (_, block);
+            id = _; params = _; async = _; generator = _; predicate = _;
+            return = _; tparams = _; sig_loc = _;
+          });
+          key = _; static = _; decorators = _;
+        }) -> Some block
+      | _ -> None
+    ) class_body
+    |> Option.value ~default:{ Ast.Statement.Block.body = [] }
   in
 
-  uninitialized
-  |> Class_property_map.iter (fun _ loc ->
+  let _ = Property_assignment.eval_property_assignment properties ctor_body in
+
+  properties
+  |> List.iter (fun (loc, _) ->
     Flow.add_output cx Error_message.(
       EUninitializedInstanceProperty (loc, PropertyNotDefinitivelyInitialized)
     )
