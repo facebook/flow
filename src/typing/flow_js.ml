@@ -5716,6 +5716,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) call_args_tlist;
       rec_flow_t cx trace (l, call_tout)
 
+    | FunProtoApplyT (lreason, Some this_t, _), BindT (_, _, { call_this_t; call_args_tlist; call_tout; _ }, _) ->
+      rec_flow_t cx trace (call_this_t, this_t);
+      rec_flow_t cx trace (FunProtoApplyT (lreason, Some this_t, call_args_tlist), call_tout)
+
     | FunProtoApplyT (lreason, _, _), BindT (_, _, { call_this_t; call_args_tlist; call_tout; _ }, _) ->
       rec_flow_t cx trace (FunProtoApplyT (lreason, Some call_this_t, call_args_tlist), call_tout)
 
