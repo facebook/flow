@@ -26,6 +26,65 @@ nnoremap <leader>an :ALENextWrap<cr>
 nnoremap <leader>ap :ALEPreviousWrap<cr>
 ```
 
+### coc.nvim-neovim <a class="toc" id="cocnvim" href="#cocnvim"></a>
+
+[Coc](https://github.com/neoclide/coc.nvim) is an intellisense engine for vim8 & neovim.
+
+### [Setup](https://gist.github.com/antonk52/4587b2687268a5dde494240ce975a708)
+
+<details>
+<summary>Minimal vimrc</summar>
+<pre>
+set nocompatible
+filetype off
+
+" install coc.nvim using Plug or preffered plugin manager
+call plug#begin('~/.vim/plugged')
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+call plug#end()
+
+filetype plugin indent on
+
+" ======= coc settings
+set updatetime=300
+set shortmess+=c
+
+" Use leader T to show documentation in preview window
+nnoremap <leader>t :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  else
+    call CocAction('doHover')
+  endif
+endfunction
+
+" instead of having ~/.vim/coc-settings.json
+let s:LSP_CONFIG = {
+      \  'flow': {
+      \    'command': exepath('flow'),
+      \    'args': ['lsp'],
+      \    'filetypes': ['javascript', 'javascriptreact'],
+      \    'initializationOptions': {},
+      \    'requireRootPattern': 1,
+      \    'settings': {},
+      \    'rootPatterns': ['.flowconfig']
+      \  }
+      \}
+
+let s:languageservers = {}
+for [lsp, config] in items(s:LSP_CONFIG)
+  let s:not_empty_cmd = !empty(get(config, 'command'))
+  if s:not_empty_cmd | let s:languageservers[lsp] = config | endif
+endfor
+
+if !empty(s:languageservers)
+  call coc#config('languageserver', s:languageservers)
+  endif
+</pre>
+</details>
+
 ### LanguageClient-neovim <a class="toc" id="LanguageClient-neovim" href="#LanguageClient-neovim"></a>
 
 Another way to add support for Flow in Vim is to use [LanguageClient-neovim](https://github.com/autozimu/LanguageClient-neovim).
