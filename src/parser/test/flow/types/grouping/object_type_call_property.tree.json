@@ -20,10 +20,11 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":3,"column":1}},
         "range":[9,22],
-        "exact":false,
         "inexact":false,
+        "exact":false,
         "properties":[],
         "indexers":[],
+        "mappeds":[],
         "callProperties":[
           {
             "type":"ObjectTypeCallProperty",

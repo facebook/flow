@@ -66,6 +66,7 @@
             "variance":null
           }
         ],
+        "mappeds":[],
         "callProperties":[],
         "internalSlots":[]
       },
