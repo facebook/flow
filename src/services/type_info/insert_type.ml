@@ -195,22 +195,22 @@ let fail_when_ty_size_exceeds size_limit ty =
 
 
 (* Generate an equivalent Flow_ast.Type *)
-let serialize ?(imports_react=false) ty =
-  (new Utils.patch_up_react_mapper ~imports_react ())#on_t () ty
+let serialize ?(imports_react=false) loc ty =
+  (new Utils.patch_up_react_mapper ~imports_react ())#on_t loc ty
   |> Ty_utils.simplify_type ~simplify_empty:true
   |> Ty_serializer.type_
   |> function
   | Ok ast -> Utils.patch_up_type_ast ast
   | Error msg -> raise (unexpected (FailedToSerialize {ty; error_message=msg}))
 
-let remove_ambiguous_types ~ambiguity_strategy ty =
+let remove_ambiguous_types ~ambiguity_strategy ty loc =
   match ambiguity_strategy with
   | Fail ->
     begin try fail_on_ambiguity ty with
       | FoundAmbiguousType ->
         raise @@ expected @@ MulipleTypesPossibleAtPoint {
-          specialized=specialize_temporary_types ty |> serialize;
-          generalized=generalize_temporary_types ty |> serialize;
+          specialized=specialize_temporary_types ty |> serialize loc;
+          generalized=generalize_temporary_types ty |> serialize loc;
         }
     end
   | Temporary  -> allow_temporary_arr_and_obj_types ty
@@ -242,8 +242,8 @@ class mapper ?(size_limit=30) ~ambiguity_strategy
       | Utils.Fatal error -> raise @@ expected @@
           FailedToValidateType{error; error_message=Utils.serialize_validation_error error}
     end;
-    let ty = remove_ambiguous_types ~ambiguity_strategy ty in
-    (location, serialize ~imports_react:true ty)
+    let ty = remove_ambiguous_types ~ambiguity_strategy ty location in
+    (location, serialize ~imports_react:true location ty)
 
   method private synth_type_annotation_hint loc =
     Flow_ast.Type.Available (this#synth_type loc)

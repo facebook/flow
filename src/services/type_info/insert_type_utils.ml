@@ -25,6 +25,9 @@ let serialize_validation_error = function
   | Empty_SomeUnknownUpper u ->
     Utils_js.spf "Empty_SomeUnknownUpper (use: %s)" u
 
+let warn_shadow_prop ?(strip_root=None) name loc =
+    Hh_logger.warn "ShadowProp %s at %s" name (Reason.string_of_loc ?strip_root loc)
+
 exception Fatal of validation_error
 (* Raise an validation_error if there isn't a user facing type that is equivalent to the Ty *)
 class type_validator_visitor = object(_)
@@ -121,9 +124,9 @@ let is_react_loc loc =
   | _ -> false
 
 (* Apply stylistic changes to react types *)
-class ['A] patch_up_react_mapper ?(imports_react=false) () = object (this)
-  inherit ['A] Ty.endo_ty as super
-  method! on_t a t =
+class patch_up_react_mapper ?(imports_react=false) () = object (this)
+  inherit [_] Ty.endo_ty as super
+  method! on_t loc t =
     match t with
 
     (* If 'react' is not imported, then we treat the symbol as Remote, so that
@@ -139,12 +142,24 @@ class ['A] patch_up_react_mapper ?(imports_react=false) () = object (this)
         def_loc;
         _} as symbol, kind, args_opt)
       when is_react_loc def_loc ->
-      let args_opt = Flow_ast_mapper.map_opt (ListUtils.ident_map (this#on_t a)) args_opt in
+      let args_opt = Flow_ast_mapper.map_opt (ListUtils.ident_map (this#on_t loc)) args_opt in
       let symbol = if imports_react
         then { symbol with Ty.name = "React." ^ name }
         else { symbol with Ty.provenance = Ty.Remote { Ty.imported_as = None } } in
       Ty.Generic (symbol, kind, args_opt)
-    | _ -> super#on_t a t
+    | _ -> super#on_t loc t
+
+    method! on_prop loc prop =
+      let prop = match prop with
+        | Ty.NamedProp (name, named_prop)
+          when Reason.is_internal_name name ->
+          warn_shadow_prop name loc;
+          (* Shadow props appear as regular props *)
+          let name = String.sub name 1 (String.length name - 1) in
+          Ty.NamedProp (name, named_prop)
+        | prop -> prop
+      in
+      super#on_prop loc prop
 end
 
 (* Returns true if the location given a zero width location. *)
