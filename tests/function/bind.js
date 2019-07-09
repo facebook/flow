@@ -30,9 +30,15 @@ let tests = [
     appliedFn(null, ['']); // error
   },
 
+
   function(x: (x: number) => void, y: (x: string) => void) {
     const appliedFn = Function.apply.bind(x); // ok
     const reappliedFn = appliedFn.bind(y); // wrong, should error
     reappliedFn(null, ['']); // wrong
-  }
+  },
+
+  function(x: (x: number) => void) {
+    const appliedFn = Function.apply.bind(x, null); // should be ok
+    appliedFn(['']); // wrong
+  },
 ];
