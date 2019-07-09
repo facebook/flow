@@ -247,7 +247,7 @@ and collect_of_type ?log_unresolved cx acc = function
 
   | FunProtoBindT _
   | FunProtoCallT _
-  | FunProtoApplyT (_, None)
+  | FunProtoApplyT (_, None, _)
   | FunProtoT _
   | NullProtoT _
   | ObjProtoT _
@@ -258,8 +258,10 @@ and collect_of_type ?log_unresolved cx acc = function
     ->
     acc
 
-  | FunProtoApplyT (_, Some t) ->
-    collect_of_type ?log_unresolved cx acc t
+  | FunProtoApplyT (_, Some t, ts) ->
+    let arg_types =
+      Core_list.map ~f:(function Arg t | SpreadArg t -> t) ts in
+    collect_of_types ?log_unresolved cx acc (arg_types @ [t])
 
 and collect_of_destructor ?log_unresolved cx acc = function
   | NonMaybeType -> acc

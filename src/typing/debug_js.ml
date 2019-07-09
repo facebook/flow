@@ -170,14 +170,17 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
-  | FunProtoApplyT (_, None)
+  | FunProtoApplyT (_, None, _)
   | FunProtoBindT _
   | FunProtoCallT _
     -> []
 
-  | FunProtoApplyT (_, Some t) -> [
-    "thisType", _json_of_t json_cx t;
-  ]
+  | FunProtoApplyT (_, Some t, call_args_tlist) ->
+    let arg_types = Core_list.map ~f:(json_of_funcallarg json_cx) call_args_tlist in
+    [
+      "thisType", _json_of_t json_cx t;
+      "argTypes", JSON_Array arg_types;
+    ]
 
   | DefT (_, _, FunT (static, proto, funtype)) -> [
       "static", _json_of_t json_cx static;
@@ -1798,10 +1801,10 @@ let rec dump_t_ (depth, tvars) cx t =
   | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
-  | FunProtoApplyT (_, None)
+  | FunProtoApplyT (_, None, _)
   | FunProtoBindT _
   | FunProtoCallT _ -> p t
-  | FunProtoApplyT (_, Some arg) ->
+  | FunProtoApplyT (_, Some arg, _ (* TODO *)) ->
     p ~extra:(kid arg) t
   | DefT (_, trust, PolyT (_, tps, c, id)) -> p ~trust:(Some trust) ~extra:(spf "%s [%s] #%d"
       (kid c)
