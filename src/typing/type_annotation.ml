@@ -852,12 +852,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "Function$Prototype$Apply" ->
-    let reason = mk_reason RFunctionType loc in
-    (match convert_type_params () with
-    | [t], targs ->
-      reconstruct_ast (FunProtoApplyT (reason, Some t, [])) targs
-    | _, targs ->
-      reconstruct_ast (FunProtoApplyT (reason, None, [])) targs
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+      let reason = mk_reason RFunctionType loc in
+      reconstruct_ast (FunProtoApplyT (reason, None, [])) None
     )
 
   | "Function$Prototype$Bind" ->
