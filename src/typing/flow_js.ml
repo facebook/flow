@@ -7834,7 +7834,7 @@ and instantiate_poly_with_targs
           AnyT (reason_op, AnyError), []
       | _, t::ts ->
           t, ts in
-      let t_ = cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t in
+      let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
       let frame = Frame (TypeParamBound {
         name = typeparam.name;
       }, use_op) in
@@ -7849,7 +7849,7 @@ and instantiate_poly_with_targs
    reason for specialization, either return the type argument or, when directed,
    look up the instantiation cache for an existing type argument for the same
    purpose and unify it with the supplied type argument. *)
-and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
+and cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t =
   match cache with
   | None -> t
   | Some rs ->
@@ -7858,7 +7858,7 @@ and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
     | RTypeAppImplicit _ -> t
     | _ ->
       let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
-      rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_;
+      rec_unify cx trace ~use_op ~unify_any:true t t_;
       t_
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
