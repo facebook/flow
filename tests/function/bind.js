@@ -38,7 +38,7 @@ let tests = [
   },
 
   function(x: (x: number) => void) {
-    const appliedFn = Function.apply.bind(x, null); // should be ok
-    appliedFn(['']); // wrong
+    const appliedFn = Function.apply.bind(x, null); // ok
+    appliedFn(['']); // error
   },
 ];
