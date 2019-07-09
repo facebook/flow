@@ -502,12 +502,17 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let _ = identifier_name env in
         let bound = _type env in
         Expect.token env T_RBRACKET;
-        Expect.token env T_COLON;
-        let value = _type env in
+        let optional, value =
+          let optional = Expect.maybe env T_PLING in
+          Expect.token env T_COLON;
+          let value = _type env in
+          optional, value
+        in
         { Type.Object.Mapped.
           name;
           bound;
           value;
+          optional;
           static = static <> None;
           variance;
         }

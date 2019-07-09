@@ -191,6 +191,7 @@ and Type : sig
         name: ('M, 'T) Type.t;
         bound: ('M, 'T) Type.t;
         value: ('M, 'T) Type.t;
+        optional: bool;
         static: bool;
         variance: 'M Variance.t option;
       }

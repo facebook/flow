@@ -1273,13 +1273,14 @@ end with type t = Impl.t) = struct
       ]
 
     and object_type_mapped (loc, { Type.Object.Mapped.
-      name; bound; value; static; variance = variance_
+      name; bound; value; static; variance = variance_; optional
     }) =
-      node "ObjectTypeIndexer" loc [
+      node "ObjectTypeMapped" loc [
         "name", _type name;
         "bound", _type bound;
         "value", _type value;
         "static", bool static;
+        "optional", bool optional;
         "variance", option variance variance_;
       ]
 
