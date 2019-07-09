@@ -246,9 +246,23 @@ Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible 
                    ^^^ [1]
 
 References:
-   bind.js:23:54
-   23|   function(x: {(a: string, b: string): void, bind(a: string): void}) {
-                                                            ^^^^^^ [2]
+   bind.js:23:55
+   23|   function(x: { (a: string, b: string): void, bind(a: string): void }) {
+                                                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- bind.js:30:22
+
+Cannot call `appliedFn` with string bound to `x` because string [1] is incompatible with number [2].
+
+   bind.js:30:22
+   30|     appliedFn(null, ['']); // error
+                            ^^ [1]
+
+References:
+   bind.js:28:19
+   28|   function(x: (x: number) => void) {
+                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- call.js:4:10
@@ -717,4 +731,4 @@ References:
 
 
 
-Found 52 errors
+Found 53 errors
