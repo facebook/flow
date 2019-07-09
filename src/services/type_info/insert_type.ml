@@ -6,6 +6,7 @@
  *)
 
 module Utils = Insert_type_utils
+open Autofix_options
 
 type unexpected =
   | UnknownTypeAtPoint of Loc.t
@@ -17,8 +18,9 @@ type expected =
   | InvalidAnnotationTarget of Loc.t
   | UnsupportedAnnotation of {location:Loc.t; error_message:string}
   | TypeSizeLimitExceeded of {size_limit:int; size:int option;}
-  | MulipleTypesPossibleAtPoint of {generalized:(Loc.t, Loc.t) Flow_ast.Type.t;
-                                    specialized:(Loc.t, Loc.t) Flow_ast.Type.t}
+  | MulipleTypesPossibleAtPoint of
+    {generalized:(Loc.t, Loc.t) Flow_ast.Type.t;
+     specialized:(Loc.t, Loc.t) Flow_ast.Type.t}
   | FailedToValidateType of {error:Utils.validation_error; error_message:string}
   | FailedToTypeCheck of Errors.ConcreteLocPrintableErrorSet.t
   | FailedToNormalize of (Loc.t * string)
@@ -33,6 +35,158 @@ let expected err = (FailedToInsertType (Expected err))
 
 let unexpected err = (FailedToInsertType (Unexpected err))
 
+exception FoundAmbiguousType
+
+class use_upper_bound_mapper = object(this)
+  inherit [_] Ty.endo_ty as super
+  method! on_Bot () t =
+    let open Ty in function
+    | (NoLowerWithUpper (SomeKnownUpper ub)) -> this#on_t () ub
+    | b -> super#on_Bot () t b
+end
+
+class allow_temporary_types_mapper = object(this)
+  inherit use_upper_bound_mapper as super
+
+  method! on_Arr () t = function
+  | Ty.{arr_literal = true; arr_elt_t; _} ->
+    Ty.Generic (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
+  | arr -> super#on_Arr () t arr
+
+  method! on_Obj () t = function
+  | Ty.{obj_literal = true; _} as obj ->
+    let obj = {obj with Ty.obj_literal = false} in
+    Ty.Generic (Utils.temporary_objectlit_symbol, Ty.TypeAliasKind,
+      Some [super#on_Obj () (Ty.Obj obj) obj])
+  | o -> super#on_Obj () t o
+end
+
+let allow_temporary_types = (new allow_temporary_types_mapper)#on_t ()
+
+class fail_on_ambiguity_mapper = object(_)
+  inherit use_upper_bound_mapper as super
+
+  method! on_Num () t = function
+  | (Some _lit) ->
+    raise FoundAmbiguousType
+  | n -> super#on_Num () t n
+
+  method! on_Bool () t = function
+  | (Some _lit) ->
+    raise FoundAmbiguousType
+  | n -> super#on_Bool () t n
+
+  method! on_Str () t = function
+  | (Some _lit) ->
+    raise FoundAmbiguousType
+  | n -> super#on_Str () t n
+
+  method! on_Arr () t = function
+  | Ty.{arr_literal = true; _} ->
+    raise FoundAmbiguousType
+  | arr -> super#on_Arr () t arr
+
+  method! on_Obj () t = function
+  | Ty.{obj_literal = true; _} ->
+    raise FoundAmbiguousType
+  | obj -> super#on_Obj () t obj
+end
+
+let fail_on_ambiguity = (new fail_on_ambiguity_mapper)#on_t ()
+
+class generalize_temporary_types_mapper = object(_)
+  inherit use_upper_bound_mapper as super
+  method! on_Num () t = function
+  | (Some _lit) -> Ty.Num None
+  | n -> super#on_Num () t n
+
+  method! on_Bool () t = function
+  | (Some _lit) -> Ty.Bool None
+  | n -> super#on_Bool () t n
+
+  method! on_Str () t = function
+  | (Some _lit) -> Ty.Str None
+  | n -> super#on_Str () t n
+
+  method! on_Arr () t = function
+  | Ty.{arr_literal = true; _} as arr ->
+    let arr = Ty.{arr with arr_literal=false} in
+    super#on_Arr () (Ty.Arr arr) arr
+  | arr -> super#on_Arr () t arr
+
+  method! on_Obj () t = function
+  | Ty.{obj_exact = true; _} as obj ->
+    let obj = Ty.{obj with obj_exact=false} in
+    super#on_Obj () (Ty.Obj obj) obj
+  | obj -> super#on_Obj () t obj
+end
+
+let generalize_temporary_types = (new generalize_temporary_types_mapper)#on_t ()
+
+class allow_temporary_arr_and_obj_types_mapper = object(this)
+  inherit generalize_temporary_types_mapper as super
+
+  method! on_Arr () t = function
+  | Ty.{arr_literal = true; arr_elt_t; _} ->
+    Ty.Generic (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
+  | arr -> super#on_Arr () t arr
+
+  method! on_Obj () t = function
+  | Ty.{obj_literal = true; _} as obj ->
+    let obj = {obj with Ty.obj_literal = false} in
+    Ty.Generic (Utils.temporary_objectlit_symbol, Ty.TypeAliasKind,
+      Some [super#on_Obj () (Ty.Obj obj) obj])
+  | o -> super#on_Obj () t o
+end
+
+let allow_temporary_arr_and_obj_types = (new allow_temporary_arr_and_obj_types_mapper)#on_t ()
+
+class specialize_temporary_types_mapper = object(_)
+  inherit use_upper_bound_mapper as super
+
+  method! on_Num () t = function
+  | (Some lit) -> Ty.NumLit lit
+  | n -> super#on_Num () t n
+
+  method! on_Bool () t = function
+  | (Some lit) -> Ty.BoolLit lit
+  | n -> super#on_Bool () t n
+
+  method! on_Str () t = function
+  | (Some lit) -> Ty.StrLit lit
+  | n -> super#on_Str () t n
+end
+
+let specialize_temporary_types = (new specialize_temporary_types_mapper)#on_t ()
+
+class fixme_ambiguous_types_mapper = object(_)
+  inherit fail_on_ambiguity_mapper as super
+
+  method! on_Num () t = function
+  | (Some _) -> Utils.Builtins.flowfixme
+  | n -> super#on_Num () t n
+
+  method! on_Bool () t = function
+  | (Some _) -> Utils.Builtins.flowfixme
+  | n -> super#on_Bool () t n
+
+  method! on_Str () t = function
+  | (Some _) -> Utils.Builtins.flowfixme
+  | n -> super#on_Str () t n
+
+  method! on_Arr () t = function
+  | Ty.{arr_literal = true; _} ->
+    Utils.Builtins.flowfixme
+  | arr -> super#on_Arr () t arr
+
+  method! on_Obj () t = function
+  | Ty.{obj_literal = true; _} ->
+    Utils.Builtins.flowfixme
+  | obj -> super#on_Obj () t obj
+end
+
+let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
+
 let fail_when_ty_size_exceeds size_limit ty =
   match Ty_utils.size_of_type ~max:size_limit ty with
   | None ->
@@ -40,9 +194,35 @@ let fail_when_ty_size_exceeds size_limit ty =
   | _ -> ()
 
 
+(* Generate an equivalent Flow_ast.Type *)
+let serialize ?(imports_react=false) ty =
+  (new Utils.patch_up_react_mapper ~imports_react ())#on_t () ty
+  |> Ty_utils.simplify_type ~simplify_empty:true
+  |> Ty_serializer.type_
+  |> function
+  | Ok ast -> Utils.patch_up_type_ast ast
+  | Error msg -> raise (unexpected (FailedToSerialize {ty; error_message=msg}))
+
+let remove_ambiguous_types ~ambiguity_strategy ty =
+  match ambiguity_strategy with
+  | Fail ->
+    begin try fail_on_ambiguity ty with
+      | FoundAmbiguousType ->
+        raise @@ expected @@ MulipleTypesPossibleAtPoint {
+          specialized=specialize_temporary_types ty |> serialize;
+          generalized=generalize_temporary_types ty |> serialize;
+        }
+    end
+  | Temporary  -> allow_temporary_arr_and_obj_types ty
+  | Generalize -> generalize_temporary_types ty
+  | Specialize -> specialize_temporary_types ty
+  | Fixme      -> fixme_ambiguous_types ty
+  | Suppress -> Utils.Builtins.flowfixme
+
 (* This class maps each node that contains the target until a node is contained
    by the target *)
-class mapper ~strict ?(size_limit=30) ~normalize ~ty_lookup target =
+class mapper ?(size_limit=30) ~ambiguity_strategy
+  ~strict ~normalize ~ty_lookup target =
   let target_is_point = Utils.is_point target in
   object(this)
   inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
@@ -56,16 +236,14 @@ class mapper ~strict ?(size_limit=30) ~normalize ~ty_lookup target =
     let (location, scheme) = ty_lookup location in
     let ty = normalize location scheme in
     fail_when_ty_size_exceeds size_limit ty;
-    let ty = Ty_utils.simplify_type ~simplify_empty:false ty in
     begin try
       Utils.validate_type ty
       with
       | Utils.Fatal error -> raise @@ expected @@
           FailedToValidateType{error; error_message=Utils.serialize_validation_error error}
     end;
-    match Utils.serialize ~imports_react:true ty with
-    | Ok type_ast -> (location, type_ast)
-    | Error msg -> raise (unexpected (FailedToSerialize {ty; error_message=msg}))
+    let ty = remove_ambiguous_types ~ambiguity_strategy ty in
+    (location, serialize ~imports_react:true ty)
 
   method private synth_type_annotation_hint loc =
     Flow_ast.Type.Available (this#synth_type loc)
@@ -233,7 +411,7 @@ let expected_error_to_string = function
   | MulipleTypesPossibleAtPoint {generalized; specialized;} ->
     "Multiple types possible at point:\n" ^
     "    generalized type: " ^ (type_to_string generalized) ^ "\n" ^
-    "    specialized type: " ^ (type_to_string specialized)
+    "    specialized type: " ^ (type_to_string specialized) ^ "\n"
   | FailedToValidateType {error_message=msg; _} ->
     "Failed to validate type: " ^ msg
   | FailedToNormalize (_,msg) ->

@@ -24,6 +24,8 @@ let base_arg_spec =
    a type annotation in a file at a position. *)
 module InsertType = struct
   let spec =
+    let open Autofix_options in
+    let ambiguity_strategies_list = String.concat ", " @@ List.map fst ambiguity_strategies in
     { name = "insert type";
       doc = "[EXPERIMENTAL] Insert type information at file and position";
       usage = Printf.sprintf
@@ -34,6 +36,9 @@ module InsertType = struct
       args = ArgSpec.(base_arg_spec
         |> flag "--strict-location" no_arg
             ~doc:"Restrict the number of valid positions for each annotation"
+        |> flag "--strategy" (required ~default:Generalize (enum ambiguity_strategies))
+            ~doc:("Set how to resolve ambiguity in possible types ("
+                 ^ ambiguity_strategies_list ^ ")")
         |> flag "--in-place" no_arg
             ~doc:"Overwrite the input file or file specified by the path flag"
         |> flag "--expand-type-aliases" no_arg
@@ -85,7 +90,7 @@ module InsertType = struct
     | Error msg -> handle_error msg
 
   let main base_flags option_values json _pretty root_arg strip_root_arg
-        verbose path wait_for_recheck location_is_strict in_place
+        verbose path wait_for_recheck location_is_strict ambiguity_strategy in_place
         expand_aliases omit_targ_defaults args () =
     let (Loc.{source; _} as target) = parse_args args in
     let source_path = Option.map ~f:File_key.to_string source in
@@ -97,7 +102,7 @@ module InsertType = struct
     if not json && (verbose <> None) then
       prerr_endline "NOTE: --verbose writes to the server log file";
     let request = ServerProt.Request.INSERT_TYPE {
-      input; target; verbose; location_is_strict;
+      input; target; verbose; location_is_strict; ambiguity_strategy;
       wait_for_recheck; expand_aliases; omit_targ_defaults; } in
     let result = connect_and_make_request flowconfig_name option_values root request in
     match result with

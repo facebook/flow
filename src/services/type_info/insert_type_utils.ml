@@ -147,13 +147,32 @@ class ['A] patch_up_react_mapper ?(imports_react=false) () = object (this)
     | _ -> super#on_t a t
 end
 
-(* Generate an equivalent Flow_ast.Type *)
-let serialize ?(imports_react=false) ty =
-  let ty = (new patch_up_react_mapper ~imports_react ())#on_t () ty in
-  match Ty_serializer.type_ ty with
-  | Ok ast -> Ok (patch_up_type_ast ast)
-  | error -> error
-
-
 (* Returns true if the location given a zero width location. *)
 let is_point loc = Loc.(loc.start = loc._end)
+
+let temporary_objectlit_symbol = {
+  Ty.
+  provenance = Ty.Builtin;
+  def_loc = ALoc.none;
+  name = "$TEMPORARY$object";
+  anonymous = false;
+}
+
+let temporary_arraylit_symbol = {
+  Ty.
+  provenance = Ty.Builtin;
+  def_loc = ALoc.none;
+  name = "$TEMPORARY$array";
+  anonymous = false;
+}
+
+module Builtins = struct
+  let flowfixme =
+    Ty.Generic (Ty_symbol.builtin_symbol "$FlowFixMe", Ty.TypeAliasKind, None)
+
+  let flowfixme_empty =
+    Ty.Generic (Ty_symbol.builtin_symbol "$FlowFixMeEmpty", Ty.TypeAliasKind, None)
+
+  let empty =
+    Ty.Bot Ty.EmptyType
+end

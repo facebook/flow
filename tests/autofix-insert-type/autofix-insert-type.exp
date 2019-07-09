@@ -1,4 +1,4 @@
-array.js 3 15
+array.js 3 15 --strategy=specialize
 // @flow
 
 function foo(): Array<number> {
@@ -251,7 +251,7 @@ foo({
   l: function bar() {}
 });
 No errors!
-poly-0.js 3 22
+poly-0.js 3 22 --strategy=specialize
 // @flow
 
 function foo<T>(x: T): {|f: T|} {
@@ -275,7 +275,7 @@ react-0.js 6 21
 import React from "react";
 import ReactDOM from "react-dom";
 
-function Clock(props: {|date: Date|}) {
+function Clock(props: {date: Date}) {
   return (
     <div>
       <h1>Hello, world!</h1>
@@ -347,7 +347,7 @@ foo(2);
 foo(() => foo());
 foo();
 No errors!
-replacement-array.js 5 15
+replacement-array.js 5 15 --strategy=generalize
 // @flow
 
 // preserve spacing
@@ -371,10 +371,10 @@ class A { // end of line comment
   m(x): number { return this.f + 1; }
 } (new A).m(""); // weird spacing
 No errors!
-replacement-dictionary.js 3 3
+replacement-dictionary.js 3 3 --strategy=generalize
 // @flow
 
-(): {|
+(): {
   "": null,
   " ": null,
   "'": null,
@@ -385,7 +385,7 @@ replacement-dictionary.js 3 3
   ab: null,
   get x(): null,
   set y(string): void,
-|} => ({
+} => ({
   ab: null, "a b": null, "a'b": null,
   "1": null, "'": null, " ": null,
   "_": null, "": null,
@@ -567,7 +567,20 @@ function f(x: MyObject) {
 
 (f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number});
 No errors!
-replacement-object.js 2 5
+replacement-object.js 2 5 --strategy=generalize
+// @flow
+var obj: {m: (x: number) => string, n: (y: number) => string} = {n(y) {return this.m(y);},m(x) {return "";}}
+obj.n(0)
+
+
+
+
+
+
+
+// This is kinda trailing whitespace
+No errors!
+replacement-object.js 2 6 --strategy=specialize
 // @flow
 var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
@@ -580,9 +593,9 @@ obj.n(0)
 
 // This is kinda trailing whitespace
 No errors!
-replacement-object.js 2 6
+replacement-object.js 2 7 --strategy=temporary
 // @flow
-var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: $TEMPORARY$object<{m: (x: number) => string, n: (y: number) => string}> = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -593,9 +606,9 @@ obj.n(0)
 
 // This is kinda trailing whitespace
 No errors!
-replacement-object.js 2 7
+replacement-object.js 2 8 --strategy=fixme
 // @flow
-var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: $FlowFixMe = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -606,22 +619,9 @@ obj.n(0)
 
 // This is kinda trailing whitespace
 No errors!
-replacement-object.js 2 8
+replacement-object.js 2 5 2 8 --strategy=generalize
 // @flow
-var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
-obj.n(0)
-
-
-
-
-
-
-
-// This is kinda trailing whitespace
-No errors!
-replacement-object.js 2 5 2 8
-// @flow
-var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m: (x: number) => string, n: (y: number) => string} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 

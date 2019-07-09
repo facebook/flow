@@ -72,6 +72,7 @@ endif
 MODULES=\
   src/commands\
   src/commands/config\
+  src/commands/options\
   src/common\
   src/common/audit\
   src/common/build_id\

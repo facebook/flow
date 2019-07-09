@@ -58,4 +58,5 @@ val insert_type :
   expand_aliases:bool ->
   omit_targ_defaults:bool ->
   location_is_strict:bool ->
+  ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   (Replacement_printer.patch, string) Core_result.t Lwt.t
