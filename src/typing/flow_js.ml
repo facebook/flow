@@ -3197,29 +3197,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         arrtype
       | _ ->
         (* Non-array non-any iterables *)
-        begin match rrt_resolve_to with
+        let resolve_array_like = begin match rrt_resolve_to with
         (* Spreading iterables in a type context is always OK *)
-        | ResolveSpreadsToMultiflowSubtypeFull _ -> ()
+        | ResolveSpreadsToMultiflowSubtypeFull _ -> false
+        (* Function.prototype.apply takes array-likes, not iterables *)
+        | ResolveSpreadsToCallT _ -> true
         (* Otherwise we're spreading values, which we may need to warn about *)
         | ResolveSpreadsToArray _
         | ResolveSpreadsToArrayLiteral _
-        | ResolveSpreadsToCallT _
         | ResolveSpreadsToCustomFunCall _
         | ResolveSpreadsToMultiflowCallFull _
         | ResolveSpreadsToMultiflowPartial _
         | ResolveSpreadsToTuple _ ->
-          add_output cx ~trace (Error_message.ENonArraySpread reason)
-        end;
+          add_output cx ~trace (Error_message.ENonArraySpread reason);
+          false
+        end in
         let reason = reason_of_t l in
         let element_tvar = Tvar.mk cx reason in
-        let iterable =
-          let targs = [element_tvar; Unsoundness.why ResolveSpread reason;
-                                     Unsoundness.why ResolveSpread reason] in
-          get_builtin_typeapp cx
-            (replace_reason_const (RCustom "Iterable expected for spread") reason)
-            "$Iterable" targs
-        in
-        flow_t cx (l, iterable);
+        let iterable_or_array_like = begin
+          if resolve_array_like then
+            let targs = [element_tvar] in
+              get_builtin_typeapp cx
+                (replace_reason_const (RCustom "Array-like object expected for apply") reason)
+                "$ArrayLike" targs
+          else
+            let targs = [element_tvar; Unsoundness.why ResolveSpread reason;
+                                        Unsoundness.why ResolveSpread reason] in
+              get_builtin_typeapp cx
+                (replace_reason_const (RCustom "Iterable expected for spread") reason)
+                "$Iterable" targs
+        end in
+        flow_t cx (l, iterable_or_array_like);
         ArrayAT (element_tvar, None)
       in
 

@@ -1,15 +1,23 @@
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15
 
-Cannot spread non-array iterable `$Iterable` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+Property `length` is missing in `$Iterable` [1] but exists in `$ArrayLike` [2].
 
    apply.js:11:15
-   11| f.apply(null, it); // Error
-                     ^^
+    11| f.apply(null, it); // Error
+                      ^^
 
 References:
    apply.js:3:11
-    3| const it: Iterable<number> = [7,8,9];
-                 ^^^^^^^^^^^^^^^^ [1]
+     3| const it: Iterable<number> = [7,8,9];
+                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:304:22
+                             v
+   304| type $ArrayLike<T> = {
+   305|   [indexer: number]: T,
+   306|   length: number,
+   307|   ...
+   308| }
+        ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- compose.js:7:6

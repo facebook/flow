@@ -24,8 +24,8 @@ f(["", 0]); // OK
 f(["", ""]); // error: string ~> number (2nd arg)
 f([0, 0]); // error: number ~> string (1st arg)
 
-// expect array
-test.apply("", "not array"); // error: expect array of args
+// expect array-like
+test.apply("", "not array"); // error: string ~> object
 
 // expect 4 errors:
 // - lookup length on Number (because 0 is used as `this`)
