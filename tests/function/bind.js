@@ -33,8 +33,8 @@ let tests = [
 
   function(x: (x: number) => void, y: (x: string) => void) {
     const appliedFn = Function.apply.bind(x); // ok
-    const reappliedFn = appliedFn.bind(y); // wrong, should error
-    reappliedFn(null, ['']); // wrong
+    const reappliedFn = appliedFn.bind(y); // error
+    reappliedFn(null, ['']); // error
   },
 
   function(x: (x: number) => void) {
