@@ -4427,15 +4427,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ObjRestT express related meta-operations on objects. Consolidate these
         meta-operations and ensure consistency of their semantics. **)
 
-    | ShapeT o, _ -> rec_flow cx trace (o, u)
+    | ShapeT (_, o), _ -> rec_flow cx trace (o, u)
 
     | DefT (reason, _, ObjT ({ call_t = None; _ } as o)),
-      UseT (use_op, ShapeT proto) ->
+      UseT (use_op, ShapeT (reason_op, proto)) ->
       let props = Context.find_real_props cx o.props_tmap in
-      match_shape cx trace ~use_op proto reason props
+      match_shape cx trace ~use_op proto reason reason_op props
 
     | DefT (reason, _, InstanceT (_, _, _, ({inst_call_t = None; _} as i))),
-      UseT (use_op, ShapeT proto) ->
+      UseT (use_op, ShapeT (reason_op, proto)) ->
       let own_props = Context.find_props cx i.own_props in
       let proto_props = Context.find_props cx i.proto_props in
       let proto_props =
@@ -4444,7 +4444,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         else SMap.remove "constructor" proto_props
       in
       let props = SMap.union own_props proto_props in
-      match_shape cx trace ~use_op proto reason props
+      match_shape cx trace ~use_op proto reason reason_op props
 
     (* Function definitions are incompatible with ShapeT. ShapeT is meant to
      * match an object type with a subset of the props in the type being
@@ -4452,9 +4452,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * this.
      *
      * This invariant is important for the React setState() type definition. *)
-    | _, UseT (use_op, ShapeT o) ->
+    | _, UseT (use_op, ShapeT (reason_op, o)) ->
       add_output cx ~trace
-        (Error_message.EIncompatibleWithShape (reason_of_t l, reason_of_t o, use_op))
+        (Error_message.EIncompatibleWithShape (reason_op, reason_of_t o, use_op))
 
     | AnyT (_, src), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why src reason_op, u)
@@ -7100,7 +7100,7 @@ and any_propagated cx trace any u =
   | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
   | UseT (use_op, ExactT (_, t))
   | UseT (use_op, OpenPredT (_, t, _, _))
-  | UseT (use_op, ShapeT t) ->
+  | UseT (use_op, ShapeT (_, t)) ->
       covariant_flow ~use_op t;
       true
 
@@ -7713,7 +7713,7 @@ and check_polarity cx ?trace polarity = function
     Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
     Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.super_t
 
-  | ShapeT t ->
+  | ShapeT (_, t) ->
     check_polarity cx ?trace polarity t
 
   | KeysT (_, t) ->
@@ -8890,9 +8890,7 @@ and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_tout
   WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal }
   |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op tin
 
-and match_shape cx trace ~use_op proto reason props =
-  (* TODO: ShapeT should have its own reason *)
-  let reason_op = reason_of_t proto in
+and match_shape cx trace ~use_op proto reason reason_op props =
   SMap.iter (fun x p ->
     let reason_prop = replace_reason (fun desc ->
       RPropertyOf (x, desc)

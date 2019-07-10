@@ -165,7 +165,7 @@ class visitor = object (self)
     | DefT (_, _, TypeT (_, t))
     | OpenPredT (_, t, _, _)
     | ReposT (_, t)
-    | ShapeT t
+    | ShapeT (_, t)
     | ThisClassT (_, t)
     | ThisTypeAppT (_, t, _, _)
       ->

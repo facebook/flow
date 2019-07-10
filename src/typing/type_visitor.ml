@@ -66,7 +66,7 @@ class ['a] t = object(self)
   | MergedT (_, uses) ->
     List.fold_left (self#use_type_ cx) acc uses
 
-  | ShapeT t -> self#type_ cx pole acc t
+  | ShapeT (_, t) -> self#type_ cx pole acc t
 
   | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
 

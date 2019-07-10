@@ -433,13 +433,19 @@ module Kit (Flow: Flow_common.S): REACT = struct
              *
              * Additionally, this hack enables us to not have to explicitly handle
              * AbstractComponent past this point. *)
-            (if clone
-            then ShapeT (config)
-            else config), None
+            (if clone then
+              let reason = mk_reason (RShape (desc_of_t config)) (loc_of_t config) in
+              ShapeT (reason, config)
+            else
+              config
+            ), None
         | _ ->
-          (if clone
-          then ShapeT (Tvar.mk_where cx reason_op props_to_tout)
-          else Tvar.mk_where cx reason_op tin_to_props),
+          (if clone then
+            let reason = replace_reason (fun desc -> RShape desc) reason_op in
+            ShapeT (reason, Tvar.mk_where cx reason_op props_to_tout)
+          else
+            Tvar.mk_where cx reason_op tin_to_props
+          ),
           (* For class components and function components we want to lookup the
            * static default props property so that we may add it to our config input. *)
           get_defaults cx trace l ~reason_op ~rec_flow

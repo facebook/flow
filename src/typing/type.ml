@@ -105,7 +105,7 @@ module rec TypeTerm : sig
     | MergedT of reason * use_t list
 
     (* constrains some properties of an object *)
-    | ShapeT of t
+    | ShapeT of reason * t
     | MatchingPropT of reason * string * t
 
     (* & types *)
@@ -2153,7 +2153,7 @@ end = struct
     | InternalT (OptionalChainVoidT reason) -> reason
     | ReposT (reason, _) -> reason
     | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
-    | ShapeT (t) -> reason_of_t t
+    | ShapeT (reason, _) -> reason
     | ThisClassT (reason, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
     | TypeAppT (reason, _, _, _) -> reason
@@ -2317,7 +2317,7 @@ end = struct
     | InternalT (OptionalChainVoidT reason) -> InternalT (OptionalChainVoidT (f reason))
     | ReposT (reason, t) -> ReposT (f reason, t)
     | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
-    | ShapeT t -> ShapeT (mod_reason_of_t f t)
+    | ShapeT (reason, t) -> ShapeT (f reason, t)
     | ThisClassT (reason, t) -> ThisClassT (f reason, t)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
     | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)

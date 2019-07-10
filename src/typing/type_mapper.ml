@@ -120,10 +120,10 @@ class virtual ['a] t = object(self)
           let uses' = ListUtils.ident_map (self#use_type cx map_cx) uses in
           if uses == uses' then t
           else MergedT (r, uses')
-      | ShapeT t' ->
+      | ShapeT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else ShapeT t''
+          else ShapeT (r, t'')
       | MatchingPropT (r, x, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

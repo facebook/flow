@@ -22,6 +22,7 @@ type 'loc virtual_reason_desc =
   | RObjectLit
   | RObjectType
   | RObjectClassName
+  | RShape of 'loc virtual_reason_desc
   | RInterfaceType
   | RArray
   | RArrayLit

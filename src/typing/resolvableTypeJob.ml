@@ -212,7 +212,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | KeysT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
 
-  | ShapeT (t) ->
+  | ShapeT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
 
   | MatchingPropT (_, _, t) ->

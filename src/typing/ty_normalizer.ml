@@ -650,7 +650,7 @@ end = struct
       Ty.Utility (Ty.Keys ty)
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
-    | ShapeT t ->
+    | ShapeT (_, t) ->
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Shape t)
     | TypeDestructorTriggerT (_, r, _, _, _) ->

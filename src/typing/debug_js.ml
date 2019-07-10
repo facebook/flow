@@ -301,7 +301,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "instance", _json_of_t json_cx instance;
     ]
 
-  | ShapeT t -> [
+  | ShapeT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1846,7 +1846,7 @@ let rec dump_t_ (depth, tvars) cx t =
     ^ "]") t
   | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
   | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
-  | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
+  | ShapeT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, trust, SingletonStrT s) -> p ~trust:(Some trust) ~extra:(spf "%S" s) t

@@ -74,6 +74,7 @@ type 'loc virtual_reason_desc =
   | RObjectLit
   | RObjectType
   | RObjectClassName
+  | RShape of 'loc virtual_reason_desc
   | RInterfaceType
   | RArray
   | RArrayLit
@@ -256,6 +257,7 @@ let rec map_desc_locs f = function
   | RJSXElement _
   | RJSXText
   | RFbt as r -> r
+  | RShape desc -> RShape (map_desc_locs f desc)
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
   | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
@@ -589,6 +591,7 @@ let rec string_of_desc = function
   | RObjectLit -> "object literal"
   | RObjectType -> "object type"
   | RObjectClassName -> "Object"
+  | RShape d -> spf "shape of %s" (string_of_desc d)
   | RInterfaceType -> "interface type"
   | RArray -> "array"
   | RArrayLit -> "array literal"
@@ -1286,6 +1289,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RObjectLit
 | RObjectType
 | RObjectClassName
+| RShape _
 | RInterfaceType
 | RTupleElement
 | RTupleOutOfBoundsAccess
