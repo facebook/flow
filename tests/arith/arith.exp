@@ -634,230 +634,196 @@ References:
              ^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- bitwise.js:10:3
+Error --------------------------------------------------------------------------------------------------- bitwise.js:8:4
+
+bigint [1] is incompatible with number [2].
+
+   bitwise.js:8:4
+   8|   +1n,
+         ^^ [1]
+
+References:
+   bitwise.js:8:3
+   8|   +1n,
+        ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- bitwise.js:24:3
 
 BigInts have no unsigned right shift, use >> instead.
 
-   10|   50n >>> 30n // error
+   24|   50n >>> 30n, // error
          ^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- bitwise.js:15:1
+Error -------------------------------------------------------------------------------------------------- bitwise.js:25:3
 
-Cannot perform arithmetic operation because bigint [1] is not a number.
+BigInts have no unsigned right shift, use >> instead.
 
-   bitwise.js:15:1
-   15| x &= 2n; // TODO: incorrect
+   25|   z >>> z,
+         ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- bitwise.js:41:3
+
+BigInts have no unsigned right shift, use >> instead.
+
+   41|   x >>>= 30n,
+         ^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- bitwise.js:42:3
+
+BigInts have no unsigned right shift, use >> instead.
+
+   42|   x >>>= z,
+         ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- bitwise.js:50:4
+
+string [1] is incompatible with number [2].
+
+   bitwise.js:50:4
+   50|   ~'', // error
+          ^^ [1]
+
+References:
+   bitwise.js:50:3
+   50|   ~'', // error
+         ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- bitwise.js:73:1
+
+Cannot perform arithmetic operation because number [1] is not a bigint.
+
+   bitwise.js:73:1
+   73| y >>= 2n;
        ^
 
 References:
-   bitwise.js:13:8
-   13| let x: bigint = 50n;
-              ^^^^^^ [1]
+   bitwise.js:72:1
+   72| y >>>= 30;
+       ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- bitwise.js:15:1
+Error -------------------------------------------------------------------------------------------------- bitwise.js:73:7
 
-Cannot assign number to `x` because number [1] is incompatible with bigint [2].
+Cannot assign `2n` to `y` because bigint [1] is incompatible with number [2].
 
-   bitwise.js:15:1
-   15| x &= 2n; // TODO: incorrect
-       ^^^^^^^ [1]
-
-References:
-   bitwise.js:13:8
-   13| let x: bigint = 50n;
-              ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:15:6
-
-Cannot perform arithmetic operation because bigint [1] is not a number.
-
-   15| x &= 2n; // TODO: incorrect
-            ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:16:1
-
-Cannot assign number to `x` because number [1] is incompatible with bigint [2].
-
-   bitwise.js:16:1
-   16| x |= 2n; // TODO: incorrect
-       ^^^^^^^ [1]
+   bitwise.js:73:7
+   73| y >>= 2n;
+             ^^
 
 References:
-   bitwise.js:13:8
-   13| let x: bigint = 50n;
-              ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:16:6
-
-Cannot perform arithmetic operation because bigint [1] is not a number.
-
-   16| x |= 2n; // TODO: incorrect
-            ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:17:1
-
-Cannot assign number to `x` because number [1] is incompatible with bigint [2].
-
-   bitwise.js:17:1
-   17| x ^= 4n; // TODO: incorrect
-       ^^^^^^^ [1]
-
-References:
-   bitwise.js:13:8
-   13| let x: bigint = 50n;
-              ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:17:6
-
-Cannot perform arithmetic operation because bigint [1] is not a number.
-
-   17| x ^= 4n; // TODO: incorrect
-            ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:18:1
-
-Cannot assign number to `x` because number [1] is incompatible with bigint [2].
-
-   bitwise.js:18:1
-   18| x <<= 1n; // TODO: incorrect
+   bitwise.js:73:1
+   73| y >>= 2n;
        ^^^^^^^^ [1]
-
-References:
-   bitwise.js:13:8
-   13| let x: bigint = 50n;
+   bitwise.js:65:8
+   65| let y: number = 2;
               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- bitwise.js:18:7
+Error -------------------------------------------------------------------------------------------------- exponent.js:5:1
 
-Cannot perform arithmetic operation because bigint [1] is not a number.
+Cannot perform arithmetic operation because number [1] is not a bigint.
 
-   18| x <<= 1n; // TODO: incorrect
-             ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:19:1
-
-Cannot assign number to `x` because number [1] is incompatible with bigint [2].
-
-   bitwise.js:19:1
-   19| x >>= 5n; // TODO: incorrect
-       ^^^^^^^^ [1]
-
-References:
-   bitwise.js:13:8
-   13| let x: bigint = 50n;
-              ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:19:7
-
-Cannot perform arithmetic operation because bigint [1] is not a number.
-
-   19| x >>= 5n; // TODO: incorrect
-             ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:20:1
-
-Cannot assign number to `x` because number [1] is incompatible with bigint [2].
-
-   bitwise.js:20:1
-   20| x >>>= 30n; // TODO: incorrect
-       ^^^^^^^^^^ [1]
-
-References:
-   bitwise.js:13:8
-   13| let x: bigint = 50n;
-              ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:20:8
-
-Cannot perform arithmetic operation because bigint [1] is not a number.
-
-   20| x >>>= 30n; // TODO: incorrect
-              ^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- bitwise.js:40:7
-
-Cannot perform arithmetic operation because bigint [1] is not a number.
-
-   40| y >>= 5n; // error
-             ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
-
-Cannot perform arithmetic operation because string [1] is not a number.
-
-   exponent.js:7:1
-   7| y **= 2; // error
+   exponent.js:5:1
+   5| x **= 4n; // error
       ^
 
 References:
-   exponent.js:6:8
-   6| let y: string = "123";
-             ^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
-
-Cannot assign number to `y` because number [1] is incompatible with string [2].
-
-   exponent.js:7:1
-   7| y **= 2; // error
+   exponent.js:4:1
+   4| x **= 4;
       ^^^^^^^ [1]
 
+
+Error -------------------------------------------------------------------------------------------------- exponent.js:5:7
+
+Cannot assign `4n` to `x` because bigint [1] is incompatible with number [2].
+
+   exponent.js:5:7
+   5| x **= 4n; // error
+            ^^
+
 References:
-   exponent.js:6:8
-   6| let y: string = "123";
+   exponent.js:5:1
+   5| x **= 4n; // error
+      ^^^^^^^^ [1]
+   exponent.js:3:8
+   3| let x: number = 2 ** 3;
              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exponent.js:10:1
+Error -------------------------------------------------------------------------------------------------- exponent.js:8:1
 
-Cannot perform arithmetic operation because bigint [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number.
 
-   exponent.js:10:1
-   10| z **= 4n; // TODO: incorrect
-       ^
-
-References:
-   exponent.js:9:8
-    9| let z: bigint = 2n ** 3n;
-              ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- exponent.js:10:1
-
-Cannot assign number to `z` because number [1] is incompatible with bigint [2].
-
-   exponent.js:10:1
-   10| z **= 4n; // TODO: incorrect
-       ^^^^^^^^ [1]
+   exponent.js:8:1
+   8| y **= 2; // error
+      ^
 
 References:
-   exponent.js:9:8
-    9| let z: bigint = 2n ** 3n;
-              ^^^^^^ [2]
+   exponent.js:7:8
+   7| let y: string = "123";
+             ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- exponent.js:10:7
+Error -------------------------------------------------------------------------------------------------- exponent.js:8:7
 
-Cannot perform arithmetic operation because bigint [1] is not a number.
+Cannot assign `2` to `y` because number [1] is incompatible with string [2].
 
-   10| z **= 4n; // TODO: incorrect
-             ^^ [1]
+   exponent.js:8:7
+   8| y **= 2; // error
+            ^
+
+References:
+   exponent.js:8:1
+   8| y **= 2; // error
+      ^^^^^^^ [1]
+   exponent.js:7:8
+   7| let y: string = "123";
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- exponent.js:9:1
+
+Cannot perform arithmetic operation because number [1] is not a bigint.
+
+   exponent.js:9:1
+   9| y **= 2n; // error
+      ^
+
+References:
+   exponent.js:8:1
+   8| y **= 2; // error
+      ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- exponent.js:9:7
+
+Cannot assign `2n` to `y` because bigint [1] is incompatible with string [2].
+
+   exponent.js:9:7
+   9| y **= 2n; // error
+            ^^
+
+References:
+   exponent.js:9:1
+   9| y **= 2n; // error
+      ^^^^^^^^ [1]
+   exponent.js:7:8
+   7| let y: string = "123";
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exponent.js:13:7
+
+Cannot perform arithmetic operation because number [1] is not a bigint.
+
+   13| z **= 4; // error
+             ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:3:33
@@ -982,68 +948,105 @@ Cannot perform arithmetic operation because null [1] is not a bigint.
                    ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- mult.js:17:1
+Error ----------------------------------------------------------------------------------------------------- mult.js:15:1
+
+Cannot perform arithmetic operation because number [1] is not a bigint.
+
+   mult.js:15:1
+   15| x *= 4n; // error
+       ^
+
+References:
+   mult.js:14:1
+   14| x *= 4;
+       ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- mult.js:15:6
+
+Cannot assign `4n` to `x` because bigint [1] is incompatible with number [2].
+
+   mult.js:15:6
+   15| x *= 4n; // error
+            ^^
+
+References:
+   mult.js:15:1
+   15| x *= 4n; // error
+       ^^^^^^^ [1]
+   mult.js:13:8
+   13| let x: number = 2 * 3;
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- mult.js:18:1
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
-   mult.js:17:1
-   17| y *= 2; // error
+   mult.js:18:1
+   18| y *= 2; // error
        ^
 
 References:
-   mult.js:16:8
-   16| let y: string = "123";
+   mult.js:17:8
+   17| let y: string = "123";
               ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- mult.js:17:1
+Error ----------------------------------------------------------------------------------------------------- mult.js:18:6
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign `2` to `y` because number [1] is incompatible with string [2].
 
-   mult.js:17:1
-   17| y *= 2; // error
+   mult.js:18:6
+   18| y *= 2; // error
+            ^
+
+References:
+   mult.js:18:1
+   18| y *= 2; // error
+       ^^^^^^ [1]
+   mult.js:17:8
+   17| let y: string = "123";
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- mult.js:19:1
+
+Cannot perform arithmetic operation because number [1] is not a bigint.
+
+   mult.js:19:1
+   19| y *= 2n; // error
+       ^
+
+References:
+   mult.js:18:1
+   18| y *= 2; // error
        ^^^^^^ [1]
 
-References:
-   mult.js:16:8
-   16| let y: string = "123";
-              ^^^^^^ [2]
 
+Error ----------------------------------------------------------------------------------------------------- mult.js:19:6
 
-Error ----------------------------------------------------------------------------------------------------- mult.js:20:1
+Cannot assign `2n` to `y` because bigint [1] is incompatible with string [2].
 
-Cannot perform arithmetic operation because bigint [1] is not a number.
-
-   mult.js:20:1
-   20| z *= 4n; // TODO: incorrect
-       ^
+   mult.js:19:6
+   19| y *= 2n; // error
+            ^^
 
 References:
-   mult.js:19:8
-   19| let z: bigint = 2n * 3n;
-              ^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- mult.js:20:1
-
-Cannot assign number to `z` because number [1] is incompatible with bigint [2].
-
-   mult.js:20:1
-   20| z *= 4n; // TODO: incorrect
+   mult.js:19:1
+   19| y *= 2n; // error
        ^^^^^^^ [1]
-
-References:
-   mult.js:19:8
-   19| let z: bigint = 2n * 3n;
+   mult.js:17:8
+   17| let y: string = "123";
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- mult.js:20:6
+Error ----------------------------------------------------------------------------------------------------- mult.js:23:6
 
-Cannot perform arithmetic operation because bigint [1] is not a number.
+Cannot perform arithmetic operation because number [1] is not a bigint.
 
-   20| z *= 4n; // TODO: incorrect
-            ^^ [1]
+   23| z *= 4; // error
+            ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ relational.js:6:2
@@ -1235,4 +1238,4 @@ References:
 
 
 
-Found 93 errors
+Found 90 errors
