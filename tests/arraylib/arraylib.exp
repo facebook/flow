@@ -75,82 +75,125 @@ References:
                                                  ^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:46:29
+Error ----------------------------------------------------------------------------------------------- array_lib.js:24:24
+
+Cannot assign `Array(...)` to `p` because:
+ - string [1] is incompatible with number [2] in array element.
+ - string [3] is incompatible with number [2] in array element.
+
+   array_lib.js:24:24
+   24| var p: Array<number> = Array('a', 'b') // error, string ~> number
+                              ^^^^^^^^^^^^^^^
+
+References:
+   array_lib.js:24:30
+   24| var p: Array<number> = Array('a', 'b') // error, string ~> number
+                                    ^^^ [1]
+   array_lib.js:24:14
+   24| var p: Array<number> = Array('a', 'b') // error, string ~> number
+                    ^^^^^^ [2]
+   array_lib.js:24:35
+   24| var p: Array<number> = Array('a', 'b') // error, string ~> number
+                                         ^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:51:29
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
-   array_lib.js:46:29
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:51:29
+   51|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
                                    ^^^
 
 References:
-   array_lib.js:46:4
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:51:4
+   51|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
           ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:46:35
+Error ----------------------------------------------------------------------------------------------- array_lib.js:51:35
 
 Cannot get `str.length` because property `length` is missing in `Number` [1].
 
-   array_lib.js:46:35
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:51:35
+   51|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
                                          ^^^^^^^^^^
 
 References:
-   array_lib.js:46:29
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:51:29
+   51|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
                                    ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:47:34
+Error ----------------------------------------------------------------------------------------------- array_lib.js:52:34
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
-   array_lib.js:47:34
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:52:34
+   52|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                         ^^^
 
 References:
-   array_lib.js:47:4
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:52:4
+   52|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
           ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:47:40
+Error ----------------------------------------------------------------------------------------------- array_lib.js:52:40
 
 Cannot get `str.length` because property `length` is missing in `Number` [1].
 
-   array_lib.js:47:40
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:52:40
+   52|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                               ^^^^^^^^^^
 
 References:
-   array_lib.js:47:34
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:52:34
+   52|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                         ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:63:48
+Error ----------------------------------------------------------------------------------------------- array_lib.js:68:48
 
 Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because:
  - number [1] is incompatible with string [2] in array element.
  - number [3] is incompatible with string [2] in array element.
 
-   array_lib.js:63:48
-   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:68:48
+   68|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                       ^^^^^^^^^^^^^^
 
 References:
-   array_lib.js:63:57
-   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:68:57
+   68|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                ^ [1]
-   array_lib.js:63:38
-   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:68:38
+   68|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
-   array_lib.js:63:60
-   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:68:60
+   68|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                   ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- issue_7887.js:7:15
+
+Cannot assign object literal to `a` because number [1] is incompatible with string [2] in array element of property
+`prop`.
+
+   issue_7887.js:7:15
+                    v
+   7| var a: Plop = {
+   8|   prop: Array(5).fill(1) // error
+   9| };
+      ^
+
+References:
+   issue_7887.js:8:23
+   8|   prop: Array(5).fill(1) // error
+                            ^ [1]
+   issue_7887.js:4:9
+   4|   prop: string[]
+              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- length.js:7:1
@@ -170,4 +213,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable.
 
 
 
-Found 14 errors
+Found 17 errors
