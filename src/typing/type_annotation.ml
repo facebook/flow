@@ -1503,7 +1503,10 @@ and convert_object =
         acc
       in
       acc, Indexer (loc, i)
-    | Mapped (_, _) as prop ->
+    | Mapped (loc, _) as prop ->
+      Flow.add_output cx Error_message.(
+        EUnsupportedSyntax (loc, ObjectMappedType)
+      );
       acc, (Tast_utils.error_mapper#object_type_property prop)
     | Property (loc, p) ->
       let acc, p = named_property cx tparams_map loc acc p in

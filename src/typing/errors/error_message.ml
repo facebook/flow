@@ -261,6 +261,7 @@ and unsupported_syntax =
   | ObjectPropertyLiteralNonString
   | ObjectPropertyGetSet
   | ObjectPropertyComputedGetSet
+  | ObjectMappedType
   | InvariantSpreadArgument
   | ClassPropertyLiteral
   | ClassPropertyComputed
@@ -1406,6 +1407,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [text "Get/set properties not yet supported."]
         | ObjectPropertyComputedGetSet ->
           [text "Computed getters and setters are not yet supported."]
+        | ObjectMappedType ->
+          [text "Mapped types are not yet supported."]
         | InvariantSpreadArgument ->
           [text "Unsupported arguments in call to "; code "invariant"; text "."]
         | ClassPropertyLiteral ->
