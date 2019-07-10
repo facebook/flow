@@ -562,16 +562,20 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_use_t json_cx t
     ]
 
-  | AdderT (_, _, _, l, r) -> [
+  | ArithmeticBinaryT (_, _, _, _, l, r) -> [
       "leftType", _json_of_t json_cx l;
       "rightType", _json_of_t json_cx r
+    ]
+
+  | UpdateT (_, l) -> [
+      "type", _json_of_t json_cx l
     ]
 
   | ComparatorT (_, _, t) -> [
       "type", _json_of_t json_cx t
     ]
 
-  | UnaryMinusT (_, t) -> [
+  | ArithmeticUnaryT (_, _, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -2111,10 +2115,12 @@ and dump_use_t_ (depth, tvars) cx t =
       (if Context.trust_tracking cx then string_of_trust_rep (lookup_trust cx) trust else "")
       (kid t)
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
-  | AdderT (use_op, _, _, x, y) -> p ~extra:(spf "%s, %s, %s"
+  | ArithmeticBinaryT (use_op, _, _, _, x, y) -> p ~extra:(spf "%s, %s, %s"
       (string_of_use_op use_op)
       (kid x)
       (kid y)) t
+  | UpdateT (_, x) -> p ~extra:(spf "%s"
+      (kid x)) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
   | AssertArithmeticOperandT _ -> p t
@@ -2263,7 +2269,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (kid ptype)) t
   | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
   | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
-  | UnaryMinusT _ -> p t
+  | ArithmeticUnaryT _ -> p t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (Core_list.map ~f:kid args)) (Polarity.string pol)) t
@@ -2486,7 +2492,7 @@ let dump_error_message =
   | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
   | IncompatibleHasOwnPropT _ -> "IncompatibleHasOwnPropT"
   | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
-  | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
+  | IncompatibleArithmeticUnaryT -> "IncompatibleArithmeticUnaryT"
   | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
   | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
   | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"

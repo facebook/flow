@@ -105,9 +105,10 @@ type hash =
   | SuperH
   | ImplementsH
   | MixinH
-  | AdderH
+  | ArithmeticBinaryH
+  | UpdateH
   | ComparatorH
-  | UnaryMinusH
+  | ArithmeticUnaryH
   | AssertArithmeticOperandH
   | AssertBigIntArithmeticOperandH
   | AssertBinaryInLHSH
@@ -268,9 +269,10 @@ let hash_of_use_ctor = Type.(function
   | SuperT _ -> SuperH
   | ImplementsT _ -> ImplementsH
   | MixinT _ -> MixinH
-  | AdderT _ -> AdderH
+  | ArithmeticBinaryT _ -> ArithmeticBinaryH
+  | UpdateT _ -> UpdateH
   | ComparatorT _ -> ComparatorH
-  | UnaryMinusT _ -> UnaryMinusH
+  | ArithmeticUnaryT _ -> ArithmeticUnaryH
   | AssertArithmeticOperandT _ -> AssertArithmeticOperandH
   | AssertBigIntArithmeticOperandT _ -> AssertBigIntArithmeticOperandH
   | AssertBinaryInLHST _ -> AssertBinaryInLHSH

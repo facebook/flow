@@ -806,7 +806,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       -> nope "is not a polymorphic type"
     | IncompatibleSuperT
       -> nope "is not inheritable"
-    | IncompatibleUnaryMinusT
+    | IncompatibleArithmeticUnaryT
       -> nope "is not a number"
     | IncompatibleGetPropT (prop_loc, prop)
     | IncompatibleSetPropT (prop_loc, prop)

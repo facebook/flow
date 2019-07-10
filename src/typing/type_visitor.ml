@@ -347,13 +347,17 @@ class ['a] t = object(self)
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#use_type_ cx acc t
 
-  | AdderT (_, _, _, a, b) ->
+  | ArithmeticBinaryT (_, _, _, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
     let acc = self#type_ cx pole_TODO acc b in
     acc
 
+  | UpdateT (_, a) ->
+    let acc = self#type_ cx pole_TODO acc a in
+    acc
+
   | ComparatorT (_, _, t) -> self#type_ cx pole_TODO acc t
-  | UnaryMinusT (_, t) -> self#type_ cx pole_TODO acc t
+  | ArithmeticUnaryT (_, _, t) -> self#type_ cx pole_TODO acc t
 
   | AssertArithmeticOperandT _
   | AssertBigIntArithmeticOperandT _

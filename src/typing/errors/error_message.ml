@@ -320,7 +320,7 @@ and 'loc upper_kind =
   | IncompatibleGetKeysT
   | IncompatibleHasOwnPropT of 'loc * string option
   | IncompatibleGetValuesT
-  | IncompatibleUnaryMinusT
+  | IncompatibleArithmeticUnaryT
   | IncompatibleMapTypeTObject
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
@@ -363,7 +363,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | IncompatibleVarianceCheckT
     | IncompatibleGetKeysT
     | IncompatibleGetValuesT
-    | IncompatibleUnaryMinusT
+    | IncompatibleArithmeticUnaryT
     | IncompatibleMapTypeTObject
     | IncompatibleTypeAppVarianceCheckT
     | IncompatibleGetStaticsT

@@ -39,6 +39,44 @@ type index = int
 
 type tvar = reason * ident
 
+module Arith: sig
+  type binary_operator =
+    | LShift
+    | RShift
+    | RShift3
+    | Plus
+    | Minus
+    | Mult
+    | Exp
+    | Div
+    | Mod
+    | BitOr
+    | Xor
+    | BitAnd
+  type unary_operator =
+    | UnaryPlus
+    | UnaryMinus
+    | BitNot
+end = struct
+  type binary_operator =
+    | LShift
+    | RShift
+    | RShift3
+    | Plus
+    | Minus
+    | Mult
+    | Exp
+    | Div
+    | Mod
+    | BitOr
+    | Xor
+    | BitAnd
+  type unary_operator =
+    | UnaryPlus
+    | UnaryMinus
+    | BitNot
+end
+
 module rec TypeTerm : sig
 
   type t =
@@ -401,13 +439,18 @@ module rec TypeTerm : sig
     | MixinT of reason * t
     | ToStringT of reason * use_t
 
-    (* overloaded +, could be subsumed by general overloading *)
-    | AdderT of use_op * reason * bool * t * t
+    (* overloaded >>, <<, >>>, +, -, *, **, /, %, |, ^, &, could be subsumed by general overloading *)
+    | ArithmeticBinaryT of use_op * reason * Arith.binary_operator * bool * t * t
     (* overloaded relational operator, could be subsumed by general
        overloading *)
     | ComparatorT of reason * bool * t
-    (* unary minus operator on numbers, allows negative number literals *)
-    | UnaryMinusT of reason * t
+    (* overloaded ++, --, could be subsumed by general
+       overloading *)
+    | UpdateT of reason * t
+
+    (* unary minus operator on numbers and bigints, allows negative number literals *)
+    (* unary plus operator on numbers, disallows bigints *)
+    | ArithmeticUnaryT of reason * Arith.unary_operator * t
 
     | AssertArithmeticOperandT of reason
     | AssertBigIntArithmeticOperandT of reason
@@ -2183,7 +2226,8 @@ end = struct
 
   and reason_of_use_t = function
     | UseT (_, t) -> reason_of_t t
-    | AdderT (_,reason,_,_,_) -> reason
+    | ArithmeticBinaryT (_,reason,_,_,_,_) -> reason
+    | UpdateT (reason,_) -> reason
     | AndT (reason, _, _) -> reason
     | ArrRestT (_, reason, _, _) -> reason
     | AssertArithmeticOperandT reason -> reason
@@ -2267,7 +2311,7 @@ end = struct
     | TestPropT (reason, _, _, _) -> reason
     | ThisSpecializeT(reason,_,_) -> reason
     | ToStringT (reason, _) -> reason
-    | UnaryMinusT (reason, _) -> reason
+    | ArithmeticUnaryT (reason, _, _) -> reason
     | UnifyT (_,t) -> reason_of_t t
     | VarianceCheckT(reason,_,_) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
@@ -2342,7 +2386,8 @@ end = struct
 
   and mod_reason_of_use_t f = function
     | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
-    | AdderT (use_op, reason, flip, rt, lt) -> AdderT (use_op, f reason, flip, rt, lt)
+    | ArithmeticBinaryT (use_op, reason, op, flip, rt, lt) -> ArithmeticBinaryT (use_op, f reason, op, flip, rt, lt)
+    | UpdateT (reason, lt) -> UpdateT (f reason, lt)
     | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
     | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
     | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
@@ -2447,7 +2492,7 @@ end = struct
     | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
     | ThisSpecializeT(reason, this, k) -> ThisSpecializeT (f reason, this, k)
     | ToStringT (reason, t) -> ToStringT (f reason, t)
-    | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
+    | ArithmeticUnaryT (reason, op, t) -> ArithmeticUnaryT (f reason, op, t)
     | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
     | VarianceCheckT(reason, ts, polarity) ->
         VarianceCheckT (f reason, ts, polarity)
@@ -2499,7 +2544,7 @@ end = struct
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
   | ConstructorT (op, r, targs, args, t) -> util op (fun op -> ConstructorT (op, r, targs, args, t))
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
-  | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
+  | ArithmeticBinaryT (op, d, o, f, l, r) -> util op (fun op -> ArithmeticBinaryT (op, d, o, f, l, r))
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
   | ToStringT (r, u2) -> nested_util u2 (fun u2 -> ToStringT (r, u2))
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
@@ -2518,6 +2563,7 @@ end = struct
   | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
   | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
   | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
+  | UpdateT (_, _)
   | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)
   | GetStaticsT (_, _)
@@ -2525,7 +2571,7 @@ end = struct
   | SetProtoT (_, _)
   | MixinT (_, _)
   | ComparatorT (_, _, _)
-  | UnaryMinusT (_, _)
+  | ArithmeticUnaryT (_, _, _)
   | AssertArithmeticOperandT (_)
   | AssertBigIntArithmeticOperandT (_)
   | AssertBinaryInLHST (_)
@@ -3225,7 +3271,8 @@ let string_of_use_op_rec : use_op -> string =
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
-  | AdderT _ -> "AdderT"
+  | ArithmeticBinaryT _ -> "ArithmeticBinaryT"
+  | UpdateT _ -> "UpdateT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
   | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
@@ -3329,7 +3376,7 @@ let string_of_use_ctor = function
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | ToStringT _ -> "ToStringT"
-  | UnaryMinusT _ -> "UnaryMinusT"
+  | ArithmeticUnaryT _ -> "ArithmeticUnaryT"
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"

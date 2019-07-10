@@ -696,7 +696,7 @@ let error_message_kind_of_upper = function
   | HasOwnPropT (_, r, Literal (_, name)) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
-  | UnaryMinusT _ -> Error_message.IncompatibleUnaryMinusT
+  | ArithmeticUnaryT _ -> Error_message.IncompatibleArithmeticUnaryT
   | MapTypeT (_, _, (ObjectMap _ | ObjectMapi _), _) -> Error_message.IncompatibleMapTypeTObject
   | TypeAppVarianceCheckT _ -> Error_message.IncompatibleTypeAppVarianceCheckT
   | GetStaticsT _ -> Error_message.IncompatibleGetStaticsT
@@ -5912,8 +5912,58 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* addition                                                *)
     (***********************************************************)
 
-    | (l, AdderT (use_op, reason, flip, r, u)) ->
-      flow_addition cx trace use_op reason flip l r u
+    | (l, ArithmeticBinaryT (use_op, reason, operator, flip, r, u)) ->
+      begin match operator with
+      | Arith.Plus ->
+        flow_addition cx trace use_op reason flip l r u
+      | Arith.RShift3 ->
+        if needs_resolution r then rec_flow cx trace (r, ArithmeticBinaryT (use_op, reason, operator, not flip, l, u)) else
+        let (l, r) = if flip then (r, l) else (l, r) in
+        let loc = aloc_of_reason reason in
+        begin match l, r with
+        | DefT (_, _, BigIntT _), DefT (_, _, BigIntT _) ->
+          rec_flow cx trace (l, AssertBigIntArithmeticOperandT reason);
+          rec_flow cx trace (r, AssertBigIntArithmeticOperandT reason);
+          add_output cx (Error_message.EBigIntNoUnsignedRightShift reason);
+          rec_flow_t cx trace (BigIntT.why reason |> with_trust literal_trust, u)
+        | _, _ ->
+          rec_flow cx trace (l, AssertArithmeticOperandT reason);
+          rec_flow cx trace (r, AssertArithmeticOperandT reason);
+          rec_flow_t cx trace (NumT.at loc |> with_trust literal_trust, u)
+        end;
+      | _ ->
+        if needs_resolution r then rec_flow cx trace (r, ArithmeticBinaryT (use_op, reason, operator, not flip, l, u)) else
+        let (l, r) = if flip then (r, l) else (l, r) in
+        let loc = aloc_of_reason reason in
+        begin match l, r with
+        | (DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) ->
+          rec_flow cx trace (l, AssertBigIntArithmeticOperandT reason);
+          rec_flow cx trace (r, AssertBigIntArithmeticOperandT reason);
+          rec_flow_t cx trace (BigIntT.at loc |> with_trust literal_trust, u)
+        | (DefT (_, _, BigIntT _), _) ->
+          rec_flow cx trace (l, AssertBigIntArithmeticOperandT reason);
+          rec_flow cx trace (r, AssertBigIntArithmeticOperandT reason);
+          rec_flow_t cx trace (BigIntT.at loc |> with_trust literal_trust, u)
+        | (_, DefT (_, _, BigIntT _)) ->
+          rec_flow cx trace (l, AssertBigIntArithmeticOperandT reason);
+          rec_flow cx trace (r, AssertBigIntArithmeticOperandT reason);
+          rec_flow_t cx trace (BigIntT.at loc |> with_trust literal_trust, u)
+        | (_, _) ->
+          rec_flow cx trace (l, AssertArithmeticOperandT reason);
+          rec_flow cx trace (r, AssertArithmeticOperandT reason);
+          rec_flow_t cx trace (NumT.at loc |> with_trust literal_trust, u)
+        end;
+      end;
+
+    | (l, UpdateT (reason, u)) ->
+      let loc = aloc_of_reason reason in
+      begin match l with
+      | DefT (_, _, BigIntT _) ->
+        rec_flow_t cx trace (BigIntT.at loc |> with_trust bogus_trust, u);
+      | t ->
+        rec_flow cx trace (t, AssertArithmeticOperandT reason);
+        rec_flow_t cx trace (NumT.at loc |> with_trust bogus_trust, u);
+      end
 
     (*********************************************************)
     (* arithmetic/bitwise/update operations besides addition *)
@@ -5948,7 +5998,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* unary minus operator *)
     (************************)
 
-    | DefT (_, trust, NumT lit), UnaryMinusT (reason_op, t_out) ->
+    | DefT (_, trust, NumT lit), ArithmeticUnaryT (reason_op, Arith.UnaryMinus, t_out) ->
       let num = match lit with
       | Literal (_, (value, raw)) ->
         let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
@@ -5959,7 +6009,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (num, t_out)
 
-    | DefT (_, trust, BigIntT lit), UnaryMinusT (reason_op, t_out) ->
+    | DefT (_, trust, BigIntT lit), ArithmeticUnaryT (reason_op, Arith.UnaryMinus, t_out) ->
       let num = match lit with
       | Literal (_, (value, raw)) ->
         let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
@@ -5970,8 +6020,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (num, t_out)
 
-    | AnyT _, UnaryMinusT (reason_op, t_out) ->
+    | AnyT _, ArithmeticUnaryT (reason_op, Arith.UnaryMinus, t_out) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, t_out)
+
+    (***********************)
+    (* unary plus operator *)
+    (***********************)
+
+    | DefT (_, _, BigIntT _), ArithmeticUnaryT (reason_op, Arith.UnaryPlus, t_out) ->
+      let loc = aloc_of_reason reason_op in
+      let t = NumT.at loc |> with_trust literal_trust in
+      (* TODO: should be empty? *)
+      rec_flow_t cx trace (AnyT.untyped reason_op, t_out);
+      rec_flow_t cx trace (l, t)
+
+    | _, ArithmeticUnaryT (reason_op, Arith.UnaryPlus, t_out) ->
+      let loc = aloc_of_reason reason_op in
+      rec_flow_t cx trace (NumT.at loc |> with_trust literal_trust, t_out)
+
+    (**************************)
+    (* unary bit not operator *)
+    (**************************)
+
+    | DefT (_, _, BigIntT _), ArithmeticUnaryT (reason_op, Arith.BitNot, t_out) ->
+      let loc = aloc_of_reason reason_op in
+      rec_flow_t cx trace (BigIntT.at loc |> with_trust literal_trust, t_out)
+
+    | _, ArithmeticUnaryT (reason_op, Arith.BitNot, t_out) ->
+      let loc = aloc_of_reason reason_op in
+      let t = NumT.at loc |> with_trust literal_trust in
+      rec_flow_t cx trace (t, t_out);
+      rec_flow_t cx trace (l, t)
 
     (************************)
     (* binary `in` operator *)
@@ -6635,7 +6714,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
  *
  **)
 and flow_addition cx trace use_op reason flip l r u =
-  if needs_resolution r then rec_flow cx trace (r, AdderT (use_op, reason, not flip, l, u)) else
+  if needs_resolution r then rec_flow cx trace (r, ArithmeticBinaryT (use_op, reason, Arith.Plus, not flip, l, u)) else
   let (l, r) = if flip then (r, l) else (l, r) in
   let loc = aloc_of_reason reason in
   begin match l, r with
@@ -7005,7 +7084,8 @@ and empty_success flavor u =
   (* Special cases: these cases actually utilize the fact that the LHS is Empty,
      either by specially propagating it or selecting cases, etc. *)
   | _, UseT (_, ExactT _)
-  | _, AdderT _
+  | _, ArithmeticBinaryT _
+  | _, UpdateT _
   | _, AndT _
   | _, OrT _
   (* Propagation cases: these cases don't use the fact that the LHS is
@@ -7118,7 +7198,7 @@ and empty_success flavor u =
   | _, ThisSpecializeT _
   | _, ToStringT _
   | _, TypeAppVarianceCheckT _
-  | _, UnaryMinusT _
+  | _, ArithmeticUnaryT _
   | _, VarianceCheckT _
   | _, ModuleExportsAssignT _
     -> true
@@ -7206,7 +7286,8 @@ and any_propagated cx trace any u =
       anyways, so it is not unreasonable to just not trust them *)
      true
 
-  | AdderT _
+  | ArithmeticBinaryT _
+  | UpdateT _
   | AndT _
   | ArrRestT _
   | BecomeT _
@@ -7273,7 +7354,7 @@ and any_propagated cx trace any u =
   | TestPropT _
   | ThisSpecializeT _
   | ToStringT _
-  | UnaryMinusT _
+  | ArithmeticUnaryT _
   | UnifyT _
   | UseT (_, AnnotT _) (* this transforms into a ReposUseT *)
   | UseT (_, MaybeT _) (* used to filter maybe *)
