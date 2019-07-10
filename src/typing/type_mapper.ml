@@ -214,6 +214,7 @@ class virtual ['a] t = object(self)
   method def_type cx map_cx t =
     match t with
       | NumT _
+      | BigIntT _
       | StrT _
       | BoolT _
       | EmptyT _
@@ -248,6 +249,7 @@ class virtual ['a] t = object(self)
           else InstanceT (st', su', impl', instt')
       | SingletonStrT _
       | SingletonNumT _
+      | SingletonBigIntT _
       | SingletonBoolT _ -> t
       | TypeT (s, t') ->
           let t'' = self#type_ cx map_cx t' in
@@ -532,9 +534,11 @@ class virtual ['a] t = object(self)
     | SingletonBoolP _
     | SingletonStrP _
     | SingletonNumP _
+    | SingletonBigIntP _
     | BoolP
     | FunP
     | NumP
+    | BIgIntP
     | ObjP
     | StrP
     | SymbolP
@@ -704,20 +708,25 @@ class virtual ['a] t_with_uses = object(self)
           let t'' = self#use_type cx map_cx t' in
           if t'' == t' then t
           else ToStringT (r, t'')
-      | AdderT (op, r, flip, t1, t2) ->
+      | ArithmeticBinaryT (op, r, o, flip, t1, t2) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
-          else AdderT (op, r, flip, t1', t2')
+          else ArithmeticBinaryT (op, r, o, flip, t1', t2')
+      | UpdateT (r, t1) ->
+          let t1' = self#type_ cx map_cx t1 in
+          if t1' == t1 then t
+          else UpdateT (r, t1')
       | ComparatorT (r, flip, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ComparatorT (r, flip, t'')
-      | UnaryMinusT (r, t') ->
+      | ArithmeticUnaryT (r, op, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else UnaryMinusT (r, t'')
+          else ArithmeticUnaryT (r, op, t'')
       | AssertArithmeticOperandT _
+      | AssertBigIntArithmeticOperandT _
       | AssertBinaryInLHST _
       | AssertBinaryInRHST _
       | AssertForInRHST _ -> t

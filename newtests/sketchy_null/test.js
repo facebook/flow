@@ -28,6 +28,19 @@ export default suite(({addFiles, addCode, flowCmd}) => [
        `,
      ).exitCodes([]),
   ]),
+  test('should trigger sketchy null output on sketchy bigint', [
+    addFiles('flowTypeFile.js', 'flowStrictSketchyBigIntFile.js')
+    .newErrors(
+      `
+        flowStrictSketchyBigIntFile.js:6
+          6:   if (sketch.nullableBigInt) {
+                   ^^^^^^^^^^^^^^^^^^^^^ Sketchy null check on bigint [1] which is potentially 0n. Perhaps you meant to check for null or undefined [1]? (\`sketchy-null-bigint\`)
+          References:
+           16:   nullableBigInt?: bigint,
+                                  ^^^^^^ [1]. See: flowTypeFile.js:16
+      `,
+    ).exitCodes([]),
+  ]),
   test('should trigger sketchy null output on sketchy bool', [
     addFiles('flowTypeFile.js', 'flowStrictSketchyBooleanFile.js')
     .newErrors(

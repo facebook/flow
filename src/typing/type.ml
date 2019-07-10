@@ -39,6 +39,44 @@ type index = int
 
 type tvar = reason * ident
 
+module Arith: sig
+  type binary_operator =
+    | LShift
+    | RShift
+    | RShift3
+    | Plus
+    | Minus
+    | Mult
+    | Exp
+    | Div
+    | Mod
+    | BitOr
+    | Xor
+    | BitAnd
+  type unary_operator =
+    | UnaryPlus
+    | UnaryMinus
+    | BitNot
+end = struct
+  type binary_operator =
+    | LShift
+    | RShift
+    | RShift3
+    | Plus
+    | Minus
+    | Mult
+    | Exp
+    | Div
+    | Mod
+    | BitOr
+    | Xor
+    | BitAnd
+  type unary_operator =
+    | UnaryPlus
+    | UnaryMinus
+    | BitNot
+end
+
 module rec TypeTerm : sig
 
   type t =
@@ -209,6 +247,7 @@ module rec TypeTerm : sig
 
   and def_t =
     | NumT of number_literal literal
+    | BigIntT of bigint_literal literal
     | StrT of string literal
     | BoolT of bool option
     | EmptyT of empty_flavor
@@ -227,6 +266,8 @@ module rec TypeTerm : sig
     (* matches exactly a given number literal, for some definition of "exactly"
        when it comes to floats... *)
     | SingletonNumT of number_literal
+    (* matches exactly a given bigint literal *)
+    | SingletonBigIntT of bigint_literal
     (* singleton bool, matches exactly a given boolean literal *)
     | SingletonBoolT of bool
     (* A subset of StrT that represents a set of characters,
@@ -398,15 +439,21 @@ module rec TypeTerm : sig
     | MixinT of reason * t
     | ToStringT of reason * use_t
 
-    (* overloaded +, could be subsumed by general overloading *)
-    | AdderT of use_op * reason * bool * t * t
+    (* overloaded >>, <<, >>>, +, -, *, **, /, %, |, ^, &, could be subsumed by general overloading *)
+    | ArithmeticBinaryT of use_op * reason * Arith.binary_operator * bool * t * t
     (* overloaded relational operator, could be subsumed by general
        overloading *)
     | ComparatorT of reason * bool * t
-    (* unary minus operator on numbers, allows negative number literals *)
-    | UnaryMinusT of reason * t
+    (* overloaded ++, --, could be subsumed by general
+       overloading *)
+    | UpdateT of reason * t
+
+    (* unary minus operator on numbers and bigints, allows negative number literals *)
+    (* unary plus operator on numbers, disallows bigints *)
+    | ArithmeticUnaryT of reason * Arith.unary_operator * t
 
     | AssertArithmeticOperandT of reason
+    | AssertBigIntArithmeticOperandT of reason
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
     | AssertForInRHST of reason
@@ -723,10 +770,12 @@ module rec TypeTerm : sig
     | SingletonBoolP of ALoc.t * bool (* true or false *)
     | SingletonStrP of ALoc.t * bool * string (* string literal *)
     | SingletonNumP of ALoc.t * bool * number_literal
+    | SingletonBigIntP of ALoc.t * bool * bigint_literal
 
     | BoolP (* boolean *)
     | FunP (* function *)
     | NumP (* number *)
+    | BIgIntP (* bigint *)
     | ObjP (* object *)
     | StrP (* string *)
     | SymbolP (* symbol *)
@@ -755,6 +804,8 @@ module rec TypeTerm : sig
     | AnyLiteral
 
   and number_literal = (float * string)
+
+  and bigint_literal = (float (* Warning! Might lose precision! *) * string)
 
   and mixed_flavor =
     | Mixed_everything
@@ -1191,6 +1242,7 @@ and Enum : sig
   type t =
     | Str of string
     | Num of TypeTerm.number_literal
+    | BigInt of TypeTerm.bigint_literal
     | Bool of bool
     | Void
     | Null
@@ -1202,6 +1254,7 @@ end = struct
   type t =
     | Str of string
     | Num of TypeTerm.number_literal
+    | BigInt of TypeTerm.bigint_literal
     | Bool of bool
     | Void
     | Null
@@ -1528,6 +1581,8 @@ end = struct
     | DefT (_, _, StrT (Literal (_, lit))) -> Some (Enum.Str lit)
     | DefT (_, _, SingletonNumT lit)
     | DefT (_, _, NumT (Literal (_, lit))) -> Some (Enum.Num lit)
+    | DefT (_, _, SingletonBigIntT lit)
+    | DefT (_, _, BigIntT (Literal (_, lit))) -> Some (Enum.BigInt lit)
     | DefT (_, _, SingletonBoolT lit)
     | DefT (_, _, BoolT (Some lit)) -> Some (Enum.Bool lit)
     | DefT (_, _, VoidT) -> Some (Enum.Void)
@@ -1538,6 +1593,7 @@ end = struct
   let is_base = TypeTerm.(function
     | DefT (_, _, SingletonStrT _)
     | DefT (_, _, SingletonNumT _)
+    | DefT (_, _, SingletonBigIntT _)
     | DefT (_, _, SingletonBoolT _)
     | DefT (_, _, VoidT)
     | DefT (_, _, NullT)
@@ -2170,10 +2226,12 @@ end = struct
 
   and reason_of_use_t = function
     | UseT (_, t) -> reason_of_t t
-    | AdderT (_,reason,_,_,_) -> reason
+    | ArithmeticBinaryT (_,reason,_,_,_,_) -> reason
+    | UpdateT (reason,_) -> reason
     | AndT (reason, _, _) -> reason
     | ArrRestT (_, reason, _, _) -> reason
     | AssertArithmeticOperandT reason -> reason
+    | AssertBigIntArithmeticOperandT reason -> reason
     | AssertBinaryInLHST reason -> reason
     | AssertBinaryInRHST reason -> reason
     | AssertForInRHST reason -> reason
@@ -2253,7 +2311,7 @@ end = struct
     | TestPropT (reason, _, _, _) -> reason
     | ThisSpecializeT(reason,_,_) -> reason
     | ToStringT (reason, _) -> reason
-    | UnaryMinusT (reason, _) -> reason
+    | ArithmeticUnaryT (reason, _, _) -> reason
     | UnifyT (_,t) -> reason_of_t t
     | VarianceCheckT(reason,_,_) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
@@ -2328,10 +2386,12 @@ end = struct
 
   and mod_reason_of_use_t f = function
     | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
-    | AdderT (use_op, reason, flip, rt, lt) -> AdderT (use_op, f reason, flip, rt, lt)
+    | ArithmeticBinaryT (use_op, reason, op, flip, rt, lt) -> ArithmeticBinaryT (use_op, f reason, op, flip, rt, lt)
+    | UpdateT (reason, lt) -> UpdateT (f reason, lt)
     | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
     | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
     | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
+    | AssertBigIntArithmeticOperandT reason -> AssertBigIntArithmeticOperandT (f reason)
     | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
     | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
     | AssertForInRHST reason -> AssertForInRHST (f reason)
@@ -2432,7 +2492,7 @@ end = struct
     | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
     | ThisSpecializeT(reason, this, k) -> ThisSpecializeT (f reason, this, k)
     | ToStringT (reason, t) -> ToStringT (f reason, t)
-    | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
+    | ArithmeticUnaryT (reason, op, t) -> ArithmeticUnaryT (f reason, op, t)
     | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
     | VarianceCheckT(reason, ts, polarity) ->
         VarianceCheckT (f reason, ts, polarity)
@@ -2484,7 +2544,7 @@ end = struct
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
   | ConstructorT (op, r, targs, args, t) -> util op (fun op -> ConstructorT (op, r, targs, args, t))
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
-  | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
+  | ArithmeticBinaryT (op, d, o, f, l, r) -> util op (fun op -> ArithmeticBinaryT (op, d, o, f, l, r))
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
   | ToStringT (r, u2) -> nested_util u2 (fun u2 -> ToStringT (r, u2))
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
@@ -2503,6 +2563,7 @@ end = struct
   | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
   | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
   | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
+  | UpdateT (_, _)
   | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)
   | GetStaticsT (_, _)
@@ -2510,8 +2571,9 @@ end = struct
   | SetProtoT (_, _)
   | MixinT (_, _)
   | ComparatorT (_, _, _)
-  | UnaryMinusT (_, _)
+  | ArithmeticUnaryT (_, _, _)
   | AssertArithmeticOperandT (_)
+  | AssertBigIntArithmeticOperandT (_)
   | AssertBinaryInLHST (_)
   | AssertBinaryInRHST (_)
   | AssertForInRHST (_)
@@ -2742,6 +2804,8 @@ end = struct
     match t1, t2 with
     | DefT (_, ltrust, NumT _), DefT (_, rtrust, NumT _)
     | DefT (_, ltrust, SingletonNumT _), DefT (_, rtrust, NumT _)
+    | DefT (_, ltrust, BigIntT _), DefT (_, rtrust, BigIntT _)
+    | DefT (_, ltrust, SingletonBigIntT _), DefT (_, rtrust, BigIntT _)
     | DefT (_, ltrust, StrT _), DefT (_, rtrust, StrT _)
     | DefT (_, ltrust, SingletonStrT _), DefT (_, rtrust, StrT _)
     | DefT (_, ltrust, BoolT _), DefT (_, rtrust, BoolT _)
@@ -2756,6 +2820,8 @@ end = struct
     | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) ->
       (not trust_checked || trust_subtype_fixed ltrust rtrust) && literal_eq expected actual
     | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) ->
+      (not trust_checked || trust_subtype_fixed ltrust rtrust) && number_literal_eq expected actual
+    | DefT (_, ltrust, BigIntT actual), DefT (_, rtrust, SingletonBigIntT expected) ->
       (not trust_checked || trust_subtype_fixed ltrust rtrust) && number_literal_eq expected actual
     | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) ->
       (not trust_checked || trust_subtype_fixed ltrust rtrust) && boolean_literal_eq expected actual
@@ -2806,6 +2872,11 @@ end
 module NumT = Primitive (struct
   let desc = RNumber
   let make r trust = DefT (r, trust, NumT AnyLiteral)
+end)
+
+module BigIntT = Primitive (struct
+  let desc = RBigInt
+  let make r trust = DefT (r, trust, BigIntT AnyLiteral)
 end)
 
 module StrT = Primitive (struct
@@ -2917,6 +2988,7 @@ module Locationless = struct
     let t = P.make (locationless_reason P.desc)
   end
   module NumT = LocationLess (NumT)
+  module BigIntT = LocationLess (BigIntT)
   module StrT = LocationLess (StrT)
   module BoolT = LocationLess (BoolT)
   module MixedT = LocationLess (MixedT)
@@ -3085,11 +3157,13 @@ let string_of_def_ctor = function
   | MixedT _ -> "MixedT"
   | NullT -> "NullT"
   | NumT _ -> "NumT"
+  | BigIntT _ -> "BigIntT"
   | ObjT _ -> "ObjT"
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
+  | SingletonBigIntT _ -> "SingletonBigIntT"
   | SingletonStrT _ -> "SingletonStrT"
   | StrT _ -> "StrT"
   | TypeT _ -> "TypeT"
@@ -3197,10 +3271,12 @@ let string_of_use_op_rec : use_op -> string =
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
-  | AdderT _ -> "AdderT"
+  | ArithmeticBinaryT _ -> "ArithmeticBinaryT"
+  | UpdateT _ -> "UpdateT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
   | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
+  | AssertBigIntArithmeticOperandT _ -> "AssertBigIntArithmeticOperandT"
   | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"
@@ -3300,7 +3376,7 @@ let string_of_use_ctor = function
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | ToStringT _ -> "ToStringT"
-  | UnaryMinusT _ -> "UnaryMinusT"
+  | ArithmeticUnaryT _ -> "ArithmeticUnaryT"
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
@@ -3335,12 +3411,14 @@ let rec string_of_predicate = function
   | SingletonBoolP (_, true) -> "true"
   | SingletonStrP (_, _, str) -> spf "string `%s`" str
   | SingletonNumP (_, _, (_,raw)) -> spf "number `%s`" raw
+  | SingletonBigIntP (_, _, (_,raw)) -> spf "bigint `%s`" raw
 
   (* typeof *)
   | VoidP -> "undefined"
   | BoolP -> "boolean"
   | StrP -> "string"
   | NumP -> "number"
+  | BIgIntP -> "bigint"
   | FunP -> "function"
   | ObjP -> "object"
   | SymbolP -> "symbol"

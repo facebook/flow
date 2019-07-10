@@ -49,6 +49,7 @@ if (z) {} // not sketchy, because z can't be falsey, only null/undefined.
 Setting `sketchy-null` sets the level for all sketchy null checks, but there are more granular rules for particular types. These are:
 * `sketchy-null-bool`
 * `sketchy-null-number`
+* `sketchy-null-bigint`
 * `sketchy-null-string`
 * `sketchy-null-mixed`
 
@@ -80,8 +81,8 @@ would still have a sketchy-null-number warning on line 3.
 
 #### `sketchy-number` <a class="toc" id="toc-sketchy-number" href="#toc-sketchy-number"></a>
 
-Triggers when a `number` is used in a manner which may lead to unexpected results if the value is falsy.
-Currently, this lint triggers if a `number` appears in:
+Triggers when a `number` or `bigint` is used in a manner which may lead to unexpected results if the value is falsy.
+Currently, this lint triggers if a `number` or `bigint` appears in:
 * the left-hand side of an `&&` expression.
 
 As a motivating example, consider this common idiom in React:

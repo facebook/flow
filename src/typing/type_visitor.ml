@@ -140,6 +140,7 @@ class ['a] t = object(self)
 
   method def_type cx pole acc = function
   | NumT _
+  | BigIntT _
   | StrT _
   | BoolT _
   | EmptyT _
@@ -171,6 +172,7 @@ class ['a] t = object(self)
 
   | SingletonStrT _
   | SingletonNumT _
+  | SingletonBigIntT _
   | SingletonBoolT _ -> acc
 
   | TypeT (_, t) -> self#type_ cx pole acc t
@@ -216,9 +218,11 @@ class ['a] t = object(self)
   | SingletonBoolP _ -> acc
   | SingletonStrP _ -> acc
   | SingletonNumP _ -> acc
+  | SingletonBigIntP _ -> acc
   | BoolP -> acc
   | FunP -> acc
   | NumP -> acc
+  | BIgIntP -> acc
   | ObjP -> acc
   | StrP -> acc
   | SymbolP -> acc
@@ -343,15 +347,20 @@ class ['a] t = object(self)
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#use_type_ cx acc t
 
-  | AdderT (_, _, _, a, b) ->
+  | ArithmeticBinaryT (_, _, _, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
     let acc = self#type_ cx pole_TODO acc b in
     acc
 
+  | UpdateT (_, a) ->
+    let acc = self#type_ cx pole_TODO acc a in
+    acc
+
   | ComparatorT (_, _, t) -> self#type_ cx pole_TODO acc t
-  | UnaryMinusT (_, t) -> self#type_ cx pole_TODO acc t
+  | ArithmeticUnaryT (_, _, t) -> self#type_ cx pole_TODO acc t
 
   | AssertArithmeticOperandT _
+  | AssertBigIntArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertForInRHST _ -> acc

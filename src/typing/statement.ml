@@ -4314,10 +4314,8 @@ and literal cx loc lit =
   | Number f ->
       DefT (annot_reason (mk_reason RNumber loc), make_trust (), NumT (Literal (None, (f, lit.raw))))
 
-  | BigInt _ ->
-      let reason = annot_reason (mk_reason (RBigIntLit lit.raw) loc) in
-      Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-      AnyT.why AnyError reason
+  | BigInt f ->
+      DefT (annot_reason (mk_reason RBigInt loc), make_trust (), BigIntT (Literal (None, (f, lit.raw))))
 
   | RegExp _ ->
       Flow.get_builtin_type cx (annot_reason (mk_reason RRegExp loc)) "RegExp"
@@ -4332,8 +4330,13 @@ and unary cx loc = Ast.Expression.Unary.(function
       { operator = Not; argument; comments }
 
   | { operator = Plus; argument; comments } ->
-      let argument = expression cx argument in
-      NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; comments }
+      let (_, argt), _ as argument = expression cx argument in
+      let reason = mk_reason (RUnaryOperator ("plus", desc_of_t argt)) loc in
+      Tvar.mk_derivable_where cx reason (fun t ->
+        let reason = mk_reason (desc_of_t argt) loc in
+        Flow.flow cx (argt, ArithmeticUnaryT (reason, Arith.UnaryPlus, t));
+      ),
+      { operator = Plus; argument; comments }
 
   | { operator = Minus; argument; comments } ->
       let (_, argt), _ as argument = expression cx argument in
@@ -4346,19 +4349,25 @@ and unary cx loc = Ast.Expression.Unary.(function
         let reason = repos_reason loc ~annot_loc:loc reason in
         let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
         DefT (reason, trust, NumT (Literal (sense, (value, raw))))
+      | DefT (reason, trust, BigIntT (Literal (sense, (value, raw)))) ->
+        let reason = repos_reason loc ~annot_loc:loc reason in
+        let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
+        DefT (reason, trust, BigIntT (Literal (sense, (value, raw))))
       | arg ->
         let reason = mk_reason (desc_of_t arg) loc in
         Tvar.mk_derivable_where cx reason (fun t ->
-          Flow.flow cx (arg, UnaryMinusT (reason, t));
+          Flow.flow cx (arg, ArithmeticUnaryT (reason, Arith.UnaryMinus, t));
         )
       end,
       { operator = Minus; argument; comments }
 
   | { operator = BitNot; argument; comments } ->
-      let t = NumT.at loc |> with_trust literal_trust in
       let (_, argt), _ as argument = expression cx argument in
-      Flow.flow_t cx (argt, t);
-      t, { operator = BitNot; argument; comments}
+      let reason = mk_reason (desc_of_t argt) loc in
+      Tvar.mk_derivable_where cx reason (fun t ->
+        Flow.flow cx (argt, ArithmeticUnaryT (reason, Arith.BitNot, t));
+      ),
+      { operator = BitNot; argument; comments }
 
   | { operator = Typeof; argument; comments } ->
       let argument = expression cx argument in
@@ -4398,25 +4407,24 @@ and unary cx loc = Ast.Expression.Unary.(function
 (* numeric pre/post inc/dec *)
 and update cx loc expr = Ast.Expression.Update.(
   let reason = mk_reason (RCustom "update") loc in
-  let result_t = NumT.at loc |> with_trust literal_trust in
-  result_t,
-  (match expr.argument with
+  match expr.argument with
   | arg_loc, Ast.Expression.Identifier (id_loc, ({ Ast.Identifier.name; comments= _ } as id_name)) ->
-    Flow.flow cx (identifier cx id_name id_loc, AssertArithmeticOperandT reason);
+    let arg_t = identifier cx id_name id_loc in
+    let result_t = Tvar.mk cx reason in
+    Flow.flow cx (arg_t, UpdateT (reason, result_t));
     (* enforce state-based guards for binding update, e.g., const *)
     let use_op = Op (AssignVar {
       var = Some (mk_reason (RIdentifier name) id_loc);
       init = reason_of_t result_t;
     }) in
     ignore (Env.set_var cx ~use_op name result_t id_loc);
-    let t = NumT.at arg_loc |> with_trust bogus_trust in
-    { expr with
-        argument = (arg_loc, t), Ast.Expression.Identifier ((id_loc, t), id_name) }
+    result_t, { expr with
+        argument = (arg_loc, result_t), Ast.Expression.Identifier ((id_loc, result_t), id_name) }
   | argument ->
     let (_, arg_t), _ as arg_ast = expression cx argument in
-    Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
-    { expr with argument = arg_ast }
-  )
+    let result_t = Tvar.mk cx reason in
+    Flow.flow cx (arg_t, UpdateT (reason, result_t));
+    result_t, { expr with argument = arg_ast }
 )
 
 (* traverse a binary expression, return result type *)
@@ -4480,6 +4488,7 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
   | LShift
   | RShift
   | RShift3
+  | Plus
   | Minus
   | Mult
   | Exp
@@ -4488,31 +4497,37 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
   | BitOr
   | Xor
   | BitAnd ->
-      let reason = mk_reason (RCustom "arithmetic operation") loc in
-      let (_, t1), _ as left = expression cx left in
-      let (_, t2), _ as right = expression cx right in
-      Flow.flow cx (t1, AssertArithmeticOperandT reason);
-      Flow.flow cx (t2, AssertArithmeticOperandT reason);
-      NumT.at loc |> with_trust literal_trust, { operator; left; right; }
-
-  | Plus ->
       let (_, t1), _ as left_ast = expression cx left in
       let (_, t2), _ as right_ast = expression cx right in
-      let desc = RBinaryOperator (
-        "+",
+      let reason = mk_reason (RBinaryOperator (
+        Flow_ast_utils.string_of_binary_operator operator,
         desc_of_reason (reason_of_t t1),
         desc_of_reason (reason_of_t t2)
-      ) in
-      let reason = mk_reason desc loc in
+      )) loc in
+      let type_op = match operator with
+        | LShift -> Arith.LShift
+        | RShift -> Arith.RShift
+        | RShift3 -> Arith.RShift3
+        | Plus -> Arith.Plus
+        | Minus -> Arith.Minus
+        | Mult -> Arith.Mult
+        | Exp -> Arith.Exp
+        | Div -> Arith.Div
+        | Mod -> Arith.Mod
+        | BitOr -> Arith.BitOr
+        | Xor -> Arith.Xor
+        | BitAnd -> Arith.BitAnd
+        | _ -> Arith.Plus
+      in
       Tvar.mk_where cx reason (fun t ->
         let use_op = Op (Addition {
           op = reason;
           left = mk_expression_reason left;
           right = mk_expression_reason right;
         }) in
-        Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t));
+        Flow.flow cx (t1, ArithmeticBinaryT (use_op, reason, type_op, false, t2, t));
       ),
-      { operator; left = left_ast; right = right_ast }
+      { operator; left = left_ast; right = right_ast; }
 
 and logical cx loc { Ast.Expression.Logical.operator; left; right } =
   let open Ast.Expression.Logical in
@@ -4738,37 +4753,7 @@ and simple_assignment cx _loc lhs rhs =
 and op_assignment cx loc lhs op rhs =
   let open Ast.Expression in
   match op with
-  | Assignment.PlusAssign ->
-      (* lhs += rhs *)
-      let reason = mk_reason (RCustom "+=") loc in
-      let (_, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
-      let (_, rhs_t), _ as rhs_ast = expression cx rhs in
-      let result_t = Tvar.mk cx reason in
-
-      (* lhs = lhs + rhs *)
-      let () =
-        let use_op = Op (Addition {
-          op = reason;
-          left = mk_pattern_reason lhs;
-          right = mk_expression_reason rhs;
-        }) in
-        Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
-      in
-      (* enforce state-based guards for binding update, e.g., const *)
-      (match lhs with
-      | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-        name = id_loc, { Ast.Identifier.name; comments= _ };
-        _;
-      } ->
-        let use_op = Op (AssignVar {
-          var = Some (mk_reason (RIdentifier name) id_loc);
-          init = reason;
-        }) in
-        ignore Env.(set_var cx ~use_op name result_t id_loc)
-      | _ -> ()
-      );
-      lhs_t, lhs_ast, rhs_ast
-
+  | Assignment.PlusAssign
   | Assignment.MinusAssign
   | Assignment.MultAssign
   | Assignment.ExpAssign
@@ -4779,27 +4764,154 @@ and op_assignment cx loc lhs op rhs =
   | Assignment.RShift3Assign
   | Assignment.BitOrAssign
   | Assignment.BitXorAssign
-  | Assignment.BitAndAssign
-    ->
-      (* lhs (numop)= rhs *)
-      let reason = mk_reason (RCustom "(numop)=") loc in
+  | Assignment.BitAndAssign ->
+      (* lhs += rhs *)
       let (_, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
       let (_, rhs_t), _ as rhs_ast = expression cx rhs in
-      (* lhs = lhs (numop) rhs *)
-      Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
-      Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
+      let reason = mk_reason (RBinaryOperator (
+        Flow_ast_utils.string_of_assignment_operator op,
+        desc_of_reason (reason_of_t lhs_t),
+        desc_of_reason (reason_of_t rhs_t)
+      )) loc in
+      let result_t = Tvar.mk cx reason in
+      let type_op = match op with
+        | Assignment.PlusAssign -> Arith.Plus
+        | Assignment.MinusAssign -> Arith.Minus
+        | Assignment.MultAssign -> Arith.Mult
+        | Assignment.ExpAssign -> Arith.Exp
+        | Assignment.DivAssign -> Arith.Div
+        | Assignment.ModAssign -> Arith.Mod
+        | Assignment.LShiftAssign -> Arith.LShift
+        | Assignment.RShiftAssign -> Arith.RShift
+        | Assignment.RShift3Assign -> Arith.RShift3
+        | Assignment.BitOrAssign -> Arith.BitOr
+        | Assignment.BitXorAssign -> Arith.Xor
+        | Assignment.BitAndAssign -> Arith.BitAnd
+      in
+      (* lhs = lhs + rhs *)
+      let () =
+        let use_op = Op (Addition {
+          op = reason;
+          left = mk_pattern_reason lhs;
+          right = mk_expression_reason rhs;
+        }) in
+        Flow.flow cx (lhs_t, ArithmeticBinaryT (use_op, reason, type_op, false, rhs_t, result_t))
+      in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
         name = id_loc, { Ast.Identifier.name; comments= _ };
         _;
       } ->
-        let t = NumT.at loc |> with_trust literal_trust in
         let use_op = Op (AssignVar {
           var = Some (mk_reason (RIdentifier name) id_loc);
-          init = reason_of_t t;
+          init = mk_expression_reason rhs;
         }) in
-        ignore Env.(set_var cx ~use_op name t id_loc)
+        ignore Env.(set_var cx ~use_op name result_t id_loc)
+
+      (* super.name = e *)
+      | lhs_loc, Ast.Pattern.Expression (_, Member {
+          Member._object = _, Super;
+          property = Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments=_ });
+        }) ->
+          let reason =
+            mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+          let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+          let super = super_ cx lhs_loc in
+          let prop_t = Tvar.mk cx prop_reason in
+          let use_op = Op (SetProperty {
+            lhs = reason;
+            prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
+            value = mk_expression_reason rhs;
+          }) in
+          Flow.flow cx (super, SetPropT (
+            use_op, reason, Named (prop_reason, name), Normal, result_t, Some prop_t
+          ));
+          ignore prop_t
+
+      (* _object.#name = e *)
+      | lhs_loc, Ast.Pattern.Expression (_, Member {
+          Member._object;
+          property = Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments= _ }));
+        }) ->
+          let (_, o), _ = expression cx _object in
+          let prop_t =
+          (* if we fire this hook, it means the assignment is a sham. *)
+          if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
+          then Unsoundness.at InferenceHooks prop_loc
+          else
+            let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+
+            (* flow type to object property itself *)
+            let class_entries = Env.get_class_entries () in
+            let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
+            let prop_t = Tvar.mk cx prop_reason in
+            let use_op = Op (SetProperty {
+              lhs = reason;
+              prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
+              value = mk_expression_reason rhs;
+            }) in
+            Flow.flow cx (o, SetPrivatePropT (
+              use_op, reason, name, class_entries, false, result_t, Some prop_t
+            ));
+            post_assignment_havoc ~private_:true name lhs prop_t result_t;
+            prop_t
+          in
+          ignore prop_t
+
+      (* _object.name = e *)
+      | lhs_loc, Ast.Pattern.Expression (_, Member {
+          Member._object;
+          property = Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments= _ });
+        }) ->
+          let wr_ctx = match _object, Env.var_scope_kind () with
+            | (_, This), Scope.Ctor -> ThisInCtor
+            | _ -> Normal
+          in
+          let (_, o), _ = expression cx _object in
+          (* if we fire this hook, it means the assignment is a sham. *)
+          let prop_t = if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
+          then Unsoundness.at InferenceHooks prop_loc
+          else
+            let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+            let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+
+            (* flow type to object property itself *)
+            let prop_t = Tvar.mk cx prop_reason in
+            let use_op = Op (SetProperty {
+              lhs = reason;
+              prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
+              value = mk_expression_reason rhs;
+            }) in
+            Flow.flow cx (o, SetPropT (
+              use_op, reason, Named (prop_reason, name), wr_ctx, result_t, Some prop_t
+            ));
+            post_assignment_havoc ~private_:false name lhs prop_t result_t;
+            prop_t
+          in
+          ignore prop_t
+
+      (* _object[index] = e *)
+      | lhs_loc, Ast.Pattern.Expression (_, Member {
+          Member._object;
+          property = Member.PropertyExpression ((iloc, _) as index);
+        }) ->
+          let reason = mk_reason (RPropertyAssignment None) lhs_loc in
+          let (_, a), _ = expression cx _object in
+          let (_, i), _ = expression cx index in
+          let use_op = Op (SetProperty {
+            lhs = reason;
+            prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) iloc;
+            value = mk_expression_reason rhs;
+          }) in
+          Flow.flow cx (a, SetElemT (use_op, reason, i, result_t, None));
+
+          (* types involved in the assignment itself are computed
+            in pre-havoc environment. it's the assignment itself
+            which clears refis *)
+          ignore (Env.havoc_heap_refinements ())
+
+      (* other r structures are handled as destructuring assignments *)
       | _ -> ()
       );
       lhs_t, lhs_ast, rhs_ast
@@ -5537,6 +5649,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         | "boolean" -> Some BoolP
         | "function" -> Some FunP
         | "number" -> Some NumP
+        | "bigint" -> Some BIgIntP
         | "object" -> Some ObjP
         | "string" -> Some StrP
         | "symbol" -> Some SymbolP
@@ -5701,6 +5814,18 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let lit, raw = extract_number_literal number_literal in
       let (_, val_t), _ as val_ast = expression cx value in
       literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, sense, (lit, raw)))
+        (fun expr -> reconstruct_ast expr val_ast)
+
+    (* special case equality relations involving bigints *)
+    | ((lit_loc, Expression.Literal { Literal.value = Literal.BigInt lit; raw; comments= _ }) as value),
+      expr ->
+      let (_, val_t), _ as val_ast = expression cx value in
+      literal_test loc ~sense ~strict expr val_t (SingletonBigIntP (lit_loc, sense, (lit, raw)))
+        (fun expr -> reconstruct_ast val_ast expr)
+    | expr,
+      ((lit_loc, Expression.Literal { Literal.value = Literal.BigInt lit; raw; comments= _ }) as value) ->
+      let (_, val_t), _ as val_ast = expression cx value in
+      literal_test loc ~sense ~strict expr val_t (SingletonBigIntP (lit_loc, sense, (lit, raw)))
         (fun expr -> reconstruct_ast expr val_ast)
 
     (* TODO: add Type.predicate variant that tests number equality *)
@@ -6922,6 +7047,8 @@ and check_default_pattern cx left right =
           update_excuses (fun excuse -> {excuse with bool_loc = Some right_loc})
         | Ast.Literal.Number 0. ->
           update_excuses (fun excuse -> {excuse with number_loc = Some right_loc})
+        | Ast.Literal.BigInt 0. ->
+          update_excuses (fun excuse -> {excuse with bigint_loc = Some right_loc})
         (* There's no valid default value for mixed to create an excuse. *)
         | _ -> ()
       end

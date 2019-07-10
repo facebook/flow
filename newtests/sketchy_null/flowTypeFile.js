@@ -11,3 +11,7 @@ export type NullableNumber = {
 export type NullableBool = {
   nullableBool?: boolean,
 };
+
+export type NullableBigInt = {
+  nullableBigInt?: bigint,
+};

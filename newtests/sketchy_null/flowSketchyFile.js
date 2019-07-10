@@ -12,4 +12,7 @@ function printSketchyBoolean(sketch: NullableType): void {
   if (sketch.nullableStr) {
     console.log(sketch.nullableStr);
   }
+  if (sketch.nullableBigInt) {
+    console.log(sketch.nullableBigInt);
+  }
 }

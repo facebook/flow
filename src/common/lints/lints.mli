@@ -9,6 +9,7 @@ type sketchy_null_kind =
  | SketchyNullBool
  | SketchyNullString
  | SketchyNullNumber
+ | SketchyNullBigInt
  | SketchyNullMixed
 
 type sketchy_number_kind =

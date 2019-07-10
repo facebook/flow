@@ -10,6 +10,7 @@ type t = {
   bool_loc: ALoc.t option;
   string_loc: ALoc.t option;
   number_loc: ALoc.t option;
+  bigint_loc: ALoc.t option;
   mixed_loc: ALoc.t option;
 }
 
@@ -18,6 +19,7 @@ let empty = {
   bool_loc = None;
   string_loc = None;
   number_loc = None;
+  bigint_loc = None;
   mixed_loc = None;
 }
 
@@ -31,6 +33,7 @@ let debug_to_string t =
     ("bool_loc", t.bool_loc);
     ("string_loc", t.string_loc);
     ("number_loc", t.number_loc);
+    ("bigint_loc", t.bigint_loc);
     ("mixed_loc", t.mixed_loc);
   ]
   |> Core_list.map ~f:(fun (name, loc_opt) -> (name, string_of_loc_option loc_opt))
