@@ -237,7 +237,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   (loc, mk_singleton_number cx loc value raw), t_ast
 
 | loc, (BigIntLiteral { Ast.BigIntLiteral.approx_value; bigint } as t_ast) ->
-  (loc, mk_singleton_bigint loc approx_value bigint), t_ast
+  (loc, mk_singleton_bigint cx loc approx_value bigint), t_ast
 
 | loc, (BooleanLiteral value as t_ast) ->
   (loc, mk_singleton_boolean cx loc value), t_ast
