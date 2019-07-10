@@ -673,12 +673,12 @@ class ['loc] mapper = object(this)
 
   method object_mapped_type (opt: ('loc, 'loc) Ast.Type.Object.Mapped.t) =
     let open Ast.Type.Object.Mapped in
-    let loc, { name = name_; bound; value; static; variance; } = opt in
+    let loc, { name = name_; bound; value; static; optional; variance; } = opt in
     let name' = this#type_ name_ in
     let bound' = this#type_ bound in
     let value' = this#type_ value in
     if name' == name_ && bound' == bound && value' == value then opt
-    else loc, { name = name'; bound = bound'; value = value'; static; variance; }
+    else loc, { name = name'; bound = bound'; value = value'; static; optional; variance; }
 
   method object_type _loc (ot: ('loc, 'loc) Ast.Type.Object.t) =
     let open Ast.Type.Object in

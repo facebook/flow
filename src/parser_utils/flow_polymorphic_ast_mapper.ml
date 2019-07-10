@@ -702,12 +702,12 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method object_mapped_type (oit: ('M, 'T) Ast.Type.Object.Mapped.t)
                                  : ('N, 'U) Ast.Type.Object.Mapped.t =
     let open Ast.Type.Object.Mapped in
-    let annot, { name = name_; bound; value; static; variance } = oit in
+    let annot, { name = name_; bound; value; static; variance; optional } = oit in
     let name' = this#type_ name_ in
     let bound' = this#type_ bound in
     let value' = this#type_ value in
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
-    this#on_loc_annot annot, { name = name'; bound = bound'; value = value'; static; variance = variance' }
+    this#on_loc_annot annot, { name = name'; bound = bound'; value = value'; variance = variance'; static; optional; }
 
   method object_internal_slot_type (islot: ('M, 'T) Ast.Type.Object.InternalSlot.t)
                                          : ('N, 'U) Ast.Type.Object.InternalSlot.t =
