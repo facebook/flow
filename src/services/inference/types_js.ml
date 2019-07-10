@@ -536,11 +536,18 @@ let merge
   in
 
   let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
-  let cycle_leaders = component_map
-    |> Utils_js.FilenameMap.elements
-    |> Core_list.map ~f:(fun (leader, members) -> (leader, Nel.length members))
-    |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
-  Lwt.return (cycle_leaders, errors, coverage, skipped_count, sig_new_or_changed, time_to_merge)
+
+  (* compute the largest cycle, for logging *)
+  let top_cycle =
+    Utils_js.FilenameMap.fold (fun leader members top ->
+      let count = Nel.length members in
+      if count = 1 then top else match top with
+      | Some (_, top_count) -> if count > top_count then Some (leader, count) else top
+      | None -> Some (leader, count)
+    ) component_map None
+  in
+
+  Lwt.return (errors, coverage, skipped_count, sig_new_or_changed, top_cycle, time_to_merge)
 
 let check_files
   ~reader
@@ -1042,7 +1049,7 @@ module Recheck: sig
     new_or_changed: Utils_js.FilenameSet.t;
     deleted: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
-    cycle_leaders: (Utils_js.FilenameMap.key * int) list;
+    top_cycle: (File_key.t * int) option;
     skipped_count: int;
     estimates: Recheck_stats.estimates option;
   }
@@ -1076,7 +1083,7 @@ end = struct
     new_or_changed: Utils_js.FilenameSet.t;
     deleted: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
-    cycle_leaders: (Utils_js.FilenameMap.key * int) list;
+    top_cycle: (File_key.t * int) option;
     skipped_count: int;
     estimates: Recheck_stats.estimates option;
   }
@@ -1541,11 +1548,11 @@ end = struct
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
     (* recheck *)
     let%lwt
-        cycle_leaders,
         updated_errors,
         coverage,
         skipped_count,
         sig_new_or_changed,
+        top_cycle,
         time_to_merge =
       merge
       ~transaction
@@ -1610,7 +1617,7 @@ end = struct
         new_or_changed;
         deleted;
         all_dependent_files;
-        cycle_leaders;
+        top_cycle;
         skipped_count;
         estimates;
       }
@@ -1669,7 +1676,7 @@ let recheck
     new_or_changed = modified;
     deleted;
     all_dependent_files = dependent_files;
-    cycle_leaders;
+    top_cycle;
     skipped_count;
     estimates;
   } = stats in
@@ -1721,10 +1728,6 @@ let recheck
   let dependent_file_count = Utils_js.FilenameSet.cardinal dependent_files in
   let changed_file_count = (Utils_js.FilenameSet.cardinal modified)
     + (Utils_js.FilenameSet.cardinal deleted) in
-  let top_cycle = Core_list.fold cycle_leaders ~init:None ~f:(fun top (f2, count2) ->
-    match top with
-    | Some (f1, count1) -> if f2 > f1 then Some (f2, count2) else Some (f1, count1)
-    | None -> Some (f2, count2)) in
   let summary = ServerStatus.({
       duration;
       info = RecheckSummary {dependent_file_count; changed_file_count; top_cycle}; }) in
@@ -2202,7 +2205,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let recheck_reasons = [Persistent_connection_prot.Full_init] in
-    let%lwt _, updated_errors, coverage, _, sig_new_or_changed, _ = merge
+    let%lwt updated_errors, coverage, _, sig_new_or_changed, _, _ = merge
       ~transaction
       ~reader
       ~options
