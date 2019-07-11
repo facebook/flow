@@ -29,6 +29,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   (* global *)
+  libs_overrides: bool;
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
@@ -71,6 +72,7 @@ val find_module_sig: sig_t -> string -> Type.t
 (* accessors *)
 val all_unresolved: t -> ISet.t IMap.t
 val metadata: t -> metadata
+val libs_overrides: t -> bool
 val max_literal_length: t -> int
 val enable_const_params: t -> bool
 val enable_enums: t -> bool
