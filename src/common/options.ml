@@ -58,7 +58,7 @@ type trust_mode =
   | SilentTrust
 
 type t = {
-  opt_libs_overrides : bool;
+  opt_declaration_merging : bool;
   opt_abstract_locations : bool;
   opt_all : bool;
   opt_debug : bool;
