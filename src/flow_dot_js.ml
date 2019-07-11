@@ -143,7 +143,7 @@ let stub_metadata ~root ~checked = { Context.
   include_suppressions = false;
 
   (* global *)
-  libs_overrides = false;
+  declaration_merging = false;
   max_literal_length = 100;
   enable_const_params = false;
   enable_enums = true;

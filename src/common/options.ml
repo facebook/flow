@@ -120,7 +120,7 @@ type t = {
   opt_type_asserts: bool;
 }
 
-let libs_overrides opts = opts.opt_libs_overrides
+let declaration_merging opts = opts.opt_declaration_merging
 let all opts = opts.opt_all
 let arch opts = opts.opt_arch
 let max_literal_length opts = opts.opt_max_literal_length

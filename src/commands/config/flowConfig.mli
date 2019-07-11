@@ -38,7 +38,7 @@ val includes: config -> string list
 val libs: config -> string list
 
 (* options *)
-val libs_overrides: config -> bool
+val declaration_merging: config -> bool
 val abstract_locations: config -> bool
 val all: config -> bool
 val emoji: config -> bool

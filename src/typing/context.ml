@@ -29,7 +29,7 @@ type metadata = {
   strict_local: bool;
 
   (* global *)
-  libs_overrides: bool;
+  declaration_merging: bool;
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
@@ -157,7 +157,7 @@ let metadata_of_options options = {
   strict_local = false;
 
   (* global *)
-  libs_overrides = Options.libs_overrides options;
+  declaration_merging = Options.declaration_merging options;
   max_literal_length = Options.max_literal_length options;
   enable_const_params = Options.enable_const_params options;
   enable_enums = Options.enums options;
@@ -273,7 +273,7 @@ let trust_constructor cx = cx.trust_constructor
 let cx_with_trust cx trust = { cx with trust_constructor = trust }
 
 let metadata cx = cx.metadata
-let libs_overrides cx = cx.metadata.libs_overrides
+let declaration_merging cx = cx.metadata.declaration_merging
 let max_literal_length cx = cx.metadata.max_literal_length
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local

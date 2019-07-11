@@ -11178,7 +11178,7 @@ and set_builtin cx ?trace x t =
     flow_opt cx ?trace (obj, GetPropT (unknown_use, reason, propref, t));
   )
   in
-  if Context.libs_overrides cx then
+  if Context.declaration_merging cx then
     flow_opt cx ?trace (t, MergeTypesT (reason, false, propref, t, old_t, obj))
   else
     flow_opt cx ?trace (obj, SetPropT (unknown_use, reason, propref, Normal, t, None))

@@ -274,7 +274,7 @@ let trunc_env =
 
 (* initialize a new environment (once per module) *)
 let init_env ?(exclude_syms=SSet.empty) cx module_scope =
-  if not (Context.libs_overrides cx) then
+  if not (Context.declaration_merging cx) then
     set_exclude_symbols exclude_syms;
 
   havoc_current_activation ();

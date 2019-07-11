@@ -66,9 +66,9 @@ let parse_lib_file ~reader options file =
 let load_lib_files ~sig_cx ~options ~reader files =
 
   let verbose = Options.verbose options in
-  let libs_overrides = Options.libs_overrides options in
+  let declaration_merging = Options.declaration_merging options in
 
-  let files = if libs_overrides then
+  let files = if declaration_merging then
     files
   else
     List.rev files
