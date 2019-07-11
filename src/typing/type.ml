@@ -365,6 +365,7 @@ module rec TypeTerm : sig
     | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * funcalltype * t option
     (* Similar to the last element of the MethodT *)
     | SetPropT of use_op * reason * propref * write_ctx * t * t option
+    | OverwritePropT of use_op * reason * propref * t
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
      * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
      * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
@@ -399,6 +400,8 @@ module rec TypeTerm : sig
     | ImplementsT of use_op * t
     | MixinT of reason * t
     | ToStringT of reason * use_t
+
+    | MergeTypesT of reason * bool (* flip *) * propref * t * t * t
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of use_op * reason * bool * t * t
@@ -2174,6 +2177,7 @@ end = struct
   and reason_of_use_t = function
     | UseT (_, t) -> reason_of_t t
     | AdderT (_,reason,_,_,_) -> reason
+    | MergeTypesT (reason,_,_,_,_,_) -> reason
     | AndT (reason, _, _) -> reason
     | ArrRestT (_, reason, _, _) -> reason
     | AssertArithmeticOperandT reason -> reason
@@ -2246,6 +2250,7 @@ end = struct
     | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
     | SetElemT (_,reason,_,_,_) -> reason
     | SetPropT (_,reason,_,_,_,_) -> reason
+    | OverwritePropT (_,reason,_,_) -> reason
     | SetPrivatePropT (_,reason,_,_,_,_,_) -> reason
     | SetProtoT (reason,_) -> reason
     | SpecializeT(_,_,reason,_,_,_) -> reason
@@ -2333,6 +2338,7 @@ end = struct
   and mod_reason_of_use_t f = function
     | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
     | AdderT (use_op, reason, flip, rt, lt) -> AdderT (use_op, f reason, flip, rt, lt)
+    | MergeTypesT (reason, flip, propref, t, rt, lt) -> MergeTypesT (f reason, flip, propref, t, rt, lt)
     | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
     | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
     | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
@@ -2423,6 +2429,7 @@ end = struct
       SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
     | SetElemT (use_op, reason, it, et, t) -> SetElemT (use_op, f reason, it, et, t)
     | SetPropT (use_op, reason, n, i, t, tp) -> SetPropT (use_op, f reason, n, i, t, tp)
+    | OverwritePropT (use_op, reason, n, i) -> OverwritePropT (use_op, f reason, n, i)
     | SetPrivatePropT (use_op, reason, n, scopes, static, t, tp) ->
         SetPrivatePropT (use_op, f reason, n, scopes, static, t, tp)
     | SetProtoT (reason, t) -> SetProtoT (f reason, t)
@@ -2477,6 +2484,7 @@ end = struct
   | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
   | SetPropT (op, r, p, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, w, t, tp))
+  | OverwritePropT (op, r, p, w) -> util op (fun op -> OverwritePropT (op, r, p, w))
   | SetPrivatePropT (op, r, s, c, b, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, c, b, t, tp))
   | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
@@ -2565,6 +2573,7 @@ end = struct
   | SubstOnPredT (_, _, _)
   | RefineT (_, _, _)
   | CondT (_, _, _, _)
+  | MergeTypesT (_, _, _, _, _, _)
   | ReactPropsToOut _
   | ReactInToProps _
   | DestructuringT _
@@ -3202,6 +3211,7 @@ let string_of_use_op_rec : use_op -> string =
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
+  | MergeTypesT _ -> "MergeTypesT"
   | AdderT _ -> "AdderT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
@@ -3295,6 +3305,7 @@ let string_of_use_ctor = function
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
+  | OverwritePropT _ -> "OverwritePropT"
   | MatchPropT _ -> "MatchPropT"
   | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"

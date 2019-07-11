@@ -498,6 +498,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | SetPropT (_, _, name, _, t, _)
+  | OverwritePropT (_, _, name, t)
   | GetPropT (_, _, name, t)
   | MatchPropT (_, _, name, t)
   | TestPropT (_, _, name, t) -> [
@@ -558,6 +559,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | AdderT (_, _, _, l, r) -> [
+      "leftType", _json_of_t json_cx l;
+      "rightType", _json_of_t json_cx r
+    ]
+
+  | MergeTypesT (_, _, _, _, l, r) -> [
       "leftType", _json_of_t json_cx l;
       "rightType", _json_of_t json_cx r
     ]
@@ -1797,7 +1803,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
-  | FunProtoCallT _ 
+  | FunProtoCallT _
   | GlobalThisT _ -> p t
   | DefT (_, trust, PolyT (_, tps, c, id)) -> p ~trust:(Some trust) ~extra:(spf "%s [%s] #%d"
       (kid c)
@@ -2099,6 +2105,9 @@ and dump_use_t_ (depth, tvars) cx t =
       (if Context.trust_tracking cx then string_of_trust_rep (lookup_trust cx) trust else "")
       (kid t)
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
+  | MergeTypesT (_, _, _, _, x, y) -> p ~extra:(spf "%s, %s"
+      (kid x)
+      (kid y)) t
   | AdderT (use_op, _, _, x, y) -> p ~extra:(spf "%s, %s, %s"
       (string_of_use_op use_op)
       (kid x)
@@ -2228,6 +2237,10 @@ and dump_use_t_ (depth, tvars) cx t =
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, _, ix, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | SetPropT (use_op, _, prop, _, ptype, _) -> p ~extra:(spf "%s, (%s), %s"
+      (string_of_use_op use_op)
+      (propref prop)
+      (kid ptype)) t
+  | OverwritePropT (use_op, _, prop, ptype) -> p ~extra:(spf "%s, (%s), %s"
       (string_of_use_op use_op)
       (propref prop)
       (kid ptype)) t
