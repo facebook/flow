@@ -21,9 +21,6 @@ val eval_property_assignment :
   (ALoc.t, ALoc.t) Ast.Statement.Block.t ->
   (
     (ALoc.t, ALoc.t) Ast.Identifier.t list *
-    ALoc.t list
+    ALoc.t list *
+    (ALoc.t * this_error * (ALoc.t, ALoc.t) Ast.Identifier.t list) list
   )
-
-val eval_this_in_constructor :
-  (ALoc.t, ALoc.t) Ast.Statement.Block.t ->
-  (ALoc.t * this_error) list

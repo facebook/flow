@@ -6259,7 +6259,7 @@ and check_properties_initialized_before_use cx class_ast: unit =
     |> Option.value ~default:{ Ast.Statement.Block.body = [] }
   in
 
-  let uninitialized_properties, read_before_initialized =
+  let uninitialized_properties, read_before_initialized, this_errors =
     Property_assignment.eval_property_assignment properties ctor_body
   in
   List.iter (fun id ->
@@ -6274,15 +6274,15 @@ and check_properties_initialized_before_use cx class_ast: unit =
       ReadFromUninitializedProperty
     ))
   ) read_before_initialized;
-
-  let this_errors = Property_assignment.eval_this_in_constructor ctor_body in
-  List.iter (fun (loc, error) ->
-    Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-      loc,
-      match error with
-      | Property_assignment.ThisInConstructor -> ThisBeforeEverythingInitialized
-      | Property_assignment.MethodCallInConstructor -> MethodCallBeforeEverythingInitialized
-    ))
+  List.iter (fun (loc, error, uninitialized_properties) ->
+    List.iter (fun _id ->
+      Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
+        loc,
+        match error with
+        | Property_assignment.ThisInConstructor -> ThisBeforeEverythingInitialized
+        | Property_assignment.MethodCallInConstructor -> MethodCallBeforeEverythingInitialized
+      ))
+    ) uninitialized_properties
   ) this_errors
 
 and mk_class cx class_loc ~name_loc reason c =

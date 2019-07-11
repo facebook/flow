@@ -549,5 +549,67 @@ Class property not definitively initialized in the constructor. Can you add an a
           ^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:491:5
 
-Found 61 errors
+It is unsafe to call a method in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   491|     this.m(this); // MethodCallBeforeEverythingInitialized, ThisBeforeEverythingInitialized
+            ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:491:12
+
+It is unsafe to use `this` in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   491|     this.m(this); // MethodCallBeforeEverythingInitialized, ThisBeforeEverythingInitialized
+                   ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:500:5
+
+It is unsafe to call a method in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   500|     this.m(this.p); // MethodCallBeforeEverythingInitialized, ReadFromUninitializedProperty
+            ^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:500:12
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   500|     this.m(this.p); // MethodCallBeforeEverythingInitialized, ReadFromUninitializedProperty
+                   ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:509:5
+
+It is unsafe to call a method in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   509|     this.m(this.m(0)); // MethodCallBeforeEverythingInitialized, MethodCallBeforeEverythingInitialized
+            ^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:509:12
+
+It is unsafe to call a method in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   509|     this.m(this.m(0)); // MethodCallBeforeEverythingInitialized, MethodCallBeforeEverythingInitialized
+                   ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:520:5
+
+It is unsafe to call a method in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   520|     this.m(this.p = 0); // MethodCallBeforeEverythingInitialized
+            ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 68 errors

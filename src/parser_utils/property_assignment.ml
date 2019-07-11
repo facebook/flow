@@ -144,6 +144,36 @@ class property_assignment = object(this)
       expr
     | _ -> super#assignment loc expr
     )
+
+  (* PREVENT THIS FROM ESCAPING *)
+
+  val mutable this_escape_errors:
+    (ALoc.t * this_error * Ssa_builder.With_ALoc.Env.t) list = []
+  method this_escape_errors = this_escape_errors
+  method private add_this_escape_error error =
+    this_escape_errors <- error :: this_escape_errors
+
+  method! expression expr =
+    (match expr with
+    | (loc, Ast.Expression.This) ->
+      this#add_this_escape_error (loc, ThisInConstructor, this#ssa_env)
+    | _ -> ()
+    );
+    super#expression expr
+
+  method! call loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
+    (match expr.Ast.Expression.Call.callee with
+    (* match on method calls *)
+    | (_, Ast.Expression.Member {
+        Ast.Expression.Member._object = (_, Ast.Expression.This);
+        property = ( Ast.Expression.Member.PropertyIdentifier _
+                   | Ast.Expression.Member.PropertyPrivateName _
+                   );
+      }) ->
+      this#add_this_escape_error (loc, MethodCallInConstructor, this#ssa_env)
+    | _ -> ()
+    );
+    super#call loc expr
 end
 
 let eval_property_assignment properties ctor_body =
@@ -169,46 +199,7 @@ let eval_property_assignment properties ctor_body =
       Some read_loc
     else
       None
-  )
-
-class this_in_constructor_finder = object(this)
-  inherit [ALoc.t] Flow_ast_mapper.mapper as super
-
-  val mutable errors: (ALoc.t * this_error) list = []
-  method errors = errors
-  method private add_error error =
-    errors <- error :: errors
-
-  method! expression expr =
-    (match expr with
-    | (loc, Ast.Expression.This) ->
-      this#add_error (loc, ThisInConstructor);
-      expr
-    | _ -> super#expression expr
-    )
-
-  method! member loc (expr: ('loc, 'loc) Ast.Expression.Member.t) =
-    let { Ast.Expression.Member._object; property } = expr in
-    (match snd _object, property with
-    | (Ast.Expression.This, Ast.Expression.Member.PropertyIdentifier _)
-    | (Ast.Expression.This, Ast.Expression.Member.PropertyPrivateName _) -> expr
-    | _ -> super#member loc expr
-    )
-
-  method! call loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
-    (match expr.Ast.Expression.Call.callee with
-    (* match on method calls *)
-    | (_, Ast.Expression.Member {
-        Ast.Expression.Member._object = (_, Ast.Expression.This);
-        property = _;
-      }) ->
-      this#add_error (loc, MethodCallInConstructor);
-      expr
-    | _ -> super#call loc expr
-    )
-end
-
-let eval_this_in_constructor ctor_body =
-  let this_walk = new this_in_constructor_finder in
-  ignore @@ this_walk#block ALoc.none ctor_body;
-  this_walk#errors
+    ),
+  Core_list.map ~f:(fun (loc, error, ssa_env) ->
+    (loc, error, filter_uninitialized ssa_env properties)
+  ) ssa_walk#this_escape_errors

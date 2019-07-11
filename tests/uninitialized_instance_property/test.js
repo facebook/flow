@@ -485,6 +485,45 @@ class E53 {
   }
 }
 
+class E54 {
+  p: number;
+  constructor() {
+    this.m(this); // MethodCallBeforeEverythingInitialized, ThisBeforeEverythingInitialized
+    this.p = 0;
+  }
+  m(o): void {}
+}
+
+class E55 {
+  p: number;
+  constructor() {
+    this.m(this.p); // MethodCallBeforeEverythingInitialized, ReadFromUninitializedProperty
+    this.p = 0;
+  }
+  m(x): void {}
+}
+
+class E56 {
+  p: number;
+  constructor() {
+    this.m(this.m(0)); // MethodCallBeforeEverythingInitialized, MethodCallBeforeEverythingInitialized
+    this.p = 0;
+  }
+  m(x): number {
+    return x;
+  }
+}
+
+class E57 {
+  p: number;
+  constructor() {
+    this.m(this.p = 0); // MethodCallBeforeEverythingInitialized
+  }
+  m(x): number {
+    return x;
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {
@@ -720,5 +759,44 @@ class P27 {
     do {
       this.p1 = 0;
     } while (this.p2 = this.p1);
+  }
+}
+
+class P28 {
+  constructor() {
+    this;
+  }
+}
+
+class P29 {
+  constructor() {
+    this.m();
+  }
+  m(): void {}
+}
+
+
+class P30 {
+  p;
+  constructor() {
+    this.p = 0;
+    if (this) {}
+  }
+}
+
+class P31 {
+  p;
+  constructor() {
+    this.p = 0;
+    this.m();
+  }
+  m(): void {}
+}
+
+class P32 {
+  p;
+  constructor() {
+    this.p = 0;
+    const x = this;
   }
 }
