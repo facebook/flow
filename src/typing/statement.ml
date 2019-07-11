@@ -6273,7 +6273,14 @@ and check_properties_initialized_before_use cx class_ast: unit =
       loc,
       ReadFromUninitializedProperty
     ))
-  ) read_before_initialized
+  ) read_before_initialized;
+
+  let this_errors = Property_assignment.eval_this_in_constructor ctor_body in
+  List.iter (fun loc ->
+    Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
+      loc, ThisBeforeEverythingInitialized
+    ))
+  ) this_errors
 
 and mk_class cx class_loc ~name_loc reason c =
   let def_reason = repos_reason class_loc reason in

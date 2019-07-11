@@ -213,6 +213,38 @@ class E25 {
   }
 }
 
+class E26 {
+  p;
+  constructor() {
+    this.p = this; // ThisBeforeEverythingInitialized
+  }
+}
+
+class E27 {
+  p;
+  constructor() {
+    if (this) {} // ThisBeforeEverythingInitialized
+    this.p = 0;
+  }
+}
+
+function f(o) {}
+class E28 {
+  p;
+  constructor() {
+    f(this); // ThisBeforeEverythingInitialized
+    this.p = 0;
+  }
+}
+
+class E29 {
+  p;
+  constructor() {
+    const x = this; // ThisBeforeEverythingInitialized
+    this.p = 0;
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {

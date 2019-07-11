@@ -166,3 +166,33 @@ let eval_property_assignment properties ctor_body =
     else
       None
   )
+
+class this_in_constructor_finder = object(this)
+  inherit [ALoc.t] Flow_ast_mapper.mapper as super
+
+  val mutable errors: ALoc.t list = []
+  method errors = errors
+  method private add_error error =
+    errors <- error :: errors
+
+  method! expression expr =
+    (match expr with
+    | (loc, Ast.Expression.This) ->
+      this#add_error loc;
+      expr
+    | _ -> super#expression expr
+    )
+
+  method! member loc (expr: ('loc, 'loc) Ast.Expression.Member.t) =
+    let { Ast.Expression.Member._object; property } = expr in
+    (match snd _object, property with
+    | (Ast.Expression.This, Ast.Expression.Member.PropertyIdentifier _)
+    | (Ast.Expression.This, Ast.Expression.Member.PropertyPrivateName _) -> expr
+    | _ -> super#member loc expr
+    )
+end
+
+let eval_this_in_constructor ctor_body =
+  let this_walk = new this_in_constructor_finder in
+  ignore @@ this_walk#block ALoc.none ctor_body;
+  this_walk#errors

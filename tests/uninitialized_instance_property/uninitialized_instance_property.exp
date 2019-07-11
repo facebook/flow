@@ -286,5 +286,41 @@ References:
              ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:219:14
 
-Found 31 errors
+It is unsafe to use `this` in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   219|     this.p = this; // ThisBeforeEverythingInitialized
+                     ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:226:9
+
+It is unsafe to use `this` in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   226|     if (this) {} // ThisBeforeEverythingInitialized
+                ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:235:7
+
+It is unsafe to use `this` in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   235|     f(this); // ThisBeforeEverythingInitialized
+              ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:243:15
+
+It is unsafe to use `this` in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   243|     const x = this; // ThisBeforeEverythingInitialized
+                      ^^^^
+
+
+
+Found 35 errors
