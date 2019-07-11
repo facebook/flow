@@ -60,6 +60,20 @@ References:
                 ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ issue-7920.js:9:4
+
+Cannot cast `null` to `typeof test` because null [1] is incompatible with string [2].
+
+   issue-7920.js:9:4
+   9|   (null: typeof test); // error
+         ^^^^ [1]
+
+References:
+   issue-7920.js:9:10
+   9|   (null: typeof test); // error
+               ^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------- sanity-conditional.js:5:50
 
 Unexpected token =
@@ -178,7 +192,7 @@ References:
 
 
 
-Found 13 errors
+Found 14 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
