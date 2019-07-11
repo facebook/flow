@@ -17,8 +17,16 @@ let private_property loc ident =
   let _, (_, ({ Ast.Identifier.name; comments = _ } as r)) = ident in
   loc, { r with Ast.Identifier.name = "this.#" ^ name }
 
-class property_assignment = object
+class property_assignment = object(this)
   inherit Ssa_builder.With_ALoc.ssa_builder
+
+  (* ABRUPT COMPLETIONS *)
+
+  method expecting_return_or_throw (f: unit -> unit): unit =
+    let completion_state = this#run_to_completion f in
+    this#commit_abrupt_completion_matching
+      Ssa_builder.With_ALoc.AbruptCompletion.(mem [return; throw])
+      completion_state
 end
 
 let eval_property_assignment properties ctor_body =
@@ -30,7 +38,7 @@ let eval_property_assignment properties ctor_body =
 
   let ssa_walk = new property_assignment in
   ignore @@ ssa_walk#with_bindings ALoc.none bindings (fun body ->
-    ignore @@ ssa_walk#run_to_completion (fun () ->
+    ssa_walk#expecting_return_or_throw (fun () ->
       ignore @@ ssa_walk#block ALoc.none body
     );
     body
