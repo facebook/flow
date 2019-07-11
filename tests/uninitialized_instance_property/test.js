@@ -150,7 +150,51 @@ class E16 {
 class E17 {
   p; // PropertyNotDefinitivelyInitialized
   constructor() {
-    this.p += 3;
+    this.p += 3; // ReadFromUninitializedProperty
+  }
+}
+
+class E18 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    this.p; // ReadFromUninitializedProperty
+  }
+}
+
+class E19 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    const x = this.p; // ReadFromUninitializedProperty
+  }
+}
+
+class E20 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    if (this.p === 0) false; // ReadFromUninitializedProperty
+  }
+}
+
+class E21 {
+  p;
+  constructor() {
+    this.p; // ReadFromUninitializedProperty
+    this.p = 0;
+  }
+}
+
+class E22 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    this.p++; // ReadFromUninitializedProperty
+  }
+}
+
+class E23 {
+  p: number;
+  constructor() {
+    this.p++; // ReadFromUninitializedProperty
+    this.p = 0;
   }
 }
 

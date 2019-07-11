@@ -15,4 +15,7 @@ val private_property : 'loc -> 'loc Ast.PrivateName.t -> ('loc, 'loc) Ast.Identi
 val eval_property_assignment :
   (ALoc.t, ALoc.t) Ast.Identifier.t list ->
   (ALoc.t, ALoc.t) Ast.Statement.Block.t ->
-  (ALoc.t, ALoc.t) Ast.Identifier.t list
+  (
+    (ALoc.t, ALoc.t) Ast.Identifier.t list *
+    ALoc.t list
+  )

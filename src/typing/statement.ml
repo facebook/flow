@@ -6259,7 +6259,7 @@ and check_properties_initialized_before_use cx class_ast: unit =
     |> Option.value ~default:{ Ast.Statement.Block.body = [] }
   in
 
-  let uninitialized_properties =
+  let uninitialized_properties, read_before_initialized =
     Property_assignment.eval_property_assignment properties ctor_body
   in
   List.iter (fun id ->
@@ -6268,6 +6268,12 @@ and check_properties_initialized_before_use cx class_ast: unit =
       PropertyNotDefinitivelyInitialized
     ))
   ) uninitialized_properties;
+  List.iter (fun loc ->
+    Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
+      loc,
+      ReadFromUninitializedProperty
+    ))
+  ) read_before_initialized
 
 and mk_class cx class_loc ~name_loc reason c =
   let def_reason = repos_reason class_loc reason in

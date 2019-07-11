@@ -83,6 +83,26 @@ class property_assignment = object(this)
     | _ -> super#pattern_expression expr
     )
 
+  (* READS *)
+
+  method! member loc (expr: (ALoc.t, ALoc.t) Ast.Expression.Member.t) =
+    (match expr with
+    | {
+        Ast.Expression.Member._object = (_, Ast.Expression.This);
+        property = ( Ast.Expression.Member.PropertyIdentifier _
+                   | Ast.Expression.Member.PropertyPrivateName _
+                   ) as property;
+      } ->
+      ignore @@ this#any_identifier loc @@ Flow_ast_utils.name_of_ident @@
+        Ast.Expression.Member.(match property with
+        | PropertyIdentifier id -> public_property loc id
+        | PropertyPrivateName id -> private_property loc id
+        | PropertyExpression _ -> failwith "match on expr makes this impossible"
+        );
+      expr
+    | _ -> super#member loc expr
+    )
+
   (* EVALUATION ORDER *)
 
   method! assignment loc (expr: (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
@@ -131,4 +151,12 @@ let eval_property_assignment properties ctor_body =
     body
   ) ctor_body;
 
-  filter_uninitialized ssa_walk#final_ssa_env properties
+  filter_uninitialized ssa_walk#final_ssa_env properties,
+  ssa_walk#values
+  |> Loc_collections.ALocMap.bindings
+  |> Core_list.filter_map ~f:(fun (read_loc, write_locs) ->
+    if not_definitively_initialized write_locs then
+      Some read_loc
+    else
+      None
+  )
