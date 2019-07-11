@@ -265,6 +265,225 @@ class E31 {
   m(): void {}
 }
 
+class E32 {
+  p1: number; // PropertyNotDefinitivelyInitialized
+  p2;
+  constructor() {
+    this.p2 = 0;
+  }
+}
+
+class E33 {
+  p;
+  #p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    this.p = 0;
+  }
+}
+
+class E34 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    if (true) {
+      this.p = 0;
+    } else if (false) {
+      this.p = 0;
+    }
+  }
+}
+
+class E35 {
+  p;
+  constructor() {
+    this.p = this.p; // ReadFromUninitializedProperty
+  }
+}
+
+class E36 {
+  p: {x: number}; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    this.p.x = 0; // ReadFromUninitializedProperty
+  }
+}
+
+class E37 {
+  p1; // PropertyNotDefinitivelyInitialized
+  p2;
+  constructor() {
+    while (this.p2 = this.p1) { // ReadFromUninitializedProperty
+      this.p1 = 0;
+    }
+  }
+}
+
+class E38 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {}
+}
+
+class E39 {
+  p1: number;
+  p2: number;
+  constructor() {
+    this.p1 = this.p2; // ReadFromUninitializedProperty
+    this.p2 = this.p1;
+  }
+}
+
+class E40 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    switch (4) {
+      case 0:
+      case 1:
+        if (true) {
+          break;
+        }
+      default:
+        this.p = 6;
+        break;
+    }
+  }
+}
+
+
+class E41 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    switch (0) {
+      case 0:
+        this.p = 0;
+        break;
+      case 1:
+        this.p = 0;
+        break;
+    }
+  }
+}
+
+class E42 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    switch (0) {
+      case 0:
+        break;
+      default:
+        this.p = 0;
+        break;
+    }
+  }
+}
+
+class E43 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    while (false) {
+      this.p = 1;
+    }
+  }
+}
+
+class E44 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    for (;;) {
+      this.p = 1;
+      break;
+    }
+  }
+}
+
+class E45 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    let p: number;
+    p = 10;
+  }
+}
+
+class E46 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    label: {
+      if (true) {
+        break label;
+      }
+      this.p = 0;
+    }
+  }
+}
+
+class E47 {
+  p: number; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    do {
+      if (true) {
+        continue;
+      }
+      this.p = 0;
+    } while (false);
+  }
+}
+
+class E48 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    do {
+      if (true) {
+        break;
+      }
+      this.p = 0;
+    } while (false);
+  }
+}
+
+class E49 {
+  p;
+  constructor() {
+    while (true) {
+      this.p; // ReadFromUninitializedProperty
+      break;
+    }
+    this.p = 0;
+  }
+}
+
+class E50 {
+  p;
+  constructor() {
+    if (true) {
+      this.p; // ReadFromUninitializedProperty
+    }
+    this.p = 0;
+  }
+}
+
+class E51 {
+  p1;
+  p2;
+  constructor() {
+    const a = (this.p2 = this.p1), // ReadFromUninitializedProperty
+          b = (this.p1 = 0);
+  }
+}
+
+class E52 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    const f = () => {
+      this.p = 0;
+    };
+  }
+}
+
+class E53 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    function f() {
+      this.p = 0;
+    }
+  }
+}
 
 /* EXPECTED TO NOT ERROR */
 
@@ -305,5 +524,201 @@ class P7 {
   constructor() {
     this.p = 0;
     this.p++;
+  }
+}
+
+class P8 {}
+
+class P9 {
+  p: number;
+  constructor() {
+    this.p = 0;
+  }
+}
+
+class P10 {
+  #priv;
+  constructor() {
+    this.#priv = 0;
+  }
+}
+
+class P11 {
+  p1 = 0;
+  p2;
+  constructor() {
+    this.p2 = this.p1;
+  }
+}
+
+function g() {}
+class P12 {
+  p;
+  constructor() {
+    g();
+    this.p = 0;
+  }
+}
+
+class P13 {
+  p;
+  constructor() {
+    if ((this.p = 0)) {}
+  }
+}
+
+class P14 {
+  p;
+  constructor() {
+    if (true) {
+      this.p = 0;
+    } else {
+      this.p = 0;
+    }
+  }
+}
+
+class P15 {
+  p;
+  constructor() {
+    if (true) {
+      this.p = 0;
+    } else if (false) {
+      this.p = 0;
+    } else {
+      this.p = 0;
+    }
+  }
+}
+
+class P16 {
+  p;
+  constructor() {
+    if (true) {
+      this.p = 0;
+    } else if (false) {
+      if (false) {
+        this.p = 0;
+      } else {
+        this.p = 0;
+      }
+    } else {
+      this.p = 0;
+    }
+  }
+}
+
+
+class P17 {
+  p1;
+  p2;
+  constructor() {
+    this.p1 = this.p2 = 0;
+  }
+}
+
+class P18 {
+  p;
+  constructor() {
+    this.p = 0;
+    const x = this.p;
+  }
+}
+
+class P19 {
+  p1;
+  p2;
+  constructor() {
+    do {
+      this.p1 = 0;
+    } while (this.p2 = this.p1);
+  }
+}
+
+class ParentP20 {
+  p: number;
+  constructor() {
+    this.p = 0;
+  }
+}
+class P20 extends ParentP20 {
+  constructor() {
+    super();
+  }
+}
+
+class ParentP21 {
+  p: number;
+  constructor() {
+    this.p = 0;
+  }
+}
+class P21 extends ParentP21 {
+}
+
+class P22 {
+  p1: number;
+  p2: number;
+  p3: number;
+  p4: number;
+  constructor() {
+    if ((this.p1 = 1) != null) {}
+    while ((this.p2 = 2) != null) {}
+    for (; (this.p3 = 3) != null;) {}
+    for (this.p4 = 4;;) {}
+  }
+}
+
+class P23 {
+  p: number;
+  constructor() {
+    do {
+      this.p = 0;
+    } while (false);
+  }
+}
+
+function somethingThatThrows(): void { throw "the football"; }
+class P24 {
+  p: number;
+  constructor() {
+    try {
+      this.p = 0;
+      somethingThatThrows();
+    } catch (err) {
+      this.p = 0;
+    }
+  }
+}
+
+class P25 {
+  p: number;
+  constructor() {
+    try {
+      somethingThatThrows();
+    } catch (err) {
+      // do some stuff to handle the error
+    } finally {
+      this.p = 0;
+    }
+  }
+}
+
+class P26 {
+  p1;
+  p2;
+  constructor() {
+    const a = (this.p1 = 0),
+          b = (this.p2 = this.p1);
+  }
+}
+
+class P27 {
+  p1;
+  p2;
+  constructor() {
+    do {
+      this.p1 = 0;
+    } while (this.p2 = this.p1);
   }
 }
