@@ -198,6 +198,21 @@ class E23 {
   }
 }
 
+class E24 {
+  constructor() {
+    let x: number;
+    let y: number = x; // ExpectError uninitialized variable is incompatible with number
+  }
+}
+
+class E25 {
+  p: number;
+  constructor() {
+    let x: number;
+    this.p = x; // ExpectError uninitialized variable is incompatible with number
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {
