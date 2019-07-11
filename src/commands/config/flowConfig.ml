@@ -43,6 +43,7 @@ module Opts = struct
   type opt_error = int * error_kind
 
   type t = {
+    libs_overrides: bool;
     abstract_locations: bool;
     all: bool;
     emoji: bool;
@@ -134,6 +135,7 @@ module Opts = struct
     |> SSet.add ".webm"
 
   let default_options = {
+    libs_overrides = false;
     abstract_locations = false;
     all = false;
     emoji = false;
@@ -617,6 +619,9 @@ module Opts = struct
     "experimental.abstract_locations",
       boolean (fun opts v -> Ok { opts with abstract_locations = v });
 
+    "experimental.libs_overrides",
+      boolean (fun opts v -> Ok { opts with libs_overrides = v });
+
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
 
@@ -1014,6 +1019,7 @@ let includes config = config.includes
 let libs config = config.libs
 
 (* options *)
+let libs_overrides c = c.options.Opts.libs_overrides
 let abstract_locations c = c.options.Opts.abstract_locations
 let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji

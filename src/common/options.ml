@@ -58,6 +58,7 @@ type trust_mode =
   | SilentTrust
 
 type t = {
+  opt_libs_overrides : bool;
   opt_abstract_locations : bool;
   opt_all : bool;
   opt_debug : bool;
@@ -119,6 +120,7 @@ type t = {
   opt_type_asserts: bool;
 }
 
+let libs_overrides opts = opts.opt_libs_overrides
 let all opts = opts.opt_all
 let arch opts = opts.opt_arch
 let max_literal_length opts = opts.opt_max_literal_length
