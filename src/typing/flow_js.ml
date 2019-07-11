@@ -3732,6 +3732,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i)))
 
+    | l, MergeTypesT (reason, flip, propref, original_t, r, u) ->
+      merge_builtin cx trace reason flip propref original_t l r u
+
     (** This rule is hit when a polymorphic type appears outside a
         type application expression - i.e. not followed by a type argument list
         delimited by angle brackets.
@@ -5244,6 +5247,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Option.iter ~f:(fun t -> rec_flow_t cx trace (AnyT.untyped reason_op, t)) prop_t;
       rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op))
 
+    | DefT (_, _, ObjT { props_tmap; _ }), OverwritePropT (_, _, Named (_, name), t) ->
+      let p = Field (None, t, Polarity.Neutral) in
+      Context.set_prop cx props_tmap name p;
+
     | DefT (reason_obj, _, ObjT o), MatchPropT (use_op, reason_op, propref, proptype) ->
         match_obj_prop cx trace ~use_op o propref reason_obj reason_op proptype
 
@@ -6524,7 +6531,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | GlobalThisT _,
       SetPropT (_, _, Named (_, name), _, tin, _) ->
-      set_builtin cx ~trace name tin;
+      overwrite_builtin cx ~trace name tin;
 
     | GlobalThisT _, _ ->
       let t = builtins cx in
@@ -6940,6 +6947,7 @@ and empty_success flavor u =
      either by specially propagating it or selecting cases, etc. *)
   | _, UseT (_, ExactT _)
   | _, AdderT _
+  | _, MergeTypesT _
   | _, AndT _
   | _, OrT _
   (* Propagation cases: these cases don't use the fact that the LHS is
@@ -7045,6 +7053,7 @@ and empty_success flavor u =
   | _, SetElemT _
   | _, SetPrivatePropT _
   | _, SetPropT _
+  | _, OverwritePropT _
   | _, SpecializeT _
   | _, SubstOnPredT _
   | _, SuperT _
@@ -7140,6 +7149,7 @@ and any_propagated cx trace any u =
      true
 
   | AdderT _
+  | MergeTypesT _
   | AndT _
   | ArrRestT _
   | BecomeT _
@@ -7200,6 +7210,7 @@ and any_propagated cx trace any u =
   | SentinelPropTestT _
   | SetElemT _
   | SetPropT _
+  | OverwritePropT _
   | ModuleExportsAssignT _
   | SpecializeT _
   | SubstOnPredT _ (* Should be impossible. We only generate these with OpenPredTs. *)
@@ -11122,10 +11133,61 @@ and extract_non_spread cx ~trace = function
     add_output cx ~trace (Error_message.(EUnsupportedSyntax (loc, SpreadArgument)));
     AnyT.error reason
 
+and merge_builtin cx trace reason flip propref original_t l r u =
+  let string_reason = string_of_reason reason in
+  ignore string_reason;
+  if needs_resolution r then begin
+    (* TODO: this doesn't work without writing to property first *)
+    rec_flow cx trace (u, OverwritePropT (unknown_use, reason, propref, l));
+    (* *)
+
+    rec_flow cx trace (r, MergeTypesT (reason, not flip, propref, original_t, l, u))
+  end else begin
+    let (l, r) = if flip then (r, l) else (l, r) in
+    begin match l, r with
+
+    (* polymorphic interface ~> polymorphic class *)
+    | DefT (_, _, PolyT (_, _, DefT (_, _, ClassT (DefT (_, _, InstanceT (_, _, _, { structural = true; own_props = o1_id; _ })))), _)),
+      DefT (_, _, PolyT (_, _, ThisClassT (_, DefT (_, _, InstanceT (_, _, _, { structural = false; own_props = o2_id; _ }))), _)) ->
+      let o1 = Context.find_props cx o1_id in
+      let o2 = Context.find_props cx o2_id in
+      ignore o1;
+      ignore o2;
+      Context.add_property_map cx o2_id (SMap.union o1 o2);
+
+    (* interface ~> class *)
+    | DefT (_, _, ClassT (DefT (_, _, InstanceT (_, _, _, { structural = true; own_props = o1_id; _ })))),
+      ThisClassT (_, DefT (_, _, InstanceT (_, _, _, { structural = false; own_props = o2_id; _ }))) ->
+      let o1 = Context.find_props cx o1_id in
+      let o2 = Context.find_props cx o2_id in
+      ignore o1;
+      ignore o2;
+      Context.add_property_map cx o2_id (SMap.union o1 o2);
+
+    (* any ~> any *)
+    | _, _ ->
+      ()
+    end
+  end
+
 and set_builtin cx ?trace x t =
   let reason = builtin_reason (RCustom x) in
+  let obj = builtins cx in
   let propref = Named (reason, x) in
-  flow_opt cx ?trace (builtins cx, SetPropT (unknown_use, reason, propref, Normal, t, None))
+  let old_t = Tvar.mk_derivable_where cx reason (fun t ->
+    flow_opt cx ?trace (obj, GetPropT (unknown_use, reason, propref, t));
+  )
+  in
+  if Context.libs_overrides cx then
+    flow_opt cx ?trace (t, MergeTypesT (reason, false, propref, t, old_t, obj))
+  else
+    flow_opt cx ?trace (obj, SetPropT (unknown_use, reason, propref, Normal, t, None))
+
+and overwrite_builtin cx ?trace x t =
+  let reason = builtin_reason (RCustom x) in
+  let propref = Named (reason, x) in
+  let obj = builtins cx in
+  flow_opt cx ?trace (obj, OverwritePropT (unknown_use, reason, propref, t))
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)
