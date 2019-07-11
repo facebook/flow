@@ -245,6 +245,27 @@ class E29 {
   }
 }
 
+class E30 {
+  p;
+  constructor() {
+    this.m(); // MethodCallBeforeEverythingInitialized
+    this.p = 0;
+  }
+  m(): void {}
+}
+
+class E31 {
+  p1;
+  p2;
+  constructor() {
+    this.p1 = 0;
+    this.m(); // MethodCallBeforeEverythingInitialized
+    this.p2 = 0;
+  }
+  m(): void {}
+}
+
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {

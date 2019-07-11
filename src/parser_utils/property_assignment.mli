@@ -9,6 +9,10 @@
 
 module Ast = Flow_ast
 
+type this_error =
+  | ThisInConstructor
+  | MethodCallInConstructor
+
 val public_property : 'loc -> ('loc, 'loc) Ast.Identifier.t -> ('loc, 'loc) Ast.Identifier.t
 val private_property : 'loc -> 'loc Ast.PrivateName.t -> ('loc, 'loc) Ast.Identifier.t
 
@@ -22,4 +26,4 @@ val eval_property_assignment :
 
 val eval_this_in_constructor :
   (ALoc.t, ALoc.t) Ast.Statement.Block.t ->
-  ALoc.t list
+  (ALoc.t * this_error) list

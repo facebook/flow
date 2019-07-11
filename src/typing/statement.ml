@@ -6276,9 +6276,12 @@ and check_properties_initialized_before_use cx class_ast: unit =
   ) read_before_initialized;
 
   let this_errors = Property_assignment.eval_this_in_constructor ctor_body in
-  List.iter (fun loc ->
+  List.iter (fun (loc, error) ->
     Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-      loc, ThisBeforeEverythingInitialized
+      loc,
+      match error with
+      | Property_assignment.ThisInConstructor -> ThisBeforeEverythingInitialized
+      | Property_assignment.MethodCallInConstructor -> MethodCallBeforeEverythingInitialized
     ))
   ) this_errors
 

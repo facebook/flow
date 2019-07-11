@@ -322,5 +322,23 @@ It is unsafe to use `this` in the constructor before all class properties are de
                       ^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:251:5
 
-Found 35 errors
+It is unsafe to call a method in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   251|     this.m(); // MethodCallBeforeEverythingInitialized
+            ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:262:5
+
+It is unsafe to call a method in the constructor before all class properties are definitively initialized.
+(`uninitialized-instance-property`)
+
+   262|     this.m(); // MethodCallBeforeEverythingInitialized
+            ^^^^^^^^
+
+
+
+Found 37 errors

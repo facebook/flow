@@ -9,6 +9,10 @@
 
 module Ast = Flow_ast
 
+type this_error =
+  | ThisInConstructor
+  | MethodCallInConstructor
+
 let public_property loc ident =
   let _, ({ Ast.Identifier.name; comments = _ } as r) = ident in
   loc, { r with Ast.Identifier.name = "this." ^ name }
@@ -170,7 +174,7 @@ let eval_property_assignment properties ctor_body =
 class this_in_constructor_finder = object(this)
   inherit [ALoc.t] Flow_ast_mapper.mapper as super
 
-  val mutable errors: ALoc.t list = []
+  val mutable errors: (ALoc.t * this_error) list = []
   method errors = errors
   method private add_error error =
     errors <- error :: errors
@@ -178,7 +182,7 @@ class this_in_constructor_finder = object(this)
   method! expression expr =
     (match expr with
     | (loc, Ast.Expression.This) ->
-      this#add_error loc;
+      this#add_error (loc, ThisInConstructor);
       expr
     | _ -> super#expression expr
     )
@@ -189,6 +193,18 @@ class this_in_constructor_finder = object(this)
     | (Ast.Expression.This, Ast.Expression.Member.PropertyIdentifier _)
     | (Ast.Expression.This, Ast.Expression.Member.PropertyPrivateName _) -> expr
     | _ -> super#member loc expr
+    )
+
+  method! call loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
+    (match expr.Ast.Expression.Call.callee with
+    (* match on method calls *)
+    | (_, Ast.Expression.Member {
+        Ast.Expression.Member._object = (_, Ast.Expression.This);
+        property = _;
+      }) ->
+      this#add_error (loc, MethodCallInConstructor);
+      expr
+    | _ -> super#call loc expr
     )
 end
 
