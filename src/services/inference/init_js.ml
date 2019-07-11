@@ -66,10 +66,17 @@ let parse_lib_file ~reader options file =
 let load_lib_files ~sig_cx ~options ~reader files =
 
   let verbose = Options.verbose options in
+  let libs_overrides = Options.libs_overrides options in
+
+  let files = if libs_overrides then
+    files
+  else
+    List.rev files
+  in
 
   (* iterate in reverse override order *)
   let%lwt (_, result) =
-    List.rev files
+    files
     |> Lwt_list.fold_left_s (
       fun (exclude_syms, results) file ->
 
