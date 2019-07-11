@@ -192,6 +192,8 @@ let sample ?record ?(weight=1.0) name value =
 let merge_entries name from into = match (from, into) with
   | None, into -> into
   | from, None -> from
+  | Some from, into when from.count = 0. -> into
+  | from, Some into when into.count = 0. -> from
   | Some from, Some into ->
       let count = from.count +. into.count in
 
