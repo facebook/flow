@@ -82,6 +82,38 @@ class property_assignment = object(this)
       expr
     | _ -> super#pattern_expression expr
     )
+
+  (* EVALUATION ORDER *)
+
+  method! assignment loc (expr: (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
+    let open Ast.Expression.Assignment in
+    let { operator; left; right } = expr in
+    (match left with
+    | _, Ast.Pattern.Expression (member_loc, Ast.Expression.Member ({
+        Ast.Expression.Member._object = (_, Ast.Expression.This);
+        property = ( Ast.Expression.Member.PropertyIdentifier _
+                   | Ast.Expression.Member.PropertyPrivateName _
+                   );
+      } as left_member)) ->
+      (match operator with
+      | None ->
+        (* given `this.x = e`, read e then write x *)
+        ignore @@ this#expression right;
+        ignore @@ this#assignment_pattern left
+      | Some _ ->
+        (* given `this.x += e`, read x then read e *)
+        ignore @@ this#member member_loc left_member;
+        ignore @@ this#expression right
+        (* This expression technically also writes to x, but we don't model that
+         * here since in order for `this.x += e` to not cause an error, x must
+         * already be assigned anyway. Also, not writing to x here leads to
+         * more understandable error messages, as the write would mask the
+         * PropertyNotDefinitivelyInitialized error.
+         *)
+      );
+      expr
+    | _ -> super#assignment loc expr
+    )
 end
 
 let eval_property_assignment properties ctor_body =

@@ -147,6 +147,13 @@ class E16 {
   }
 }
 
+class E17 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    this.p += 3;
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {
@@ -170,5 +177,21 @@ class P4 {
 class P5 {
   constructor() {
     throw "";
+  }
+}
+
+class P6 {
+  p: number;
+  constructor() {
+    this.p = 0;
+    this.p += 3;
+  }
+}
+
+class P7 {
+  p: number;
+  constructor() {
+    this.p = 0;
+    this.p++;
   }
 }

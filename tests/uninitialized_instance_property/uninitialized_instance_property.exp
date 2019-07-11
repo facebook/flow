@@ -151,5 +151,14 @@ Class property not definitively initialized in the constructor. Can you add an a
           ^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:151:3
 
-Found 17 errors
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   151|   p; // PropertyNotDefinitivelyInitialized
+          ^
+
+
+
+Found 18 errors
