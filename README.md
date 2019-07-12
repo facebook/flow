@@ -4,6 +4,23 @@ Flow is a static typechecker for JavaScript. To find out more about Flow, check 
 
 For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
 
+## Contents
+
+- [Requirements](#requirements)
+- [Installing Flow](#installing-flow)
+ 	- [Installing Flow Per Project](#installing-flow-per-project)
+ 	- [Installing Flow Globally](#installing-flow-globally)
+- [Getting started](#getting-started)
+- [Building Flow](#building-flow)
+- [Building Flow on Windows](#building-flow-on-windows)
+	- [Install Cygwin](#install-cygwin)
+	- [Install Opam](#install-opam)
+	- [Install Flow](#install-flow)
+- [Using Flow's parser from JavaScript](#using-flows-parser-from-javascript)
+- [Join the Flow community](#join-the-flow-community)
+- [License](#license)
+
+
 ## Requirements
 
 Flow works with:
