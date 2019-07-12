@@ -87,7 +87,7 @@ jobs:
       - run: *opam_deps
       - run:
           name: Install extra deps from opam
-          command: opam install js_of_ocaml.3.1.0 | cat
+          command: opam install js_of_ocaml.3.4.0 | cat
       - save_cache: *save_opam_cache
       - run:
           name: Build flow

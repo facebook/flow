@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Js = Js_of_ocaml.Js
+module Sys_js = Js_of_ocaml.Sys_js
+
 let lazy_table_of_aloc _ = lazy (failwith "Did not expect to encounter an abstract location in flow_dot_js")
 
 let error_of_parse_error source_file (loc, err) =
