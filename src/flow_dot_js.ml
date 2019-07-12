@@ -304,23 +304,23 @@ let mk_loc file line col =
   }
 
 let infer_type filename content line col =
-    let filename = File_key.SourceFile filename in
-    let root = Path.dummy_path in
-    match parse_content filename content with
-    | Error _ -> failwith "parse error"
-    | Ok (ast, file_sig) ->
-      let file_sig = File_sig.abstractify_locs file_sig in
-      let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
-      let file = Context.file cx in
-      let loc = mk_loc filename line col in Query_types.(
-        let result = type_at_pos_type ~full_cx:cx ~file ~file_sig ~expand_aliases:false
-          ~omit_targ_defaults:false ~typed_ast loc in
-        match result with
-        | FailureNoMatch -> Loc.none, Error "No match"
-        | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
-        | Success (loc, t) ->
-          loc, Ok (Ty_printer.string_of_t ~force_single_line:true t)
-      )
+  let filename = File_key.SourceFile filename in
+  let root = Path.dummy_path in
+  match parse_content filename content with
+  | Error _ -> failwith "parse error"
+  | Ok (ast, file_sig) ->
+    let file_sig = File_sig.abstractify_locs file_sig in
+    let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
+    let file = Context.file cx in
+    let loc = mk_loc filename line col in Query_types.(
+      let result = type_at_pos_type ~full_cx:cx ~file ~file_sig ~expand_aliases:false
+        ~omit_targ_defaults:false ~typed_ast loc in
+      match result with
+      | FailureNoMatch -> Loc.none, Error "No match"
+      | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
+      | Success (loc, t) ->
+        loc, Ok (Ty_printer.string_of_t ~force_single_line:true t)
+    )
 
 let types_to_json types ~strip_root =
   let open Hh_json in
@@ -394,35 +394,38 @@ let coverage_to_json ~strip_root ~trust (types : (Loc.t * Coverage.expression_co
   ]
 
 let dump_types js_file js_content =
-    let filename = File_key.SourceFile (Js.to_string js_file) in
-    let root = Path.dummy_path in
-    let content = Js.to_string js_content in
-    match parse_content filename content with
-    | Error _ -> failwith "parse error"
-    | Ok (ast, file_sig) ->
-      let file_sig = File_sig.abstractify_locs file_sig in
-      let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
-      let printer = Ty_printer.string_of_t in
-      let types = Query_types.dump_types ~printer cx file_sig typed_ast in
-      let strip_root = None in
-      let types_json = types_to_json types ~strip_root in
+  let filename = File_key.SourceFile (Js.to_string js_file) in
+  let root = Path.dummy_path in
+  let content = Js.to_string js_content in
+  match parse_content filename content with
+  | Error _ -> failwith "parse error"
+  | Ok (ast, file_sig) ->
+    let file_sig = File_sig.abstractify_locs file_sig in
+    let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
+    let printer = Ty_printer.string_of_t in
+    let types = Query_types.dump_types ~printer cx file_sig typed_ast in
+    let strip_root = None in
+    let types_json = types_to_json types ~strip_root in
 
-      js_of_json types_json
+    js_of_json types_json
 
 let coverage js_file js_content =
-    let filename = File_key.SourceFile (Js.to_string js_file) in
-    let root = Path.dummy_path in
-    let content = Js.to_string js_content in
-    match parse_content filename content with
-    | Error _ -> failwith "parse error"
-    | Ok (ast, file_sig) ->
-      let file_sig = File_sig.abstractify_locs file_sig in
-      let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
-      let types = Query_types.covered_types ~should_check:true ~check_trust:false cx typed_ast in
-      let strip_root = None in
-      let coverage_json = coverage_to_json types content ~trust:false ~strip_root in
+  let filename = File_key.SourceFile (Js.to_string js_file) in
+  let root = Path.dummy_path in
+  let content = Js.to_string js_content in
+  match parse_content filename content with
+  | Error _ ->
+    Js.raise_js_error (Js.Unsafe.new_obj Js.error_constr [|
+      Js.Unsafe.inject (Js.string "parse error")
+    |])
+  | Ok (ast, file_sig) ->
+    let file_sig = File_sig.abstractify_locs file_sig in
+    let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
+    let types = Query_types.covered_types ~should_check:true ~check_trust:false cx typed_ast in
+    let strip_root = None in
+    let coverage_json = coverage_to_json types content ~trust:false ~strip_root in
 
-      js_of_json coverage_json
+    js_of_json coverage_json
 
 let type_at_pos js_file js_content js_line js_col =
   let filename = Js.to_string js_file in
