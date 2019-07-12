@@ -17,12 +17,6 @@ module FilenameSet = Set.Make(File_key)
 
 module FilenameMap = MyMap.Make (File_key)
 
-module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
-  type t = Path.t
-  let compare p1 p2 =
-    String.compare (Path.to_string p1) (Path.to_string p2)
-end)
-
 let assert_false s =
   let callstack = Exception.get_current_callstack_string 10 in
   prerr_endline (spf "%s%s\n%s:\n%s%s%s"

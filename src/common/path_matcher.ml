@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
+module PathMap : Map.S with type key = Path.t = Map.Make (struct
+  type t = Path.t
+  let compare p1 p2 =
+    String.compare (Path.to_string p1) (Path.to_string p2)
+end)
 
 type t = {
-  (* list of paths to match against. may contain wildcards.
-     NOTE: stored in reverse-insertion order! *)
-  paths: Path.t list;
   (* stems extracted from paths.
      NOTE: stored in reverse-insertion order! *)
   stems: Path.t list;
@@ -18,10 +19,8 @@ type t = {
   stem_map: ((string * Str.regexp) list) PathMap.t;
 }
 
-let empty = { paths = []; stems = []; stem_map = PathMap.empty; }
-let paths matcher = matcher.paths
+let empty = { stems = []; stem_map = PathMap.empty; }
 let stems matcher = matcher.stems
-let stem_map matcher = matcher.stem_map
 
 (* given a path, return the max prefix not containing a wildcard
    or a terminal filename.
@@ -89,13 +88,13 @@ let fixup_path p =
   Path.make s
 
 (* adds `path` to the matcher, calculating the appropriate stem and pattern *)
-let add { paths; stems; stem_map; } path =
+let add { stems; stem_map; } path =
   let path = fixup_path path in
   let stem = path_stem path in
   let patt = path_patt path in
   let pstr = Path.to_string path in
   let stems, stem_map =
-    match PathMap.get stem stem_map with
+    match PathMap.find_opt stem stem_map with
     | None ->
         let stem_map = PathMap.add stem [pstr, patt] stem_map in
         (stem :: stems), stem_map
@@ -103,7 +102,7 @@ let add { paths; stems; stem_map; } path =
         let stem_map = PathMap.add stem ((pstr, patt) :: entries) stem_map in
         stems, stem_map
   in
-  { paths = path::paths; stems; stem_map; }
+  { stems; stem_map; }
 
 (* filters a list of prefixes into only the prefixes with which f starts *)
 let find_prefixes f = List.filter (fun prefix ->
@@ -120,6 +119,6 @@ let matches path_matcher f =
   let matching_stems = find_prefixes f path_matcher.stems in
   let normalized_f = Sys_utils.normalize_filename_dir_sep f in
   List.exists (fun stem ->
-    let patts = PathMap.find_unsafe stem path_matcher.stem_map in
+    let patts = PathMap.find stem path_matcher.stem_map in
     match_patt normalized_f patts != None
   ) matching_stems
