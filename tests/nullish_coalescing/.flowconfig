@@ -1,3 +1,4 @@
 [options]
+esproposal.nullish_coalescing=enable
 module.system=haste
 no_flowlib=false
