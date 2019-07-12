@@ -897,11 +897,12 @@ end = struct
     in
 
     let pretty_pct num denom =
-      if denom = 0.0 then "(--N/A--)" else Printf.sprintf "(%+5.1f%%)" (100.0 *. num /. denom)
+      if denom = 0.0 then "(--N/A--)" else Printf.sprintf "(%+6.1f%%)" (100.0 *. num /. denom)
     in
 
     (* Prints a single row of the table. All but the last column have a fixed width. *)
     let print_summary_single ~indent key result =
+      let indent = String.make indent ' ' in
       Printf.eprintf "%s        %s %s    %s %s    %s%s\n%!"
         (pretty_num result.start)
         (pretty_num result.delta)
@@ -912,7 +913,7 @@ end = struct
         key
     in
 
-    let header_without_section = "  START                   DELTA              HWM DELTA    " in
+    let header_without_section = "  START                   DELTA                HWM DELTA      " in
     let pre_section_whitespace = String.make (String.length header_without_section) ' ' in
 
     let print_header label =
@@ -927,19 +928,24 @@ end = struct
     in
 
     let rec print_finished ~indent results =
-      SMap.iter (print_summary_single ~indent) results.finished_results;
-      let new_indent = indent ^ "  " in
-      List.iter (fun sub_result ->
-        Printf.eprintf "%s%s%s\n%!" pre_section_whitespace indent sub_result.finished_label;
-        print_finished ~indent:new_indent sub_result
-      ) results.finished_sub_results
+      if not (SMap.is_empty results.finished_results) || results.finished_sub_results <> []
+      then begin
+        let header_indent = String.make indent '=' in
+        Printf.eprintf "%s%s%s%s\n%!"
+          pre_section_whitespace header_indent results.finished_label header_indent;
+        let indent = indent + 2 in
+        SMap.iter (print_summary_single ~indent) results.finished_results;
+        List.iter (fun sub_result ->
+          print_finished ~indent sub_result
+        ) results.finished_sub_results
+      end
     in
 
     fun memory ->
       if SMap.cardinal memory.finished_results > 0 || memory.finished_sub_results <> []
       then begin
         print_header memory.finished_label;
-        print_finished ~indent:"" memory
+        print_finished ~indent:2 memory
       end
 
   let merge ~from ~into =
