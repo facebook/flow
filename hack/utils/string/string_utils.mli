@@ -43,7 +43,6 @@ val replace_char : char -> char -> string -> string
 val split_into_lines : string -> string list
 val indent : int -> string -> string
 val split_on_newlines : string -> string list
-val split_on_char : char -> string -> string list
 module Internal :
   sig
     val to_list : string -> char list

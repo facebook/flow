@@ -217,21 +217,6 @@ let split_on_newlines content =
   | "" :: rest -> List.rev rest
   | _ -> lines
 
-
-(* TODO: remove after upgrading to ocaml 4.05 *)
-let split_on_char sep s =
-  let open String in
-  let r = ref [] in
-  let j = ref (length s) in
-  for i = length s - 1 downto 0 do
-    if unsafe_get s i = sep then begin
-      r := sub s (i + 1) (!j - i - 1) :: !r;
-      j := i
-    end
-  done;
-  sub s 0 !j :: !r
-
-
 module Internal = struct
   let to_list s =
     let rec loop acc i =
