@@ -273,7 +273,7 @@ let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
-  ~get_ast_unsafe ~get_aloc_table_unsafe ~get_docblock_unsafe
+  ~get_ast_unsafe ~get_aloc_table_unsafe ~get_docblock_unsafe ~phase
   component reqs dep_cxs (master_cx: Context.sig_t) =
 
   let sig_cx = Context.make_sig () in
@@ -292,7 +292,7 @@ let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
     let module_ref = Files.module_ref filename in
-    let cx = Context.make sig_cx metadata filename aloc_tables module_ref in
+    let cx = Context.make sig_cx metadata filename aloc_tables module_ref phase in
 
     (* create builtins *)
     if !need_merge_master_cx then (

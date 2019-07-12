@@ -122,10 +122,13 @@ type sig_t = {
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
 }
 
+type phase = Checking | Merging
+
 type t = {
   sig_cx: sig_t;
 
   file: File_key.t;
+  phase: phase;
   (* Tables for the current component (cycle) *)
   aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   metadata: metadata;
@@ -210,10 +213,11 @@ let make_sig () = {
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make sig_cx metadata file aloc_tables module_ref = {
+let make sig_cx metadata file aloc_tables module_ref phase = {
   sig_cx;
 
   file;
+  phase;
   aloc_tables;
   metadata;
 
@@ -264,6 +268,7 @@ let module_ref cx =
   info.Module_info.ref
 
 (* accessors *)
+let current_phase cx = cx.phase
 let all_unresolved cx = cx.sig_cx.all_unresolved
 let envs cx = cx.sig_cx.envs
 let trust_constructor cx = cx.trust_constructor

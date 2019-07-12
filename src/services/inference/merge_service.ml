@@ -102,7 +102,7 @@ let reqs_of_component ~reader component required =
 
   master_cx, dep_cxs, reqs
 
-let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe component =
+let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe ~phase component =
   let required, file_sigs =
     Nel.fold_left (fun (required, file_sigs) file ->
       let file_sig = get_file_sig_unsafe ~reader file in
@@ -128,7 +128,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
   let (((cx, _, _), other_cxs) as cx_nel) = Merge_js.merge_component
-    ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
+    ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs ~phase
     ~get_ast_unsafe:(get_ast_unsafe ~reader)
     ~get_aloc_table_unsafe
     ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
@@ -146,6 +146,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
 
 let merge_context ~options ~reader component =
   merge_context_generic ~options ~reader
+    ~phase:(match Options.arch options with | Options.Classic -> Context.Checking | Options.TypesFirst -> Context.Merging)
     ~get_ast_unsafe:(match Options.arch options with
       | Options.Classic -> fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
@@ -206,6 +207,7 @@ let merge_contents_context ~reader options file ast info file_sig =
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
     ~get_aloc_table_unsafe
     ~get_docblock_unsafe:(fun _ -> info)
+    ~phase:Context.Checking
     component file_reqs dep_cxs master_cx
   in
 
@@ -269,7 +271,7 @@ let check_file options ~reader file =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let { cx; coverage_map; _; } = merge_context_generic ~options ~reader
+    let { cx; coverage_map; _; } = merge_context_generic ~options ~reader ~phase:Context.Checking
       ~get_ast_unsafe:(fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
         let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in

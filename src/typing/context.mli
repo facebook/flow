@@ -55,10 +55,11 @@ type metadata = {
   type_asserts: bool;
 }
 
+type phase = Checking | Merging
 type type_assert_kind = Is | Throws | Wraps
 
 val make_sig: unit -> sig_t
-val make: sig_t -> metadata -> File_key.t -> ALoc.table Lazy.t Utils_js.FilenameMap.t -> string -> t
+val make: sig_t -> metadata -> File_key.t -> ALoc.table Lazy.t Utils_js.FilenameMap.t -> string -> phase -> t
 val metadata_of_options: Options.t -> metadata
 
 val trust_constructor: t -> (unit -> Trust.trust_rep)
@@ -69,6 +70,7 @@ val graph_sig: sig_t -> Constraint.node IMap.t
 val find_module_sig: sig_t -> string -> Type.t
 
 (* accessors *)
+val current_phase: t -> phase
 val all_unresolved: t -> ISet.t IMap.t
 val metadata: t -> metadata
 val max_literal_length: t -> int

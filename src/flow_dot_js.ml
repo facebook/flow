@@ -82,7 +82,7 @@ let load_lib_files ~master_cx ~metadata files
       | Ok (ast, file_sig) ->
         let sig_cx = Context.make_sig () in
         let aloc_table = Utils_js.FilenameMap.empty in
-        let cx = Context.make sig_cx metadata lib_file aloc_table Files.lib_module_ref in
+        let cx = Context.make sig_cx metadata lib_file aloc_table Files.lib_module_ref Context.Checking in
         Flow_js.mk_builtins cx;
         let syms = Type_inference_js.infer_lib_file cx ast
           ~exclude_syms ~file_sig:(File_sig.abstractify_locs file_sig) ~lint_severities:LintSettings.empty_severities ~file_options:None
@@ -181,7 +181,8 @@ let get_master_cx =
         (stub_metadata ~root ~checked:false)
         File_key.Builtins
         aloc_table
-        Files.lib_module_ref in
+        Files.lib_module_ref
+        Context.Checking in
       Flow_js.mk_builtins cx;
       master_cx := Some (root, cx);
       cx
@@ -229,6 +230,7 @@ let infer_and_merge ~root filename ast file_sig =
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
     ~get_aloc_table_unsafe:(fun _ -> failwith "Did not expect to need an ALoc table")
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
+    ~phase:Context.Checking
     (Nel.one filename) reqs [] (Context.sig_cx master_cx)
   in
   (cx, tast)
