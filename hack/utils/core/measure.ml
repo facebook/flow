@@ -189,6 +189,10 @@ let sample ?record ?(weight=1.0) name value =
   let entry = { count; mean; variance_sum; max; min; distribution; } in
   record := SMap.add name entry (!record)
 
+let delete ?record name =
+  let record = get_record record in
+  record := SMap.remove name (!record)
+
 let merge_entries name from into = match (from, into) with
   | None, into -> into
   | from, None -> from
@@ -242,23 +246,16 @@ let time (type a) ?record name (f: unit -> a) : a =
   sample ~record name (end_time -. start_time);
   ret
 
-let get_sum ?record name =
+let get_helper f ?record name =
   let record = get_record record in
   match SMap.get name !record with
   | None -> None
-  | Some { count; mean; _; } -> Some (count *. mean)
+  | Some entry -> Some (f entry)
 
-let get_mean ?record name =
-  let record = get_record record in
-  match SMap.get name !record with
-  | None -> None
-  | Some { mean; _; } -> Some mean
-
-let get_count ?record name =
-  let record = get_record record in
-  match SMap.get name !record with
-  | None -> None
-  | Some { count; _; } -> Some count
+let get_sum = get_helper (fun { count; mean; _; } -> count *. mean)
+let get_mean = get_helper (fun { mean; _; } -> mean)
+let get_count = get_helper (fun { count; _; } -> count)
+let get_max = get_helper (fun { max; _; } -> max)
 
 let pretty_num f =
   if f > 1000000000.0

@@ -23,11 +23,14 @@ val track_distribution: ?record:record -> string -> bucket_size:float -> unit
 val sample: ?record:record -> ?weight:float -> string -> float -> unit
 val time: ?record:record -> string -> (unit -> 'a) -> 'a
 
+val delete: ?record:record -> string -> unit
+
 val merge: ?record:record -> from:record -> unit
 
 val get_sum: ?record:record -> string -> float option
 val get_mean: ?record:record -> string -> float option
 val get_count: ?record:record -> string -> float option
+val get_max: ?record:record -> string -> float option
 
 val print_entry_stats: ?record:record -> ?print_raw:(string -> unit) -> string -> unit
 val print_stats: ?record:record -> ?print_raw:(string -> unit) -> unit -> unit
