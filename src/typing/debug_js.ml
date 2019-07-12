@@ -2691,11 +2691,6 @@ let dump_error_message =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           msg
-    | EIncompatibleWithShape (lower, upper, use_op) ->
-        spf "EIncompatibleWithShape (%s, %s, %s)"
-          (dump_reason cx lower)
-          (dump_reason cx upper)
-          (string_of_use_op use_op)
     | EInternal (loc, err) ->
         spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) ->

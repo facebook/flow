@@ -4453,8 +4453,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *
      * This invariant is important for the React setState() type definition. *)
     | _, UseT (use_op, ShapeT (reason_op, _)) ->
-      add_output cx ~trace
-        (Error_message.EIncompatibleWithShape (reason_of_t l, reason_op, use_op))
+      add_output cx ~trace (Error_message.EIncompatibleWithUseOp (
+        reason_of_t l,
+        reason_op,
+        use_op
+      ))
 
     | AnyT (_, src), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why src reason_op, u)
