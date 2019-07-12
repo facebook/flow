@@ -34,8 +34,12 @@ this.onmessage = function(e) {
       return;
     case "coverage":
       getFlow(data.version).then(function(flow) {
-        var result = flow.coverage(data.filename, data.body);
-        postMessage({id: data.id, type: "coverage", result: result});
+        if (flow.coverage) {
+          var result = flow.coverage(data.filename, data.body);
+          postMessage({id: data.id, type: "coverage", result: result});
+        } else {
+          postMessage({id: data.id, type: "coverage", err: Error('coverage method is missing')});
+        }
       })["catch"](function (e) {
         postMessage({id: data.id, type: "coverage", err: e});
       })

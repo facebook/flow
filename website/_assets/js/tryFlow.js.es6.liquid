@@ -114,7 +114,10 @@ function getAnnotations(text, callback, options, editor) {
         CodeMirror.signal(editor, 'flowCoverage', coverage);
         return coverage.expressions.uncovered_locs
       })
-      .catch(() => []),
+      .catch(err => {
+        console.error(err)
+        return []
+      }),
     flow
       .then(flowProxy => flowProxy.checkContent('-', text))
       .then(errors => {
@@ -245,7 +248,10 @@ class AsyncLocalFlow {
   }
 
   coverage(filename, body) {
-    return Promise.resolve(this._flow.coverage(filename, body))
+    if (this._flow.coverage) {
+      return Promise.resolve(this._flow.coverage(filename, body))
+    }
+    return Promise.reject(Error('coverage method is missing'))
   }
 
   dumpTypes(filename, body) {
