@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:11:23
 
-Cannot assign `f()` to `a` because undefined [1] is incompatible with `$Shape` of `Foo` [2].
+Cannot assign `f()` to `a` because undefined [1] is incompatible with `$Shape` of shape of `Foo` [2].
 
    test.js:11:23
    11| var a : $Shape<Foo> = f(); // error
@@ -10,23 +10,23 @@ References:
    test.js:9:14
     9| function f () {}
                     ^ [1]
-   test.js:11:16
+   test.js:11:9
    11| var a : $Shape<Foo> = f(); // error
-                      ^^^ [2]
+               ^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:23
 
-Cannot assign `null` to `b` because null [1] is incompatible with `$Shape` of `Foo` [2].
+Cannot assign `null` to `b` because null [1] is incompatible with `$Shape` of shape of `Foo` [2].
 
    test.js:12:23
    12| var b : $Shape<Foo> = null; // error
                              ^^^^ [1]
 
 References:
-   test.js:12:16
+   test.js:12:9
    12| var b : $Shape<Foo> = null; // error
-                      ^^^ [2]
+               ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:5
@@ -65,16 +65,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:2
 
-Cannot cast `pc` to object type because property `y` is missing in object type [1] but exists in `PointC` [2].
+Cannot cast `pc` to shape of object type because property `y` is missing in shape of object type [1] but exists in
+`PointC` [2].
 
    test.js:40:2
    40| (pc: $Shape<{x : number}>); // error
         ^^
 
 References:
-   test.js:40:13
+   test.js:40:6
    40| (pc: $Shape<{x : number}>); // error
-                   ^^^^^^^^^^^^ [1]
+            ^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:32:17
    32| declare var pc: PointC;
                        ^^^^^^ [2]
@@ -99,16 +100,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:2
 
-Cannot cast `pi` to object type because property `y` is missing in object type [1] but exists in `IPoint` [2].
+Cannot cast `pi` to shape of object type because property `y` is missing in shape of object type [1] but exists in
+`IPoint` [2].
 
    test.js:45:2
    45| (pi: $Shape<{x : number}>); // error
         ^^
 
 References:
-   test.js:45:13
+   test.js:45:6
    45| (pi: $Shape<{x : number}>); // error
-                   ^^^^^^^^^^^^ [1]
+            ^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:33:17
    33| declare var pi: IPoint;
                        ^^^^^^ [2]
@@ -133,16 +135,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:2
 
-Cannot cast `ps` to object type because property `y` is missing in object type [1] but exists in `IPoint` [2].
+Cannot cast `ps` to shape of object type because property `y` is missing in shape of object type [1] but exists in
+`IPoint` [2].
 
    test.js:50:2
    50| (ps: $Shape<{x : number}>); // error
         ^^
 
 References:
-   test.js:50:13
+   test.js:50:6
    50| (ps: $Shape<{x : number}>); // error
-                   ^^^^^^^^^^^^ [1]
+            ^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:34:24
    34| declare var ps: $Shape<IPoint>;
                               ^^^^^^ [2]
