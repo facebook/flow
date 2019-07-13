@@ -21,7 +21,12 @@ module Request = struct
   | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; trust : bool }
   | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; trust : bool }
   | CYCLE of { filename: string; types_only: bool }
-  | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
+  | DUMP_TYPES of {
+    input: File_input.t;
+    expand_aliases: bool;
+    evaluate_destructors: bool;
+    wait_for_recheck: bool option;
+  }
   | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
   | FIND_REFS of {
       filename: File_input.t;
@@ -49,6 +54,7 @@ module Request = struct
       char: int;
       verbose: Verbose.t option;
       expand_aliases: bool;
+      evaluate_destructors: bool;
       omit_targ_defaults: bool;
       wait_for_recheck: bool option;
     }
@@ -89,7 +95,7 @@ module Request = struct
       Printf.sprintf "cycle (types_only: %b) %s" types_only filename
   | GRAPH_DEP_GRAPH _ ->
       Printf.sprintf "dep-graph"
-  | DUMP_TYPES { input; wait_for_recheck=_; } ->
+  | DUMP_TYPES { input; expand_aliases=_; evaluate_destructors=_; wait_for_recheck=_; } ->
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
   | FIND_MODULE { moduleref; filename; wait_for_recheck=_; } ->
       Printf.sprintf "find-module %s %s" moduleref filename
@@ -104,7 +110,7 @@ module Request = struct
         (File_input.filename_of_file_input filename) line char
   | GET_IMPORTS { module_names; wait_for_recheck=_; } ->
       Printf.sprintf "get-imports %s" (String.concat " " module_names)
-  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
+  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; evaluate_destructors=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input input) line char
   | INSERT_TYPE { input; target; _} ->

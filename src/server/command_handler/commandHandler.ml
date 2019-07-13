@@ -110,8 +110,8 @@ let infer_type
     ~(options: Options.t)
     ~(env: ServerEnv.env)
     ~(profiling: Profiling_js.running)
-    ((file_input, line, col, verbose, expand_aliases, omit_targ_defaults):
-      (File_input.t * int * int * Verbose.t option * bool * bool))
+    ((file_input, line, col, verbose, expand_aliases, evaluate_destructors, omit_targ_defaults):
+      (File_input.t * int * int * Verbose.t option * bool * bool * bool))
   : ((Loc.t * Ty.t option, string) Core_result.t * Hh_json.json option) Lwt.t =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
@@ -120,7 +120,7 @@ let infer_type
   | Error e -> Lwt.return (Error e, None)
   | Ok content ->
     let%lwt result = try_with_json (fun () ->
-      Type_info_service.type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults
+      Type_info_service.type_at_pos ~options ~env ~profiling ~expand_aliases ~evaluate_destructors ~omit_targ_defaults
         file content line col
     ) in
     Lwt.return (split_result result)
@@ -199,13 +199,13 @@ let collect_rage ~options ~reader ~env ~files =
 
   items
 
-let dump_types ~options ~env ~profiling file_input =
+let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_destructors file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content ->
     try_with begin fun () ->
-      Type_info_service.dump_types ~options ~env ~profiling file content
+      Type_info_service.dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_destructors file content
     end
 
 let coverage ~options ~env ~profiling ~force ~trust file_input =
@@ -404,8 +404,8 @@ let handle_cycle ~fn ~types_only ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
-let handle_dump_types ~options ~input ~profiling ~env =
-  let%lwt response = dump_types ~options ~env ~profiling input in
+let handle_dump_types ~options ~input ~expand_aliases ~evaluate_destructors ~profiling ~env =
+  let%lwt response = dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_destructors input in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
 let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
@@ -463,10 +463,10 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
   let%lwt response = output_dependencies ~env root strip_root outfile in
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
-let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
+let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~evaluate_destructors
       ~omit_targ_defaults ~profiling ~env =
   let%lwt result, json_data =
-    infer_type ~options ~env ~profiling (input, line, char, verbose, expand_aliases, omit_targ_defaults)
+    infer_type ~options ~env ~profiling (input, line, char, verbose, expand_aliases, evaluate_destructors, omit_targ_defaults)
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
@@ -580,8 +580,8 @@ let get_ephemeral_handler genv command =
     let file_options = Options.file_options options in
     let fn = Files.filename_from_string ~options:file_options filename in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
-  | ServerProt.Request.DUMP_TYPES { input; wait_for_recheck; } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_dump_types ~options ~input)
+  | ServerProt.Request.DUMP_TYPES { input; expand_aliases; evaluate_destructors; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_dump_types ~options ~input ~expand_aliases ~evaluate_destructors)
   | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (
       handle_find_module ~options ~reader ~moduleref ~filename
@@ -604,10 +604,10 @@ let get_ephemeral_handler genv command =
     (* The user preference is to make this wait for up-to-date data *)
     Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~outfile)
   | ServerProt.Request.INFER_TYPE {
-      input; line; char; verbose; expand_aliases; omit_targ_defaults; wait_for_recheck;
+      input; line; char; verbose; expand_aliases; evaluate_destructors; omit_targ_defaults; wait_for_recheck;
     } ->
     mk_parallelizable ~wait_for_recheck ~options (
-      handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults
+      handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~evaluate_destructors ~omit_targ_defaults
     )
   | ServerProt.Request.RAGE { files; } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
@@ -1036,7 +1036,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
   in
   let verbose = None in (* if Some, would write to server logs *)
   let%lwt result, extra_data =
-    infer_type ~options ~env ~profiling (file, line, char, verbose, false, false)
+    infer_type ~options ~env ~profiling (file, line, char, verbose, false, false, false)
   in
   let metadata = with_data ~extra_data metadata in
   begin match result with

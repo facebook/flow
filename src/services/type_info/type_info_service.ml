@@ -8,7 +8,7 @@
 open Core_result
 let (>|=) = Lwt.(>|=)
 
-let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults file content line col =
+let type_at_pos ~options ~env ~profiling ~expand_aliases ~evaluate_destructors ~omit_targ_defaults file content line col =
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
   function
   | Error str -> Error (str, None)
@@ -27,6 +27,7 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
           ~file
           ~file_sig:(File_sig.abstractify_locs file_sig)
           ~expand_aliases
+          ~evaluate_destructors
           ~omit_targ_defaults
           ~typed_ast
           loc
@@ -70,13 +71,13 @@ let insert_type ~options ~env ~profiling ~file_key
     Error (error_to_string (Expected (FailedToTypeCheck errs)))
 
 
-let dump_types ~options ~env ~profiling file content =
+let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_destructors file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
   map ~f:(fun (cx, _info, file_sig, tast) ->
     let abs_file_sig = File_sig.abstractify_locs file_sig in
-    Query_types.dump_types ~printer cx abs_file_sig tast
+    Query_types.dump_types ~printer ~expand_aliases ~evaluate_destructors cx abs_file_sig tast
   )
 
 

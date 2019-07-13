@@ -10,6 +10,7 @@ val type_at_pos :
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   expand_aliases:bool ->
+  evaluate_destructors:bool ->
   omit_targ_defaults:bool ->
   File_key.t ->
   string ->
@@ -22,6 +23,8 @@ val dump_types :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
+  expand_aliases:bool ->
+  evaluate_destructors:bool ->
   File_key.t ->
   string ->
   ((Loc.t * string) list, string) Core_result.t Lwt.t

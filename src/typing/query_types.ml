@@ -54,7 +54,7 @@ let type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme =
     let msg = Ty_normalizer.error_to_string err in
     FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
 
-let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_defaults ~typed_ast loc =
+let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~evaluate_destructors ~omit_targ_defaults ~typed_ast loc =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -62,7 +62,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
-    evaluate_type_destructors = false;
+    evaluate_type_destructors = evaluate_destructors;
     optimize_types = true;
     omit_targ_defaults;
     simplify_empty = true;
@@ -72,15 +72,15 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
   | Some  (loc, scheme) ->
     type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme
 
-let dump_types ~printer cx file_sig typed_ast =
+let dump_types ~printer ~expand_aliases ~evaluate_destructors cx file_sig typed_ast =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
     expand_internal_types = false;
-    expand_type_aliases = false;
+    expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
-    evaluate_type_destructors = false;
+    evaluate_type_destructors = evaluate_destructors;
     optimize_types = true;
     omit_targ_defaults = false;
     simplify_empty = true;
