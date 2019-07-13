@@ -2,8 +2,6 @@
 layout: guide
 ---
 
-[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) objects contain elements which are iterable in the order of insertion.
-
 Flow provides two types of collections:
 
 - A _read-only_ interface that provides operations for accessing collection elements.
@@ -18,8 +16,6 @@ Legend:
 <img alt="Collections hierarchy legend" src="{{ site.baseurl }}/static/collections-legend.svg" />
 
 ## `$ReadOnlyMap<K, V>` <a class="toc" id="toc-readonlymap" href="#toc-readonlymap"></a>
-
-Where `K` is the type of keys, and `V` is the type of elements in the map.
 
 `$ReadOnlyMap` stores key-value pairs (or entries).
 
@@ -37,6 +33,8 @@ numbersMap.set("key1", 3); // error, read-only map
 
 ## `Map<K, V>` <a class="toc" id="toc-map" href="#toc-map"></a>
 
+[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) in MDN.
+
 Subtype of `$ReadOnlyMap<K, V>` with write operations:
 
 ```js
@@ -47,8 +45,6 @@ sayings.set("elephant", "toot");
 ```
 
 ## `$ReadOnlySet<T>` <a class="toc" id="toc-readonlyset" href="#toc-readonlyset"></a>
-
-Where `T` is the type of elements in the set.
 
 `$ReadOnlySet` stores unique elements.
 
@@ -63,6 +59,8 @@ numbersSet.add(3); // error, read-only set
 
 ## `Set<T>` <a class="toc" id="toc-set" href="#toc-set"></a>
 
+[Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) in MDN.
+
 Subtype of `$ReadOnlySet<T>` with write operations:
 
 ```js
@@ -74,3 +72,19 @@ mySet.add(5);
 mySet.add("some text");
 mySet.delete(1);
 ```
+
+## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
+
+See [Array Types](../arrays/#toc-readonlyarray) section
+
+## `Array<T>` <a class="toc" id="toc-array" href="#toc-array"></a>
+
+See [Array Types](../arrays/#toc-array-type) section
+
+## `$ReadOnlyWeakMap<K, V>` <a class="toc" id="toc-readonlyweakmap" href="#toc-readonlyweakmap"></a>
+
+## `WeakMap<K, V>` <a class="toc" id="toc-weakmap" href="#toc-weakmap"></a>
+
+## `$ReadOnlyWeakSet<K, V>` <a class="toc" id="toc-readonlyweakset" href="#toc-readonlyweakset"></a>
+
+## `WeakSet<K, V>` <a class="toc" id="toc-weakset" href="#toc-weakset"></a>
