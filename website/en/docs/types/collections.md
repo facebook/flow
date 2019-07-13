@@ -15,34 +15,17 @@ Legend:
 
 <img alt="Collections hierarchy legend" src="{{ site.baseurl }}/static/collections-legend.svg" />
 
-## `$ReadOnlyMap<K, V>` <a class="toc" id="toc-readonlymap" href="#toc-readonlymap"></a>
+## `String` <a class="toc" id="toc-string" href="#toc-string"></a>
 
-`$ReadOnlyMap` stores key-value pairs (or entries).
+See [Primitive Types](../primitives/#toc-strings) section
 
-For example:
+## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
 
-```js
-const numbersMap: $ReadOnlyMap<string, number> = new Map([
-  ["key1", 0],
-  ["key2", 1]
-]);
-const firstNumber = numbersMap.get("key1"); // ok
-numbersMap.delete("key1"); // error, read-only map
-numbersMap.set("key1", 3); // error, read-only map
-```
+See [Array Types](../arrays/#toc-readonlyarray) section
 
-## `Map<K, V>` <a class="toc" id="toc-map" href="#toc-map"></a>
+## `Array<T>` <a class="toc" id="toc-array" href="#toc-array"></a>
 
-[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) collection in MDN.
-
-Subtype of `$ReadOnlyMap<K, V>` with write operations:
-
-```js
-const sayings = new Map(); // Map<string, string>
-sayings.set("dog", "woof");
-sayings.set("cat", "meow");
-sayings.set("elephant", "toot");
-```
+See [Array Types](../arrays/#toc-array-type) section
 
 ## `$ReadOnlySet<T>` <a class="toc" id="toc-readonlyset" href="#toc-readonlyset"></a>
 
@@ -73,13 +56,34 @@ mySet.add("some text");
 mySet.delete(1);
 ```
 
-## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
+## `$ReadOnlyMap<K, V>` <a class="toc" id="toc-readonlymap" href="#toc-readonlymap"></a>
 
-See [Array Types](../arrays/#toc-readonlyarray) section
+`$ReadOnlyMap` stores key-value pairs (or entries).
 
-## `Array<T>` <a class="toc" id="toc-array" href="#toc-array"></a>
+For example:
 
-See [Array Types](../arrays/#toc-array-type) section
+```js
+const numbersMap: $ReadOnlyMap<string, number> = new Map([
+  ["key1", 0],
+  ["key2", 1]
+]);
+const firstNumber = numbersMap.get("key1"); // ok
+numbersMap.delete("key1"); // error, read-only map
+numbersMap.set("key1", 3); // error, read-only map
+```
+
+## `Map<K, V>` <a class="toc" id="toc-map" href="#toc-map"></a>
+
+[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) collection in MDN.
+
+Subtype of `$ReadOnlyMap<K, V>` with write operations:
+
+```js
+const sayings = new Map(); // Map<string, string>
+sayings.set("dog", "woof");
+sayings.set("cat", "meow");
+sayings.set("elephant", "toot");
+```
 
 ## `$ReadOnlyWeakMap<K, V>` <a class="toc" id="toc-readonlyweakmap" href="#toc-readonlyweakmap"></a>
 

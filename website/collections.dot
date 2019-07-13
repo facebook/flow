@@ -17,13 +17,13 @@ digraph Collections {
   WeakMap [color="#4A5659"];
   WeakSet [color="#4A5659"];
 
+  Iterable -> "$ReadOnlyArray";
   Iterable -> "$ReadOnlySet";
   Iterable -> "$ReadOnlyMap";
-  Iterable -> "$ReadOnlyArray";
-  Iterable -> String;
+  Iterable -> "String";
   "$ReadOnlyArray" -> Array;
   "$ReadOnlySet" -> Set;
   "$ReadOnlyMap" -> Map;
-  "$ReadOnlyWeakMap" -> WeakMap;
   "$ReadOnlyWeakSet" -> WeakSet;
+  "$ReadOnlyWeakMap" -> WeakMap;
 }
