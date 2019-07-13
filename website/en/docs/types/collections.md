@@ -33,7 +33,7 @@ numbersMap.set("key1", 3); // error, read-only map
 
 ## `Map<K, V>` <a class="toc" id="toc-map" href="#toc-map"></a>
 
-[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) in MDN.
+[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) collection in MDN.
 
 Subtype of `$ReadOnlyMap<K, V>` with write operations:
 
@@ -52,14 +52,14 @@ For example:
 
 ```js
 const numbersSet: $ReadOnlySet<string, number> = new Set([0, 1, 2, 3]);
-const hasZero = numbersSet.has(0) // ok
+const hasZero = numbersSet.has(0); // ok
 numbersSet.delete(1); // error, read-only set
 numbersSet.add(3); // error, read-only set
 ```
 
 ## `Set<T>` <a class="toc" id="toc-set" href="#toc-set"></a>
 
-[Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) in MDN.
+[Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) collection in MDN.
 
 Subtype of `$ReadOnlySet<T>` with write operations:
 
@@ -83,8 +83,46 @@ See [Array Types](../arrays/#toc-array-type) section
 
 ## `$ReadOnlyWeakMap<K, V>` <a class="toc" id="toc-readonlyweakmap" href="#toc-readonlyweakmap"></a>
 
+Where `K` should be subtype of object or `$ReadOnlyArray`.
+
+`$ReadOnlyWeakMap` is a collection of key/value pairs in which the keys are weakly referenced.
+
+```js
+const key0 = {a: 'foo'}
+const numbersMap: $ReadOnlyWeakMap<{| a: string |}, number> = new WeakMap([
+  [key0, 1],
+]);
+const firstNumber = numbersMap.get(key0); // ok
+numbersMap.delete(key0); // error, read-only weakmap
+numbersMap.set(key0, 3); // error, read-only weakmap
+```
+
 ## `WeakMap<K, V>` <a class="toc" id="toc-weakmap" href="#toc-weakmap"></a>
 
-## `$ReadOnlyWeakSet<K, V>` <a class="toc" id="toc-readonlyweakset" href="#toc-readonlyweakset"></a>
+[WeakMap](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap) collection in MDN.
 
-## `WeakSet<K, V>` <a class="toc" id="toc-weakset" href="#toc-weakset"></a>
+Subtype of `$ReadOnlyWeakMap<K, V>` with write operations:
+
+```js
+
+```
+
+## `$ReadOnlyWeakSet<T>` <a class="toc" id="toc-readonlyweakset" href="#toc-readonlyweakset"></a>
+
+Where `T` should be subtype of object or `$ReadOnlyArray`.
+
+`$ReadOnlyWeakSet` lets you store weakly held objects in a collection.
+
+```js
+
+```
+
+## `WeakSet<T>` <a class="toc" id="toc-weakset" href="#toc-weakset"></a>
+
+[WeakSet](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet) collection in MDN.
+
+Subtype of `$ReadOnlyWeakSet<T>` with write operations:
+
+```js
+
+```
