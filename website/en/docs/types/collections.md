@@ -7,7 +7,7 @@ Flow provides two types of collections:
 - A _read-only_ interface that provides operations for accessing collection elements.
 - A _mutable_ interface that extends the corresponding read-only interface with write operations: adding and removing its elements.
 
-The following shows all collections types:
+The following figure shows all collections types:
 
 <img style="width:100%;" alt="Collections hierarchy" src="{{ site.baseurl }}/static/collections.svg" />
 
@@ -92,9 +92,9 @@ Where `K` should be subtype of object or `$ReadOnlyArray`.
 `$ReadOnlyWeakMap` is a collection of key/value pairs in which the keys are weakly referenced.
 
 ```js
-const key0 = {a: 'foo'}
+const key0 = { a: "foo" };
 const numbersMap: $ReadOnlyWeakMap<{| a: string |}, number> = new WeakMap([
-  [key0, 1],
+  [key0, 1]
 ]);
 const firstNumber = numbersMap.get(key0); // ok
 numbersMap.delete(key0); // error, read-only weakmap
@@ -108,7 +108,6 @@ numbersMap.set(key0, 3); // error, read-only weakmap
 Subtype of `$ReadOnlyWeakMap<K, V>` with write operations:
 
 ```js
-
 ```
 
 ## `$ReadOnlyWeakSet<T>` <a class="toc" id="toc-readonlyweakset" href="#toc-readonlyweakset"></a>
@@ -118,7 +117,6 @@ Where `T` should be subtype of object or `$ReadOnlyArray`.
 `$ReadOnlyWeakSet` lets you store weakly held objects in a collection.
 
 ```js
-
 ```
 
 ## `WeakSet<T>` <a class="toc" id="toc-weakset" href="#toc-weakset"></a>
@@ -128,5 +126,4 @@ Where `T` should be subtype of object or `$ReadOnlyArray`.
 Subtype of `$ReadOnlyWeakSet<T>` with write operations:
 
 ```js
-
 ```
