@@ -1,0 +1,29 @@
+digraph Collections {
+  edge [
+    color="#7F7F7F"
+  ];
+  node [
+    shape="box",
+    style="rounded, filled",
+    fontcolor="#FFFFFF",
+    color="#E8BD36"
+  ];
+  rankdir="TB";
+
+  Set [color="#4A5659"];
+  Map [color="#4A5659"];
+  Array [color="#4A5659"];
+  String  [color="#4A5659"];
+  WeakMap [color="#4A5659"];
+  WeakSet [color="#4A5659"];
+
+  Iterable -> "$ReadOnlySet";
+  Iterable -> "$ReadOnlyMap";
+  Iterable -> "$ReadOnlyArray";
+  Iterable -> String;
+  "$ReadOnlyArray" -> Array;
+  "$ReadOnlySet" -> Set;
+  "$ReadOnlyMap" -> Map;
+  "$ReadOnlyWeakMap" -> WeakMap;
+  "$ReadOnlyWeakSet" -> WeakSet;
+}

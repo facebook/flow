@@ -233,6 +233,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/types/arrays/":
   title: "Array Types"
   description: "Typing arrays and the elements inside of them"
+"/docs/types/collections/":
+  title: "Collections Types"
+  description: "Typing Maps, Sets and the key-value entries inside of them"
 "/docs/types/casting/":
   title: "Type Casting Expressions"
   description: "Asserting and casting values to different types"

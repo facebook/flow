@@ -28,6 +28,7 @@
     - path: "/docs/types/objects/"
 
     - path: "/docs/types/arrays/"
+    - path: "/docs/types/collections/"
     - path: "/docs/types/tuples/"
 
     - path: "/docs/types/classes/"
