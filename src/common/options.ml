@@ -117,6 +117,7 @@ type t = {
   opt_include_suppressions : bool;
   opt_trust_mode: trust_mode;
   opt_type_asserts: bool;
+  opt_jsx_pragma: string option;
 }
 
 let all opts = opts.opt_all
@@ -182,6 +183,7 @@ let strict_mode opts = opts.opt_strict_mode
 
 let trust_mode opts = opts.opt_trust_mode
 let type_asserts opts = opts.opt_type_asserts
+let jsx_pragma opts = opts.opt_jsx_pragma
 
 
 let lazy_mode_to_string lazy_mode =

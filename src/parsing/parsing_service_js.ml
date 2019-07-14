@@ -472,7 +472,7 @@ let does_content_match_file_hash ~reader file content =
  * Add success/error info to passed accumulator. *)
 let reducer
   ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch
-  ~max_header_tokens ~noflow ~parse_unchanged
+  ~max_header_tokens ~noflow ~jsx_pragma ~parse_unchanged
   parse_results file
 : results =
   (* It turns out that sometimes files appear and disappear very quickly. Just
@@ -524,6 +524,13 @@ let reducer
           let info =
             if noflow file then { info with Docblock.flow = Some Docblock.OptOut }
             else info
+          in
+          let info = match jsx_pragma with
+          | Some jsx_pragma ->
+            let padding = (String.make 1 '\n') ^ (String.make 1 ' ') in
+            let (jsx_expr, _) = Parser_flow.jsx_pragma_expression (padding ^ jsx_pragma) (Some file) in
+            { info with Docblock.jsx = Some (Docblock.Jsx_pragma (jsx_pragma, jsx_expr)) }
+          | None -> info
           in
           begin match (do_parse ~parse_options ~info content file) with
           | Parse_ok parse_ok ->
@@ -602,13 +609,13 @@ let next_of_filename_set ?(with_progress=false) workers filenames =
   else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
 let parse ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch ~profile
-  ~max_header_tokens ~noflow ~parse_unchanged workers next
+  ~max_header_tokens ~noflow ~jsx_pragma ~parse_unchanged workers next
 : results Lwt.t =
   let t = Unix.gettimeofday () in
   let reducer =
     reducer
       ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch
-      ~max_header_tokens ~noflow ~parse_unchanged
+      ~max_header_tokens ~noflow ~jsx_pragma ~parse_unchanged
   in
   let%lwt results = MultiWorkerLwt.call
     workers
@@ -632,7 +639,7 @@ let parse ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch ~profile
   Lwt.return results
 
 let reparse
-  ~transaction ~reader ~parse_options ~profile ~max_header_tokens ~noflow
+  ~transaction ~reader ~parse_options ~profile ~max_header_tokens ~noflow ~jsx_pragma
   ~parse_unchanged ~with_progress ~workers ~modified:files ~deleted =
   (* save old parsing info for files *)
   let all_files = FilenameSet.union files deleted in
@@ -640,7 +647,7 @@ let reparse
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
     parse ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch:false ~profile
-      ~max_header_tokens ~noflow ~parse_unchanged workers next
+      ~max_header_tokens ~noflow ~jsx_pragma ~parse_unchanged workers next
   in
   let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
   let modified = List.fold_left (fun acc (fail, _, _) ->
@@ -664,6 +671,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
   let abstract_locations = options.Options.opt_abstract_locations in
+  let jsx_pragma = Options.jsx_pragma options in
   let parse_options  =
     make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
         ~facebook_fbt ()
@@ -673,7 +681,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
     ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch:false
-    ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
+    ~profile ~max_header_tokens ~noflow ~jsx_pragma ~parse_unchanged workers next
 
 let reparse_with_defaults
   ~transaction ~reader ?types_mode ?use_strict ?with_progress
@@ -686,12 +694,13 @@ let reparse_with_defaults
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
   let abstract_locations = options.Options.opt_abstract_locations in
+  let jsx_pragma = Options.jsx_pragma options in
   let parse_options  =
     make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
         ~facebook_fbt ()
   in
   reparse
-    ~transaction ~reader ~parse_options ~profile ~max_header_tokens ~noflow
+    ~transaction ~reader ~parse_options ~profile ~max_header_tokens ~noflow ~jsx_pragma
     ~parse_unchanged ~with_progress ~workers ~modified ~deleted
 
 (* ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
@@ -730,6 +739,7 @@ let ensure_parsed ~reader options workers files =
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
   let abstract_locations = options.Options.opt_abstract_locations in
+  let jsx_pragma = Options.jsx_pragma options in
 
   let parse_options =
     make_parse_options ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch
@@ -738,7 +748,7 @@ let ensure_parsed ~reader options workers files =
 
   let%lwt results = parse
     ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch:true
-    ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
+    ~profile ~max_header_tokens ~noflow ~jsx_pragma ~parse_unchanged workers next
   in
 
   Lwt.return results.parse_hash_mismatch_skips

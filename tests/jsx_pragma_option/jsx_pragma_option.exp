@@ -1,0 +1,24 @@
+Error --------------------------------------------------------------------------------------------------- index.js:10:13
+
+Cannot create `a` element because:
+ - `a` [1] is incompatible with string literal `hello` [2].
+ - inexact null [3] is incompatible with exact object type [4].
+
+   index.js:10:13
+   10| const Bye = <a />;
+                   ^^^^^ [3]
+
+References:
+   index.js:10:14
+   10| const Bye = <a />;
+                    ^ [1]
+   jsx.js:4:10
+    4|   (type: 'hello', props: {|a: string|}, children: any): {| hello: 'div' |}
+                ^^^^^^^ [2]
+   jsx.js:4:26
+    4|   (type: 'hello', props: {|a: string|}, children: any): {| hello: 'div' |}
+                                ^^^^^^^^^^^^^ [4]
+
+
+
+Found 2 errors
