@@ -560,6 +560,31 @@ References:
                   ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- issue-2812.js:14:1
+
+Cannot call `bar.join` because in type argument `T` [1]:
+ - Either object type [2] is incompatible with number [3].
+ - Or object type [2] is incompatible with string [4].
+
+   issue-2812.js:14:1
+   14| bar.join(',') // should error, nothing happens
+       ^^^^^^^^^^^^^
+
+References:
+   issue-2812.js:3:23
+    3| declare class MyArray<T> {
+                             ^ [1]
+   issue-2812.js:12:26
+   12| declare var bar: MyArray<{| a: number |}>;
+                                ^^^^^^^^^^^^^^^ [2]
+   issue-2812.js:5:14
+    5|   +join: <U: number | string>(this: MyArray<U>, separator?: string) => string;
+                    ^^^^^^ [3]
+   issue-2812.js:5:23
+    5|   +join: <U: number | string>(this: MyArray<U>, separator?: string) => string;
+                             ^^^^^^ [4]
+
+
 Error ------------------------------------------------------------------------------------------------ issue-7529.js:4:7
 
 Cannot call `foo` with `123` bound to `x` because number [1] is incompatible with string [2].
@@ -782,4 +807,4 @@ References:
 
 
 
-Found 56 errors
+Found 57 errors
