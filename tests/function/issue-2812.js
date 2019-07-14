@@ -11,4 +11,4 @@ foo.join(',') // ok
 
 declare var bar: MyArray<{| a: number |}>;
 
-bar.join(',') // should error, nothing happens
+bar.join(',') // error, object ~> number | string
