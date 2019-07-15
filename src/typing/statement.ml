@@ -6252,7 +6252,7 @@ and check_properties_initialized_before_use cx class_ast: unit =
           value = (_, {
             Ast.Function.body = Ast.Function.BodyBlock (_, block);
             id = _; params = _; async = _; generator = _; predicate = _;
-            return = _; tparams = _; sig_loc = _;
+            return = _; tparams = _; comments = _; sig_loc = _;
           });
           key = _; static = _; decorators = _;
         }) -> Some block
@@ -6691,6 +6691,7 @@ and mk_func_sig =
       id;
       async;
       generator;
+      comments = _;
       sig_loc = _;
     } = func in
     let reason = func_reason ~async ~generator loc in
@@ -6860,6 +6861,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             predicate = Some (loc, Ast.Type.Predicate.Inferred);
             return;
             tparams;
+            comments = Flow_ast_utils.mk_comments_opt ();
             sig_loc = declare_loc;
           }, function
           | _, Ast.Statement.FunctionDeclaration { Ast.Function.

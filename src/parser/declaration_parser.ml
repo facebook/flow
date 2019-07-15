@@ -215,6 +215,8 @@ module Declaration
       rest = None && List.for_all is_simple_param params
 
   let _function = with_loc (fun env ->
+    let leading = Peek.comments env in
+    let trailingComments = ref [] in
     let async = async env in
     let sig_loc, (generator, tparams, id, params, return, predicate) = with_loc (fun env ->
       Expect.token env T_FUNCTION;
@@ -241,6 +243,8 @@ module Declaration
     let body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
+    trailingComments := Peek.comments env;
+    let trailing = !trailingComments in
     Statement.FunctionDeclaration { Function.
       id;
       params;
@@ -250,6 +254,7 @@ module Declaration
       predicate;
       return;
       tparams;
+      comments = (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());
       sig_loc;
     }
   )

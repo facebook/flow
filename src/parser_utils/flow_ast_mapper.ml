@@ -820,19 +820,20 @@ class ['loc] mapper = object(this)
     let open Ast.Function in
     let {
       id = ident; params; body; async; generator;
-      predicate; return; tparams; sig_loc;
+      predicate; return; tparams; comments; sig_loc;
     } = expr in
     let ident' = map_opt this#function_identifier ident in
     let params' = this#function_params params in
     let return' = this#type_annotation_hint return in
     let body' = this#function_body_any body in
+    let comments' = this#syntax_opt comments in
     (* TODO: walk predicate *)
     let tparams' = map_opt this#type_parameter_declaration tparams in
     if ident == ident' && params == params' && body == body' && return == return'
-      && tparams == tparams' then expr
+      && tparams == tparams' && comments == comments' then expr
     else {
       id = ident'; params = params'; return = return'; body = body';
-      async; generator; predicate; tparams = tparams'; sig_loc;
+      async; generator; predicate; tparams = tparams'; comments = comments'; sig_loc;
     }
 
   method function_params (params: ('loc, 'loc) Ast.Function.Params.t) =

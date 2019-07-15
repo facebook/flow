@@ -868,7 +868,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Function in
     let {
       id = ident; params; body; async; generator;
-      predicate; return; tparams; sig_loc;
+      predicate; return; tparams; comments; sig_loc;
     } = expr in
     let ident' = Option.map ~f:this#t_function_identifier ident in
     this#type_parameter_declaration_opt tparams (fun tparams' ->
@@ -876,10 +876,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let return' = this#type_annotation_hint return in
       let body' = this#function_body body in
       let predicate' = Option.map ~f:this#type_predicate predicate in
+      let comments' = Option.map ~f:this#syntax comments in
       let sig_loc' = this#on_loc_annot sig_loc in
       {
         id = ident'; params = params'; return = return'; body = body';
-        async; generator; predicate = predicate'; tparams = tparams'; sig_loc = sig_loc'
+        async; generator; predicate = predicate'; tparams = tparams'; comments = comments'; sig_loc = sig_loc'
       }
     )
 
