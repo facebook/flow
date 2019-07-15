@@ -151,6 +151,21 @@ module TextDocumentItem = struct
   }
 end
 
+(**
+ * A code lens represents a command that should be shown along with
+ * source text, like the number of references, a way to run tests, etc.
+ *
+ * A code lens is _unresolved_ when no command is associated to it. For performance
+ * reasons the creation of a code lens and resolving should be done in two stages.
+ *)
+module CodeLens = struct
+  type t = {
+    range: range;
+    command: Command.t;
+    data: Hh_json.json option;
+  }
+end
+
 (* A parameter literal used in requests to pass a text document and a position
    inside that document. *)
 module TextDocumentPositionParams = struct
@@ -407,6 +422,12 @@ module Rage = struct
   }
 end
 
+(* Code Lens resolve request, method="codeLens/resolve" *)
+module CodeLensResolve = struct
+  type params = CodeLens.t
+
+  and result = CodeLens.t
+end
 
 (* Hover request, method="textDocument/hover" *)
 module Hover = struct
@@ -801,6 +822,16 @@ module Rename = struct
   }
 end
 
+(* Code Lens request, method="textDocument/codeLens" *)
+module DocumentCodeLens = struct
+  type params = codelensParams
+
+  and result = CodeLens.t list
+
+  and codelensParams = {
+    textDocument: TextDocumentIdentifier.t;
+  }
+end
 
 (* LogMessage notification, method="window/logMessage" *)
 module LogMessage = struct
@@ -985,6 +1016,7 @@ type lsp_request =
   | InitializeRequest of Initialize.params
   | RegisterCapabilityRequest of RegisterCapability.params
   | ShutdownRequest
+  | CodeLensResolveRequest of CodeLensResolve.params
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
   | TypeDefinitionRequest of TypeDefinition.params
@@ -1002,11 +1034,13 @@ type lsp_request =
   | ShowStatusRequest of ShowStatus.params
   | RageRequest
   | RenameRequest of Rename.params
+  | DocumentCodeLensRequest of DocumentCodeLens.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
   | InitializeResult of Initialize.result
   | ShutdownResult
+  | CodeLensResolveResult of CodeLensResolve.result
   | HoverResult of Hover.result
   | DefinitionResult of Definition.result
   | TypeDefinitionResult of TypeDefinition.result
@@ -1024,6 +1058,7 @@ type lsp_result =
   | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
   | RenameResult of Rename.result
+  | DocumentCodeLensResult of DocumentCodeLens.result
   | ErrorResult of Error.t * string (* the string is a stacktrace *)
 
 type lsp_notification =

@@ -212,6 +212,22 @@ let print_messageType (type_: MessageType.t) : json =
   | InfoMessage -> int_ 3
   | LogMessage -> int_ 4
 
+let parse_codeLens (json: json option) : CodeLens.t =
+  let open CodeLens in
+  {
+    range = Jget.obj_exn json "range" |> parse_range_exn;
+    command = Jget.obj_exn json "command" |> parse_command;
+    data = Jget.obj_exn json "data";
+  }
+
+let print_codeLens (codeLens: CodeLens.t) : json =
+  let open CodeLens in
+  JSON_Object [
+    "range", print_range codeLens.range;
+    "command", print_command codeLens.command;
+    "data", match codeLens.data with None -> JSON_Null | Some json -> json;
+  ]
+
 
 (************************************************************************)
 (** shutdown request                                                   **)
@@ -346,6 +362,15 @@ let print_signatureHelp (r: SignatureHelp.result) : json =
       "activeParameter", Hh_json.int_ r.activeParameter;
     ]
 
+(************************************************************************)
+(** codeLens/resolve Request                                           **)
+(************************************************************************)
+
+let parse_codeLensResolve (params: json option) : CodeLensResolve.params =
+  parse_codeLens params
+
+let print_codeLensResolve (r: CodeLensResolve.result) : json =
+  print_codeLens r
 
 
 (************************************************************************)
@@ -370,7 +395,19 @@ let print_documentRename (r: Rename.result) : json =
     "changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes);
   ]
 
+(************************************************************************)
+(** textDocument/codeLens Request                                      **)
+(************************************************************************)
 
+let parse_documentCodeLens (params: json option) : DocumentCodeLens.params =
+  let open DocumentCodeLens in
+  {
+    textDocument = Jget.obj_exn params "textDocument"
+                   |> parse_textDocumentIdentifier;
+  }
+
+let print_documentCodeLens (r: DocumentCodeLens.result) : json =
+  JSON_Array (List.map r ~f:print_codeLens)
 
 (************************************************************************)
 (** textDocument/publishDiagnostics notification                       **)
@@ -1075,6 +1112,7 @@ let request_name_to_string (request: lsp_request) : string =
   | InitializeRequest _ -> "initialize"
   | RegisterCapabilityRequest _ -> "client/registerCapability"
   | ShutdownRequest -> "shutdown"
+  | CodeLensResolveRequest _ -> "codeLens/resolve"
   | HoverRequest _ -> "textDocument/hover"
   | CompletionRequest _ -> "textDocument/completion"
   | CompletionItemResolveRequest _ -> "completionItem/resolve"
@@ -1090,6 +1128,7 @@ let request_name_to_string (request: lsp_request) : string =
   | DocumentOnTypeFormattingRequest _ -> "textDocument/onTypeFormatting"
   | RageRequest -> "telemetry/rage"
   | RenameRequest _ -> "textDocument/rename"
+  | DocumentCodeLensRequest _ -> "textDocument/codeLens"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result: lsp_result) : string =
@@ -1098,6 +1137,7 @@ let result_name_to_string (result: lsp_result) : string =
   | ShowStatusResult _ -> "window/showStatus"
   | InitializeResult _ -> "initialize"
   | ShutdownResult -> "shutdown"
+  | CodeLensResolveResult _ -> "codeLens/resolve"
   | HoverResult _ -> "textDocument/hover"
   | CompletionResult _ -> "textDocument/completion"
   | CompletionItemResolveResult _ -> "completionItem/resolve"
@@ -1113,6 +1153,7 @@ let result_name_to_string (result: lsp_result) : string =
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
   | RenameResult _ -> "textDocument/rename"
+  | DocumentCodeLensResult _ -> "textDocument/codeLens"
   | ErrorResult (e, _stack) -> "ERROR/" ^ (e.Error.message)
 
 let notification_name_to_string (notification: lsp_notification) : string =
@@ -1157,6 +1198,7 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   match method_ with
   | "initialize" -> InitializeRequest (parse_initialize params)
   | "shutdown" -> ShutdownRequest
+  | "codeLens/resolve" -> CodeLensResolveRequest (parse_codeLensResolve params)
   | "textDocument/hover" -> HoverRequest (parse_hover params)
   | "textDocument/completion" -> CompletionRequest (parse_completion params)
   | "textDocument/definition" -> DefinitionRequest (parse_definition params)
@@ -1171,6 +1213,7 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
     DocumentRangeFormattingRequest (parse_documentRangeFormatting params)
   | "textDocument/onTypeFormatting" ->
     DocumentOnTypeFormattingRequest (parse_documentOnTypeFormatting params)
+  | "textDocument/codeLens" -> DocumentCodeLensRequest (parse_documentCodeLens params)
   | "telemetry/rage" -> RageRequest
   | "completionItem/resolve"
   | "window/showMessageRequest"
@@ -1208,6 +1251,7 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | InitializeRequest _
   | RegisterCapabilityRequest _
   | ShutdownRequest
+  | CodeLensResolveRequest _
   | HoverRequest _
   | CompletionRequest _
   | CompletionItemResolveRequest _
@@ -1223,6 +1267,7 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | DocumentOnTypeFormattingRequest _
   | RageRequest
   | RenameRequest _
+  | DocumentCodeLensRequest _
   | UnknownRequest _ ->
     raise (Error.Parse ("Don't know how to parse LSP response " ^ method_))
 
@@ -1256,6 +1301,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _
+    | CodeLensResolveRequest _
     | CompletionRequest _
     | CompletionItemResolveRequest _
     | DefinitionRequest _
@@ -1270,6 +1316,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     | DocumentOnTypeFormattingRequest _
     | RageRequest
     | RenameRequest _
+    | DocumentCodeLensRequest _
     | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
@@ -1285,6 +1332,7 @@ let print_lsp_response ?include_error_stack_trace (id: lsp_id) (result: lsp_resu
   let json = match result with
     | InitializeResult r -> print_initialize r
     | ShutdownResult -> print_shutdown ()
+    | CodeLensResolveResult r -> print_codeLensResolve r
     | HoverResult r -> print_hover r
     | CompletionResult r -> print_completion r
     | DefinitionResult r -> print_definition r
@@ -1299,6 +1347,7 @@ let print_lsp_response ?include_error_stack_trace (id: lsp_id) (result: lsp_resu
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
     | RenameResult r -> print_documentRename r
+    | DocumentCodeLensResult r -> print_documentCodeLens r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->
