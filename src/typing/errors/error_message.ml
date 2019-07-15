@@ -171,7 +171,11 @@ and 'loc t' =
   | EIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | ETrustIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EUnsupportedImplements of 'loc virtual_reason
-  | EReactKit of ('loc virtual_reason * 'loc virtual_reason) * React.tool * 'loc virtual_use_op
+  | EReactKit of {
+      reason: 'loc virtual_reason;
+      tool: React.tool;
+      use_op: 'loc virtual_use_op;
+    }
   | EReactElementFunArity of 'loc virtual_reason * string * int
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
   | EUnsupportedSetProto of 'loc virtual_reason
@@ -447,7 +451,11 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
       ETrustIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
-  | EReactKit ((r1, r2), t, op) -> EReactKit ((map_reason r1, map_reason r2), t, map_use_op op)
+  | EReactKit { reason; tool; use_op } -> EReactKit {
+      reason = map_reason reason;
+      tool;
+      use_op = map_use_op use_op;
+    }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
       EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
   | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
@@ -610,7 +618,8 @@ let util_use_op_of_msg nope util = function
 | EInvalidObjectKit {reason; reason_op; use_op} ->
   util use_op (fun use_op -> EInvalidObjectKit {reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
-| EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
+| EReactKit { reason; tool; use_op } ->
+  util use_op (fun use_op -> EReactKit { reason; tool; use_op })
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
 | EDebugPrint (_, _)
 | EExportValueAsType (_, _)
@@ -1738,9 +1747,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnsupportedImplements reason ->
       Normal [text "Cannot implement "; desc reason; text " because it is not an interface."]
 
-    | EReactKit (reasons, tool, use_op) ->
+    | EReactKit { reason; tool; use_op } ->
       let open React in
-      let (_, reason) = reasons in
       let is_not_prop_type = "is not a React propType" in
       let msg = match tool with
       | GetProps _

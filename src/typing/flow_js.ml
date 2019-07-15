@@ -3969,12 +3969,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         |> fun t -> rec_flow_t cx trace (props, t);
         rec_flow_t cx trace (return_t, get_builtin_type cx reason_op "React$Node")
 
-    | DefT (r, _, FunT _), (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props)) ->
+    | DefT (r, _, FunT _), (ReactInToProps (_, props) | ReactPropsToOut (_, props)) ->
         React.GetProps props
-        |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
+        |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
 
     | DefT (r, _, ObjT { call_t = Some id; _ }),
-      (ReactInToProps (reason_op, props) |  ReactPropsToOut (reason_op, props)) ->
+      (ReactInToProps (_, props) |  ReactPropsToOut (_, props)) ->
         begin match Context.find_call cx id with
           | DefT (_, _, FunT (_, _, { rest_param = None; is_predicate = false; _ }))
           | DefT (_, _, PolyT (_, _, DefT (_, _, FunT _), _)) as fun_t ->
@@ -3982,7 +3982,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               rec_flow cx trace (Fn.const r |> Fn.flip mod_reason_of_t fun_t, u)
           | _ ->
               React.GetProps props
-              |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
+              |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
         end
 
     | AnyT _, ReactPropsToOut (_, props) ->
@@ -3991,9 +3991,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _, ReactInToProps (_, props) ->
         rec_flow_t cx trace (props, l)
 
-    | DefT (r, _, _), (ReactPropsToOut (reason_op, props) | ReactInToProps (reason_op, props)) ->
+    | DefT (r, _, _), (ReactPropsToOut (_, props) | ReactInToProps (_, props)) ->
         React.GetProps props
-        |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
+        |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
 
     (***********************************************)
     (* function types deconstruct into their parts *)

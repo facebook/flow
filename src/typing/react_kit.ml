@@ -13,13 +13,15 @@ let err_incompatible
   cx
   trace
   ~use_op
-  ~reason_op
   ~(add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
   reason
-  u
+  tool
 =
-  add_output cx ~trace (Error_message.EReactKit
-    ((reason_op, reason), u, use_op))
+  add_output cx ~trace (Error_message.EReactKit {
+    reason;
+    tool;
+    use_op;
+  })
 let component_class
   cx
   reason
@@ -158,7 +160,7 @@ let props_to_tout
     rec_flow_t cx trace (MixedT.why reason trust, tout)
 
   (* ...otherwise, error. *)
-  | _ -> err_incompatible cx trace ~use_op ~reason_op ~add_output (reason_of_t component) u
+  | _ -> err_incompatible cx trace ~use_op ~add_output (reason_of_t component) u
 
 (* Creates the type that we expect for a React config by diffing out default
  * props with ObjKitT(Rest). The config does not include types for `key`
@@ -237,7 +239,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
   let sealed_in_op = Obj_type.sealed_in_op
 
   let run cx trace ~use_op reason_op l u =
-    let err_incompatible reason = err_incompatible cx trace ~use_op ~reason_op ~add_output reason u
+    let err_incompatible reason = err_incompatible cx trace ~use_op ~add_output reason u
     in
 
     (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce

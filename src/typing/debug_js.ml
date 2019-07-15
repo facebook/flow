@@ -2780,10 +2780,9 @@ let dump_error_message =
           (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
-    | EReactKit ((reason1, reason2), _, use_op) ->
-        spf "EReactKit (%s, %s, _, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+    | EReactKit { reason; tool = _; use_op } ->
+        spf "EReactKit { reason = %s; use_op = %s; _ }"
+          (dump_reason cx reason)
           (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->
         spf "EReactElementFunArity (%s)" (dump_reason cx reason)
