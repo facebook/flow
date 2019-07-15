@@ -440,7 +440,7 @@ let merge = merge_runner ~job:merge_component
 let check options ~reader file =
   let result =
     let check_timeout = Options.merge_timeout options in (* TODO: add new option *)
-    let interval = Option.value_map ~f:(min 15.0) ~default:15.0 check_timeout in
+    let interval = Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
     let file_str = File_key.to_string file in
 
     try with_async_logging_timer
