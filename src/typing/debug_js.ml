@@ -82,6 +82,10 @@ let string_of_destructor = function
   | ReactElementRefType -> "ReactElementRef"
   | ReactConfigType _ -> "ReactConfig"
 
+let string_of_destruct_kind = function
+  | DestructAnnot -> "Annot"
+  | DestructInfer -> "Infer"
+
 type json_cx = {
   stack: ISet.t;
   size: int ref;
@@ -929,7 +933,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
     ]
-  | DestructuringT (_, s, t_out) -> [
+  | DestructuringT (_, k, s, t_out) -> [
+      "kind", JSON_String (
+        match k with
+        | DestructAnnot -> "annot"
+        | DestructInfer -> "infer"
+      );
       "selector", json_of_selector json_cx s;
       "t_out", _json_of_t json_cx t_out;
     ]
@@ -2261,8 +2270,11 @@ and dump_use_t_ (depth, tvars) cx t =
         (kid tout))
   | ExtendsUseT (_, _, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (Core_list.map ~f:kid nexts)) (kid l) (kid u)) t
-  | DestructuringT (_, s, tout) -> p t
-      ~extra:(spf "%s, %s" (string_of_selector s) (kid tout))
+  | DestructuringT (_, k, s, tout) -> p t
+      ~extra:(spf "%s, %s, %s"
+        (string_of_destruct_kind k)
+        (string_of_selector s)
+        (kid tout))
   | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =

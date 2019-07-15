@@ -669,7 +669,7 @@ class ['a] t = object(self)
       let acc = self#type_ cx pole_TODO acc t2 in
       acc)
 
-  | DestructuringT (_, s, tout) ->
+  | DestructuringT (_, _, s, tout) ->
     let acc = self#selector cx acc s in
     let acc = self#type_ cx pole_TODO acc tout in
     acc

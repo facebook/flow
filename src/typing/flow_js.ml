@@ -2288,6 +2288,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
+    | MaybeT (r, t), DestructuringT (reason, DestructAnnot, s, tout) ->
+      let f t =
+        AnnotT (reason, Tvar.mk_where cx reason (fun tvar ->
+          rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))
+        ), false)
+      in
+      let void_t = VoidT.why r |> with_trust bogus_trust in
+      let null_t = NullT.why r |> with_trust bogus_trust in
+      let rep = UnionRep.make (f void_t) (f null_t) [(f t)] in
+      rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
+
     | MaybeT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _) ->
       (* This isn't correct, but matches the existing incorrectness of spreads
        * today. In particular, spreading `null` and `void` become {}. The wrong
@@ -2317,6 +2328,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Don't split the optional type into its constituent members. Instead,
          reposition the entire optional type. *)
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+
+    | OptionalT (r, t), DestructuringT (reason, DestructAnnot, s, tout) ->
+      let f t =
+        AnnotT (reason, Tvar.mk_where cx reason (fun tvar ->
+          rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))
+        ), false)
+      in
+      let void_t = VoidT.why r |> with_trust bogus_trust in
+      let rep = UnionRep.make (f void_t) (f t) [] in
+      rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
 
     | OptionalT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _) ->
       (* This isn't correct, but matches the existing incorrectness of spreads
@@ -2846,6 +2867,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        reposition the entire union type. *)
     | UnionT _, ReposLowerT (reason, use_desc, u) ->
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+
+    | UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout) ->
+      let t0, (t1, ts) = UnionRep.members_nel rep in
+      let f t =
+        AnnotT (reason, Tvar.mk_where cx reason (fun tvar ->
+          rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))
+        ), false)
+      in
+      let rep = UnionRep.make (f t0) (f t1) (Core_list.map ts ~f) in
+      rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
 
     | UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
       object_kit cx trace ~use_op reason resolve_tool tool tout l
@@ -5421,8 +5452,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* destructuring *)
     (*****************)
 
-    | _, DestructuringT (reason, s, tout) ->
-      eval_selector cx ~trace reason l s tout
+    | _, DestructuringT (reason, kind, s, tout) ->
+      begin match kind with
+      | DestructAnnot ->
+        (* NB: BecomeT used to enforce that 0->1 property is preserved. Is
+         * currently necessary, since 0->1 annotations are not always
+         * recursively 0->1 -- e.g., class instance types. *)
+        let tvar = Tvar.mk cx reason in
+        eval_selector cx ~trace reason l s tvar;
+        rec_flow cx trace (tvar, BecomeT (reason, tout))
+      | DestructInfer ->
+        eval_selector cx ~trace reason l s tout
+      end
 
     (**************)
     (* object kit *)

@@ -27,8 +27,6 @@ open Reason
 open Type
 open Env.LookupMode
 
-open Destructuring
-
 (*************)
 (* Utilities *)
 (*************)
@@ -193,17 +191,9 @@ module Func_stmt_config = struct
       Env.bind_implicit_let ~state:State.Initialized
         kind cx name t loc
 
-  let destruct cx annot ~use_op:_ loc name default t =
-    let reason = mk_reason (RIdentifier name) loc in
-    let t = match annot with
-    | Ast.Type.Missing _ -> t
-    | Ast.Type.Available _ ->
-      let source = Tvar.mk_where cx reason (fun t' ->
-        Flow.flow cx (t, BecomeT (reason, t'))
-      ) in
-      AnnotT (reason, source, false)
-    in
+  let destruct cx ~use_op:_ loc name default t =
     Option.iter ~f:(fun d ->
+      let reason = mk_reason (RIdentifier name) loc in
       let default_t = Flow.mk_default cx reason d in
       Flow.flow_t cx (default_t, t)
     ) default;
@@ -241,8 +231,12 @@ module Func_stmt_config = struct
         let default = Option.map default (fun ((_, t), _) ->
           Default.expr t
         ) in
-        let init = Destructuring.empty ?default t in
-        let f = destruct cx annot in
+        let init = Destructuring.empty ?default t ~annot:(
+          match annot with
+          | Ast.Type.Missing _ -> false
+          | Ast.Type.Available _ -> true
+        ) in
+        let f = destruct cx in
         Destructuring.object_properties cx ~expr ~f init properties
       in
       loc, { Ast.Function.Param.
@@ -259,8 +253,12 @@ module Func_stmt_config = struct
         let default = Option.map default (fun ((_, t), _) ->
           Default.expr t
         ) in
-        let init = Destructuring.empty ?default t in
-        let f = destruct cx annot in
+        let init = Destructuring.empty ?default t ~annot:(
+          match annot with
+          | Ast.Type.Missing _ -> false
+          | Ast.Type.Available _ -> true
+        ) in
+        let f = destruct cx in
         Destructuring.array_elements cx ~expr ~f init elements
       in
       loc, { Ast.Function.Param.
@@ -2830,7 +2828,7 @@ and variable cx kind ?if_uninitialized id init = Ast.Statement.(
     mk_reason RDestructuring ploc
   in
 
-  let annot = type_of_pattern id in
+  let annot = Destructuring.type_of_pattern id in
   let annot_t, annot_ast = Anno.mk_type_annotation cx SMap.empty id_reason annot in
 
   let has_anno = match annot with
@@ -2859,7 +2857,11 @@ and variable cx kind ?if_uninitialized id init = Ast.Statement.(
       let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
       Flow.flow cx (init_t, UseT (use_op, annot_t))
     );
-    let init = Destructuring.empty ?init annot_t in
+    let init = Destructuring.empty ?init annot_t ~annot:(
+      match annot with
+      | Ast.Type.Missing _ -> false
+      | Ast.Type.Available _ -> true
+    ) in
     Destructuring.pattern cx ~expr:expression init id ~f:(fun ~use_op loc name default t ->
       let reason = mk_reason (RIdentifier name) loc in
       declare_var cx name loc;
