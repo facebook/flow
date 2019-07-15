@@ -106,6 +106,7 @@ type t =
     }
   | OpaqueTypeDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      impltype: (Loc.t, Loc.t) Ast.Type.t option;
       supertype: (Loc.t, Loc.t) Ast.Type.t option;
     }
   | InterfaceDef of {

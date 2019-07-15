@@ -539,19 +539,22 @@ let tests = "signature_generator" >::: ([
      "export opaque type T4: number = T3";
      "opaque type T5 = number";
      "export opaque type T6: T5 = number";
+     "export opaque type T7 = number;"
     ]
-    ["declare opaque type T1;";
-     "declare opaque type T2: number;";
-     "";
-     "declare opaque type T4: number;";
-     "declare opaque type T5;";
-     "declare opaque type T6: T5;";
+    ["opaque type T1;";
+     "opaque type T2: number;";
+     "opaque type T3 = number;";
+     "opaque type T4: number = T3;";
+     "opaque type T5 = number;";
+     "opaque type T6: T5 = number;";
+     "opaque type T7 = number;";
      "export type {T1};";
      "export type {T2};";
      "";
      "export type {T4};";
      "";
-     "export type {T6};"];
+     "export type {T6};";
+     "export type {T7};"];
 
   "import_then_destructure" >:: mk_signature_generator_test
     ["import Foo from 'foo';";

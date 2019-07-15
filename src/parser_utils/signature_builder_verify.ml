@@ -294,10 +294,9 @@ module Eval(Env: EvalEnv) = struct
           SSet.add tp tps, Deps.join (deps, deps')
         ) init tparams
 
-  let opaque_type tps supertype =
-    match supertype with
-      | None -> Deps.bot
-      | Some t -> type_ tps t
+  let type_opt tps = function
+    | None -> Deps.bot
+    | Some t -> type_ tps t
 
   let rec annot_path tps = function
     | Kind.Annot_path.Annot (_, t) -> type_ tps t
@@ -745,9 +744,10 @@ module Verifier(Env: EvalEnv) = struct
       | Kind.TypeDef { tparams; right } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
         Deps.join (deps, Eval.type_ tps right)
-      | Kind.OpaqueTypeDef { tparams; supertype } ->
+      | Kind.OpaqueTypeDef { tparams; impltype; supertype } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
-        Deps.join (deps, Eval.opaque_type tps supertype)
+        let deps = Deps.join (deps, Eval.type_opt tps impltype) in
+        Deps.join (deps, Eval.type_opt tps supertype)
       | Kind.InterfaceDef { tparams; body = (_, body); extends } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
         let deps = Deps.join (deps, Eval.object_type tps body) in

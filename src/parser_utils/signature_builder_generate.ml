@@ -36,6 +36,7 @@ module T = struct
       }
     | OpaqueType of {
         tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        impltype: type_ option;
         supertype: type_ option;
       }
     | Interface of {
@@ -561,9 +562,9 @@ module T = struct
     match decl with
     | Type { tparams; right; } ->
       decl_loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right }
-    | OpaqueType { tparams; supertype; } ->
-      decl_loc, Ast.Statement.DeclareOpaqueType {
-        Ast.Statement.OpaqueType.id; tparams; impltype = None; supertype
+    | OpaqueType { tparams; impltype; supertype; } ->
+      decl_loc, Ast.Statement.OpaqueType {
+        Ast.Statement.OpaqueType.id; tparams; impltype; supertype
       }
     | Interface { tparams; extends; body; } ->
       decl_loc, Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body }
@@ -1311,14 +1312,19 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           tparams;
           right;
         }
-      | Kind.OpaqueTypeDef { tparams; supertype } ->
+      | Kind.OpaqueTypeDef { tparams; impltype; supertype } ->
         let tparams = Eval.type_params tparams in
+        let impltype = match impltype with
+          | None -> None
+          | Some t -> Some (Eval.type_ t)
+        in
         let supertype = match supertype with
           | None -> None
           | Some t -> Some (Eval.type_ t)
         in
         T.OpaqueType {
           tparams;
+          impltype;
           supertype;
         }
       | Kind.InterfaceDef { tparams; extends; body = (body_loc, body) } ->

@@ -115,8 +115,8 @@ let type_alias loc type_alias =
 
 let opaque_type loc opaque_type =
   let open Ast.Statement.OpaqueType in
-  let { id; tparams; impltype = _; supertype } = opaque_type in
-  id, (loc, Kind.OpaqueTypeDef { tparams; supertype })
+  let { id; tparams; impltype; supertype } = opaque_type in
+  id, (loc, Kind.OpaqueTypeDef { tparams; impltype; supertype })
 
 let interface loc interface =
   let open Ast.Statement.Interface in
