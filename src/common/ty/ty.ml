@@ -173,6 +173,12 @@ and polarity = Positive | Negative | Neutral
   visit_prefix="on_";
   ancestors=["iter_ty_base"];
 }, visitors {
+  name="iter2_ty";
+  nude=true;
+  variety = "iter2";
+  visit_prefix="on_";
+  ancestors=["iter2_ty_base"];
+}, visitors {
   name="reduce_ty";
   variety = "reduce";
   nude = true;

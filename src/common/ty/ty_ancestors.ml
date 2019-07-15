@@ -20,6 +20,28 @@ class ['self] iter_ty_base = object (_: 'self)
     = fun f env -> List.iter (f env)
 end
 
+class ['self] iter2_ty_base = object (_: 'self)
+  method private on_string: 'env . 'env -> string -> string -> unit = fun _env _x _y -> ()
+  method private on_bool  : 'env . 'env -> bool   -> bool   -> unit = fun _env _x _y -> ()
+  method private on_int   : 'env . 'env -> int    -> int    -> unit = fun _env _x _y -> ()
+  method private on_symbol: 'env . 'env -> symbol -> symbol -> unit = fun _env _x _y -> ()
+  method private on_aloc  : 'env . 'env -> ALoc.t -> ALoc.t -> unit = fun _env _x _y -> ()
+
+  method private on_option:
+    'env 'a 'b .
+    ('env -> 'a -> 'a -> 'b) -> 'env -> 'a option -> 'a option -> 'b option
+    = fun f env x y ->
+      match x, y with
+      | Some x, Some y -> Some (f env x y)
+      | Some _, None
+      | None, Some _ -> raise VisitorsRuntime.StructuralMismatch
+      | None, None -> None
+  method private on_list:
+    'env 'a .
+    ('env -> 'a -> 'a -> unit) -> 'env -> 'a list -> 'a list -> unit
+    = fun f env -> List.iter2 (f env)
+end
+
 class ['self] map_ty_base = object (_: 'self)
   method private on_string: 'env -> string     -> string     = fun _ x -> x
   method private on_bool  : 'env -> bool       -> bool       = fun _ x -> x
