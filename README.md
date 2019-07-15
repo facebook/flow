@@ -206,7 +206,7 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 
 ## Join the Flow community
 * Website: [https://flow.org](https://flow.org/)
-* Discord (for contributors): https://discord.gg/8ezwRUK
+* Discord: https://discord.gg/8ezwRUK
 * irc: #flowtype on Freenode
 * Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
 * Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)
