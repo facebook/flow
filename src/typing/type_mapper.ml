@@ -1006,11 +1006,11 @@ class virtual ['a] t_with_uses = object(self)
         let t_out' = self#type_ cx map_cx t_out in
         if t' == t'' && t_out == t_out' then t
         else ModuleExportsAssignT (r, t'', t_out')
-      | DestructuringT (r, s, t') ->
+      | DestructuringT (r, k, s, t') ->
         let s' = self#selector cx map_cx s in
         let t'' = self#type_ cx map_cx t' in
         if s' == s && t'' == t' then t
-        else DestructuringT (r, s', t'')
+        else DestructuringT (r, k, s', t'')
 
     method private opt_use_type cx map_cx t = match t with
     | OptCallT (op, r, funcall) ->

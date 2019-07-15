@@ -688,8 +688,25 @@ module rec TypeTerm : sig
     | ReactPropsToOut of reason * t
     | ReactInToProps of reason * t
 
-    | DestructuringT of reason * selector * t_out
+    (* Used to calculate a destructured binding. If annot is true, the lower
+     * bound is an annotation (0->1), and t_out will be unified with the
+     * destructured type. The caller should wrap the tvar with an AnnotT. *)
+    | DestructuringT of reason * destruct_kind * selector * t_out
 
+  (* Bindings created from destructuring annotations should themselves act like
+   * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
+   * because `p` should behave like a `string` annotation.
+   *
+   * We accomplish this by wrapping the binding itself in an AnnotT type. The
+   * wrapped type must be 0->1, which is enforced with BecomeT.
+   *
+   * Since DestructuringT uses with the DestructAnnot kind should only encounter
+   * annotations, the set of lower bounds will be a subset of all possible
+   * types. The only important cases to handle are disjunctive types that would
+   * violate the 0->1 property, like UnionT and MaybeT. *)
+  and destruct_kind =
+    | DestructAnnot
+    | DestructInfer
 
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
@@ -2262,7 +2279,7 @@ end = struct
     | MatchPropT (_, reason, _, _) -> reason
     | ReactPropsToOut (reason, _)
     | ReactInToProps (reason, _) -> reason
-    | DestructuringT (reason, _, _) -> reason
+    | DestructuringT (reason, _, _, _) -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2444,7 +2461,7 @@ end = struct
     | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
     | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
     | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
-    | DestructuringT (reason, s, t) -> DestructuringT (f reason, s, t)
+    | DestructuringT (reason, a, s, t) -> DestructuringT (f reason, a, s, t)
 
   and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
