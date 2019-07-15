@@ -11,3 +11,9 @@ assert_ok "$FLOW" find-refs --global foo.js 4 4 --strip-root --pretty
 
 printf "Autocomplete class property:\n"
 assert_ok "$FLOW" autocomplete bar.js 7 5 --strip-root --pretty < bar.js.txt
+
+printf "dump types:\n"
+assert_ok "$FLOW" dump-types bar.js --strip-root --pretty
+
+printf "type-at-pos:\n"
+assert_ok "$FLOW" type-at-pos bar.js 7 6 --strip-root --pretty
