@@ -234,15 +234,7 @@ module Declaration
           in
           (Type.type_parameter_declaration env, Some id)
       ) in
-      let params =
-        let yield, await = match async, generator with
-        | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorDeclaration *)
-        | true, false -> false, allow_await env (* #prod-AsyncFunctionDeclaration *)
-        | false, true -> true, false (* #prod-GeneratorDeclaration *)
-        | false, false -> false, false (* #prod-FunctionDeclaration *)
-        in
-        function_params ~await ~yield env
-      in
+      let params = function_params ~await:async ~yield:generator env in
       let (return, predicate) = Type.annotation_and_predicate_opt env in
       (generator, tparams, id, params, return, predicate)
     ) env in

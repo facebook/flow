@@ -6218,14 +6218,6 @@ language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (st
   Missing parse error
 language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (default)
   Missing parse error
-language/statements/async-function/early-errors-declaration-await-in-formals-default.js (strict mode)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-await-in-formals-default.js (default)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-await-in-formals.js (strict mode)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-await-in-formals.js (default)
-  Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
@@ -11032,8 +11024,8 @@ language/statements/try/early-catch-lex.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 64218 (92.09%)
-Failed: 5516 (7.91%)
+Passed: 64222 (92.10%)
+Failed: 5512 (7.90%)
 
 Features:
   Proxy: 661/663 (99.70%)
