@@ -4,3 +4,15 @@
   (modules (:standard \ replacement_printer))
   (libraries
     flow_parser_utils_output))
+
+(library
+  (name flow_parser_utils_replacement_printer)
+  (wrapped false)
+  (modules replacement_printer)
+  (libraries
+    flow_parser_utils
+    flow_parser_utils_output
+    flow_parser_utils_output_printers
+    flow_server_utils
+  )
+)

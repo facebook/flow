@@ -1,0 +1,9 @@
+(library
+  (name flow_state_locals_module)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_common_modulename
+    flow_state_readers
+  )
+)

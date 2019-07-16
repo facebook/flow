@@ -1,0 +1,10 @@
+(library
+  (name flow_server_error_collator)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_server_env
+    flow_state_heaps_parsing
+    flow_state_readers
+  )
+)

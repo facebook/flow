@@ -1,0 +1,42 @@
+(library
+  (name flow_service_saved_state)
+  (wrapped false)
+  (c_names saved_state_compression_stubs)
+  (modules :standard \
+    saved_state_fetcher
+    saved_state_dummy_fetcher
+    saved_state_local_fetcher
+  )
+  (libraries
+    flow_common_build_id
+    flow_common_profiling
+    flow_config
+    flow_parser_utils
+    flow_saved_state_stubs
+    flow_server_env
+    flow_server_files
+    flow_state_heaps_module
+    flow_state_heaps_parsing
+    flow_typing
+    sys_utils ; hack
+    xx
+  )
+  (preprocess (pps lwt_ppx))
+)
+
+(library
+  (name flow_service_saved_state_fetcher)
+  (wrapped false)
+  (modules
+    saved_state_fetcher
+    saved_state_dummy_fetcher
+    saved_state_local_fetcher
+  )
+  (libraries
+    flow_common
+    flow_common_profiling
+    lwt.unix
+    sys_utils
+  )
+  (preprocess (pps lwt_ppx))
+)

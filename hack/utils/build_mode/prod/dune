@@ -1,0 +1,5 @@
+(library
+  (name build_mode_prod)
+  (wrapped false)
+  (modules build_mode)
+)

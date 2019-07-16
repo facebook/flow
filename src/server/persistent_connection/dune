@@ -1,0 +1,8 @@
+(library
+  (name flow_server_persistent_connection)
+  (wrapped false)
+  (libraries
+    flow_monitor_rpc
+    flow_server_protocol
+  )
+)
