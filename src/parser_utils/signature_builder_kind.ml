@@ -76,6 +76,7 @@ type t =
     }
   | FunctionDef of {
       generator: bool;
+      async: bool;
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
       params: (Loc.t, Loc.t) Ast.Function.Params.t;
       return: (Loc.t, Loc.t) Ast.Type.annotation_or_hint;
@@ -179,14 +180,14 @@ let validator = function
   | Sort.Value -> is_value
 
 let get_function_kind_info = function
-  | FunctionDef { generator; tparams; params; return; body; predicate = _ } ->
-    Some (generator, tparams, params, return, body)
+  | FunctionDef { generator; async; tparams; params; return; body; predicate = _ } ->
+    Some (generator, async, tparams, params, return, body)
   | VariableDef {
       id = _;
       annot = None;
       init = Some (Init_path.Init (_, Ast.Expression.(Function stuff | ArrowFunction stuff)))
     } ->
     let open Ast.Function in
-    let { id = _; generator; tparams; params; return; body; _ } = stuff in
-    Some (generator, tparams, params, return, body)
+    let { id = _; generator; async; tparams; params; return; body; _ } = stuff in
+    Some (generator, async, tparams, params, return, body)
   | _ -> None

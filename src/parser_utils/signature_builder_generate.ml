@@ -102,6 +102,8 @@ module T = struct
     | Void
     | Null
 
+    | Promise of (Loc.t * expr_type)
+
     | TypeCast of type_
 
     | Outline of outlinable_t
@@ -368,6 +370,12 @@ module T = struct
     | loc, String -> loc, Ast.Type.String
     | loc, Boolean -> loc, Ast.Type.Boolean
     | loc, Void -> loc, Ast.Type.Void
+    | loc, Promise t -> loc, Ast.Type.Generic {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (
+          Flow_ast_utils.ident_of_source (loc, "Promise")
+        );
+        targs = Some (loc, [type_of_expr_type outlined (t)]);
+      }
     | loc, Null -> loc, Ast.Type.Null
 
     | _loc, JSXLiteral g -> type_of_generic g
@@ -862,15 +870,15 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         loc, T.Outline (T.Class (Option.map ~f:Flow_ast_utils.source_of_ident id, class_ tparams body super super_targs implements))
       | loc, Function { Ast.Function.
           generator; tparams; params; return; body;
-          id = _; async = _; predicate = _; sig_loc = _;
+          id = _; async; predicate = _; sig_loc = _;
         } ->
-        loc, T.Function (function_ generator tparams params return body)
+        loc, T.Function (function_ generator async tparams params return body)
       | loc, ArrowFunction { Ast.Function.
-          tparams; params; return; body; async = _; predicate = _; sig_loc = _;
+          tparams; params; return; body; async; predicate = _; sig_loc = _;
           (* TODO: arrow functions can't have ids or be generators: *)
           id = _; generator = _;
         } ->
-        loc, T.Function (function_ false tparams params return body)
+        loc, T.Function (function_ false async tparams params return body)
       | loc, Object stuff ->
         let open Ast.Expression.Object in
         let { properties; comments= _ } = stuff in
@@ -1107,10 +1115,13 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | Some param -> Some (function_rest_param param) in
     params_loc, params, rest
 
-  and function_return ~is_missing_ok return =
+  and function_return ~is_missing_ok ~async return =
     match return with
     | Ast.Type.Missing loc ->
-      if is_missing_ok () then T.EXPR (loc, T.Void)
+      if is_missing_ok () then
+        let t = T.Void in
+        let t = if async then T.Promise (loc, t) else t in
+        T.EXPR (loc, t)
       else T.FixMe.mk_little_annotation loc
     | Ast.Type.Available (_, t) -> T.TYPE (type_ t)
 
@@ -1131,16 +1142,16 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     | Some (_, Ast.Type.Predicate.Inferred), _ -> None
     | Some (_, Ast.Type.Predicate.Declared _), _ -> predicate
 
-  and function_ generator tparams params return body =
+  and function_ generator async tparams params return body =
     let tparams = type_params tparams in
     let params = function_params params in
     let return =
       let is_missing_ok () = not generator && Signature_utils.Procedure_decider.is body in
-      function_return ~is_missing_ok return
+      function_return ~is_missing_ok ~async return
     in
-    (* TODO: It is unclear what happens for async or generator functions. In particular,
+    (* TODO: It is unclear what happens for generator functions. In particular,
        what do declarations of such functions look like, aside from the return type being
-       `Promise<...>` or `Generator<...>`? *)
+       `Generator<...>`? *)
     T.FUNCTION {
       tparams;
       params;
@@ -1165,10 +1176,10 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           let x = object_key key in
           let loc, {
             Ast.Function.generator; tparams; params; return; body;
-            id = _; async = _; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; sig_loc = _;
           } = value in
           (elem_loc, T.CMethod
-            (x, kind, static, (loc, function_ generator tparams params return body))) :: acc
+            (x, kind, static, (loc, function_ generator async tparams params return body))) :: acc
         | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _ }) ->
           let x = object_key key in
           (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
@@ -1229,23 +1240,23 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           let x = object_key key in
           let { Ast.Function.
             generator; tparams; params; return; body;
-            id = _; async = _; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; sig_loc = _;
           } = fn in
-          loc, T.OMethod (x, (fn_loc, function_ generator tparams params return body))
+          loc, T.OMethod (x, (fn_loc, function_ generator async tparams params return body))
         | loc, Get { key; value = (fn_loc, fn) } ->
           let x = object_key key in
           let { Ast.Function.
             generator; tparams; params; return; body;
-            id = _; async = _; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; sig_loc = _;
           } = fn in
-          loc, T.OGet (x, (fn_loc, function_ generator tparams params return body))
+          loc, T.OGet (x, (fn_loc, function_ generator async tparams params return body))
         | loc, Set { key; value = (fn_loc, fn) } ->
           let x = object_key key in
           let { Ast.Function.
             generator; tparams; params; return; body;
-            id = _; async = _; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; sig_loc = _;
           } = fn in
-          loc, T.OSet (x, (fn_loc, function_ generator tparams params return body))
+          loc, T.OSet (x, (fn_loc, function_ generator async tparams params return body))
     in
     let object_spread_property =
       let open Ast.Expression.Object.SpreadProperty in
@@ -1270,9 +1281,9 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     match kind with
       | Kind.WithPropertiesDef { base; properties } ->
         begin match Kind.get_function_kind_info base with
-        | Some (generator, tparams, params, return, body) ->
+        | Some (generator, async, tparams, params, return, body) ->
           T.FunctionWithStaticsDecl {
-            base = (loc, T.Function (Eval.function_ generator tparams params return body));
+            base = (loc, T.Function (Eval.function_ generator async tparams params return body));
             statics = Core_list.map properties
                         ~f:(fun (id_prop, expr) -> (id_prop, Eval.literal_expr expr));
           }
@@ -1280,9 +1291,9 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         end
       | Kind.VariableDef { id = _; annot; init } ->
         T.VariableDecl (Eval.annotation loc ?init annot)
-      | Kind.FunctionDef { generator; tparams; params; return; body; predicate } ->
+      | Kind.FunctionDef { generator; async; tparams; params; return; body; predicate } ->
         let annot = T.EXPR (loc, T.Function (
-          Eval.function_ generator tparams params return body
+          Eval.function_ generator async tparams params return body
         )) in
         let predicate = Eval.function_predicate body predicate in
         T.FunctionDecl { annot; predicate; }
@@ -1453,9 +1464,9 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     | Declaration (loc, Ast.Statement.FunctionDeclaration ({
         Ast.Function.id = None;
         generator; tparams; params; return; body;
-        async = _; predicate = _; sig_loc = _;
+        async; predicate = _; sig_loc = _;
       })) ->
-      `Expr (loc, T.Function (Eval.function_ generator tparams params return body))
+      `Expr (loc, T.Function (Eval.function_ generator async tparams params return body))
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       `Decl (Entry.class_ loc class_)
     | Declaration (loc, Ast.Statement.ClassDeclaration ({

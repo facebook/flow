@@ -565,6 +565,23 @@ let tests_data = [
   [],
   ["Reachable: isOne, one"];
 
+  name "async_function_1",
+  ["async function foo() {};";
+   "module.exports = foo;"],
+  [],
+  ["Reachable: foo"];
+
+  name "async_function_2",
+  ["async function foo() { return 1; };";
+   "module.exports = foo;"],
+  ["Expected annotation at function return @ (1, 20) to (1, 20)"],
+  ["Reachable: foo"];
+
+  name "async_function_3",
+  ["module.exports = async () => await 1;"],
+  ["Expected annotation at function return @ (1, 25) to (1, 25)"],
+  [];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?facebook_fbt

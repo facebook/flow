@@ -730,4 +730,20 @@ let tests = "signature_generator" >::: ([
       "declare var $1: {a: number};";
       "declare module.exports: typeof x;"];
 
+  "async_function_1" >:: mk_signature_generator_test
+    ["async function foo() {};";
+     "module.exports = foo"]
+    ["declare function foo(): Promise<void>;";
+     "declare module.exports: typeof foo;"];
+
+   "async_function_2" >:: mk_signature_generator_test
+    ["module.exports = async () => {}"]
+    ["declare module.exports: () => Promise<void>;"];
+
+   "async_method" >:: mk_signature_generator_test
+     ["class C { async m() {} };";
+      "module.exports = C"]
+     ["declare class C {m(): Promise<void>}";
+      "declare module.exports: typeof C;"];
+
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)
