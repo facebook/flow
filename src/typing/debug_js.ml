@@ -2792,8 +2792,20 @@ let dump_error_message =
           (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
-    | EReactKit { reason; tool = _; use_op } ->
-        spf "EReactKit { reason = %s; use_op = %s; _ }"
+    | ENotAReactComponent { reason; use_op } ->
+      spf "ENotAReactComponent { reason = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EInvalidReactConfigType { reason; use_op } ->
+      spf "EInvalidReactConfigType { reason = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EInvalidReactPropType { reason; use_op; tool = _ } ->
+      spf "EInvalidReactPropType { reason = %s; use_op = %s; _ }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EInvalidReactCreateClass { reason; use_op; tool = _ } ->
+        spf "EInvalidReactCreateClass { reason = %s; use_op = %s; _ }"
           (dump_reason cx reason)
           (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->

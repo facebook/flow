@@ -171,10 +171,17 @@ and 'loc t' =
   | EIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | ETrustIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EUnsupportedImplements of 'loc virtual_reason
-  | EReactKit of {
+  | ENotAReactComponent of { reason: 'loc virtual_reason; use_op: 'loc virtual_use_op; }
+  | EInvalidReactConfigType of { reason: 'loc virtual_reason; use_op: 'loc virtual_use_op; }
+  | EInvalidReactPropType of {
       reason: 'loc virtual_reason;
-      tool: React.tool;
       use_op: 'loc virtual_use_op;
+      tool: React.SimplifyPropType.tool;
+    }
+  | EInvalidReactCreateClass of {
+      reason: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+      tool: React.CreateClass.tool;
     }
   | EReactElementFunArity of 'loc virtual_reason * string * int
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
@@ -451,10 +458,23 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
       ETrustIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
-  | EReactKit { reason; tool; use_op } -> EReactKit {
+  | ENotAReactComponent { reason; use_op } -> ENotAReactComponent {
       reason = map_reason reason;
-      tool;
       use_op = map_use_op use_op;
+    }
+  | EInvalidReactConfigType { reason; use_op } -> EInvalidReactConfigType {
+      reason = map_reason reason;
+      use_op = map_use_op use_op;
+    }
+  | EInvalidReactPropType { reason; use_op; tool; } -> EInvalidReactPropType {
+      reason = map_reason reason;
+      use_op = map_use_op use_op;
+      tool;
+    }
+  | EInvalidReactCreateClass { reason; use_op; tool } -> EInvalidReactCreateClass {
+      reason = map_reason reason;
+      use_op = map_use_op use_op;
+      tool;
     }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
       EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
@@ -618,8 +638,14 @@ let util_use_op_of_msg nope util = function
 | EInvalidObjectKit {reason; reason_op; use_op} ->
   util use_op (fun use_op -> EInvalidObjectKit {reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
-| EReactKit { reason; tool; use_op } ->
-  util use_op (fun use_op -> EReactKit { reason; tool; use_op })
+| ENotAReactComponent { reason; use_op } ->
+  util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
+| EInvalidReactConfigType { reason; use_op } ->
+  util use_op (fun use_op -> EInvalidReactConfigType { reason; use_op })
+| EInvalidReactPropType { reason; use_op; tool } ->
+  util use_op (fun use_op -> EInvalidReactPropType { reason; use_op; tool })
+| EInvalidReactCreateClass { reason; use_op; tool } ->
+  util use_op (fun use_op -> EInvalidReactCreateClass { reason; use_op; tool })
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
 | EDebugPrint (_, _)
 | EExportValueAsType (_, _)
@@ -838,7 +864,10 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason ALoc.source lreason ->
       Some (aloc_of_reason reason)
   | EFunctionCallExtraArg _
-  | EReactKit _
+  | ENotAReactComponent _
+  | EInvalidReactConfigType _
+  | EInvalidReactPropType _
+  | EInvalidReactCreateClass _
   | EIncompatibleWithUseOp _
   | ETrustIncompatibleWithUseOp _
   | EIncompatibleDefs _
@@ -1747,21 +1776,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnsupportedImplements reason ->
       Normal [text "Cannot implement "; desc reason; text " because it is not an interface."]
 
-    | EReactKit { reason; tool; use_op } ->
+    | ENotAReactComponent { reason; use_op } ->
+      UseOp (loc_of_reason reason, [ref reason; text " is not a React component"], use_op)
+
+    | EInvalidReactConfigType { reason; use_op } ->
+      UseOp (loc_of_reason reason, [ref reason; text " cannot calculate config"], use_op)
+
+    | EInvalidReactPropType { reason; use_op; tool } ->
       let open React in
+      let open React.SimplifyPropType in
       let is_not_prop_type = "is not a React propType" in
       let msg = match tool with
-      | GetProps _
-      | GetConfig _
-      | GetRef _
-      | CreateElement0 _
-      | CreateElement _
-      | ConfigCheck _
-        -> "is not a React component"
-      | GetConfigType _
-        -> "cannot calculate config"
-      | SimplifyPropType (tool, _) ->
-        SimplifyPropType.(match tool with
         | ArrayOf -> is_not_prop_type
         | InstanceOf -> "is not a class"
         | ObjectOf -> is_not_prop_type
@@ -1772,9 +1797,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | Shape ResolveObject -> "is not an object"
         | Shape (ResolveDict _) -> is_not_prop_type
         | Shape (ResolveProp _) -> is_not_prop_type
-        )
-      | CreateClass (tool, _, _) ->
-        CreateClass.(match tool with
+      in
+      UseOp (loc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)
+
+    | EInvalidReactCreateClass { reason; use_op; tool } ->
+      let open React in
+      let open React.CreateClass in
+      let is_not_prop_type = "is not a React propType" in
+      let msg = match tool with
         | Spec _ -> "is not an exact object"
         | Mixins _ -> "is not a tuple"
         | Statics _ -> "is not an object"
@@ -1783,7 +1813,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | PropTypes (_, ResolveProp _) -> is_not_prop_type
         | DefaultProps _ -> "is not an object"
         | InitialState _ -> "is not an object or null"
-        )
       in
       UseOp (loc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)
 

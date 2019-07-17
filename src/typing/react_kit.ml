@@ -17,11 +17,24 @@ let err_incompatible
   reason
   tool
 =
-  add_output cx ~trace (Error_message.EReactKit {
-    reason;
-    tool;
-    use_op;
-  })
+  let open React in
+  let err = match tool with
+  | GetProps _
+  | GetConfig _
+  | GetRef _
+  | CreateElement0 _
+  | CreateElement _
+  | ConfigCheck _ ->
+    Error_message.ENotAReactComponent { reason; use_op; }
+  | GetConfigType _ ->
+    Error_message.EInvalidReactConfigType { reason; use_op }
+  | SimplifyPropType (tool, _) ->
+    Error_message.EInvalidReactPropType { reason; use_op; tool }
+  | CreateClass (tool, _, _) ->
+    Error_message.EInvalidReactCreateClass { reason; use_op; tool }
+  in
+  add_output cx ~trace err
+
 let component_class
   cx
   reason
