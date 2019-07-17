@@ -483,8 +483,8 @@ let program (algo : diff_algorithm)
       Some (while_statement while1 while2)
     | (_, ForOf for_of1), (_, ForOf for_of2) ->
       for_of_statement for_of1 for_of2
-    | (_, DoWhile do_while1), (_, DoWhile do_while2) ->
-      Some (do_while_statement do_while1 do_while2)
+    | (loc, DoWhile do_while1), (_, DoWhile do_while2) ->
+      Some (do_while_statement loc do_while1 do_while2)
     | (_, Switch switch1), (_, Switch switch2) ->
       switch_statement switch1 switch2
     | (loc, Return return1), (_, Return return2) ->
@@ -1445,15 +1445,16 @@ let program (algo : diff_algorithm)
     | (LeftPattern _, LeftDeclaration _) ->
       None
 
-  and do_while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
-                         (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
+  and do_while_statement loc (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
+                             (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
       : node change list =
     let open Ast.Statement.DoWhile in
-    let { body = body1; test = test1 } = stmt1 in
-    let { body = body2; test = test2 } = stmt2 in
+    let { body = body1; test = test1; comments = comments1 } = stmt1 in
+    let { body = body2; test = test2; comments = comments2 } = stmt2 in
     let body = diff_if_changed statement body1 body2 in
     let test = diff_if_changed expression test1 test2 in
-    List.concat [body; test]
+    let comments = syntax_opt loc comments1 comments2 |> Option.value ~default:[] in
+    List.concat [body; test; comments]
 
   and return_statement loc (stmt1: (Loc.t, Loc.t) Ast.Statement.Return.t)
                            (stmt2: (Loc.t, Loc.t) Ast.Statement.Return.t)

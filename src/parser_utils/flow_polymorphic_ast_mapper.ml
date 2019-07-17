@@ -448,10 +448,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method do_while (stuff: ('M, 'T) Ast.Statement.DoWhile.t) : ('N, 'U) Ast.Statement.DoWhile.t =
     let open Ast.Statement.DoWhile in
-    let { body; test } = stuff in
+    let { body; test; comments } = stuff in
     let body' = this#statement body in
     let test' = this#predicate_expression test in
-    { body = body'; test = test' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { body = body'; test = test'; comments = comments' }
 
   method empty () =
     ()

@@ -434,6 +434,7 @@ and Statement : sig
     type ('M, 'T) t = {
       body: ('M, 'T) Statement.t;
       test: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

@@ -197,8 +197,8 @@ module Statements = struct
   let while_ test body =
     Loc.none, While { While.test; body }
 
-  let do_while body test =
-    Loc.none, DoWhile { DoWhile.body; test }
+  let do_while body ?comments test =
+    Loc.none, DoWhile { DoWhile.body; test; comments }
 
   let for_ init test update body =
     Loc.none, For { For.

@@ -605,8 +605,8 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         statement_with_test "while" (expression test);
         statement_after_test ~pretty_semicolon body;
       ]
-    | S.DoWhile { S.DoWhile.body; test } ->
-      with_semicolon (fuse [
+    | S.DoWhile { S.DoWhile.body; test; comments } ->
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (fuse [
         fuse_with_space [
           Atom "do";
           statement body;

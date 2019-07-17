@@ -1520,7 +1520,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
      [Pre] do S while c [Post]
   *)
   (***************************************************************************)
-  | (loc, DoWhile { DoWhile.body; test }) ->
+  | (loc, DoWhile { DoWhile.body; test; comments }) ->
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       let env =  Env.peek_env () in
@@ -1565,7 +1565,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       (* ENV = [done_env] *)
       (* done_env = Post' & ~c *)
 
-      let ast = loc, DoWhile { DoWhile.body = body_ast; test = test_ast } in
+      let ast = loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments = comments } in
       Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
 
   (***************************************************************************)

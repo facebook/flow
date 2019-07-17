@@ -132,6 +132,7 @@ module Statement
   )
 
   and do_while = with_loc (fun env ->
+    let leading = Peek.comments env in
     Expect.token env T_DO;
     let body = Parse.statement (env |> with_in_loop true) in
 
@@ -142,17 +143,21 @@ module Statement
     then function_as_statement_error_at env (fst body);
 
     Expect.token env T_WHILE;
+    let pre_cond_trailing = Peek.comments env in
     Expect.token env T_LPAREN;
     let test = Parse.expression env in
     Expect.token env T_RPAREN;
+    let past_cond_trailing = Peek.comments env in
     (* The rules of automatic semicolon insertion in ES5 don't mention this,
      * but the semicolon after a do-while loop is optional. This is properly
      * specified in ES6 *)
     if Peek.token env = T_SEMICOLON
     then Eat.semicolon env;
+    let trailing = pre_cond_trailing @ past_cond_trailing in
     Statement.DoWhile { Statement.DoWhile.
       body;
       test;
+      comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());
     }
   )
 

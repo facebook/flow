@@ -615,7 +615,7 @@ module Make
       this#expecting_abrupt_completions (fun () ->
         let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
         let open Ast.Statement.DoWhile in
-        let { body; test } = stmt in
+        let { body; test; _ } = stmt in
         let env1 = this#fresh_ssa_env in
         this#merge_self_ssa_env env1;
         let loop_completion_state = this#run_to_completion (fun () ->

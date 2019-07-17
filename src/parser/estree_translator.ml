@@ -189,8 +189,8 @@ end with type t = Impl.t) = struct
           "test", expression test;
           "body", statement body;
         ]
-    | loc, DoWhile { DoWhile.body; test } ->
-        node "DoWhileStatement" loc [
+    | loc, DoWhile { DoWhile.body; test; comments } ->
+        node ?comments "DoWhileStatement" loc [
           "body", statement body;
           "test", expression test;
         ]
