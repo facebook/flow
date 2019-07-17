@@ -22,7 +22,7 @@ val union: t -> t -> t
  * discard those included in the first argument. *)
 val update_suppressions: t -> t -> t
 
-val all_locs: t -> Loc.t list
+val all_locs: t -> Loc_collections.LocSet.t
 
 val filter_suppressed_errors :
   root:Path.t -> file_options:Files.options option ->

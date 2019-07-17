@@ -196,11 +196,9 @@ let check ~root ~file_options (err: Loc.t Errors.printable_error) (suppressions:
 (* Gets the locations of the suppression comments that are yet unused *)
 
 let all_locs map =
-  map
-  |> FilenameMap.values
-  |> Core_list.map ~f:FileSuppressions.all_locs
-  |> List.fold_left LocSet.union LocSet.empty
-  |> LocSet.elements
+  FilenameMap.fold (fun _k v acc ->
+    LocSet.union acc (FileSuppressions.all_locs v)
+  ) map LocSet.empty
 
 let filter_suppressed_errors ~root ~file_options suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)

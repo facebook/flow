@@ -87,7 +87,9 @@ let collate_parse_results ~options parse_results =
     (file, info) :: unparsed
   ) parse_skips parse_fails in
 
-  let parse_ok = parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
+  let parse_ok = FilenameMap.fold (fun k _ acc ->
+    FilenameSet.add k acc
+  ) parse_ok FilenameSet.empty in
 
   parse_ok, unparsed, parse_unchanged, local_errors
 
@@ -1858,15 +1860,21 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
 
   let%lwt parsed_set, unparsed_set, all_files, parsed, unparsed =
     with_timer_lwt ~options "PrepareCommitModules" profiling (fun () ->
-      let parsed_set = parsed_heaps |> FilenameMap.keys |> FilenameSet.of_list in
-      let unparsed_set = unparsed_heaps |> FilenameMap.keys |> FilenameSet.of_list in
+      let parsed, parsed_set =
+        FilenameMap.fold (fun fn data (parsed, parsed_set) ->
+          let parsed = (fn, data.Saved_state.info)::parsed in
+          let parsed_set = FilenameSet.add fn parsed_set in
+          parsed, parsed_set
+        ) parsed_heaps ([], FilenameSet.empty)
+      in
+      let unparsed, unparsed_set =
+        FilenameMap.fold (fun fn data (unparsed, unparsed_set) ->
+          let unparsed = (fn, data.Saved_state.unparsed_info)::unparsed in
+          let unparsed_set = FilenameSet.add fn unparsed_set in
+          unparsed, unparsed_set
+        ) unparsed_heaps ([], FilenameSet.empty)
+      in
       let all_files = FilenameSet.union parsed_set unparsed_set in
-      let parsed = FilenameMap.fold
-        (fun fn data acc -> (fn, data.Saved_state.info)::acc) parsed_heaps []
-      in
-      let unparsed = FilenameMap.fold
-        (fun fn data acc -> (fn, data.Saved_state.unparsed_info)::acc) unparsed_heaps []
-      in
       Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed)
     )
   in

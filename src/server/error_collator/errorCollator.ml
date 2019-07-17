@@ -30,9 +30,9 @@ let regenerate ~reader =
   let add_unused_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
     let deps = CheckedSet.dependencies checked in
-    Error_suppressions.all_locs unused
-    |> List.fold_left
-      (fun warnings loc ->
+    let all_locs = Error_suppressions.all_locs unused in
+    Loc_collections.LocSet.fold
+      (fun loc warnings ->
         let source_file = match Loc.source loc with Some x -> x | None -> File_key.SourceFile "-" in
         (* In lazy mode, dependencies are modules which we typecheck not because we care about
          * them, but because something important (a focused file or a focused file's dependent)
@@ -55,6 +55,7 @@ let regenerate ~reader =
         end else
           warnings
       )
+      all_locs
       warnings
   in
   let acc_fun (type a) ~options suppressions (f : File_key.t -> ConcreteLocPrintableErrorSet.t -> a -> a)
