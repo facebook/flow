@@ -2,6 +2,7 @@
   (name flow_server_protocol)
   (wrapped false)
   (libraries
+    flow_autofix_options
     flow_common
     flow_parser_utils_replacement_printer
     flow_server_status
