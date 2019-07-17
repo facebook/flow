@@ -160,6 +160,7 @@ MODULES=\
   hack/utils/lsp\
   hack/utils/marshal_tools\
   hack/utils/opaque_digest\
+  hack/utils/procfs\
   hack/utils/string\
   hack/utils/sys\
   hack/watchman\

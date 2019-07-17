@@ -21,5 +21,6 @@
     heap_shared_mem
     marshal_tools
     procs_bucket
+    procfs
     sys_utils
     worker_cancel))
