@@ -10,24 +10,27 @@ type import_mode =
  | TypeMode
  | TypeofMode
 
-type imported_ident = ALoc.t * string * import_mode
+and imported_ident =
+  ALoc.t * string * import_mode
+  [@printer fun fmt (_, id, _) -> fprintf fmt "%s" id]
 
-type remote_info = {
+and remote_info = {
   imported_as: imported_ident option;
 }
 
-type provenance =
+and provenance =
   | Local
   | Remote of remote_info
   | Library
   | Builtin
 
-type symbol = {
+and symbol = {
   provenance: provenance;
-  def_loc: ALoc.t;
+  def_loc: ALoc.t [@printer fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc)];
   name: string;
   anonymous: bool;
 }
+[@@deriving show]
 
 let builtin_symbol name = {
   provenance = Builtin;

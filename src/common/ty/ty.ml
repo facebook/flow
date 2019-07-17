@@ -9,6 +9,8 @@ include Ty_symbol
 include Ty_ancestors
 
 type aloc = ALoc.t
+[@printer fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc)]
+[@@deriving show]
 
 type t =
   | TVar of tvar * t list option
@@ -202,7 +204,8 @@ and polarity = Positive | Negative | Neutral
   nude = true;
   visit_prefix = "on_";
   ancestors = ["mapreduce_ty_base"];
-}]
+}, show
+]
 
 (* Type destructors *)
 
