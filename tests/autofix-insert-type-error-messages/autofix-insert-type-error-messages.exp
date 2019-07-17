@@ -8,6 +8,8 @@ big-type.js
 flow autofix insert-type: The type that would be generated (size: 121) exceeds the size limit (30)
 object.js
 flow autofix insert-type: Multiple types possible at point:
+empty-array.js
+flow autofix insert-type: Failed to validate type: Empty_SomeUnknownUpper (use: GetPropT)
 type-shadowing.js
 flow autofix insert-type: couldn't print type: [Shadowed type parameters] Raised on type: MixedT
 recursive.js
