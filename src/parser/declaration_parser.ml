@@ -243,8 +243,7 @@ module Declaration
     let body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
-    trailingComments := Peek.comments env;
-    let trailing = !trailingComments in
+    let trailing = Peek.comments env in
     Statement.FunctionDeclaration { Function.
       id;
       params;
