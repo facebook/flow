@@ -421,3 +421,14 @@ let expected_error_to_string = function
 let error_to_string = function
   | Unexpected err -> "flow autofix insert-type: " ^ (unexpected_error_to_string err)
   | Expected err -> "flow autofix insert-type: " ^ (expected_error_to_string err)
+
+let insert_type ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults ~strict
+                ~ambiguity_strategy ast target =
+  let file_sig = (File_sig.abstractify_locs file_sig) in
+  let ty_lookup = type_lookup_at_location typed_ast in
+  let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
+  (new mapper ~normalize ~ty_lookup ~strict ~ambiguity_strategy target)#program ast
+
+let mk_patch ast new_ast file_content =
+  let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
+  Replacement_printer.mk_patch_ast_differ ast_diff ast file_content

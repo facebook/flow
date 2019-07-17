@@ -1,19 +1,41 @@
 #!/bin/bash
 
-assert_ok "$FLOW" autofix insert-type --in-place a.js 6 3 6 14
-assert_ok "$FLOW" autofix insert-type --in-place a.js 7 3 7 11
-echo "> cat a.js"
-cat a.js
+mkdir tmp || rm tmp/*
+cp .flowconfig tmp/.flowconfig
+start_flow tmp
 
-assert_ok "$FLOW" autofix insert-type --in-place b.js 4 6
-echo "> cat b.js"
-cat b.js
+do_file () {
+  FILE=$1; shift
 
-assert_ok "$FLOW" autofix insert-type --in-place c.js 4 3 4 24
-assert_ok "$FLOW" autofix insert-type --in-place c.js 9 17
-echo "> cat c.js"
-cat c.js
+  cp "$FILE" "tmp/$FILE"
 
-assert_ok "$FLOW" force-recheck {a,b,c}.js
+  while [[ $# -ge 4 ]]; do
+    local a1=$1; shift;
+    local a2=$1; shift;
+    local a3=$1; shift;
+    local a4=$1; shift;
+    echo "> flow autofix insert-type $FILE $a1 $a2 $a3 $a4"
+    assert_ok "$FLOW" autofix insert-type --in-place "$FILE" "$a1" "$a2" "$a3" "$a4"
+  done
+  assert_ok "$FLOW" force-recheck "$FILE"
+  echo "> cat $FILE"
+  cat "$FILE"
+
+  echo "> flow autofix exports tmp/$FILE"
+  assert_ok "$FLOW" autofix exports --in-place "tmp/$FILE"
+  assert_ok "$FLOW" force-recheck "tmp/$FILE"
+  echo "> cat tmp/$FILE"
+  cat "tmp/$FILE"
+}
+
+do_file a.js 6 3 6 14    7 3 7 11
+do_file b.js 4 6 4 6
+do_file c.js 4 3 4 24    9 17 9 17
+
 echo "> flow status"
 assert_ok "$FLOW" status
+
+echo "> flow status tmp"
+assert_ok "$FLOW" status tmp
+
+assert_ok "$FLOW" stop tmp

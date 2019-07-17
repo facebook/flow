@@ -137,6 +137,17 @@ let insert_type ~options ~env ~profiling ~file_input ~target
           ~expand_aliases ~omit_targ_defaults ~location_is_strict ~ambiguity_strategy in
           Lwt.return result)
 
+let autofix_exports ~options ~env ~profiling ~input =
+  let filename = File_input.filename_of_file_input input in
+  let file_key = File_key.SourceFile filename in
+  File_input.content_of_file_input input
+  %>>= fun file_content -> try_with (fun _ ->
+    let%lwt result =
+      Type_info_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content in
+    Lwt.return result)
+
+
+
 let collect_rage ~options ~reader ~env ~files =
   let items = [] in
 
@@ -388,6 +399,10 @@ let handle_autocomplete ~reader ~options ~input ~profiling ~env =
   let%lwt result, json_data = autocomplete ~reader ~options ~env ~profiling input in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
+let handle_autofix_exports ~options ~input ~profiling ~env =
+  let%lwt result = autofix_exports ~options ~env ~profiling ~input in
+  Lwt.return (ServerProt.Response.AUTOFIX_EXPORTS result, None)
+
 let handle_check_file ~options ~force ~input ~profiling ~env =
   let%lwt response = check_file ~options ~env ~force ~profiling input in
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
@@ -564,6 +579,9 @@ let get_ephemeral_handler genv command =
   match command with
   | ServerProt.Request.AUTOCOMPLETE { input; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_autocomplete ~reader ~options ~input)
+  | ServerProt.Request.AUTOFIX_EXPORTS {input; verbose; wait_for_recheck;} ->
+    let options = {options with Options.opt_verbose = verbose} in
+    mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
   | ServerProt.Request.CHECK_FILE { input; verbose; force; include_warnings; wait_for_recheck; } ->
     let options = { options with Options.
       opt_verbose = verbose;

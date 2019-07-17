@@ -54,20 +54,28 @@ let insert_type ~options ~env ~profiling ~file_key
   let open Insert_type in
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
   | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
-    let file_sig = (File_sig.abstractify_locs file_sig) in
-    let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
-    let ty_lookup = type_lookup_at_location typed_ast in
     begin
       try
-        let mapper = new mapper ~normalize ~ty_lookup ~strict ~ambiguity_strategy target in
-        let new_ast = mapper#program ast in
-        let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
-        let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff ast file_content in
-        Ok file_patch
+        let new_ast = Insert_type.insert_type ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults ~strict
+          ~ambiguity_strategy ast target in
+        Ok (mk_patch ast new_ast file_content)
       with FailedToInsertType err -> Error (error_to_string err)
     end
   | (None, errs, _) ->
     Error (error_to_string (Expected (FailedToTypeCheck errs)))
+
+let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
+  let open Autofix_exports in
+  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
+  | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
+    begin
+      let sv_errors = set_of_fixable_signature_verification_locations file_sig in
+      let fix_sv_errors = fix_signature_verification_errors ~full_cx ~file_sig ~typed_ast in
+      let (new_ast, it_errs) =  fix_sv_errors ast sv_errors in
+      Ok (Insert_type.mk_patch ast new_ast file_content, it_errs)
+    end
+  | (None, _errs, _) ->
+    Error ":o"
 
 
 let dump_types ~options ~env ~profiling file content =

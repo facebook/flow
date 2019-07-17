@@ -60,3 +60,11 @@ val insert_type :
   location_is_strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   (Replacement_printer.patch, string) Core_result.t Lwt.t
+
+val autofix_exports:
+  options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
+  file_key:File_key.t ->
+  file_content:string ->
+  (Replacement_printer.patch * string list, string) Core_result.t Lwt.t

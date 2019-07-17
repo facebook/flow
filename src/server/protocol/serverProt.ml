@@ -11,6 +11,11 @@ module Request = struct
 
   type command =
   | AUTOCOMPLETE of { input: File_input.t; wait_for_recheck: bool option; }
+  | AUTOFIX_EXPORTS of {
+      input:File_input.t;
+      verbose: Verbose.t option;
+      wait_for_recheck: bool option;
+    }
   | CHECK_FILE of {
       input: File_input.t;
       verbose: Verbose.t option;
@@ -79,6 +84,8 @@ module Request = struct
   let to_string = function
   | AUTOCOMPLETE { input; wait_for_recheck=_; } ->
     Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
+  | AUTOFIX_EXPORTS { input; _} ->
+    Printf.sprintf "autofix exports %s" (File_input.filename_of_file_input input)
   | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; wait_for_recheck=_; } ->
     Printf.sprintf "check %s" (File_input.filename_of_file_input input)
   | BATCH_COVERAGE { batch=_; wait_for_recheck=_; trust=_ } ->
@@ -164,6 +171,8 @@ module Response = struct
     string
   ) result
 
+  type autofix_exports_response = ((Replacement_printer.patch * string list), string) result
+
   type coverage_response = (
     (Loc.t * Coverage.expression_coverage) list,
     string
@@ -239,6 +248,7 @@ module Response = struct
 
   type response =
   | AUTOCOMPLETE of autocomplete_response
+  | AUTOFIX_EXPORTS of autofix_exports_response
   | CHECK_FILE of check_file_response
   | COVERAGE of coverage_response
   | BATCH_COVERAGE of batch_coverage_response
@@ -260,6 +270,7 @@ module Response = struct
 
   let to_string = function
   | AUTOCOMPLETE _ -> "autocomplete response"
+  | AUTOFIX_EXPORTS _ -> "autofix exports response"
   | CHECK_FILE _ -> "check_file response"
   | COVERAGE _ -> "coverage response"
   | BATCH_COVERAGE _ -> "batch-coverage response"
