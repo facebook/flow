@@ -134,7 +134,8 @@ let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid
     set_close_on_exec stdout;
     set_close_on_exec stderr
   with Unix_error (EINVAL, _, _) -> ());
-  Daemon.spawn (null_fd, log_fd, log_fd) (main_entry) {
+  let name = spf "server master process watching %s" (Path.to_string root) in
+  Daemon.spawn ~name (null_fd, log_fd, log_fd) (main_entry) {
     shared_mem_config;
     options;
     logging_context = FlowEventLogger.get_context ();
