@@ -110,6 +110,7 @@ and 'loc t' =
     }
   | EIncompatibleWithExact of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
+  | EUnsupportedObjectSingleton of ('loc virtual_reason * 'loc virtual_reason)
   | EIdxArity of 'loc virtual_reason
   | EIdxUse1 of 'loc virtual_reason
   | EIdxUse2 of 'loc virtual_reason
@@ -487,6 +488,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         cases = Core_list.map ~f:map_reason cases;
       }
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
+  | EUnsupportedObjectSingleton (r1, r2) -> EUnsupportedObjectSingleton (map_reason r1, map_reason r2)
   | EIdxArity r -> EIdxArity (map_reason r)
   | EIdxUse1 r -> EIdxUse1 (map_reason r)
   | EIdxUse2 r -> EIdxUse2 (map_reason r)
@@ -637,6 +639,7 @@ let util_use_op_of_msg nope util = function
 | EComparison (_, _)
 | ESpeculationAmbiguous _
 | EUnsupportedExact (_, _)
+| EUnsupportedObjectSingleton (_, _)
 | EIdxArity (_)
 | EIdxUse1 (_)
 | EIdxUse2 (_)
@@ -745,6 +748,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EIdxUse1 reason
   | EIdxUse2 reason
   | EUnsupportedExact (_, reason)
+  | EUnsupportedObjectSingleton (_, reason)
   | EPolarityMismatch { reason; _ }
   | ENoNamedExport (reason, _, _, _)
   | EOnlyDefaultExport (reason, _, _)
@@ -1251,6 +1255,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnsupportedExact (_, lower) ->
       Normal
         [text "Cannot create exact type from "; ref lower; text "."]
+
+    | EUnsupportedObjectSingleton (_, lower) ->
+      Normal
+        [text "Cannot create object from "; ref lower; text "."]
 
     | EIdxArity _ ->
       Normal [

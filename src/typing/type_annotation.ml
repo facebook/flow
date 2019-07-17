@@ -795,6 +795,17 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
 
+  | "$ObjSingleton" ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+      let t1, t2, targs = match convert_type_params () with
+      | [t1; t2], targs -> t1, t2, targs
+      | _ -> assert false in
+      let reason = mk_reason RObjectSingleton loc in
+      reconstruct_ast
+        (ObjectSingletonT (reason, t1, t2))
+        targs
+    )
+
   | "$CharSet" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match targs with

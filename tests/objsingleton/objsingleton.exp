@@ -1,0 +1,38 @@
+Error -------------------------------------------------------------------------------------------- objsingleton.js:18:42
+
+Cannot call `onAction` with object literal bound to `pattern` because property `Action3` is missing in object
+literal [1] but exists in object type [2].
+
+   objsingleton.js:18:42
+                                                v
+   18| const result2: number = onAction(action, {
+   19|   Action1: () => 0,
+   20|   Action2: () => 1
+   21| });
+       ^ [1]
+
+References:
+   objsingleton.js:5:12
+    5|   pattern: $ObjSingleton<T, () => Result>
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- objsingleton.js:39:49
+
+Cannot assign `e` to `f` because inexact object type [1] is incompatible with exact object type [2].
+
+   objsingleton.js:39:49
+   39| const f: $ObjSingleton<'foo' | 'bar', string> = e;
+                                                       ^
+
+References:
+   objsingleton.js:38:10
+   38| const e: {foo: string, bar: string} = { foo: "foo", bar: "bar" };
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   objsingleton.js:39:10
+   39| const f: $ObjSingleton<'foo' | 'bar', string> = e;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors

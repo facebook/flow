@@ -102,6 +102,11 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ExactT (r, t'')
+      | ObjectSingletonT (r, t', t2') ->
+          let t'' = self#type_ cx map_cx t' in
+          let t2'' = self#type_ cx map_cx t2' in
+          if t'' == t' && t2'' == t2' then t
+          else ObjectSingletonT (r, t'', t2'')
       | FunProtoT _
       | ObjProtoT _
       | NullProtoT _
@@ -862,6 +867,11 @@ class virtual ['a] t_with_uses = object(self)
           let cont' = self#cont cx map_cx cont in
           if cont' == cont then t
           else MakeExactT (r, cont')
+      | MakeObjectSingletonT (r, cont, value) ->
+          let cont' = self#cont cx map_cx cont in
+          let value' = self#type_ cx map_cx value in
+          if cont' == cont && value' == value then t
+          else MakeObjectSingletonT (r, cont', value')
       | CJSRequireT (r, t', is_strict) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

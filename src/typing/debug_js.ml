@@ -273,6 +273,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | ObjectSingletonT (_, t1, t2) -> [
+      "key", _json_of_t json_cx t1;
+      "value", _json_of_t json_cx t2
+    ]
+
   | MaybeT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -726,6 +731,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
+
+  | MakeObjectSingletonT (_, cont, _) -> _json_of_cont json_cx cont
 
   | CJSRequireT (_, export, _) -> [
       "export",
@@ -1843,6 +1850,7 @@ let rec dump_t_ (depth, tvars) cx t =
         | None -> spf "%s, %s" (kid base) (kid this)
       end t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
+  | ObjectSingletonT (_, key, value) -> p ~extra:(spf "%s, %s" (kid key) (kid value)) t
   | MaybeT (_, arg) -> p ~extra:(kid arg) t
   | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
@@ -2181,6 +2189,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (lookup_kind kind)
       (lookup_action action)) t
   | MakeExactT _ -> p t
+  | MakeObjectSingletonT _ -> p t
   | MapTypeT _ -> p t
   | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
@@ -2644,6 +2653,10 @@ let dump_error_message =
           (string_of_use_op use_op)
     | EUnsupportedExact (reason1, reason2) ->
         spf "EUnsupportedExact (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EUnsupportedObjectSingleton (reason1, reason2) ->
+        spf "EUnsupportedObjectSingleton (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
     | EIdxArity reason ->

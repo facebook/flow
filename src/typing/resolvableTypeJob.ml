@@ -209,6 +209,8 @@ and collect_of_type ?log_unresolved cx acc = function
     ->
     collect_of_type ?log_unresolved cx acc t
 
+  | ObjectSingletonT (_, t1, t2) -> collect_of_types ?log_unresolved cx acc [t1; t2]
+
   | KeysT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
 
