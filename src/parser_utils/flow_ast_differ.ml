@@ -1170,7 +1170,7 @@ let program (algo : diff_algorithm)
     match expr1, expr2 with
     | ExpressionContainer.Expression expr1', ExpressionContainer.Expression expr2' ->
       Some (diff_if_changed expression expr1' expr2')
-    | ExpressionContainer.EmptyExpression _, ExpressionContainer.EmptyExpression _ ->
+    | ExpressionContainer.EmptyExpression, ExpressionContainer.EmptyExpression ->
       Some []
     | _ -> None
 

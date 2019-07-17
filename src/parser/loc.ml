@@ -30,12 +30,6 @@ let btwn loc1 loc2 = {
   _end = loc2._end;
 }
 
-let btwn_exclusive loc1 loc2 = {
-  source = loc1.source;
-  start = loc1._end;
-  _end = loc2.start;
-}
-
 (* Returns the position immediately before the start of the given loc. If the
    given loc is at the beginning of a line, return the position of the first
    char on the same line. *)

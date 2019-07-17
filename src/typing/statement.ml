@@ -4825,24 +4825,13 @@ and clone_object cx reason this that use_op =
 and collapse_children cx (children_loc, children):
     Type.unresolved_param list *
     (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list) =
-  let open Ast.JSX in
   let unresolved_params, children' =
     children
-    |> List.fold_left (fun (unres_params, children) -> function
-      | ExpressionContainer.(
-          loc,
-          ExpressionContainer { expression = EmptyExpression empty_loc }
-        ) ->
-        unres_params, (loc,
-          ExpressionContainer.(ExpressionContainer {
-            expression = EmptyExpression empty_loc
-          })
-        )::children
-      | child ->
-        let unres_param_opt, child = jsx_body cx child in
-        Option.value_map unres_param_opt
-          ~default:unres_params ~f:(fun x -> x::unres_params),
-        child::children
+    |> List.fold_left (fun (unres_params, children) child ->
+      let unres_param_opt, child = jsx_body cx child in
+      Option.value_map unres_param_opt
+        ~default:unres_params ~f:(fun x -> x::unres_params),
+      child::children
     ) ([], [])
     |> map_pair List.rev List.rev
   in
@@ -5277,13 +5266,11 @@ and jsx_body cx (loc, child) = Ast.JSX.(
       match ex with
       | Expression e ->
         let (_, t), _ as e = expression cx e in
-        UnresolvedArg t, Expression e
-      | EmptyExpression loc ->
-        let reason = mk_reason (RCustom "empty jsx body") loc in
-        let t = DefT (reason, make_trust (), EmptyT Bottom) in
-        UnresolvedArg t, EmptyExpression loc
+        Some (UnresolvedArg t), Expression e
+      | EmptyExpression ->
+        None, EmptyExpression
     in
-    Some unresolved_param, (loc, ExpressionContainer { expression = ex })
+    unresolved_param, (loc, ExpressionContainer { expression = ex })
   | SpreadChild expr ->
     let (_, t), _ as e = expression cx expr in
     Some (UnresolvedSpreadArg t), (loc, SpreadChild e)

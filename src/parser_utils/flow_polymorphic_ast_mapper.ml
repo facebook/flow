@@ -1095,7 +1095,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { expression } = jsx_expr in
     let expression' = match expression with
       | Expression expr -> Expression (this#expression expr)
-      | EmptyExpression annot -> EmptyExpression (this#on_loc_annot annot)
+      | EmptyExpression -> EmptyExpression
     in
     { expression = expression' }
 

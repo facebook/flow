@@ -9,7 +9,6 @@ type position = { line : int; column : int; } [@@deriving show]
 type t = { source : File_key.t option; start : position; _end : position; } [@@deriving show]
 val none : t
 val btwn : t -> t -> t
-val btwn_exclusive : t -> t -> t
 val char_before : t -> t
 val first_char: t -> t
 val contains : t -> t -> bool

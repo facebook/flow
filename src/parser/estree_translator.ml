@@ -1475,7 +1475,11 @@ end with type t = Impl.t) = struct
     and jsx_expression_container (loc, { JSX.ExpressionContainer.expression = expr }) =
       let expression = match expr with
       | JSX.ExpressionContainer.Expression expr -> expression expr
-      | JSX.ExpressionContainer.EmptyExpression empty_loc ->
+      | JSX.ExpressionContainer.EmptyExpression ->
+          let empty_loc = Loc.({ loc with
+            start = { loc.start with column = loc.start.column + 1 };
+            _end = { loc._end with column = loc._end.column - 1 };
+          }) in
           node "JSXEmptyExpression" empty_loc []
       in
       node "JSXExpressionContainer" loc [

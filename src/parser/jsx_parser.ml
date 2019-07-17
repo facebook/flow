@@ -27,40 +27,42 @@ module JSX (Parse: Parser_common.PARSER) = struct
       argument;
     })
 
-  let expression_container' env start_loc =
+  let expression_container' env =
     let expression = if Peek.token env = T_RCURLY
-      then
-        let empty_loc = Loc.btwn_exclusive start_loc (Peek.loc env) in
-        JSX.ExpressionContainer.EmptyExpression empty_loc
-      else JSX.ExpressionContainer.Expression (Parse.expression env) in
-    let end_loc = Peek.loc env in
-    Expect.token env T_RCURLY;
-    Eat.pop_lex_mode env;
-    Loc.btwn start_loc end_loc, JSX.ExpressionContainer.({
-      expression;
-    })
+      then JSX.ExpressionContainer.EmptyExpression
+      else JSX.ExpressionContainer.Expression (Parse.expression env)
+    in
+    { JSX.ExpressionContainer.expression }
 
   let expression_container env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
-    let start_loc = Peek.loc env in
-    Expect.token env T_LCURLY;
-    expression_container' env start_loc
+    let container = with_loc (fun env ->
+      Expect.token env T_LCURLY;
+      let container = expression_container' env in
+      Expect.token env T_RCURLY;
+      container
+    ) env in
+    Eat.pop_lex_mode env;
+    container
 
   let expression_container_or_spread_child env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
-    let start_loc = Peek.loc env in
-    Expect.token env T_LCURLY;
-      match Peek.token env with
-        | T_ELLIPSIS ->
-            Expect.token env T_ELLIPSIS;
-            let expr = Parse.assignment env in
-            let end_loc = Peek.loc env in
-            Expect.token env T_RCURLY;
-            Eat.pop_lex_mode env;
-            Loc.btwn start_loc end_loc, JSX.SpreadChild expr
-        | _ ->
-          let expression_container = expression_container' env start_loc in
-          fst expression_container, JSX.ExpressionContainer (snd expression_container)
+    let loc, result = with_loc (fun env ->
+      Expect.token env T_LCURLY;
+      let result = match Peek.token env with
+      | T_ELLIPSIS ->
+        Expect.token env T_ELLIPSIS;
+        let expr = Parse.assignment env in
+        JSX.SpreadChild expr
+      | _ ->
+        let container = expression_container' env in
+        JSX.ExpressionContainer container
+      in
+      Expect.token env T_RCURLY;
+      result
+    ) env in
+    Eat.pop_lex_mode env;
+    loc, result
 
   let identifier env =
     let loc = Peek.loc env in
@@ -139,7 +141,7 @@ module JSX (Parse: Parser_common.PARSER) = struct
             begin
               let open JSX.ExpressionContainer in
               match expression_container.expression with
-              | EmptyExpression _ ->
+              | EmptyExpression ->
                   error_at env (loc, Error.JSXAttributeValueEmptyExpression);
               | _ -> ()
             end;

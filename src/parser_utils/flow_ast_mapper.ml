@@ -1029,7 +1029,7 @@ class ['loc] mapper = object(this)
     match expression with
     | Expression expr ->
       id this#expression expr jsx_expr (fun expr -> { expression = Expression expr})
-    | EmptyExpression _ -> jsx_expr
+    | EmptyExpression -> jsx_expr
 
   method jsx_name (name: ('loc, 'loc) Ast.JSX.name) =
     let open Ast.JSX in

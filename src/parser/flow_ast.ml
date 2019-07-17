@@ -1081,7 +1081,7 @@ and JSX : sig
 
     and ('M, 'T) expression =
       | Expression of ('M, 'T) Expression.t
-      | EmptyExpression of 'M
+      | EmptyExpression
 
     [@@deriving show]
   end

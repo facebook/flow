@@ -1806,9 +1806,7 @@ and jsx_expression_container { Ast.JSX.ExpressionContainer.expression=expr } =
     Atom "{";
     begin match expr with
     | Ast.JSX.ExpressionContainer.Expression expr -> expression expr
-    | Ast.JSX.ExpressionContainer.EmptyExpression loc ->
-      (* Potentally we will need to inject comments here *)
-      source_location_with_comments (loc, Empty)
+    | Ast.JSX.ExpressionContainer.EmptyExpression -> Empty
     end;
     Atom "}";
   ]
