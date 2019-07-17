@@ -216,7 +216,6 @@ module Declaration
 
   let _function = with_loc (fun env ->
     let leading = Peek.comments env in
-    let trailingComments = ref [] in
     let async = async env in
     let sig_loc, (generator, tparams, id, params, return, predicate) = with_loc (fun env ->
       Expect.token env T_FUNCTION;
