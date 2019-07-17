@@ -1,3 +1,27 @@
+### 0.103.0
+
+New Features:
+* Added `--types` flag to `flow cycle`, when given only type dependencies are used to compute cycles
+
+Notable bug fixes:
+* Fixed a bug when destructuring unions gave spurious errors [[example]](https://flow.org/try/#0GYVwdgxgLglg9mABMAFAbwA6ILyIAwC+AXIpiWCALYBGApgE4A+AzlPTGAOYECUpBAKFCRYCRJ3QZipDOSp16BRIxklW7Lr35A)
+* Updated for-in/for-of head expressions to be evaluated in the correct scope [[example]](https://flow.org/try/#0MYewdgzgLgBAHgLhgQQE6oIYE8A8YCuAtgEYCmqAfDALwwDaAugNwBQAZiKjABSiSxwYINvACUMAN4sY8VgF8gA)
+
+Performance:
+* Improved the calculation for what are dependents of a file, reducing work during rechecks
+
+Library definitions:
+* Added support for Array#flatMap (thanks @goodmind)
+* Replaced usages of `Object` and `Function` (which are aliases for `any`) in library definitions with `any`
+* Removed some usages of `any` from library definitions
+* Updated Function#apply to accept strictly two arguments (thanks @goodmind)
+* Added SpeechSynthesis definitions (thanks @goodmind)
+
+Misc:
+* Updated/added HTML spec URLs in comments (thanks @kevinSuttle)
+* Fixed parsing of anonymous class implements clause (thanks @goodmind)
+* Added support for printing mixins and implements (thanks @goodmind)
+
 ### 0.102.0
 
 Likely to cause new Flow errors:
