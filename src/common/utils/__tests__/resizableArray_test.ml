@@ -67,4 +67,38 @@ let tests = "resizable_array" >::: [
     assert_equal ~ctxt (ResizableArray.get arr 2) (Some "foo2");
     assert_equal ~ctxt (ResizableArray.get arr 3) (Some "foo3");
   end;
+  "shrink" >:: begin fun ctxt ->
+    let arr = ResizableArray.make 8 in
+
+    ResizableArray.push arr "foo";
+    ResizableArray.push arr "bar";
+
+    assert_equal ~ctxt (ResizableArray.underlying_array_size_do_not_use arr) 8;
+    assert_equal ~ctxt (ResizableArray.size arr) 2;
+
+    ResizableArray.shrink arr;
+
+    assert_equal ~ctxt (ResizableArray.underlying_array_size_do_not_use arr) 2;
+    assert_equal ~ctxt (ResizableArray.size arr) 2;
+
+    assert_equal ~ctxt (ResizableArray.get arr 0) (Some "foo");
+    assert_equal ~ctxt (ResizableArray.get arr 1) (Some "bar");
+  end;
+  "shrink_noop" >:: begin fun ctxt ->
+    let arr = ResizableArray.make 2 in
+
+    ResizableArray.push arr "foo";
+    ResizableArray.push arr "bar";
+
+    assert_equal ~ctxt (ResizableArray.underlying_array_size_do_not_use arr) 2;
+    assert_equal ~ctxt (ResizableArray.size arr) 2;
+
+    ResizableArray.shrink arr;
+
+    assert_equal ~ctxt (ResizableArray.underlying_array_size_do_not_use arr) 2;
+    assert_equal ~ctxt (ResizableArray.size arr) 2;
+
+    assert_equal ~ctxt (ResizableArray.get arr 0) (Some "foo");
+    assert_equal ~ctxt (ResizableArray.get arr 1) (Some "bar");
+  end;
 ]

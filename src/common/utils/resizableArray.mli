@@ -20,6 +20,8 @@ val make: int -> 'a t
 val set: 'a t -> int -> 'a -> unit
 (* Expands the underlying array if necessary *)
 val push: 'a t -> 'a -> unit
+(* Shrinks the representation to match the number of elements stored *)
+val shrink: 'a t -> unit
 
 (* Returns None if the index is out of bounds. *)
 val get: 'a t -> int -> 'a option

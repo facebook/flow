@@ -24,13 +24,16 @@ let get arr i =
   else
     arr.arr.(i)
 
+let change_capacity arr new_capacity =
+  let new_array = Array.make new_capacity None in
+  Array.blit arr.arr 0 new_array 0 arr.size;
+  arr.arr <- new_array
+
 let expand_if_needed arr =
   let old_capacity = Array.length arr.arr in
   if arr.size = old_capacity then begin
     let new_capacity = max (old_capacity * 2) 1 in
-    let new_array = Array.make new_capacity None in
-    Array.blit arr.arr 0 new_array 0 old_capacity;
-    arr.arr <- new_array
+    change_capacity arr new_capacity
   end
 
 let set arr i x =
@@ -42,6 +45,10 @@ let push arr elt =
   expand_if_needed arr;
   arr.arr.(arr.size) <- Some elt;
   arr.size <- arr.size + 1
+
+let shrink arr =
+  if arr.size <> Array.length arr.arr then
+    change_capacity arr arr.size
 
 let size arr = arr.size
 
