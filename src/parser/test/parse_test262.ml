@@ -12,7 +12,7 @@ type verbose_mode =
 
 type error_reason =
   | Missing_parse_error
-  | Unexpected_parse_error of (Loc.t * Parser_common.Error.t)
+  | Unexpected_parse_error of (Loc.t * Parse_error.t)
 
 type test_name = string * bool (* filename * strict *)
 

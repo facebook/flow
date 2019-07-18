@@ -11,7 +11,6 @@ open Token
 open Parser_env
 open Flow_ast
 open Parser_common
-module Error = Parse_error
 
 module type TYPE = sig
   val _type : env -> (Loc.t, Loc.t) Ast.Type.t
@@ -37,7 +36,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and annotation env =
     if not (should_parse_types env)
-    then error env Error.UnexpectedTypeAnnotation;
+    then error env Parse_error.UnexpectedTypeAnnotation;
     with_loc (fun env ->
       Expect.token env T_COLON;
       _type env
@@ -166,7 +165,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let loc, g = generic env in
         loc, Type.Generic g
     | T_STRING (loc, value, raw, octal)  ->
-        if octal then strict_error env Error.StrictOctalLiteral;
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         loc, Type.StringLiteral {
           Ast.StringLiteral.value;
@@ -175,7 +174,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
         Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
         if kind = LEGACY_OCTAL
-        then strict_error env Error.StrictOctalLiteral;
+        then strict_error env Parse_error.StrictOctalLiteral;
         loc, Type.NumberLiteral {
           Ast.NumberLiteral.value;
           raw;
@@ -241,7 +240,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and function_param_with_id env name =
     if not (should_parse_types env)
-    then error env Error.UnexpectedTypeAnnotation;
+    then error env Parse_error.UnexpectedTypeAnnotation;
     with_loc ~start_loc:(fst name) (fun env ->
       let optional = Expect.maybe env T_PLING in
       Expect.token env T_COLON;
@@ -428,7 +427,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     in let init_property env start_loc ~variance ~static ~proto key =
       ignore proto;
       if not (should_parse_types env)
-      then error env Error.UnexpectedTypeAnnotation;
+      then error env Parse_error.UnexpectedTypeAnnotation;
       let prop = with_loc ~start_loc (fun env ->
         let optional = Expect.maybe env T_PLING in
         Expect.token env T_COLON;
@@ -454,10 +453,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         | true, (_, { Type.Function.Params.params = []; rest = None }) -> ()
         | false, (_, { Type.Function.Params.rest = Some _; _ }) ->
             (* rest params don't make sense on a setter *)
-            error_at env (key_loc, Error.SetterArity)
+            error_at env (key_loc, Parse_error.SetterArity)
         | false, (_, { Type.Function.Params.params = [_]; _ }) -> ()
-        | true, _ -> error_at env (key_loc, Error.GetterArity)
-        | false, _ -> error_at env (key_loc, Error.SetterArity)
+        | true, _ -> error_at env (key_loc, Parse_error.GetterArity)
+        | false, _ -> error_at env (key_loc, Parse_error.SetterArity)
         end;
         Type.Object.Property.({
           key;
@@ -544,11 +543,11 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | _ -> error_unexpected env
 
     in let error_unexpected_variance env = function
-    | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
+    | Some (loc, _) -> error_at env (loc, Parse_error.UnexpectedVariance)
     | None -> ()
 
     in let error_unexpected_proto env = function
-    | Some loc -> error_at env (loc, Error.UnexpectedProto)
+    | Some loc -> error_at env (loc, Parse_error.UnexpectedProto)
     | None -> ()
 
     in let error_invalid_property_name env is_class static key =
@@ -558,7 +557,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       match key with
       | Expression.Object.Property.Identifier (loc, { Identifier.name; comments= _ })
         when is_class && (is_constructor name || (is_static && is_prototype name)) ->
-        error_at env (loc, Error.InvalidFieldName {
+        error_at env (loc, Parse_error.InvalidFieldName {
           name;
           static = is_static;
           private_ = false;
@@ -582,10 +581,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             begin match Peek.token env with
             | T_RCURLY when allow_inexact -> List.rev props, true
             | T_RCURLYBAR ->
-                error_at env (start_loc, Error.InexactInsideExact);
+                error_at env (start_loc, Parse_error.InexactInsideExact);
                 List.rev props, inexact
             | _ ->
-                error_at env (start_loc, Error.UnexpectedExplicitInexactInObject);
+                error_at env (start_loc, Parse_error.UnexpectedExplicitInexactInObject);
                 properties ~is_class ~allow_inexact ~allow_spread ~exact env acc
             end
           | _ ->
@@ -601,12 +600,12 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           Eat.token env;
           begin match Peek.token env with
           | T_COMMA | T_SEMICOLON | T_RCURLY | T_RCURLYBAR ->
-              error_at env (start_loc, Error.InexactInsideNonObject);
+              error_at env (start_loc, Parse_error.InexactInsideNonObject);
               semicolon exact env;
               properties ~is_class ~allow_inexact ~allow_spread ~exact env acc
           | _ ->
               error_list env (Peek.errors env);
-              error_at env (start_loc, Error.UnexpectedSpreadType);
+              error_at env (start_loc, Parse_error.UnexpectedSpreadType);
               (* It's likely the user is trying to spread something here, so we can
                * eat what they try to spread to try to continue parsing the remaining
                * properties.
@@ -784,7 +783,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             Some (_type env), true
         | _ ->
             if require_default
-            then error_at env (loc, Error.MissingTypeParamDefault);
+            then error_at env (loc, Parse_error.MissingTypeParamDefault);
             None, require_default in
         (variance, name, bound, default, require_default)
       ) env in
@@ -808,7 +807,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         if Peek.token env = T_LESS_THAN
         then begin
           if not (should_parse_types env)
-          then error env Error.UnexpectedTypeAnnotation;
+          then error env Parse_error.UnexpectedTypeAnnotation;
           Some (with_loc (fun env ->
             Expect.token env T_LESS_THAN;
             let params = params env ~require_default:false [] in

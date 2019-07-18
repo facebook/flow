@@ -40,7 +40,7 @@ module Cover
     (match expr with
     | loc, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; comments= _ })
       when is_restricted name ->
-        strict_error_at env (loc, Error.StrictLHSAssignment)
+        strict_error_at env (loc, Parse_error.StrictLHSAssignment)
     | _ -> ());
 
     Parse.pattern_from_expr env expr

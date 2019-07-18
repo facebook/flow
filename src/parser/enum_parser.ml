@@ -54,7 +54,7 @@ end = struct
       let value = Parse.number env kind raw in
       NumberInit (loc, {NumberLiteral.value; raw})
     | T_STRING (loc, value, raw, octal), (T_COMMA | T_RCURLY) ->
-      if octal then strict_error env Error.StrictOctalLiteral;
+      if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
       StringInit (loc, {StringLiteral.value; raw})
     | (T_TRUE | T_FALSE) as token, (T_COMMA | T_RCURLY) ->

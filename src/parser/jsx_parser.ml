@@ -11,7 +11,6 @@ open Token
 open Parser_common
 open Parser_env
 open Flow_ast
-module Error = Parse_error
 
 module JSX (Parse: Parser_common.PARSER) = struct
   let spread_attribute env =
@@ -140,7 +139,7 @@ module JSX (Parse: Parser_common.PARSER) = struct
               let open JSX.ExpressionContainer in
               match expression_container.expression with
               | EmptyExpression ->
-                  error_at env (loc, Error.JSXAttributeValueEmptyExpression);
+                  error_at env (loc, Parse_error.JSXAttributeValueEmptyExpression);
               | _ -> ()
             end;
             Some (JSX.Attribute.ExpressionContainer (loc, expression_container))
@@ -153,7 +152,7 @@ module JSX (Parse: Parser_common.PARSER) = struct
               comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());
             }))
         | _ ->
-            error env Error.InvalidJSXAttributeValue;
+            error env Parse_error.InvalidJSXAttributeValue;
             let loc = Peek.loc env in
             let raw = "" in
             let value = Ast.Literal.String "" in
@@ -307,12 +306,13 @@ module JSX (Parse: Parser_common.PARSER) = struct
                 | `Element e ->
                   let opening_name = normalize e.JSX.Opening.name in
                   if normalize name <> opening_name
-                  then error env (Error.ExpectedJSXClosingTag opening_name)
-                | `Fragment -> error env (Error.ExpectedJSXClosingTag "JSX fragment"));
+                  then error env (Parse_error.ExpectedJSXClosingTag opening_name)
+                | `Fragment -> error env (Parse_error.ExpectedJSXClosingTag "JSX fragment"));
               loc
           | `Fragment loc ->
               (match snd openingElement with
-              | `Element e -> error env (Error.ExpectedJSXClosingTag (normalize e.JSX.Opening.name))
+              | `Element e ->
+                error env (Parse_error.ExpectedJSXClosingTag (normalize e.JSX.Opening.name))
               | _ -> ());
               loc
           | _ -> fst openingElement in

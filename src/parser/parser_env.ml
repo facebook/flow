@@ -6,7 +6,6 @@
  *)
 
 open Flow_ast
-module Error = Parse_error
 module SSet = Set.Make(String)
 
 module Lex_mode = struct
@@ -166,7 +165,7 @@ type allowed_super =
   | Super_prop_or_call
 
 type env = {
-  errors                : (Loc.t * Error.t) list ref;
+  errors                : (Loc.t * Parse_error.t) list ref;
   comments              : Loc.t Comment.t list ref;
   labels                : SSet.t;
   exports               : SSet.t ref;
@@ -186,7 +185,7 @@ type env = {
   allow_await           : bool;
   allow_directive       : bool;
   allow_super           : allowed_super;
-  error_callback        : (env -> Error.t -> unit) option;
+  error_callback        : (env -> Parse_error.t -> unit) option;
   lex_mode_stack        : Lex_mode.t list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
   lex_env               : Lex_env.t ref;
@@ -282,7 +281,7 @@ let record_export env (loc, { Identifier.name= export_name; comments= _ }) =
   if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
   if SSet.mem export_name exports
-  then error_at env (loc, Error.DuplicateExport export_name)
+  then error_at env (loc, Parse_error.DuplicateExport export_name)
   else env.exports := SSet.add export_name !(env.exports)
 
 (* Since private fields out of scope are a parse error, we keep track of the declared and used
@@ -307,7 +306,8 @@ let exit_class env =
   match !(env.privates) with
   | [declared_privates, used_privates] ->
       let unbound_privates = get_unbound_privates declared_privates used_privates in
-      List.iter (fun (name, loc) -> error_at env (loc, Error.UnboundPrivate name)) unbound_privates;
+      List.iter (fun (name, loc) ->
+        error_at env (loc, Parse_error.UnboundPrivate name)) unbound_privates;
       env.privates := []
   | (loc_declared_privates, loc_used_privates) :: privates ->
       let unbound_privates = get_unbound_privates loc_declared_privates loc_used_privates in
@@ -322,7 +322,7 @@ let add_declared_private env name =
 
 let add_used_private env name loc =
   match !(env.privates) with
-  | [] -> error_at env (loc, Error.PrivateNotInClass)
+  | [] -> error_at env (loc, Parse_error.PrivateNotInClass)
   | (declared, used)::xs -> env.privates := ((declared, (name, loc) :: used) :: xs)
 
 (* lookahead: *)
@@ -703,14 +703,14 @@ let error env e =
 let get_unexpected_error token =
   let open Token in
   match token with
-  | T_EOF -> Error.UnexpectedEOS
-  | T_NUMBER _ -> Error.UnexpectedNumber
+  | T_EOF -> Parse_error.UnexpectedEOS
+  | T_NUMBER _ -> Parse_error.UnexpectedNumber
   | T_JSX_TEXT _
-  | T_STRING _ -> Error.UnexpectedString
-  | T_IDENTIFIER _ -> Error.UnexpectedIdentifier
-  | t when token_is_future_reserved t -> Error.UnexpectedReserved
-  | t when token_is_strict_reserved t -> Error.StrictReservedWord
-  | _ -> Error.UnexpectedToken (value_of_token token)
+  | T_STRING _ -> Parse_error.UnexpectedString
+  | T_IDENTIFIER _ -> Parse_error.UnexpectedIdentifier
+  | t when token_is_future_reserved t -> Parse_error.UnexpectedReserved
+  | t when token_is_strict_reserved t -> Parse_error.StrictReservedWord
+  | _ -> Parse_error.UnexpectedToken (value_of_token token)
 
 let error_unexpected env =
   (* So normally we consume the lookahead lex result when Eat.token calls
@@ -722,14 +722,14 @@ let error_unexpected env =
   error env (get_unexpected_error (Peek.token env))
 
 let error_on_decorators env = List.iter
-  (fun decorator -> error_at env ((fst decorator), Error.UnsupportedDecorator))
+  (fun decorator -> error_at env ((fst decorator), Parse_error.UnsupportedDecorator))
 
 let strict_error env e = if in_strict_mode env then error env e
 let strict_error_at env (loc, e) =
   if in_strict_mode env then error_at env (loc, e)
 
 let function_as_statement_error_at env loc =
-  error_at env (loc, Error.FunctionAsStatement {
+  error_at env (loc, Parse_error.FunctionAsStatement {
     in_strict_mode = in_strict_mode env
   })
 
@@ -828,7 +828,7 @@ module Try = struct
   exception Rollback
 
   type saved_state = {
-    saved_errors          : (Loc.t * Error.t) list;
+    saved_errors          : (Loc.t * Parse_error.t) list;
     saved_comments        : Loc.t Flow_ast.Comment.t list;
     saved_last_lex_result : Lex_result.t option;
     saved_lex_mode_stack  : Lex_mode.t list;

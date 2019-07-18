@@ -7,7 +7,6 @@
 
 open Parser_env
 open Flow_ast
-module Error = Parse_error
 
 type pattern_errors = {
   if_expr: (Loc.t * Parse_error.t) list;
@@ -31,15 +30,16 @@ module type PARSER = sig
   val assignment : env -> (Loc.t, Loc.t) Expression.t
   val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
   val object_initializer : env -> Loc.t * (Loc.t, Loc.t) Expression.Object.t * pattern_errors
-  val identifier : ?restricted_error:Error.t -> env -> (Loc.t, Loc.t) Identifier.t
-  val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
+  val identifier : ?restricted_error:Parse_error.t -> env -> (Loc.t, Loc.t) Identifier.t
+  val identifier_with_type :
+    env -> ?no_optional:bool -> Parse_error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
   val assert_identifier_name_is_identifier :
-    ?restricted_error:Error.t -> env -> (Loc.t, Loc.t) Identifier.t -> unit
+    ?restricted_error:Parse_error.t -> env -> (Loc.t, Loc.t) Identifier.t -> unit
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
   val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
   val jsx_element_or_fragment :
     env -> Loc.t * [`Element of (Loc.t, Loc.t) JSX.element | `Fragment of (Loc.t, Loc.t) JSX.fragment]
-  val pattern : env -> Error.t -> (Loc.t, Loc.t) Pattern.t
+  val pattern : env -> Parse_error.t -> (Loc.t, Loc.t) Pattern.t
   val pattern_from_expr : env -> (Loc.t, Loc.t) Expression.t -> (Loc.t, Loc.t) Pattern.t
   val object_key : ?class_body: bool -> env -> Loc.t * (Loc.t, Loc.t) Expression.Object.Property.key
   val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
