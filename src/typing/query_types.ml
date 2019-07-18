@@ -165,15 +165,15 @@ let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~
     (* Shadowed type parameters won't be valid for type insertion *)
     flag_shadowed_type_params = true;
     (* Insert-Types filters out literals at the users request.
-     * We should preserve them for now in case they are wanted at a later stage
-     * but this makes unions have a bunch of redundant elements when we generalize
-     * them. For now we optimize types here. *)
+     * Setting this flag preserves literal information so the we later
+     * have the option of presenting it to the user in specialized types. *)
     preserve_inferred_literal_types = false;
     (* Utility types won't are not serialized so it may be worth evaluating them away
      * if we find them in the resulting Ty.t. The trade off is that types might get
      * larger. *)
     evaluate_type_destructors = false;
-    (* This will be slow for very large types, consider allowing this to toggled *)
+    (* Optimize types is false because Insert_types manually calls the simplifier with
+       a custom comparison operation *)
     optimize_types = false;
     omit_targ_defaults;
     simplify_empty = true; }

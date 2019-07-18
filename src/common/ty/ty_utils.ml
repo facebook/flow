@@ -97,6 +97,7 @@ let symbols_of_type =
 module type TopAndBotQueries = sig
   val is_bot: Ty.t -> bool
   val is_top: Ty.t -> bool
+  val compare: Ty.t -> Ty.t -> int
 end
 
 module Simplifier(Q: TopAndBotQueries) = struct
@@ -104,9 +105,11 @@ module Simplifier(Q: TopAndBotQueries) = struct
   (* Simplify union/intersection types
 
      This visitor:
-     - removes identical nodes from union and intersection types. (At the moment
-       the comparison used is `Pervasives.compare`, but perhaps something more
-       clever can replace this.)
+     - removes identical nodes from union and intersection types. The comparison operation
+       is usually Pervasives.compare but you can specify a custom comparison operation
+       for the case where you want to consider some types equal even though they are not
+       identical. This is used in autofix insert-type to treat different sorts of Any as
+       the same.
      - removes the neutral element for union (resp. intersection) types, which
        is the bottom (resp. top) type.
 
@@ -141,7 +144,7 @@ module Simplifier(Q: TopAndBotQueries) = struct
       let ts1 = self#on_nel self#on_t env ts0 in
       let ts2 = Nel.map_concat break ts1 in
       let ts2 = if Nel.length ts1 <> Nel.length ts2 then ts2 else ts1 in
-      let ts3 = ts2 |> simplify_nel ~is_zero ~is_one |> Nel.dedup in
+      let ts3 = ts2 |> simplify_nel ~is_zero ~is_one |> Nel.dedup ~compare:Q.compare in
       let ts3 = if Nel.length ts2 <> Nel.length ts3 then ts3 else ts2 in
       if ts0 == ts3 then default else make ts3
 
@@ -185,6 +188,8 @@ module BotSensitiveQueries: TopAndBotQueries = struct
   let is_bot = function
     | Ty.Bot kind -> is_bot_kind kind
     | _ -> false
+
+  let compare = Pervasives.compare
 end
 
 module BotInsensitiveQueries: TopAndBotQueries = struct
@@ -195,6 +200,8 @@ module BotInsensitiveQueries: TopAndBotQueries = struct
   let is_bot = function
     | Ty.Bot _ -> true
     | _ -> false
+
+  let compare = Pervasives.compare
 end
 
 let simplify_type =

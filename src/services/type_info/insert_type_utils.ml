@@ -5,8 +5,35 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* The guiding principle of this query is whether or not two
+   types will serialize the same. *)
+module TySimplifyQueries : Ty_utils.TopAndBotQueries = struct
+  open Ty
+  let is_top = Ty_utils.BotInsensitiveQueries.is_top
+  let is_bot = Ty_utils.BotInsensitiveQueries.is_bot
+
+  let comparator = object(_)
+    inherit [unit] comparator_ty
+    method! private on_Any () _ _ = ()
+  end
+
+  let compare = comparator#compare ()
+end
+
+(* This simplifier deduplicates types in unions and intersections that *)
+(* will serialize to the same type, removes top from intersections, and removes *)
+(* bottom from unions. *)
+module TySimplify : sig
+  val run: Ty.t -> Ty.t
+end = Ty_utils.Simplifier(TySimplifyQueries)
+
+module TySet = Set.Make(struct
+  type t = Ty.t
+  let compare = Pervasives.compare
+end)
+
 type validation_error =
-  | TooBig
+  | TooBig of {size_limit:int; size:int option;}
   | Anonymous of Loc.t
   | Recursive
   | ReactElementConfigFunArg
@@ -15,7 +42,7 @@ type validation_error =
   | Empty_SomeUnknownUpper of string
 
 let serialize_validation_error = function
-  | TooBig -> "TooBig"
+  | TooBig _ -> "TooBig"
   | Anonymous loc -> Utils_js.spf "Anonymous (def: %s)" (Loc.to_string_no_source loc)
   | Recursive -> "Recursive"
   | ReactElementConfigFunArg -> "ReactElementConfigFunArg"
@@ -59,7 +86,14 @@ class type_validator_visitor = object(_)
     super#on_symbol env s
 end
 
-let validate_type = (new type_validator_visitor)#on_t ()
+let validate_type_too_big_max=1000
+
+let validate_type ~size_limit t =
+  match Ty_utils.size_of_type ~max:size_limit t with
+  | None ->
+    let max = validate_type_too_big_max in
+    raise (Fatal (TooBig {size_limit; size=Ty_utils.size_of_type ~max t}))
+  | Some _ -> (new type_validator_visitor)#on_t () t
 
 (** Add named type parameter to ensure a Flow_ast.Type can be parsed after being
   * pretty printed.
@@ -128,7 +162,6 @@ class patch_up_react_mapper ?(imports_react=false) () = object (this)
   inherit [_] Ty.endo_ty as super
   method! on_t loc t =
     match t with
-
     (* If 'react' is not imported, then we treat the symbol as Remote, so that
      * it is imported with the same mechanism we import other Remote symbols.
      * Otherwise, we refer to these names as 'React.NAME'. *)

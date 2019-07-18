@@ -207,6 +207,140 @@ and polarity = Positive | Negative | Neutral
 }, show
 ]
 
+exception Difference of int
+let assert0 i = if i == 0 then () else raise (Difference i)
+
+(* The prototype of what should happen when overriding fail_* methods *)
+let fail_gen: 'env 'x. ('env -> 'x -> int) -> 'env -> 'x -> 'x -> unit =
+  fun tag_of env t1 t2 ->
+    assert0 ((tag_of env t1) - (tag_of env t2))
+
+(* Compare Ty.t for structural equality
+   This class can be overridden to define new forms of equality on types *)
+class ['A] comparator_ty = object(this)
+  inherit [_] iter2_ty
+
+  method compare (env : 'A) (t1 : t) (t2 : t) =
+    try this#on_t env t1 t2 ; 0 with
+    | Difference n -> n
+
+  (* Base fields originally handled in the ancestor *)
+  method! private on_int _env x y = assert0 (x - y)
+  method! private on_string _env x y = assert0 (String.compare x y)
+  method! private on_bool _env x y = assert0 (Pervasives.compare x y)
+  method! private on_symbol _env x y = assert0 (Pervasives.compare x y)
+  method! private on_aloc _env x y = assert0 (ALoc.compare x y)
+
+  method! private fail_option _env x _y =
+    match x with
+    | None -> raise (Difference (-1))
+    | _ -> raise (Difference 1)
+
+  method! private fail_list _env x _y =
+    match x with
+    | [] -> raise (Difference (-1))
+    | _ -> raise (Difference 1)
+
+  (* This class must override all fail_* methods on variant types to be correct. *)
+  (* The following methods are ordered respectively with the
+     definitions in this file to make it easier to check *)
+  method! private fail_t env x y = fail_gen this#tag_of_t env x y
+  method! private fail_any_kind env x y = fail_gen this#tag_of_any_kind env x y
+  method! private fail_upper_bound_kind env x y = fail_gen this#tag_of_upper_bound_kind env x y
+  method! private fail_bot_kind env x y = fail_gen this#tag_of_bot_kind env x y
+  method! private fail_gen_kind env x y = fail_gen this#tag_of_gen_kind env x y
+  method! private fail_prop env x y = fail_gen this#tag_of_prop env x y
+  method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
+  method! private fail_utility env x y = fail_gen this#tag_of_utility env x y
+
+  (* No two elements of each variant can be assigned the same tag *)
+  method tag_of_t _ = function
+    | TVar _ -> 0
+    | Bound _ -> 1
+    | Generic _ -> 2
+    | Any _ -> 3
+    | Top -> 4
+    | Bot _ -> 5
+    | Void -> 6
+    | Null -> 7
+    | Num _ -> 8
+    | Str _ -> 9
+    | Bool _ -> 10
+    | NumLit _ -> 11
+    | StrLit _ -> 12
+    | BoolLit _ -> 13
+    | Fun _ -> 14
+    | Obj _ -> 15
+    | Arr _ -> 16
+    | Tup _ -> 17
+    | Union _ -> 18
+    | Inter _ -> 19
+    | TypeAlias _ -> 20
+    | TypeOf _ -> 21
+    | ClassDecl _ -> 22
+    | InterfaceDecl _ -> 23
+    | Utility _ -> 24
+    | Module _ -> 25
+    | Mu _ -> 26
+
+  method tag_of_gen_kind _ = function
+    | ClassKind -> 0
+    | InterfaceKind -> 1
+    | TypeAliasKind -> 2
+
+  method tag_of_any_kind _ = function
+    | Implicit -> 0
+    | Explicit -> 1
+
+  method tag_of_prop _env = function
+    | NamedProp _ -> 0
+    | IndexProp _ -> 1
+    | CallProp _ -> 2
+    | SpreadProp _ -> 3
+
+  method tag_of_named_prop _env = function
+    | Field _ -> 0
+    | Method _ -> 1
+    | Get _ -> 2
+    | Set _ -> 3
+
+  method tag_of_utility _ = function
+    | Keys _ -> 0
+    | Values _ -> 1
+    | ReadOnly _ -> 2
+    | Exact _ -> 3
+    | Diff _ -> 4
+    | Rest _ -> 5
+    | PropertyType _ -> 6
+    | ElementType _ -> 7
+    | NonMaybeType _ -> 8
+    | ObjMap _ -> 9
+    | ObjMapi _ -> 10
+    | TupleMap _ -> 11
+    | Call _ -> 12
+    | Class _ -> 13
+    | Shape _ -> 14
+    | Supertype _ -> 15
+    | Subtype _ -> 16
+    | Exists -> 17
+    | ReactElementPropsType _ -> 18
+    | ReactElementConfigType _ -> 19
+    | ReactElementRefType _ -> 20
+    | ReactConfigType _ -> 21
+
+  method tag_of_bot_kind _env = function
+    | EmptyType -> 0
+    | EmptyMatchingPropT -> 1
+    | EmptyTypeDestructorTriggerT _ -> 2
+    | NoLowerWithUpper _ -> 3
+
+  method tag_of_upper_bound_kind _env = function
+    | NoUpper -> 0
+    | SomeKnownUpper _ -> 1
+    | SomeUnknownUpper _ -> 2
+end
+
+
 (* Type destructors *)
 
 let rec bk_union ?(flattened=false) = function

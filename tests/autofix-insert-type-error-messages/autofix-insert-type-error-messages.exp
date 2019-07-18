@@ -3,7 +3,7 @@ flow autofix insert-type: Invalid position given
 empty.js
 flow autofix insert-type: Did not find an annotation at 5:1-0
 annotated.js
-flow autofix insert-type: Preexisiting type annotation at 3:7-14:number
+flow autofix insert-type: Preexisiting type annotation at 3:7-14: number
 big-type.js
 flow autofix insert-type: The type that would be generated (size: 121) exceeds the size limit (30)
 object.js

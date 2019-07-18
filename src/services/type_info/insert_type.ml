@@ -6,7 +6,6 @@
  *)
 
 module Utils = Insert_type_utils
-open Autofix_options
 
 type unexpected =
   | UnknownTypeAtPoint of Loc.t
@@ -17,7 +16,6 @@ type expected =
   | TypeAnnotationAtPoint of {location:Loc.t; type_ast: (Loc.t, Loc.t) Flow_ast.Type.t}
   | InvalidAnnotationTarget of Loc.t
   | UnsupportedAnnotation of {location:Loc.t; error_message:string}
-  | TypeSizeLimitExceeded of {size_limit:int; size:int option;}
   | MulipleTypesPossibleAtPoint of
     {generalized:(Loc.t, Loc.t) Flow_ast.Type.t;
      specialized:(Loc.t, Loc.t) Flow_ast.Type.t}
@@ -60,6 +58,7 @@ class allow_temporary_types_mapper = object(this)
       Some [super#on_Obj () (Ty.Obj obj) obj])
   | o -> super#on_Obj () t o
 end
+
 
 let allow_temporary_types = (new allow_temporary_types_mapper)#on_t ()
 
@@ -187,23 +186,17 @@ end
 
 let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
 
-let fail_when_ty_size_exceeds size_limit ty =
-  match Ty_utils.size_of_type ~max:size_limit ty with
-  | None ->
-    raise @@ expected @@ TypeSizeLimitExceeded {size_limit; size=Ty_utils.size_of_type ty}
-  | _ -> ()
-
-
 (* Generate an equivalent Flow_ast.Type *)
 let serialize ?(imports_react=false) loc ty =
   (new Utils.patch_up_react_mapper ~imports_react ())#on_t loc ty
-  |> Ty_utils.simplify_type ~simplify_empty:true
+  |> Utils.TySimplify.run
   |> Ty_serializer.type_
   |> function
   | Ok ast -> Utils.patch_up_type_ast ast
   | Error msg -> raise (unexpected (FailedToSerialize {ty; error_message=msg}))
 
 let remove_ambiguous_types ~ambiguity_strategy ty loc =
+  let open Autofix_options in
   match ambiguity_strategy with
   | Fail ->
     begin try fail_on_ambiguity ty with
@@ -235,12 +228,11 @@ class mapper ?(size_limit=30) ~ambiguity_strategy
   method private synth_type location =
     let (location, scheme) = ty_lookup location in
     let ty = normalize location scheme in
-    fail_when_ty_size_exceeds size_limit ty;
     begin try
-      Utils.validate_type ty
+      Utils.validate_type ~size_limit ty
       with
       | Utils.Fatal error -> raise @@ expected @@
-          FailedToValidateType{error; error_message=Utils.serialize_validation_error error}
+        FailedToValidateType{error; error_message=Utils.serialize_validation_error error}
     end;
     let ty = remove_ambiguous_types ~ambiguity_strategy ty location in
     (location, serialize ~imports_react:true location ty)
@@ -394,24 +386,24 @@ let unexpected_error_to_string = function
 let expected_error_to_string = function
   | TypeAnnotationAtPoint {location; type_ast;} ->
     "Preexisiting type annotation at " ^ (Loc.to_string_no_source location)
-    ^ ":" ^ (type_to_string type_ast)
+    ^ ": " ^ (type_to_string type_ast)
   | InvalidAnnotationTarget location ->
     "Did not find an annotation at " ^ (Loc.to_string_no_source location)
   | UnsupportedAnnotation {location; error_message;} ->
     error_message ^ " found at " ^ (Loc.to_string_no_source location)
     ^ " is not currently supported"
-  | TypeSizeLimitExceeded {size_limit; size;} ->
-    "The type that would be generated "
-    ^ (match size with
-        | Some n -> "(size: " ^ (string_of_int n) ^ ") "
-        | None -> "")
-    ^ "exceeds the size limit (" ^ (string_of_int size_limit) ^ ")"
   | FailedToTypeCheck _ ->
     "Failed to typecheck file"
   | MulipleTypesPossibleAtPoint {generalized; specialized;} ->
     "Multiple types possible at point:\n" ^
     "    generalized type: " ^ (type_to_string generalized) ^ "\n" ^
     "    specialized type: " ^ (type_to_string specialized) ^ "\n"
+  | FailedToValidateType {error=Utils.TooBig {size_limit; size;}; _} ->
+    "The type that would be generated (size: " ^
+    begin match size with
+    | Some size -> string_of_int size
+    | None -> ">" ^ (string_of_int Utils.validate_type_too_big_max)
+    end ^ ") exceeds the size limit (" ^ (string_of_int size_limit) ^ ")"
   | FailedToValidateType {error_message=msg; _} ->
     "Failed to validate type: " ^ msg
   | FailedToNormalize (_,msg) ->
