@@ -73,6 +73,7 @@ type t = {
   opt_esproposal_export_star_as: esproposal_feature_mode;
   opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
+  opt_esproposal_fsharp_pipeline_operator: esproposal_feature_mode;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_flowconfig_name: string;
@@ -134,6 +135,7 @@ let esproposal_decorators opts = opts.opt_esproposal_decorators
 let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
 let esproposal_optional_chaining opts = opts.opt_esproposal_optional_chaining
 let esproposal_nullish_coalescing opts = opts.opt_esproposal_nullish_coalescing
+let esproposal_fsharp_pipeline_operator opts = opts.opt_esproposal_fsharp_pipeline_operator
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 let haste_name_reducers opts = opts.opt_haste_name_reducers
 let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist

@@ -250,13 +250,77 @@ module Expression
     if op <> None then Eat.token env;
     op
 
+  and pipeline_cover =
+    let open Expression in
+    let make_binary env left right operator loc =
+      let left = as_expression env left in
+      let right = as_expression env right in
+      Cover_expr (loc, Binary {
+        Binary.operator;
+        left;
+        right;
+      })
+    in let rec pipeline_expr env left lloc =
+      let options = parse_options env in
+      match Peek.token env with
+      | T_PIPELINE ->
+          if not options.esproposal_fsharp_pipeline_operator
+          then error env Parse_error.FSharpPipelineOperatorDisabled;
+
+          Expect.token env T_PIPELINE;
+          let env' = env |> with_allow_solo_await true in
+          let rloc, right = with_loc pipeline_body_cover env' in
+          let loc = Loc.btwn lloc rloc in
+          pipeline_expr env (make_binary env left right Binary.Pipeline loc) loc
+      | _ -> left
+    and error_callback _ = function
+      (* Don't rollback on these errors. *)
+      | Error.StrictReservedWord -> ()
+      (* Everything else causes a rollback *)
+      | _ -> raise Try.Rollback
+    and try_logical_cover_but_not_arrow_function env =
+      let env = env |> with_error_callback error_callback in
+      let ret = logical_cover env in
+      match Peek.token env with
+      | T_ARROW -> (* x => 123 *)
+        raise Try.Rollback
+      | T_COLON when last_token env = Some T_RPAREN -> (* (x): number => 123 *)
+        raise Try.Rollback
+      (* async x => 123 -- and we've already parsed async as an identifier
+       * expression *)
+      | _ when Peek.is_identifier env -> begin match ret with
+        | Cover_expr (_, Expression.Identifier (_, { Identifier.name= "async"; comments= _ }))
+            when not (Peek.is_line_terminator env) ->
+          raise Try.Rollback
+        | _ -> ret
+        end
+      | _ -> ret
+    and pipeline_body_cover env =
+      match Peek.token env, Peek.is_identifier env with
+      | T_LPAREN, _
+      | T_LESS_THAN, _
+      | _, true ->
+        (match Try.to_parse env try_logical_cover_but_not_arrow_function with
+        | Try.ParsedSuccessfully expr -> expr
+        | Try.FailedToParse ->
+          (match Try.to_parse env try_arrow_function with
+            | Try.ParsedSuccessfully expr -> expr
+            | Try.FailedToParse ->
+                logical_cover env
+          )
+        )
+      | _ -> logical_cover env
+    in fun env ->
+      let loc, left = with_loc pipeline_body_cover env in
+      pipeline_expr env left loc
+
   (* ConditionalExpression :
    *   LogicalExpression
    *   LogicalExpression ? AssignmentExpression : AssignmentExpression
    *)
   and conditional_cover env =
     let start_loc = Peek.loc env in
-    let expr = logical_cover env in
+    let expr = pipeline_cover env in
     if Peek.token env = T_PLING
     then begin
       Expect.token env T_PLING;
@@ -267,7 +331,9 @@ module Expression
       let end_loc, alternate = with_loc assignment env in
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr (loc, Expression.(Conditional { Conditional.
-        test = as_expression env expr;
+        test = as_expression
+          env
+          expr;
         consequent;
         alternate;
       }))
@@ -455,7 +521,20 @@ module Expression
       end
     | Some operator ->
       Eat.token env;
-      let end_loc, argument = with_loc unary env in
+      let null (_env : Parser_env.env) : (Loc.t, Loc.t) Flow_ast.Expression.t =
+        Peek.loc env, Expression.Literal {
+          Literal.value = Literal.Null;
+          comments = None;
+          raw = "null";
+        }
+      in
+      let end_loc, argument = with_loc (
+        if (allow_solo_await env) then
+          null
+        else
+          unary
+        ) env
+      in
       let loc = Loc.btwn begin_loc end_loc in
       Expression.(match operator, argument with
       | Unary.Delete, (_, Identifier _) ->

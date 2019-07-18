@@ -20,6 +20,7 @@ let parse_options = Some Parser_env.({
   esproposal_export_star_as = true;
   esproposal_optional_chaining = true;
   esproposal_nullish_coalescing = true;
+  esproposal_fsharp_pipeline_operator = true;
   types = true;
   use_strict = false;
 })

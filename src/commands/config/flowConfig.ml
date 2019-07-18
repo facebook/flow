@@ -57,6 +57,7 @@ module Opts = struct
     esproposal_export_star_as: Options.esproposal_feature_mode;
     esproposal_nullish_coalescing: Options.esproposal_feature_mode;
     esproposal_optional_chaining: Options.esproposal_feature_mode;
+    esproposal_fsharp_pipeline_operator: Options.esproposal_feature_mode;
     facebook_fbs: string option;
     facebook_fbt: string option;
     file_watcher: Options.file_watcher option;
@@ -148,6 +149,7 @@ module Opts = struct
     esproposal_export_star_as = Options.ESPROPOSAL_WARN;
     esproposal_nullish_coalescing = Options.ESPROPOSAL_WARN;
     esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
+    esproposal_fsharp_pipeline_operator = Options.ESPROPOSAL_WARN;
     facebook_fbs = None;
     facebook_fbt = None;
     file_watcher = None;
@@ -365,6 +367,11 @@ module Opts = struct
       esproposal_feature_flag
         ~allow_enable:true
         (fun opts v -> Ok { opts with esproposal_nullish_coalescing = v });
+
+    "esproposal.fsharp_pipeline_operator",
+      esproposal_feature_flag
+        ~allow_enable:true
+        (fun opts v -> Ok { opts with esproposal_fsharp_pipeline_operator = v });
 
     "facebook.fbs",
       string (fun opts v -> Ok { opts with facebook_fbs = Some v });
@@ -1029,6 +1036,7 @@ let esproposal_decorators c = c.options.Opts.esproposal_decorators
 let esproposal_export_star_as c = c.options.Opts.esproposal_export_star_as
 let esproposal_optional_chaining c = c.options.Opts.esproposal_optional_chaining
 let esproposal_nullish_coalescing c = c.options.Opts.esproposal_nullish_coalescing
+let esproposal_fsharp_pipeline_operator c = c.options.Opts.esproposal_fsharp_pipeline_operator
 let file_watcher c = c.options.Opts.file_watcher
 let facebook_fbs c = c.options.Opts.facebook_fbs
 let facebook_fbt c = c.options.Opts.facebook_fbt
