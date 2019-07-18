@@ -6,5 +6,5 @@
     flow_parser_utils_aloc
     flow_parser_utils_output
   )
-  (preprocess (pps visitors.ppx))
+  (preprocess (pps visitors.ppx ppx_deriving.show))
 )
