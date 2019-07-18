@@ -555,6 +555,7 @@ let add_output cx ?trace msg =
    When check is called with a trace whose depth exceeds a constant
    limit, we throw a LimitExceeded exception.
  *)
+
 module RecursionCheck : sig
   exception LimitExceeded of Trace.t
   val check: Context.t -> Trace.t -> unit
@@ -579,45 +580,25 @@ end
  * we have seen a reason. Then, when we've seen it multiple times, we can decide
  * to stop doing constant folding.
  *)
+
 module ConstFoldExpansion : sig
   val guard: int -> reason -> (int -> 't) -> 't
 end = struct
   let rmaps: int ReasonMap.t IMap.t ref = ref IMap.empty
 
-  let get_rmap id = Option.value ~default:ReasonMap.empty (IMap.get id !rmaps)
+  let get_rmap id =
+    IMap.get id !rmaps
+    |> Option.value ~default:ReasonMap.empty
 
   let increment reason rmap =
-    match ReasonMap.get reason rmap with
-    | None -> 0, ReasonMap.add reason 1 rmap
-    | Some count -> count, ReasonMap.add reason (count + 1) rmap
-
-  let decrement reason rmap =
-    match ReasonMap.get reason rmap with
-    | Some count ->
-      if count > 1
-      then ReasonMap.add reason (count - 1) rmap
-      else ReasonMap.remove reason rmap
-    | None -> rmap
-
-  let push id reason =
-    let rmap = get_rmap id in
-    let old_value, new_reason_map = increment reason rmap in
-    rmaps := IMap.add id new_reason_map !rmaps;
-    old_value
-
-  let pop id reason =
-    let rmap =
-      get_rmap id
-      |> decrement reason in
-    if ReasonMap.is_empty rmap
-    then rmaps := IMap.remove id !rmaps
-    else rmaps := IMap.add id rmap !rmaps
+     match ReasonMap.get reason rmap with
+     | None -> 0, ReasonMap.add reason 1 rmap
+     | Some count -> count, ReasonMap.add reason (count + 1) rmap
 
   let guard id reason f =
-    let count = push id reason in
-    let ret = f count in
-    pop id reason;
-    ret
+    let count, rmap = get_rmap id |> increment reason in
+    rmaps := IMap.add id rmap !rmaps;
+    f count
 end
 
 exception Not_expect_bound of string
@@ -3308,9 +3289,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               rrt_unresolved;
               rrt_resolve_to = ResolveSpreadsToArray (elem_t, tout);
             }))
-          | _ ->
-            (* We've already deconstructed, so there's nothing left to do *)
-            ()
+            | _ ->
+              (* We've already deconstructed, so there's nothing left to do *)
+              ()
         )
 
       | ResolveSpreadsToMultiflowCallFull (id, _)
@@ -10581,14 +10562,14 @@ and finish_resolve_spread_list =
   (* Turn tuple rest params into single params *)
   let flatten_spread_args list =
     list
-    |> List.fold_left (fun acc param -> match param with
+    |> Core_list.fold_left ~f:(fun acc param -> match param with
       | ResolvedSpreadArg (_, arrtype) ->
           begin match arrtype with
           | ArrayAT (_, Some tuple_types)
           | TupleAT (_, tuple_types) ->
-              List.fold_left
-                (fun acc elem -> ResolvedArg(elem)::acc)
-                acc
+              Core_list.fold_left
+                ~f:(fun acc elem -> ResolvedArg(elem)::acc)
+                ~init:acc
                 tuple_types
           | ArrayAT (_, None)
           | ROArrayAT (_)
@@ -10596,8 +10577,8 @@ and finish_resolve_spread_list =
           end
       | ResolvedAnySpreadArg _
       | ResolvedArg _ -> param::acc
-      ) []
-    |> List.rev
+      ) ~init:[]
+    |> Core_list.rev
 
   in
 

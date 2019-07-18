@@ -3296,7 +3296,7 @@ let string_of_use_ctor = function
     spf "ResolveSpreadT(%s)" begin match rrt_resolve_to with
     | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
     | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
-    | ResolveSpreadsToArrayLiteral _ -> "ResolveSpreadsToArrayLiteral"
+    | ResolveSpreadsToArrayLiteral (id, _, _) -> spf "ResolveSpreadsToArrayLiteral (%d)" id
     | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
     | ResolveSpreadsToMultiflowSubtypeFull _ ->
       "ResolveSpreadsToMultiflowSubtypeFull"

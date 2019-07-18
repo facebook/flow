@@ -94,5 +94,119 @@ References:
                 ^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- spread.js:44:2
 
-Found 6 errors
+Cannot cast `[...][0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+
+   spread.js:44:2
+   44| ([...x, ...x][0] : 3); // error
+        ^^^^^^^^^^^^^^^
+
+References:
+   spread.js:19:13
+   19| let x = [3, 4];
+                   ^ [1]
+   spread.js:44:20
+   44| ([...x, ...x][0] : 3); // error
+                          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:45:2
+
+Cannot cast `[...][1]` to number literal `4` because number [1] is incompatible with number literal `4` [2].
+
+   spread.js:45:2
+   45| ([...x, ...x][1] : 4); // error
+        ^^^^^^^^^^^^^^^
+
+References:
+   spread.js:19:10
+   19| let x = [3, 4];
+                ^ [1]
+   spread.js:45:20
+   45| ([...x, ...x][1] : 4); // error
+                          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:47:2
+
+Cannot cast `[...][0]` to number literal `3` because:
+ - number [1] is incompatible with number literal `3` [2].
+ - string [3] is incompatible with number literal `3` [2].
+
+   spread.js:47:2
+   47| ([...x, ...x, ...y][0] : 3); // error
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   spread.js:19:13
+   19| let x = [3, 4];
+                   ^ [1]
+   spread.js:47:26
+   47| ([...x, ...x, ...y][0] : 3); // error
+                                ^ [2]
+   spread.js:20:13
+   20| let y = [3, "a"];
+                   ^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:48:2
+
+Cannot cast `[...][1]` to number literal `4` because:
+ - number [1] is incompatible with number literal `4` [2].
+ - string [3] is incompatible with number literal `4` [2].
+
+   spread.js:48:2
+   48| ([...x, ...x, ...y][1] : 4); // error
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   spread.js:19:10
+   19| let x = [3, 4];
+                ^ [1]
+   spread.js:48:26
+   48| ([...x, ...x, ...y][1] : 4); // error
+                                ^ [2]
+   spread.js:20:13
+   20| let y = [3, "a"];
+                   ^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:49:2
+
+Cannot cast `[...][0]` to number literal `3` because:
+ - number [1] is incompatible with number literal `3` [2].
+ - number [3] is incompatible with number literal `3` [2].
+
+   spread.js:49:2
+   49| ([...x, ...x, 1][0] : 3); // error
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   spread.js:19:13
+   19| let x = [3, 4];
+                   ^ [1]
+   spread.js:49:23
+   49| ([...x, ...x, 1][0] : 3); // error
+                             ^ [2]
+   spread.js:49:15
+   49| ([...x, ...x, 1][0] : 3); // error
+                     ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:64:22
+
+Cannot assign array literal to `t2s` because array literal [1] has an arity of 3 but tuple type [2] has an arity of 4.
+
+   spread.js:64:22
+   64| let t2s: [1,2,3,4] = [...[t, t, t]]; // error tuple is only 3 long
+                            ^^^^^^^^^^^^^^ [1]
+
+References:
+   spread.js:64:10
+   64| let t2s: [1,2,3,4] = [...[t, t, t]]; // error tuple is only 3 long
+                ^^^^^^^^^ [2]
+
+
+
+Found 15 errors
