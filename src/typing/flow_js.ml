@@ -577,26 +577,32 @@ end
  * doing constant folding.
  *
  * One solution is for constant-folding-location to keep count of how many times
- * we have seen a reason. Then, when we've seen it multiple times, we can decide
+ * we have seen a reason at a given position in the array.
+ * Then, when we've seen it multiple times in the same place, we can decide
  * to stop doing constant folding.
  *)
 
+module ConstFoldMap = MyMap.Make(struct
+  type t = reason * int
+  let compare = Pervasives.compare
+end)
+
 module ConstFoldExpansion : sig
-  val guard: int -> reason -> (int -> 't) -> 't
+  val guard: int -> reason * int -> (int -> 't) -> 't
 end = struct
-  let rmaps: int ReasonMap.t IMap.t ref = ref IMap.empty
+  let rmaps: int ConstFoldMap.t IMap.t ref = ref IMap.empty
 
   let get_rmap id =
     IMap.get id !rmaps
-    |> Option.value ~default:ReasonMap.empty
+    |> Option.value ~default:ConstFoldMap.empty
 
-  let increment reason rmap =
-     match ReasonMap.get reason rmap with
-     | None -> 0, ReasonMap.add reason 1 rmap
-     | Some count -> count, ReasonMap.add reason (count + 1) rmap
+  let increment reason_with_pos rmap =
+     match ConstFoldMap.get reason_with_pos rmap with
+     | None -> 0, ConstFoldMap.add reason_with_pos 1 rmap
+     | Some count -> count, ConstFoldMap.add reason_with_pos (count + 1) rmap
 
-  let guard id reason f =
-    let count, rmap = get_rmap id |> increment reason in
+  let guard id reason_with_pos f =
+    let count, rmap = get_rmap id |> increment reason_with_pos in
     rmaps := IMap.add id rmap !rmaps;
     f count
 end
@@ -3268,10 +3274,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          *    This should prevent more distinct lower bounds from flowing in
          * 3. rec_flow caches (l,u) pairs.
          *)
-
-
         let reason_elemt = reason_of_t elemt in
-        ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
+        let pos = Core_list.length rrt_resolved in
+        ConstFoldExpansion.guard id (reason_elemt, pos) (fun recursion_depth ->
           match recursion_depth with
           | 0 ->
             (* The first time we see this, we process it normally *)
@@ -3299,7 +3304,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | ResolveSpreadsToCustomFunCall (id, _, _)
       | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
         let reason_elemt = reason_of_t elemt in
-        ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
+        let pos = Core_list.length rrt_resolved in
+        ConstFoldExpansion.guard id (reason_elemt, pos) (fun recursion_depth ->
           match recursion_depth with
           | 0 ->
             (* The first time we see this, we process it normally *)
@@ -10508,8 +10514,8 @@ and multiflow_partial =
         let reason_op = arg_array_reason in
         let element_reason = replace_reason_const Reason.inferred_union_elem_array_desc reason_op in
         let elem_t = Tvar.mk cx element_reason in
-        let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)) in
-        resolve_spread_list cx ~use_op ~reason_op elems resolve_to
+        ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)
+        |> resolve_spread_list cx ~use_op ~reason_op elems
       ) in
       let () =
         let use_op = Frame (FunRestParam {

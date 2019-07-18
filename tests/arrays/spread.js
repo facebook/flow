@@ -62,3 +62,11 @@ let t = makeTvar();
 let ts: [1,2,3,4] = [...[t, t, t, t]];
 
 let t2s: [1,2,3,4] = [...[t, t, t]]; // error tuple is only 3 long
+
+function foo(a: [1,2,3], b: [4,5,6]): [1,2,3,4,5,6] {
+  return [...a, ...b];
+}
+
+function bar(a: [1,2,3], b: [4,5,6]): [1,2,3,1,2,3] {
+  return [...a, ...a];
+}
