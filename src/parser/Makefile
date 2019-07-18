@@ -22,12 +22,13 @@ NATIVE_OBJECT_FILES=\
 RUNNER_DEPS=\
 	hack/heap\
 	hack/injection/default_injector\
-	hack/utils\
+	hack/third-party/core\
 	hack/utils/collections\
+	hack/utils/core\
 	hack/utils/disk\
 	hack/utils/hh_json\
+	hack/utils/string\
 	hack/utils/sys\
-	hack/third-party/core\
 	src/common/utils\
 	src/parser\
 	src/parser_utils
