@@ -451,6 +451,7 @@ Notable bug fixes:
 Misc:
 * We've deleted `flow gen-flow-files` due to bitrot. We do plan on building a better version in the future.
 * Various libdef updates. Thanks for all the PRs!
+* `{}` now consistently represents an unsealed object. You can read more in the [documentation](https://flow.org/en/docs/types/objects/#toc-unsealed-objects). [example](https://flow.org/try/#0GYVwdgxgLglg9mABFApgZygCgN7DnALkTBAFsAjFAJwF8BKbGgKCdQx3oG5EB6HxAHJxE1KnCqIAhlEQAOWUwgIMiAB5Fc+IiQrUaiALyJG3PogCiVMROlzZQA)
 
 ### 0.88.0
 
