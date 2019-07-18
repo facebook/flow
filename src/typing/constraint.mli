@@ -19,8 +19,8 @@ and root = {
 }
 
 and constraints =
-| Resolved of Type.t
-| FullyResolved of Type.t
+| Resolved of Type.use_op * Type.t
+| FullyResolved of Type.use_op * Type.t
 | Unresolved of bounds
 
 and bounds = {

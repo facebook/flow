@@ -127,7 +127,7 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
                  In either case, it is not necessary to visit the structure of the
                  resolved type, as we will not find anything to complain about. *)
               seen
-            | Resolved t ->
+            | Resolved (_, t) ->
               self#type_ cx Polarity.Positive seen t
             | Unresolved { lower; _ } ->
               TypeMap.fold (fun t _ seen -> self#type_ cx Polarity.Positive seen t) lower seen
@@ -280,7 +280,7 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
       | OpenT (r, id) ->
         let seen = self#tvar cx Polarity.Positive seen r id in
         (match Context.find_graph cx id with
-        | Resolved t | FullyResolved t -> self#typeapp targs cx pole seen t
+        | Resolved (_, t) | FullyResolved (_, t) -> self#typeapp targs cx pole seen t
         | Unresolved { lower; _ } ->
           TypeMap.fold (fun t _ acc ->
             self#typeapp targs cx pole acc t

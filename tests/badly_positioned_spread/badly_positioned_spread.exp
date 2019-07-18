@@ -1,15 +1,19 @@
-Error ------------------------------------------------------------------------------------------------------- foo.js:3:1
+Error ------------------------------------------------------------------------------------------------------ bad.js:10:8
 
-Property `color` is missing in statics of function type [1] but exists in object type [2].
+Cannot spread object literal because property `color` is missing in statics of function type [1] but exists in object
+type [2] in property `foo`.
 
-   foo.js:3:1
-   3| function Foo(props: {||}): void {}
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   bad.js:10:8
+   10|     ...{Bar: y}
+              ^^^^^^^^
 
 References:
+   foo.js:3:1
+    3| function Foo(props: {||}): void {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    bad.js:5:17
-   5| const y : {foo: {color?: string}} = {foo: {color: "cat"}};
-                      ^^^^^^^^^^^^^^^^ [2]
+    5| const y : {foo: {color?: string}} = {foo: {color: "cat"}};
+                       ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ good.js:8:8

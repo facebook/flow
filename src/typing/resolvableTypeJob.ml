@@ -64,7 +64,7 @@ and collect_of_type ?log_unresolved cx acc = function
       (* Everything reachable from this type is certainly resolved, so we can
          avoid walking the type entirely. *)
       acc
-    | Resolved t ->
+    | Resolved (_, t) ->
       let acc = IMap.add id OpenResolved acc in
       collect_of_type ?log_unresolved cx acc t
     | Unresolved _ ->
@@ -289,7 +289,7 @@ and collect_of_binding ?log_unresolved cx acc = function
       (* Everything reachable from this type is certainly resolved, so we can
          avoid walking the type entirely. *)
       acc
-    | Resolved t ->
+    | Resolved (_, t) ->
       let acc = IMap.add id OpenResolved acc in
       collect_of_type ?log_unresolved cx acc t
     | Unresolved _ ->

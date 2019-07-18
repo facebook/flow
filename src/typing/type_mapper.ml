@@ -26,7 +26,7 @@ let unwrap_type =
       seen := ISet.add id !seen;
       let open Constraint in
       match Context.find_graph cx id with
-      | Resolved t' | FullyResolved t' -> unwrap seen cx t'
+      | Resolved (_, t') | FullyResolved (_, t') -> unwrap seen cx t'
       | Unresolved _ -> t
     end
   | AnnotT (_, t, _)
@@ -45,7 +45,7 @@ let union_flatten =
         seen := ISet.add id !seen;
         let open Constraint in
         match Context.find_graph cx id with
-        | Resolved t' | FullyResolved t' -> flatten cx seen t'
+        | Resolved (_, t') | FullyResolved (_, t') -> flatten cx seen t'
         | Unresolved _ -> [t]
       end
     | AnnotT (_, t, _) -> flatten cx seen t

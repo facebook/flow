@@ -780,8 +780,8 @@ end = struct
      taking their union.
   *)
   and resolve_bounds ~env = function
-    | Constraint.Resolved t
-    | Constraint.FullyResolved t ->
+    | Constraint.Resolved (_, t)
+    | Constraint.FullyResolved (_, t) ->
       type__ ~env t
     | Constraint.Unresolved bounds ->
       resolve_from_lower_bounds ~env bounds >>= function

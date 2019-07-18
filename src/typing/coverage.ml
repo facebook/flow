@@ -141,8 +141,8 @@ class visitor = object (self)
         tvar_cache <- IMap.add root_id Started tvar_cache;
         let open Constraint in
         let cov = match constraints with
-          | Resolved t
-          | FullyResolved t ->
+          | Resolved (_, t)
+          | FullyResolved (_, t) ->
             self#type_ cx t
           | Unresolved bounds ->
             let bounds = TypeMap.keys bounds.lower in

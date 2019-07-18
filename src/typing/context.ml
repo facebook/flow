@@ -613,7 +613,7 @@ let rec find_resolved cx = function
   | Type.OpenT (_, id) ->
     let open Constraint in
     begin match find_graph cx id with
-      | Resolved t | FullyResolved t -> Some t
+      | Resolved (_, t) | FullyResolved (_, t) -> Some t
       | Unresolved _ -> None
     end
   | Type.AnnotT (_, t, _) -> find_resolved cx t
