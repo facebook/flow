@@ -864,6 +864,7 @@ let parse_initialize (params: json option) : Initialize.params =
     {
       useTextEditAutocomplete = Jget.bool_d json "useTextEditAutocomplete" ~default:false;
       liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true;
+      namingTableSavedStatePath = Jget.string_opt json "namingTableSavedStatePath";
     }
   and parse_capabilities json =
     {

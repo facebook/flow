@@ -120,6 +120,7 @@ module Initialize :
     and initializationOptions = {
       useTextEditAutocomplete : bool;
       liveSyntaxErrors : bool;
+      namingTableSavedStatePath : string option;
     }
     and client_capabilities = {
       workspace : workspaceClientCapabilities;

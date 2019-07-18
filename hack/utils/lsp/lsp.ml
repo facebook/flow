@@ -273,6 +273,7 @@ module Initialize = struct
   and initializationOptions = {
     useTextEditAutocomplete: bool; (* only supported for Hack so far *)
     liveSyntaxErrors: bool; (* implicitly true for Hack; supported in Flow *)
+    namingTableSavedStatePath: string option; (* only supported for Hack *)
   }
 
   and client_capabilities = {
