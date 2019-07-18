@@ -209,6 +209,7 @@ COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
 JS_STUBS=\
+	+dtoa/dtoa_stubs.js\
 	$(wildcard js/*.js)
 
 OUNIT_TESTS=\

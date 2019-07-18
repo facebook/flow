@@ -5392,23 +5392,42 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | ROArrayAT (value) -> value, None, true
       end in
       let can_write_tuple, value = match l with
-      | DefT (_, _, NumT (Literal (_, (float_value, _)))) ->
+      | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) ->
           begin match ts with
           | None -> false, value
           | Some ts ->
-              let index = int_of_float float_value in
-              begin
-                try true, List.nth ts index
-                with _ ->
+            let index_string = Dtoa.ecma_string_of_float float_value in
+            begin match int_of_string_opt index_string with
+            | Some index ->
+              let value_opt = try List.nth_opt ts index with Invalid_argument _ -> None in
+              begin match value_opt with
+              | Some value ->
+                true, value
+              | None ->
                 if is_tuple then begin
-                  let reasons = (reason, reason_tup) in
-                  let error =
-                    Error_message.ETupleOutOfBounds (reasons, List.length ts, index, use_op)
-                  in
-                  add_output cx ~trace error;
-                  true, DefT (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason), bogus_trust (), VoidT)
-                end else true, value
+                  add_output cx ~trace (Error_message.ETupleOutOfBounds {
+                    use_op;
+                    reason;
+                    reason_op = reason_tup;
+                    length = List.length ts;
+                    index = index_string;
+                  });
+                  true, AnyT.error (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason))
+                end else
+                  true, value
               end
+            | None ->
+              (* not an integer index *)
+              if is_tuple then begin
+                add_output cx ~trace (Error_message.ETupleNonIntegerIndex {
+                  use_op;
+                  reason = index_reason;
+                  index = index_string;
+                });
+                true, AnyT.error reason
+              end else
+                true, value
+            end
           end
       | _ -> false, value
       in

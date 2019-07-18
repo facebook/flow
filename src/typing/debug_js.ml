@@ -2614,12 +2614,18 @@ let dump_error_message =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (string_of_use_op use_op)
-    | ETupleOutOfBounds ((reason1, reason2), arity1, arity2, use_op) ->
-        spf "ETupleOutOfBounds (%s, %s, %d, %d, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          arity1 arity2
+    | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+        spf "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; length = %d; index = %s }"
           (string_of_use_op use_op)
+          (dump_reason cx reason)
+          (dump_reason cx reason_op)
+          length
+          index
+    | ETupleNonIntegerIndex { use_op; reason; index } ->
+        spf "ETupleNonIntegerIndex { use_op = %s; reason = %s; index = %s }"
+          (string_of_use_op use_op)
+          (dump_reason cx reason)
+          index
     | ETupleUnsafeWrite { reason; use_op } ->
         spf "ETupleUnsafeWrite { reason = %s; use_op = %s }"
           (dump_reason cx reason)

@@ -93,7 +93,18 @@ and 'loc t' =
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ETupleArityMismatch of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
-  | ETupleOutOfBounds of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
+  | ETupleOutOfBounds of {
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      reason_op: 'loc virtual_reason;
+      length: int;
+      index: string;
+    }
+  | ETupleNonIntegerIndex of {
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      index: string;
+    }
   | ETupleUnsafeWrite of { reason: 'loc virtual_reason; use_op: 'loc virtual_use_op }
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
@@ -434,8 +445,20 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       ETupleArityMismatch ((map_reason r1, map_reason r2), l, i, map_use_op op)
   | ENonLitArrayToTuple  ((r1, r2), op) ->
       ENonLitArrayToTuple ((map_reason r1, map_reason r2), map_use_op op)
-  | ETupleOutOfBounds ((r1, r2), l, i, op) ->
-      ETupleOutOfBounds ((map_reason r1, map_reason r2), l, i, map_use_op op)
+  | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+      ETupleOutOfBounds {
+        use_op = map_use_op use_op;
+        reason = map_reason reason;
+        reason_op = map_reason reason_op;
+        length;
+        index;
+      }
+  | ETupleNonIntegerIndex { use_op; reason; index } ->
+      ETupleNonIntegerIndex {
+        use_op = map_use_op use_op;
+        reason = map_reason reason;
+        index;
+      }
   | ETupleUnsafeWrite { reason; use_op } ->
       ETupleUnsafeWrite { reason = map_reason reason; use_op = map_use_op use_op }
   | EROArrayWrite ((r1, r2), op) ->
@@ -624,7 +647,10 @@ let util_use_op_of_msg nope util = function
 | EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
 | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
 | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
-| ETupleOutOfBounds (rs, l, i, op) -> util op (fun op -> ETupleOutOfBounds (rs, l, i, op))
+| ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+  util use_op (fun use_op -> ETupleOutOfBounds { use_op; reason; reason_op; length; index })
+| ETupleNonIntegerIndex { use_op; reason; index } ->
+  util use_op (fun use_op -> ETupleNonIntegerIndex { use_op; reason; index })
 | ETupleUnsafeWrite { reason; use_op } ->
   util use_op (fun use_op -> ETupleUnsafeWrite { reason; use_op })
 | EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
@@ -879,6 +905,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | ETupleUnsafeWrite _
   | EROArrayWrite _
   | ETupleOutOfBounds _
+  | ETupleNonIntegerIndex _
   | ENonLitArrayToTuple _
   | ETupleArityMismatch _
   | EAdditionMixed _
@@ -1220,12 +1247,21 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "incompatible with "; ref upper;
       ], use_op)
 
-    | ETupleOutOfBounds (reasons, length, index, use_op) ->
-      let (lower, upper) = reasons in
-      UseOp (loc_of_reason lower, [
-        ref upper;
-        text (spf " only has %d element%s, so index %d is out of bounds"
+    | ETupleOutOfBounds { reason; reason_op; length; index; use_op } ->
+      UseOp (loc_of_reason reason, [
+        ref reason_op;
+        text (spf " only has %d element%s, so index %s is out of bounds"
           length (if length == 1 then "" else "s") index);
+      ], use_op)
+
+    | ETupleNonIntegerIndex { reason; index; use_op } ->
+      let index_ref =
+        let open Errors.Friendly in
+        Reference ([Code index], def_loc_of_reason reason)
+      in
+      UseOp (loc_of_reason reason, [
+        text "the index into a tuple must be an integer, but ";
+        index_ref; text " is not an integer";
       ], use_op)
 
     | ETupleUnsafeWrite { reason; use_op } ->
