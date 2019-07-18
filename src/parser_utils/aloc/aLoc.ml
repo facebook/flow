@@ -9,7 +9,7 @@ type table = {
   (* This is not strictly necessary, but it allows us to check that the location source matches the
    * table source, to avoid confusing issues if we try a lookup with the wrong table. *)
   file: File_key.t;
-  mutable map: Loc.t ResizableArray.t
+  map: Loc.t ResizableArray.t
 }
 
 let make_table file = {
