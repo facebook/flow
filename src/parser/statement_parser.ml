@@ -140,7 +140,7 @@ module Statement
        (see sec-semantics-static-semantics-early-errors). *)
     if not (in_strict_mode env) && is_labelled_function body
     then function_as_statement_error_at env (fst body);
-
+    let pre_keyword_trailing = Peek.comments env in
     Expect.token env T_WHILE;
     let pre_cond_trailing = Peek.comments env in
     Expect.token env T_LPAREN;
@@ -152,7 +152,7 @@ module Statement
      * specified in ES6 *)
     if Peek.token env = T_SEMICOLON
     then Eat.semicolon env;
-    let trailing = pre_cond_trailing @ past_cond_trailing in
+    let trailing = pre_keyword_trailing @ pre_cond_trailing @ past_cond_trailing in
     Statement.DoWhile { Statement.DoWhile.
       body;
       test;

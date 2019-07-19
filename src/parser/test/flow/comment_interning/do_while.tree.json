@@ -1,7 +1,7 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":27,"column":1}},
-  "range":[0,591],
+  "range":[0,631],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -266,7 +266,7 @@
     {
       "type":"FunctionDeclaration",
       "loc":{"source":null,"start":{"line":20,"column":0},"end":{"line":27,"column":1}},
-      "range":[386,591],
+      "range":[386,631],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":20,"column":9},"end":{"line":20,"column":22}},
@@ -279,7 +279,7 @@
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":20,"column":25},"end":{"line":27,"column":1}},
-        "range":[411,591],
+        "range":[411,631],
         "body":[
           {
             "type":"VariableDeclaration",
@@ -314,19 +314,25 @@
             "trailingComments":[
               {
                 "type":"Block",
-                "loc":{"source":null,"start":{"line":24,"column":12},"end":{"line":24,"column":48}},
-                "range":[465,501],
-                "value":" 3.0. pre-cond trailing comment "
+                "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
+                "range":[459,498],
+                "value":" 3.0. pre-keyword trailing comment "
               },
               {
                 "type":"Block",
-                "loc":{"source":null,"start":{"line":24,"column":56},"end":{"line":24,"column":93}},
-                "range":[509,546],
-                "value":" 3.1. past-cond trailing comment "
+                "loc":{"source":null,"start":{"line":24,"column":52},"end":{"line":24,"column":88}},
+                "range":[505,541],
+                "value":" 3.1. pre-cond trailing comment "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":24,"column":96},"end":{"line":24,"column":133}},
+                "range":[549,586],
+                "value":" 3.2. past-cond trailing comment "
               }
             ],
-            "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":24,"column":94}},
-            "range":[432,547],
+            "loc":{"source":null,"start":{"line":22,"column":4},"end":{"line":24,"column":134}},
+            "range":[432,587],
             "body":{
               "type":"BlockStatement",
               "loc":{"source":null,"start":{"line":22,"column":7},"end":{"line":24,"column":5}},
@@ -363,21 +369,21 @@
             },
             "test":{
               "type":"BinaryExpression",
-              "loc":{"source":null,"start":{"line":24,"column":50},"end":{"line":24,"column":54}},
-              "range":[503,507],
+              "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":94}},
+              "range":[543,547],
               "operator":"<",
               "left":{
                 "type":"Identifier",
-                "loc":{"source":null,"start":{"line":24,"column":50},"end":{"line":24,"column":51}},
-                "range":[503,504],
+                "loc":{"source":null,"start":{"line":24,"column":90},"end":{"line":24,"column":91}},
+                "range":[543,544],
                 "name":"i",
                 "typeAnnotation":null,
                 "optional":false
               },
               "right":{
                 "type":"Literal",
-                "loc":{"source":null,"start":{"line":24,"column":53},"end":{"line":24,"column":54}},
-                "range":[506,507],
+                "loc":{"source":null,"start":{"line":24,"column":93},"end":{"line":24,"column":94}},
+                "range":[546,547],
                 "value":3,
                 "raw":"3"
               }
@@ -432,21 +438,27 @@
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":24,"column":12},"end":{"line":24,"column":48}},
-      "range":[465,501],
-      "value":" 3.0. pre-cond trailing comment "
+      "loc":{"source":null,"start":{"line":24,"column":6},"end":{"line":24,"column":45}},
+      "range":[459,498],
+      "value":" 3.0. pre-keyword trailing comment "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":24,"column":56},"end":{"line":24,"column":93}},
-      "range":[509,546],
-      "value":" 3.1. past-cond trailing comment "
+      "loc":{"source":null,"start":{"line":24,"column":52},"end":{"line":24,"column":88}},
+      "range":[505,541],
+      "value":" 3.1. pre-cond trailing comment "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":24,"column":96},"end":{"line":24,"column":133}},
+      "range":[549,586],
+      "value":" 3.2. past-cond trailing comment "
     },
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":26,"column":4},"end":{"line":26,"column":40}},
-      "range":[553,589],
-      "value":" 3.2. unreachable trailing comment"
+      "range":[593,629],
+      "value":" 3.3. unreachable trailing comment"
     }
   ]
 }

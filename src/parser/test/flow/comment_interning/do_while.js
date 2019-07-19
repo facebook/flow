@@ -21,7 +21,7 @@ function only_trailing() {
     var i = 0;
     do {
         i += 1;
-    } while /* 3.0. pre-cond trailing comment */ (i< 3) /* 3.1. past-cond trailing comment */;
+    } /* 3.0. pre-keyword trailing comment */ while /* 3.1. pre-cond trailing comment */ (i< 3) /* 3.2. past-cond trailing comment */;
 
-    // 3.2. unreachable trailing comment
+    // 3.3. unreachable trailing comment
 }
