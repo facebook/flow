@@ -6,6 +6,9 @@
     "packages/flow-parser",
     "packages/flow-remove-types"
   ],
+  "resolutions": {
+    "lodash": ">=4.17.14"
+  },
   "scripts": {
     "prepublish": "yarn workspace flow-parser run prepublish"
   }
