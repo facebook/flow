@@ -192,6 +192,8 @@ jobs:
 
   runtests_linux:
     <<: *docker_node
+    environment:
+      FLOW_RUNTESTS_PARALLELISM: 8
     steps:
       - attach_workspace:
           at: ~/flow
