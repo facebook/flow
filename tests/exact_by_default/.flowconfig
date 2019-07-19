@@ -1,0 +1,5 @@
+[options]
+exact_by_default=true
+
+[lints]
+implicit-inexact-object=error
