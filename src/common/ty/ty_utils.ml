@@ -100,25 +100,18 @@ module type TopAndBotQueries = sig
   val compare: Ty.t -> Ty.t -> int
 end
 
+(* Simplify union/intersection types
+ *
+ * This visitor:
+ *  - removes equal nodes from union and intersection types, based on
+ *    `TopAndBotQueries.compare`.
+ *
+ *  - removes the neutral element for union (resp. intersection) types, which is
+ *    the bottom (resp. top) type.
+ *
+ *  WARNING: This visitor will do a deep type traversal.
+ *)
 module Simplifier(Q: TopAndBotQueries) = struct
-
-  (* Simplify union/intersection types
-
-     This visitor:
-     - removes identical nodes from union and intersection types. The comparison operation
-       is usually Pervasives.compare but you can specify a custom comparison operation
-       for the case where you want to consider some types equal even though they are not
-       identical. This is used in autofix insert-type to treat different sorts of Any as
-       the same.
-     - removes the neutral element for union (resp. intersection) types, which
-       is the bottom (resp. top) type.
-
-     The Any state of this visitor is used to capture any change to the type
-     structure.
-
-     WARNING: This visitor will do a deep type traversal
-  *)
-
   let rec simplify_list ~is_zero ~is_one acc = function
     | [] -> acc
     | t::ts ->
@@ -189,7 +182,8 @@ module BotSensitiveQueries: TopAndBotQueries = struct
     | Ty.Bot kind -> is_bot_kind kind
     | _ -> false
 
-  let compare = Pervasives.compare
+  let comparator = new Ty.comparator_ty
+  let compare = comparator#compare ()
 end
 
 module BotInsensitiveQueries: TopAndBotQueries = struct
@@ -201,7 +195,13 @@ module BotInsensitiveQueries: TopAndBotQueries = struct
     | Ty.Bot _ -> true
     | _ -> false
 
-  let compare = Pervasives.compare
+  let comparator = object(_)
+    inherit [unit] Ty.comparator_ty
+    (* All Bot kinds are equivalent *)
+    method! private on_bot_kind () _ _ = ()
+  end
+
+  let compare = comparator#compare ()
 end
 
 let simplify_type =

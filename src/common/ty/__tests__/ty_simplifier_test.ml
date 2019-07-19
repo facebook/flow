@@ -51,9 +51,7 @@ let tests = "ty_simplifier" >::: [
    *
    * {f: empty} | {f: empty'}
    * ~> (simplify_empty:true)
-   * {f: empty} | {f: empty'}
-   *
-   * TODO: This should simplify to {f: empty}
+   * {f: empty'}
    *)
   "simplify_union_obj_empty_insensitive" >:: begin fun ctxt ->
     let t_in = Ty.Union (
@@ -77,26 +75,14 @@ let tests = "ty_simplifier" >::: [
           }),
       []) in
     let t_out = Ty_utils.simplify_type ~simplify_empty:true t_in in
-    let t_exp = Ty.Union (
-      (Ty.Obj
-        { Ty.obj_exact = false; obj_frozen = false; obj_literal = false;
-          obj_props =
-          [(Ty.NamedProp ("f",
-              (Ty.Field ((Ty.Bot Ty.EmptyType),
-                 { Ty.fld_polarity = Ty.Neutral; fld_optional = false }))
-              ))
-            ]
-          }),
-      (Ty.Obj
-        { Ty.obj_exact = false; obj_frozen = false; obj_literal = false;
-          obj_props =
-          [(Ty.NamedProp ("f",
-              (Ty.Field ((Ty.Bot Ty.EmptyMatchingPropT),
-                 { Ty.fld_polarity = Ty.Neutral; fld_optional = false }))
-              ))
-            ]
-          }),
-      []) in
+    let t_exp = Ty.Obj
+      { Ty.obj_exact = false; obj_frozen = false; obj_literal = false;
+        obj_props =
+        [(Ty.NamedProp ("f",
+            (Ty.Field ((Ty.Bot Ty.EmptyMatchingPropT),
+               { Ty.fld_polarity = Ty.Neutral; fld_optional = false }))
+            ))]
+      } in
     assert_equal ~ctxt ~printer:Ty.show t_exp t_out;
   end;
 
