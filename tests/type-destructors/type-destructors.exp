@@ -1,37 +1,51 @@
-Error --------------------------------------------------------------------------------------------- element_type.js:1:17
+Error --------------------------------------------------------------------------------------------- element_type.js:3:17
 
 Cannot use type without exactly 2 type arguments.
 
-   1| type BadArity = $ElementType<number, number, number>;
+   3| type BadArity = $ElementType<number, number, number>;
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- element_type.js:7:2
+Error ---------------------------------------------------------------------------------------------- element_type.js:9:2
 
 Cannot cast `'hello world'` to `Arr_Elem` because string [1] is incompatible with number [2].
 
-   element_type.js:7:2
-   7| ('hello world': Arr_Elem);
+   element_type.js:9:2
+   9| ('hello world': Arr_Elem);
        ^^^^^^^^^^^^^ [1]
 
 References:
-   element_type.js:7:17
-   7| ('hello world': Arr_Elem);
+   element_type.js:9:17
+   9| ('hello world': Arr_Elem);
                       ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- element_type.js:18:2
+Error --------------------------------------------------------------------------------------------- element_type.js:20:2
 
 Cannot cast `'hello world'` to `Obj_Elem` because string [1] is incompatible with number [2].
 
-   element_type.js:18:2
-   18| ('hello world': Obj_Elem);
+   element_type.js:20:2
+   20| ('hello world': Obj_Elem);
         ^^^^^^^^^^^^^ [1]
 
 References:
-   element_type.js:18:17
-   18| ('hello world': Obj_Elem);
+   element_type.js:20:17
+   20| ('hello world': Obj_Elem);
                        ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- element_type.js:27:16
+
+Cannot instantiate `$ElementType` because property `b` is missing in object type [1].
+
+   element_type.js:27:16
+   27| declare var x: $ElementType<{a: ''}, 'a' | 'b'>;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   element_type.js:27:29
+   27| declare var x: $ElementType<{a: ''}, 'a' | 'b'>;
+                                   ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- errors.js:12:10
@@ -334,39 +348,39 @@ References:
                          ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- property_type.js:1:18
+Error -------------------------------------------------------------------------------------------- property_type.js:3:18
 
 Cannot use `$PropertyType` because the second type argument must be a string literal.
 
-   1| type Malformed = $PropertyType<any, number>;
+   3| type Malformed = $PropertyType<any, number>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- property_type.js:6:2
+Error --------------------------------------------------------------------------------------------- property_type.js:8:2
 
 Cannot cast `42` to `Obj_Prop_x` because number [1] is incompatible with string [2].
 
-   property_type.js:6:2
-   6| (42: Obj_Prop_x);
+   property_type.js:8:2
+   8| (42: Obj_Prop_x);
        ^^ [1]
 
 References:
-   property_type.js:6:6
-   6| (42: Obj_Prop_x);
+   property_type.js:8:6
+   8| (42: Obj_Prop_x);
            ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- property_type.js:10:15
+Error ------------------------------------------------------------------------------------------- property_type.js:12:15
 
 Cannot return `0` because number [1] is incompatible with string [2].
 
-   property_type.js:10:15
-   10|   else return 0;
+   property_type.js:12:15
+   12|   else return 0;
                      ^ [1]
 
 References:
-   property_type.js:3:17
-    3| type Obj = { x: string };
+   property_type.js:5:17
+    5| type Obj = { x: string };
                        ^^^^^^ [2]
 
 
@@ -714,65 +728,65 @@ References:
                ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:2:40
+Error ---------------------------------------------------------------------------------------------------- union.js:4:40
 
 Cannot assign `true` to `x1` because:
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   union.js:2:40
-   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+   union.js:4:40
+   4| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                                              ^^^^ [1]
 
 References:
-   union.js:2:23
-   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+   union.js:4:23
+   4| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                             ^^^^^^ [2]
-   union.js:2:30
-   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+   union.js:4:30
+   4| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                                    ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:4:52
+Error ---------------------------------------------------------------------------------------------------- union.js:6:52
 
 Cannot assign `true` to `x3` because:
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   union.js:4:52
-   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+   union.js:6:52
+   6| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                                          ^^^^ [1]
 
 References:
-   union.js:4:26
-   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+   union.js:6:26
+   6| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                ^^^^^^ [2]
-   union.js:4:37
-   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+   union.js:6:37
+   6| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                           ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:10:2
+Error ---------------------------------------------------------------------------------------------------- union.js:12:2
 
 Cannot cast `null` to `P2` because:
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with number [3].
 
-   union.js:10:2
-   10| (null: P2); // err, null ~> string|number
+   union.js:12:2
+   12| (null: P2); // err, null ~> string|number
         ^^^^ [1]
 
 References:
-   union.js:11:14
-   11| type T = {p: string} | {p: number}; // NB: T resolved here
+   union.js:13:14
+   13| type T = {p: string} | {p: number}; // NB: T resolved here
                     ^^^^^^ [2]
-   union.js:11:28
-   11| type T = {p: string} | {p: number}; // NB: T resolved here
+   union.js:13:28
+   13| type T = {p: string} | {p: number}; // NB: T resolved here
                                   ^^^^^^ [3]
 
 
 
-Found 51 errors
+Found 52 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
