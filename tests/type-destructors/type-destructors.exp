@@ -272,6 +272,25 @@ References:
                       ^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- issue_4211.js:16:2
+
+Cannot cast object literal to `T` because:
+ - Either object literal [1] is incompatible with number [2].
+ - Or object literal [1] is incompatible with string [3].
+
+   issue_4211.js:16:2
+   16| ({a: 1}: T); // error
+        ^^^^^^ [1]
+
+References:
+   issue_4211.js:3:17
+    3| declare var t: [number, string];
+                       ^^^^^^ [2]
+   issue_4211.js:3:25
+    3| declare var t: [number, string];
+                               ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- merged/test.js:9:4
 
 Cannot call `fn` with object literal bound to the first parameter because property `foo` is missing in object type [1]
@@ -753,7 +772,7 @@ References:
 
 
 
-Found 50 errors
+Found 51 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
