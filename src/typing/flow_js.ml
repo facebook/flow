@@ -2975,6 +2975,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when (match u with
         (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
            prevents a drastic blowup of cases which can cause perf problems. *)
+        | ElemT (_, _, _, ReadElem _)
         | PredicateT (RightP (SentinelProp _, _), _)
         | PredicateT (NotP (RightP (SentinelProp _, _)), _) -> false
         | _ -> true
@@ -5343,17 +5344,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout)))
 
     | (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
-      GetElemT (use_op, reason_op, UnionT (_, rep), tout) ->
-      let t0, (t1, ts) = UnionRep.members_nel rep in
-      let f t =
-        AnnotT (reason_op, Tvar.mk_where cx reason_op (fun tvar ->
-          rec_flow cx trace (l, GetElemT (use_op, reason_op, t, tvar))
-        ), false)
-      in
-      let rep = UnionRep.make (f t0) (f t1) (Core_list.map ts ~f) in
-      rec_unify cx trace ~use_op (UnionT (reason_op, rep)) tout
-
-    | (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
       GetElemT (use_op, reason_op, key, tout) ->
       rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem tout))
 
@@ -5362,6 +5352,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
 
+
+    | UnionT (_, rep),
+      ElemT (use_op, reason, tin, ReadElem tout) ->
+      let t0, (t1, ts) = UnionRep.members_nel rep in
+      let f t =
+        AnnotT (reason, Tvar.mk_where cx reason (fun tvar ->
+          rec_flow cx trace (t, ElemT (use_op, reason, tin, ReadElem tvar))
+        ), false)
+      in
+      let rep = UnionRep.make (f t0) (f t1) (Core_list.map ts ~f) in
+      rec_unify cx trace ~use_op (UnionT (reason, rep)) tout
 
     | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action) ->
       let propref = match l with
