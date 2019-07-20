@@ -137,7 +137,7 @@ Set this to `true` to indicate that Flow should interpret object types as exact
 by default. When this flag is `false`, Flow has the following behavior:
 
 ```js
-{foo: number} // exact
+{foo: number} // inexact
 {| foo: number |} // exact
 {foo: number, ...} // inexact
 ```
@@ -145,7 +145,7 @@ by default. When this flag is `false`, Flow has the following behavior:
 When this flag is `true`, Flow has the following behavior:
 
 ```js
-{foo: number} // inexact
+{foo: number} // exact
 {| foo: number |} // exact
 {foo: number, ...} // inexact
 ```
