@@ -305,7 +305,7 @@ let three: "three" = identity("three");
 
 #### Constrain instance of generic class <a class="toc" id="toc-constrain-generic-class" href="#toc-constrain-generic-class"></a>
 
-Sometmies you want to restrict what parts of a class can be accessed based on the `this` variable. This can be emulated via `$Call`. (todo: link to Call documentation)
+Sometmies you want to restrict what parts of a class can be accessed based on the `this` variable. This can be emulated via [`$Call`](../utilities/#toc-call)
 
 ***Plain class***
 
