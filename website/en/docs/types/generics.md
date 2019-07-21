@@ -303,6 +303,101 @@ let two: 2 = identity(2);
 let three: "three" = identity("three");
 ```
 
+#### Constrain instance of generic class <a class="toc" id="toc-constrain-generic-class" href="#toc-constrain-generic-class"></a>
+
+Sometmies you want to restrict what parts of a class can be accessed based on the `this` variable. This can be emulated via `$Call`. (todo: link to Call documentation)
+
+***Plain class***
+
+We create a function in base class `A` that can only be called when the instance of is type `B`.
+
+```js
+// @flow
+declare class A {
+  m(): $Call<B => 1, this>;
+}
+declare class B extends A {}
+
+const a = new A
+a.m() // error (but unfortunately does not show up in the right place)
+const b = new B
+b.m() // ok
+```
+
+***Generic class***
+
+You can create a function that can only be called when `T` is `number`
+```js
+// @flow
+declare class O<T> {
+  m(): $Call<(number => number), T>;
+}
+  
+declare var o1: O<number>
+  
+const a1: number = o1.m() // ok
+// $ExpectError
+const b1: string = o1.m() // error
+```
+
+***Nested generic class***
+
+You can use type inference to constrain on nested types such as `Array<T>`.
+
+```js
+// @flow
+declare class O<+T> {
+  constructor(T): void;
+  m(): $Call<<U>(Array<U>) => U, T>
+}
+
+const oarr = new O([1,2,3])
+const n: number = oarr.m() // ok
+// $ExpectError
+const s: string = oarr.m() // note: inferred that this is an array of numbers, not of strings
+```
+
+***State machine***
+
+You can even use this to model a statically-checked state machine
+
+```js
+// @flow
+type StateConstraint<CurrentState, Input, Output> = $Call<
+  (Input => () => StateMachine<Output>) & () => {...},
+  CurrentState
+>;
+
+class StateMachine<CurrentState>  {
+  state: CurrentState;
+
+  constructor(s: CurrentState) { this.state = s }
+
+  toStateTwo: StateConstraint<CurrentState, 1, 2> = () => {
+    return new StateMachine(2);
+  }
+
+  toStateFour: StateConstraint<CurrentState, 1|2, 4> = () => {
+    return new StateMachine(4);
+  }
+    
+  toStateThree: StateConstraint<CurrentState, 2, 3> = () => {
+    return new StateMachine(3);
+  }
+
+  static start(): StateMachine<1> {
+    return new StateMachine(1);
+  }
+}
+
+let state1 = StateMachine.start();
+let state2 = state1.toStateTwo().toStateThree();
+
+// state is now '3' so template requirement isn't satisfied
+// $ExpectError
+let state3 = state2.toStateFour();
+```
+
 #### Generic types act as bounds <a class="toc" id="toc-generic-types-act-as-bounds" href="#toc-generic-types-act-as-bounds"></a>
 
 ```js
