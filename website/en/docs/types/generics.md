@@ -305,11 +305,11 @@ let three: "three" = identity("three");
 
 #### Constrain instance of generic class <a class="toc" id="toc-constrain-generic-class" href="#toc-constrain-generic-class"></a>
 
-Sometmies you want to restrict what parts of a class can be accessed based on the `this` variable. This can be emulated via [`$Call`](../utilities/#toc-call)
+Sometimes you want to restrict what parts of a class can be accessed based on the `this` variable. This can be emulated via [`$Call`](../utilities/#toc-call)
 
 ***Plain class***
 
-We create a function in base class `A` that can only be called when the instance of is type `B`.
+We create a function in base class `A` that can only be called when the instance is of type `B`.
 
 ```js
 // @flow
@@ -342,7 +342,7 @@ const b1: string = o1.m() // error
 
 ***Nested generic class***
 
-You can use type inference to constrain on nested types such as `Array<T>`.
+You can use type inference to constrain nested types such as `Array<T>`.
 
 ```js
 // @flow
