@@ -60,6 +60,15 @@ let parse_status raw_status_contents =
     rss_hwm = SMap.get "VmHWM" stats |> Option.value_map ~default:0 ~f:humanReadableToBytes;
   }
 
+let parse_cgroup raw_cgroup_contents =
+  match String.split raw_cgroup_contents ~on:'\n' with
+  | [] -> Error "Expected at least one cgroup in /proc/<PID>/cgroup file"
+  | first_line::_ ->
+    begin match String.split first_line ~on:':' with
+    | [_id; _controllers; cgroup] -> Ok cgroup
+    | _ -> Error "First line of  /proc/<PID>/cgroup file was not correctly formatted"
+    end
+
 let asset_procfs_supported =
   let memoized_result = ref None in
   fun () ->
@@ -78,3 +87,10 @@ let status_for_pid pid =
   asset_procfs_supported () >>= fun () ->
   read_proc_file "status" pid
   >>| parse_status
+
+(* In cgroup v1 a pid can be in multiple cgroups. In cgroup v2 it will only be in a single cgroup.
+ *)
+let first_cgroup_for_pid pid =
+  asset_procfs_supported () >>= fun () ->
+  read_proc_file "cgroup" pid
+  >>= parse_cgroup
