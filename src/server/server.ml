@@ -7,14 +7,10 @@
 
 let sample_init_memory profiling =
   let open SharedMem_js in
-  let dep_stats = dep_stats () in
   let hash_stats = hash_stats () in
   let heap_size = heap_size () in
   let memory_metrics = [
     "heap.size", heap_size;
-    "dep_table.nonempty_slots", dep_stats.nonempty_slots;
-    "dep_table.used_slots", dep_stats.used_slots;
-    "dep_table.slots", dep_stats.slots;
     "hash_table.nonempty_slots", hash_stats.nonempty_slots;
     "hash_table.used_slots", hash_stats.used_slots;
     "hash_table.slots", hash_stats.slots;
