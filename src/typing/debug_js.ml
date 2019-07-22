@@ -1861,7 +1861,13 @@ let rec dump_t_ (depth, tvars) cx t =
   | DefT (_, trust, SingletonStrT s) -> p ~trust:(Some trust) ~extra:(spf "%S" s) t
   | DefT (_, trust, SingletonNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
   | DefT (_, trust, SingletonBoolT b) -> p ~trust:(Some trust) ~extra:(spf "%B" b) t
-  | ModuleT _ -> p t
+  | ModuleT (_, { exports_tmap; _}, _) -> p t ~extra:(
+      Context.find_exports cx exports_tmap
+      |> SMap.bindings
+      |> Core_list.map ~f:(fun (name, (_, t)) -> kid t |> spf "%s: %s" name)
+      |> String.concat ", "
+      |> spf "[%s]"
+    )
   | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | InternalT (ChoiceKitT _) -> p t
