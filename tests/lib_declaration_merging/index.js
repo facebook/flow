@@ -4,8 +4,8 @@ import { Bar } from "wat";
 
 declare var wat: Bar;
 
-wat.foo; // doesn't work, but probably should, maybe not
-wat.bar;
+;(wat.foo: number); // ok
+;(wat.bar: string); // ok
 
 const foo = [1, 2, 3];
 
