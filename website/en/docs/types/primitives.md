@@ -293,8 +293,11 @@ acceptsOptionalString();          // Works!
 
 ## Symbols <a class="toc" id="toc-symbols" href="#toc-symbols"></a>
 
-Symbols are not currently supported by Flow. You can see these two issues for
-more information:
+Limited support for `Symbols` exists such as the ability to refine using
+```js
+typeof x === 'symbol'
+```
+
+You can see this issue for more information:
 
 - [facebook/flow#810](https://github.com/facebook/flow/issues/810)
-- [facebook/flow#1015](https://github.com/facebook/flow/issues/1015)
