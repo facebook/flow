@@ -5251,6 +5251,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let p = Field (None, t, Polarity.Neutral) in
       Context.set_prop cx props_tmap name p;
 
+    | ModuleT (_, { exports_tmap; _ }, _), OverwritePropT (_, _, Named (_, name), t) ->
+      Context.set_export cx exports_tmap name (None, t);
+
     | DefT (reason_obj, _, ObjT o), MatchPropT (use_op, reason_op, propref, proptype) ->
         match_obj_prop cx trace ~use_op o propref reason_obj reason_op proptype
 
@@ -11163,6 +11166,18 @@ and merge_builtin cx trace reason flip propref original_t l r u =
       ignore o1;
       ignore o2;
       Context.add_property_map cx o2_id (SMap.union o1 o2);
+
+    (* module ~> module *)
+    | ModuleT (_, {exports_tmap = exports1_id; _}, _), ModuleT (_, {exports_tmap = exports2_id; _}, _) ->
+      let exports1 = Context.find_exports cx exports1_id in
+      let exports2 = Context.find_exports cx exports2_id in
+      let exports = SMap.union exports1 exports2 in
+      Context.add_export_map cx exports2_id exports;
+      ignore @@ SMap.union ~combine:(fun key (_, t1) (_, t2) ->
+        rec_flow cx trace (t2, MergeTypesT (reason, false, Named (reason_of_t t1, key), t2, t1, r));
+        None
+      ) exports1 exports2;
+      ()
 
     (* any ~> any *)
     | _, _ ->
