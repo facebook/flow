@@ -851,6 +851,12 @@ let rec convert cx tparams_map = Ast.Type.(function
       reconstruct_ast (AnyT.make Annotated reason) None
     )
 
+  | "$GlobalThis" ->
+    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+      let reason = mk_reason (RCustom "global this") loc in
+      reconstruct_ast (GlobalThisT reason) None
+    )
+
   | "Function$Prototype$Apply" ->
     check_type_arg_arity cx loc t_ast targs 0 (fun () ->
       let reason = mk_reason RFunctionType loc in

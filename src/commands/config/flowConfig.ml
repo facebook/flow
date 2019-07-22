@@ -43,6 +43,7 @@ module Opts = struct
   type opt_error = int * error_kind
 
   type t = {
+    declaration_merging: bool;
     abstract_locations: bool;
     all: bool;
     emoji: bool;
@@ -135,6 +136,7 @@ module Opts = struct
     |> SSet.add ".webm"
 
   let default_options = {
+    declaration_merging = false;
     abstract_locations = false;
     all = false;
     emoji = false;
@@ -622,6 +624,9 @@ module Opts = struct
     "experimental.abstract_locations",
       boolean (fun opts v -> Ok { opts with abstract_locations = v });
 
+    "experimental.declaration_merging",
+      boolean (fun opts v -> Ok { opts with declaration_merging = v });
+
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
 
@@ -1019,6 +1024,7 @@ let includes config = config.includes
 let libs config = config.libs
 
 (* options *)
+let declaration_merging c = c.options.Opts.declaration_merging
 let abstract_locations c = c.options.Opts.abstract_locations
 let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji

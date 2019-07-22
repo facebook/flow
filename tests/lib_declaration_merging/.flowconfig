@@ -1,0 +1,3 @@
+[options]
+no_flowlib=true
+experimental.declaration_merging=true

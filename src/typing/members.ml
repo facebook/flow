@@ -431,6 +431,7 @@ let rec extract_type cx this_t = match this_t with
   | FunProtoBindT _
   | FunProtoCallT _
   | FunProtoT _
+  | GlobalThisT _
   | KeysT (_, _)
   | DefT (_, _, MixedT _)
   | NullProtoT _

@@ -705,6 +705,7 @@ end = struct
     | ModuleT (reason, _, _) -> module_t env reason t
 
     | DefT (_, _, CharSetT _)
+    | GlobalThisT _
     | NullProtoT _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 

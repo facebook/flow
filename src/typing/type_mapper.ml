@@ -107,7 +107,8 @@ class virtual ['a] t = object(self)
       | NullProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _
-      | FunProtoCallT _ -> t
+      | FunProtoCallT _
+      | GlobalThisT _ -> t
       | AnyWithLowerBoundT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -618,6 +619,11 @@ class virtual ['a] t_with_uses = object(self)
           let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
           if prop' == prop && t'' == t' && prop_t' == prop_t then t
           else SetPropT (use_op, r, prop', i, t'', prop_t')
+      | OverwritePropT (use_op, r, prop, t') ->
+          let prop' = self#prop_ref cx map_cx prop in
+          let t'' = self#type_ cx map_cx t' in
+          if prop' == prop && t'' == t' then t
+          else OverwritePropT (use_op, r, prop', t'')
       | SetPrivatePropT (use_op, r, prop, scopes, static, t', prop_t) ->
           let t'' = self#type_ cx map_cx t' in
           let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
@@ -704,6 +710,12 @@ class virtual ['a] t_with_uses = object(self)
           let t'' = self#use_type cx map_cx t' in
           if t'' == t' then t
           else ToStringT (r, t'')
+      | MergeTypesT (r, flip, propref, t', t1, t2) ->
+          let t'' = self#type_ cx map_cx t' in
+          let t1' = self#type_ cx map_cx t1 in
+          let t2' = self#type_ cx map_cx t2 in
+          if t1' == t1 && t2' == t2 && t'' == t' then t
+          else MergeTypesT (r, flip, propref, t'', t1', t2')
       | AdderT (op, r, flip, t1, t2) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in

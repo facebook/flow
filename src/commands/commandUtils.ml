@@ -1096,6 +1096,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_no_saved_state = options_flags.no_saved_state;
     opt_arch;
     opt_abstract_locations;
+    opt_declaration_merging = FlowConfig.declaration_merging flowconfig;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode = Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;

@@ -37,6 +37,7 @@ class ['a] t = object(self)
   | FunProtoCallT _
   | ObjProtoT _
   | NullProtoT _
+  | GlobalThisT _
     -> acc
 
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
@@ -279,6 +280,11 @@ class ['a] t = object(self)
     let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
     acc
 
+  | OverwritePropT (_, _, p, t) ->
+    let acc = self#propref cx acc p in
+    let acc = self#type_ cx pole_TODO acc t in
+    acc
+
   | SetPropT (_, _, p, _, t, prop_t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
@@ -342,6 +348,11 @@ class ['a] t = object(self)
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#use_type_ cx acc t
+
+  | MergeTypesT (_, _, _, _, a, b) ->
+    let acc = self#type_ cx pole_TODO acc a in
+    let acc = self#type_ cx pole_TODO acc b in
+    acc
 
   | AdderT (_, _, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in

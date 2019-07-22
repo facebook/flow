@@ -1,0 +1,16 @@
+Error ----------------------------------------------------------------------------------------- test_node_modules.js:8:1
+
+Cannot get `foo.b` because property `b` is missing in `Foo` [1].
+
+   test_node_modules.js:8:1
+   8| foo.b; // error
+      ^^^^^
+
+References:
+   test_node_modules.js:5:18
+   5| declare var foo: Foo;
+                       ^^^ [1]
+
+
+
+Found 1 error

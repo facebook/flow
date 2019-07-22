@@ -189,6 +189,7 @@ class visitor = object (self)
     | FunProtoApplyT _
     | FunProtoBindT _
     | FunProtoCallT _
+    | GlobalThisT _
     | InternalT _
     | KeysT _
     | MaybeT _

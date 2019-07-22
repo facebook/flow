@@ -48,6 +48,7 @@ type hash =
   | FunProtoApplyH
   | FunProtoBindH
   | FunProtoCallH
+  | GlobalThisH
   | ObjH
   | ObjProtoH
   | MatchingPropH
@@ -86,6 +87,7 @@ type hash =
   | CallH
   | MethodH
   | SetPropH
+  | OverwritePropH
   | SetPrivatePropH
   | GetPropH
   | MatchPropH
@@ -103,6 +105,7 @@ type hash =
   | SuperH
   | ImplementsH
   | MixinH
+  | MergeTypesH
   | AdderH
   | ComparatorH
   | UnaryMinusH
@@ -222,6 +225,7 @@ let hash_of_ctor = Type.(function
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH
+  | GlobalThisT _ -> GlobalThisH
   | IntersectionT _ -> IntersectionH
   | KeysT _ -> KeysH
   | MaybeT _ -> MaybeH
@@ -246,6 +250,7 @@ let hash_of_use_ctor = Type.(function
   | CallT _ -> CallH
   | MethodT _ -> MethodH
   | SetPropT _ -> SetPropH
+  | OverwritePropT _ -> OverwritePropH
   | SetPrivatePropT _ -> SetPrivatePropH
   | GetPropT _ -> GetPropH
   | MatchPropT _ -> MatchPropH
@@ -263,6 +268,7 @@ let hash_of_use_ctor = Type.(function
   | SuperT _ -> SuperH
   | ImplementsT _ -> ImplementsH
   | MixinT _ -> MixinH
+  | MergeTypesT _ -> MergeTypesH
   | AdderT _ -> AdderH
   | ComparatorT _ -> ComparatorH
   | UnaryMinusT _ -> UnaryMinusH
