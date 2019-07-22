@@ -318,7 +318,7 @@ function method(obj: {}) {
 
 However, if you need to opt-out of the type checker, and don't want to go all
 the way to `any`, you could use `{ [key: string]: any}`. (Note that [`any`](../any/) is unsafe and
-should be avoided). For historical reasons, the `Object` keyword is still avaiable.
+should be avoided). For historical reasons, the `Object` keyword is still available.
 In previous versions of Flow, `Object` was the same
 as `{ [key: string]: any}`.
 
