@@ -26,6 +26,7 @@ val with_timer_lwt:
 
 val legacy_sample_memory: metric:string -> value:float -> running -> unit
 val sample_memory: metric:string -> value:float -> running -> unit
+val add_memory: metric:string -> start:float -> delta:float -> hwm_delta:float -> running -> unit
 
 val get_timing_json_string: finished -> string
 val get_abridged_timing_json_string: finished -> string

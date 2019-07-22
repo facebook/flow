@@ -48,9 +48,32 @@ let filter_duplicate_provider map file =
     FilenameMap.add file new_errset map
   | None -> map
 
-let with_timer_lwt ?options timer profiling f =
-  let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
-  Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling
+let with_timer_lwt =
+  let clear_worker_memory () =
+    ["worker_rss_start"; "worker_rss_delta"; "worker_rss_hwm_delta";]
+    |> List.iter Measure.delete
+  in
+
+  let profile_add_memory profiling getter metric =
+    getter "worker_rss_start"
+    |> Option.iter ~f:(fun start ->
+      getter "worker_rss_delta"
+      |> Option.iter ~f:(fun delta ->
+        getter "worker_rss_hwm_delta"
+        |> Option.iter ~f:(fun hwm_delta ->
+          Profiling_js.add_memory ~metric ~start ~delta ~hwm_delta profiling
+        )
+      )
+    )
+  in
+  fun ?options timer profiling f ->
+    let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
+    clear_worker_memory ();
+    let%lwt ret = Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling in
+    profile_add_memory profiling Measure.get_mean (spf "%s:worker_rss_avg" timer);
+    profile_add_memory profiling Measure.get_max (spf "%s:worker_rss_max" timer);
+    clear_worker_memory ();
+    Lwt.return ret
 
 let collate_parse_results ~options parse_results =
   let { Parsing_service_js.

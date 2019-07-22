@@ -791,6 +791,7 @@ module Memory: sig
   val with_memory_lwt: label:string -> f:(running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
   val legacy_sample_memory: metric:string -> value:float -> running -> unit
   val sample_memory: metric:string -> value:float -> running -> unit
+  val add_memory: metric:string -> start:float -> delta:float -> hwm_delta:float -> running -> unit
   val to_json: abridged:bool -> finished -> Hh_json.json
   val print_summary_memory_table: finished -> unit
   val merge: from:finished -> into:running -> unit
@@ -858,6 +859,17 @@ end = struct
       running_memory := { !running_memory with
         running_results = SMap.add metric new_metric (!running_memory.running_results)
       }
+
+  let add_memory ~metric ~start ~delta ~hwm_delta running_memory =
+    let new_metric = {
+      start;
+      delta;
+      high_water_mark_delta = hwm_delta;
+      is_legacy = false;
+    } in
+    running_memory := { !running_memory with
+      running_results = SMap.add metric new_metric (!running_memory.running_results);
+    }
 
   let rec to_json ~abridged finished_memory =
     let open Hh_json in
@@ -999,6 +1011,9 @@ let legacy_sample_memory ~metric ~value profile =
 
 let sample_memory ~metric ~value profile =
   Memory.sample_memory ~metric ~value profile.running_memory
+
+let add_memory ~metric ~start ~delta ~hwm_delta profile =
+  Memory.add_memory ~metric ~start ~delta ~hwm_delta profile.running_memory
 
 let to_json_properties profile =
   [
