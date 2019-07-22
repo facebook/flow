@@ -29,6 +29,8 @@ val negate_number_literal:
   float * string ->
   float * string
 
+val is_negative_number_literal: string -> bool
+
 val loc_of_expression:
   ('a, 'a) Flow_ast.Expression.t -> 'a
 

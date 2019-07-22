@@ -63,6 +63,10 @@ let negate_number_literal (value, raw) =
   in
   ~-. value, raw
 
+let is_negative_number_literal raw =
+  let raw_len = String.length raw in
+  raw_len > 0 && raw.[0] = '-'
+
 let loc_of_statement = fst
 
 let loc_of_expression = fst
