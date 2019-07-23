@@ -352,9 +352,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     match Peek.ith_token ~i:1 env with
     | T_PLING (* optional param *)
     | T_COLON ->
-        let param = function_param_with_id env in
-        ignore (Expect.maybe env T_COMMA);
-        ParamList (function_param_list_without_parens env [param])
+        ParamList (function_param_list_without_parens env [])
     | _ ->
         let id = type_identifier env in
         Type (
