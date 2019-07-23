@@ -82,28 +82,31 @@ class type_parameter_mapper = object(_)
 end
 
 
-exception Found of ALoc.t * Type.TypeScheme.t
-
 (* Find exact location match *)
-class exact_match_searcher (target_loc: ALoc.t) = object(self)
-  inherit type_parameter_mapper as super
+module ExactMatchQuery = struct
 
-  method find_loc: 'a . ALoc.t -> Type.t -> Type.typeparam list -> 'a =
-    fun loc t tparams ->
-      raise (Found (loc, { Type.TypeScheme.tparams; type_ = t}))
+  exception Found of Type.TypeScheme.t
 
-  method! on_type_annot annot =
-    let (loc, t) = annot in
-    if target_loc = loc then
-      self#annot_with_tparams (self#find_loc loc t)
-    else
-      super#on_type_annot annot
+  let found t tparams =
+    raise (Found { Type.TypeScheme.tparams; type_ = t})
+
+  class exact_match_searcher (target_loc: ALoc.t) = object(self)
+    inherit type_parameter_mapper as super
+    method! on_type_annot annot =
+      let (loc, t) = annot in
+      if target_loc = loc
+      then self#annot_with_tparams (found t)
+      else super#on_type_annot annot
+  end
+
+  let find typed_ast aloc =
+    let searcher = new exact_match_searcher aloc in
+    try ignore (searcher#program typed_ast); None with
+    | Found scheme -> Some scheme
+
 end
 
-let find_exact_match_annotation typed_ast loc =
-  let searcher = new exact_match_searcher loc in
-  try ignore (searcher#program typed_ast); None with
-  | Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
+let find_exact_match_annotation = ExactMatchQuery.find
 
 (* Find identifier under location *)
 module Type_at_pos = struct
@@ -162,43 +165,45 @@ module Type_at_pos = struct
 
   end
 
-  class type_at_aloc_map_folder = object(_)
-    inherit type_parameter_mapper
-    val mutable map = ALocMap.empty
-    method! on_type_annot x =
-      let loc, type_ = x in
-      let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams; } in
-      map <- ALocMap.add loc scheme map;
-      x
-    method to_map = map
-  end
-
-  class type_at_aloc_list_folder = object(_)
-    inherit type_parameter_mapper
-    val mutable l = []
-    method! on_type_annot x =
-      let loc, type_ = x in
-      l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams; }) :: l;
-      x
-    method to_list = l
-  end
-
-  let find_type_at_pos_annotation typed_ast loc =
+  let find typed_ast loc =
     let searcher = new type_at_pos_searcher loc in
     try ignore (searcher#program typed_ast); None with
     | Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
 
 end
 
-let find_type_at_pos_annotation = Type_at_pos.find_type_at_pos_annotation
+let find_type_at_pos_annotation = Type_at_pos.find
+
+
+class type_at_aloc_map_folder = object(_)
+  inherit type_parameter_mapper
+  val mutable map = ALocMap.empty
+  method! on_type_annot x =
+    let loc, type_ = x in
+    let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams; } in
+    map <- ALocMap.add loc scheme map;
+    x
+  method to_map = map
+end
+
+class type_at_aloc_list_folder = object(_)
+  inherit type_parameter_mapper
+  val mutable l = []
+  method! on_type_annot x =
+    let loc, type_ = x in
+    l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams; }) :: l;
+    x
+  method to_list = l
+end
+
 
 let typed_ast_to_map typed_ast : (Type.TypeScheme.t ALocMap.t) =
-  let folder = new Type_at_pos.type_at_aloc_map_folder in
+  let folder = new type_at_aloc_map_folder in
   ignore (folder#program typed_ast);
   folder#to_map
 
 let typed_ast_to_list typed_ast: (ALoc.t * Type.TypeScheme.t) list =
-  let folder = new Type_at_pos.type_at_aloc_list_folder in
+  let folder = new type_at_aloc_list_folder in
   ignore (folder#program typed_ast);
   folder#to_list
 

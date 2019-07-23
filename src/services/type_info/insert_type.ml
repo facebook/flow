@@ -226,7 +226,7 @@ class mapper ?(size_limit=30) ~ambiguity_strategy
   method loc_annot_contains_target = this#target_contained_by
 
   method private synth_type location =
-    let (location, scheme) = ty_lookup location in
+    let scheme = ty_lookup location in
     let ty = normalize location scheme in
     begin try
       Utils.validate_type ~size_limit ty

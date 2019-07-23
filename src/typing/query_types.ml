@@ -36,9 +36,9 @@ open Utils_js
 *)
 
 type result =
-| FailureNoMatch
-| FailureUnparseable of Loc.t * Type.t * string
-| Success of Loc.t * Ty.t
+  | FailureNoMatch
+  | FailureUnparseable of Loc.t * Type.t * string
+  | Success of Loc.t * Ty.t
 
 let concretize_loc_pairs pair_list =
   Core_list.map ~f:(fun (loc, x) -> ALoc.to_loc_exn loc, x) pair_list
@@ -151,9 +151,10 @@ let suggest_types cx file_sig typed_ast loc =
     simplify_empty = true;
   } in
   let file = Context.file cx in
-  match Typed_ast_utils.find_exact_match_annotation typed_ast loc with
+  let aLoc = ALoc.of_loc loc in
+  match Typed_ast_utils.find_exact_match_annotation typed_ast aLoc with
   | None -> FailureNoMatch
-  | Some (loc, scheme) ->
+  | Some scheme ->
     type_of_scheme ~options ~full_cx:cx ~file ~file_sig typed_ast loc scheme
 
 let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~expand_aliases ~omit_targ_defaults ~typed_ast loc scheme =
