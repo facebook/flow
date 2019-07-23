@@ -589,7 +589,7 @@ let check_files
   ~persistent_connections
   ~recheck_reasons =
   match Options.arch options with
-  | Options.Classic -> Lwt.return (updated_errors, coverage, 0.)
+  | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0)
   | Options.TypesFirst ->
     with_timer_lwt ~options "Check" profiling (fun () ->
       Hh_logger.info "Check prep";
@@ -663,7 +663,7 @@ let check_files
         warnings;
         suppressions;
       } in
-      Lwt.return (errors, coverage, time_to_check_merged)
+      Lwt.return (errors, coverage, time_to_check_merged, !skipped_count)
     )
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
@@ -1076,6 +1076,7 @@ module Recheck: sig
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
+    check_skip_count: int;
     estimates: Recheck_stats.estimates option;
   }
   val full:
@@ -1110,6 +1111,7 @@ end = struct
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
+    check_skip_count: int;
     estimates: Recheck_stats.estimates option;
   }
 
@@ -1608,7 +1610,7 @@ end = struct
       ))
     in
     let merged_files = to_merge in
-    let%lwt errors, coverage, time_to_check_merged = check_files
+    let%lwt errors, coverage, time_to_check_merged, check_skip_count = check_files
       ~reader
       ~options
       ~profiling
@@ -1646,6 +1648,7 @@ end = struct
         all_dependent_files;
         top_cycle;
         merge_skip_count;
+        check_skip_count;
         estimates;
       }
     )
@@ -1705,6 +1708,7 @@ let recheck
     all_dependent_files = dependent_files;
     top_cycle;
     merge_skip_count;
+    check_skip_count;
     estimates;
   } = stats in
   let (
@@ -1742,6 +1746,7 @@ let recheck
     ~dependent_files
     ~profiling
     ~merge_skip_count
+    ~check_skip_count
     ~estimated_time_to_recheck
     ~estimated_time_to_restart
     ~estimated_time_to_init
@@ -2254,7 +2259,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~recheck_reasons
       ~prep_merge:None in
     let merged_files = to_merge in
-    let%lwt errors, coverage, _ = check_files
+    let%lwt errors, coverage, _, _ = check_files
       ~reader
       ~options
       ~profiling

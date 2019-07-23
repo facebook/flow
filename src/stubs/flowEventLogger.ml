@@ -68,6 +68,7 @@ let recheck
     ~deleted:_
     ~dependent_files:_
     ~merge_skip_count:_
+    ~check_skip_count:_
     ~profiling:_
     ~estimated_time_to_recheck:_
     ~estimated_time_to_restart:_
