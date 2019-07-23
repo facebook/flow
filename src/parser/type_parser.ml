@@ -238,10 +238,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     })
 
 
-  and function_param_with_id env name =
-    if not (should_parse_types env)
-    then error env Parse_error.UnexpectedTypeAnnotation;
-    with_loc ~start_loc:(fst name) (fun env ->
+  and function_param_with_id env =
+    with_loc (fun env ->
+      let name = Parse.identifier env in
+      if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       let optional = Expect.maybe env T_PLING in
       Expect.token env T_COLON;
       let annot = _type env in
@@ -256,8 +256,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     let param env =
       match Peek.ith_token ~i:1 env with
       | T_COLON | T_PLING ->
-          let id = Parse.identifier env in
-          function_param_with_id env id
+          function_param_with_id env
       | _ ->
           let annot = _type env in
           anonymous_function_param env annot
@@ -353,8 +352,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     match Peek.ith_token ~i:1 env with
     | T_PLING (* optional param *)
     | T_COLON ->
-        let id = Parse.identifier env in
-        let param = function_param_with_id env id in
+        let param = function_param_with_id env in
         ignore (Expect.maybe env T_COMMA);
         ParamList (function_param_list_without_parens env [param])
     | _ ->
