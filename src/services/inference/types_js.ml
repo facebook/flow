@@ -1075,7 +1075,7 @@ module Recheck: sig
     deleted: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
-    skipped_count: int;
+    merge_skip_count: int;
     estimates: Recheck_stats.estimates option;
   }
   val full:
@@ -1109,7 +1109,7 @@ end = struct
     deleted: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
-    skipped_count: int;
+    merge_skip_count: int;
     estimates: Recheck_stats.estimates option;
   }
 
@@ -1577,7 +1577,7 @@ end = struct
     let%lwt
         updated_errors,
         coverage,
-        skipped_count,
+        merge_skip_count,
         sig_new_or_changed,
         top_cycle,
         time_to_merge =
@@ -1645,7 +1645,7 @@ end = struct
         deleted;
         all_dependent_files;
         top_cycle;
-        skipped_count;
+        merge_skip_count;
         estimates;
       }
     )
@@ -1704,7 +1704,7 @@ let recheck
     deleted;
     all_dependent_files = dependent_files;
     top_cycle;
-    skipped_count;
+    merge_skip_count;
     estimates;
   } = stats in
   let (
@@ -1741,7 +1741,7 @@ let recheck
     ~deleted
     ~dependent_files
     ~profiling
-    ~skipped_count
+    ~merge_skip_count
     ~estimated_time_to_recheck
     ~estimated_time_to_restart
     ~estimated_time_to_init
