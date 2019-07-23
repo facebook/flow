@@ -54,14 +54,14 @@ let with_timer_lwt =
     |> List.iter Measure.delete
   in
 
-  let profile_add_memory profiling getter metric =
+  let profile_add_memory profiling getter group metric =
     getter "worker_rss_start"
     |> Option.iter ~f:(fun start ->
       getter "worker_rss_delta"
       |> Option.iter ~f:(fun delta ->
         getter "worker_rss_hwm_delta"
         |> Option.iter ~f:(fun hwm_delta ->
-          Profiling_js.add_memory ~metric ~start ~delta ~hwm_delta profiling
+          Profiling_js.add_memory ~group ~metric ~start ~delta ~hwm_delta profiling
         )
       )
     )
@@ -70,8 +70,8 @@ let with_timer_lwt =
     let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
     clear_worker_memory ();
     let%lwt ret = Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling in
-    profile_add_memory profiling Measure.get_mean (spf "%s:worker_rss_avg" timer);
-    profile_add_memory profiling Measure.get_max (spf "%s:worker_rss_max" timer);
+    profile_add_memory profiling Measure.get_mean timer "worker_rss_avg";
+    profile_add_memory profiling Measure.get_max timer "worker_rss_max";
     clear_worker_memory ();
     Lwt.return ret
 
