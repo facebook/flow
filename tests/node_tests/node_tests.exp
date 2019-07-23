@@ -1767,26 +1767,26 @@ Cannot call `process.emitWarning` because:
          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2558:24
-   2558|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2582:24
+   2582|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2558:33
-   2558|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2582:33
+   2582|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2559:3
-   2559|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2583:3
+   2583|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2560:3
-   2560|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2584:3
+   2584|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2561:3
+   <BUILTINS>/node.js:2585:3
            v-----------
-   2561|   emitWarning(
-   2562|     warning: string,
-   2563|     type: string,
-   2564|     code: string,
-   2565|     ctor?: (...empty) => mixed
-   2566|   ): void;
+   2585|   emitWarning(
+   2586|     warning: string,
+   2587|     type: string,
+   2588|     code: string,
+   2589|     ctor?: (...empty) => mixed
+   2590|   ): void;
            ------^ [6]
 
 
@@ -1805,14 +1805,14 @@ References:
    process/emitWarning.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2559:24
-   2559|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2583:24
+   2583|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2560:24
-   2560|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2584:24
+   2584|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2562:14
-   2562|     warning: string,
+   <BUILTINS>/node.js:2586:14
+   2586|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1830,11 +1830,11 @@ References:
    process/emitWarning.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2560:38
-   2560|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2584:38
+   2584|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2563:11
-   2563|     type: string,
+   <BUILTINS>/node.js:2587:11
+   2587|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1850,8 +1850,8 @@ References:
    process/emitWarning.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2564:11
-   2564|     code: string,
+   <BUILTINS>/node.js:2588:11
+   2588|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1864,8 +1864,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2558:41
-   2558|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2582:41
+   2582|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/emitWarning.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -1941,8 +1941,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2587:21
-   2587|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2611:21
+   2611|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1955,8 +1955,8 @@ Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2547:32
-   2547|   allowedNodeEnvironmentFlags: Set<string>;
+   <BUILTINS>/node.js:2571:32
+   2571|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
    process/process.js:5:39
       5| (process.allowedNodeEnvironmentFlags: string); // error
