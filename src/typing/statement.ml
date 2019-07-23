@@ -750,7 +750,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
      ----------------------------
      [Pre] if c S1 else S2 [Post]
   *)
-  | (loc, If { If.test; consequent; alternate }) ->
+  | (loc, If { If.test; consequent; alternate; comments }) ->
       let loc_test, _ = test in
       let test_ast, preds, not_preds, xts =
         predicates_of_condition cx test in
@@ -826,6 +826,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         test = test_ast;
         consequent = then_ast;
         alternate = else_ast;
+        comments;
       } in
 
       (* handle control flow in cases where we've thrown from both sides *)

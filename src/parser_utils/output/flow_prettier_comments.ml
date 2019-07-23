@@ -100,7 +100,7 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
   let open Ast.Statement in
   match stmt with
   | Block {Block.body} -> body
-  | If {If.test; consequent; alternate} ->
+  | If {If.test; consequent; alternate; comments = _} ->
       [statement_of_expression test; consequent]
       @ statement_list_of_option alternate
   | Labeled {Labeled.body; _} -> [body]

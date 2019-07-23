@@ -308,10 +308,14 @@ module Statement
     in
 
     with_loc (fun env ->
+      let pre_if_leading = Peek.comments env in
       Expect.token env T_IF;
+      let pre_cond_leading = Peek.comments env in
+      let leading = pre_if_leading @ pre_cond_leading in
       Expect.token env T_LPAREN;
       let test = Parse.expression env in
       Expect.token env T_RPAREN;
+      let trailing = Peek.comments env in
       let consequent = if_branch env in
       let alternate = if Peek.token env = T_ELSE
       then begin
@@ -322,6 +326,7 @@ module Statement
         test;
         consequent;
         alternate;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
       }
     )
 

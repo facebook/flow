@@ -533,7 +533,7 @@ module Make
     (******************************************)
     method! if_statement _loc (stmt: (L.t, L.t) Ast.Statement.If.t) =
       let open Ast.Statement.If in
-      let { test; consequent; alternate } = stmt in
+      let { test; consequent; alternate; _ } = stmt in
       ignore @@ this#expression test;
       let env0 = this#ssa_env in
       (* collect completions and environments of every branch *)

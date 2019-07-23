@@ -471,7 +471,8 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
     | S.Expression { S.Expression.expression = expr; _ } ->
       let ctxt = { normal_context with left = In_expression_statement } in
       with_semicolon (expression_with_parens ~precedence:0 ~ctxt expr)
-    | S.If { S.If.test; consequent; alternate; } ->
+    | S.If { S.If.test; consequent; alternate; comments } ->
+      layout_node_with_simple_comments_opt loc comments
       begin match alternate with
       | Some alt ->
         fuse [

@@ -966,12 +966,13 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method if_statement (stmt: ('M, 'T) Ast.Statement.If.t) : ('N, 'U) Ast.Statement.If.t =
     let open Ast.Statement.If in
-    let { test; consequent; alternate } = stmt in
+    let { test; consequent; alternate; comments } = stmt in
     let test' = this#predicate_expression test in
     let consequent' =
       this#if_consequent_statement ~has_else:(alternate <> None) consequent in
     let alternate' = Option.map ~f:this#statement alternate in
-    { test = test'; consequent = consequent'; alternate = alternate' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 
   method import_declaration _loc (decl: ('M, 'T) Ast.Statement.ImportDeclaration.t)
                                       : ('N, 'U) Ast.Statement.ImportDeclaration.t =

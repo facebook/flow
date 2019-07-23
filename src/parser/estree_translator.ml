@@ -139,8 +139,8 @@ end with type t = Impl.t) = struct
           "expression", expression expr;
           "directive", option string directive;
         ]
-    | loc, If { If.test; consequent; alternate } ->
-        node "IfStatement" loc [
+    | loc, If { If.test; consequent; alternate; comments } ->
+        node ?comments "IfStatement" loc [
           "test", expression test;
           "consequent", statement consequent;
           "alternate", option statement alternate;

@@ -312,6 +312,7 @@ and Statement : sig
       test: ('M, 'T) Expression.t;
       consequent: ('M, 'T) Statement.t;
       alternate: ('M, 'T) Statement.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

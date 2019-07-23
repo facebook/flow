@@ -266,8 +266,8 @@ module Statements = struct
   let class_declaration ?super ?implements ?id elements =
     Loc.none, ClassDeclaration (Classes.make ?super ?implements ?id elements)
 
-  let if_ test consequent alternate =
-    Loc.none, If { If.test; consequent; alternate }
+  let if_ ?comments test consequent alternate =
+    Loc.none, If { If.test; consequent; alternate; comments }
 
   let return ?(loc=Loc.none) ?comments expr =
     loc, Return { Return.argument = expr; comments }

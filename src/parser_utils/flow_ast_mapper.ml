@@ -902,14 +902,15 @@ class ['loc] mapper = object(this)
 
   method if_statement _loc (stmt: ('loc, 'loc) Ast.Statement.If.t) =
     let open Ast.Statement.If in
-    let { test; consequent; alternate } = stmt in
+    let { test; consequent; alternate; comments } = stmt in
     let test' = this#predicate_expression test in
     let consequent' =
       this#if_consequent_statement ~has_else:(alternate <> None) consequent in
     let alternate' = map_opt this#if_alternate_statement alternate in
-    if test == test' && consequent == consequent' && alternate == alternate'
+    let comments' = this#syntax_opt comments in
+    if test == test' && consequent == consequent' && alternate == alternate' && comments == comments'
     then stmt
-    else { test = test'; consequent = consequent'; alternate = alternate' }
+    else { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 
   method import_declaration _loc (decl: ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
