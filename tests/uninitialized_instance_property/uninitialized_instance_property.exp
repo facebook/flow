@@ -30,7 +30,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   15|   #priv; // PropertyNotDefinitivelyInitialized
+   15|   #priv: boolean; // PropertyNotDefinitivelyInitialized
          ^^^^^
 
 
@@ -39,7 +39,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   19|   p; // PropertyNotDefinitivelyInitialized
+   19|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -48,7 +48,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   27|   p; // PropertyNotDefinitivelyInitialized
+   27|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -57,7 +57,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   35|   p; // PropertyNotDefinitivelyInitialized
+   35|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -66,7 +66,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   45|   p; // PropertyNotDefinitivelyInitialized
+   45|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -75,7 +75,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   56|   p; // PropertyNotDefinitivelyInitialized
+   56|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -84,7 +84,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   66|   p; // PropertyNotDefinitivelyInitialized
+   66|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -93,7 +93,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   76|   p; // PropertyNotDefinitivelyInitialized
+   76|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -102,7 +102,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   86|   p; // PropertyNotDefinitivelyInitialized
+   86|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -111,7 +111,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   96|   p; // PropertyNotDefinitivelyInitialized
+   96|   p: number; // PropertyNotDefinitivelyInitialized
          ^
 
 
@@ -120,7 +120,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   110|   p; // PropertyNotDefinitivelyInitialized
+   110|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -129,7 +129,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   120|   p; // PropertyNotDefinitivelyInitialized
+   120|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -138,7 +138,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   131|   p; // PropertyNotDefinitivelyInitialized
+   131|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -147,7 +147,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   141|   p; // PropertyNotDefinitivelyInitialized
+   141|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -156,7 +156,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   151|   p; // PropertyNotDefinitivelyInitialized
+   151|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -173,7 +173,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   158|   p; // PropertyNotDefinitivelyInitialized
+   158|   p: string; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -190,7 +190,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   165|   p; // PropertyNotDefinitivelyInitialized
+   165|   p: null; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -207,7 +207,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   172|   p; // PropertyNotDefinitivelyInitialized
+   172|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -354,7 +354,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   278|   #p; // PropertyNotDefinitivelyInitialized
+   278|   #p: "a"; // PropertyNotDefinitivelyInitialized
           ^^
 
 
@@ -363,7 +363,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   285|   p; // PropertyNotDefinitivelyInitialized
+   285|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -397,7 +397,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   310|   p1; // PropertyNotDefinitivelyInitialized
+   310|   p1: number; // PropertyNotDefinitivelyInitialized
           ^^
 
 
@@ -485,7 +485,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   405|   p; // PropertyNotDefinitivelyInitialized
+   405|   p: 0; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -503,7 +503,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   429|   p; // PropertyNotDefinitivelyInitialized
+   429|   p: 0.; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -536,7 +536,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   471|   p; // PropertyNotDefinitivelyInitialized
+   471|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
@@ -545,7 +545,7 @@ Error --------------------------------------------------------------------------
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   480|   p; // PropertyNotDefinitivelyInitialized
+   480|   p: number; // PropertyNotDefinitivelyInitialized
           ^
 
 
