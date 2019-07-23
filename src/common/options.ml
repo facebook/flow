@@ -119,6 +119,7 @@ type t = {
   opt_type_asserts: bool;
 }
 
+let abstract_locations opts = opts.opt_abstract_locations
 let all opts = opts.opt_all
 let arch opts = opts.opt_arch
 let max_literal_length opts = opts.opt_max_literal_length

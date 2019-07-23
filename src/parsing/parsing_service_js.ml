@@ -663,7 +663,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
-  let abstract_locations = options.Options.opt_abstract_locations in
+  let abstract_locations = Options.abstract_locations options in
   let parse_options  =
     make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
         ~facebook_fbt ()
@@ -685,7 +685,7 @@ let reparse_with_defaults
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
-  let abstract_locations = options.Options.opt_abstract_locations in
+  let abstract_locations = Options.abstract_locations options in
   let parse_options  =
     make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
         ~facebook_fbt ()
@@ -729,7 +729,7 @@ let ensure_parsed ~reader options workers files =
   in
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
-  let abstract_locations = options.Options.opt_abstract_locations in
+  let abstract_locations = Options.abstract_locations options in
 
   let parse_options =
     make_parse_options ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch
