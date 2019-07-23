@@ -141,7 +141,7 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
     let module_ref_prefix = Options.haste_module_ref_prefix options in
     let facebook_fbt = Options.facebook_fbt options in
     let arch = Options.arch options in
-    let abstract_locations = options.Options.opt_abstract_locations in
+    let abstract_locations = Options.abstract_locations options in
 
     let docblock_errors, info =
       Parsing_service_js.parse_docblock ~max_tokens filename contents in
