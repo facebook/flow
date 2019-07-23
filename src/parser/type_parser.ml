@@ -32,17 +32,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | ParamList of (Loc.t, Loc.t) Type.Function.Params.t'
     | Type of (Loc.t, Loc.t) Type.t
 
-  let rec _type env = union env
-
-  and annotation env =
-    if not (should_parse_types env)
-    then error env Parse_error.UnexpectedTypeAnnotation;
-    with_loc (fun env ->
-      Expect.token env T_COLON;
-      _type env
-    ) env
-
-  and variance env =
+  let maybe_variance env =
     let loc = Peek.loc env in
     match Peek.token env with
      | T_PLUS ->
@@ -53,6 +43,16 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
          Some (loc, Variance.Minus)
      | _ ->
          None
+
+  let rec _type env = union env
+
+  and annotation env =
+    if not (should_parse_types env)
+    then error env Parse_error.UnexpectedTypeAnnotation;
+    with_loc (fun env ->
+      Expect.token env T_COLON;
+      _type env
+    ) env
 
   and union env =
     let _ = Expect.maybe env T_BIT_OR in
@@ -622,16 +622,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
     and property env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto start_loc =
       match Peek.token env with
-      | T_PLUS when variance = None ->
-        let loc = Peek.loc env in
-        Eat.token env;
-        let variance = Some (loc, Variance.Plus) in
-        property
-          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
-      | T_MINUS when variance = None ->
-        let loc = Peek.loc env in
-        Eat.token env;
-        let variance = Some (loc, Variance.Minus) in
+      | (T_PLUS | T_MINUS) when variance = None ->
+        let variance = maybe_variance env in
         property
           env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_STATIC when allow_static ->
@@ -775,7 +767,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
   and type_parameter_declaration =
     let rec params env ~require_default acc = Type.ParameterDeclaration.TypeParam.(
       let loc, (variance, name, bound, default, require_default) = with_loc (fun env ->
-        let variance = variance env in
+        let variance = maybe_variance env in
         let loc, (name, bound) = bounded_type env in
         let default, require_default = match Peek.token env with
         | T_ASSIGN ->
