@@ -11503,8 +11503,7 @@ and object_kit =
             (mk_object cx reason options x1)
             (Core_list.map ~f:(mk_object cx reason options) xs))
         in
-        (* Intentional UnknownUse here. *)
-        rec_flow_t cx trace (t, tout)
+        rec_flow_t cx ~use_op trace (t, tout)
       | t::todo_rev ->
         let tool = Resolve Next in
         let state = {todo_rev; acc = x::acc} in
