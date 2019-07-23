@@ -1439,7 +1439,9 @@ end = struct
 
     let%lwt all_dependent_files =
       with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
-        Lwt.return (Dep_service.calc_all_dependents dependency_info direct_dependent_files)
+        if FilenameSet.is_empty direct_dependent_files (* as is the case for anything doing `check_contents` *)
+        then Lwt.return FilenameSet.empty (* avoid O(dependency graph) calculations *)
+        else Lwt.return (Dep_service.calc_all_dependents dependency_info direct_dependent_files)
       ) in
 
     (* Here's how to update unparsed:
