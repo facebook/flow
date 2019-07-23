@@ -2794,7 +2794,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (_, _, ObjT o), GetValuesT (reason, values) ->
       let {
-        flags;
+        flags = _;
         proto_t = _;
         props_tmap = tmap;
         dict_t;
@@ -2805,21 +2805,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Get the read type for all readable properties and discard the rest. *)
       let ts = SMap.fold (fun _ prop ts ->
         match Property.read_t prop with
-        | Some t ->
-            let t = if flags.frozen then
-              match t with
-              | DefT (t_reason, trust, StrT (Literal (_, lit))) ->
-                let t_reason = replace_reason_const (RStringLit lit) t_reason in
-                DefT (t_reason, trust, SingletonStrT lit)
-              | DefT (t_reason, trust, NumT (Literal (_, lit))) ->
-                let t_reason = replace_reason_const (RNumberLit (snd lit)) t_reason in
-                DefT (t_reason, trust, SingletonNumT lit)
-              | DefT (t_reason, trust, BoolT (Some lit)) ->
-                let t_reason = replace_reason_const (RBooleanLit lit) t_reason in
-                DefT (t_reason, trust, SingletonBoolT lit)
-              | _ -> t
-            else t in
-            t :: ts
+        | Some t -> t :: ts
         | None -> ts
       ) props [] in
       (* If the object has a dictionary value then add that to our types. *)
@@ -5204,9 +5190,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          but point at the entire Object.freeze call. *)
       let desc = RFrozen (desc_of_reason reason_o) in
       let reason = replace_reason_const desc reason_op in
-
+      let literal t = match t with
+      | DefT (t_reason, trust, StrT (Literal (_, lit))) ->
+        let t_reason = replace_reason_const (RStringLit lit) t_reason in
+        DefT (t_reason, trust, SingletonStrT lit)
+      | DefT (t_reason, trust, NumT (Literal (_, lit))) ->
+        let t_reason = replace_reason_const (RNumberLit (snd lit)) t_reason in
+        DefT (t_reason, trust, SingletonNumT lit)
+      | DefT (t_reason, trust, BoolT (Some lit)) ->
+        let t_reason = replace_reason_const (RBooleanLit lit) t_reason in
+        DefT (t_reason, trust, SingletonBoolT lit)
+      | _ -> t
+      in
+      let map_t t = match t with
+      | OptionalT (r, t) -> OptionalT (r, literal t)
+      | _ -> literal t
+      in
+      let props_tmap =
+        Context.find_props cx objtype.props_tmap
+        |> Properties.map_fields map_t
+        |> Context.make_property_map cx
+      in
       let flags = {frozen = true; sealed = Sealed; exact = true;} in
-      let new_obj = DefT (reason, trust, ObjT {objtype with flags}) in
+      let new_obj = DefT (reason, trust, ObjT {objtype with flags; props_tmap}) in
       rec_flow_t cx trace (new_obj, t)
 
     | AnyT (_, src), ObjFreezeT (reason_op, t) ->
