@@ -813,12 +813,14 @@ module Expression
     let sig_loc, (id, params, generator, predicate, return, tparams) = with_loc (fun env ->
       Expect.token env T_FUNCTION;
       let generator = Declaration.generator env in
-      let yield, await = match async, generator with
-      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
-      | true, false -> false, true (* #prod-AsyncFunctionExpression *)
-      | false, true -> true, false (* #prod-GeneratorExpression *)
-      | false, false -> false, false (* #prod-FunctionExpression *)
-      in
+      (* `await` is a keyword in async functions:
+          - proposal-async-iteration/#prod-AsyncGeneratorExpression
+          - #prod-AsyncFunctionExpression *)
+      let await = async in
+      (* `yield` is a keyword in generator functions:
+          - proposal-async-iteration/#prod-AsyncGeneratorExpression
+          - #prod-GeneratorExpression *)
+      let yield = generator in
       let id, tparams =
         if Peek.token env = T_LPAREN
         then None, None
