@@ -288,7 +288,9 @@ let toplevels id cx this super ~decls ~stmts ~expr
       use_op, t, None
     | FieldInit e ->
       let (_, t), _ as ast = expr cx e in
-      unknown_use, t, Some ast
+      let body = mk_expression_reason e in
+      let use_op = Op (InitField {op = reason_fn; body = body}) in
+      use_op, t, Some ast
     | Predicate ->
       let loc = aloc_of_reason reason in
       Flow_js.add_output cx

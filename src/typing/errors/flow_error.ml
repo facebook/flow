@@ -371,6 +371,10 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
         | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
         | None -> [text "Cannot assign "; desc init; text " to variable"])
 
+      | Op (InitField {op; body}) ->
+        `Root (op, None,
+          [text "Cannot initialize "; desc op; text " with "; ref body])
+
       | Op Cast {lower; upper} ->
         `Root (lower, None,
           [text "Cannot cast "; desc lower; text " to "; desc upper])

@@ -303,6 +303,7 @@ module rec TypeTerm : sig
     | FunImplicitReturn of { fn: 'loc virtual_reason; upper: 'loc virtual_reason }
     | GeneratorYield of { value: 'loc virtual_reason }
     | GetProperty of 'loc virtual_reason
+    | InitField of {op: 'loc virtual_reason; body: 'loc virtual_reason}
     | Internal of internal_use_op
     | JSXCreateElement of { op: 'loc virtual_reason; component: 'loc virtual_reason }
     | ReactCreateElementCall of { op: 'loc virtual_reason; component: 'loc virtual_reason; children: 'loc }
@@ -2603,6 +2604,7 @@ end = struct
   let rec mod_loc_of_virtual_use_op f =
     let mod_reason = Reason.map_reason_locs f in
     let mod_loc_of_root_use_op f = function
+    | InitField {op; body} -> InitField {op = mod_reason op; body = mod_reason body}
     | ObjectSpread {op} -> ObjectSpread {op = mod_reason op}
     | ObjectChain {op} -> ObjectChain {op = mod_reason op}
     | Addition { op; left; right } ->
@@ -3032,6 +3034,7 @@ let replace_speculation_root_use_op =
     | Error use_op -> use_op
 
 let aloc_of_root_use_op : root_use_op -> ALoc.t = function
+| InitField {op; _}
 | ObjectSpread {op}
 | ObjectChain {op}
 | Addition {op; _}
@@ -3161,6 +3164,7 @@ let string_of_internal_use_op = function
   | WidenEnv -> "WidenEnv"
 
 let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
+| InitField _ -> "InitField"
 | ObjectSpread _ -> "ObjectSpread"
 | ObjectChain _ -> "ObjectChain"
 | Addition _ -> "Addition"

@@ -9713,6 +9713,7 @@ and flow_use_op op1 u =
               | ObjectSpread _ | ObjectChain _
               | TypeApplication _
               | Speculation _
+              | InitField _
                 -> true
               | Cast _
               | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _

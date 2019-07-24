@@ -1,0 +1,23 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:11:3
+
+Cannot initialize property `foo` with object literal [1] because string [2] is incompatible with number [3] in property
+`bar`.
+
+   test.js:11:3
+   11|   foo: {|bar: Bar|} = {bar: 'cat'};
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:11:23
+   11|   foo: {|bar: Bar|} = {bar: 'cat'};
+                             ^^^^^^^^^^^^ [1]
+   test.js:11:29
+   11|   foo: {|bar: Bar|} = {bar: 'cat'};
+                                   ^^^^^ [2]
+   test.js:11:15
+   11|   foo: {|bar: Bar|} = {bar: 'cat'};
+                     ^^^ [3]
+
+
+
+Found 1 error
