@@ -11,6 +11,7 @@ type 'loc virtual_reason_desc =
   | RTrusted of 'loc virtual_reason_desc | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
   | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RExports
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string

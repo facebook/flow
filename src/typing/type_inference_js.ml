@@ -432,7 +432,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
   Env.init_env cx module_scope;
 
   let file_loc = Loc.({ none with source = Some filename }) |> ALoc.of_loc in
-  let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
+  let reason = Reason.mk_reason Reason.RExports file_loc in
 
   let init_exports = Obj_type.mk cx reason in
   ImpExp.set_module_exports cx file_loc init_exports;

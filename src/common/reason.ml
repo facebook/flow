@@ -63,6 +63,7 @@ type 'loc virtual_reason_desc =
   | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
   | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RExports
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
@@ -226,6 +227,7 @@ type reason_desc = ALoc.t virtual_reason_desc
 let rec map_desc_locs f = function
   | RAnyExplicit | RAnyImplicit
   | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RExports
   | RNullOrVoid
   | RLongStringLit _
   | RStringLit _
@@ -578,6 +580,7 @@ let rec string_of_desc = function
   | RNull -> "null"
   | RNullOrVoid -> "null or undefined"
   | RSymbol -> "symbol"
+  | RExports -> "exports"
   | RStringLit "" -> "empty string"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
@@ -1367,6 +1370,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RDefaultImportedType _
 | RCode _
 | RCustom _
+| RExports
 | RPolyType _
 | RPolyTest _
 | RExactType _
