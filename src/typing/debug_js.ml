@@ -2859,8 +2859,6 @@ let dump_error_message =
       spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedUtility (loc, name) ->
       spf "EDeprecatedUtility (%s, %s)" (string_of_aloc loc) name
-    | EDeprecatedEnumUtility loc ->
-      spf "EDeprecatedEnumUtility (%s)" (string_of_aloc loc)
     | EDynamicExport (reason, reason') ->
       spf "EDynamicExport (%s, %s)" (dump_reason cx reason) (dump_reason cx reason')
     | EDeprecatedType loc ->

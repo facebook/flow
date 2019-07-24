@@ -23,7 +23,6 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DeprecatedEnumUtility
   | DynamicExport
   | UnsafeGettersSetters
   | InexactSpread
@@ -52,7 +51,6 @@ let string_of_kind = function
   | UnclearType -> "unclear-type"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
-  | DeprecatedEnumUtility -> "deprecated-enum-utility"
   | DynamicExport -> "dynamic-export"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | InexactSpread -> "inexact-spread"
@@ -84,7 +82,6 @@ let kinds_of_string = function
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" -> Some [DeprecatedType]
   | "deprecated-utility" -> Some [DeprecatedUtility]
-  | "deprecated-enum-utility" -> Some [DeprecatedEnumUtility]
   | "dynamic-export" -> Some [DynamicExport]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "inexact-spread" -> Some [InexactSpread]

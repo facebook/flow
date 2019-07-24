@@ -212,7 +212,6 @@ and 'loc t' =
   | EUnclearType of 'loc
   | EDeprecatedType of 'loc
   | EDeprecatedUtility of 'loc * string
-  | EDeprecatedEnumUtility of 'loc
   | EDynamicExport of 'loc virtual_reason * 'loc virtual_reason
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
@@ -594,7 +593,6 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedType loc -> EDeprecatedType (f loc)
   | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
-  | EDeprecatedEnumUtility loc -> EDeprecatedEnumUtility (f loc)
   | EDynamicExport (r1, r2) -> EDynamicExport (map_reason r1, map_reason r2)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
@@ -748,7 +746,6 @@ let util_use_op_of_msg nope util = function
 | EUnclearType (_)
 | EDeprecatedType _
 | EDeprecatedUtility _
-| EDeprecatedEnumUtility _
 | EDynamicExport _
 | EUnsafeGettersSetters (_)
 | EUnusedSuppression (_)
@@ -815,7 +812,6 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EUnclearType loc
   | EDeprecatedType loc
   | EDeprecatedUtility (loc, _)
-  | EDeprecatedEnumUtility loc
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
@@ -928,7 +924,6 @@ let kind_of_msg = Errors.(function
   | EUnclearType _                  -> LintError Lints.UnclearType
   | EDeprecatedType _               -> LintError Lints.DeprecatedType
   | EDeprecatedUtility _            -> LintError Lints.DeprecatedUtility
-  | EDeprecatedEnumUtility _        -> LintError Lints.DeprecatedEnumUtility
   | EDynamicExport _                -> LintError Lints.DynamicExport
   | EUnsafeGettersSetters _         -> LintError Lints.UnsafeGettersSetters
   | ESketchyNullLint { kind; _ }    -> LintError (Lints.SketchyNull kind)
@@ -1953,12 +1948,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Deprecated utility. Using "; code name; text " types is not recommended!"
       ]
 
-    | EDeprecatedEnumUtility _ ->
-      Normal [
-        code "$Enum<...>"; text " is deprecated, use "; code "$Keys<...>"; text " instead";
-        text " (the functionality is identical).";
-      ]
-
     | EDynamicExport (reason, reason_exp) ->
       Normal
         [text "Dynamic "; ref reason; text " unsafely appears in exported ";
@@ -2076,7 +2065,6 @@ let is_lint_error = function
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
-  | EDeprecatedEnumUtility _
   | EDynamicExport _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
