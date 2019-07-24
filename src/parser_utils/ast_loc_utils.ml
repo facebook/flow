@@ -35,4 +35,5 @@ let abstractify_alocs filename ast =
   let mapper = new abstractifier filename in
   let ast' = mapper#program ast in
   let table = mapper#get_table in
+  ALoc.shrink_table table;
   (table, ast')

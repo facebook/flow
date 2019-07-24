@@ -7,6 +7,7 @@
 
 type table
 val make_table: File_key.t -> table
+val shrink_table: table -> unit
 
 type key
 

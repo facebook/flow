@@ -18,6 +18,9 @@ let make_table file = {
   map = ResizableArray.make 32;
 }
 
+let shrink_table table =
+  ResizableArray.shrink table.map
+
 type key = int
 let compare_key: key -> key -> int = Pervasives.compare
 let string_of_key = string_of_int
