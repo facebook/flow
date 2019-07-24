@@ -37,7 +37,7 @@ type t =
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | Utility of utility
-  | Module of symbol
+  | Module of symbol * export_t
   | Mu of int * t
 
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
@@ -77,6 +77,11 @@ and gen_kind =
   | ClassKind
   | InterfaceKind
   | TypeAliasKind
+
+and export_t = {
+  exports : (string * t) list;
+  cjs_export : t option;
+}
 
 and fun_t = {
   fun_params: (string option * t * fun_param) list;

@@ -30,7 +30,7 @@ let check_type_visitor wrap =
     | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
     | Top -> wrap Reason.RMixed
     | Bot _ -> wrap Reason.REmpty
-    | Module { Ty.name; _ } -> wrap (Reason.RModule name)
+    | Module ({ Ty.name; _ }, _) -> wrap (Reason.RModule name)
     | TypeAlias { ta_tparams = None; ta_type = Some t; _ } -> self#on_t env t
     | TypeAlias { ta_name = { Ty.name; _ }; _ } ->
       wrap (Reason.RCustom ("type alias " ^ name))

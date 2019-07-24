@@ -175,8 +175,9 @@ and dump_t ?(depth = 10) t =
       (Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
   | TypeOf (path, n) ->
     spf "Typeof(%s)" (String.concat "." (path@[n]))
-  | Module n ->
-    spf "Module(%s)" (dump_symbol n)
+  | Module (n, { exports; _ }) ->
+    spf "Module(%s, %s)" (dump_symbol n)
+      (dump_list (fun (name, t) -> dump_t ~depth t |> spf "%s : %s" name) ~sep:"," exports)
   | ClassDecl (name, ps) ->
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
   | InterfaceDecl (name, ps) ->
@@ -296,7 +297,7 @@ let json_of_t ~strip_root =
         "path", JSON_Array (Core_list.map ~f:(fun x -> JSON_String x) path);
         "name", JSON_String name;
       ]
-    | Module name -> [
+    | Module (name, _) -> [
         "name", json_of_symbol name;
       ]
     | ClassDecl (name, tparams) -> [
