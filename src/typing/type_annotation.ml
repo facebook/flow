@@ -1502,6 +1502,11 @@ and convert_object =
         acc
       in
       acc, Indexer (loc, i)
+    | Mapped (loc, _) as prop ->
+      Flow.add_output cx Error_message.(
+        EUnsupportedSyntax (loc, ObjectMappedType)
+      );
+      acc, (Tast_utils.error_mapper#object_type_property prop)
     | Property (loc, p) ->
       let acc, p = named_property cx tparams_map loc acc p in
       acc, Property (loc, p)
@@ -1884,6 +1889,9 @@ and add_interface_properties cx tparams_map properties s =
 
     | SpreadProperty (loc, _)  as prop ->
       Flow.add_output cx Error_message.(EInternal (loc, InterfaceTypeSpread));
+      x, (Tast_utils.error_mapper#object_type_property prop)::rev_prop_asts
+
+    | Mapped (_, _) as prop ->
       x, (Tast_utils.error_mapper#object_type_property prop)::rev_prop_asts
   ) (s, []) properties
   in

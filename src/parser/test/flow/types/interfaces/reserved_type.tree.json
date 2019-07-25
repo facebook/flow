@@ -33,6 +33,7 @@
         "exact":false,
         "properties":[],
         "indexers":[],
+        "mappeds":[],
         "callProperties":[],
         "internalSlots":[]
       },
@@ -58,6 +59,7 @@
         "exact":false,
         "properties":[],
         "indexers":[],
+        "mappeds":[],
         "callProperties":[],
         "internalSlots":[]
       },

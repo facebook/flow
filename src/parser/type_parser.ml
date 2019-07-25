@@ -490,6 +490,30 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       ) env in
       Type.Object.Indexer indexer
 
+    in let mapped_property env start_loc static variance =
+      let mapped_type = with_loc ~start_loc (fun env ->
+        (* Note: T_LBRACKET has already been consumed *)
+        let name = _type env in
+        let _ = identifier_name env in
+        let bound = _type env in
+        Expect.token env T_RBRACKET;
+        let optional, value =
+          let optional = Expect.maybe env T_PLING in
+          Expect.token env T_COLON;
+          let value = _type env in
+          optional, value
+        in
+        { Type.Object.Mapped.
+          name;
+          bound;
+          value;
+          optional;
+          static = static <> None;
+          variance;
+        }
+      ) env in
+      Type.Object.Mapped mapped_type
+
     in let internal_slot env start_loc static =
       let islot = with_loc ~start_loc (fun env ->
         (* Note: First T_LBRACKET has already been consumed *)
@@ -637,12 +661,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_LBRACKET ->
         error_unexpected_proto env proto;
         Expect.token env T_LBRACKET;
-        (match Peek.token env with
-        | T_LBRACKET ->
+        (match Peek.token env, Peek.ith_token ~i:1 env with
+        | T_IDENTIFIER _, T_IDENTIFIER { raw = "in"; _ } ->
+          mapped_property env start_loc static variance
+        | T_LBRACKET, _ ->
           error_unexpected_variance env variance;
           internal_slot env start_loc static
         | _ ->
-          indexer_property env start_loc static variance)
+          indexer_property env start_loc static variance
+        )
       | T_LESS_THAN
       | T_LPAREN ->
         (* Note that `static(): void` is a static callable property if we

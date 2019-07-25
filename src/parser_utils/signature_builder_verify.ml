@@ -217,6 +217,11 @@ module Eval(Env: EvalEnv) = struct
       let _, { key; value; _ } = prop in
       Deps.join (type_ tps key, type_ tps value)
     in
+    let object_type_mapped tps prop =
+      let open Ast.Type.Object.Mapped in
+      let _, { name; bound = _; value; _ } = prop in
+      Deps.join (type_ tps name, type_ tps value)
+    in
     let object_type_call_prop tps prop =
       let open Ast.Type.Object.CallProperty in
       let _, { value = (_, ft); _ } = prop in
@@ -228,6 +233,7 @@ module Eval(Env: EvalEnv) = struct
       List.fold_left (fun deps -> function
         | Property prop -> Deps.join (deps, object_type_prop tps prop)
         | Indexer prop -> Deps.join (deps, object_type_indexer tps prop)
+        | Mapped prop -> Deps.join (deps, object_type_mapped tps prop)
         | CallProperty prop -> Deps.join (deps, object_type_call_prop tps prop)
         | SpreadProperty prop -> Deps.join (deps, object_type_spread_prop tps prop)
         | InternalSlot _prop -> Deps.unreachable

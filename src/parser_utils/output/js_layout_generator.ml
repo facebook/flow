@@ -2361,6 +2361,22 @@ and type_object_property = Ast.Type.Object.(function
       Atom "]"; Atom ":"; pretty_space;
       type_ value;
     ])
+  | Mapped (loc, { Mapped.name; bound; value; static; optional; variance = variance_ }) ->
+    source_location_with_comments (loc, fuse [
+      if static then fuse [Atom "static"; space] else Empty;
+      option variance variance_;
+      Atom "[";
+      type_ name;
+      pretty_space;
+      Atom "in";
+      pretty_space;
+      type_ bound;
+      Atom "]";
+      if optional then Atom "?" else Empty;
+      Atom ":";
+      pretty_space;
+      type_ value;
+    ])
   | CallProperty (loc, { CallProperty.value=(call_loc, func); static }) ->
     source_location_with_comments (loc, fuse [
       if static then fuse [Atom "static"; space] else Empty;

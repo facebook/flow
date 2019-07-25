@@ -75,6 +75,7 @@
             }
           ],
           "indexers":[],
+          "mappeds":[],
           "callProperties":[],
           "internalSlots":[]
         }
@@ -145,6 +146,7 @@
             }
           ],
           "indexers":[],
+          "mappeds":[],
           "callProperties":[],
           "internalSlots":[]
         }
@@ -209,6 +211,7 @@
                   }
                 ],
                 "indexers":[],
+                "mappeds":[],
                 "callProperties":[],
                 "internalSlots":[]
               }

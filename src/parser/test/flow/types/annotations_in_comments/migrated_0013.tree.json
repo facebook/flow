@@ -20,8 +20,8 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":4,"column":1}},
         "range":[27,49],
-        "exact":false,
         "inexact":false,
+        "exact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -57,6 +57,7 @@
           }
         ],
         "indexers":[],
+        "mappeds":[],
         "callProperties":[],
         "internalSlots":[]
       }

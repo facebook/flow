@@ -38,8 +38,8 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":23}},
         "range":[56,70],
-        "exact":false,
         "inexact":false,
+        "exact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -91,6 +91,7 @@
           }
         ],
         "indexers":[],
+        "mappeds":[],
         "callProperties":[],
         "internalSlots":[]
       }
@@ -112,8 +113,8 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":21}},
         "range":[105,117],
-        "exact":false,
         "inexact":false,
+        "exact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -150,6 +151,7 @@
           }
         ],
         "indexers":[],
+        "mappeds":[],
         "callProperties":[],
         "internalSlots":[]
       }
@@ -171,8 +173,8 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":8,"column":9},"end":{"line":8,"column":23}},
         "range":[166,180],
-        "exact":false,
         "inexact":false,
+        "exact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -217,6 +219,7 @@
           }
         ],
         "indexers":[],
+        "mappeds":[],
         "callProperties":[],
         "internalSlots":[]
       }

@@ -28,6 +28,7 @@
           "exact":false,
           "properties":[],
           "indexers":[],
+          "mappeds":[],
           "callProperties":[
             {
               "type":"ObjectTypeCallProperty",

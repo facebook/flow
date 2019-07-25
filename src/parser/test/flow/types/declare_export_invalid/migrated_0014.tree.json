@@ -77,6 +77,7 @@
             }
           ],
           "indexers":[],
+          "mappeds":[],
           "callProperties":[],
           "internalSlots":[]
         },
