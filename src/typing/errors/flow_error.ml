@@ -373,7 +373,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
 
       | Op (InitField {op; body}) ->
         `Root (op, None,
-          [text "Cannot initialize "; desc op; text " with "; ref body])
+          [text "Cannot initialize "; desc op; text " with "; desc body])
 
       | Op Cast {lower; upper} ->
         `Root (lower, None,
