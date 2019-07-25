@@ -10,7 +10,6 @@ module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
-module Error = Parse_error
 module SMap = Map.Make(String)
 
 open Parser_common
@@ -56,7 +55,7 @@ module Object
     let trailing = Peek.comments env in
     match tkn with
     | T_STRING (loc, value, raw, octal) ->
-        if octal then strict_error env Error.StrictOctalLiteral;
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         let value = Literal.String value in
         loc, Literal (loc, { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); })
@@ -100,10 +99,10 @@ module Object
         | true, (_, { Ast.Function.Params.params = []; rest = None }) -> ()
         | false, (_, { Ast.Function.Params.rest = Some _; _ }) ->
             (* rest params don't make sense on a setter *)
-            error_at env (key_loc, Error.SetterArity)
+            error_at env (key_loc, Parse_error.SetterArity)
         | false, (_, { Ast.Function.Params.params = [_]; _ }) -> ()
-        | true, _ -> error_at env (key_loc, Error.GetterArity)
-        | false, _ -> error_at env (key_loc, Error.SetterArity)
+        | true, _ -> error_at env (key_loc, Parse_error.GetterArity)
+        | false, _ -> error_at env (key_loc, Parse_error.SetterArity)
         end;
         let return = Type.annotation_opt env in
         (tparams, params, return)
@@ -389,7 +388,7 @@ module Object
       if Peek.token env = T_IMPLEMENTS
       then begin
         if not (should_parse_types env)
-        then error env Error.UnexpectedTypeInterface;
+        then error env Parse_error.UnexpectedTypeInterface;
         Expect.token env T_IMPLEMENTS;
         class_implements env []
       end else [] in
@@ -398,7 +397,7 @@ module Object
 
   and check_property_name env loc name static =
     if String.equal name "constructor" || (String.equal name "prototype" && static) then
-      error_at env (loc, Error.InvalidFieldName {
+      error_at env (loc, Parse_error.InvalidFieldName {
         name;
         static;
         private_ = false;
@@ -407,7 +406,7 @@ module Object
   and check_private_names env seen_names private_name (kind: [`Field | `Getter | `Setter]) =
     let (loc, (_, { Identifier.name; comments= _; })) = private_name in
     if String.equal name "constructor" then
-      let () = error_at env (loc, Error.InvalidFieldName {
+      let () = error_at env (loc, Parse_error.InvalidFieldName {
         name;
         static = false;
         private_ = true;
@@ -421,7 +420,7 @@ module Object
         (* one getter and one setter are allowed as long as it's not used as a field *)
         ()
       | _ ->
-        error_at env (loc, Error.DuplicatePrivateFields name)
+        error_at env (loc, Parse_error.DuplicatePrivateFields name)
       end;
       SMap.add name `Field seen_names
     | None ->
@@ -447,13 +446,13 @@ module Object
                   (seen_constructor, private_names)
                 else begin
                   if seen_constructor then
-                    error_at env (loc, Error.DuplicateConstructor);
+                    error_at env (loc, Parse_error.DuplicateConstructor);
                   (true, private_names)
                 end
               | Method ->
                 (seen_constructor, begin match m.key with
                 | Ast.Expression.Object.Property.PrivateName _ ->
-                    error_at env (loc, Error.PrivateMethod);
+                    error_at env (loc, Parse_error.PrivateMethod);
                     private_names
                 | _ -> private_names
                 end)
@@ -527,7 +526,7 @@ module Object
       }))
 
     in let error_unsupported_variance env = function
-    | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
+    | Some (loc, _) -> error_at env (loc, Parse_error.UnexpectedVariance)
     | None -> ()
 
     (* Class property with annotation *)
@@ -701,7 +700,7 @@ module Object
       | true, false -> None
       | _ -> Some(Parse.identifier tmp_env)
     ) in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     let body, extends, implements = _class env in
     Ast.Statement.ClassDeclaration { Class.
       id;
@@ -720,11 +719,12 @@ module Object
     Expect.token env T_CLASS;
     let id, tparams = match Peek.token env with
       | T_EXTENDS
+      | T_IMPLEMENTS
       | T_LESS_THAN
       | T_LCURLY -> None, None
       | _ ->
           let id = Some (Parse.identifier env) in
-          let tparams = Type.type_parameter_declaration_with_defaults env in
+          let tparams = Type.type_parameter_declaration env in
           id, tparams in
     let body, extends, implements = _class env in
     Ast.Expression.Class { Class.

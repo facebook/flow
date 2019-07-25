@@ -62,6 +62,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       this#empty ();
       Empty
 
+    | EnumDeclaration enum -> EnumDeclaration (this#enum_declaration enum)
+
     | ExportDefaultDeclaration decl ->
       ExportDefaultDeclaration (this#export_default_declaration annot decl)
 
@@ -326,9 +328,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method continue (cont: 'M Ast.Statement.Continue.t) : 'N Ast.Statement.Continue.t =
     let open Ast.Statement.Continue in
-    let { label } = cont in
+    let { label; comments } = cont in
     let label' = Option.map ~f:this#label_identifier label in
-    { label = label' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { label = label'; comments = comments' }
 
   method debugger () =
     ()
@@ -445,13 +448,84 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method do_while (stuff: ('M, 'T) Ast.Statement.DoWhile.t) : ('N, 'U) Ast.Statement.DoWhile.t =
     let open Ast.Statement.DoWhile in
-    let { body; test } = stuff in
+    let { body; test; comments } = stuff in
     let body' = this#statement body in
     let test' = this#predicate_expression test in
-    { body = body'; test = test' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { body = body'; test = test'; comments = comments' }
 
   method empty () =
     ()
+
+  method enum_declaration (enum: ('M, 'T) Ast.Statement.EnumDeclaration.t)
+      : ('N, 'U) Ast.Statement.EnumDeclaration.t =
+    let open Ast.Statement.EnumDeclaration in
+    let {id; body} = enum in
+    let body' = match body with
+      | BooleanBody boolean_body -> BooleanBody (this#enum_boolean_body boolean_body)
+      | NumberBody number_body -> NumberBody (this#enum_number_body number_body)
+      | StringBody string_body -> StringBody (this#enum_string_body string_body)
+      | SymbolBody symbol_body -> SymbolBody (this#enum_symbol_body symbol_body)
+    in
+    {id = this#t_identifier id; body = body'}
+
+  method enum_boolean_body (body: 'M Ast.Statement.EnumDeclaration.BooleanBody.t)
+      : 'N Ast.Statement.EnumDeclaration.BooleanBody.t =
+    let open Ast.Statement.EnumDeclaration.BooleanBody in
+    let {members; explicitType} = body in
+    {members = Core_list.map ~f:this#enum_boolean_member members; explicitType}
+
+  method enum_number_body (body: 'M Ast.Statement.EnumDeclaration.NumberBody.t)
+      : 'N Ast.Statement.EnumDeclaration.NumberBody.t =
+    let open Ast.Statement.EnumDeclaration.NumberBody in
+    let {members; explicitType} = body in
+    {members = Core_list.map ~f:this#enum_number_member members; explicitType}
+
+  method enum_string_body (body: 'M Ast.Statement.EnumDeclaration.StringBody.t)
+      : 'N Ast.Statement.EnumDeclaration.StringBody.t =
+    let open Ast.Statement.EnumDeclaration.StringBody in
+    let {members; explicitType} = body in
+    let members' = match members with
+      | Defaulted members -> Defaulted (Core_list.map ~f:this#enum_defaulted_member members)
+      | Initialized members -> Initialized (Core_list.map ~f:this#enum_string_member members)
+    in
+    {members = members'; explicitType}
+
+  method enum_symbol_body (body: 'M Ast.Statement.EnumDeclaration.SymbolBody.t)
+      : 'N Ast.Statement.EnumDeclaration.SymbolBody.t =
+    let open Ast.Statement.EnumDeclaration.SymbolBody in
+    let {members} = body in
+    {members = Core_list.map ~f:this#enum_defaulted_member members}
+
+  method enum_defaulted_member (member: 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
+      : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =
+    let open Ast.Statement.EnumDeclaration.DefaultedMember in
+    let annot, {id} = member in
+    this#on_loc_annot annot, {id = this#identifier id}
+
+  method enum_boolean_member
+      (member: (bool, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+      : (bool, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let annot, {id; init = (init_annot, init_val)} = member in
+    let init' = this#on_loc_annot init_annot, init_val in
+    this#on_loc_annot annot, {id = this#identifier id; init = init'}
+
+  method enum_number_member
+      (member: (Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+      : (Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let annot, {id; init = (init_annot, init_val)} = member in
+    let init' = this#on_loc_annot init_annot, init_val in
+    this#on_loc_annot annot, {id = this#identifier id; init = init'}
+
+  method enum_string_member
+      (member: (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+      : (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let annot, {id; init = (init_annot, init_val)} = member in
+    let init' = this#on_loc_annot init_annot, init_val in
+    this#on_loc_annot annot, {id = this#identifier id; init = init'}
 
   method export_default_declaration _loc (decl: ('M, 'T) Ast.Statement.ExportDefaultDeclaration.t)
                                               : ('N, 'U) Ast.Statement.ExportDefaultDeclaration.t =
@@ -892,12 +966,13 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method if_statement (stmt: ('M, 'T) Ast.Statement.If.t) : ('N, 'U) Ast.Statement.If.t =
     let open Ast.Statement.If in
-    let { test; consequent; alternate } = stmt in
+    let { test; consequent; alternate; comments } = stmt in
     let test' = this#predicate_expression test in
     let consequent' =
       this#if_consequent_statement ~has_else:(alternate <> None) consequent in
     let alternate' = Option.map ~f:this#statement alternate in
-    { test = test'; consequent = consequent'; alternate = alternate' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 
   method import_declaration _loc (decl: ('M, 'T) Ast.Statement.ImportDeclaration.t)
                                       : ('N, 'U) Ast.Statement.ImportDeclaration.t =
@@ -1021,7 +1096,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { expression } = jsx_expr in
     let expression' = match expression with
       | Expression expr -> Expression (this#expression expr)
-      | EmptyExpression annot -> EmptyExpression (this#on_loc_annot annot)
+      | EmptyExpression -> EmptyExpression
     in
     { expression = expression' }
 
@@ -1456,9 +1531,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method unary_expression (expr: ('M, 'T) Ast.Expression.Unary.t)
                               : ('N, 'U) Ast.Expression.Unary.t =
     let open Ast.Expression.Unary in
-    let { argument; operator; } = expr in
+    let { argument; operator; comments; } = expr in
     let argument' = this#expression argument in
-    { argument = argument'; operator }
+    let comments' = Option.map ~f:this#syntax comments in
+    { argument = argument'; operator; comments = comments' }
 
   method update_expression (expr: ('M, 'T) Ast.Expression.Update.t)
                                 : ('N, 'U) Ast.Expression.Update.t =

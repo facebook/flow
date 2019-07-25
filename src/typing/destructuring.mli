@@ -23,6 +23,7 @@ type callback =
 val empty:
   ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t ->
   ?default:Type.t Default.t ->
+  annot:bool ->
   Type.t ->
   state
 

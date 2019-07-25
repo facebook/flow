@@ -12,9 +12,10 @@ type types_mode =
   | TypesForbiddenByDefault
 
 type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option
 type parse_ok =
   | Classic of t
-  | TypesFirst of t * t (* sig *)
+  | TypesFirst of t * aloc_t (* sig *)
 
 val basic: parse_ok -> t
 
@@ -66,11 +67,13 @@ type parse_options = {
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
   parse_arch: Options.arch;
+  parse_abstract_locations: bool;
 }
 
 val make_parse_options:
   ?fail: bool ->
   ?arch: Options.arch ->
+  ?abstract_locations: bool ->
   ?prevent_munge: bool ->
   types_mode: types_mode ->
   use_strict: bool ->

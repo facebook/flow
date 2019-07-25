@@ -304,6 +304,9 @@ function add(id: number, name: string) {
 
 ### `Object` Type <a class="toc" id="toc-object-type" href="#toc-object-type"></a>
 
+> NOTE: For new code, prefer `any` or `{ [key: string]: any}`. `Object` is an alias to [`any`](../any/) and will
+> be deprecated and removed in a future version of Flow. 
+
 Sometimes it is useful to write types that accept arbitrary objects, for
 those you should write `{}` like this:
 
@@ -314,16 +317,28 @@ function method(obj: {}) {
 ```
 
 However, if you need to opt-out of the type checker, and don't want to go all
-the way to `any`, you can instead use `Object`. **`Object` is unsafe and
-should be avoided.**
+the way to `any`, you could use `{ [key: string]: any}`. (Note that [`any`](../any/) is unsafe and
+should be avoided). For historical reasons, the `Object` keyword is still available.
+In previous versions of Flow, `Object` was the same
+as `{ [key: string]: any}`.
 
 For example, the following code will not report any errors:
 
 ```js
-function method(obj: Object) {
+function method(obj: { [key: string]: any }) {
   obj.foo = 42;               // Works.
   let bar: boolean = obj.bar; // Works.
   obj.baz.bat.bam.bop;        // Works.
+}
+
+method({ baz: 3.14, bar: "hello" });
+```
+
+Neither will this:
+
+```js
+function method(obj: Object) {
+  obj = 10;
 }
 
 method({ baz: 3.14, bar: "hello" });

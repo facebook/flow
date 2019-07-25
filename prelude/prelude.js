@@ -18,6 +18,12 @@ declare class $ReadOnlyArray<+T> {
 
 declare class Array<T> extends $ReadOnlyArray<T> {}
 
+type $ArrayLike<T> = {
+  [indexer: number]: T,
+  length: number,
+  ...
+}
+
 // Promise
 
 declare class Promise<+R> {}

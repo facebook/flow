@@ -13,6 +13,19 @@
     utils_core))
 
 (library
+  (name watchman_lwt)
+  (wrapped false)
+  (modules
+    watchman_lwt
+  )
+  (libraries
+    watchman
+    buffered_line_reader_lwt
+  )
+  (preprocess (pps lwt_ppx))
+)
+
+(library
   (name watchman_utils)
   (wrapped false)
   (modules

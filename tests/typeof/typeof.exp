@@ -96,8 +96,8 @@ Cannot use object literal as a type because object literal is a value. To get th
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
 
 Cannot cast `null` to `typeof x` because:
- - Either null [1] is incompatible with number [2].
- - Or null [1] is incompatible with string [3].
+ - Either cannot call `f` with `42` bound to `a` because null [1] is incompatible with number [2].
+ - Or cannot call `f` with `'foo'` bound to `b` because null [1] is incompatible with string [3].
 
    union.js:9:2
    9| (null: typeof x); // error: null ~> number|string

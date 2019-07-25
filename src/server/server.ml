@@ -7,14 +7,10 @@
 
 let sample_init_memory profiling =
   let open SharedMem_js in
-  let dep_stats = dep_stats () in
   let hash_stats = hash_stats () in
   let heap_size = heap_size () in
   let memory_metrics = [
     "heap.size", heap_size;
-    "dep_table.nonempty_slots", dep_stats.nonempty_slots;
-    "dep_table.used_slots", dep_stats.used_slots;
-    "dep_table.slots", dep_stats.slots;
     "hash_table.nonempty_slots", hash_stats.nonempty_slots;
     "hash_table.used_slots", hash_stats.used_slots;
     "hash_table.slots", hash_stats.slots;
@@ -143,16 +139,16 @@ let run ~monitor_channels ~shared_mem_config options =
           estimated_time_to_recheck;
           estimated_time_to_restart;
           estimated_time_to_init;
-          estimated_time_to_merge_a_file;
-          estimated_files_to_merge;
+          estimated_time_per_file;
+          estimated_files_to_recheck;
           estimated_files_to_init;
         } ->
           FlowEventLogger.init_done
             ~estimated_time_to_recheck
             ~estimated_time_to_restart
             ~estimated_time_to_init
-            ~estimated_time_to_merge_a_file
-            ~estimated_files_to_merge
+            ~estimated_time_per_file
+            ~estimated_files_to_recheck
             ~estimated_files_to_init
             profiling
       end;
@@ -200,9 +196,10 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
     let%lwt profiling, (print_errors, errors, warnings) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
         let%lwt env, _ = program_init profiling in
+        let reader = State_reader.create () in
         let%lwt (errors, warnings, suppressed_errors) =
           Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling
-            ~f:(fun () -> Lwt.return (ErrorCollator.get ~options env))
+            ~f:(fun () -> Lwt.return (ErrorCollator.get ~reader ~options env))
         in
         let collated_errors = (errors, warnings, suppressed_errors) in
         let%lwt print_errors =

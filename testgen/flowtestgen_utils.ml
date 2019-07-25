@@ -533,6 +533,7 @@ let stub_metadata ~root ~checked = { Context.
   (* global *)
   max_literal_length = 100;
   enable_const_params = false;
+  enable_enums = true;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
@@ -540,18 +541,21 @@ let stub_metadata ~root ~checked = { Context.
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  exact_by_default = false;
   facebook_fbs = None;
   facebook_fbt = None;
   haste_module_ref_prefix = None;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
+  recursion_limit = 10000;
   root;
   strip_root = true;
   suppress_comments = [];
   suppress_types = SSet.empty;
   default_lib_dir = None;
   trust_mode = Options.NoTrust;
+  type_asserts = false;
 }
 
 (* Invoke flow for type checking *)
@@ -562,10 +566,13 @@ let flow_check (code : string) : string option =
     try
       let root = Path.dummy_path in
       let master_sig_cx = Context.make_sig () in
+      let aloc_table = Utils_js.FilenameMap.empty in
       let master_cx = Context.make master_sig_cx
         (stub_metadata ~root ~checked:false)
         File_key.Builtins
-        Files.lib_module_ref in
+        aloc_table
+        Files.lib_module_ref
+        Context.Checking in
 
       (* Merge builtins *)
       let builtin_metadata = stub_metadata ~root ~checked:true in
@@ -577,7 +584,7 @@ let flow_check (code : string) : string option =
       in
       let builtins_sig_cx = Context.make_sig () in
       let builtins_cx = Context.make builtins_sig_cx builtin_metadata
-        File_key.Builtins Files.lib_module_ref in
+        File_key.Builtins aloc_table Files.lib_module_ref Context.Checking in
       let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
         ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:(File_sig.abstractify_locs builtins_file_sig) in
       let () =
@@ -603,7 +610,7 @@ let flow_check (code : string) : string option =
                           } in
       let input_ast, _ = Parser_flow.program code in
       let (_, _, comments) = input_ast in
-      let aloc_ast = Ast_loc_utils.abstractify_mapper#program input_ast in
+      let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program input_ast in
       let filename = File_key.SourceFile "/tmp/foo.js" in
       let file_sig = match File_sig.With_Loc.program ~ast:input_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig
@@ -612,20 +619,26 @@ let flow_check (code : string) : string option =
       let file_sigs = Utils_js.FilenameMap.singleton filename (File_sig.abstractify_locs file_sig) in
       let reqs = Merge_js.Reqs.empty in
       (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
-      let ((final_cx, _, _), _other_cxs) = Merge_js.merge_component_strict
+      let ((final_cx, _, _), _other_cxs) = Merge_js.merge_component
           ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
           ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
+          ~get_aloc_table_unsafe:(fun _ -> failwith "Did not expect to need an ALoc table in testgen")
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
+          ~phase:Context.Checking
           (Nel.one filename) reqs [] master_sig_cx in
       let suppressions = Error_suppressions.empty in
       let severity_cover = Utils_js.FilenameMap.singleton filename (ExactCover.default_file_cover filename) in
       let errors = Context.errors final_cx in
       let include_suppressions = Context.include_suppressions final_cx in
+      let aloc_tables = Utils_js.FilenameMap.empty in
       let errors, warnings, suppressions =
-        Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+        Error_suppressions.filter_lints ~include_suppressions suppressions errors aloc_tables severity_cover in
 
-      let errors = Flow_error.make_errors_printable errors in
-      let warnings = Flow_error.make_errors_printable warnings in
+      let lazy_table_of_aloc _ =
+        lazy (failwith "Did not expect to encounter an abstract location in flowtestgen")
+      in
+      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
       let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
           ~root ~file_options:None suppressions errors ~unused:suppressions in
       let warnings, _, _ = Error_suppressions.filter_suppressed_errors

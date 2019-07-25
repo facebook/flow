@@ -101,6 +101,7 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
       (* Make the parser as permissive as possible.
          TODO: make these CLI flags *)
       let parse_options = Some Parser_env.({
+        enums = true;
         esproposal_class_instance_fields = true;
         esproposal_class_static_fields = true;
         esproposal_decorators = true;

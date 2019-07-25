@@ -9,7 +9,6 @@ module Ast = Flow_ast
 
 open Token
 open Parser_env
-module Error = Parse_error
 open Parser_common
 
 (* Sometimes we add the same error for multiple different reasons. This is hard
@@ -18,7 +17,7 @@ open Parser_common
    removed. This differs from a set because the original order is preserved. *)
 let filter_duplicate_errors =
   let module PrintableErrorSet = Set.Make(struct
-    type t = Loc.t * Error.t
+    type t = Loc.t * Parse_error.t
     let compare (a_loc, a_error) (b_loc, b_error) =
       let loc = Loc.compare a_loc b_loc in
       if loc = 0
@@ -57,7 +56,7 @@ module rec Parse : PARSER = struct
       let check env token =
         match token with
         | T_STRING (loc, _, _, octal) ->
-            if octal then strict_error_at env (loc, Error.StrictOctalLiteral)
+            if octal then strict_error_at env (loc, Parse_error.StrictOctalLiteral)
         | _ -> failwith ("Nooo: "^(token_to_string token)^"\n")
 
       in let rec statement_list env term_fn item_fn (string_tokens, stmts) =
@@ -155,6 +154,7 @@ module rec Parse : PARSER = struct
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env
+    | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
     | _ -> statement env)
 
   and statement env =
@@ -252,8 +252,8 @@ module rec Parse : PARSER = struct
   and object_key = Object.key
   and class_declaration = Object.class_declaration
   and class_expression = Object.class_expression
-
   and is_assignable_lhs = Expression.is_assignable_lhs
+  and number = Expression.number
 
   and assert_identifier_name_is_identifier ?restricted_error env (loc, { Ast.Identifier.name; comments= _ }) =
     match name with
@@ -261,24 +261,24 @@ module rec Parse : PARSER = struct
       (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
        * lists them out. It is always disallowed in strict mode *)
       if in_strict_mode env then
-        strict_error_at env (loc, Error.StrictReservedWord)
+        strict_error_at env (loc, Parse_error.StrictReservedWord)
       else if no_let env then
-        error_at env (loc, Error.UnexpectedToken name)
+        error_at env (loc, Parse_error.UnexpectedToken name)
     | "await" ->
       (* `allow_await` means that `await` is allowed to be a keyword,
          which makes it illegal to use as an identifier.
          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_await env then error_at env (loc, Error.UnexpectedReserved)
+      if allow_await env then error_at env (loc, Parse_error.UnexpectedReserved)
     | "yield" ->
       (* `allow_yield` means that `yield` is allowed to be a keyword,
          which makes it illegal to use as an identifier.
          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_yield env then error_at env (loc, Error.UnexpectedReserved)
-      else strict_error_at env (loc, Error.StrictReservedWord)
+      if allow_yield env then error_at env (loc, Parse_error.UnexpectedReserved)
+      else strict_error_at env (loc, Parse_error.StrictReservedWord)
     | _ when is_strict_reserved name ->
-      strict_error_at env (loc, Error.StrictReservedWord)
+      strict_error_at env (loc, Parse_error.StrictReservedWord)
     | _ when is_reserved name ->
-      error_at env (loc, Error.UnexpectedToken name)
+      error_at env (loc, Parse_error.UnexpectedToken name)
     | _ ->
       begin match restricted_error with
       | Some err when is_restricted name -> strict_error_at env (loc, err)
@@ -296,7 +296,7 @@ module rec Parse : PARSER = struct
       let optional = not no_optional && Peek.token env = T_PLING in
       if optional then begin
         if not (should_parse_types env)
-        then error env Error.UnexpectedTypeAnnotation;
+        then error env Parse_error.UnexpectedTypeAnnotation;
         Expect.token env T_PLING
       end;
       let annot = Type.annotation_opt env in
@@ -340,7 +340,7 @@ let do_parse env parser fail =
   let ast = parser env in
   let error_list = filter_duplicate_errors (errors env) in
   if fail && error_list <> []
-  then raise (Error.Error error_list);
+  then raise (Parse_error.Error error_list);
   ast, error_list
 
 (* Makes the input parser expect EOF at the end. Use this to error on trailing
@@ -386,10 +386,10 @@ let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content file
       do_parse env Parse.expression fail
     | _ ->
       error_unexpected env;
-      raise (Error.Error (errors env)))
+      raise (Parse_error.Error (errors env)))
   | _ ->
     error_unexpected env;
-    raise (Error.Error (errors env))
+    raise (Parse_error.Error (errors env))
 
 let jsx_pragma_expression =
   let left_hand_side env =

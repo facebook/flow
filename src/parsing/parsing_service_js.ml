@@ -11,9 +11,10 @@ open Utils_js
 open Sys_utils
 
 type t = (Loc.t, Loc.t) Ast.program * File_sig.With_Loc.t
+type aloc_t = (ALoc.t, ALoc.t) Ast.program * File_sig.With_ALoc.t * ALoc.table option
 type parse_ok =
   | Classic of t
-  | TypesFirst of t * t (* sig *)
+  | TypesFirst of t * aloc_t (* sig *)
 
 let basic = function
   | Classic t -> t
@@ -86,11 +87,13 @@ type parse_options = {
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
   parse_arch: Options.arch;
+  parse_abstract_locations: bool;
 }
 
 let make_parse_options
     ?(fail=true)
     ?(arch=Options.Classic)
+    ?(abstract_locations=false)
     ?(prevent_munge=false)
     ~types_mode
     ~use_strict
@@ -107,6 +110,7 @@ let make_parse_options
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
     parse_arch = arch;
+    parse_abstract_locations = abstract_locations;
   }
 
 let parse_source_file ~fail ~types ~use_strict content file =
@@ -116,6 +120,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
      * ignore/warn/enable them is handled during inference so that a clean error
      * can be surfaced (rather than a more cryptic parse error).
      *)
+    enums = true;
     esproposal_class_instance_fields = true;
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
@@ -132,6 +137,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
 
 let parse_json_file ~fail content file =
   let parse_options = Some Parser_env.({
+    enums = false;
     esproposal_class_instance_fields = false;
     esproposal_class_static_fields = false;
     esproposal_decorators = false;
@@ -378,6 +384,7 @@ let do_parse ~parse_options ~info content file =
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
     parse_arch = arch;
+    parse_abstract_locations = abstract_locations;
   } = parse_options in
   try (
     match file with
@@ -420,15 +427,22 @@ let do_parse ~parse_options ~info content file =
                 ?prevent_munge ~facebook_fbt
                 ~ignore_static_propTypes ~facebook_keyMirror
                 signature ast in
+            let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
+            let (aloc_table, sig_ast) = if abstract_locations then
+              let (aloc_table, sig_ast) = Ast_loc_utils.abstractify_alocs file sig_ast in
+              (Some aloc_table, sig_ast)
+            else
+              None, sig_ast
+            in
             let file_sig = File_sig.With_Loc.verified errors (snd signature) in
-            let sig_file_sig = match File_sig.With_Loc.program ~ast:sig_ast ~module_ref_prefix with
+            let sig_file_sig = match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs
               | Error _ -> assert false in
             begin match arch with
               | Options.Classic ->
                 Parse_ok (Classic (ast, file_sig))
               | Options.TypesFirst ->
-                Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig)))
+                Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig, aloc_table)))
             end
           | Error e -> Parse_fail (File_sig_error e)
         else
@@ -648,9 +662,11 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   in
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
+  let abstract_locations = Options.abstract_locations options in
   let parse_options  =
-    make_parse_options ~arch ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ()
+    make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
+        ~facebook_fbt ()
   in
 
   let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
@@ -668,9 +684,11 @@ let reparse_with_defaults
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
+  let abstract_locations = Options.abstract_locations options in
   let parse_options  =
-    make_parse_options ~arch ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ()
+    make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
+        ~facebook_fbt ()
   in
   reparse
     ~transaction ~reader ~parse_options ~profile ~max_header_tokens ~noflow
@@ -710,10 +728,12 @@ let ensure_parsed ~reader options workers files =
     MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts)
   in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
+  let abstract_locations = Options.abstract_locations options in
 
   let parse_options =
-    make_parse_options ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ()
+    make_parse_options ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch
+        ~abstract_locations ()
   in
 
   let%lwt results = parse

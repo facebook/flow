@@ -1,0 +1,10 @@
+(library
+  (name flow_typing_errors)
+  (wrapped false)
+  (libraries
+    flow_common_errors
+    flow_parser_utils
+    flow_typing_scope
+    flow_typing_type
+  )
+)

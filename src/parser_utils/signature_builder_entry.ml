@@ -27,11 +27,11 @@ let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
         | Property (prop_loc, { Property.key; pattern = p; _ }) ->
           begin match key with
             | Property.Identifier (key_loc, { Ast.Identifier.name= x; comments= _ }) ->
-              let annot_path = Kind.Annot_path.mk_object ?annot_path x in
+              let annot_path = Kind.Annot_path.mk_object prop_loc ?annot_path (key_loc, x) in
               let init_path = Kind.Init_path.mk_object prop_loc ?init_path (key_loc, x) in
               acc @ (pattern loc ?annot_path ?init_path p)
             | Property.Literal (key_loc, { Ast.Literal.raw; _ }) ->
-              let annot_path = Kind.Annot_path.mk_object ?annot_path raw in
+              let annot_path = Kind.Annot_path.mk_object prop_loc ?annot_path (key_loc, raw) in
               let init_path = Kind.Init_path.mk_object prop_loc ?init_path (key_loc, raw) in
               acc @ (pattern loc ?annot_path ?init_path p)
             | Property.Computed _ ->
@@ -63,14 +63,18 @@ let variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclara
   ) [] declarations
 
 let function_declaration loc { Ast.Function.
-  id; generator; tparams; params; return; body; _
+  id; generator; async; tparams; params; return; body; predicate; _
 } =
-  Option.value_exn id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
+  Option.value_exn id, (loc, Kind.FunctionDef {
+    generator; async; tparams; params; return; body; predicate
+  })
 
 let function_expression loc { Ast.Function.
-  id; generator; tparams; params; return; body; _
+  id; generator; async; tparams; params; return; body; predicate; _
 } =
-  Option.value_exn id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
+  Option.value_exn id, (loc, Kind.FunctionDef {
+    generator; async; tparams; params; return; body; predicate
+  })
 
 let class_ loc class_ =
   let open Ast.Class in
@@ -94,8 +98,8 @@ let declare_variable loc declare_variable =
 
 let declare_function loc declare_function =
   let open Ast.Statement.DeclareFunction in
-  let { id; annot; _ } = declare_function in
-  id, (loc, Kind.DeclareFunctionDef { annot })
+  let { id; annot; predicate; _ } = declare_function in
+  id, (loc, Kind.DeclareFunctionDef { annot; predicate })
 
 let declare_class loc declare_class =
   let open Ast.Statement.DeclareClass in
@@ -111,8 +115,8 @@ let type_alias loc type_alias =
 
 let opaque_type loc opaque_type =
   let open Ast.Statement.OpaqueType in
-  let { id; tparams; impltype = _; supertype } = opaque_type in
-  id, (loc, Kind.OpaqueTypeDef { tparams; supertype })
+  let { id; tparams; impltype; supertype } = opaque_type in
+  id, (loc, Kind.OpaqueTypeDef { tparams; impltype; supertype })
 
 let interface loc interface =
   let open Ast.Statement.Interface in

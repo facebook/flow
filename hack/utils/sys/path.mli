@@ -7,8 +7,14 @@
  *
  *)
 
+open Reordered_argument_collections
 
-type t = private string
+module S : sig
+  type t = private string
+  val compare : t -> t -> int
+  val to_string : t -> string
+end
+type t = S.t
 
 val dummy_path: t
 val make: string -> t
@@ -30,3 +36,5 @@ val cat: t -> string
 
 val slash_escaped_string_of_path: t -> string
 val path_of_slash_escaped_string: string -> t
+
+module Set : module type of Reordered_argument_set(Set.Make(S))

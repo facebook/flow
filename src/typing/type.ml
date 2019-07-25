@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Polarity
 open Reason
 open Utils_js
 
@@ -71,7 +72,7 @@ module rec TypeTerm : sig
     | EvalT of t * defer_use_t * int
 
     (* bound type variable *)
-    | BoundT of reason * string * polarity
+    | BoundT of reason * string * Polarity.t
     (* existential type variable *)
     | ExistsT of reason
 
@@ -302,6 +303,7 @@ module rec TypeTerm : sig
     | FunImplicitReturn of { fn: 'loc virtual_reason; upper: 'loc virtual_reason }
     | GeneratorYield of { value: 'loc virtual_reason }
     | GetProperty of 'loc virtual_reason
+    | InitField of {op: 'loc virtual_reason; body: 'loc virtual_reason}
     | Internal of internal_use_op
     | JSXCreateElement of { op: 'loc virtual_reason; component: 'loc virtual_reason }
     | ReactCreateElementCall of { op: 'loc virtual_reason; component: 'loc virtual_reason; children: 'loc }
@@ -333,7 +335,7 @@ module rec TypeTerm : sig
         targ: 'loc virtual_reason;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
-        polarity: polarity;
+        polarity: Polarity.t;
       }
     | TypeParamBound of { name: string }
     | UnifyFlip
@@ -442,7 +444,7 @@ module rec TypeTerm : sig
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
-    | VarianceCheckT of reason * t list * polarity
+    | VarianceCheckT of reason * t list * Polarity.t
 
     | TypeAppVarianceCheckT of use_op * reason * reason * (t * t) list
 
@@ -493,6 +495,10 @@ module rec TypeTerm : sig
     | ObjTestProtoT of reason * t_out
     (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
+
+    (* Assign properties to module.exports. The only interesting case is when module.exports is a
+       function type, where we set the statics field of the function type. *)
+    | ModuleExportsAssignT of reason * t * t
 
     (* assignment rest element in array pattern *)
     | ArrRestT of use_op * reason * int * t
@@ -683,8 +689,25 @@ module rec TypeTerm : sig
     | ReactPropsToOut of reason * t
     | ReactInToProps of reason * t
 
-    | DestructuringT of reason * selector * t_out
+    (* Used to calculate a destructured binding. If annot is true, the lower
+     * bound is an annotation (0->1), and t_out will be unified with the
+     * destructured type. The caller should wrap the tvar with an AnnotT. *)
+    | DestructuringT of reason * destruct_kind * selector * t_out
 
+  (* Bindings created from destructuring annotations should themselves act like
+   * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
+   * because `p` should behave like a `string` annotation.
+   *
+   * We accomplish this by wrapping the binding itself in an AnnotT type. The
+   * wrapped type must be 0->1, which is enforced with BecomeT.
+   *
+   * Since DestructuringT uses with the DestructAnnot kind should only encounter
+   * annotations, the set of lower bounds will be a subset of all possible
+   * types. The only important cases to handle are disjunctive types that would
+   * violate the 0->1 property, like UnionT and MaybeT. *)
+  and destruct_kind =
+    | DestructAnnot
+    | DestructInfer
 
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
@@ -729,8 +752,8 @@ module rec TypeTerm : sig
 
     | ArrP (* Array.isArray *)
 
-    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP (reason, "b", loc), tout))` *)
-    | PropExistsP of reason * string * ALoc.t option (* Location of the property in the existence check *)
+    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b", loc), tout))` *)
+    | PropExistsP of string * ALoc.t option (* Location of the property in the existence check *)
 
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
@@ -908,14 +931,21 @@ module rec TypeTerm : sig
   | ShadowWrite of Properties.id Nel.t
 
   and lookup_action =
-  | RWProp of use_op * t (* original target *) * t (* in/out type *) * rw
+  | ReadProp of {
+      use_op: use_op;
+      obj_t: t;
+      tout: t;
+    }
+  | WriteProp of {
+      use_op: use_op;
+      obj_t: t;
+      prop_tout: t option;
+      tin: t;
+      write_ctx: write_ctx;
+    }
   | LookupProp of use_op * Property.t
   | SuperProp of use_op * Property.t
   | MatchProp of use_op * t
-
-  and rw =
-  | Read
-  | Write of write_ctx * t option (* original type of field *)
 
   and write_ctx = ThisInCtor | Normal
 
@@ -947,14 +977,12 @@ module rec TypeTerm : sig
     dict_name: string option;
     key: t;
     value: t;
-    dict_polarity: polarity;
+    dict_polarity: Polarity.t;
   }
-
-  and polarity = Negative | Neutral | Positive
 
   (* Locations refer to the location of the identifier, if one exists *)
   and property =
-    | Field of ALoc.t option * t * polarity
+    | Field of ALoc.t option * t * Polarity.t
     | Get of ALoc.t option * t
     | Set of ALoc.t option * t
     | GetSet of ALoc.t option * t * ALoc.t option * t
@@ -969,7 +997,7 @@ module rec TypeTerm : sig
 
   and insttype = {
     class_id: ALoc.t;
-    type_args: (string * reason * t * polarity) list;
+    type_args: (string * reason * t * Polarity.t) list;
     own_props: Properties.id;
     proto_props: Properties.id;
     inst_call_t: int option;
@@ -983,7 +1011,7 @@ module rec TypeTerm : sig
     opaque_id: ALoc.t;
     underlying_t: t option;
     super_t: t option;
-    opaque_type_args: (string * reason * t * polarity) list;
+    opaque_type_args: (string * reason * t * Polarity.t) list;
     opaque_name: string;
   }
 
@@ -1026,7 +1054,7 @@ module rec TypeTerm : sig
     reason: reason;
     name: string;
     bound: t;
-    polarity: polarity;
+    polarity: Polarity.t;
     default: t option;
   }
 
@@ -1203,57 +1231,6 @@ end
 
 and EnumSet: Set.S with type elt = Enum.t = Set.Make(Enum)
 
-and Polarity : sig
-  type t = TypeTerm.polarity
-
-  val compat: t * t -> bool
-  val inv: t -> t
-  val mult: t * t -> t
-  val of_rw: TypeTerm.rw -> t
-
-  val string: t -> string
-  val sigil: t -> string
-end = struct
-  open TypeTerm
-
-  type t = polarity
-
-  (* Subtype relation for polarities, interpreting neutral as positive &
-     negative: whenever compat(p1,p2) holds, things that have polarity p1 can
-     appear in positions that have polarity p2. *)
-  let compat = function
-    | Positive, Positive
-    | Negative, Negative
-    | Neutral, _ -> true
-    | _ -> false
-
-  let inv = function
-    | Positive -> Negative
-    | Negative -> Positive
-    | Neutral -> Neutral
-
-  let mult = function
-    | Positive, Positive -> Positive
-    | Negative, Negative -> Positive
-    | Neutral, _ | _, Neutral -> Neutral
-    | _ -> Negative
-
-  let of_rw = function
-    | Read -> Positive
-    | Write _ -> Negative
-
-  (* printer *)
-  let string = function
-    | Positive -> "covariant"
-    | Negative -> "contravariant"
-    | Neutral -> "invariant"
-
-  let sigil = function
-    | Positive -> "+"
-    | Negative -> "-"
-    | Neutral -> ""
-end
-
 and Property : sig
   type t = TypeTerm.property
 
@@ -1261,7 +1238,6 @@ and Property : sig
 
   val read_t: t -> TypeTerm.t option
   val write_t: ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
-  val access: TypeTerm.rw -> t -> TypeTerm.t option
 
   val read_loc: t -> ALoc.t option
   val write_loc: t -> ALoc.t option
@@ -1338,10 +1314,6 @@ end = struct
           let k = ALoc.compare loc1 loc2 in
           let loc = if k <= 0 then loc1 else loc2 in
           Some loc
-
-  let access = function
-    | Read -> read_t
-    | Write (ctx, _) -> write_t ~ctx
 
   let iter_t f = function
     | Field (_, t, _)
@@ -2293,6 +2265,7 @@ end = struct
     | SetProtoT (reason,_) -> reason
     | SpecializeT(_,_,reason,_,_,_) -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
+    | ModuleExportsAssignT (reason, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
     | SuperT (_,reason,_) -> reason
     | TestPropT (reason, _, _, _) -> reason
@@ -2307,7 +2280,7 @@ end = struct
     | MatchPropT (_, reason, _, _) -> reason
     | ReactPropsToOut (reason, _)
     | ReactInToProps (reason, _) -> reason
-    | DestructuringT (reason, _, _) -> reason
+    | DestructuringT (reason, _, _, _) -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2471,6 +2444,7 @@ end = struct
         SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
     | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
         ObjKitT (use_op, f reason, resolve_tool, tool, tout)
+    | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
     | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
     | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
     | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
@@ -2488,7 +2462,7 @@ end = struct
     | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
     | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
     | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
-    | DestructuringT (reason, s, t) -> DestructuringT (f reason, s, t)
+    | DestructuringT (reason, a, s, t) -> DestructuringT (f reason, a, s, t)
 
   and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2544,6 +2518,9 @@ end = struct
   | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
   | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
   | ExtendsUseT (op, r, ts, a, b) -> util op (fun op -> ExtendsUseT (op, r, ts, a, b))
+  | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
+  | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
+  | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
   | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)
   | GetStaticsT (_, _)
@@ -2566,8 +2543,6 @@ end = struct
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _)
   | LookupT (_, _, _, _, _)
-  | ObjAssignToT (_, _, _, _ ,_)
-  | ObjAssignFromT (_, _, _, _, _)
   | ObjFreezeT (_, _)
   | ObjRestT (_, _, _)
   | ObjSealT (_, _)
@@ -2590,7 +2565,6 @@ end = struct
   | ExportNamedT (_, _, _, _, _)
   | ExportTypeT (_, _, _, _, _)
   | AssertExportIsTypeT (_, _, _)
-  | MapTypeT (_, _, _, _)
   | ChoiceKitUseT (_, _)
   | IntersectionPreprocessKitT (_, _)
   | DebugPrintT (_)
@@ -2608,6 +2582,7 @@ end = struct
   | ReactPropsToOut _
   | ReactInToProps _
   | DestructuringT _
+  | ModuleExportsAssignT _
     -> nope u
 
   let use_op_of_use_t =
@@ -2629,6 +2604,7 @@ end = struct
   let rec mod_loc_of_virtual_use_op f =
     let mod_reason = Reason.map_reason_locs f in
     let mod_loc_of_root_use_op f = function
+    | InitField {op; body} -> InitField {op = mod_reason op; body = mod_reason body}
     | ObjectSpread {op} -> ObjectSpread {op = mod_reason op}
     | ObjectChain {op} -> ObjectChain {op = mod_reason op}
     | Addition { op; left; right } ->
@@ -2984,6 +2960,15 @@ let is_proper_def = function
   | MatchingPropT _ -> false
   | _ -> true
 
+(* not all use types should appear in "merged" types *)
+let is_proper_use = function
+  (* Speculation should be completed by the end of merge. This does not hold
+     today because non-0->1 things are erroneously considered 0->1, specifically
+     type parameters and sometimes eval types. Until this situation is fixed, we
+     can at least avoid these things leaking into dependent merge steps. *)
+  | ChoiceKitUseT _ -> false
+  | _ -> true
+
 (* convenience *)
 let is_bot = function
 | DefT (_, _, EmptyT _) -> true
@@ -3049,6 +3034,7 @@ let replace_speculation_root_use_op =
     | Error use_op -> use_op
 
 let aloc_of_root_use_op : root_use_op -> ALoc.t = function
+| InitField {op; _}
 | ObjectSpread {op}
 | ObjectChain {op}
 | Addition {op; _}
@@ -3178,6 +3164,7 @@ let string_of_internal_use_op = function
   | WidenEnv -> "WidenEnv"
 
 let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
+| InitField _ -> "InitField"
 | ObjectSpread _ -> "ObjectSpread"
 | ObjectChain _ -> "ObjectChain"
 | Addition _ -> "Addition"
@@ -3313,7 +3300,7 @@ let string_of_use_ctor = function
     spf "ResolveSpreadT(%s)" begin match rrt_resolve_to with
     | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
     | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
-    | ResolveSpreadsToArrayLiteral _ -> "ResolveSpreadsToArrayLiteral"
+    | ResolveSpreadsToArrayLiteral (id, _, _) -> spf "ResolveSpreadsToArrayLiteral (%d)" id
     | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
     | ResolveSpreadsToMultiflowSubtypeFull _ ->
       "ResolveSpreadsToMultiflowSubtypeFull"
@@ -3343,6 +3330,7 @@ let string_of_use_ctor = function
   | ReactPropsToOut _ -> "ReactPropsToOut"
   | ReactInToProps _ -> "ReactInToProps"
   | DestructuringT _ -> "DestructuringT"
+  | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
@@ -3381,7 +3369,7 @@ let rec string_of_predicate = function
   (* Array.isArray *)
   | ArrP -> "array"
 
-  | PropExistsP (_, key, _) -> spf "prop `%s` is truthy" key
+  | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
 
   | LatentP (OpenT (_, id),i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i

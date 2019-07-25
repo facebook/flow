@@ -38,8 +38,8 @@ let unit_of_op = function
 module Taint = struct
   type t = Untainted | Tainted
 
-  let of_trust tr =
-    if Trust.is_qualifier tr && Trust.as_qualifier tr |> Trust.is_tainted then Tainted else Untainted
+  let of_trust cx tr =
+    if Trust_helpers.actual_trust cx tr |> Trust.is_tainted then Tainted else Untainted
 
   let to_string = function
     | Untainted -> "Untainted"
@@ -141,8 +141,8 @@ class visitor = object (self)
         tvar_cache <- IMap.add root_id Started tvar_cache;
         let open Constraint in
         let cov = match constraints with
-          | Resolved t
-          | FullyResolved t ->
+          | Resolved (_, t)
+          | FullyResolved (_, t) ->
             self#type_ cx t
           | Unresolved bounds ->
             let bounds = TypeMap.keys bounds.lower in
@@ -217,14 +217,14 @@ class visitor = object (self)
     | DefT (_, t, StrT _)
     | DefT (_, t, VoidT)
       ->
-      Kind.Checked, Taint.of_trust t
+      Kind.Checked, Taint.of_trust cx t
 
     (* Concrete uncovered constructors *)
     (* TODO: Rethink coverage and trust for these types *)
     | MatchingPropT _
     | TypeDestructorTriggerT _ -> Kind.Empty, Taint.Untainted
 
-    | DefT (_, t, EmptyT _) -> Kind.Empty, Taint.of_trust t
+    | DefT (_, t, EmptyT _) -> Kind.Empty, Taint.of_trust cx t
     | AnyT _ -> Kind.Any, Taint.Tainted
 
   method private types_of_use acc = function

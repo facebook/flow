@@ -1,0 +1,8 @@
+(library
+  (name flow_common_modulename)
+  (wrapped false)
+  (libraries
+    flow_parser
+    collections ; hack
+  )
+)

@@ -139,8 +139,8 @@ end with type t = Impl.t) = struct
           "expression", expression expr;
           "directive", option string directive;
         ]
-    | loc, If { If.test; consequent; alternate } ->
-        node "IfStatement" loc [
+    | loc, If { If.test; consequent; alternate; comments } ->
+        node ?comments "IfStatement" loc [
           "test", expression test;
           "consequent", statement consequent;
           "alternate", option statement alternate;
@@ -154,8 +154,8 @@ end with type t = Impl.t) = struct
         node "BreakStatement" loc [
           "label", option identifier label;
         ]
-    | loc, Continue { Continue.label } ->
-        node "ContinueStatement" loc [
+    | loc, Continue { Continue.label; comments } ->
+        node ?comments "ContinueStatement" loc [
           "label", option identifier label;
         ]
     | loc, With { With._object; body } ->
@@ -189,8 +189,8 @@ end with type t = Impl.t) = struct
           "test", expression test;
           "body", statement body;
         ]
-    | loc, DoWhile { DoWhile.body; test } ->
-        node "DoWhileStatement" loc [
+    | loc, DoWhile { DoWhile.body; test; comments } ->
+        node ?comments "DoWhileStatement" loc [
           "body", statement body;
           "test", expression test;
         ]
@@ -231,6 +231,7 @@ end with type t = Impl.t) = struct
           "right", expression right;
           "body", statement body;
         ]
+    | loc, EnumDeclaration enum -> enum_declaration (loc, enum)
     | loc, Debugger -> node "DebuggerStatement" loc []
     | loc, ClassDeclaration c -> class_declaration (loc, c)
     | loc, InterfaceDeclaration i -> interface_declaration (loc, i)
@@ -394,7 +395,7 @@ end with type t = Impl.t) = struct
           node "SequenceExpression" loc [
             "expressions", array_of_list expression expressions;
           ]
-      | loc, Unary { Unary.operator; argument } -> Unary.(
+      | loc, Unary { Unary.operator; argument; comments } -> Unary.(
           match operator with
           | Await ->
             (* await is defined as a separate expression in ast-types
@@ -406,7 +407,7 @@ end with type t = Impl.t) = struct
              * 3) Modify the esprima test runner to compare AwaitExpression and
              *    our UnaryExpression
              * *)
-            node "AwaitExpression" loc [
+            node ?comments "AwaitExpression" loc [
               "argument", expression argument;
             ]
           | _ -> begin
@@ -420,7 +421,7 @@ end with type t = Impl.t) = struct
             | Delete -> "delete"
             | Await -> failwith "matched above"
             in
-            node "UnaryExpression" loc [
+            node ?comments "UnaryExpression" loc [
               "operator", string operator;
               "prefix", bool true;
               "argument", expression argument;
@@ -812,6 +813,58 @@ end with type t = Impl.t) = struct
         "variance", option variance variance_;
       ]
 
+    and enum_declaration (loc, {Statement.EnumDeclaration.id; body}) =
+      let open Statement.EnumDeclaration in
+      let enum_body = match body with
+        | BooleanBody {BooleanBody.members; explicitType} ->
+          node "EnumBooleanBody" loc [
+            "members", array_of_list (fun (loc, {InitializedMember.id; init = _, bool_val}) ->
+              node "EnumBooleanMember" loc [
+                "id", identifier id;
+                "init", bool bool_val;
+              ]) members;
+            "explicitType", bool explicitType;
+          ]
+        | NumberBody {NumberBody.members; explicitType} ->
+          node "EnumNumberBody" loc [
+            "members", array_of_list (fun (loc, {InitializedMember.id; init}) ->
+              node "EnumNumberMember" loc [
+                "id", identifier id;
+                "init", number_literal init;
+              ]) members;
+            "explicitType", bool explicitType;
+          ]
+        | StringBody {StringBody.members; explicitType} ->
+          let members = match members with
+            | StringBody.Defaulted defaulted_members ->
+              List.map (fun (loc, {DefaultedMember.id}) ->
+                node "EnumDefaultedMember" loc [
+                  "id", identifier id;
+                ]) defaulted_members
+            | StringBody.Initialized initialized_members ->
+              List.map (fun (loc, {InitializedMember.id; init}) ->
+                node "EnumStringMember" loc [
+                  "id", identifier id;
+                  "init", string_literal init;
+                ]) initialized_members
+          in
+          node "EnumStringBody" loc [
+            "members", array members;
+            "explicitType", bool explicitType;
+          ]
+        | SymbolBody {SymbolBody.members} ->
+          node "EnumSymbolBody" loc [
+            "members", array_of_list (fun (loc, {DefaultedMember.id}) ->
+              node "EnumDefaultedMember" loc [
+                "id", identifier id;
+              ]) members;
+          ]
+      in
+      node "EnumDeclaration" loc [
+        "id", identifier id;
+        "body", enum_body;
+      ]
+
     and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends }) =
       node "InterfaceDeclaration" loc [
         "id", identifier id;
@@ -980,6 +1033,12 @@ end with type t = Impl.t) = struct
           [ "value", value_; "raw", string raw; ]
       in
       node ?comments "Literal" loc props
+
+    and number_literal (loc, {NumberLiteral.value; raw}) =
+      node "Literal" loc [
+        "value", number value;
+        "raw", string raw;
+      ]
 
     and bigint_literal (loc, { Literal.raw; _ }) =
       node "BigIntLiteral" loc [
@@ -1416,7 +1475,11 @@ end with type t = Impl.t) = struct
     and jsx_expression_container (loc, { JSX.ExpressionContainer.expression = expr }) =
       let expression = match expr with
       | JSX.ExpressionContainer.Expression expr -> expression expr
-      | JSX.ExpressionContainer.EmptyExpression empty_loc ->
+      | JSX.ExpressionContainer.EmptyExpression ->
+          let empty_loc = Loc.({ loc with
+            start = { loc.start with column = loc.start.column + 1 };
+            _end = { loc._end with column = loc._end.column - 1 };
+          }) in
           node "JSXEmptyExpression" empty_loc []
       in
       node "JSXExpressionContainer" loc [

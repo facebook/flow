@@ -25,6 +25,7 @@ type state = {
   current: Type.t;
   init: (ALoc.t, ALoc.t) Flow_ast.Expression.t option;
   default: Type.t Default.t option;
+  annot: bool;
 }
 
 type expr =
@@ -40,28 +41,33 @@ type callback =
   Type.t ->
   unit
 
-let empty ?init ?default current = {
+let empty ?init ?default ~annot current = {
   parent = None;
   current;
   init;
   default;
+  annot;
 }
+
+let destruct cx reason ~annot selector t =
+  let kind = if annot then DestructAnnot else DestructInfer in
+  Tvar.mk_where cx reason (fun tout ->
+    Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout))
+  )
 
 let pattern_default cx ~expr acc = function
   | None -> acc, None
   | Some e ->
-    let { current; default; _ } = acc in
+    let { current; default; annot; _ } = acc in
     let (loc, t), _ as e = expr cx e in
     let default = Some (Default.expr ?default t) in
     let reason = mk_reason RDefaultValue loc in
-    let current = Tvar.mk_where cx reason (fun tout ->
-      Flow_js.flow cx (current, DestructuringT (reason, Default, tout))
-    ) in
+    let current = destruct cx reason ~annot Default current in
     let acc = { acc with current; default } in
     acc, Some e
 
 let array_element cx acc i loc =
-  let { current; init; default; _ } = acc in
+  let { current; init; default; annot; _ } = acc in
   let key = DefT (mk_reason RNumber loc, bogus_trust (), NumT (
     Literal (None, (float i, string_of_int i))
   )) in
@@ -86,25 +92,23 @@ let array_element cx acc i loc =
   | Some t -> None, t
   | None ->
     Some current,
-    Tvar.mk_where cx reason (fun tout ->
-      Flow_js.flow cx (current, DestructuringT (reason, Elem key, tout)))
+    destruct cx reason ~annot (Elem key) current
   in
   let default = Option.map default (Default.elem key reason) in
-  { parent; current; init; default }
+  { acc with parent; current; init; default }
 
 let array_rest_element cx acc i loc =
-  let { current; default; _ } = acc in
+  let { current; default; annot; _ } = acc in
   let reason = mk_reason RArrayPatternRestProp loc in
   let parent, current =
     Some current,
-    Tvar.mk_where cx reason (fun tout ->
-      Flow_js.flow cx (current, DestructuringT (reason, ArrRest i, tout)))
+    destruct cx reason ~annot (ArrRest i) current
   in
   let default = Option.map default (Default.arr_rest i reason) in
   { acc with parent; current; default }
 
 let object_named_property cx acc loc x comments =
-  let { current; init; default; _ } = acc in
+  let { current; init; default; annot; _ } = acc in
   let reason = mk_reason (RProperty (Some x)) loc in
   let init = Option.map init (fun init ->
     loc, Ast.Expression.(Member Member.({
@@ -122,8 +126,7 @@ let object_named_property cx acc loc x comments =
        given `var {foo} = ...`, `foo` is both. compare to `a.foo`
        where `foo` is the name and `a.foo` is the lookup. *)
     Some current,
-    Tvar.mk_where cx reason (fun tout ->
-      Flow_js.flow cx (current, DestructuringT (reason, Prop x, tout)))
+    destruct cx reason ~annot (Prop x) current
   in
   let default = Option.map default (Default.prop x reason) in
   let () = match parent with
@@ -138,10 +141,10 @@ let object_named_property cx acc loc x comments =
     Type_inference_hooks_js.dispatch_lval_hook cx x loc
       (Type_inference_hooks_js.Parent t);
   in
-  { parent; current; init; default }
+  { acc with parent; current; init; default }
 
 let object_computed_property cx ~expr acc e =
-  let { current; init; default; _ } = acc in
+  let { current; init; default; annot; _ } = acc in
   let (loc, t), _ as e' = expr cx e in
   let reason = mk_reason (RProperty None) loc in
   let init = Option.map init (fun init ->
@@ -157,19 +160,17 @@ let object_computed_property cx ~expr acc e =
   | Some t -> None, t
   | None ->
     Some current,
-    Tvar.mk_where cx reason (fun tout ->
-      Flow_js.flow cx (current, DestructuringT (reason, Elem t, tout)))
+    destruct cx reason ~annot (Elem t) current
   in
   let default = Option.map default (Default.elem t reason) in
-  { parent; current; init; default }, e'
+  { acc with parent; current; init; default }, e'
 
 let object_rest_property cx acc xs loc =
-  let { current; default; _ } = acc in
+  let { current; default; annot; _ } = acc in
   let reason = mk_reason RObjectPatternRestProp loc in
   let parent, current =
     Some current,
-    Tvar.mk_where cx reason (fun tout ->
-      Flow_js.flow cx (current, DestructuringT (reason, ObjRest xs, tout)))
+    destruct cx reason ~annot (ObjRest xs) current
   in
   let default = Option.map default (Default.obj_rest xs reason) in
   { acc with parent; current; default }
@@ -199,7 +200,7 @@ let object_property cx ~expr (acc: state) xs (key: (ALoc.t, ALoc.t) Ast.Pattern.
     acc, xs, Tast_utils.error_mapper#pattern_object_property_key key
 
 let identifier cx ~f acc loc name =
-  let { parent; current; init; default } = acc in
+  let { parent; current; init; default; annot } = acc in
   let () = match parent with
   (* If there was a parent pattern, we already dispatched the hook if relevant. *)
   | Some _ -> ()
@@ -218,8 +219,24 @@ let identifier cx ~f acc loc name =
       -> RIdentifier name
     | desc -> desc
   )) current in
+  let reason = mk_reason (RIdentifier name) loc in
+  let current =
+    (* If we are destructuring an annotation, the chain of constraints leading
+     * to here will preserve the 0->1 constraint. The mk_typeof_annotation
+     * helper will wrap the destructured type in an AnnotT, to ensure it is
+     * resolved before it is used as an upper bound. The helper also enforces
+     * the destructured type is 0->1 via BecomeT.
+     *
+     * The BecomeT part should not be necessary, but for now it is. Ideally an
+     * annotation would recursively be 0->1, but it's possible for them to
+     * contain inferred parts. For example, a class's instance type where one of
+     * the fields is unannotated. *)
+    if annot
+    then Flow_js.mk_typeof_annotation cx reason current
+    else current
+  in
   let use_op = Op (AssignVar {
-    var = Some (mk_reason (RIdentifier name) loc);
+    var = Some reason;
     init = (
       match init with
       | Some init -> mk_expression_reason init
@@ -299,7 +316,7 @@ let type_of_pattern (_, p) =
 
 (* instantiate pattern visitor for assignments *)
 let assignment cx ~expr rhs_t init =
-  let acc = empty ~init rhs_t in
+  let acc = empty ~init ~annot:false rhs_t in
   let f ~use_op loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
     ignore Env.(set_var cx ~use_op name t loc)

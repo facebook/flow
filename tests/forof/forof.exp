@@ -41,8 +41,8 @@ Cannot cast `x` to number because string [1] is incompatible with number [2].
              ^
 
 References:
-   <BUILTINS>/core.js:311:28
-   311|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:323:28
+   323|     @@iterator(): Iterator<string>;
                                    ^^^^^^ [1]
    forof.js:25:9
     25|     (x: number); // Error - string ~> number
@@ -58,8 +58,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
              ^^^^
 
 References:
-   <BUILTINS>/core.js:580:28
-   580|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:592:28
+   592|     @@iterator(): Iterator<[K, V]>;
                                    ^^^^^^ [1]
    forof.js:32:12
     32|     (elem: number); // Error - tuple ~> number
@@ -75,8 +75,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
              ^^^^
 
 References:
-   <BUILTINS>/core.js:580:28
-   580|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:592:28
+   592|     @@iterator(): Iterator<[K, V]>;
                                    ^^^^^^ [1]
    forof.js:39:12
     39|     (elem: number); // Error - tuple ~> number
@@ -170,5 +170,19 @@ References:
                ^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- scope.js:2:17
 
-Found 11 errors
+Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+
+   scope.js:2:17
+   2| for (const x of x) { // error: can not reference undeclared x in right-hand expr
+                      ^
+
+References:
+   scope.js:2:12
+   2| for (const x of x) { // error: can not reference undeclared x in right-hand expr
+                 ^ [1]
+
+
+
+Found 12 errors

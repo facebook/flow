@@ -1,7 +1,6 @@
 /**
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {format} from 'util';

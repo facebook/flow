@@ -11,6 +11,7 @@ type 'loc virtual_reason_desc =
   | RTrusted of 'loc virtual_reason_desc | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
   | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RExports
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
@@ -49,6 +50,7 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | REnum
+  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -165,7 +167,7 @@ and reason_desc_function =
   | RNormal
   | RUnknown
 
-and reason_desc = ALoc.t virtual_reason_desc
+type reason_desc = ALoc.t virtual_reason_desc
 
 type 'loc virtual_reason
 type reason = ALoc.t virtual_reason
@@ -189,8 +191,9 @@ val map_desc_locs : ('a -> 'b) -> 'a virtual_reason_desc -> 'b virtual_reason_de
 val string_of_loc: ?strip_root:Path.t option -> Loc.t -> string
 val string_of_aloc: ?strip_root:Path.t option -> ALoc.t -> string
 val json_of_loc: ?strip_root:Path.t option -> ?catch_offset_errors:bool -> offset_table:Offset_utils.t option -> Loc.t -> Hh_json.json
-val json_of_aloc: ?strip_root:Path.t option -> ?catch_offset_errors:bool -> offset_table:Offset_utils.t option -> ALoc.t -> Hh_json.json
 val json_of_loc_props: ?strip_root:Path.t option -> ?catch_offset_errors:bool -> offset_table:Offset_utils.t option -> Loc.t -> (string * Hh_json.json) list
+val json_of_source: ?strip_root:Path.t option -> File_key.t option -> Hh_json.json
+val json_source_type_of_source: File_key.t option -> Hh_json.json
 
 val locationless_reason: reason_desc -> reason
 
@@ -202,8 +205,6 @@ val internal_name: string -> string
 val is_internal_module_name: string -> bool
 val internal_module_name: string -> string
 val uninternal_module_name: string -> string
-
-val internal_pattern_name: ALoc.t -> string
 
 val is_instantiable_reason: 'loc virtual_reason -> bool
 
@@ -231,7 +232,6 @@ val is_blamable_reason: reason -> bool
 
 val string_of_source: ?strip_root:Path.t option -> File_key.t -> string
 val string_of_reason: ?strip_root:Path.t option -> reason -> string
-val json_of_reason: ?strip_root:Path.t option -> offset_table:Offset_utils.t option -> reason -> Hh_json.json
 val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
@@ -266,3 +266,8 @@ val invalidate_rtype_alias: 'loc virtual_reason_desc  -> 'loc virtual_reason_des
 
 val code_desc_of_literal: 'loc Flow_ast.Literal.t -> string
 val code_desc_of_expression: wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> string
+
+(* Pass in any available aloc tables to be used when comparing abstract and concrete locations from
+ * the same file. Usually `Context.aloc_tables` is a good choice, but if the context is not
+ * available, the empty map may be appropriate. *)
+val concretize_equal: ALoc.table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool

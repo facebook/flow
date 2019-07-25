@@ -23,7 +23,6 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DeprecatedEnumUtility
   | DynamicExport
   | UnsafeGettersSetters
   | InexactSpread
@@ -31,6 +30,8 @@ type lint_kind =
   | UnnecessaryInvariant
   | SignatureVerificationFailure
   | ImplicitInexactObject
+  | UninitializedInstanceProperty
+  | NonArraySpread
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
@@ -50,7 +51,6 @@ let string_of_kind = function
   | UnclearType -> "unclear-type"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
-  | DeprecatedEnumUtility -> "deprecated-enum-utility"
   | DynamicExport -> "dynamic-export"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | InexactSpread -> "inexact-spread"
@@ -58,6 +58,8 @@ let string_of_kind = function
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | SignatureVerificationFailure -> "signature-verification-failure"
   | ImplicitInexactObject -> "implicit-inexact-object"
+  | UninitializedInstanceProperty -> "uninitialized-instance-property"
+  | NonArraySpread -> "non-array-spread"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
@@ -80,7 +82,6 @@ let kinds_of_string = function
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" -> Some [DeprecatedType]
   | "deprecated-utility" -> Some [DeprecatedUtility]
-  | "deprecated-enum-utility" -> Some [DeprecatedEnumUtility]
   | "dynamic-export" -> Some [DynamicExport]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "inexact-spread" -> Some [InexactSpread]
@@ -88,6 +89,8 @@ let kinds_of_string = function
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
+  | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
+  | "non-array-spread" -> Some [NonArraySpread]
   | _ -> None
 
 module LintKind = struct

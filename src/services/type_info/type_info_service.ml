@@ -48,6 +48,36 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
 
     Ok ((loc, ty), Some json_data)
 
+let insert_type ~options ~env ~profiling ~file_key
+      ~file_content ~target ~expand_aliases ~omit_targ_defaults ~location_is_strict:(strict)
+      ~ambiguity_strategy=
+  let open Insert_type in
+  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
+  | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
+    begin
+      try
+        let new_ast = Insert_type.insert_type ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults ~strict
+          ~ambiguity_strategy ast target in
+        Ok (mk_patch ast new_ast file_content)
+      with FailedToInsertType err -> Error (error_to_string err)
+    end
+  | (None, errs, _) ->
+    Error (error_to_string (Expected (FailedToTypeCheck errs)))
+
+let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
+  let open Autofix_exports in
+  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
+  | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
+    begin
+      let sv_errors = set_of_fixable_signature_verification_locations file_sig in
+      let fix_sv_errors = fix_signature_verification_errors ~full_cx ~file_sig ~typed_ast in
+      let (new_ast, it_errs) =  fix_sv_errors ast sv_errors in
+      Ok (Insert_type.mk_patch ast new_ast file_content, it_errs)
+    end
+  | (None, _errs, _) ->
+    Error ":o"
+
+
 let dump_types ~options ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
@@ -74,9 +104,9 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
 let suggest ~options ~env ~profiling file_name file_content =
   let file_key = File_key.SourceFile file_name in
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-  | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
+  | (Some (cx,  ast, file_sig, tast), tc_errors, tc_warnings) ->
     let file_sig = File_sig.abstractify_locs file_sig in
-    let ty_query loc = Query_types.suggest_types cx file_sig tast (ALoc.of_loc loc) in
+    let ty_query = Query_types.suggest_types cx file_sig tast in
     let visitor = new Suggest.visitor ~ty_query in
     let ast_with_suggestions = visitor#program ast in
     let suggest_warnings = visitor#warnings () in

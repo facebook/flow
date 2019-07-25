@@ -1,0 +1,19 @@
+Error --------------------------------------------------------------------------------------------------- test1.js:22:13
+
+Cannot call `foo` because inexact object type [1] is incompatible with exact object type [2].
+
+   test1.js:22:13
+   22| var x = f()(foo(Comp));
+                   ^^^^^^^^^
+
+References:
+   test1.js:12:29
+   12|   Comp: React.ComponentType<{}>,
+                                   ^^ [1]
+   test1.js:6:34
+    6|   Component: React$ComponentType<{|...P|}>,
+                                        ^^^^^^^^ [2]
+
+
+
+Found 1 error

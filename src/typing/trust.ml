@@ -281,9 +281,9 @@ let string_of_pub t =
 let string_of_trust n =
   Printf.sprintf "<%s/%s>" (string_of_taint n) (string_of_pub n)
 
-let string_of_trust_rep n =
+let string_of_trust_rep get_trust n =
   if is_qualifier n then untag_qualifier n |> string_of_trust
-  else Printf.sprintf "%d -> []" (untag_ident n)
+  else Printf.sprintf "%d -> [%s]" (untag_ident n) (untag_ident n |> get_trust |> string_of_trust)
 
 (* trust_qualifier creation functions and modules:
    These functions will be used to generate trust_qualifier information when DefTs are

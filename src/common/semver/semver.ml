@@ -37,10 +37,10 @@ let is_valid_range range =
   try let _ = range_of_string range in true
   with Parse_error _ -> false
 
-let satisfies (range:string) (version:string) =
+let satisfies ?include_prereleases (range:string) (version:string) =
   let range = range_of_string range in
   let version = version_of_string version in
-  Semver_range.satisfies range version
+  Semver_range.satisfies ?include_prereleases range version
 
 let compare a b =
   Semver_version.compare_precedence (version_of_string a) (version_of_string b)

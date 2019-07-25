@@ -1,18 +1,3 @@
-Error ------------------------------------------------------------------------------------------------ lib/libdef.js:3:3
-
-Dynamic explicit 'any' [1] unsafely appears in exported declare v [2]. This can cause importing modules to lose type
-coverage! (`dynamic-export`)
-
-   lib/libdef.js:3:3
-   3|   declare var v : any;
-        ^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   lib/libdef.js:3:19
-   3|   declare var v : any;
-                        ^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------------- basic.js:4:24
 
 Dynamic explicit 'any' [1] unsafely appears in exported `x` [2]. This can cause importing modules to lose type coverage!
@@ -310,4 +295,4 @@ References:
 
 
 
-Found 20 errors
+Found 19 errors

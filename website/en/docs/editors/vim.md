@@ -2,28 +2,31 @@
 layout: guide
 ---
 
-## ALE <a class="toc" id="vim-ale" href="#vim-ale"></a>
+Flow's editor integration is primarily via the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). There are [many vim LSP clients](https://microsoft.github.io/language-server-protocol/implementors/tools/) to choose from, such as [ALE](#toc-ale).
 
-The Asynchronous Lint Engine (ALE) [vim-ale](https://github.com/w0rp/ale) plugin for Vim 8+ and NeoVim provides linting of many syntaxes during editing, before files are saved. Supported JavaScript linters include eslint, jscs, jshint, flow, standard, and xo.  Installation instructions can be found at [https://github.com/w0rp/ale#3-installation](https://github.com/w0rp/ale#3-installation).
+Alternatively, the legacy [vim-flow](#toc-vim-flow) extension is Flow-specific, and provides fewer features.
 
-Here is suggested ALE configuration to place in your .vimrc file:
-```
-" Asynchronous Lint Engine (ALE)
-" Limit linters used for JavaScript.
+## ALE <a class="toc" id="toc-ale" href="#toc-ale"></a>
+
+The Asynchronous Lint Engine (ALE) plugin for Vim 8+ and NeoVim, [vim-ale](https://github.com/w0rp/ale), is a generalized linting engine with support for Flow and many other tools.
+
+### Installation <a class="toc" id="toc-installation" href="#toc-installation"></a>
+
+Follow the [instructions](https://github.com/w0rp/ale#3-installation) in the ALE README.
+
+Configure ALE to use the `flow-language-server` linter for JavaScript files:
+
+```vim
+" In ~/.vim/ftplugin/javascript.vim, or somewhere similar.
+
+" Enables only Flow for JavaScript. See :ALEInfo for a list of other available
+" linters. NOTE: the `flow` linter uses an old API; prefer `flow-language-server`.
+let b:ale_linters = ['flow-language-server']
+
+" Or in ~/.vim/vimrc:
 let g:ale_linters = {
-\  'javascript': ['flow'] " can add more
+\   'javascript': ['flow-language-server'],
 \}
-highlight clear ALEErrorSign " otherwise uses error bg color (typically red)
-highlight clear ALEWarningSign " otherwise uses error bg color (typically red)
-let g:ale_sign_error = 'X' " could use emoji
-let g:ale_sign_warning = '?' " could use emoji
-let g:ale_statusline_format = ['X %d', '? %d', '']
-" %linter% is the name of the linter that provided the message
-" %s is the error or warning message
-let g:ale_echo_msg_format = '%linter% says %s'
-" Map keys to navigate between lines with errors and warnings.
-nnoremap <leader>an :ALENextWrap<cr>
-nnoremap <leader>ap :ALEPreviousWrap<cr>
 ```
 
 ## coc.nvim-neovim <a class="toc" id="cocnvim" href="#cocnvim"></a>

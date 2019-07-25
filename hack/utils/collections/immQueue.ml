@@ -53,6 +53,9 @@ let pop_unsafe t =
     | (Some x, t) -> (x, t)
     | (None, _) -> raise Empty
 
+let exists t ~f =
+  (List.exists f t.outgoing) || (List.exists f t.incoming)
+
 let iter t ~f =
   List.iter f t.outgoing;
   List.iter f (List.rev t.incoming)

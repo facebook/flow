@@ -171,3 +171,38 @@ var intersection: & T & U;
 
 // Test generic async arrow funcion
 const f = async <T>(): T => {};
+
+// Comment type annotations are preserved
+var X /*: {
+  version: string,
+} */ = { version: '42'};
+
+function method(param /*: string */) /*: number */ {
+  // ...
+}
+
+// Comment type includes are emptied out
+class MyClass {
+  /*:: prop: string; */
+}
+
+// Inferred predicate
+function testit(arg: mixed): boolean %checks {
+  return !!arg;
+}
+
+// Test function with default type parameter
+function f<T, S = T>() {}
+
+// Opaque types
+opaque type A = number;
+opaque type B: string = string;
+declare opaque type A;
+declare opaque type B: string;
+export opaque type A = number;
+
+// Declare export
+declare export opaque type B;
+declare export var x;
+declare export function x(): void;
+declare export default T;

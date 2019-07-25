@@ -9,7 +9,7 @@ type table = {
   (* This is not strictly necessary, but it allows us to check that the location source matches the
    * table source, to avoid confusing issues if we try a lookup with the wrong table. *)
   file: File_key.t;
-  mutable map: Loc.t ResizableArray.t
+  map: Loc.t ResizableArray.t
 }
 
 let make_table file = {
@@ -17,6 +17,9 @@ let make_table file = {
   (* TODO maybe start with a rough estimate of the number of locations? *)
   map = ResizableArray.make 32;
 }
+
+let shrink_table table =
+  ResizableArray.shrink table.map
 
 type key = int
 let compare_key: key -> key -> int = Pervasives.compare
@@ -35,7 +38,10 @@ module Repr: sig
   val source: t -> File_key.t option
   val update_source: (File_key.t option -> File_key.t option) -> t -> t
 
+  (* `is_abstract x` is equivalent to `kind x = Abstract` *)
+  val is_abstract: t -> bool
   val kind: t -> kind
+
   (* Raises unless `kind` returns `Abstract` *)
   val get_key_exn: t -> key
   (* Raises if `kind` returns `Abstract` *)
@@ -142,10 +148,7 @@ let abstractify table loc =
 let to_loc_exn = Repr.to_loc_exn
 
 let to_loc table loc =
-  match Repr.kind loc with
-  | Repr.Concrete | Repr.ALocNone ->
-    Repr.to_loc_exn loc
-  | Repr.Abstract ->
+  if Repr.is_abstract loc then
     let source = Repr.source loc in
     let key = Repr.get_key_exn loc in
     let table = Lazy.force table in
@@ -160,6 +163,18 @@ let to_loc table loc =
           (string_of_key key)
           (File_key.to_string table.file)
         )
+  else
+    Repr.to_loc_exn loc
+
+let to_loc_with_tables tables loc =
+  let aloc_table = lazy (
+    let source = match Repr.source loc with
+    | Some x -> x
+    | None -> failwith "Unexpectedly encountered a location without a source"
+    in
+    Lazy.force (Utils_js.FilenameMap.find_unsafe source tables)
+  ) in
+  to_loc aloc_table loc
 
 let none = Repr.of_loc Loc.none
 
@@ -168,11 +183,7 @@ let source = Repr.source
 let update_source = Repr.update_source
 
 let debug_to_string ?(include_source=false) loc =
-  match Repr.kind loc with
-  | Repr.Concrete | Repr.ALocNone ->
-    let loc = Repr.to_loc_exn loc in
-    Loc.debug_to_string ~include_source loc
-  | Repr.Abstract ->
+  if Repr.is_abstract loc then
     let source = Repr.source loc in
     let key = Repr.get_key_exn loc in
     let source = if include_source then
@@ -186,6 +197,9 @@ let debug_to_string ?(include_source=false) loc =
     in
     let key = string_of_key key in
     source ^ key
+  else
+    let loc = Repr.to_loc_exn loc in
+    Loc.debug_to_string ~include_source loc
 
 let compare loc1 loc2 =
   let source_compare = File_key.compare_opt (Repr.source loc1) (Repr.source loc2) in
@@ -219,18 +233,43 @@ let compare loc1 loc2 =
 
 let equal loc1 loc2 = compare loc1 loc2 = 0
 
-let to_string_no_source loc = match Repr.kind loc with
-| Repr.Concrete | Repr.ALocNone ->
-  Loc.to_string_no_source (Repr.to_loc_exn loc)
-| Repr.Abstract ->
-  let key = Repr.get_key_exn loc in
-  string_of_key key
+let concretize_if_possible available_tables loc =
+  if Repr.is_abstract loc then
+    match Repr.source loc with
+    (* We shouldn't end up with a location with no source and an abstract representation. It may be
+     * worth asserting here at some point. *)
+    | None -> loc
+    | Some source ->
+      begin match Utils_js.FilenameMap.find_opt source available_tables with
+      (* We don't have the right table, so just return the loc *)
+      | None -> loc
+      | Some table ->
+        (* Concretize by converting to a Loc.t, then back to an ALoc.t *)
+        of_loc (to_loc table loc)
+      end
+  else
+    loc
+
+let concretize_compare available_tables loc1 loc2 =
+  if Repr.source loc1 = Repr.source loc2 && Repr.is_abstract loc1 <> Repr.is_abstract loc2 then
+    let loc1 = concretize_if_possible available_tables loc1 in
+    let loc2 = concretize_if_possible available_tables loc2 in
+    compare loc1 loc2
+  else
+    compare loc1 loc2
+
+let concretize_equal table loc1 loc2 = concretize_compare table loc1 loc2 = 0
+
+let to_string_no_source loc =
+  if Repr.is_abstract loc then
+    let key = Repr.get_key_exn loc in
+    string_of_key key
+  else
+    Loc.to_string_no_source (Repr.to_loc_exn loc)
 
 module ALocRepresentationDoNotUse = struct
-  let is_abstract loc = match Repr.kind loc with
-    | Repr.Abstract -> true
-    | Repr.Concrete -> false
-    | Repr.ALocNone -> false
+  let is_abstract = Repr.is_abstract
 
   let get_key_exn = Repr.get_key_exn
+  let string_of_key = string_of_key
 end

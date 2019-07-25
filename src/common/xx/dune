@@ -1,0 +1,6 @@
+(library
+  (name xx)
+  (wrapped false)
+  (c_names xx_stubs)
+  (libraries lz4)
+)

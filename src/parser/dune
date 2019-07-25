@@ -5,4 +5,4 @@
   (libraries
     sedlex
     wtf8)
-  (preprocess (pps ppx_gen_rec sedlex.ppx)))
+  (preprocess (pps ppx_gen_rec ppx_deriving.std sedlex.ppx)))

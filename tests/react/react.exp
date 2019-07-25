@@ -1,15 +1,15 @@
-Error ----------------------------------------------------------------------------------------- abstractelement.js:11:23
+Error ------------------------------------------------------------------------------------------ abstractelement.js:13:3
 
-Cannot get `React.MixedElement` because property `MixedElement` is missing in module `react` [1].
+Cannot get `e.props.a` because property `a` is missing in mixed [1].
 
-   abstractelement.js:11:23
-   11| function takesTop(e : React.MixedElement) {
-                             ^^^^^^^^^^^^^^^^^^
+   abstractelement.js:13:3
+    13|   e.props.a; // error
+          ^^^^^^^^^
 
 References:
-   abstractelement.js:3:15
-    3| const React = require('react');
-                     ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:184:49
+   184| declare type React$MixedElement = React$Element<React$ElementType>;
+                                                        ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- createContext.js:17:15
@@ -1884,11 +1884,11 @@ References:
    key.js:12:11
     12| <Foo key={true} />; // Error
                   ^^^^ [1]
-   <BUILTINS>/react.js:191:26
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:26
+   190| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:191:35
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:35
+   190| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -1906,11 +1906,11 @@ References:
    key.js:21:16
     21| <FooExact key={true} />; // Error
                        ^^^^ [1]
-   <BUILTINS>/react.js:191:26
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:26
+   190| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:191:35
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:35
+   190| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -1924,8 +1924,8 @@ incompatible with `Element` [2].
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:802:52
-   802|   getElementById(elementId: string): HTMLElement | null;
+   <BUILTINS>/dom.js:806:52
+   806|   getElementById(elementId: string): HTMLElement | null;
                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:30:16
     30|     container: Element,
@@ -2019,10 +2019,16 @@ References:
                                            ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:43:34
+Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:43:10
 
-number [1] is not a React propType.
+Cannot call `React.PropTypes.arrayOf` because number [1] is not a React propType.
 
+   proptype_arrayOf.js:43:10
+   43|     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proptype_arrayOf.js:43:34
    43|     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
                                         ^ [1]
 
@@ -2225,10 +2231,16 @@ References:
                                            ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- proptype_objectOf.js:43:35
+Error --------------------------------------------------------------------------------------- proptype_objectOf.js:43:10
 
-number [1] is not a React propType.
+Cannot call `React.PropTypes.objectOf` because number [1] is not a React propType.
 
+   proptype_objectOf.js:43:10
+   43|     obj: React.PropTypes.objectOf(0), // error: number not a prop type
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proptype_objectOf.js:43:35
    43|     obj: React.PropTypes.objectOf(0), // error: number not a prop type
                                          ^ [1]
 
@@ -2336,10 +2348,16 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ proptype_oneOf.js:76:30
+Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:76:8
 
-number [1] is not an array.
+Cannot call `React.PropTypes.oneOf` because number [1] is not an array.
 
+   proptype_oneOf.js:76:8
+   76|     p: React.PropTypes.oneOf(0), // error: expected array, got 0
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proptype_oneOf.js:76:30
    76|     p: React.PropTypes.oneOf(0), // error: expected array, got 0
                                     ^ [1]
 
@@ -2443,10 +2461,16 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:91:34
+Error --------------------------------------------------------------------------------------- proptype_oneOfType.js:91:8
 
-number [1] is not an array.
+Cannot call `React.PropTypes.oneOfType` because number [1] is not an array.
 
+   proptype_oneOfType.js:91:8
+   91|     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proptype_oneOfType.js:91:34
    91|     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
                                         ^ [1]
 
@@ -2696,8 +2720,8 @@ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2].
                           ^^^
 
 References:
-   <BUILTINS>/react.js:198:39
-   198|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:39
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:13:24
     13| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -2748,8 +2772,8 @@ Cannot cast `foo` to `FooExact` because null [1] is incompatible with `FooExact`
                                ^^^
 
 References:
-   <BUILTINS>/react.js:198:39
-   198|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:39
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:24:29
     24| <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
@@ -2911,8 +2935,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1041:50
-   1041|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1045:50
+   1045|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -2929,8 +2953,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1041:50
-   1041|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1045:50
+   1045|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -2947,8 +2971,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1041:50
-   1041|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1045:50
+   1045|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -2979,8 +3003,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1041:50
-   1041|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1045:50
+   1045|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -3012,8 +3036,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1041:50
-   1041|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1045:50
+   1045|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -3045,8 +3069,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1041:50
-   1041|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1045:50
+   1045|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -3275,8 +3299,8 @@ References:
    useContext_hook.js:23:39
     23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
                                               ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:205:28
-   205| declare type React$Context<T> = {
+   <BUILTINS>/react.js:204:28
+   204| declare type React$Context<T> = {
                                    ^ [3]
 
 

@@ -312,6 +312,7 @@ and Statement : sig
       test: ('M, 'T) Expression.t;
       consequent: ('M, 'T) Statement.t;
       alternate: ('M, 'T) Statement.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -331,6 +332,7 @@ and Statement : sig
   module Continue : sig
     type 'M t = {
       label: ('M, 'M) Identifier.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -433,6 +435,7 @@ and Statement : sig
     type ('M, 'T) t = {
       body: ('M, 'T) Statement.t;
       test: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -470,6 +473,53 @@ and Statement : sig
     and ('M, 'T) left =
       | LeftDeclaration of ('M * ('M, 'T) VariableDeclaration.t)
       | LeftPattern of ('M, 'T) Pattern.t
+    [@@deriving show]
+  end
+  module EnumDeclaration: sig
+    module DefaultedMember : sig
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        id: ('M, 'M) Identifier.t;
+      }
+      [@@deriving show]
+    end
+    module InitializedMember : sig
+      type ('I, 'M) t = 'M * ('I, 'M) t'
+      and ('I, 'M) t' = {
+        id: ('M, 'M) Identifier.t;
+        init: 'M * 'I;
+      }
+      [@@deriving show]
+    end
+    module BooleanBody : sig
+      type 'M t = {members: (bool, 'M) InitializedMember.t list; explicitType: bool}
+      [@@deriving show]
+    end
+    module NumberBody : sig
+      type 'M t = {members: (NumberLiteral.t, 'M) InitializedMember.t list; explicitType: bool}
+      [@@deriving show]
+    end
+    module StringBody : sig
+      type 'M t = {members: (StringLiteral.t, 'M) members; explicitType: bool}
+      and ('I, 'M) members =
+        | Defaulted of 'M DefaultedMember.t list
+        | Initialized of ('I, 'M) InitializedMember.t list
+      [@@deriving show]
+    end
+    module SymbolBody : sig
+      type 'M t = {members: 'M DefaultedMember.t list}
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      id: ('M, 'T) Identifier.t;
+      body: 'M body;
+    }
+    and 'M body =
+      | BooleanBody of 'M BooleanBody.t
+      | NumberBody of 'M NumberBody.t
+      | StringBody of 'M StringBody.t
+      | SymbolBody of 'M SymbolBody.t
     [@@deriving show]
   end
   module Interface : sig
@@ -638,6 +688,7 @@ and Statement : sig
     | DeclareVariable of ('M, 'T) DeclareVariable.t
     | DoWhile of ('M, 'T) DoWhile.t
     | Empty
+    | EnumDeclaration of ('M, 'T) EnumDeclaration.t
     | ExportDefaultDeclaration of ('M, 'T) ExportDefaultDeclaration.t
     | ExportNamedDeclaration of ('M, 'T) ExportNamedDeclaration.t
     | Expression of ('M, 'T) Expression.t
@@ -784,7 +835,8 @@ and Expression : sig
 
     and ('M, 'T) t = {
       operator: operator;
-      argument: ('M, 'T) Expression.t
+      argument: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
     }
 
     [@@deriving show]
@@ -1030,7 +1082,7 @@ and JSX : sig
 
     and ('M, 'T) expression =
       | Expression of ('M, 'T) Expression.t
-      | EmptyExpression of 'M
+      | EmptyExpression
 
     [@@deriving show]
   end

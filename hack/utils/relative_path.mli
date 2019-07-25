@@ -39,7 +39,7 @@ val suffix : t -> string
 val to_absolute : t -> string
 val to_tmp : t -> t
 val to_root : t -> t
-val strip_root_if_possible : string -> string
+val strip_root_if_possible : string -> string option
 
 module Set : sig
   include module type of Reordered_argument_set(Set.Make(S))

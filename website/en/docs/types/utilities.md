@@ -21,6 +21,7 @@ Table of contents:
 - [`$Call<F, T...>`](#toc-call)
 - [`Class<T>`](#toc-class)
 - [`$Shape<T>`](#toc-shape)
+- [`$Exports<T>`](#toc-exports)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -626,6 +627,29 @@ const person2: Person = {name: 'a'};  // Error: missing `age`
 const person3: PersonDetails = {age: 28};  // OK
 const person4: PersonDetails = {name: 'a'};  // OK
 const person5: PersonDetails = {age: 28, name: 'a'};  // OK
+```
+
+## `$Exports<T>` <a class="toc" id="toc-exports" href="#toc-exports"></a>
+
+The following are functionally equivalent
+
+```js
+import typeof * as T from 'my-module';
+```
+
+```js
+type T = $Exports<'my-module'>;
+```
+
+The advantage of the `$Exports` syntax is that you can `export` the type on the same line
+```js
+export type T = $Exports<'my-module'>;
+```
+
+where as you would otherwise need to export an alias in the `import typeof` case
+```js
+import typeof * as T from 'my-module';
+export type MyModuleType = T;
 ```
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>

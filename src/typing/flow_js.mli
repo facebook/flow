@@ -52,7 +52,7 @@ val generate_tests: Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) ->
 val match_this_binding: Type.t SMap.t -> (Type.t -> bool) -> bool
 
 val check_polarity:
-  Context.t -> ?trace:Trace.t -> Type.polarity -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
 
 (* selectors *)
 
@@ -93,3 +93,7 @@ val enforce_strict: Context.t -> Type.t -> unit
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
 val possible_uses: Context.t -> Constraint.ident -> Type.use_t list
+
+(* trust *)
+val mk_trust_var: Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
+val strengthen_trust: Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit

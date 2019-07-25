@@ -1,0 +1,11 @@
+> cat simplify-empty.js
+// @flow
+
+export function foo(x: any): any {
+  if (x && x.bar) {
+    return x.bar();
+  }
+  return x;
+}
+> flow status
+No errors!

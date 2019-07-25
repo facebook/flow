@@ -45,12 +45,14 @@ val enable_const_params: config -> bool
 val enforce_strict_call_arity: config -> bool
 val enforce_well_formed_exports: config -> bool
 val enforce_well_formed_exports_whitelist: config -> string list
+val enums: config -> bool
 val esproposal_class_instance_fields: config -> Options.esproposal_feature_mode
 val esproposal_class_static_fields: config -> Options.esproposal_feature_mode
 val esproposal_decorators: config -> Options.esproposal_feature_mode
 val esproposal_export_star_as: config -> Options.esproposal_feature_mode
 val esproposal_nullish_coalescing: config -> Options.esproposal_feature_mode
 val esproposal_optional_chaining: config -> Options.esproposal_feature_mode
+val exact_by_default: config -> bool
 val facebook_fbs: config -> string option
 val facebook_fbt: config -> string option
 val file_watcher: config -> Options.file_watcher option
@@ -63,6 +65,7 @@ val ignore_non_literal_requires: config -> bool
 val include_warnings: config -> bool
 val lazy_mode: config -> Options.lazy_mode option
 val log_file: config -> Path.t option
+val max_files_checked_per_worker: config -> int
 val max_header_tokens: config -> int
 val max_literal_length: config -> int
 val max_workers: config -> int
@@ -77,6 +80,7 @@ val munge_underscores: config -> bool
 val no_flowlib: config -> bool
 val node_resolver_dirnames: config -> string list
 val required_version: config -> string option
+val recursion_limit: config -> int
 val root_name: config -> string option
 val saved_state_fetcher: config -> Options.saved_state_fetcher
 val shm_dep_table_pow: config -> int
@@ -90,6 +94,7 @@ val suppress_types: config -> SSet.t
 val temp_dir: config -> string
 val traces: config -> int
 val trust_mode: config -> Options.trust_mode
+val type_asserts: config -> bool
 val types_first: config -> bool
 val wait_for_recheck: config -> bool
 val weak: config -> bool

@@ -552,3 +552,18 @@ test.js:14:7 = {
   "start":7,
   "end":7
 }
+import-type.js:3:20 = {
+  "type":"type MyUnionType = \"A\" | \"B\" | \"C\"",
+  "reasons":[],
+  "loc":{
+    "source":"import-type.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":15,"offset":24},
+    "end":{"line":3,"column":25,"offset":35}
+  },
+  "path":"import-type.js",
+  "line":3,
+  "endline":3,
+  "start":15,
+  "end":25
+}

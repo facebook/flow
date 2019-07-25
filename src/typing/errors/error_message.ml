@@ -53,22 +53,39 @@ and 'loc t' =
   | EOnlyDefaultExport of 'loc virtual_reason * string * string
   | ENoNamedExport of 'loc virtual_reason * string * string * string option
   | EMissingTypeArgs of { reason_tapp: 'loc virtual_reason; reason_arity: 'loc virtual_reason; min_arity: int; max_arity: int }
-  | EValueUsedAsType of ('loc virtual_reason * 'loc virtual_reason)
-  | EExpectedStringLit of ('loc virtual_reason * 'loc virtual_reason) * string * string Type.literal * 'loc virtual_use_op
-  | EExpectedNumberLit of
-      ('loc virtual_reason * 'loc virtual_reason) *
-      Type.number_literal *
-      Type.number_literal Type.literal *
-      'loc virtual_use_op
-  | EExpectedBooleanLit of ('loc virtual_reason * 'loc virtual_reason) * bool * bool option * 'loc virtual_use_op
+  | EValueUsedAsType of 'loc virtual_reason
+  | EExpectedStringLit of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
+  | EExpectedNumberLit of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
+  | EExpectedBooleanLit of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EPropNotFound of string option * ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
-  | EPropAccess of ('loc virtual_reason * 'loc virtual_reason) * string option * Type.polarity * Type.rw * 'loc virtual_use_op
-  | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Type.polarity * Type.polarity) * 'loc virtual_use_op
+  | EPropNotReadable of {
+      reason_prop: 'loc virtual_reason;
+      prop_name: string option;
+      use_op: 'loc virtual_use_op;
+    }
+  | EPropNotWritable of {
+      reason_prop: 'loc virtual_reason;
+      prop_name: string option;
+      use_op: 'loc virtual_use_op;
+    }
+  | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Polarity.t * Polarity.t) * 'loc virtual_use_op
   | EPolarityMismatch of {
       reason: 'loc virtual_reason;
       name: string;
-      expected_polarity: Type.polarity;
-      actual_polarity: Type.polarity;
+      expected_polarity: Polarity.t;
+      actual_polarity: Polarity.t;
     }
   | EStrictLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_reason * string option * 'loc virtual_use_op option
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
@@ -76,8 +93,19 @@ and 'loc t' =
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ETupleArityMismatch of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
-  | ETupleOutOfBounds of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
-  | ETupleUnsafeWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
+  | ETupleOutOfBounds of {
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      reason_op: 'loc virtual_reason;
+      length: int;
+      index: string;
+    }
+  | ETupleNonIntegerIndex of {
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      index: string;
+    }
+  | ETupleUnsafeWrite of { reason: 'loc virtual_reason; use_op: 'loc virtual_use_op }
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
@@ -128,15 +156,21 @@ and 'loc t' =
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
-  | EExperimentalDecorators of 'loc
   | EExperimentalClassProperties of 'loc * bool
-  | EUnsafeGetSet of 'loc
+  | EUninitializedInstanceProperty of 'loc * uninitialized_property_error
+  | EExperimentalDecorators of 'loc
   | EExperimentalExportStarAs of 'loc
+  | EExperimentalEnums of 'loc
+  | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
   | EUnreachable of 'loc
-  | EInvalidObjectKit of { tool: Object.tool; reason: 'loc virtual_reason; reason_op: 'loc virtual_reason; use_op: 'loc virtual_use_op }
+  | EInvalidObjectKit of {
+      reason: 'loc virtual_reason;
+      reason_op: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EInvalidTypeof of 'loc * string
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
@@ -148,7 +182,18 @@ and 'loc t' =
   | EIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | ETrustIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EUnsupportedImplements of 'loc virtual_reason
-  | EReactKit of ('loc virtual_reason * 'loc virtual_reason) * React.tool * 'loc virtual_use_op
+  | ENotAReactComponent of { reason: 'loc virtual_reason; use_op: 'loc virtual_use_op; }
+  | EInvalidReactConfigType of { reason: 'loc virtual_reason; use_op: 'loc virtual_use_op; }
+  | EInvalidReactPropType of {
+      reason: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+      tool: React.SimplifyPropType.tool;
+    }
+  | EInvalidReactCreateClass of {
+      reason: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+      tool: React.CreateClass.tool;
+    }
   | EReactElementFunArity of 'loc virtual_reason * string * int
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
   | EUnsupportedSetProto of 'loc virtual_reason
@@ -167,7 +212,6 @@ and 'loc t' =
   | EUnclearType of 'loc
   | EDeprecatedType of 'loc
   | EDeprecatedUtility of 'loc * string
-  | EDeprecatedEnumUtility of 'loc
   | EDynamicExport of 'loc virtual_reason * 'loc virtual_reason
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
@@ -189,6 +233,7 @@ and 'loc t' =
   | EBigIntNotYetSupported of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
+  | ENonArraySpread of 'loc virtual_reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -301,6 +346,12 @@ and 'loc upper_kind =
   | IncompatibleGetStaticsT
   | IncompatibleUnclassified of string
 
+and uninitialized_property_error =
+  | PropertyNotDefinitivelyInitialized
+  | ReadFromUninitializedProperty
+  | MethodCallBeforeEverythingInitialized
+  | ThisBeforeEverythingInitialized
+
 let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
   let map_reason = Reason.map_reason_locs f in
@@ -349,16 +400,38 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EIncompatibleProp {use_op; prop; reason_prop; reason_obj; special} ->
       EIncompatibleProp {use_op = Option.map ~f:map_use_op use_op;
         prop; reason_prop = map_reason reason_prop; reason_obj = map_reason reason_obj; special}
-  | EExpectedStringLit ((r1, r2), u, l, op) ->
-      EExpectedStringLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
-  | EExpectedNumberLit ((r1, r2), u, l, op) ->
-      EExpectedNumberLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
-  | EExpectedBooleanLit ((r1, r2), u, l, op) ->
-      EExpectedBooleanLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
+  | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+      EExpectedStringLit {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
+  | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+      EExpectedNumberLit {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
+  | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+      EExpectedBooleanLit {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
   | EPropNotFound (prop, (r1, r2), op) ->
       EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op)
-  | EPropAccess ((r1, r2), prop, p, rw, op) ->
-      EPropAccess ((map_reason r1, map_reason r2), prop, p, rw, map_use_op op)
+  | EPropNotReadable { reason_prop; prop_name; use_op } ->
+      EPropNotReadable {
+        reason_prop = map_reason reason_prop;
+        prop_name;
+        use_op = map_use_op use_op;
+      }
+  | EPropNotWritable { reason_prop; prop_name; use_op } ->
+      EPropNotWritable {
+        reason_prop = map_reason reason_prop;
+        prop_name;
+        use_op = map_use_op use_op;
+      }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
        EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
   | EStrictLookupFailed ((r1, r2), r, p, op) ->
@@ -371,10 +444,22 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       ETupleArityMismatch ((map_reason r1, map_reason r2), l, i, map_use_op op)
   | ENonLitArrayToTuple  ((r1, r2), op) ->
       ENonLitArrayToTuple ((map_reason r1, map_reason r2), map_use_op op)
-  | ETupleOutOfBounds ((r1, r2), l, i, op) ->
-      ETupleOutOfBounds ((map_reason r1, map_reason r2), l, i, map_use_op op)
-  | ETupleUnsafeWrite ((r1, r2), op) ->
-      ETupleUnsafeWrite ((map_reason r1, map_reason r2), map_use_op op)
+  | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+      ETupleOutOfBounds {
+        use_op = map_use_op use_op;
+        reason = map_reason reason;
+        reason_op = map_reason reason_op;
+        length;
+        index;
+      }
+  | ETupleNonIntegerIndex { use_op; reason; index } ->
+      ETupleNonIntegerIndex {
+        use_op = map_use_op use_op;
+        reason = map_reason reason;
+        index;
+      }
+  | ETupleUnsafeWrite { reason; use_op } ->
+      ETupleUnsafeWrite { reason = map_reason reason; use_op = map_use_op use_op }
   | EROArrayWrite ((r1, r2), op) ->
       EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
@@ -388,14 +473,31 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op}
   | EIncompatibleWithShape (l, u, use_op) ->
       EIncompatibleWithShape (map_reason l, map_reason u, map_use_op use_op)
-  | EInvalidObjectKit {tool; reason; reason_op; use_op} ->
-      EInvalidObjectKit {tool; reason = map_reason reason;
+  | EInvalidObjectKit {reason; reason_op; use_op} ->
+      EInvalidObjectKit {reason = map_reason reason;
         reason_op = map_reason reason_op; use_op = map_use_op use_op}
   | EIncompatibleWithUseOp (rl, ru, op) ->
       EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
       ETrustIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
-  | EReactKit ((r1, r2), t, op) -> EReactKit ((map_reason r1, map_reason r2), t, map_use_op op)
+  | ENotAReactComponent { reason; use_op } -> ENotAReactComponent {
+      reason = map_reason reason;
+      use_op = map_use_op use_op;
+    }
+  | EInvalidReactConfigType { reason; use_op } -> EInvalidReactConfigType {
+      reason = map_reason reason;
+      use_op = map_use_op use_op;
+    }
+  | EInvalidReactPropType { reason; use_op; tool; } -> EInvalidReactPropType {
+      reason = map_reason reason;
+      use_op = map_use_op use_op;
+      tool;
+    }
+  | EInvalidReactCreateClass { reason; use_op; tool } -> EInvalidReactCreateClass {
+      reason = map_reason reason;
+      use_op = map_use_op use_op;
+      tool;
+    }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
       EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
   | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
@@ -410,7 +512,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMissingTypeArgs {reason_tapp; reason_arity; min_arity; max_arity} ->
       EMissingTypeArgs {reason_tapp=map_reason reason_tapp; reason_arity=map_reason reason_arity;
         min_arity; max_arity}
-  | EValueUsedAsType (r1, r2) -> EValueUsedAsType (map_reason r1, map_reason r2)
+  | EValueUsedAsType reason -> EValueUsedAsType (map_reason reason)
   | EPolarityMismatch {reason; name; expected_polarity; actual_polarity} ->
       EPolarityMismatch {reason = map_reason reason; name; expected_polarity; actual_polarity}
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
@@ -461,7 +563,9 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EExperimentalDecorators loc -> EExperimentalDecorators (f loc)
   | EExperimentalClassProperties (loc, b) -> EExperimentalClassProperties (f loc, b)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
+  | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EExperimentalExportStarAs loc -> EExperimentalExportStarAs (f loc)
+  | EExperimentalEnums loc -> EExperimentalEnums (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -489,7 +593,6 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedType loc -> EDeprecatedType (f loc)
   | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
-  | EDeprecatedEnumUtility loc -> EDeprecatedEnumUtility (f loc)
   | EDynamicExport (r1, r2) -> EDynamicExport (map_reason r1, map_reason r2)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
@@ -506,6 +609,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification _ as e -> e
+  | ENonArraySpread r -> ENonArraySpread (map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -523,11 +627,17 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op ->
       EIncompatibleProp {use_op=Some use_op; prop; reason_prop; reason_obj; special}))
 | ETrustIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> ETrustIncompatibleWithUseOp (rl, ru, op))
-| EExpectedStringLit (rs, u, l, op) -> util op (fun op -> EExpectedStringLit (rs, u, l, op))
-| EExpectedNumberLit (rs, u, l, op) -> util op (fun op -> EExpectedNumberLit (rs, u, l, op))
-| EExpectedBooleanLit (rs, u, l, op) -> util op (fun op -> EExpectedBooleanLit (rs, u, l, op))
+| EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+  util use_op (fun use_op -> EExpectedStringLit { reason_lower; reason_upper; use_op })
+| EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+  util use_op (fun use_op -> EExpectedNumberLit { reason_lower; reason_upper; use_op })
+| EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+  util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
 | EPropNotFound (prop, rs, op) -> util op (fun op -> EPropNotFound (prop, rs, op))
-| EPropAccess (rs, prop, p, rw, op) -> util op (fun op -> EPropAccess (rs, prop, p, rw, op))
+| EPropNotReadable { reason_prop; prop_name; use_op } ->
+  util use_op (fun use_op -> EPropNotReadable { reason_prop; prop_name; use_op })
+| EPropNotWritable { reason_prop; prop_name; use_op } ->
+  util use_op (fun use_op -> EPropNotWritable { reason_prop; prop_name; use_op })
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
 | EStrictLookupFailed (rs, r, p, Some op) ->
   util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
@@ -535,8 +645,12 @@ let util_use_op_of_msg nope util = function
 | EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
 | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
 | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
-| ETupleOutOfBounds (rs, l, i, op) -> util op (fun op -> ETupleOutOfBounds (rs, l, i, op))
-| ETupleUnsafeWrite (rs, op) -> util op (fun op -> ETupleUnsafeWrite (rs, op))
+| ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+  util use_op (fun use_op -> ETupleOutOfBounds { use_op; reason; reason_op; length; index })
+| ETupleNonIntegerIndex { use_op; reason; index } ->
+  util use_op (fun use_op -> ETupleNonIntegerIndex { use_op; reason; index })
+| ETupleUnsafeWrite { reason; use_op } ->
+  util use_op (fun use_op -> ETupleUnsafeWrite { reason; use_op })
 | EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
 | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
   util use_op (fun use_op -> EUnionSpeculationFailed {use_op; reason; reason_op; branches})
@@ -545,10 +659,17 @@ let util_use_op_of_msg nope util = function
   util use_op (fun use_op -> EInvalidCharSet {invalid; valid; use_op})
 | EIncompatibleWithShape (l, u, use_op) ->
   util use_op (fun use_op -> EIncompatibleWithShape (l, u, use_op))
-| EInvalidObjectKit {tool; reason; reason_op; use_op} ->
-  util use_op (fun use_op -> EInvalidObjectKit {tool; reason; reason_op; use_op})
+| EInvalidObjectKit {reason; reason_op; use_op} ->
+  util use_op (fun use_op -> EInvalidObjectKit {reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
-| EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
+| ENotAReactComponent { reason; use_op } ->
+  util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
+| EInvalidReactConfigType { reason; use_op } ->
+  util use_op (fun use_op -> EInvalidReactConfigType { reason; use_op })
+| EInvalidReactPropType { reason; use_op; tool } ->
+  util use_op (fun use_op -> EInvalidReactPropType { reason; use_op; tool })
+| EInvalidReactCreateClass { reason; use_op; tool } ->
+  util use_op (fun use_op -> EInvalidReactCreateClass { reason; use_op; tool })
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
 | EDebugPrint (_, _)
 | EExportValueAsType (_, _)
@@ -560,7 +681,7 @@ let util_use_op_of_msg nope util = function
 | EOnlyDefaultExport (_, _, _)
 | ENoNamedExport (_, _, _, _)
 | EMissingTypeArgs {reason_tapp=_; reason_arity=_; min_arity=_; max_arity=_}
-| EValueUsedAsType (_, _)
+| EValueUsedAsType _
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
 | EStrictLookupFailed (_, _, _, None)
 | EComparison (_, _)
@@ -597,7 +718,9 @@ let util_use_op_of_msg nope util = function
 | EExperimentalDecorators (_)
 | EExperimentalClassProperties (_, _)
 | EUnsafeGetSet (_)
+| EUninitializedInstanceProperty (_)
 | EExperimentalExportStarAs (_)
+| EExperimentalEnums (_)
 | EIndeterminateModuleType (_)
 | EBadExportPosition (_)
 | EBadExportContext (_)
@@ -623,7 +746,6 @@ let util_use_op_of_msg nope util = function
 | EUnclearType (_)
 | EDeprecatedType _
 | EDeprecatedUtility _
-| EDeprecatedEnumUtility _
 | EDynamicExport _
 | EUnsafeGettersSetters (_)
 | EUnusedSuppression (_)
@@ -639,12 +761,13 @@ let util_use_op_of_msg nope util = function
 | EUnexpectedTemporaryBaseType _
 | EBigIntNotYetSupported _
 | ESignatureVerification _
+| ENonArraySpread _
   -> nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
   determined while locations are abstract. We just return None in this case. *)
 let aloc_of_msg : t -> ALoc.t option = function
-  | EValueUsedAsType (primary, _)
+  | EValueUsedAsType primary
   | EComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
   | EDynamicExport (_, primary)
@@ -680,7 +803,8 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EImportTypeAsTypeof (reason, _)
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
-  | EDebugPrint (reason, _) ->
+  | EDebugPrint (reason, _)
+  | ENonArraySpread reason ->
         Some (aloc_of_reason reason)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
@@ -688,7 +812,6 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EUnclearType loc
   | EDeprecatedType loc
   | EDeprecatedUtility (loc, _)
-  | EDeprecatedEnumUtility loc
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
@@ -706,7 +829,9 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EBadExportPosition loc
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
+  | EExperimentalEnums loc
   | EUnsafeGetSet loc
+  | EUninitializedInstanceProperty (loc, _)
   | EExperimentalClassProperties (loc, _)
   | EExperimentalDecorators loc
   | EModuleOutsideRoot (loc, _)
@@ -747,6 +872,7 @@ let aloc_of_msg : t -> ALoc.t option = function
         | EmptyObject loc
         | UnexpectedExpression (loc, _)
         | SketchyToplevelDef loc
+        | UnsupportedPredicateExpression loc
         | TODO (_, loc) -> Some loc
       )
   | EDuplicateModuleProvider {conflict; _ } ->
@@ -760,7 +886,10 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason ALoc.source lreason ->
       Some (aloc_of_reason reason)
   | EFunctionCallExtraArg _
-  | EReactKit _
+  | ENotAReactComponent _
+  | EInvalidReactConfigType _
+  | EInvalidReactPropType _
+  | EInvalidReactCreateClass _
   | EIncompatibleWithUseOp _
   | ETrustIncompatibleWithUseOp _
   | EIncompatibleDefs _
@@ -772,13 +901,15 @@ let aloc_of_msg : t -> ALoc.t option = function
   | ETupleUnsafeWrite _
   | EROArrayWrite _
   | ETupleOutOfBounds _
+  | ETupleNonIntegerIndex _
   | ENonLitArrayToTuple _
   | ETupleArityMismatch _
   | EAdditionMixed _
   | EPrivateLookupFailed _
   | EStrictLookupFailed _
   | EPropPolarityMismatch _
-  | EPropAccess _
+  | EPropNotReadable _
+  | EPropNotWritable _
   | EPropNotFound _
   | EExpectedBooleanLit _
   | EExpectedNumberLit _
@@ -793,7 +924,6 @@ let kind_of_msg = Errors.(function
   | EUnclearType _                  -> LintError Lints.UnclearType
   | EDeprecatedType _               -> LintError Lints.DeprecatedType
   | EDeprecatedUtility _            -> LintError Lints.DeprecatedUtility
-  | EDeprecatedEnumUtility _        -> LintError Lints.DeprecatedEnumUtility
   | EDynamicExport _                -> LintError Lints.DynamicExport
   | EUnsafeGettersSetters _         -> LintError Lints.UnsafeGettersSetters
   | ESketchyNullLint { kind; _ }    -> LintError (Lints.SketchyNull kind)
@@ -803,6 +933,8 @@ let kind_of_msg = Errors.(function
   | EInexactSpread _                -> LintError Lints.InexactSpread
   | ESignatureVerification _        -> LintError Lints.SignatureVerificationFailure
   | EImplicitInexactObject _        -> LintError Lints.ImplicitInexactObject
+  | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
+  | ENonArraySpread _               -> LintError Lints.NonArraySpread
   | EBadExportPosition _
   | EBadExportContext _             -> InferWarning ExportKind
   | EUnexpectedTypeof _
@@ -810,6 +942,7 @@ let kind_of_msg = Errors.(function
   | EExperimentalClassProperties _
   | EUnsafeGetSet _
   | EExperimentalExportStarAs _
+  | EExperimentalEnums _
   | EIndeterminateModuleType _
   | EUnreachable _
   | EInvalidTypeof _                -> InferWarning OtherKind
@@ -833,8 +966,8 @@ let mk_prop_message = Errors.Friendly.(function
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
 type 'loc friendly_message_recipe =
-  | IncompatibleUse of 'loc * 'loc upper_kind * 'loc Reason.virtual_reason *
-      'loc Type.virtual_use_op
+  | IncompatibleUse of 'loc * 'loc upper_kind * 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
+      * 'loc Type.virtual_use_op
   | Speculation of 'loc * 'loc Type.virtual_use_op * ('loc Reason.virtual_reason * t) list
   | Incompatible of 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
       * 'loc Type.virtual_use_op
@@ -843,8 +976,8 @@ type 'loc friendly_message_recipe =
   | PropMissing of 'loc * string option * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
   | Normal of 'loc Errors.Friendly.message_feature list
   | UseOp of 'loc * 'loc Errors.Friendly.message_feature list * 'loc Type.virtual_use_op
-  | PropPolarityMismatch of string option * ('loc Reason.virtual_reason * Type.polarity)
-      * ('loc Reason.virtual_reason * Type.polarity) * 'loc Type.virtual_use_op
+  | PropPolarityMismatch of string option * ('loc Reason.virtual_reason * Polarity.t)
+      * ('loc Reason.virtual_reason * Polarity.t) * 'loc Type.virtual_use_op
 
 let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   let text = Errors.Friendly.text in
@@ -868,7 +1001,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       } ->
       if branches = [] then
         IncompatibleUse
-          (loc_of_reason reason_upper, upper_kind, reason_lower, Option.value ~default:unknown_use use_op)
+          (loc_of_reason reason_upper, upper_kind, reason_lower, reason_upper, Option.value ~default:unknown_use use_op)
       else
         Speculation (loc_of_reason reason_upper, Option.value ~default:unknown_use use_op, branches)
 
@@ -1015,24 +1148,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text (spf "%n type argument%s." n (if n == 1 then "" else "s"));
         ]
 
-    | EValueUsedAsType reasons ->
-      let (value, _) = reasons in
+    | EValueUsedAsType value ->
       Normal [
         text "Cannot use "; desc value; text " as a type because ";
         desc value; text " is a value. To get the type of ";
         text "a value use "; code "typeof"; text ".";
       ]
 
-    | EExpectedStringLit (reasons, _, _, use_op) ->
-      let (reason_lower, reason_upper) = reasons in
+    | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
       Incompatible (reason_lower, reason_upper, use_op)
 
-    | EExpectedNumberLit (reasons, _, _, use_op) ->
-      let (reason_lower, reason_upper) = reasons in
+    | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
       Incompatible (reason_lower, reason_upper, use_op)
 
-    | EExpectedBooleanLit (reasons, _, _, use_op) ->
-      let (reason_lower, reason_upper) = reasons in
+    | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
       Incompatible (reason_lower, reason_upper, use_op)
 
     | EPropNotFound (prop, reasons, use_op) ->
@@ -1040,13 +1169,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       PropMissing
         (loc_of_reason reason_prop, prop, reason_obj, use_op)
 
-    | EPropAccess (reasons, x, _, rw, use_op) ->
-      let (reason_prop, _) = reasons in
-      let rw = match rw with
-      | Read -> "readable"
-      | Write _ -> "writable"
-      in
-      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text (spf " is not %s" rw)], use_op)
+    | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
+      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text " is not readable"], use_op)
+
+    | EPropNotWritable { reason_prop; prop_name = x; use_op } ->
+      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text " is not writable"], use_op)
 
     | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
       let (lreason, ureason) = reasons in
@@ -1055,9 +1182,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
     | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       let polarity_string = function
-      | Positive -> "output"
-      | Negative -> "input"
-      | Neutral -> "input/output"
+      | Polarity.Positive -> "output"
+      | Polarity.Negative -> "input"
+      | Polarity.Neutral -> "input/output"
       in
       let expected_polarity = polarity_string expected_polarity in
       let actual_polarity = polarity_string actual_polarity in
@@ -1115,17 +1242,25 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "incompatible with "; ref upper;
       ], use_op)
 
-    | ETupleOutOfBounds (reasons, length, index, use_op) ->
-      let (lower, upper) = reasons in
-      UseOp (loc_of_reason lower, [
-        ref upper;
-        text (spf " only has %d element%s, so index %d is out of bounds"
+    | ETupleOutOfBounds { reason; reason_op; length; index; use_op } ->
+      UseOp (loc_of_reason reason, [
+        ref reason_op;
+        text (spf " only has %d element%s, so index %s is out of bounds"
           length (if length == 1 then "" else "s") index);
       ], use_op)
 
-    | ETupleUnsafeWrite (reasons, use_op) ->
-      let (lower, _) = reasons in
-      UseOp (loc_of_reason lower,
+    | ETupleNonIntegerIndex { reason; index; use_op } ->
+      let index_ref =
+        let open Errors.Friendly in
+        Reference ([Code index], def_loc_of_reason reason)
+      in
+      UseOp (loc_of_reason reason, [
+        text "the index into a tuple must be an integer, but ";
+        index_ref; text " is not an integer";
+      ], use_op)
+
+    | ETupleUnsafeWrite { reason; use_op } ->
+      UseOp (loc_of_reason reason,
         [text "the index must be statically known to write a tuple element"],
         use_op)
 
@@ -1511,12 +1646,40 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "[options]"; text " section of your "; code ".flowconfig"; text ".";
       ]
 
+    | EUninitializedInstanceProperty (_loc, err) ->
+      (match err with
+      | PropertyNotDefinitivelyInitialized -> Normal [
+          text "Class property not definitively initialized in the constructor. ";
+          text "Can you add an assignment to the property declaration?";
+        ]
+      | ReadFromUninitializedProperty -> Normal [
+          text "It is unsafe to read from a class property before it is ";
+          text "definitively initialized.";
+        ]
+      | MethodCallBeforeEverythingInitialized -> Normal [
+          text "It is unsafe to call a method in the constructor before all ";
+          text "class properties are definitively initialized.";
+        ]
+      | ThisBeforeEverythingInitialized -> Normal [
+          text "It is unsafe to use "; code "this"; text " in the constructor ";
+          text "before all class properties are definitively initialized.";
+        ]
+      )
+
     | EExperimentalExportStarAs _ ->
       Normal [
         text "Experimental "; code "export * as"; text " usage. ";
         code "export * as"; text " is an active early stage feature propsal that ";
         text "may change. You may opt-in to using it anyway by putting ";
         code "esproposal.export_star_as=enable"; text " into the ";
+        code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+      ]
+
+    | EExperimentalEnums _ ->
+      Normal [
+        text "Experimental "; code "enum"; text " usage. ";
+        text "You may opt-in to using enums by putting ";
+        code "experimental.enums=true"; text " into the ";
         code "[options]"; text " section of your "; code ".flowconfig"; text ".";
       ]
 
@@ -1575,6 +1738,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
            text "Please provide an annotation, e.g., by adding a type cast around this expression."]
         | SketchyToplevelDef _ ->
           [text "Unexpected toplevel definition that needs hoisting:"]
+        | UnsupportedPredicateExpression _ ->
+          [text "Unsupported kind of expression in predicate function:"]
         | TODO (msg, _) ->
           [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
       end in
@@ -1586,7 +1751,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnreachable _ ->
       Normal [text "Unreachable code."]
 
-    | EInvalidObjectKit { tool=_; reason; reason_op=_; use_op } ->
+    | EInvalidObjectKit { reason; reason_op=_; use_op } ->
       UseOp (loc_of_reason reason, [ref reason; text " is not an object"], use_op)
 
     | EInvalidTypeof (_, typename) ->
@@ -1642,22 +1807,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnsupportedImplements reason ->
       Normal [text "Cannot implement "; desc reason; text " because it is not an interface."]
 
-    | EReactKit (reasons, tool, use_op) ->
+    | ENotAReactComponent { reason; use_op } ->
+      UseOp (loc_of_reason reason, [ref reason; text " is not a React component"], use_op)
+
+    | EInvalidReactConfigType { reason; use_op } ->
+      UseOp (loc_of_reason reason, [ref reason; text " cannot calculate config"], use_op)
+
+    | EInvalidReactPropType { reason; use_op; tool } ->
       let open React in
-      let (_, reason) = reasons in
+      let open React.SimplifyPropType in
       let is_not_prop_type = "is not a React propType" in
       let msg = match tool with
-      | GetProps _
-      | GetConfig _
-      | GetRef _
-      | CreateElement0 _
-      | CreateElement _
-      | ConfigCheck _
-        -> "is not a React component"
-      | GetConfigType _
-        -> "cannot calculate config"
-      | SimplifyPropType (tool, _) ->
-        SimplifyPropType.(match tool with
         | ArrayOf -> is_not_prop_type
         | InstanceOf -> "is not a class"
         | ObjectOf -> is_not_prop_type
@@ -1668,9 +1828,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | Shape ResolveObject -> "is not an object"
         | Shape (ResolveDict _) -> is_not_prop_type
         | Shape (ResolveProp _) -> is_not_prop_type
-        )
-      | CreateClass (tool, _, _) ->
-        CreateClass.(match tool with
+      in
+      UseOp (loc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)
+
+    | EInvalidReactCreateClass { reason; use_op; tool } ->
+      let open React in
+      let open React.CreateClass in
+      let is_not_prop_type = "is not a React propType" in
+      let msg = match tool with
         | Spec _ -> "is not an exact object"
         | Mixins _ -> "is not a tuple"
         | Statics _ -> "is not an object"
@@ -1679,7 +1844,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | PropTypes (_, ResolveProp _) -> is_not_prop_type
         | DefaultProps _ -> "is not an object"
         | InitialState _ -> "is not an object or null"
-        )
       in
       UseOp (loc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)
 
@@ -1782,12 +1946,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EDeprecatedUtility (_, name) ->
       Normal [
         text "Deprecated utility. Using "; code name; text " types is not recommended!"
-      ]
-
-    | EDeprecatedEnumUtility _ ->
-      Normal [
-        code "$Enum<...>"; text " is deprecated, use "; code "$Keys<...>"; text " instead";
-        text " (the functionality is identical).";
       ]
 
     | EDynamicExport (reason, reason_exp) ->
@@ -1893,6 +2051,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       Normal [
         text "BigInt "; ref reason; text " is not yet supported."
       ]
+    | ENonArraySpread reason ->
+      Normal [
+        text "Cannot spread non-array iterable "; ref reason; text ". Use ";
+        code "...Array.from(<iterable>)"; text " instead."
+      ]
 )
 
 let is_lint_error = function
@@ -1902,7 +2065,6 @@ let is_lint_error = function
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
-  | EDeprecatedEnumUtility _
   | EDynamicExport _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
@@ -1912,5 +2074,7 @@ let is_lint_error = function
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
+  | EUninitializedInstanceProperty _
+  | ENonArraySpread _
       -> true
   | _ -> false

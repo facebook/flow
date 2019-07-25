@@ -1,0 +1,10 @@
+(library
+  (name flow_typing_ty)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_parser_utils_aloc
+    flow_parser_utils_output
+  )
+  (preprocess (pps visitors.ppx ppx_deriving.show))
+)

@@ -18,12 +18,12 @@ val get_ast_result:
   File_key.t ->
   ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
 
-val get_dependents:
+val get_all_dependents:
   reader:State_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
   ServerEnv.env ref ->
   File_key.t ->
   string (* content *) ->
-  (* transitive dependents, direct dependents *)
-  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Lwt.t
+  (* transitive dependents *)
+  Utils_js.FilenameSet.t Lwt.t

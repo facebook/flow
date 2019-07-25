@@ -401,8 +401,14 @@ trust.js
 
 {
   "expressions":{
-    "untainted_count":16,
+    "untainted_count":22,
     "untainted_locs":[
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":1,"offset":9},
+        "end":{"line":3,"column":16,"offset":25}
+      },
       {
         "source":"trust.js",
         "type":"SourceFile",
@@ -412,8 +418,32 @@ trust.js
       {
         "source":"trust.js",
         "type":"SourceFile",
+        "start":{"line":9,"column":1,"offset":160},
+        "end":{"line":9,"column":16,"offset":176}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":1,"offset":190},
+        "end":{"line":10,"column":16,"offset":206}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":12,"column":1,"offset":244},
+        "end":{"line":12,"column":16,"offset":260}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
         "start":{"line":15,"column":1,"offset":325},
         "end":{"line":15,"column":17,"offset":342}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":17,"column":1,"offset":379},
+        "end":{"line":17,"column":17,"offset":396}
       },
       {
         "source":"trust.js",
@@ -478,6 +508,12 @@ trust.js
       {
         "source":"trust.js",
         "type":"SourceFile",
+        "start":{"line":39,"column":1,"offset":848},
+        "end":{"line":39,"column":4,"offset":852}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
         "start":{"line":40,"column":1,"offset":854},
         "end":{"line":40,"column":2,"offset":856}
       },
@@ -500,46 +536,9 @@ trust.js
         "end":{"line":42,"column":2,"offset":868}
       }
     ],
-    "tainted_count":6,
-    "tainted_locs":[
-      {
-        "source":"trust.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":1,"offset":9},
-        "end":{"line":3,"column":16,"offset":25}
-      },
-      {
-        "source":"trust.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":1,"offset":160},
-        "end":{"line":9,"column":16,"offset":176}
-      },
-      {
-        "source":"trust.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":1,"offset":190},
-        "end":{"line":10,"column":16,"offset":206}
-      },
-      {
-        "source":"trust.js",
-        "type":"SourceFile",
-        "start":{"line":12,"column":1,"offset":244},
-        "end":{"line":12,"column":16,"offset":260}
-      },
-      {
-        "source":"trust.js",
-        "type":"SourceFile",
-        "start":{"line":17,"column":1,"offset":379},
-        "end":{"line":17,"column":17,"offset":396}
-      },
-      {
-        "source":"trust.js",
-        "type":"SourceFile",
-        "start":{"line":39,"column":1,"offset":848},
-        "end":{"line":39,"column":4,"offset":852}
-      }
-    ],
-    "uncovered_count":23,
+    "tainted_count":0,
+    "tainted_locs":[],
+    "uncovered_count":17,
     "uncovered_locs":[
       {
         "source":"trust.js",
@@ -703,5 +702,5 @@ trust.js
     ]
   }
 }
-Covered: 41.03% (16 of 39 expressions)
+Covered: 56.41% (22 of 39 expressions)
 

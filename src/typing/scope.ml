@@ -284,12 +284,6 @@ type t = {
   mutable entries: Entry.t SMap.t;
   mutable refis: refi_binding Key_map.t;
   mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
-  (* Map containing all local bindings declared in a 'declare module'. Instead
-     of creating a chain of ModuleT ~> ExportNamedT for each one of the local
-     exports of a DeclareModule that we encounter, we create a single flow at the
-     end of processing the DeclareModule using this mapping as the payload of
-     ExportNamedT. *)
-  mutable declare_module_local_exports: (ALoc.t option * Type.t) SMap.t;
 }
 
 (* ctor helper *)
@@ -299,7 +293,6 @@ let fresh_impl kind = {
   entries = SMap.empty;
   refis = Key_map.empty;
   declare_func_annots = SMap.empty;
-  declare_module_local_exports = SMap.empty;
 }
 
 (* return a fresh scope of the most common kind (var) *)
@@ -312,8 +305,8 @@ let fresh_lex () = fresh_impl LexScope
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
  *)
-let clone { id; kind; entries; refis; declare_func_annots; declare_module_local_exports } =
-  { id; kind; entries; refis; declare_func_annots; declare_module_local_exports }
+let clone { id; kind; entries; refis; declare_func_annots } =
+  { id; kind; entries; refis; declare_func_annots }
 
 (* use passed f to iterate over all scope entries *)
 let iter_entries f scope =
@@ -415,12 +408,3 @@ let is_global scope =
   match scope.kind with
   | VarScope Global -> true
   | _ -> false
-
-let set_declare_module_local_export scope name loc t =
-  scope.declare_module_local_exports <-
-    SMap.add name (Some loc, t) scope.declare_module_local_exports
-
-let with_declare_module_local_exports scope f =
-  scope.declare_module_local_exports <- SMap.empty;
-  let r = f () in
-  r, scope.declare_module_local_exports

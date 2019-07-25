@@ -161,6 +161,11 @@ let json pos =
     "char_end",   Hh_json.int_ end_;
   ]
 
+(*
+ * !!! Be careful !!!
+ * This method returns zero-based column numbers, but one-based line numbers.
+ * Consider using info_pos instead.
+ *)
 let line_column p =
   match p with
   | Pos_small { pos_start; _ } -> File_pos_small.line_column pos_start

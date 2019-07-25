@@ -11,16 +11,16 @@ let estimates_key = "estimates"
 let estimated_time_to_recheck_key = "estimated_time_to_recheck"
 let estimated_time_to_restart_key = "estimated_time_to_restart"
 let estimated_time_to_init_key = "estimated_time_to_init"
-let estimated_time_to_merge_a_file_key = "estimated_time_to_merge_a_file"
-let estimated_files_to_merge_key = "estimated_files_to_merge"
+let estimated_time_per_file_key = "estimated_time_per_file"
+let estimated_files_to_recheck_key = "estimated_files_to_recheck"
 let estimated_files_to_init_key = "estimated_files_to_init"
 
 type estimates = {
   estimated_time_to_recheck: float;
   estimated_time_to_restart: float;
   estimated_time_to_init: float;
-  estimated_time_to_merge_a_file: float;
-  estimated_files_to_merge: int;
+  estimated_time_per_file: float;
+  estimated_files_to_recheck: int;
   estimated_files_to_init: int;
 }
 
@@ -80,8 +80,8 @@ let load_per_file_time ~options =
                 estimated_time_to_recheck = float_exn json estimated_time_to_recheck_key;
                 estimated_time_to_restart = float_exn json estimated_time_to_restart_key;
                 estimated_time_to_init = float_exn json estimated_time_to_init_key;
-                estimated_time_to_merge_a_file = float_exn json estimated_time_to_merge_a_file_key;
-                estimated_files_to_merge = int_exn json estimated_files_to_merge_key;
+                estimated_time_per_file = float_exn json estimated_time_per_file_key;
+                estimated_files_to_recheck = int_exn json estimated_files_to_recheck_key;
                 estimated_files_to_init = int_exn json estimated_files_to_init_key;
               }
             in
@@ -110,8 +110,8 @@ let save_averages ~options ?estimates new_averages =
       estimated_time_to_recheck;
       estimated_time_to_restart;
       estimated_time_to_init;
-      estimated_time_to_merge_a_file;
-      estimated_files_to_merge;
+      estimated_time_per_file;
+      estimated_files_to_recheck;
       estimated_files_to_init;
     } ->
       Hh_json.[
@@ -122,10 +122,10 @@ let save_averages ~options ?estimates new_averages =
             JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_restart);
           estimated_time_to_init_key,
             JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_init);
-          estimated_time_to_merge_a_file_key,
-            JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_merge_a_file);
-          estimated_files_to_merge_key,
-            JSON_Number (string_of_int estimated_files_to_merge);
+          estimated_time_per_file_key,
+            JSON_Number (Dtoa.ecma_string_of_float estimated_time_per_file);
+          estimated_files_to_recheck_key,
+            JSON_Number (string_of_int estimated_files_to_recheck);
           estimated_files_to_init_key,
             JSON_Number (string_of_int estimated_files_to_init);
         ]
@@ -188,17 +188,17 @@ let with_averages f =
   | None -> failwith "Recheck_stats needs to be initialized before it can be used"
   | Some averages -> f averages
 
-let record_merge_time ~options ~total_time ~merged_files =
-  (* merged_files should be non-negative. If it's 0, then we have no new information to add *)
-  if merged_files > 0
+let record_recheck_time ~options ~total_time ~rechecked_files =
+  (* rechecked_files should be non-negative. If it's 0, then we have no new information to add *)
+  if rechecked_files > 0
   then with_averages @@ fun { init_time; per_file_time; parsed_count; } ->
     (* What should we do for tiny repositories? Let's make the window at least 15 samples big *)
     let window = max parsed_count 15 in
     let per_file_time = moving_average
       ~window
       ~avg:per_file_time
-      ~sample:(total_time /. (float_of_int merged_files))
-      ~sample_count:merged_files
+      ~sample:(total_time /. (float_of_int rechecked_files))
+      ~sample_count:rechecked_files
     in
     save_averages ~options { init_time; per_file_time; parsed_count; }
   else Lwt.return_unit

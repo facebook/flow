@@ -11,7 +11,6 @@ open Token
 open Parser_common
 open Parser_env
 open Flow_ast
-module Error = Parse_error
 module SSet = Set.Make(String)
 
 module type DECLARATION = sig
@@ -22,10 +21,11 @@ module type DECLARATION = sig
   val function_body: env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
   val is_simple_function_params: (Loc.t, Loc.t) Ast.Function.Params.t -> bool
   val strict_post_check: env -> strict:bool -> simple:bool -> (Loc.t, Loc.t) Identifier.t option -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
-  val let_: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val const: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val var: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val let_: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Parse_error.t) list
+  val const: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Parse_error.t) list
+  val var: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Parse_error.t) list
   val _function: env -> (Loc.t, Loc.t) Statement.t
+  val enum_declaration: env -> (Loc.t, Loc.t) Statement.t
 end
 
 module Declaration
@@ -33,13 +33,15 @@ module Declaration
   (Type: Type_parser.TYPE)
 : DECLARATION
 = struct
+  module Enum  = Enum_parser.Enum (Parse)
+
   let check_param =
     let rec pattern ((env, _) as check_env) (loc, p) = Pattern.(match p with
       | Object o -> _object check_env o
       | Array arr -> _array check_env arr
       | Identifier id -> identifier_pattern check_env id
       | Expression _ -> (
-          error_at env (loc, Error.ExpectedPatternFoundExpression);
+          error_at env (loc, Parse_error.ExpectedPatternFoundExpression);
           check_env
         )
     )
@@ -76,16 +78,16 @@ module Declaration
 
     and identifier (env, param_names) (loc, { Identifier.name; comments= _ } as id) =
       if SSet.mem name param_names
-      then error_at env (loc, Error.StrictParamDupe);
+      then error_at env (loc, Parse_error.StrictParamDupe);
       let env, param_names =
         identifier_no_dupe_check (env, param_names) id in
       env, SSet.add name param_names
 
     and identifier_no_dupe_check (env, param_names) (loc, { Identifier.name; comments= _ }) =
       if is_restricted name
-      then strict_error_at env (loc, Error.StrictParamName);
+      then strict_error_at env (loc, Parse_error.StrictParamName);
       if is_future_reserved name || is_strict_reserved name
-      then strict_error_at env (loc, Error.StrictReservedWord);
+      then strict_error_at env (loc, Parse_error.StrictReservedWord);
       env, param_names
 
     in pattern
@@ -109,9 +111,9 @@ module Declaration
       (match id with
       | Some (loc, { Identifier.name; comments= _ }) ->
           if is_restricted name
-          then strict_error_at env (loc, Error.StrictFunctionName);
+          then strict_error_at env (loc, Parse_error.StrictFunctionName);
           if is_future_reserved name || is_strict_reserved name
-          then strict_error_at env (loc, Error.StrictReservedWord)
+          then strict_error_at env (loc, Parse_error.StrictReservedWord)
       | None -> ());
       let acc = List.fold_left (fun acc (_, { Function.Param.argument; default = _ }) ->
         check_param acc argument
@@ -124,7 +126,7 @@ module Declaration
 
   let function_params =
     let rec param = with_loc (fun env ->
-      let argument = Parse.pattern env Error.StrictParamName in
+      let argument = Parse.pattern env Parse_error.StrictParamName in
       let default =
         if Peek.token env = T_ASSIGN then begin
           Expect.token env T_ASSIGN;
@@ -143,14 +145,14 @@ module Declaration
             if t = T_ELLIPSIS then begin
               let loc, id = with_loc (fun env ->
                 Expect.token env T_ELLIPSIS;
-                Parse.pattern env Error.StrictParamName
+                Parse.pattern env Parse_error.StrictParamName
               ) env in
               Some (loc, { Function.RestParam.argument = id; })
             end else
               None
           in
           if Peek.token env <> T_RPAREN
-          then error env Error.ParameterAfterRestParameter;
+          then error env Parse_error.ParameterAfterRestParameter;
           { Ast.Function.Params.params = List.rev acc; rest }
       | _ ->
           let the_param = param env in
@@ -189,7 +191,7 @@ module Declaration
     in
     match variance with
     | Some (loc, _) when is_async || is_generator ->
-        error_at env (loc, Error.UnexpectedVariance);
+        error_at env (loc, Parse_error.UnexpectedVariance);
         None
     | _ ->
         variance
@@ -222,24 +224,16 @@ module Declaration
         | true, T_LESS_THAN ->
           let typeParams = Type.type_parameter_declaration env in
           let id = if Peek.token env = T_LPAREN then None else Some (
-            Parse.identifier ~restricted_error:Error.StrictFunctionName env
+            Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env
           ) in
           (typeParams, id)
         | _ ->
           let id =
-            Parse.identifier ~restricted_error:Error.StrictFunctionName env
+            Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env
           in
           (Type.type_parameter_declaration env, Some id)
       ) in
-      let params =
-        let yield, await = match async, generator with
-        | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorDeclaration *)
-        | true, false -> false, allow_await env (* #prod-AsyncFunctionDeclaration *)
-        | false, true -> true, false (* #prod-GeneratorDeclaration *)
-        | false, false -> false, false (* #prod-FunctionDeclaration *)
-        in
-        function_params ~await ~yield env
-      in
+      let params = function_params ~await:async ~yield:generator env in
       let (return, predicate) = Type.annotation_and_predicate_opt env in
       (generator, tparams, id, params, return, predicate)
     ) env in
@@ -262,7 +256,7 @@ module Declaration
   let variable_declaration_list =
     let variable_declaration env =
       let loc, (decl, errs) = with_loc (fun env ->
-        let id = Parse.pattern env Error.StrictVarName in
+        let id = Parse.pattern env Parse_error.StrictVarName in
         let init, errs = if Peek.token env = T_ASSIGN
         then begin
           Expect.token env T_ASSIGN;
@@ -270,7 +264,7 @@ module Declaration
         end else Ast.Pattern.(
           match id with
           | _, Identifier _ -> None, []
-          | loc, _ -> None, [(loc, Error.NoUninitializedDestructuring)]
+          | loc, _ -> None, [(loc, Parse_error.NoUninitializedDestructuring)]
         ) in
         Ast.Statement.VariableDeclaration.Declarator.({
           id;
@@ -311,7 +305,7 @@ module Declaration
       List.fold_left (fun errs decl ->
         match decl with
         | loc, { Declarator.init = None; _ } ->
-            (loc, Error.NoUninitializedConst)::errs
+            (loc, Parse_error.NoUninitializedConst)::errs
         | _ -> errs
       ) errs variable.declarations
     ) in
@@ -320,4 +314,6 @@ module Declaration
   let let_ env =
     let env = env |> with_no_let true in
     declarations T_LET Statement.VariableDeclaration.Let env
+
+  let enum_declaration = Enum.declaration
 end

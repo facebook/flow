@@ -21,15 +21,18 @@ open Utils_js
  * 3. Throw away the collated errors when lazy mode's typecheck_contents adds more dependents or
  *    dependencies to the checked set
  **)
-let regenerate =
+let regenerate ~reader =
   let open Errors in
   let open Error_suppressions in
+  let lazy_table_of_aloc =
+    Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader
+  in
   let add_unused_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
     let deps = CheckedSet.dependencies checked in
-    Error_suppressions.all_locs unused
-    |> List.fold_left
-      (fun warnings loc ->
+    let all_locs = Error_suppressions.all_locs unused in
+    Loc_collections.LocSet.fold
+      (fun loc warnings ->
         let source_file = match Loc.source loc with Some x -> x | None -> File_key.SourceFile "-" in
         (* In lazy mode, dependencies are modules which we typecheck not because we care about
          * them, but because something important (a focused file or a focused file's dependent)
@@ -43,8 +46,8 @@ let regenerate =
           let err =
             let msg = Error_message.EUnusedSuppression (ALoc.of_loc loc) in
             Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
-            |> Flow_error.concretize_error
-            |> Flow_error.make_error_printable in
+            |> (Flow_error.concretize_error lazy_table_of_aloc)
+            |> (Flow_error.make_error_printable lazy_table_of_aloc) in
           let file_warnings = FilenameMap.get source_file warnings
             |> Option.value ~default:ConcreteLocPrintableErrorSet.empty
             |> ConcreteLocPrintableErrorSet.add err in
@@ -52,6 +55,7 @@ let regenerate =
         end else
           warnings
       )
+      all_locs
       warnings
   in
   let acc_fun (type a) ~options suppressions (f : File_key.t -> ConcreteLocPrintableErrorSet.t -> a -> a)
@@ -59,7 +63,7 @@ let regenerate =
     let root = Options.root options in
     let file_options = Some (Options.file_options options) in
     let file_errs, file_suppressed, unused =
-      Flow_error.make_errors_printable file_errs
+      Flow_error.make_errors_printable lazy_table_of_aloc file_errs
       |> filter_suppressed_errors ~root ~file_options suppressions ~unused in
     let errors = f filename file_errs errors in
     let suppressed = List.rev_append file_suppressed suppressed in
@@ -103,11 +107,11 @@ let regenerate =
       add_unused_suppression_warnings env.ServerEnv.checked_files unused warnings in
     { collated_errorset; collated_warning_map; collated_suppressed_errors }
 
-let get_with_separate_warnings ~options env =
+let get_with_separate_warnings ~reader ~options env =
   let open ServerEnv in
   let collated_errors = match !(env.collated_errors) with
   | None ->
-    let collated_errors = regenerate ~options env in
+    let collated_errors = regenerate ~reader ~options env in
     env.collated_errors := Some collated_errors;
     collated_errors
   | Some collated_errors ->
@@ -117,8 +121,8 @@ let get_with_separate_warnings ~options env =
   (collated_errorset, collated_warning_map, collated_suppressed_errors)
 
 (* combine error maps into a single error set and a single warning set *)
-let get ~options env =
+let get ~reader ~options env =
   let open Errors in
-  let errors, warning_map, suppressed_errors = get_with_separate_warnings ~options env in
+  let errors, warning_map, suppressed_errors = get_with_separate_warnings ~reader ~options env in
   let warnings = FilenameMap.fold (fun _key -> ConcreteLocPrintableErrorSet.union) warning_map ConcreteLocPrintableErrorSet.empty in
   (errors, warnings, suppressed_errors)

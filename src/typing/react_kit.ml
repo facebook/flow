@@ -13,13 +13,28 @@ let err_incompatible
   cx
   trace
   ~use_op
-  ~reason_op
   ~(add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
   reason
-  u
+  tool
 =
-  add_output cx ~trace (Error_message.EReactKit
-    ((reason_op, reason), u, use_op))
+  let open React in
+  let err = match tool with
+  | GetProps _
+  | GetConfig _
+  | GetRef _
+  | CreateElement0 _
+  | CreateElement _
+  | ConfigCheck _ ->
+    Error_message.ENotAReactComponent { reason; use_op; }
+  | GetConfigType _ ->
+    Error_message.EInvalidReactConfigType { reason; use_op }
+  | SimplifyPropType (tool, _) ->
+    Error_message.EInvalidReactPropType { reason; use_op; tool }
+  | CreateClass (tool, _, _) ->
+    Error_message.EInvalidReactCreateClass { reason; use_op; tool }
+  in
+  add_output cx ~trace err
+
 let component_class
   cx
   reason
@@ -107,9 +122,10 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
 let get_defaults cx trace component ~reason_op ~rec_flow =
   match component with
   | DefT (_, _, ClassT _)
-  | DefT (_, _, FunT _) ->
+  | DefT (_, _, FunT _)
+  | DefT (_, _, ObjT _) ->
     let tvar = Tvar.mk cx reason_op in
-    lookup_defaults cx trace component ~reason_op ~rec_flow tvar Positive;
+    lookup_defaults cx trace component ~reason_op ~rec_flow tvar Polarity.Positive;
     Some tvar
   | DefT (_, _, ReactAbstractComponentT _) -> None
   (* Everything else will not have default props we should diff out. *)
@@ -147,7 +163,7 @@ let props_to_tout
     ~get_builtin_type
     `Props
     lit
-    (Field (None, tout, Positive))
+    (Field (None, tout, Polarity.Positive))
 
   (* any and any specializations *)
   | AnyT (reason, src) ->
@@ -157,7 +173,7 @@ let props_to_tout
     rec_flow_t cx trace (MixedT.why reason trust, tout)
 
   (* ...otherwise, error. *)
-  | _ -> err_incompatible cx trace ~use_op ~reason_op ~add_output (reason_of_t component) u
+  | _ -> err_incompatible cx trace ~use_op ~add_output (reason_of_t component) u
 
 (* Creates the type that we expect for a React config by diffing out default
  * props with ObjKitT(Rest). The config does not include types for `key`
@@ -197,9 +213,9 @@ let get_config
   | DefT (_, _, ReactAbstractComponentT {config; _}) ->
       let use_op = Frame (ReactGetConfig {polarity = pole}, use_op) in
       begin match pole with
-      | Positive -> rec_flow_t ~use_op cx trace (config, tout)
-      | Negative -> rec_flow_t ~use_op cx trace (tout, config)
-      | Neutral -> rec_unify cx trace ~use_op tout config
+      | Polarity.Positive -> rec_flow_t ~use_op cx trace (config, tout)
+      | Polarity.Negative -> rec_flow_t ~use_op cx trace (tout, config)
+      | Polarity.Neutral -> rec_unify cx trace ~use_op tout config
       end
   | _ ->
     let reason_component = (reason_of_t component) in
@@ -236,7 +252,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
   let sealed_in_op = Obj_type.sealed_in_op
 
   let run cx trace ~use_op reason_op l u =
-    let err_incompatible reason = err_incompatible cx trace ~use_op ~reason_op ~add_output reason u
+    let err_incompatible reason = err_incompatible cx trace ~use_op ~add_output reason u
     in
 
     (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
@@ -335,7 +351,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         rec_flow_t cx trace (tin, MixedT.why reason trust);
 
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
+      | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Polarity.Negative))
 
       | AnyT (reason, source) ->
         rec_flow_t cx trace (tin, AnyT.why source reason)
@@ -504,7 +520,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           lower = reason_of_t normalized_config;
           upper = reason_key;
         }, use_op) in
-        let action = LookupProp (use_op, Field (None, key_t, Positive)) in
+        let action = LookupProp (use_op, Field (None, key_t, Polarity.Positive)) in
         rec_flow cx trace (normalized_config,
           LookupT (reason_key, kind, [], propref, action))
       in
@@ -528,7 +544,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           lower = reason_of_t normalized_config;
           upper = reason_ref;
         }, use_op) in
-        let action = LookupProp (use_op, Field (None, ref_t, Positive)) in
+        let action = LookupProp (use_op, Field (None, ref_t, Polarity.Positive)) in
         rec_flow cx trace (normalized_config,
           LookupT (reason_ref, kind, [], propref, action))
       in
@@ -541,7 +557,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
     in
 
     let get_config = get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t ~rec_unify
-      ~get_builtin_type ~add_output u Positive
+      ~get_builtin_type ~add_output u Polarity.Positive
     in
 
     let get_config_with_props_and_defaults default_props tout =
@@ -550,8 +566,13 @@ module Kit (Flow: Flow_common.S): REACT = struct
       let props = l in
       let tool = Resolve Next in
       let state = One default_props in
-      rec_flow cx trace (props,
-        ObjKitT (Op UnknownUse, reason_op, tool, Rest (ReactConfigMerge Neutral, state), tout))
+      rec_flow cx trace (props, ObjKitT (
+        Op UnknownUse,
+        reason_op,
+        tool,
+        Rest (ReactConfigMerge Polarity.Neutral, state),
+        tout
+      ))
     in
 
 
@@ -574,7 +595,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         rec_flow_t cx trace (instance, tout);
 
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
+      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
 
       | AnyT (reason, source) ->
         rec_flow_t cx trace (AnyT.why source reason, tout)
@@ -629,7 +650,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           dict_name = None;
           key = tout |> reason_of_t |> StrT.why |> with_trust bogus_trust;
           value;
-          dict_polarity = Neutral;
+          dict_polarity = Polarity.Neutral;
         } in
         let proto = ObjProtoT (locationless_reason RObjectClassName) in
         let reason = replace_reason_const RObjectType reason_op in
@@ -684,7 +705,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
            for reasons descriptions/locations, recursive ReactKit constraints, and
            `resolve` behavior. *)
         let add_prop k t (reason, props, dict, flags) =
-          let props = SMap.add k (Field (None, t, Neutral)) props in
+          let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
           reason, props, dict, flags
         in
         let add_dict dict (reason, props, _, flags) =
@@ -941,8 +962,8 @@ module Kit (Flow: Flow_common.S): REACT = struct
 
         let props =
           SMap.empty
-          |> SMap.add "props" (Field (None, props_t, Neutral))
-          |> SMap.add "state" (Field (None, knot.state_t, Neutral))
+          |> SMap.add "props" (Field (None, props_t, Polarity.Neutral))
+          |> SMap.add "state" (Field (None, knot.state_t, Polarity.Neutral))
         in
 
         (* Some spec fields are used to create the instance type, but are not
@@ -965,7 +986,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
             | None -> v
             | Some t ->
               let loc = Property.read_loc v in
-              Field (loc, t, Positive)
+              Field (loc, t, Polarity.Positive)
             in
             props, SMap.add k v static_props
 
@@ -1010,7 +1031,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         ) spec_props (props, SMap.empty) in
 
         let static_props = static_props
-          |> SMap.add "defaultProps" (Field (None, knot.default_t, Neutral))
+          |> SMap.add "defaultProps" (Field (None, knot.default_t, Polarity.Neutral))
         in
 
         let reason_component = replace_reason_const RReactComponent reason_op in
@@ -1030,7 +1051,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
               dict_name = None;
               key = StrT.why reason (bogus_trust ());
               value = EmptyT.why reason (bogus_trust ());
-              dict_polarity = Neutral;
+              dict_polarity = Polarity.Neutral;
             } in
             reason, static_props, dict, false, true
           | Some (Known (reason, props, dict, { exact; sealed; _ })) ->
@@ -1133,7 +1154,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
 
       | PropTypes (stack, tool) ->
         let add_prop k t (reason, props, dict, flags) =
-          let props = SMap.add k (Field (None, t, Neutral)) props in
+          let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
           reason, props, dict, flags
         in
         let add_dict dict (reason, props, _, flags) =

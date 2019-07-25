@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 import { suite, test } from "flow-dev-tools/src/test/Tester";
@@ -10,12 +9,12 @@ export default suite(({ addFile, addFiles, addCode }) => [
     addCode(`
       type InvalidDecimal = 1.0n;
     `).newErrors(
-      `
+        `
           test.js:4
             4:       type InvalidDecimal = 1.0n;
-                                           ^^^^ Invalid bigint literal
-        `
-    )
+                                           ^^^^ A bigint literal must be an integer
+        `,
+      )
   ]),
 
   test("BigInt invalid negative decimal type literal", [
@@ -25,7 +24,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegDecimal = -1.0n;
-                                              ^^^^^ Invalid bigint literal
+                                              ^^^^^ A bigint literal must be an integer
         `,
       )
   ]),
@@ -34,12 +33,12 @@ export default suite(({ addFile, addFiles, addCode }) => [
     addCode(`
       const invalid_decimal = 1.0n;
     `).newErrors(
-      `
+        `
           test.js:4
             4:       const invalid_decimal = 1.0n;
-                                             ^^^^ Invalid bigint literal
-        `
-    )
+                                             ^^^^ A bigint literal must be an integer
+        `,
+      )
   ]),
 
   test("BigInt invalid negative decimal literal", [
@@ -49,7 +48,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       const invalid_neg_decimal = -1.0n;
-                                                  ^^^^ Invalid bigint literal
+                                                  ^^^^ A bigint literal must be an integer
         `,
       )
   ]),
@@ -58,12 +57,12 @@ export default suite(({ addFile, addFiles, addCode }) => [
     addCode(`
       type InvalidE = 2e9n;
     `).newErrors(
-      `
+        `
           test.js:4
             4:       type InvalidE = 2e9n;
-                                     ^^^^ Invalid bigint literal
-        `
-    )
+                                     ^^^^ A bigint literal cannot use exponential notation
+        `,
+      )
   ]),
 
   test("BigInt invalid negative scientific type literal", [
@@ -73,7 +72,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegE = -2e9n;
-                                        ^^^^^ Invalid bigint literal
+                                        ^^^^^ A bigint literal cannot use exponential notation
         `,
       )
   ]),
@@ -85,7 +84,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegDecimalE = 2.0e9n;
-                                               ^^^^^^ Invalid bigint literal
+                                               ^^^^^^ A bigint literal cannot use exponential notation
         `,
       )
   ]),
@@ -97,7 +96,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegDecimalE = -2.0e9n;
-                                               ^^^^^^^ Invalid bigint literal
+                                               ^^^^^^^ A bigint literal cannot use exponential notation
         `,
       )
   ]),
@@ -106,12 +105,12 @@ export default suite(({ addFile, addFiles, addCode }) => [
     addCode(`
       const invalid_e = 2e9n;
     `).newErrors(
-      `
+        `
           test.js:4
             4:       const invalid_e = 2e9n;
-                                       ^^^^ Invalid bigint literal
-        `
-    )
+                                       ^^^^ A bigint literal cannot use exponential notation
+        `,
+      )
   ]),
 
   test("BigInt invalid negative scientific literal", [
@@ -121,7 +120,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       const invalid_neg_e = -2e9n;
-                                            ^^^^ Invalid bigint literal
+                                            ^^^^ A bigint literal cannot use exponential notation
         `,
       )
   ]),

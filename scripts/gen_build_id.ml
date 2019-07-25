@@ -24,9 +24,9 @@ let () =
     try read_process_stdout "git" [|"git"; "rev-parse"; "HEAD"|]
     with Failure msg -> (
       Printf.eprintf "Failed git rev-parse: %s\n%!" msg;
-      try read_process_stdout "hg" [|"hg"; "id"; "-i"|]
+      try read_process_stdout "hg" [|"hg"; "log"; "-r"; "."; "-T"; "{node}\\n"|]
       with Failure msg -> (
-        Printf.eprintf "Failed hg id: %s\n%!" msg;
+        Printf.eprintf "Failed hg log: %s\n%!" msg;
         ""
       )
     )

@@ -8,7 +8,10 @@
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
 EXTRA_LIBS=
-INTERNAL_MODULES=hack/stubs/logging src/stubs
+INTERNAL_MODULES=\
+	hack/stubs/logging\
+	hack/stubs/logging/common\
+	src/stubs
 INTERNAL_NATIVE_C_FILES=
 INTERNAL_BUILD_FLAGS=
 INTERNAL_FLAGS=
@@ -69,6 +72,7 @@ endif
 MODULES=\
   src/commands\
   src/commands/config\
+  src/commands/options\
   src/common\
   src/common/audit\
   src/common/build_id\
@@ -91,6 +95,8 @@ MODULES=\
   src/monitor\
   src/monitor/connections\
   src/monitor/logger\
+  src/monitor/rpc\
+  src/monitor/status\
   src/monitor/utils\
   src/parser\
   src/parser_utils\
@@ -98,6 +104,7 @@ MODULES=\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parsing\
+  src/procs\
   src/server\
   src/server/command_handler\
   src/server/env\
@@ -129,6 +136,7 @@ MODULES=\
   src/third-party/ocaml-vlq/src\
   src/typing\
   src/typing/errors\
+  src/typing/polarity\
   hack/dfind\
   hack/find\
   hack/globals\
@@ -139,11 +147,21 @@ MODULES=\
   hack/socket\
   hack/third-party/avl\
   hack/third-party/core\
-  hack/utils\
+  hack/utils/core\
+  hack/utils/buffered_line_reader\
   hack/utils/build_mode/prod\
   hack/utils/collections\
   hack/utils/disk\
+  hack/utils/file_content\
+  hack/utils/file_url\
   hack/utils/hh_json\
+  hack/utils/http_lite\
+  hack/utils/jsonrpc\
+  hack/utils/lsp\
+  hack/utils/marshal_tools\
+  hack/utils/opaque_digest\
+  hack/utils/procfs\
+  hack/utils/string\
   hack/utils/sys\
   hack/watchman\
   $(INOTIFY)\
@@ -157,7 +175,7 @@ NATIVE_C_FILES=\
   src/services/saved_state/saved_state_compression_stubs.c\
   hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
-  hack/utils/get_build_id.c\
+  hack/utils/core/get_build_id.c\
   hack/utils/sys/files.c\
   hack/utils/sys/gc_profiling.c\
   hack/utils/sys/getrusage.c\
@@ -191,6 +209,7 @@ COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
 JS_STUBS=\
+	+dtoa/dtoa_stubs.js\
 	$(wildcard js/*.js)
 
 OUNIT_TESTS=\
@@ -214,13 +233,13 @@ NATIVE_C_DIRS=$(patsubst %/,%,$(sort $(dir $(NATIVE_C_FILES))))
 ALL_HEADER_FILES=$(addprefix _build/,$(shell find $(NATIVE_C_DIRS) -name '*.h'))
 ALL_HEADER_FILES+=_build/src/third-party/lz4/xxhash.c
 NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
-NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
+NATIVE_OBJECT_FILES+=hack/utils/core/get_build_id.gen.o
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 
-CC_FLAGS=-DNO_SQLITE3 -DNO_HHVM
+CC_FLAGS=-DNO_SQLITE3
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
@@ -252,10 +271,10 @@ all-homebrew:
 clean:
 	ocamlbuild -clean
 	rm -rf bin
-	rm -f hack/utils/get_build_id.gen.c
+	rm -f hack/utils/core/get_build_id.gen.c
 	rm -f flow.odocl
 
-build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
@@ -264,7 +283,7 @@ build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIE
 		$(RELEASE_TAGS) \
 		src/flow.native
 
-build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
@@ -291,10 +310,10 @@ $(BUILT_C_FILES): _build/%.c: %.c
 $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
-hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
-_build/hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+_build/hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
 $(COPIED_FLOWLIB): _build/%.js: %.js
@@ -307,8 +326,19 @@ $(COPIED_PRELUDE): _build/%.js: %.js
 	cp $< $@
 	rm -rf _build/src/prelude
 
-_build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
-	$(OCB) -I scripts scripts/ppx_gen_flowlibs.native
+_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa: scripts/script_utils.ml scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.ml
+	$(OCB) -I scripts -tag linkall -pkg unix scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa
+
+_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa: scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.ml
+	$(OCB) -I scripts -tag linkall -pkg unix scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
+
+_build/scripts/ppx_gen_flowlibs.exe: _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
+	ocamlfind ocamlopt -linkpkg -linkall \
+		-package ocaml-migrate-parsetree,unix \
+		-I _build/scripts/ppx_gen_flowlibs \
+		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa \
+		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa \
+		-o "$@"
 
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
@@ -351,7 +381,7 @@ test-tool: bin/flow$(EXE)
 test: bin/flow$(EXE)
 	${MAKE} do-test
 
-js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	mkdir -p bin
 	# NOTE: temporarily disabling warning 31 because
 	# hack/third-party/core/result.ml and the opam `result` module both define

@@ -1,8 +1,25 @@
-# Flow [![Build Status](https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield)](https://circleci.com/gh/facebook/flow/tree/master) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/thyvx6i5nixtoocm/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/flow/branch/master)
+# Flow [![Build Status](https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield)](https://circleci.com/gh/facebook/flow/tree/master) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/thyvx6i5nixtoocm/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/flow/branch/master) [![Join the chat at https://discordapp.com/invite/8ezwRUK](https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white)](https://discordapp.com/invite/8ezwRUK)
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
 For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
+
+## Contents
+
+- [Requirements](#requirements)
+- [Installing Flow](#installing-flow)
+ 	- [Installing Flow Per Project](#installing-flow-per-project)
+ 	- [Installing Flow Globally](#installing-flow-globally)
+- [Getting started](#getting-started)
+- [Building Flow](#building-flow)
+- [Building Flow on Windows](#building-flow-on-windows)
+	- [Install Cygwin](#install-cygwin)
+	- [Install Opam](#install-opam)
+	- [Install Flow](#install-flow)
+- [Using Flow's parser from JavaScript](#using-flows-parser-from-javascript)
+- [Join the Flow community](#join-the-flow-community)
+- [License](#license)
+
 
 ## Requirements
 
@@ -189,7 +206,7 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 
 ## Join the Flow community
 * Website: [https://flow.org](https://flow.org/)
-* Discord (for contributors): https://discord.gg/8ezwRUK
+* Discord: https://discord.gg/8ezwRUK
 * irc: #flowtype on Freenode
 * Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
 * Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)

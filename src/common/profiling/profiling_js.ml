@@ -790,7 +790,15 @@ module Memory: sig
   type finished
   val with_memory_lwt: label:string -> f:(running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
   val legacy_sample_memory: metric:string -> value:float -> running -> unit
-  val sample_memory: metric:string -> value:float -> running -> unit
+  val sample_memory: group:string -> metric:string -> value:float -> running -> unit
+  val add_memory:
+    group:string ->
+    metric:string ->
+    start:float ->
+    delta:float ->
+    hwm_delta:float ->
+    running ->
+    unit
   val to_json: abridged:bool -> finished -> Hh_json.json
   val print_summary_memory_table: finished -> unit
   val merge: from:finished -> into:running -> unit
@@ -803,28 +811,57 @@ end = struct
   }
 
   and running' = {
-    running_results: memory_result SMap.t;
+    running_groups_rev: string list;
+    running_results: memory_result SMap.t SMap.t;
     running_sub_results_rev: finished list;
   }
   and running = running' ref
   and finished = {
     finished_label: string;
-    finished_results: memory_result SMap.t;
+    finished_groups: string list;
+    finished_results: memory_result SMap.t SMap.t;
     finished_sub_results: finished list;
   }
 
+  let legacy_group = "<Legacy>"
+
   let with_memory_lwt ~label ~f =
     let running_memory = ref {
+      running_groups_rev = [];
       running_results = SMap.empty;
       running_sub_results_rev = [];
     } in
     let%lwt ret = f running_memory in
     let finished_memory = {
       finished_label = label;
+      finished_groups = List.rev !running_memory.running_groups_rev;
       finished_results = !running_memory.running_results;
       finished_sub_results = List.rev (!running_memory.running_sub_results_rev);
     } in
     Lwt.return (finished_memory, ret)
+
+  let get_group_map ~group running_memory =
+    match SMap.get group !running_memory.running_results with
+    | None ->
+      running_memory := { !running_memory with
+        running_groups_rev = group :: !running_memory.running_groups_rev;
+        running_results = SMap.add group SMap.empty !running_memory.running_results;
+      };
+      SMap.empty
+    | Some group -> group
+
+  let get_metric ~group ~metric running_memory =
+    get_group_map ~group running_memory
+    |> SMap.get metric
+
+  let set_metric ~group ~metric entry running_memory =
+    let group_map =
+      get_group_map ~group running_memory
+      |> SMap.add metric entry
+    in
+    running_memory := { !running_memory with
+      running_results = SMap.add group group_map (!running_memory.running_results);
+    }
 
   let legacy_sample_memory ~metric ~value running_memory =
     let legacy_metric = {
@@ -833,45 +870,54 @@ end = struct
       high_water_mark_delta = value;
       is_legacy = true;
     } in
-    running_memory := { !running_memory with
-      running_results = SMap.add metric legacy_metric (!running_memory.running_results);
-    }
+    set_metric ~group:legacy_group ~metric legacy_metric running_memory
 
-  let start_sampling ~metric ~value running_memory =
+  let start_sampling ~group ~metric ~value running_memory =
     let new_metric = {
       start = value;
       delta = 0.0;
       high_water_mark_delta = 0.0;
       is_legacy = false;
     } in
-    running_memory := { !running_memory with
-      running_results = SMap.add metric new_metric (!running_memory.running_results);
-    }
-  let sample_memory ~metric ~value running_memory =
-    match SMap.get metric (!running_memory.running_results) with
-    | None -> start_sampling ~metric ~value running_memory
+    set_metric ~group ~metric new_metric running_memory
+
+  let sample_memory ~group ~metric ~value running_memory =
+    match get_metric ~group ~metric running_memory with
+    | None -> start_sampling ~group ~metric ~value running_memory
     | Some old_metric ->
       let new_metric = { old_metric with
         delta = value -. old_metric.start;
         high_water_mark_delta = max (value -. old_metric.start) old_metric.high_water_mark_delta;
       } in
-      running_memory := { !running_memory with
-        running_results = SMap.add metric new_metric (!running_memory.running_results)
-      }
+      set_metric ~group ~metric new_metric running_memory
+
+  let add_memory ~group ~metric ~start ~delta ~hwm_delta running_memory =
+    let new_metric = {
+      start;
+      delta;
+      high_water_mark_delta = hwm_delta;
+      is_legacy = false;
+    } in
+    set_metric ~group ~metric new_metric running_memory
 
   let rec to_json ~abridged finished_memory =
     let open Hh_json in
-    let object_props = finished_memory.finished_results
-    |> SMap.map (fun v ->
-      if v.is_legacy
-      then JSON_Number (Dtoa.ecma_string_of_float v.delta)
-      else JSON_Object [
-        ("start", JSON_Number (Dtoa.ecma_string_of_float v.start));
-        ("delta", JSON_Number (Dtoa.ecma_string_of_float v.delta));
-        ("hwm_delta", JSON_Number (Dtoa.ecma_string_of_float v.high_water_mark_delta));
-      ]
-    )
-    |> SMap.elements in
+    let object_props = SMap.fold (fun group_name group props ->
+      if group_name = legacy_group
+      then
+        SMap.fold (fun k v props ->
+          (k, JSON_Number (Dtoa.ecma_string_of_float v.delta))::props
+        ) group props
+      else
+        let group_json = SMap.fold (fun k v props ->
+          (k, JSON_Object [
+            ("start", JSON_Number (Dtoa.ecma_string_of_float v.start));
+            ("delta", JSON_Number (Dtoa.ecma_string_of_float v.delta));
+            ("hwm_delta", JSON_Number (Dtoa.ecma_string_of_float v.high_water_mark_delta));
+          ])::props
+        ) group [] in
+        (group_name, JSON_Object group_json)::props
+    ) finished_memory.finished_results [] in
     let object_props =
       if abridged
       then object_props
@@ -897,11 +943,18 @@ end = struct
     in
 
     let pretty_pct num denom =
-      if denom = 0.0 then "(--N/A--)" else Printf.sprintf "(%+5.1f%%)" (100.0 *. num /. denom)
+      if denom = 0.0
+      then "(--N/A--)"
+      else
+        let fraction = num /. denom in
+        if fraction >= 10.0 (* e.g "( +20.4x)" fits the space whereas (+2040.0%) doesn't *)
+        then Printf.sprintf "(%+6.1fx)" fraction
+        else Printf.sprintf "(%+6.1f%%)" (fraction *. 100.0)
     in
 
     (* Prints a single row of the table. All but the last column have a fixed width. *)
     let print_summary_single ~indent key result =
+      let indent = String.make indent ' ' in
       Printf.eprintf "%s        %s %s    %s %s    %s%s\n%!"
         (pretty_num result.start)
         (pretty_num result.delta)
@@ -912,12 +965,20 @@ end = struct
         key
     in
 
-    let header_without_section = "  START                   DELTA              HWM DELTA    " in
+    let header_without_section = "  START                DELTA               HWM DELTA          " in
     let pre_section_whitespace = String.make (String.length header_without_section) ' ' in
+
+    let print_group ~indent finished_results group_name =
+      Option.iter (SMap.get group_name finished_results) ~f:(fun group ->
+        let indent_str = String.make (String.length header_without_section + indent - 2) ' ' in
+        Printf.eprintf "%s== %s ==\n%!" indent_str group_name;
+        SMap.iter (print_summary_single ~indent:(indent+2)) group
+      )
+    in
 
     let print_header label =
       let label = Printf.sprintf "%s Memory Stats" label in
-      let header = header_without_section ^ "  SECTION" in
+      let header = header_without_section ^ "SECTION" in
       let header_len = String.length header + 8 in
       let whitespace_len = header_len - (String.length label) in
       Printf.eprintf "%s%s%s\n%!"
@@ -927,19 +988,24 @@ end = struct
     in
 
     let rec print_finished ~indent results =
-      SMap.iter (print_summary_single ~indent) results.finished_results;
-      let new_indent = indent ^ "  " in
-      List.iter (fun sub_result ->
-        Printf.eprintf "%s%s%s\n%!" pre_section_whitespace indent sub_result.finished_label;
-        print_finished ~indent:new_indent sub_result
-      ) results.finished_sub_results
+      if not (SMap.is_empty results.finished_results) || results.finished_sub_results <> []
+      then begin
+        let header_indent = String.make indent '=' in
+        Printf.eprintf "%s%s %s %s\n%!"
+          pre_section_whitespace header_indent results.finished_label header_indent;
+        let indent = indent + 2 in
+        List.iter (print_group ~indent results.finished_results) results.finished_groups;
+        List.iter (fun sub_result ->
+          print_finished ~indent sub_result
+        ) results.finished_sub_results
+      end
     in
 
     fun memory ->
       if SMap.cardinal memory.finished_results > 0 || memory.finished_sub_results <> []
       then begin
         print_header memory.finished_label;
-        print_finished ~indent:"" memory
+        print_finished ~indent:2 memory
       end
 
   let merge ~from ~into =
@@ -960,9 +1026,9 @@ type finished = {
 
 let print_summary profile =
   Printf.eprintf "\n%!";
-  Timing.print_summary_timing_table profile.finished_timing;
-  Printf.eprintf "\n%!";
   Memory.print_summary_memory_table profile.finished_memory;
+  Printf.eprintf "\n%!";
+  Timing.print_summary_timing_table profile.finished_timing;
   Printf.eprintf "\n%!"
 
 let with_profiling_lwt ~label ~should_print_summary f =
@@ -991,8 +1057,15 @@ let with_timer_lwt ?should_print ~timer ~f profile =
 let legacy_sample_memory ~metric ~value profile =
   Memory.legacy_sample_memory ~metric ~value profile.running_memory
 
-let sample_memory ~metric ~value profile =
-  Memory.sample_memory ~metric ~value profile.running_memory
+let total_memory_group = "<Total>"
+
+let sample_memory ~group ~metric ~value profile =
+  Memory.sample_memory ~group:total_memory_group ~metric ~value profile.running_memory;
+  Memory.sample_memory ~group ~metric ~value profile.running_memory
+
+let add_memory ~group ~metric ~start ~delta ~hwm_delta profile =
+  Memory.add_memory ~group:total_memory_group ~metric ~start ~delta ~hwm_delta profile.running_memory;
+  Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory
 
 let to_json_properties profile =
   [

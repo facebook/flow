@@ -7,14 +7,14 @@
 
 open Utils_js
 
-val dependent_files:
+val calc_direct_dependents:
   reader: Abstract_state_reader.t ->
   MultiWorkerLwt.worker list option -> (* workers *)
   candidates:FilenameSet.t ->
   root_files:FilenameSet.t ->
   root_modules:Modulename.Set.t ->
-  (* (transitive_dependents, direct_dependents) of changed_modules *)
-  (FilenameSet.t * FilenameSet.t) Lwt.t
+  (* direct_dependents of changed_modules *)
+  FilenameSet.t Lwt.t
 
 type dependency_graph = FilenameSet.t FilenameMap.t
 
@@ -43,7 +43,7 @@ val calc_all_dependencies:
   FilenameSet.t ->
   FilenameSet.t
 
-val calc_all_reverse_dependencies:
+val calc_all_dependents:
   Dependency_info.t ->
   FilenameSet.t ->
   FilenameSet.t

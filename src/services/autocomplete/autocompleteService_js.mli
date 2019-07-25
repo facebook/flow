@@ -6,6 +6,7 @@
  *)
 
 val autocomplete_get_results:
+  reader:Parsing_heaps.Reader.reader ->
   Context.t ->
   File_sig.With_Loc.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->

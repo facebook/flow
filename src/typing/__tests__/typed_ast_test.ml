@@ -24,6 +24,7 @@ let metadata = { Context.
   (* global *)
   max_literal_length = 100;
   enable_const_params = false;
+  enable_enums = true;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
@@ -31,23 +32,27 @@ let metadata = { Context.
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  exact_by_default = false;
   facebook_fbs = None;
   facebook_fbt = None;
   haste_module_ref_prefix = None;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
+  recursion_limit = 10000;
   root = Path.dummy_path;
   strip_root = true;
   suppress_comments = [];
   suppress_types = SSet.empty;
   default_lib_dir = None;
   trust_mode = Options.NoTrust;
+  type_asserts = false;
 }
 
 (* somewhat copied from Flow_dot_js *)
 let parse_content file content =
   let parse_options = Some Parser_env.({
+    enums = true;
     esproposal_class_instance_fields = true;
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
@@ -105,14 +110,15 @@ let before_and_after_stmts file_name =
   | Ok ((_, stmts, _), file_sig) ->
     let cx =
       let sig_cx = Context.make_sig () in
-      Context.make sig_cx metadata file_key Files.lib_module_ref
+      let aloc_table = Utils_js.FilenameMap.empty in
+      Context.make sig_cx metadata file_key aloc_table Files.lib_module_ref Context.Checking
     in
     Flow_js.mk_builtins cx;
     Flow_js.Cache.clear ();
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
     Env.init_env cx module_scope;
-    let stmts = Core_list.map ~f:Ast_loc_utils.abstractify_mapper#statement stmts in
+    let stmts = Core_list.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
     let t_stmts =
       try
         Statement.toplevel_decls cx stmts;

@@ -18,6 +18,7 @@ and line_col = {
 
 val create: ?file:string -> ?source_root:string -> unit -> t
 
+val freeze_for_lookup: t -> t
 val find_original: t -> line_col -> original option
 
 val compose: t -> t -> t

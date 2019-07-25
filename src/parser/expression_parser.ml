@@ -10,7 +10,6 @@ module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
-module Error = Parse_error
 open Parser_common
 
 module type EXPRESSION = sig
@@ -80,6 +79,7 @@ module Expression
   let as_pattern = Pattern_cover.as_pattern
 
   (* AssignmentExpression :
+   *   [+Yield] YieldExpression
    *   ConditionalExpression
    *   LeftHandSideExpression = AssignmentExpression
    *   LeftHandSideExpression AssignmentOperator AssignmentExpression
@@ -106,7 +106,7 @@ module Expression
 
     in let error_callback _ = function
       (* Don't rollback on these errors. *)
-      | Error.StrictReservedWord -> ()
+      | Parse_error.StrictReservedWord -> ()
       (* Everything else causes a rollback *)
       | _ -> raise Try.Rollback
 
@@ -163,7 +163,7 @@ module Expression
     as_expression env (assignment_cover env)
 
   and yield env = with_loc (fun env ->
-    if in_formal_parameters env then error env Error.YieldInFormalParameters;
+    if in_formal_parameters env then error env Parse_error.YieldInFormalParameters;
     Expect.token env T_YIELD;
     let argument, delegate =
       if Peek.is_implicit_semicolon env then None, false
@@ -249,6 +249,10 @@ module Expression
     if op <> None then Eat.token env;
     op
 
+  (* ConditionalExpression :
+   *   LogicalExpression
+   *   LogicalExpression ? AssignmentExpression : AssignmentExpression
+   *)
   and conditional_cover env =
     let start_loc = Peek.loc env in
     let expr = logical_cover env in
@@ -270,6 +274,19 @@ module Expression
 
   and conditional env = as_expression env (conditional_cover env)
 
+  (*
+   * LogicalANDExpression :
+   *   BinaryExpression
+   *   LogicalANDExpression && BitwiseORExpression
+   *
+   * LogicalORExpression :
+   *   LogicalANDExpression
+   *   LogicalORExpression || LogicalANDExpression
+   *   LogicalORExpression ?? LogicalANDExpression
+   *
+   * LogicalExpression :
+   *   LogicalORExpression
+   *)
   and logical_cover =
     let open Expression in
     let make_logical env left right operator loc =
@@ -371,7 +388,7 @@ module Expression
       then begin
         match right with
         | Cover_expr (_, Expression.JSXElement _) ->
-            error env Error.AdjacentJSXElements
+            error env Parse_error.AdjacentJSXElements
         | _ -> ()
       end;
       match stack, binary_op env with
@@ -382,7 +399,7 @@ module Expression
         Cover_expr (collapse_stack right right_loc stack)
       | _, Some (rop, rpri) ->
         if is_unary && rop = Expression.Binary.Exp then
-          error_at env (right_loc, Error.InvalidLHSInExponentiation);
+          error_at env (right_loc, Parse_error.InvalidLHSInExponentiation);
         let right = as_expression env right in
         helper env (add_to_stack right (rop, rpri) right_loc stack)
 
@@ -408,6 +425,7 @@ module Expression
 
   and unary_cover env =
     let begin_loc = Peek.loc env in
+    let leading = Peek.comments env in
     let op = peek_unary_op env in
     match op with
     | None -> begin
@@ -421,11 +439,11 @@ module Expression
             Eat.token env;
             let end_loc, argument = with_loc unary env in
             if not (is_lhs argument)
-            then error_at env (fst argument, Error.InvalidLHSInAssignment);
+            then error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
             (match argument with
             | _, Expression.Identifier (_, { Identifier.name; comments= _ })
               when is_restricted name ->
-                strict_error env Error.StrictLHSPrefix
+                strict_error env Parse_error.StrictLHSPrefix
             | _ -> ());
             let loc = Loc.btwn begin_loc end_loc in
             Cover_expr (loc, Expression.(Update { Update.
@@ -440,16 +458,17 @@ module Expression
       let loc = Loc.btwn begin_loc end_loc in
       Expression.(match operator, argument with
       | Unary.Delete, (_, Identifier _) ->
-          strict_error_at env (loc, Error.StrictDelete)
+          strict_error_at env (loc, Parse_error.StrictDelete)
       | Unary.Delete, (_, Member member) ->
           begin match member.Ast.Expression.Member.property with
           | Ast.Expression.Member.PropertyPrivateName _ ->
-              error_at env (loc, Error.PrivateDelete)
+              error_at env (loc, Parse_error.PrivateDelete)
           | _ -> () end
       | _ -> ());
       Cover_expr (loc, Expression.(Unary { Unary.
         operator;
         argument;
+        comments= (Flow_ast_utils.mk_comments_opt ~leading ())
       }))
 
   and unary env = as_expression env (unary_cover env)
@@ -468,11 +487,11 @@ module Expression
     | Some operator ->
         let argument = as_expression env argument in
         if not (is_lhs argument)
-        then error_at env (fst argument, Error.InvalidLHSInAssignment);
+        then error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
         (match argument with
         | _, Expression.Identifier (_, { Identifier.name; comments= _ })
           when is_restricted name ->
-            strict_error env Error.StrictLHSPostfix
+            strict_error env Parse_error.StrictLHSPostfix
         | _ -> ());
         let end_loc = Peek.loc env in
         Eat.token env;
@@ -731,7 +750,7 @@ module Expression
       (* super.PrivateName is a syntax error *)
       begin match left with
       | Cover_expr (_, Ast.Expression.Super) when is_private ->
-          error_at env (loc, Error.SuperPrivate)
+          error_at env (loc, Parse_error.SuperPrivate)
       | _ -> () end;
       let member = Expression.Member.({
         _object = as_expression env left;
@@ -794,12 +813,14 @@ module Expression
     let sig_loc, (id, params, generator, predicate, return, tparams) = with_loc (fun env ->
       Expect.token env T_FUNCTION;
       let generator = Declaration.generator env in
-      let yield, await = match async, generator with
-      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
-      | true, false -> false, true (* #prod-AsyncFunctionExpression *)
-      | false, true -> true, false (* #prod-GeneratorExpression *)
-      | false, false -> false, false (* #prod-FunctionExpression *)
-      in
+      (* `await` is a keyword in async functions:
+          - proposal-async-iteration/#prod-AsyncGeneratorExpression
+          - #prod-AsyncFunctionExpression *)
+      let await = async in
+      (* `yield` is a keyword in generator functions:
+          - proposal-async-iteration/#prod-AsyncGeneratorExpression
+          - #prod-GeneratorExpression *)
+      let yield = generator in
       let id, tparams =
         if Peek.token env = T_LPAREN
         then None, None
@@ -808,7 +829,7 @@ module Expression
             | T_LESS_THAN -> None
             | _ ->
               let env = env |> with_allow_await await |> with_allow_yield yield in
-              Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
+              Some (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env) in
           id, Type.type_parameter_declaration env
         end in
 
@@ -838,12 +859,12 @@ module Expression
   and number env kind raw =
     let value = match kind with
     | LEGACY_OCTAL ->
-      strict_error env Error.StrictOctalLiteral;
+      strict_error env Parse_error.StrictOctalLiteral;
       begin try Int64.to_float (Int64.of_string ("0o"^raw))
       with Failure _ -> failwith ("Invalid legacy octal "^raw)
       end
     | LEGACY_NON_OCTAL ->
-      strict_error env Error.StrictNonOctalLiteral;
+      strict_error env Parse_error.StrictNonOctalLiteral;
       begin try float_of_string raw
       with Failure _ -> failwith ("Invalid number "^raw)
       end
@@ -902,7 +923,7 @@ module Expression
         let trailing = Peek.comments env in
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
     | T_STRING (loc, value, raw, octal) ->
-        if octal then strict_error env Error.StrictOctalLiteral;
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         let value = Literal.String value in
         let trailing = Peek.comments env in
@@ -1100,13 +1121,13 @@ module Expression
       | _ -> ()) raw_flags;
     let flags = Buffer.contents filtered_flags in
     if flags <> raw_flags
-    then error env (Error.InvalidRegExpFlags raw_flags);
+    then error env (Parse_error.InvalidRegExpFlags raw_flags);
     let value = Literal.(RegExp { RegExp.pattern; flags; }) in
     loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); })
 
   and try_arrow_function =
     (* Certain errors (almost all errors) cause a rollback *)
-    let error_callback _ = Error.(function
+    let error_callback _ = Parse_error.(function
       (* Don't rollback on these errors. *)
       | StrictParamName
       | StrictReservedWord
@@ -1141,7 +1162,7 @@ module Expression
         if Peek.is_identifier env && tparams = None
         then
           let (loc, _) as name =
-            Parse.identifier ~restricted_error:Error.StrictParamName env in
+            Parse.identifier ~restricted_error:Parse_error.StrictParamName env in
           let param = loc, { Ast.Function.Param.
             argument = loc, Pattern.Identifier { Pattern.Identifier.
               name;
@@ -1183,7 +1204,7 @@ module Expression
       in
 
       if Peek.is_line_terminator env && Peek.token env = T_ARROW
-      then error env Error.NewlineBeforeArrow;
+      then error env Parse_error.NewlineBeforeArrow;
       Expect.token env T_ARROW;
 
       (* Now we know for sure this is an arrow function *)
@@ -1227,6 +1248,6 @@ module Expression
       is_private, id
     ) env in
     if is_private && start_loc.Loc._end <> (fst id).Loc.start then
-      error_at env (loc, Error.WhitespaceInPrivateName);
+      error_at env (loc, Parse_error.WhitespaceInPrivateName);
     loc, id, is_private
 end

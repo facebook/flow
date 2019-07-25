@@ -100,7 +100,7 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
   let open Ast.Statement in
   match stmt with
   | Block {Block.body} -> body
-  | If {If.test; consequent; alternate} ->
+  | If {If.test; consequent; alternate; comments = _} ->
       [statement_of_expression test; consequent]
       @ statement_list_of_option alternate
   | Labeled {Labeled.body; _} -> [body]
@@ -141,7 +141,7 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
           nodes @ node_list_of_option ~f:get_children_nodes_expr init )
         [] declarations
   | While {While.test; body} -> [statement_of_expression test; body]
-  | DoWhile {DoWhile.test; body} -> [statement_of_expression test; body]
+  | DoWhile {DoWhile.test; body; comments = _} -> [statement_of_expression test; body]
   | For {For.init; test; update; body} ->
       let init_nodes =
         node_list_of_option
@@ -196,6 +196,7 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
   | Expression {Expression.expression; _} -> get_children_nodes_expr expression
   | Debugger -> []
   | Empty -> []
+  | EnumDeclaration _ -> []
   | Break _ -> []
   | ClassDeclaration clazz -> get_children_nodes_class clazz
   | Continue _ -> []

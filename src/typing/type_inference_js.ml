@@ -160,7 +160,7 @@ let scan_for_lint_suppressions =
   let split_delim_locational delim { loc; value } =
     let delim_str = String.make 1 delim in
     let source = loc.Loc.source in
-    let parts = String_utils.split_on_char delim value in
+    let parts = String.split_on_char delim value in
     let parts, _ = List.fold_left (fun (parts, start) value ->
       let _end = update_pos start value in
       let next_start = update_pos _end delim_str in
@@ -432,9 +432,8 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
   Env.init_env cx module_scope;
 
   let file_loc = Loc.({ none with source = Some filename }) |> ALoc.of_loc in
-  let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
+  let reason = Reason.mk_reason Reason.RExports file_loc in
 
-  let initial_module_t = ImpExp.module_t_of_cx cx in
   let init_exports = Obj_type.mk cx reason in
   ImpExp.set_module_exports cx file_loc init_exports;
 
@@ -444,27 +443,39 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
 
   scan_for_suppressions cx lint_severities file_options comments;
 
-  let module_t = Context.(
-    match Context.module_kind cx with
-    (* CommonJS with a clobbered module.exports *)
-    | CommonJSModule(Some(loc)) ->
-      let module_exports_t = ImpExp.get_module_exports cx file_loc in
-      let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
-      ImpExp.mk_commonjs_module_t cx reason_exports_module
-        reason module_exports_t
-
-    (* CommonJS with a mutated 'exports' object *)
-    | CommonJSModule(None) ->
-      ImpExp.mk_commonjs_module_t cx reason_exports_module
-        reason local_exports_var
-
-    (* Uses standard ES module exports *)
-    | ESModule -> ImpExp.mk_module_t cx reason_exports_module
-  ) in
-  Flow_js.flow_t cx (module_t, initial_module_t);
+  let module_t = Import_export.mk_module_t cx reason in
+  Context.add_module cx module_ref module_t;
 
   prog_aloc, typed_statements, aloc_comments
 
+
+(* Because libdef parsing is overly permissive, a libdef file might include an
+   unexpected top-level statement like `export type` which mutates the module
+   map and overwrites the builtins object.
+
+   Since all libdefs share a sig_cx, this mutation will cause problems in later
+   lib files if not unwound.
+
+   Until we can restrict libdef parsing to forbid unexpected behaviors like
+   this, we need this wrapper to preserve the existing behavior. However, none
+   of this should be necessary.
+*)
+let with_libdef_builtins cx f =
+  (* Store the original builtins and replace with a fresh tvar. *)
+  let orig_builtins = Flow_js.builtins cx in
+  Flow_js.mk_builtins cx;
+
+  (* This function call might replace the builtins we just installed. *)
+  f ();
+
+  (* Connect the original builtins to the one we just calculated. *)
+  let () =
+    let builtins = Context.find_module cx Files.lib_module_ref in
+    Flow_js.flow_t cx (orig_builtins, builtins)
+  in
+
+  (* Restore the original builtins tvar for the next file. *)
+  Context.add_module cx Files.lib_module_ref orig_builtins
 
 (* infer a parsed library file.
    processing is similar to an ordinary module, except that
@@ -472,7 +483,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
    b) bindings are added as properties to the builtin object
  *)
 let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast =
-  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let _, _, comments = ast in
   let _, aloc_statements, _ = aloc_ast in
   Flow_js.Cache.clear();
@@ -486,8 +497,10 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;
 
-  ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
-  scan_for_suppressions cx lint_severities file_options comments;
+  with_libdef_builtins cx (fun () ->
+    ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
+    scan_for_suppressions cx lint_severities file_options comments;
+  );
 
   module_scope |> Scope.(iter_entries Entry.(fun name entry ->
     Flow_js.set_builtin cx name (actual_type entry)

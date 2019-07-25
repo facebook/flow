@@ -11,19 +11,19 @@ type esproposal_feature_mode =
   | ESPROPOSAL_WARN
 
 type file_watcher =
-| NoFileWatcher
-| DFind
-| Watchman
+  | NoFileWatcher
+  | DFind
+  | Watchman
 
 type module_system =
   | Node
   | Haste
 
 type lazy_mode =
-| LAZY_MODE_FILESYSTEM
-| LAZY_MODE_IDE
-| LAZY_MODE_WATCHMAN
-| NON_LAZY_MODE
+  | LAZY_MODE_FILESYSTEM
+  | LAZY_MODE_IDE
+  | LAZY_MODE_WATCHMAN
+  | NON_LAZY_MODE
 
 type jsx_mode =
   (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
@@ -44,9 +44,9 @@ type jsx_mode =
   | Jsx_csx
 
 type saved_state_fetcher =
-| Dummy_fetcher
-| Local_fetcher
-| Fb_fetcher
+  | Dummy_fetcher
+  | Local_fetcher
+  | Fb_fetcher
 
 type arch =
   | Classic
@@ -66,12 +66,14 @@ type t = {
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
   opt_enforce_well_formed_exports_whitelist: string list;
+  opt_enums: bool;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
   opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
+  opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_flowconfig_name: string;
@@ -83,6 +85,7 @@ type t = {
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_warnings: bool;
+  opt_max_files_checked_per_worker: int;
   opt_max_workers: int;
   opt_merge_timeout: float option;
   opt_module: module_system;
@@ -94,6 +97,7 @@ type t = {
   opt_profile : bool;
   opt_lazy_mode: lazy_mode;
   opt_quiet : bool;
+  opt_recursion_limit : int;
   opt_root : Path.t;
   opt_root_name : string option;
   opt_saved_state_fetcher: saved_state_fetcher;
@@ -112,14 +116,18 @@ type t = {
   opt_strict_mode: StrictModeSettings.t;
   opt_arch: arch;
   opt_include_suppressions : bool;
-  opt_trust_mode: trust_mode
+  opt_trust_mode: trust_mode;
+  opt_type_asserts: bool;
 }
 
+let abstract_locations opts = opts.opt_abstract_locations
 let all opts = opts.opt_all
+let arch opts = opts.opt_arch
 let max_literal_length opts = opts.opt_max_literal_length
 let enable_const_params opts = opts.opt_enable_const_params
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
+let enums opts = opts.opt_enums
 let esproposal_class_static_fields opts =
   opts.opt_esproposal_class_static_fields
 let esproposal_class_instance_fields opts =
@@ -128,6 +136,7 @@ let esproposal_decorators opts = opts.opt_esproposal_decorators
 let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
 let esproposal_optional_chaining opts = opts.opt_esproposal_optional_chaining
 let esproposal_nullish_coalescing opts = opts.opt_esproposal_nullish_coalescing
+let exact_by_default opts = opts.opt_exact_by_default
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 let haste_name_reducers opts = opts.opt_haste_name_reducers
 let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
@@ -139,6 +148,7 @@ let is_debug_mode opts = opts.opt_debug
 let is_lazy_mode opts = opts.opt_lazy_mode <> NON_LAZY_MODE
 let lazy_mode opts = opts.opt_lazy_mode
 let is_quiet opts = opts.opt_quiet
+let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
@@ -148,6 +158,7 @@ let module_resolver opts = opts.opt_module_resolver
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let no_saved_state opts = opts.opt_no_saved_state
+let recursion_limit opts = opts.opt_recursion_limit
 let root opts = opts.opt_root
 let root_name opts = opts.opt_root_name
 let facebook_fbs opts = opts.opt_facebook_fbs
@@ -173,6 +184,7 @@ let lint_severities opts = opts.opt_lint_severities
 let strict_mode opts = opts.opt_strict_mode
 
 let trust_mode opts = opts.opt_trust_mode
+let type_asserts opts = opts.opt_type_asserts
 
 
 let lazy_mode_to_string lazy_mode =

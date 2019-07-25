@@ -101,31 +101,23 @@ References:
                                                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:5:26
+Error ----------------------------------------------------------------------------------------------------- apply.js:5:2
 
-A spread argument is unsupported here.
+Cannot call `Object.assign.apply` because no more than 2 arguments are expected by function type [1].
 
-   5| (Object.assign.apply({}, {a: 1}, {b: 'foo'}): {a: number, b: string}); // error
-                               ^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- apply.js:5:26
-
-Property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [2].
-
-   apply.js:5:26
+   apply.js:5:2
      5| (Object.assign.apply({}, {a: 1}, {b: 'foo'}): {a: number, b: string}); // error
-                                 ^^^^^^ [1]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:530:11
-   530| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:124:18
+   124|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+                         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:7:2
 
-array literal [1] is not an object.
+Incorrect arguments passed to call of method `call` because array literal [1] is not an object.
 
    apply.js:7:2
    7| (Object.assign.call({}, [{a: 1}, {b: 'foo'}]): {a: number, b: string}); // error
@@ -163,8 +155,8 @@ Cannot cast `Object.assign.length` to string because number [1] is incompatible 
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:126:13
-   126|     length: number;
+   <BUILTINS>/core.js:130:13
+   130|     length: number;
                     ^^^^^^ [1]
    apply.js:12:25
     12| (Object.assign.length : string); // error
@@ -180,8 +172,8 @@ Cannot cast `Object.assign.name` to number because string [1] is incompatible wi
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:127:11
-   127|     name: string;
+   <BUILTINS>/core.js:131:11
+   131|     name: string;
                   ^^^^^^ [1]
    apply.js:14:23
     14| (Object.assign.name : number); // error
@@ -218,7 +210,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:5:1
 
-number [1] is not an object.
+Incorrect arguments passed to call of method `assign` because number [1] is not an object.
 
    non_objects.js:5:1
    5| Object.assign({a: "foo"}, 123);
@@ -322,4 +314,4 @@ References:
 
 
 
-Found 20 errors
+Found 19 errors

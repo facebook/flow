@@ -471,7 +471,8 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
     | S.Expression { S.Expression.expression = expr; _ } ->
       let ctxt = { normal_context with left = In_expression_statement } in
       with_semicolon (expression_with_parens ~precedence:0 ~ctxt expr)
-    | S.If { S.If.test; consequent; alternate; } ->
+    | S.If { S.If.test; consequent; alternate; comments } ->
+      layout_node_with_simple_comments_opt loc comments
       begin match alternate with
       | Some alt ->
         fuse [
@@ -505,9 +506,9 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         | Some l -> fuse [s_break; space; identifier l]
         | None -> s_break;
       )
-    | S.Continue { S.Continue.label } ->
+    | S.Continue { S.Continue.label; comments } ->
       let s_continue = Atom "continue" in
-      with_semicolon (
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (
         match label with
         | Some l -> fuse [s_continue; space; identifier l]
         | None -> s_continue;
@@ -605,8 +606,8 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         statement_with_test "while" (expression test);
         statement_after_test ~pretty_semicolon body;
       ]
-    | S.DoWhile { S.DoWhile.body; test } ->
-      with_semicolon (fuse [
+    | S.DoWhile { S.DoWhile.body; test; comments } ->
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (fuse [
         fuse_with_space [
           Atom "do";
           statement body;
@@ -660,6 +661,7 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
     | S.VariableDeclaration decl ->
       with_semicolon (variable_declaration (loc, decl))
     | S.ClassDeclaration class_ -> class_base class_
+    | S.EnumDeclaration enum -> enum_declaration enum
     | S.ForOf { S.ForOf.left; right; body; async } ->
       fuse [
         Atom "for";
@@ -866,7 +868,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           ~sep:(Atom ",")
           (Core_list.map ~f:expression_or_spread arguments);
       ];
-    | E.Unary { E.Unary.operator; argument } ->
+    | E.Unary { E.Unary.operator; argument; comments } ->
       let s_operator, needs_space = begin match operator with
       | E.Unary.Minus -> Atom "-", false
       | E.Unary.Plus -> Atom "+", false
@@ -886,7 +888,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         } in
         expression_with_parens ~precedence ~ctxt argument
       in
-      fuse [
+      layout_node_with_simple_comments_opt loc comments @@ fuse [
         s_operator;
         if needs_space then begin match argument with
         | (_, E.Sequence _) -> Empty
@@ -1470,6 +1472,23 @@ and class_body (loc, { Ast.Class.Body.body }) =
     )
   else Atom "{}"
 
+and class_implements implements = match implements with
+  | [] -> None
+  | _ -> Some (fuse [
+      Atom "implements"; space;
+      fuse_list
+        ~sep:(Atom ",")
+        (List.map
+          (fun (loc, { Ast.Class.Implements.id; targs }) ->
+            source_location_with_comments (loc, fuse [
+              identifier id;
+              option type_parameter_instantiation targs;
+            ])
+          )
+          implements
+        )
+    ])
+
 and class_base { Ast.Class.
   id; body; tparams; extends;
   implements; classDecorators
@@ -1497,23 +1516,7 @@ and class_base { Ast.Class.
         ])
       | None -> None
       end;
-      begin match implements with
-      | [] -> None
-      | _ -> Some (fuse [
-          Atom "implements"; space;
-          fuse_list
-            ~sep:(Atom ",")
-            (List.map
-              (fun (loc, { Ast.Class.Implements.id; targs }) ->
-                source_location_with_comments (loc, fuse [
-                  identifier id;
-                  option type_parameter_instantiation targs;
-                ])
-              )
-              implements
-            )
-        ])
-      end;
+      class_implements implements;
     ] in
     match deoptionalize class_extends with
     | [] -> []
@@ -1536,6 +1539,69 @@ and class_base { Ast.Class.
   group [
     decorator_parts;
     group parts;
+  ]
+
+and enum_declaration {Ast.Statement.EnumDeclaration.id; body} =
+  let open Ast.Statement.EnumDeclaration in
+  let representation_type name explicit =
+    if explicit then
+      fuse [space; Atom "of"; space; Atom name]
+    else
+      Empty
+  in
+  let wrap_body members =
+    wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
+  in
+  let defaulted_member (_, {DefaultedMember.id}) = fuse [
+    identifier id;
+    Atom ","
+  ] in
+  let initialized_member id value_str = fuse [
+    identifier id;
+    pretty_space;
+    Atom "=";
+    pretty_space;
+    Atom value_str;
+    Atom ","
+  ] in
+  let boolean_member (_, {InitializedMember.id; init = (_, init_value)}) =
+    initialized_member id (if init_value then "true" else "false")
+  in
+  let number_member (_, {InitializedMember.id; init = (_, {Ast.NumberLiteral.raw; _})}) =
+    initialized_member id raw
+  in
+  let string_member (_, {InitializedMember.id; init = (_, {Ast.StringLiteral.raw; _})}) =
+    initialized_member id raw
+  in
+  let body = match body with
+    | BooleanBody {BooleanBody.members; explicitType} -> fuse [
+      representation_type "boolean" explicitType;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:boolean_member members;
+    ]
+    | NumberBody {NumberBody.members; explicitType} -> fuse [
+      representation_type "number" explicitType;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:number_member members;
+    ]
+    | StringBody {StringBody.members; explicitType} -> fuse [
+      representation_type "string" explicitType;
+      pretty_space;
+      wrap_body @@ match members with
+      | StringBody.Defaulted members -> Core_list.map ~f:defaulted_member members
+      | StringBody.Initialized members -> Core_list.map ~f:string_member members
+    ]
+    | SymbolBody {SymbolBody.members} -> fuse [
+      representation_type "symbol" true;
+      pretty_space;
+      wrap_body @@ Core_list.map ~f:defaulted_member members;
+    ]
+  in
+  fuse [
+    Atom "enum";
+    space;
+    identifier id;
+    body;
   ]
 
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)
@@ -1741,9 +1807,7 @@ and jsx_expression_container { Ast.JSX.ExpressionContainer.expression=expr } =
     Atom "{";
     begin match expr with
     | Ast.JSX.ExpressionContainer.Expression expr -> expression expr
-    | Ast.JSX.ExpressionContainer.EmptyExpression loc ->
-      (* Potentally we will need to inject comments here *)
-      source_location_with_comments (loc, Empty)
+    | Ast.JSX.ExpressionContainer.EmptyExpression -> Empty
     end;
     Atom "}";
   ]
@@ -2439,26 +2503,55 @@ and declare_interface interface =
   ]) interface
 
 and declare_class ?(s_type=Empty) { Ast.Statement.DeclareClass.
-  id; tparams; body=(loc, obj); extends; mixins=_; implements=_;
+  id; tparams; body=(loc, obj); extends; mixins; implements;
 } =
-  (* TODO: What are mixins? *)
-  (* TODO: Print implements *)
-  fuse [
+  let class_parts = [
     Atom "declare"; space;
     s_type;
     Atom "class"; space;
     identifier id;
     option type_parameter tparams;
-    begin match extends with
-    | None -> Empty
-    | Some (loc, generic) -> fuse [
-        space; Atom "extends"; space;
-        source_location_with_comments (loc, type_generic generic)
-      ]
-    end;
-    pretty_space;
-    source_location_with_comments (loc, type_object ~sep:(Atom ",") obj)
-  ]
+  ] in
+  let extends_parts =
+    let class_extends = [
+      begin match extends with
+      | Some (loc, generic) -> Some (fuse [
+          Atom "extends"; space;
+          source_location_with_comments (loc, type_generic generic)
+        ])
+      | None -> None
+      end;
+      begin match mixins with
+      | [] -> None
+      | xs -> Some (fuse [
+        Atom "mixins"; space;
+        fuse_list
+          ~sep:(Atom ",")
+          (List.map
+            (fun (loc, generic) -> source_location_with_comments (loc, type_generic generic))
+            xs
+          )
+        ])
+      end;
+      class_implements implements;
+    ] in
+    match deoptionalize class_extends with
+    | [] -> Empty
+    | items -> Layout.Indent (fuse [
+      line;
+      join line items;
+    ])
+  in
+  let body = source_location_with_comments (loc, type_object ~sep:(Atom ",") obj) in
+  let parts =
+    []
+    |> List.rev_append class_parts
+    |> List.cons extends_parts
+    |> List.cons pretty_space
+    |> List.cons body
+    |> List.rev
+  in
+  group parts
 
 and declare_function ?(s_type=Empty) { Ast.Statement.DeclareFunction.
   id; annot=(loc, t); predicate

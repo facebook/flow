@@ -10,6 +10,9 @@
   *)
 
 module Class_type_sig: Class_sig.S
+module Object_freeze: sig
+  val freeze_object: Context.t -> ALoc.t -> Type.t -> Type.t
+end
 
 val convert: Context.t ->
   Type.t SMap.t ->
@@ -85,7 +88,7 @@ val mk_declare_class_sig: Context.t ->
   (ALoc.t, ALoc.t) Flow_ast.Statement.DeclareClass.t ->
   Class_type_sig.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t
 
-val polarity: 'a Flow_ast.Variance.t option -> Type.polarity
+val polarity: 'a Flow_ast.Variance.t option -> Polarity.t
 
 val qualified_name: (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t -> string
 

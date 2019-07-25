@@ -63,24 +63,26 @@ class visitor ~ty_query = object(this)
 
   method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
-    match super#expression expr with
+    let expr' = super#expression expr in
+    match expr' with
     | loc, Function x ->
-      Flow_ast_mapper.id (this#callable_return loc) x expr (fun x -> loc, Function x)
+      Flow_ast_mapper.id (this#callable_return loc) x expr' (fun x -> loc, Function x)
     | loc, ArrowFunction x ->
-      Flow_ast_mapper.id (this#callable_return loc) x expr (fun x -> loc, ArrowFunction x)
-    | expr -> expr
+      Flow_ast_mapper.id (this#callable_return loc) x expr' (fun x -> loc, ArrowFunction x)
+    | _ -> expr'
 
   method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
     let open Ast.Statement in
-    match super#statement stmt with
+    let stmt' = super#statement stmt in
+    match stmt' with
     | (loc, FunctionDeclaration x) ->
-      Flow_ast_mapper.id (this#callable_return loc) x stmt (fun x -> loc, FunctionDeclaration x)
-    | stmt -> stmt
+      Flow_ast_mapper.id (this#callable_return loc) x stmt' (fun x -> loc, FunctionDeclaration x)
+    | _ -> stmt'
 
   method! object_property (prop: (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
     let open Ast.Expression.Object.Property in
-    let prop = super#object_property prop in
-    match prop with
+    let prop' = super#object_property prop in
+    match prop' with
     | loc, Method { value = (fn_loc, fn); key } ->
       (* NOTE here we are indexing the type tables through the location of
          the entire method. The coverage tables should account for that.
@@ -91,54 +93,43 @@ class visitor ~ty_query = object(this)
       *)
       let key' = this#object_key key in
       let fn' = this#callable_return fn_loc fn in
-      if key == key' && fn == fn' then prop
+      if key == key' && fn == fn' then prop'
       else (loc, Method { key = key'; value = (fn_loc, fn') })
-    | _ -> prop
+    | _ -> prop'
 
   method! class_method loc (meth: (Loc.t, Loc.t) Ast.Class.Method.t') =
     let open Ast.Class.Method in
     let open Ast.Expression.Object.Property in
-    let meth = super#class_method loc meth in
-    let { key; value = (loc, func); _ } = meth in
+    let meth' = super#class_method loc meth in
+    let { key; value = (loc, func); _ } = meth' in
     match key with
     | Identifier (id_loc, _) ->
       let func' = this#callable_return id_loc func in
-      { meth with value = (loc, func') }
-    | _ -> meth
+      { meth' with value = (loc, func') }
+    | _ -> meth'
 
-  method! function_param_pattern (expr: (Loc.t, Loc.t) Ast.Pattern.t) =
+  method! function_param_pattern (patt: (Loc.t, Loc.t) Ast.Pattern.t) =
     let open Ast.Pattern in
-    let (loc, patt) = expr in
-    let patt' = match patt with
-      | Identifier { Identifier.name; annot; optional } -> (
-          match annot with
-          | Ast.Type.Missing mis_loc ->
-            let annot = match this#inferred_type loc with
-              | Some annot -> Ast.Type.Available annot
-              | None -> Ast.Type.Missing mis_loc
-            in
-            Identifier { Identifier.name; annot; optional }
-          | Ast.Type.Available _ -> patt
-        )
-      | _ ->
-        let _, patt' = super#function_param_pattern expr in
-        patt'
-    in
-    if patt == patt' then expr else (loc, patt')
+    let open Identifier in
+    let patt' = super#function_param_pattern patt in
+    match patt' with
+    | (loc, Identifier ({annot=Ast.Type.Missing _; _} as id)) ->
+      begin match this#inferred_type loc with
+      | Some annot ->
+        (loc, Identifier {id with annot=(Ast.Type.Available annot)})
+      | None -> patt'
+      end
+    | _ -> patt'
 
   method callable_return loc func =
     let open Ast.Function in
     let { return; _ } = func in
-    let return' =
-      match return with
-      | Ast.Type.Available _ -> return
-      | Ast.Type.Missing missing_loc as miss ->
-        match this#inferred_type ~blame_loc:loc ~annotate_bottom:true missing_loc with
-        | Some annot -> Ast.Type.Available annot
-        | None -> miss
-    in
-    if return' == return
-      then func
-      else { func with return = return' }
+    match return with
+    | Ast.Type.Available _ -> func
+    | Ast.Type.Missing missing_loc -> begin
+      match this#inferred_type ~blame_loc:loc ~annotate_bottom:true missing_loc with
+      | Some annot -> {func with return=Ast.Type.Available annot}
+      | None -> func
+      end
 
 end

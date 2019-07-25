@@ -518,6 +518,70 @@ let tests_data = [
    "Expected annotation at function return @ (2, 42) to (2, 42)"],
   ["Reachable: bar, n"];
 
+  name "function_statics",
+  ["function bar(): void { };";
+   "const x = 42;";
+   "bar.x = x;";
+   "module.exports = bar;"],
+  [],
+  ["Reachable: bar, x"];
+
+  name "function_predicates_1",
+  ["class A {}";
+   "export function foo(x: mixed): boolean %checks {";
+   "  return x === new A;";
+   "}"],
+  ["Unsupported predicate expression @ (3, 15) to (3, 20)"],
+  ["Reachable: foo"];
+
+  name "function_predicates_2",
+  ["declare function bar(x: mixed): boolean %checks(x === null);";
+   "export function foo(x: mixed): boolean %checks {";
+   "  return bar(x);";
+   "}"],
+  [],
+  ["Reachable: bar, foo"];
+
+  name "function_predicates_3",
+  ["function bar(x: mixed): %checks { return x === null; }";
+   "declare export function foo(x: mixed): boolean %checks(bar(x));"],
+  ["Expected annotation at function return @ (1, 31) to (1, 31)"],
+  ["Reachable: bar, foo"];
+
+  name "function_predicates_4",
+  ["function one() { return 1; }";
+   "const n = one()";
+   "export function isOne(x: mixed): boolean %checks {";
+   "  return x === n;";
+   "}"],
+  ["Cannot determine the type of this call expression @ (2, 10) to (2, 15)"],
+  ["Reachable: isOne, n"];
+
+  name "function_predicates_5",
+  ["const one = 1;";
+   "export function isOne(x: mixed): boolean %checks {";
+   "  return x === one;";
+   "}"],
+  [],
+  ["Reachable: isOne, one"];
+
+  name "async_function_1",
+  ["async function foo() {};";
+   "module.exports = foo;"],
+  [],
+  ["Reachable: foo"];
+
+  name "async_function_2",
+  ["async function foo() { return 1; };";
+   "module.exports = foo;"],
+  ["Expected annotation at function return @ (1, 20) to (1, 20)"],
+  ["Reachable: foo"];
+
+  name "async_function_3",
+  ["module.exports = async () => await 1;"],
+  ["Expected annotation at function return @ (1, 25) to (1, 25)"],
+  [];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?facebook_fbt

@@ -491,6 +491,21 @@ struct
           (Hh_json.json_to_string ~pretty:true response);
          raise Exit_status.(Exit_with Watchman_failed)
 
+  let prepend_relative_path_term ~relative_path ~terms =
+    match terms with
+    | None -> None
+    | Some _ when relative_path = "" ->
+      (* If we're watching the watch root directory, then there's no point in specifying a list of
+       * files and directories to watch. We're already subscribed to any change in this watch root
+       * anyway *)
+      None
+    | Some terms ->
+      (* So lets say we're being told to watch foo/bar. Is foo/bar a directory? Is it a file? If it
+       * is a file now, might it become a directory later? I'm not aware of aterm which will watch for either a file or a directory, so let's add two terms *)
+      Some (
+        J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms
+      )
+
   let re_init ?prior_clockspec
     { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
 
@@ -504,32 +519,43 @@ struct
     let subscribe_mode = if supports_flush then subscribe_mode else None in
 
     Watchman_process.list_fold_values roots
-      ~init:(Some [], SSet.empty)
-      ~f: (fun (terms, watch_roots) path ->
-        (* Watch this root *)
-        Watchman_process.request
-          ~debug_logging ~conn (watch_project (Path.to_string path)) >|= fun response ->
-        let watch_root = J.get_string_val "watch" response in
-        let relative_path = J.get_string_val "relative_path" ~default:"" response in
+      ~init:(Some [], SSet.empty, SSet.empty)
+      ~f: (fun (terms, watch_roots, failed_paths) path ->
+        (* Watch this root. If the path doesn't exist, watch_project will throw. In that case catch
+         * the error and continue for now. *)
+        Watchman_process.catch
+          ~f:(fun () ->
+            Watchman_process.request
+              ~debug_logging ~conn (watch_project (Path.to_string path))
+            >|= fun response -> Some response)
+          ~catch:(fun ~stack:_ _ -> Watchman_process.return None)
+        >|= fun response ->
+          match response with
+          | None ->
+            terms, watch_roots, SSet.add (Path.to_string path) failed_paths
+          | Some response ->
+            let watch_root = J.get_string_val "watch" response in
+            let relative_path = J.get_string_val "relative_path" ~default:"" response in
 
-        let terms = match terms with
-        | None -> None
-        | Some _ when relative_path = "" ->
-          (* If we're watching the watch root directory, then there's no point in specifying a list
-           * of files and directories to watch. We're already subscribed to any change in this
-           * watch root anyway *)
-          None
-        | Some terms ->
-          (* So lets say we're being told to watch foo/bar. Is foo/bar a directory? Is it a file?
-           * If it is a file now, might it become a directory later? I'm not aware of a term which
-           * will watch for either a file or a directory, so let's add two terms *)
-          Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
-        in
+            let terms = prepend_relative_path_term ~relative_path ~terms in
 
-        let watch_roots = SSet.add watch_root watch_roots in
-        terms, watch_roots
+            let watch_roots = SSet.add watch_root watch_roots in
+            terms, watch_roots, failed_paths
       )
-    >>= fun (watched_path_expression_terms, watch_roots) ->
+    >>= fun (watched_path_expression_terms, watch_roots, failed_paths) ->
+
+    (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
+     * returned an error. Let's do a best effort attempt to infer the watch root and relative
+     * path for each bad include *)
+    let watched_path_expression_terms = SSet.fold (fun path terms ->
+      let open String_utils in
+      match SSet.find_first_opt (fun root -> string_starts_with path root) watch_roots with
+      | None ->
+        failwith (spf "Cannot deduce watch root for path %s" path)
+      | Some root ->
+        let relative_path = lstrip (lstrip path root) Filename.dir_sep in
+        prepend_relative_path_term ~relative_path ~terms
+    ) failed_paths watched_path_expression_terms in
 
     (* All of our watched paths should have the same watch root. Let's assert that *)
     let watch_root = match SSet.elements watch_roots with

@@ -23,7 +23,6 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DeprecatedEnumUtility
   | DynamicExport
   | UnsafeGettersSetters
   | InexactSpread
@@ -31,6 +30,8 @@ type lint_kind =
   | UnnecessaryInvariant
   | SignatureVerificationFailure
   | ImplicitInexactObject
+  | UninitializedInstanceProperty
+  | NonArraySpread
 
 val string_of_kind: lint_kind -> string
 

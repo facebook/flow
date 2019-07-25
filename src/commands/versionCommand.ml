@@ -49,7 +49,7 @@ let main json pretty semver _root () =
     let json = JSON_Object [
       "semver", JSON_String Flow_version.version;
       "binary", JSON_String (Sys_utils.executable_path ());
-      "build_id", JSON_String Build_id.build_id_ohai;
+      "build_id", JSON_String Build_id.build_revision;
       "flow_build_id", JSON_String (Flow_build_id.get_build_id ());
     ] in
     print_json_endline ~pretty json

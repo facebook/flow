@@ -1,22 +1,4 @@
 FLOW STATUS:
-Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
-
-Cannot resolve name `exports`.
-
-   4|   exports.foo = 5;
-        ^^^^^^^
-
-
-
-Found 1 error
+No errors!
 FLOW CHECK-CONTENTS:
-Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
-
-Cannot resolve name `exports`.
-
-   4|   exports.foo = 5;
-        ^^^^^^^
-
-
-
-Found 1 error
+No errors!

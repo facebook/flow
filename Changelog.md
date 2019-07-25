@@ -1,3 +1,84 @@
+### 0.103.0
+
+New Features:
+* Added `--types` flag to `flow cycle`, when given only type dependencies are used to compute cycles
+
+Notable bug fixes:
+* Fixed a bug when destructuring unions gave spurious errors [[example]](https://flow.org/try/#0GYVwdgxgLglg9mABMAFAbwA6ILyIAwC+AXIpiWCALYBGApgE4A+AzlPTGAOYECUpBAKFCRYCRJ3QZipDOSp16BRIxklW7Lr35A)
+* Updated for-in/for-of head expressions to be evaluated in the correct scope [[example]](https://flow.org/try/#0MYewdgzgLgBAHgLhgQQE6oIYE8A8YCuAtgEYCmqAfDALwwDaAugNwBQAZiKjABSiSxwYINvACUMAN4sY8VgF8gA)
+
+Performance:
+* Improved the calculation for what are dependents of a file, reducing work during rechecks
+
+Library definitions:
+* Added support for Array#flatMap (thanks @goodmind)
+* Replaced usages of `Object` and `Function` (which are aliases for `any`) in library definitions with `any`
+* Removed some usages of `any` from library definitions
+* Updated Function#apply to accept strictly two arguments (thanks @goodmind)
+* Added SpeechSynthesis definitions (thanks @goodmind)
+
+Misc:
+* Updated/added HTML spec URLs in comments (thanks @kevinSuttle)
+* Fixed parsing of anonymous class implements clause (thanks @goodmind)
+* Added support for printing mixins and implements (thanks @goodmind)
+
+### 0.102.0
+
+Likely to cause new Flow errors:
+* Function components with no arguments get a sealed empty object type as props.
+* Moved `MixedElement` export into the module declaration, so it will now need to be qualified as `React.MixedElement`.
+
+Notable bug fixes:
+* Fixed error positioning around utility types (e.g. `$ObjMap`).
+* Omit reporting error stack traces to end users over LSP.
+* Fixed bug where Flow would crash when variable has same name as a type (fixes #7825)
+
+Misc:
+* Refactored coverage computation to use the typed AST. This enables coverage results over more locations that earlier.
+* Improved server and monitor error logging.
+* In typing object types as react components, account for the `defaultProps` property and make them compatible with `React.AbstractComponent`.
+* Optimized the way module exports are populated to prevent recursion limiter exceptions.
+* Improved error messages for invalid `BigInt`s. (thanks, @goodmind!)
+* Hovering over an imported type alias returns its definition. (thanks, @vicapow!)
+* Fixed semver comparison to allow for suffixes such as `rc`.
+
+Libdefs:
+* Remove `Object` type (equivalent to `any`) from `WeakSet` and `$ReadOnlyWeakSet`. (thanks, @goodmind!)
+* Add methods to Node HTTP ServerResponse type definition. (thanks, @chrislloyd!)
+* Add definitions for the Web Animations API. (thanks, @goodmind!)
+
+### 0.101.1
+
+Notable bug fixes:
+* Fixed a bug with suppressions in the experimental types-first mode.
+
+### 0.101.0
+
+Likely to cause new Flow errors:
+  * `$Keys` now produces a more precise type, which may find errors where incompatible strings were passed to something expecting the `$Keys` of some object.
+
+New Features:
+  * We released a new implicit-inexact-object lint to detect when an inexact object is used without explicitly adding `...` to the
+    end of the props list. See [here](https://medium.com/flow-type/on-the-roadmap-exact-objects-by-default-16b72933c5cf) for context.
+  * Function type parameters may now use default arguments. This is not yet supported by babel.
+
+Notable bug fixes:
+  * Fixed a bug with ranges returned by autocomplete
+  * Fixed a bug where errors with bad locations reported over the LSP could cause the editor to clear all errors.
+
+Misc:
+  * `React.memo` and `React.lazy` now both allow you to specify an instance type via `React.AbstractComponent`.
+  * Various performance improvements to union types.
+  * Various libdef fixes and improvements.
+  * Various improvements to error positioning.
+  * The recursion limit is now configurable in the .flowconfig via `recursion_limit`. Most projects will not need to override this value.
+
+Parser:
+  * Forbid private fields named `#constructor`
+  * Fix duplicate private class field validation for getters/setters
+  * Fix parsing of private getters and setters
+  * Function type parameters may now use default arguments.
+
 ### 0.100.0
 
 Likely to cause new Flow errors:
@@ -370,6 +451,7 @@ Notable bug fixes:
 Misc:
 * We've deleted `flow gen-flow-files` due to bitrot. We do plan on building a better version in the future.
 * Various libdef updates. Thanks for all the PRs!
+* `{}` now consistently represents an unsealed object. You can read more in the [documentation](https://flow.org/en/docs/types/objects/#toc-unsealed-objects). [example](https://flow.org/try/#0GYVwdgxgLglg9mABFApgZygCgN7DnALkTBAFsAjFAJwF8BKbGgKCdQx3oG5EB6HxAHJxE1KnCqIAhlEQAOWUwgIMiAB5Fc+IiQrUaiALyJG3PogCiVMROlzZQA)
 
 ### 0.88.0
 

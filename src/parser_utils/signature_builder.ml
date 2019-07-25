@@ -112,6 +112,7 @@ module Signature = struct
     | _, DeclareModule _
     | _, DeclareModuleExports _
     | _, Empty
+    | _, EnumDeclaration _ (* TODO(T44736715) Support enums in signature builder/verifier/etc. *)
     | _, Expression _
     | _, Break _
     | _, Continue _
@@ -302,6 +303,24 @@ class type_hoister = object(this)
     in
     this#update_acc (Env.add entry)
 
+  method private update_binding (x, id, expr) =
+    this#update_acc (fun env ->
+      match SMap.get x env with
+      | None -> env
+      | Some u ->
+        SMap.add x (Loc_collections.LocMap.map (function
+          | (loc, Signature_builder_kind.WithPropertiesDef def) ->
+            (loc, Signature_builder_kind.WithPropertiesDef { def with
+              properties = (id, expr)::def.properties
+            })
+          | (loc, base) ->
+            (loc, Signature_builder_kind.WithPropertiesDef {
+              base;
+              properties = [(id, expr)]
+            })
+        ) u) env
+    )
+
   method private add_binding_opt = function
     | None, _ -> ()
     | Some id, kind -> this#add_binding (id, kind)
@@ -323,6 +342,7 @@ class type_hoister = object(this)
       | _, DeclareFunction _
       | _, ClassDeclaration _
       | _, DeclareClass _
+      | _, EnumDeclaration _
       | _, TypeAlias _
       | _, DeclareTypeAlias _
       | _, OpaqueType _
@@ -344,6 +364,18 @@ class type_hoister = object(this)
       | _, While _
         ->
         this#next (lazy (ignore @@ super#statement stmt));
+        stmt
+
+      | _, Expression {
+          Expression.expression = (_, Ast.Expression.Assignment { Ast.Expression.Assignment.
+            operator = None;
+            left = (_, Ast.Pattern.Expression (_, Ast.Expression.Member { Ast.Expression.Member.
+              _object = _, Ast.Expression.Identifier (_, { Ast.Identifier.name = x; _ });
+              property = Ast.Expression.Member.PropertyIdentifier id;
+            }));
+            right = expr;
+        }); _ } ->
+        this#update_binding (x, id, expr);
         stmt
 
       (* shortcut *)
@@ -370,6 +402,7 @@ class type_hoister = object(this)
     (* ignore block-scoped bindings and type bindings *)
     | _, ClassDeclaration _
     | _, DeclareClass _
+    | _, EnumDeclaration _
     | _, TypeAlias _
     | _, DeclareTypeAlias _
     | _, OpaqueType _

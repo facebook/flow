@@ -21,8 +21,8 @@ let mk_with_proto cx reason
 let mk_exact_empty cx reason =
   ObjProtoT reason |> mk_with_proto cx reason ~sealed:true ~exact:true ~frozen:true
 
-let mk cx reason =
-  mk_with_proto cx reason (ObjProtoT reason)
+let mk ?(sealed=false) cx reason =
+  mk_with_proto cx reason ~sealed (ObjProtoT reason)
 
 and sealed_in_op reason_op = function
   | Sealed -> true

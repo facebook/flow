@@ -11,6 +11,11 @@ module Request = struct
 
   type command =
   | AUTOCOMPLETE of { input: File_input.t; wait_for_recheck: bool option; }
+  | AUTOFIX_EXPORTS of {
+      input:File_input.t;
+      verbose: Verbose.t option;
+      wait_for_recheck: bool option;
+    }
   | CHECK_FILE of {
       input: File_input.t;
       verbose: Verbose.t option;
@@ -20,7 +25,7 @@ module Request = struct
     }
   | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; trust : bool }
   | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; trust : bool }
-  | CYCLE of { filename: string; }
+  | CYCLE of { filename: string; types_only: bool }
   | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
   | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
   | FIND_REFS of {
@@ -52,6 +57,16 @@ module Request = struct
       omit_targ_defaults: bool;
       wait_for_recheck: bool option;
     }
+  | INSERT_TYPE of {
+      input: File_input.t;
+      target: Loc.t;
+      verbose: Verbose.t option;
+      location_is_strict: bool;
+      ambiguity_strategy: Autofix_options.ambiguity_strategy;
+      wait_for_recheck: bool option;
+      expand_aliases: bool;
+      omit_targ_defaults: bool;
+    }
   | RAGE of { files: string list }
   | REFACTOR of {
       input: File_input.t;
@@ -69,14 +84,16 @@ module Request = struct
   let to_string = function
   | AUTOCOMPLETE { input; wait_for_recheck=_; } ->
     Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
+  | AUTOFIX_EXPORTS { input; _} ->
+    Printf.sprintf "autofix exports %s" (File_input.filename_of_file_input input)
   | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; wait_for_recheck=_; } ->
     Printf.sprintf "check %s" (File_input.filename_of_file_input input)
   | BATCH_COVERAGE { batch=_; wait_for_recheck=_; trust=_ } ->
       Printf.sprintf "%s" "batch-coverage"
   | COVERAGE { input; force=_; wait_for_recheck=_; trust=_ } ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
-  | CYCLE { filename; } ->
-      Printf.sprintf "cycle %s" filename
+  | CYCLE { filename; types_only } ->
+      Printf.sprintf "cycle (types_only: %b) %s" types_only filename
   | GRAPH_DEP_GRAPH _ ->
       Printf.sprintf "dep-graph"
   | DUMP_TYPES { input; wait_for_recheck=_; } ->
@@ -97,6 +114,11 @@ module Request = struct
   | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input input) line char
+  | INSERT_TYPE { input; target; _} ->
+    let open Loc in
+    Printf.sprintf "autofix insert-type %s:%d:%d-%d:%d"
+      (File_input.filename_of_file_input input)
+      target.start.line target.start.column target._end.line target._end.column
   | RAGE { files; } -> Printf.sprintf "rage %s" (String.concat " " files)
   | REFACTOR { input; line; char; refactor_variant; } ->
       Printf.sprintf "refactor %s:%d:%d:%s"
@@ -138,7 +160,7 @@ module Response = struct
   (* Results ready to be displayed to the user *)
   type complete_autocomplete_result = {
       res_loc      : Loc.t;
-      res_ty       : string;
+      res_ty       : Loc.t * string;
       res_kind     : Lsp.Completion.completionItemKind option;
       res_name     : string;
       func_details : func_details_result option;
@@ -148,6 +170,8 @@ module Response = struct
     complete_autocomplete_result list,
     string
   ) result
+
+  type autofix_exports_response = ((Replacement_printer.patch * string list), string) result
 
   type coverage_response = (
     (Loc.t * Coverage.expression_coverage) list,
@@ -174,6 +198,8 @@ module Response = struct
     Loc.t * Ty.t option,
     string
   ) result
+
+  type insert_type_response = (Replacement_printer.patch, string) result
 
   type textedit = Loc.t * string
   type refactor_ok = {
@@ -222,6 +248,7 @@ module Response = struct
 
   type response =
   | AUTOCOMPLETE of autocomplete_response
+  | AUTOFIX_EXPORTS of autofix_exports_response
   | CHECK_FILE of check_file_response
   | COVERAGE of coverage_response
   | BATCH_COVERAGE of batch_coverage_response
@@ -234,6 +261,7 @@ module Response = struct
   | GET_DEF of get_def_response
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
+  | INSERT_TYPE of insert_type_response
   | RAGE of rage_response
   | REFACTOR of refactor_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
@@ -242,6 +270,7 @@ module Response = struct
 
   let to_string = function
   | AUTOCOMPLETE _ -> "autocomplete response"
+  | AUTOFIX_EXPORTS _ -> "autofix exports response"
   | CHECK_FILE _ -> "check_file response"
   | COVERAGE _ -> "coverage response"
   | BATCH_COVERAGE _ -> "batch-coverage response"
@@ -254,6 +283,7 @@ module Response = struct
   | GET_DEF _ -> "get_def response"
   | GET_IMPORTS _ -> "get_imports response"
   | INFER_TYPE _ -> "infer_type response"
+  | INSERT_TYPE _ -> "insert_type response"
   | RAGE _ -> "rage response"
   | REFACTOR _ -> "refactor response"
   | STATUS _ -> "status response"

@@ -77,9 +77,7 @@ let register_entry_point
       LoggingUtils.set_hh_logger_min_level options;
       Hh_logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
 
-      (* This server might have been started by a monitor process which is already pretty old, so
-      * the start_time might be way out of date. *)
-      FlowEventLogger.(restore_context {logging_context with start_time = Unix.gettimeofday (); });
+      FlowEventLogger.restore_context logging_context;
       (* It makes the logs easier if all server logs have the "command" column set to "server",
        * regardless of whether they were started with `flow start` or `flow server` *)
       FlowEventLogger.set_command (Some "server");
@@ -136,7 +134,8 @@ let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid
     set_close_on_exec stdout;
     set_close_on_exec stderr
   with Unix_error (EINVAL, _, _) -> ());
-  Daemon.spawn (null_fd, log_fd, log_fd) (main_entry) {
+  let name = spf "server master process watching %s" (Path.to_string root) in
+  Daemon.spawn ~name (null_fd, log_fd, log_fd) (main_entry) {
     shared_mem_config;
     options;
     logging_context = FlowEventLogger.get_context ();

@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Parsing_heaps_utils
 open ServerEnv
 
 module Result = Core_result
@@ -74,7 +75,7 @@ end
 
 (* If the given type refers to an object literal, return the location of the object literal.
  * Otherwise return None *)
-let get_object_literal_loc ty : Loc.t option =
+let get_object_literal_loc ~reader ty : Loc.t option =
   let open Type in
   let open Reason in
   let reason_desc =
@@ -83,7 +84,7 @@ let get_object_literal_loc ty : Loc.t option =
     |> desc_of_reason ~unwrap:false
   in
   match reason_desc with
-  | RObjectLit -> Some (Type.def_loc_of_t ty |> ALoc.to_loc_exn)
+  | RObjectLit -> Some (Type.def_loc_of_t ty |> loc_of_aloc ~reader)
   | _ -> None
 
 type def_kind =
@@ -99,7 +100,7 @@ type def_kind =
    * property. *)
   | Use_in_literal of Type.t Nel.t * string (* name *)
 
-let set_def_loc_hook prop_access_info literal_key_info target_loc =
+let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
   let set_prop_access_info new_info =
     let set_ok info = prop_access_info := Ok (Some info) in
     let set_err err = prop_access_info := Error err in
@@ -125,29 +126,29 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
       end
   in
   let use_hook ret _ctxt name loc ty =
-    let loc = ALoc.to_loc_exn loc in
+    let loc = loc_of_aloc ~reader loc in
     begin if Loc.contains loc target_loc then
       set_prop_access_info (Use (ty, name))
     end;
     ret
   in
   let class_def_hook _ctxt ty static name loc =
-    let loc = ALoc.to_loc_exn loc in
+    let loc = loc_of_aloc ~reader loc in
     if Loc.contains loc target_loc then
       set_prop_access_info (Class_def (ty, name, static))
   in
   let obj_def_hook _ctxt name loc =
-    let loc = ALoc.to_loc_exn loc in
+    let loc = loc_of_aloc ~reader loc in
     if Loc.contains loc target_loc then
       set_prop_access_info (Obj_def (loc, name))
   in
   let export_named_hook name loc =
-    let loc = ALoc.to_loc_exn loc in
+    let loc = loc_of_aloc ~reader loc in
     if Loc.contains loc target_loc then
       set_prop_access_info (Obj_def (loc, name))
   in
   let obj_to_obj_hook _ctxt obj1 obj2 =
-    match get_object_literal_loc obj1, literal_key_info with
+    match get_object_literal_loc ~reader obj1, literal_key_info with
     | Some loc, Some (target_loc, _, name) when loc = target_loc ->
       let open Type in
       begin match obj2 with
@@ -270,19 +271,20 @@ let get_def_loc_from_extracted_type cx extracted_type name =
     | Some (None, _) -> None
     | Some (Some loc, _) -> Some loc
 
-let rec extract_def_loc cx ty name : (def_loc, string) result =
+let rec extract_def_loc ~reader cx ty name : (def_loc, string) result =
   let resolved = Members.resolve_type cx ty in
-  extract_def_loc_resolved cx resolved name
+  extract_def_loc_resolved ~reader cx resolved name
 
 (* The same as get_def_loc_from_extracted_type except it recursively checks for overridden
  * definitions of the member in superclasses and returns those as well *)
-and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, string) result =
+and extract_def_loc_from_instancet ~reader cx extracted_type super name : (def_loc, string) result =
   let current_class_def_loc = get_def_loc_from_extracted_type cx extracted_type name in
   current_class_def_loc
   >>= begin function
     | None -> Ok NoDefFound
     | Some loc ->
-      extract_def_loc cx super name
+      let loc = loc_of_aloc ~reader loc in
+      extract_def_loc ~reader cx super name
       >>= begin function
         | FoundClass lst ->
             (* Avoid duplicate entries. This can happen if a class does not override a method,
@@ -304,22 +306,22 @@ and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, stri
       end
   end
 
-and extract_def_loc_resolved cx ty name : (def_loc, string) result =
+and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
   let open Members in
   let open Type in
   match extract_type cx ty with
     | Success (DefT (_, _, InstanceT (_, super, _, _))) as extracted_type ->
-        extract_def_loc_from_instancet cx extracted_type super name
+        extract_def_loc_from_instancet ~reader cx extracted_type super name
     | Success (DefT (_, _, ObjT _)) | SuccessModule _ as extracted_type ->
         get_def_loc_from_extracted_type cx extracted_type name
         >>| begin function
           | None -> NoDefFound
-          | Some loc -> FoundObject loc
+          | Some loc -> FoundObject (loc_of_aloc ~reader loc)
         end
     | Success (UnionT (_, rep)) ->
         let union_members =
           UnionRep.members rep
-          |> Core_list.map ~f:(fun member -> extract_def_loc cx member name)
+          |> Core_list.map ~f:(fun member -> extract_def_loc ~reader cx member name)
           |> Result.all
         in
         union_members
@@ -348,7 +350,7 @@ let file_key_of_module_ref ~reader file_key module_ref =
   in
   Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn resolved
 
-let def_info_of_typecheck_results cx props_access_info =
+let def_info_of_typecheck_results ~reader cx props_access_info =
   let def_info_of_class_member_locs locs =
     (* We want to include the immediate implementation as well as all superclass implementations.
      * If we wanted a mode where superclass implementations were not included, for example, we
@@ -368,7 +370,7 @@ let def_info_of_typecheck_results cx props_access_info =
     | UnsupportedType
     | AnyType -> None
     in
-    extract_def_loc cx ty name >>| def_info_of_def_loc
+    extract_def_loc ~reader cx ty name >>| def_info_of_def_loc
   in
   match props_access_info with
     | None -> Ok None
@@ -384,7 +386,7 @@ let def_info_of_typecheck_results cx props_access_info =
         else
           (* We get the type of the class back here, so we need to extract the type of an instance *)
           extract_instancet cx ty >>= fun ty ->
-          begin extract_def_loc_resolved cx ty name >>= function
+          begin extract_def_loc_resolved ~reader cx ty name >>= function
             | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
             | FoundUnion _
             | FoundObject _ -> Error "Expected to extract class def info from a class"
@@ -433,7 +435,7 @@ let get_def_info
   let info = Docblock.set_flow_mode_for_ide_command info in
   let literal_key_info: (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
   let%lwt cx =
-    set_def_loc_hook props_access_info literal_key_info loc;
+    set_def_loc_hook ~reader props_access_info literal_key_info loc;
     let%lwt cx, _ = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
       let%lwt () =
         Types_js.ensure_checked_dependencies ~options ~reader ~env file_key file_sig
@@ -445,7 +447,7 @@ let get_def_info
   in
   unset_hooks ();
   !props_access_info %>>= fun props_access_info ->
-  let def_info = def_info_of_typecheck_results cx props_access_info in
+  let def_info = def_info_of_typecheck_results ~reader cx props_access_info in
   let def_info = def_info >>= add_literal_properties literal_key_info in
   let def_info = def_info >>= function
   | Some _ as def_info -> Ok def_info

@@ -739,13 +739,13 @@ let token (env: Lex_env.t) lexbuf : result =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | scibigint ->
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
+      let env = lex_error env loc Parse_error.InvalidSciBigInt in
       Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | scibigint ->
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
+    let env = lex_error env loc Parse_error.InvalidSciBigInt in
     Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
   | scinumber, word ->
     (* Numbers cannot be immediately followed by words *)
@@ -761,7 +761,7 @@ let token (env: Lex_env.t) lexbuf : result =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | floatbigint ->
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
+      let env = lex_error env loc Parse_error.InvalidFloatBigInt in
       Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
@@ -774,7 +774,7 @@ let token (env: Lex_env.t) lexbuf : result =
     )
   | floatbigint ->
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
+    let env = lex_error env loc Parse_error.InvalidFloatBigInt in
     Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
   | wholebigint ->
     Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
@@ -1668,14 +1668,14 @@ let type_token env lexbuf =
     | Opt neg, scibigint ->
       let num = lexeme lexbuf in
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
+      let env = lex_error env loc Parse_error.InvalidSciBigInt in
       Token (env, mk_bignum_singleton BIG_NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, scibigint ->
     let num = lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
+    let env = lex_error env loc Parse_error.InvalidSciBigInt in
     Token (env, mk_bignum_singleton BIG_NORMAL num)
   | Opt neg, scinumber, word ->
     (* Numbers cannot be immediately followed by words *)
@@ -1695,7 +1695,7 @@ let type_token env lexbuf =
     | Opt neg, floatbigint ->
       let num = lexeme lexbuf in
       let loc = loc_of_lexbuf env lexbuf in
-      let env = lex_error env loc Parse_error.InvalidBigInt in
+      let env = lex_error env loc Parse_error.InvalidFloatBigInt in
       Token (env, mk_bignum_singleton BIG_NORMAL num)
     | _ -> failwith "unreachable"
     )
@@ -1710,7 +1710,7 @@ let type_token env lexbuf =
   | Opt neg, floatbigint ->
     let num = lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
+    let env = lex_error env loc Parse_error.InvalidFloatBigInt in
     Token (env, mk_bignum_singleton BIG_NORMAL num)
   | Opt neg, wholebigint ->
     let num = lexeme lexbuf in

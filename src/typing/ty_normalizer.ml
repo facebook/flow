@@ -133,8 +133,17 @@ end = struct
   (* Monadic helper functions *)
   let mapM f xs = all (Core_list.map ~f:f xs)
   let optMapM f = function
-    | Some xs -> mapM f xs >>| fun ys -> Some ys
+    | Some xs -> mapM f xs >>| Option.return
     | None as y -> return y
+
+  let optM f = function
+    | Some x -> f x >>| Option.return
+    | None as y -> return y
+
+  let _fstMapM f (x, y) = f x >>| mk_tuple_swapped y
+
+  let sndMapM f (x, y) = f y >>| mk_tuple x
+
   let concat_fold_m f xs = mapM f xs >>| Core_list.concat
 
   let fresh_num =
@@ -702,7 +711,7 @@ end = struct
       else
          return Ty.(TypeOf (["Function"; "prototype"], "call"))
 
-    | ModuleT (reason, _, _) -> module_t env reason t
+    | ModuleT (reason, exports, _) -> module_t env reason exports t
 
     | DefT (_, _, CharSetT _)
     | NullProtoT _ ->
@@ -780,8 +789,8 @@ end = struct
      taking their union.
   *)
   and resolve_bounds ~env = function
-    | Constraint.Resolved t
-    | Constraint.FullyResolved t ->
+    | Constraint.Resolved (_, t)
+    | Constraint.FullyResolved (_, t) ->
       type__ ~env t
     | Constraint.Unresolved bounds ->
       resolve_from_lower_bounds ~env bounds >>= function
@@ -1436,9 +1445,9 @@ end = struct
     type__ ~env t >>| fun t -> (t, opt)
 
   and type_polarity = function
-    | T.Positive -> Ty.Positive
-    | T.Negative -> Ty.Negative
-    | T.Neutral -> Ty.Neutral
+    | Polarity.Positive -> Ty.Positive
+    | Polarity.Negative -> Ty.Negative
+    | Polarity.Neutral -> Ty.Neutral
 
   (************)
   (* EvalT    *)
@@ -1528,15 +1537,26 @@ end = struct
     | Type.LatentPredT _ -> latent_pred_t ~env id t
     | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
 
-  and module_t env reason t =
-    match desc_of_reason reason with
-    | RModule name
-    | RCommonJSExports name
-    | RUntypedModule name ->
-      let symbol = symbol_from_reason env reason name in
-      return (Ty.Module symbol)
-    | _ ->
-      terr ~kind:UnsupportedTypeCtor (Some t)
+  and module_t env reason exports t =
+    let name = match desc_of_reason reason with
+      | RModule name
+      | RCommonJSExports name
+      | RUntypedModule name -> Some name
+      | RExports -> Some "exports"
+      | _ -> None in
+    match name with
+    | Some name ->
+        let symbol = symbol_from_reason env reason name in
+        let cjs_export = optM (type__ ~env) T.(exports.cjs_export) in
+        let exports = Context.find_exports Env.(env.genv.cx) T.(exports.exports_tmap)
+        |> SMap.map snd
+        |> SMap.bindings
+        |> mapM (type__ ~env |> sndMapM) in
+        exports >>= fun exports ->
+        cjs_export >>| fun cjs_export ->
+        Ty.Module (symbol, Ty.{ exports; cjs_export })
+    | None ->
+        terr ~kind:UnsupportedTypeCtor (Some t)
 
   and uses_t =
     let rec uses_t_aux ~env acc uses =

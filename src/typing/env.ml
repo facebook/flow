@@ -619,6 +619,26 @@ let promote_to_const_like cx loc =
     ALocSet.cardinal writes <= 1
   with _ -> false
 
+let initialized_value_entry cx kind specific loc v =
+  let open Entry in
+  (* Maybe promote to const-like *)
+  let new_kind = match kind with
+    | Var VarBinding ->
+      if (promote_to_const_like cx loc)
+      then Var ConstlikeVarBinding
+      else kind
+    | Let LetVarBinding ->
+      if (promote_to_const_like cx loc)
+      then Let ConstlikeLetVarBinding
+      else kind
+    | _ -> kind
+  in
+  Value { v with
+    Entry.kind = new_kind;
+    value_state = State.Initialized;
+    specific;
+  }
+
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)
 let init_value_entry kind cx ~use_op name ~has_anno specific loc =
@@ -636,23 +656,8 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
         Flow_js.flow cx (specific, UseT (use_op, v.general));
       );
       (* note that annotation supercedes specific initializer type *)
-      let new_kind =
-        match kind with
-        | Var VarBinding ->
-        if (promote_to_const_like cx loc)
-        then Entry.(Var ConstlikeVarBinding)
-        else kind
-        | Let LetVarBinding ->
-        if (promote_to_const_like cx loc)
-        then Entry.(Let ConstlikeLetVarBinding)
-        else kind
-        | _ -> kind in
-      let value_binding = { v with
-        Entry.kind = new_kind;
-        value_state = State.Initialized;
-        specific = if has_anno then v.general else specific
-      } in
-      let new_entry = Value value_binding in
+      let specific = if has_anno then v.general else specific in
+      let new_entry = initialized_value_entry cx kind specific loc v in
       Scope.add_entry name new_entry scope;
     | _ ->
       (* Incompatible or non-redeclarable new and previous entries.
@@ -690,16 +695,18 @@ let pseudo_init_declared_type cx name loc =
   then Entry.(
     let scope, entry = find_entry cx name loc in
     match entry with
-    | Value value_binding ->
-      let entry = Value { value_binding with
-        value_state = State.Declared;
-        specific = value_binding.general
-      } in
+    | Value ({ Entry.kind = Var _; _ } as v)
+    | Value ({ Entry.kind = (Let _ | Const _);
+        value_state = State.(Undeclared | Declared); _ } as v) ->
+      Changeset.Global.change_var (scope.id, name, Changeset.Write);
+      let kind = v.Entry.kind in
+      let entry = initialized_value_entry cx kind v.general loc v in
       Scope.add_entry name entry scope
-    | Type _ ->
-      assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
-    | Class _ ->
-      assert_false (spf "pseudo_init_declared_type %s: Class entry" name)
+    | _ ->
+      (* Incompatible or non-redeclarable new and previous entries.
+         We will have already issued an error in `bind_value_entry`,
+         so we can prune this case here. *)
+      ()
   )
 
 (* helper for read/write tdz checks *)
@@ -943,6 +950,10 @@ let refine_var = update_var Changeset.Refine ~use_op:(Op (Internal Refinement))
 let refine_const cx name specific loc =
   let scope, entry = find_entry cx name loc in
   Entry.(match entry with
+  | Value ({ Entry.kind = Const _; value_state = State.Undeclared; _ } as v)
+    when same_activation scope ->
+    tdz_error cx name loc v;
+    None
   | Value ({ Entry.kind = Const _; _ } as v) ->
     let change = scope.id, name, Changeset.Refine in
     Changeset.Global.change_var change;

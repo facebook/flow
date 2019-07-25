@@ -20,6 +20,39 @@ class ['self] iter_ty_base = object (_: 'self)
     = fun f env -> List.iter (f env)
 end
 
+class ['self] iter2_ty_base = object (self : 'self)
+  method private on_string: 'env . 'env -> string -> string -> unit = fun _env _x _y -> ()
+  method private on_bool  : 'env . 'env -> bool   -> bool   -> unit = fun _env _x _y -> ()
+  method private on_int   : 'env . 'env -> int    -> int    -> unit = fun _env _x _y -> ()
+  method private on_symbol: 'env . 'env -> symbol -> symbol -> unit = fun _env _x _y -> ()
+  method private on_aloc  : 'env . 'env -> ALoc.t -> ALoc.t -> unit = fun _env _x _y -> ()
+
+  method private fail_option: 'env 'a. 'env -> 'a option -> 'a option -> unit =
+    fun _ _ _ -> raise VisitorsRuntime.StructuralMismatch
+
+  method private on_option:
+    'env 'a .
+    ('env -> 'a -> 'a -> unit) -> 'env -> 'a option -> 'a option -> unit
+    = fun f env x y ->
+      match x, y with
+      | Some x, Some y -> (f env x y)
+      | Some _, None
+      | None, Some _ -> self#fail_option env x y
+      | None, None -> ()
+
+  method private fail_list: 'env 'a. 'env -> 'a list -> 'a list -> unit =
+    fun _ _ _ -> raise VisitorsRuntime.StructuralMismatch
+
+  method private on_list:
+    'env 'a .
+    ('env -> 'a -> 'a -> unit) -> 'env -> 'a list -> 'a list -> unit
+    = fun f env l1 l2 ->
+      match (l1, l2) with
+      | ([], []) -> ()
+      | (a1::l1, a2::l2) -> f env a1 a2; self#on_list f env l1 l2
+      | (l1, l2) -> self#fail_list env l1 l2
+end
+
 class ['self] map_ty_base = object (_: 'self)
   method private on_string: 'env -> string     -> string     = fun _ x -> x
   method private on_bool  : 'env -> bool       -> bool       = fun _ x -> x

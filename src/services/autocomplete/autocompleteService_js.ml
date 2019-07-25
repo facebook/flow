@@ -8,6 +8,7 @@
 open Autocomplete_js
 open Core_result
 open ServerProt.Response
+open Parsing_heaps_utils
 
 let add_autocomplete_token contents line column =
   let line = line - 1 in
@@ -20,6 +21,17 @@ let add_autocomplete_token contents line column =
       start ^ Autocomplete_js.autocomplete_suffix ^ end_
     ) else line_str
   )
+
+(* the autocomplete token inserts `suffix_len` characters, which are included
+ * in `ac_loc` returned by `Autocomplete_js`. They need to be removed before
+ * showing `ac_loc` to the client. *)
+let remove_autocomplete_token_from_loc loc =
+    let open Loc in
+    { loc with
+      _end = { loc._end with
+        column = loc._end.column - Autocomplete_js.suffix_len;
+      };
+    }
 
 let autocomplete_result_to_json ~strip_root result =
   let func_param_to_json param =
@@ -37,12 +49,26 @@ let autocomplete_result_to_json ~strip_root result =
      | None -> Hh_json.JSON_Null
   in
   let name = result.res_name in
-  let ty = result.res_ty in
+  let (ty_loc, ty) = result.res_ty in
+
+  (* This is deprecated for two reasons:
+   *   1) The props are still our legacy, flat format rather than grouped into
+   *      "loc" and "range" properties.
+   *   2) It's the location of the definition of the type (the "type loc"),
+   *      which may be interesting but should be its own field. The loc should
+   *      instead be the range to replace (usually but not always the token
+   *      being completed; perhaps we also want to replace the whole member
+   *      expression, for example). That's `result.res_loc`, but we're not
+   *      exposing it in the legacy `flow autocomplete` or `flow ide` APIs; use
+   *      LSP instead.
+   *)
+  let deprecated_loc = Errors.deprecated_json_props_of_loc ~strip_root ty_loc in
+
   Hh_json.JSON_Object (
     ("name", Hh_json.JSON_String name) ::
     ("type", Hh_json.JSON_String ty) ::
     ("func_details", func_details_to_json result.func_details) ::
-    (Errors.deprecated_json_props_of_loc ~strip_root result.res_loc)
+    deprecated_loc
   )
 
 let autocomplete_response_to_json ~strip_root response =
@@ -79,8 +105,8 @@ let lsp_completion_of_type (ty: Ty.t) =
       Utility _ | Mu _
     ) ->  Some Variable
 
-let autocomplete_create_result ((name, loc), ty) =
-  let res_ty = Ty_printer.string_of_t ~with_comments:false ty in
+let autocomplete_create_result ((name, loc), (ty, ty_loc)) =
+  let res_ty = ty_loc, Ty_printer.string_of_t ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   Ty.(match ty with
   | Fun {fun_params; fun_rest_param; fun_return; _} ->
@@ -123,9 +149,9 @@ let autocomplete_filter_members members =
   ) members
 
 let autocomplete_member
-    ~exclude_proto_members ~ac_type
+    ~reader ~exclude_proto_members ~ac_type
     cx file_sig typed_ast this ac_name ac_loc docblock =
-  let ac_loc = ALoc.to_loc_exn ac_loc in
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let this_t = Members.resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
@@ -171,11 +197,11 @@ let autocomplete_member
     let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
     let result = result_map
     |> autocomplete_filter_members
-    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> ALoc.to_loc_exn), t))
+    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> loc_of_aloc ~reader), t))
     |> SMap.values
     |> Ty_normalizer.from_types ~options ~genv
     |> Core_list.filter_map ~f:(function
-     | l, Ok s -> Some (l, s)
+     | (name, ty_loc), Ok ty -> Some ((name, ac_loc), (ty, ty_loc))
      | _ -> None
      )
     |> Core_list.map ~f:autocomplete_create_result
@@ -184,7 +210,8 @@ let autocomplete_member
 
 
 (* env is all visible bound names at cursor *)
-let autocomplete_id cx file_sig env typed_ast =
+let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let result = SMap.fold (fun name entry acc ->
     (* Filter out internal environment variables except for this and
        super. *)
@@ -193,13 +220,13 @@ let autocomplete_id cx file_sig env typed_ast =
     if not (is_this || is_super) && Reason.is_internal_name name
     then acc
     else (
-      let (loc, name) =
+      let (ty_loc, name) =
         (* renaming of this/super *)
         if is_this
         then (Loc.none, "this")
         else if is_super
         then (Loc.none, "super")
-        else (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn, name)
+        else (Scope.Entry.entry_loc entry |> loc_of_aloc ~reader, name)
       in
       let options = {
         Ty_normalizer_env.
@@ -217,7 +244,7 @@ let autocomplete_id cx file_sig env typed_ast =
       let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
       let type_ = Scope.Entry.actual_type entry in
       match Ty_normalizer.from_type ~options ~genv type_ with
-      | Ok t -> autocomplete_create_result ((name, loc), t) :: acc
+      | Ok ty -> autocomplete_create_result ((name, ac_loc), (ty, ty_loc)) :: acc
       | Error _ -> acc
     )
   ) env [] in
@@ -227,7 +254,7 @@ let autocomplete_id cx file_sig env typed_ast =
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx cx file_sig typed_ast cls ac_name ac_loc docblock = Flow_js.(
+let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = Tvar.mk_where cx reason (fun tvar ->
@@ -238,18 +265,18 @@ let autocomplete_jsx cx file_sig typed_ast cls ac_name ac_loc docblock = Flow_js
     ) in
     (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
     autocomplete_member
-      ~exclude_proto_members:true ~ac_type:"Acjsx" cx file_sig typed_ast
+      ~reader ~exclude_proto_members:true ~ac_type:"Acjsx" cx file_sig typed_ast
       props_object ac_name ac_loc docblock
   )
 
-let autocomplete_get_results cx file_sig typed_ast state docblock =
+let autocomplete_get_results ~reader cx file_sig typed_ast state docblock =
   let file_sig = File_sig.abstractify_locs file_sig in
   match !state with
-  | Some { ac_type = Acid (env); _; } ->
-    autocomplete_id cx file_sig env typed_ast
+  | Some { ac_loc; ac_type = Acid (env); _; } ->
+    autocomplete_id ~reader cx ac_loc file_sig env typed_ast
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-    autocomplete_member ~exclude_proto_members:false ~ac_type:"Acmem"
+    autocomplete_member ~reader ~exclude_proto_members:false ~ac_type:"Acmem"
       cx file_sig typed_ast this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
-    autocomplete_jsx cx file_sig typed_ast cls ac_name ac_loc docblock
+    autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock
   | None -> Ok ([], None)

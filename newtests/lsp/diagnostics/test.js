@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -12,6 +11,7 @@ export default suite(
     ideRequestAndWaitUntilResponse,
     ideNotification,
     addFile,
+    addFiles,
     modifyFile,
     lspIgnoreStatusAndCancellation,
   }) => [
@@ -226,6 +226,68 @@ obj?.foo(); // Error
             ...lspIgnoreStatusAndCancellation,
           ],
         ),
+    ]),
+    test('Errors with Loc.none', [
+      ideStartAndConnect(),
+      addFiles('empty.js', 'importsFakeSymbol.js').waitUntilIDEMessage(
+        9000,
+        (() => {
+          const expectedMessage = {
+            uri: '<PLACEHOLDER_PROJECT_URL_SLASH>importsFakeSymbol.js',
+            diagnostics: [
+              {
+                range: {
+                  start: {
+                    line: 2,
+                    character: 7,
+                  },
+                  end: {
+                    line: 2,
+                    character: 10,
+                  },
+                },
+                severity: 1,
+                code: 'InferError',
+                source: 'Flow',
+                message: 'property `foo` is missing in  exports [1].',
+                relatedInformation: [
+                  {
+                    location: {
+                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      range: {
+                        start: {
+                          line: 0,
+                          character: 0,
+                        },
+                        end: {
+                          line: 0,
+                          character: 0,
+                        },
+                      },
+                    },
+                    message: '[1] exports',
+                  },
+                ],
+                relatedLocations: [
+                  {
+                    location: {
+                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      range: {
+                        start: {line: 0, character: 0},
+                        end: {line: 0, character: 0},
+                      },
+                    },
+                    message: '[1] exports',
+                  },
+                ],
+              },
+            ],
+          };
+          return `textDocument/publishDiagnostics${JSON.stringify(
+            expectedMessage,
+          )}`;
+        })(),
+      ),
     ]),
   ],
 );

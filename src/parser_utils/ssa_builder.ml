@@ -493,7 +493,7 @@ module Make
 
     method! continue _loc (stmt: L.t Ast.Statement.Continue.t) =
       let open Ast.Statement.Continue in
-      let { label } = stmt in
+      let { label; comments = _ } = stmt in
       this#raise_abrupt_completion (AbruptCompletion.continue label)
 
     method! return _loc (stmt: (L.t, L.t) Ast.Statement.Return.t) =
@@ -533,7 +533,7 @@ module Make
     (******************************************)
     method! if_statement _loc (stmt: (L.t, L.t) Ast.Statement.If.t) =
       let open Ast.Statement.If in
-      let { test; consequent; alternate } = stmt in
+      let { test; consequent; alternate; _ } = stmt in
       ignore @@ this#expression test;
       let env0 = this#ssa_env in
       (* collect completions and environments of every branch *)
@@ -615,7 +615,7 @@ module Make
       this#expecting_abrupt_completions (fun () ->
         let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
         let open Ast.Statement.DoWhile in
-        let { body; test } = stmt in
+        let { body; test; _ } = stmt in
         let env1 = this#fresh_ssa_env in
         this#merge_self_ssa_env env1;
         let loop_completion_state = this#run_to_completion (fun () ->

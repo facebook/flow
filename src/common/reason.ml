@@ -63,6 +63,7 @@ type 'loc virtual_reason_desc =
   | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
   | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RExports
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
@@ -100,7 +101,8 @@ type 'loc virtual_reason_desc =
   | RLogical of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
   | RTemplateString
   | RUnknownString
-  | REnum
+  | REnum (* TODO(T45400747): Rename union based "enums" code to something else *)
+  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -211,6 +213,7 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
+[@@deriving eq]
 
 and reason_desc_function =
   | RAsync
@@ -219,11 +222,12 @@ and reason_desc_function =
   | RNormal
   | RUnknown
 
-and reason_desc = ALoc.t virtual_reason_desc
+type reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
   | RAnyExplicit | RAnyImplicit
   | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RExports
   | RNullOrVoid
   | RLongStringLit _
   | RStringLit _
@@ -261,6 +265,7 @@ let rec map_desc_locs f = function
   | RTemplateString
   | RUnknownString
   | REnum
+  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -382,12 +387,14 @@ type 'loc virtual_reason = {
   loc: 'loc;
   def_loc_opt: 'loc option;
   annot_loc_opt: 'loc option;
-}
+} [@@deriving eq]
 
 type reason = ALoc.t virtual_reason
 type concrete_reason = Loc.t virtual_reason
 
 type t = reason
+
+let concretize_equal aloc_tables = equal_virtual_reason (ALoc.concretize_equal aloc_tables)
 
 let in_range loc range = Loc.(
   let line, line1, line2 = loc.start.line, range.start.line, range._end.line in
@@ -433,6 +440,20 @@ let string_of_aloc ?(strip_root=None) aloc =
   | Some file ->
     spf "%s:%s" (string_of_source ~strip_root file) (ALoc.to_string_no_source aloc)
 
+let json_of_source ?(strip_root=None) = Hh_json.(function
+  | Some x -> JSON_String (string_of_source ~strip_root x)
+  | None -> JSON_Null
+)
+
+let json_source_type_of_source = Hh_json.(function
+  | Some File_key.LibFile _ -> JSON_String "LibFile"
+  | Some File_key.SourceFile _ -> JSON_String "SourceFile"
+  | Some File_key.JsonFile _ -> JSON_String "JsonFile"
+  | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
+  | Some File_key.Builtins -> JSON_String "Builtins"
+  | None -> JSON_Null
+)
+
 let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_table loc = Hh_json.(Loc.(
   let offset_entry offset_table pos =
     let offset = try
@@ -464,18 +485,8 @@ let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_ta
     end
   in
   [
-    "source", (
-      match loc.source with
-      | Some x -> JSON_String (string_of_source ~strip_root x)
-      | None -> JSON_Null
-    );
-    "type", (match loc.source with
-    | Some File_key.LibFile _ -> JSON_String "LibFile"
-    | Some File_key.SourceFile _ -> JSON_String "SourceFile"
-    | Some File_key.JsonFile _ -> JSON_String "JsonFile"
-    | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
-    | Some File_key.Builtins -> JSON_String "Builtins"
-    | None -> JSON_Null);
+    "source", (json_of_source ~strip_root loc.source);
+    "type", (json_source_type_of_source loc.source);
     "start", JSON_Object start;
     "end", JSON_Object end_;
   ]
@@ -484,9 +495,6 @@ let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_ta
 let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc = Hh_json.(
   JSON_Object (json_of_loc_props ?strip_root ?catch_offset_errors ~offset_table loc)
 )
-
-let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
-  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
 
 (* reason constructors, accessors, etc. *)
 
@@ -572,6 +580,7 @@ let rec string_of_desc = function
   | RNull -> "null"
   | RNullOrVoid -> "null or undefined"
   | RSymbol -> "symbol"
+  | RExports -> "exports"
   | RStringLit "" -> "empty string"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
@@ -616,6 +625,7 @@ let rec string_of_desc = function
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | REnum -> "enum"
+  | REnumDeclaration -> "Enum declarations are not yet implemented."
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -762,13 +772,6 @@ let string_of_reason ?(strip_root=None) r =
     else spf "%s:\n%s" spos desc
   )
 
-let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
-  JSON_Object ([
-    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc_exn);
-    "desc", JSON_String (string_of_desc r.desc)
-  ])
-)
-
 let dump_reason ?(strip_root=None) r =
   spf "%s: %S%s"
     (string_of_aloc ~strip_root (aloc_of_reason r))
@@ -807,9 +810,6 @@ let uninternal_module_name name =
   else
     name
 
-let internal_pattern_name loc =
-  spf ".$pattern__%s" (string_of_aloc loc)
-
 (* Instantiable reasons identify tvars that are created for the purpose of
    instantiation: they are fresh rather than shared, and should become types
    that flow to them. We assume these characteristics when performing
@@ -839,7 +839,15 @@ let is_instantiable_reason r =
 *)
 let is_constant_reason r =
   match desc_of_reason r with
-  | RIdentifier x
+  | RIdentifier x ->
+    (* A single-letter variable name which happens to be upper-case should not
+       be confused with a constant reason. This should really be further
+       restricted to `const`-declared identifiers in scope. Or, better yet,
+       removing this heuristic entirely. *)
+    let len = String.length x in
+    if len < 2
+    then false
+    else is_not_lowercase x 0 (len - 1)
   | RProperty (Some x)
   | RPrivateProperty x
   | RMember { object_ = _; property = x }
@@ -1064,7 +1072,7 @@ Ast.Expression.(match x with
 | TemplateLiteral _ -> "`...`"
 | This -> "this"
 | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
-| Unary { Unary.operator; argument } ->
+| Unary { Unary.operator; argument; comments= _ } ->
   let x = code_desc_of_expression ~wrap:true argument in
   let op = Unary.(match operator with
   | Minus -> "-"
@@ -1362,6 +1370,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RDefaultImportedType _
 | RCode _
 | RCustom _
+| RExports
 | RPolyType _
 | RPolyTest _
 | RExactType _
@@ -1403,6 +1412,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RReactConfig
 | RTrusted _
 | RPrivate _
+| REnumDeclaration
   -> `Unclassified
 
 let is_nullish_reason r =

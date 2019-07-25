@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
@@ -29,7 +28,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})
@@ -47,7 +46,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})

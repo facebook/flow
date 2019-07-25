@@ -12,7 +12,7 @@ type verbose_mode =
 
 type error_reason =
   | Missing_parse_error
-  | Unexpected_parse_error of (Loc.t * Parser_common.Error.t)
+  | Unexpected_parse_error of (Loc.t * Parse_error.t)
 
 type test_name = string * bool (* filename * strict *)
 
@@ -281,6 +281,7 @@ let parse_test acc filename =
 let run_test (name, frontmatter, content) =
   let (filename, use_strict) = name in
   let parse_options = { Parser_env.
+      enums = true;
       esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;
       esproposal_decorators = false;

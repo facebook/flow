@@ -7,6 +7,7 @@
 
 type table
 val make_table: File_key.t -> table
+val shrink_table: table -> unit
 
 type key
 
@@ -29,6 +30,8 @@ val abstractify: table -> t -> t
  * necessary. We will have to look up tables in the shared heap at some point, so making it lazy
  * allows us to avoid fetching the table if the underlying location is actually concrete. *)
 val to_loc: table Lazy.t -> t -> Loc.t
+(* Like to_loc, but conveniently picks the correct table for the conversion out of the map *)
+val to_loc_with_tables: table Lazy.t Utils_js.FilenameMap.t -> t -> Loc.t
 (* TODO move to ALocRepresentationDoNotUse *)
 (* Unsafe: fails if the location has an abstract underlying representation. *)
 val to_loc_exn: t -> Loc.t
@@ -46,6 +49,11 @@ val update_source: (File_key.t option -> File_key.t option) -> t -> t
 val compare: t -> t -> int
 val equal: t -> t -> bool
 
+(* If one of the provided locations has an abstract underlying representation, and the other is
+ * concrete, attempt to concretize the abstract one using the given table, before comparing *)
+val concretize_compare: table Lazy.t Utils_js.FilenameMap.t -> t -> t -> int
+val concretize_equal: table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool
+
 (* Stringifies the underlying representation of the ALoc.t, without concretizing it, for debugging
  * purposes. If you make any typechecking behavior depend on the result of this function you are a
  * bad person. *)
@@ -58,4 +66,5 @@ module ALocRepresentationDoNotUse : sig
   val is_abstract: t -> bool
   (* Should only be called if `is_abstract` returns `true`. Otherwise it will raise *)
   val get_key_exn: t -> key
+  val string_of_key: key -> string
 end

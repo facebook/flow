@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -130,9 +129,9 @@ export default suite(
                 },
                 {
                   label: 'aUnion',
-                  kind: 6,
-                  detail: 'number',
-                  inlineDetail: 'number',
+                  kind: 13,
+                  detail: 'type aUnion = "a" | "b"',
+                  inlineDetail: 'type aUnion = "a" | "b"',
                   insertTextFormat: 1,
                 },
                 {
@@ -223,8 +222,8 @@ export default suite(
                   insertTextFormat: 2,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 14},
-                      end: {line: 9, character: 16},
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
                     },
                     newText: 'foo()',
                   },
@@ -245,8 +244,8 @@ export default suite(
                   insertTextFormat: 2,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 14},
-                      end: {line: 9, character: 16},
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
                     },
                     newText: 'aFunction(${1:arg1}, ${2:arg2})',
                   },

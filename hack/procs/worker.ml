@@ -45,6 +45,7 @@ let slave_main ic oc =
   let start_minor_collections = ref 0 in
   let start_major_collections = ref 0 in
   let start_wall_time = ref 0. in
+  let start_proc_fs_status = ref None in
 
   let infd = Daemon.descr_of_in_channel ic in
   let outfd = Daemon.descr_of_out_channel oc in
@@ -82,6 +83,14 @@ let slave_main ic oc =
 
     Measure.sample "minor_collections" (float (end_minor_collections - !start_minor_collections));
     Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
+
+    begin match !start_proc_fs_status, ProcFS.status_for_pid (Unix.getpid ()) with
+    | Some { ProcFS.rss_total = start; _; }, Ok { ProcFS.rss_total = total; rss_hwm = hwm; _; } ->
+      Measure.sample "worker_rss_start" (float start);
+      Measure.sample "worker_rss_delta" (float (total - start));
+      Measure.sample "worker_rss_hwm_delta" (float (hwm - start))
+    | _ -> ()
+    end;
 
     (* If we got so far, just let it finish "naturally" *)
     WorkerCancel.set_on_worker_cancelled (fun () -> ());
@@ -124,6 +133,7 @@ let slave_main ic oc =
     start_minor_collections := gc.Gc.minor_collections;
     start_major_collections := gc.Gc.major_collections;
     start_wall_time := Unix.gettimeofday ();
+    start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Core_kernel.Result.ok;
     Mem_profile.start ();
     do_process { send = send_result };
     exit 0

@@ -11,3 +11,16 @@
     logging_common
     marshal_tools
     sys_utils))
+
+(library
+  (name dfind_lwt)
+  (wrapped false)
+  (modules dfindLibLwt)
+  (libraries
+    dfind
+    lwt
+    lwt.unix
+    marshal_tools_lwt
+    sys_utils
+  )
+)

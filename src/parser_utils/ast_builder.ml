@@ -51,6 +51,12 @@ module Types = struct
     loc, Ast.Type.Object (Objects.make ?exact ?inexact properties)
 end
 
+let string_literal value =
+  {Ast.StringLiteral.value; raw = Printf.sprintf "%S" value}
+
+let number_literal value raw =
+  {Ast.NumberLiteral.value; raw}
+
 module Literals = struct
   open Ast.Literal
 
@@ -191,8 +197,8 @@ module Statements = struct
   let while_ test body =
     Loc.none, While { While.test; body }
 
-  let do_while body test =
-    Loc.none, DoWhile { DoWhile.body; test }
+  let do_while body ?comments test =
+    Loc.none, DoWhile { DoWhile.body; test; comments }
 
   let for_ init test update body =
     Loc.none, For { For.
@@ -260,8 +266,8 @@ module Statements = struct
   let class_declaration ?super ?implements ?id elements =
     Loc.none, ClassDeclaration (Classes.make ?super ?implements ?id elements)
 
-  let if_ test consequent alternate =
-    Loc.none, If { If.test; consequent; alternate }
+  let if_ ?comments test consequent alternate =
+    Loc.none, If { If.test; consequent; alternate; comments }
 
   let return ?(loc=Loc.none) ?comments expr =
     loc, Return { Return.argument = expr; comments }
@@ -281,6 +287,36 @@ module Statements = struct
 
   let with_ _object body =
     Loc.none, With { With._object; body }
+
+  let enum_declaration ?(loc=Loc.none) id body =
+    loc, EnumDeclaration {EnumDeclaration.id; body}
+
+  module EnumDeclarations = struct
+    open EnumDeclaration
+
+    let initialized_member ?(loc=Loc.none) id init_value =
+      loc, {InitializedMember.id; init = Loc.none, init_value}
+
+    let defaulted_member ?(loc=Loc.none) id =
+      loc, {DefaultedMember.id}
+
+    let boolean_body ?(explicit_type=false) members =
+      BooleanBody {BooleanBody.members; explicitType = explicit_type}
+
+    let number_body ?(explicit_type=false) members =
+      NumberBody {NumberBody.members; explicitType = explicit_type}
+
+    let string_defaulted_body ?(explicit_type=false) members =
+      let members = StringBody.Defaulted members in
+      StringBody {StringBody.members; explicitType = explicit_type}
+
+    let string_initialized_body ?(explicit_type=false) members =
+      let members = StringBody.Initialized members in
+      StringBody {StringBody.members; explicitType = explicit_type}
+
+    let symbol_body members =
+      SymbolBody {SymbolBody.members}
+  end
 end
 
 module Expressions = struct
@@ -336,10 +372,11 @@ module Expressions = struct
   let logical ~op left right =
     Loc.none, Logical { Logical.operator = op; left; right }
 
-  let unary ~op argument =
+  let unary ?(comments=None) ~op argument =
     Loc.none, Unary { Unary.
       operator = op;
       argument;
+      comments;
     }
 
   let unary_plus (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Plus b
@@ -464,6 +501,7 @@ let mk_program ?(comments=[]) stmts =
 
 let ast_of_string ~parser str =
   let parse_options = Some Parser_env.({
+    enums = true;
     esproposal_class_instance_fields = true;
     esproposal_class_static_fields = true;
     esproposal_decorators = true;

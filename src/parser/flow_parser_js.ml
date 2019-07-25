@@ -53,6 +53,11 @@ module Token_translator = Token_translator.Translate (JsTranslator)
 let parse_options jsopts = Parser_env.(
   let opts = default_parse_options in
 
+  let enums = Js.Unsafe.get jsopts "enums" in
+  let opts = if Js.Optdef.test enums
+    then { opts with enums = Js.to_bool enums; }
+    else opts in
+
   let decorators = Js.Unsafe.get jsopts "esproposal_decorators" in
   let opts = if Js.Optdef.test decorators
     then { opts with esproposal_decorators = Js.to_bool decorators; }

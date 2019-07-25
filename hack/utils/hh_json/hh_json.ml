@@ -315,6 +315,9 @@ let string_of_file filename =
 
 (* Writing JSON *)
 
+let sort_object obj_entries =
+  List.sort ~cmp:(fun (k1, _) (k2, _) -> Pervasives.compare k1 k2) obj_entries
+
 module type Output_stream_intf = sig
   type t
   val add_char: t -> char -> unit
@@ -380,37 +383,39 @@ module Make_streamer (Out : Output_stream_intf) = struct
     Out.add_substring b s !pos (String.length s - !pos);
     Out.add_char b '"'
 
-  let rec add_json (buf:Out.t) (json:json): unit =
+  let rec add_json ~sort_keys (buf:Out.t) (json:json): unit =
     match json with
     | JSON_Object l ->
-        concat ~lb:"{" ~rb:"}" ~sep:"," ~concat_elt:add_assoc buf l
+        (* Make the pretty output deterministic by sorting the keys *)
+        let l = if sort_keys then sort_object l else l in
+        concat ~lb:"{" ~rb:"}" ~sep:"," ~concat_elt:(add_assoc ~sort_keys) buf l
     | JSON_Array l ->
-        concat ~lb:"[" ~rb:"]" ~sep:"," ~concat_elt:add_json buf l
+        concat ~lb:"[" ~rb:"]" ~sep:"," ~concat_elt:(add_json ~sort_keys) buf l
     | JSON_String s -> escape buf s
     | JSON_Number n -> Out.add_string buf n
     | JSON_Bool b -> Out.add_string buf (if b then "true" else "false")
     | JSON_Null -> Out.add_string buf "null"
 
-  and add_assoc (buf:Out.t) (k,v) =
+  and add_assoc ~sort_keys (buf:Out.t) (k,v) =
     escape buf k;
     Out.add_char buf ':';
-    add_json buf v
+    add_json ~sort_keys buf v
 end
 
 module Out_buffer = Make_streamer (Buffer_stream)
 module Out_channel = Make_streamer (Channel_stream)
 
-let rec json_to_string ?(pretty=false) (json:json): string =
+let rec json_to_string ?(sort_keys=false) ?(pretty=false) (json:json): string =
   if pretty
-  then json_to_multiline json
+  then json_to_multiline ~sort_keys json
   else
     let buf = Buffer.create 1024 in (* need a better estimate! *)
-    Out_buffer.add_json buf json;
+    Out_buffer.add_json ~sort_keys buf json;
     Buffer.contents buf
 
-and json_to_multiline json =
+and json_to_multiline ?(sort_keys=false) json =
   let rec loop indent json =
-    let single = json_to_string json in
+    let single = json_to_string ~sort_keys json in
     if String.length single < 80 then single else
     match json with
     | JSON_Array l ->
@@ -418,10 +423,12 @@ and json_to_multiline json =
         "[\n" ^ indent ^ "  " ^ (String.concat (",\n" ^ indent ^ "  ") nl) ^
           "\n" ^ indent ^ "]"
     | JSON_Object l ->
+       (* Make the pretty output deterministic by sorting the keys *)
+       let l = if sort_keys then sort_object l else l in
        let nl =
          List.map l
            (fun (k, v) ->
-            indent ^ "  " ^ (json_to_string (JSON_String k)) ^ ":" ^
+            indent ^ "  " ^ (json_to_string ~sort_keys (JSON_String k)) ^ ":" ^
               (loop (indent ^ "  ") v))
        in
         "{\n" ^ (String.concat ",\n" nl) ^ "\n" ^ indent ^ "}"
@@ -430,7 +437,7 @@ and json_to_multiline json =
   loop "" json
 
 let json_to_output oc (json:json): unit =
-  Out_channel.add_json oc json
+  Out_channel.add_json ~sort_keys:false oc json
 
 let rec json_to_multiline_output oc (json:json): unit =
   let json_assoc_to_output oc (k,v) : unit =

@@ -5,17 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val regenerate:
-  options:Options.t ->
-  ServerEnv.env ->
-  ServerEnv.collated_errors
-
 val get_with_separate_warnings:
+  reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
   Errors.ConcreteLocPrintableErrorSet.t * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
 
 val get:
+  reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
   Errors.ConcreteLocPrintableErrorSet.t * Errors.ConcreteLocPrintableErrorSet.t * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list

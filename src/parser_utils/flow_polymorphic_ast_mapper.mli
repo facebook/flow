@@ -101,6 +101,32 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method do_while :
       ('M, 'T) Ast.Statement.DoWhile.t -> ('N, 'U) Ast.Statement.DoWhile.t
     method empty : unit -> unit
+    method enum_declaration :
+      ('M, 'T) Ast.Statement.EnumDeclaration.t -> ('N, 'U) Ast.Statement.EnumDeclaration.t
+    method enum_boolean_body :
+      'M Ast.Statement.EnumDeclaration.BooleanBody.t ->
+      'N Ast.Statement.EnumDeclaration.BooleanBody.t
+    method enum_number_body :
+      'M Ast.Statement.EnumDeclaration.NumberBody.t ->
+      'N Ast.Statement.EnumDeclaration.NumberBody.t
+    method enum_string_body :
+      'M Ast.Statement.EnumDeclaration.StringBody.t ->
+      'N Ast.Statement.EnumDeclaration.StringBody.t
+    method enum_symbol_body :
+      'M Ast.Statement.EnumDeclaration.SymbolBody.t ->
+      'N Ast.Statement.EnumDeclaration.SymbolBody.t
+    method enum_defaulted_member :
+     'M Ast.Statement.EnumDeclaration.DefaultedMember.t ->
+      'N Ast.Statement.EnumDeclaration.DefaultedMember.t
+    method enum_boolean_member :
+     (bool, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      (bool, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+    method enum_number_member :
+     (Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      (Ast.NumberLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+    method enum_string_member :
+     (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
     method explicit_or_implicit :
       ('M, 'T)
       Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation ->

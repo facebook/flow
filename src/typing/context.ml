@@ -31,6 +31,7 @@ type metadata = {
   (* global *)
   max_literal_length: int;
   enable_const_params: bool;
+  enable_enums: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
@@ -38,23 +39,22 @@ type metadata = {
   esproposal_export_star_as: Options.esproposal_feature_mode;
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
+  recursion_limit: int;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   max_workers: int;
   default_lib_dir : Path.t option;
-  trust_mode: Options.trust_mode
+  trust_mode: Options.trust_mode;
+  type_asserts: bool;
 }
-
-type module_kind =
-  | CommonJSModule of ALoc.t option
-  | ESModule
 
 type test_prop_hit_or_miss =
   | Hit
@@ -65,6 +65,9 @@ type type_assert_kind = Is | Throws | Wraps
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
+
+  (* map from tvar ids to trust nodes *)
+  mutable trust_graph: Trust_constraint.node IMap.t;
 
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.Properties.map;
@@ -95,7 +98,7 @@ type sig_t = {
   mutable nominal_ids: ISet.t;
 
   (* map from TypeAssert assertion locations to the type being asserted *)
-  mutable type_asserts: (type_assert_kind * ALoc.t) ALocMap.t;
+  mutable type_asserts_map: (type_assert_kind * ALoc.t) ALocMap.t;
 
   mutable errors: Flow_error.ErrorSet.t;
 
@@ -120,14 +123,18 @@ type sig_t = {
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
 }
 
+type phase = Checking | Merging
+
 type t = {
   sig_cx: sig_t;
 
   file: File_key.t;
-  module_ref: string;
+  phase: phase;
+  (* Tables for the current component (cycle) *)
+  aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   metadata: metadata;
 
-  mutable module_kind: module_kind;
+  module_info: Module_info.t;
 
   mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;
   mutable imported_ts: Type.t SMap.t;
@@ -136,7 +143,7 @@ type t = {
 
   trust_constructor: unit -> Trust.trust_rep;
 
-  mutable declare_module_ref: string option;
+  mutable declare_module_ref: Module_info.t option;
 
   mutable use_def : Scope_api.info * Ssa_api.With_ALoc.values;
 }
@@ -155,6 +162,7 @@ let metadata_of_options options = {
   (* global *)
   max_literal_length = Options.max_literal_length options;
   enable_const_params = Options.enable_const_params options;
+  enable_enums = Options.enums options;
   enforce_strict_call_arity = Options.enforce_strict_call_arity options;
   esproposal_class_instance_fields = Options.esproposal_class_instance_fields options;
   esproposal_class_static_fields = Options.esproposal_class_static_fields options;
@@ -162,34 +170,38 @@ let metadata_of_options options = {
   esproposal_export_star_as = Options.esproposal_export_star_as options;
   esproposal_optional_chaining = Options.esproposal_optional_chaining options;
   esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
+  exact_by_default = Options.exact_by_default options;
   facebook_fbs = Options.facebook_fbs options;
   facebook_fbt = Options.facebook_fbt options;
   haste_module_ref_prefix = Options.haste_module_ref_prefix options;
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
   max_workers = Options.max_workers options;
+  recursion_limit = Options.recursion_limit options;
   root = Options.root options;
   strip_root = Options.should_strip_root options;
   suppress_comments = Options.suppress_comments options;
   suppress_types = Options.suppress_types options;
   default_lib_dir = (Options.file_options options).Files.default_lib_dir;
   trust_mode = Options.trust_mode options;
+  type_asserts = Options.type_asserts options;
 }
 
 let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty
 
 let make_sig () = {
   graph = IMap.empty;
+  trust_graph = IMap.empty;
   property_maps = Type.Properties.Map.empty;
   call_props = IMap.empty;
   export_maps = Type.Exports.Map.empty;
   evaluated = IMap.empty;
-  type_graph = Graph_explorer.new_graph ISet.empty;
+  type_graph = Graph_explorer.new_graph ();
   all_unresolved = IMap.empty;
   envs = IMap.empty;
   module_map = SMap.empty;
   nominal_ids = ISet.empty;
-  type_asserts = ALocMap.empty;
+  type_asserts_map = ALocMap.empty;
   errors = Flow_error.ErrorSet.empty;
   error_suppressions = Error_suppressions.empty;
   severity_cover = Utils_js.FilenameMap.empty;
@@ -203,14 +215,15 @@ let make_sig () = {
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make sig_cx metadata file module_ref = {
+let make sig_cx metadata file aloc_tables module_ref phase = {
   sig_cx;
 
   file;
-  module_ref;
+  phase;
+  aloc_tables;
   metadata;
 
-  module_kind = CommonJSModule(None);
+  module_info = Module_info.empty_cjs_module module_ref;
 
   import_stmts = [];
   imported_ts = SMap.empty;
@@ -226,24 +239,38 @@ let make sig_cx metadata file module_ref = {
 
 let sig_cx cx = cx.sig_cx
 let graph_sig sig_cx = sig_cx.graph
+let trust_graph_sig sig_cx = sig_cx.trust_graph
 let find_module_sig sig_cx m =
   try SMap.find_unsafe m sig_cx.module_map
   with Not_found -> raise (Module_not_found m)
 
-let push_declare_module cx module_ref =
+(* modules *)
+
+let push_declare_module cx info =
   match cx.declare_module_ref with
   | Some _ -> failwith "declare module must be one level deep"
-  | None -> cx.declare_module_ref <- Some module_ref
+  | None -> cx.declare_module_ref <- Some info
 
 let pop_declare_module cx =
   match cx.declare_module_ref with
   | None -> failwith "pop empty declare module"
   | Some _ -> cx.declare_module_ref <- None
 
-let in_declare_module cx =
-  Option.is_some cx.declare_module_ref
+let module_info cx =
+  match cx.declare_module_ref with
+  | Some info -> info
+  | None -> cx.module_info
+
+let module_kind cx =
+  let info = module_info cx in
+  info.Module_info.kind
+
+let module_ref cx =
+  let info = module_info cx in
+  info.Module_info.ref
 
 (* accessors *)
+let current_phase cx = cx.phase
 let all_unresolved cx = cx.sig_cx.all_unresolved
 let envs cx = cx.sig_cx.envs
 let trust_constructor cx = cx.trust_constructor
@@ -254,6 +281,7 @@ let metadata cx = cx.metadata
 let max_literal_length cx = cx.metadata.max_literal_length
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
+let enable_enums cx = cx.metadata.enable_enums
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 let errors cx = cx.sig_cx.errors
 let error_suppressions cx = cx.sig_cx.error_suppressions
@@ -264,7 +292,9 @@ let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
 let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
 let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
 let evaluated cx = cx.sig_cx.evaluated
+let exact_by_default cx = cx.metadata.exact_by_default
 let file cx = cx.file
+let aloc_tables cx = cx.aloc_tables
 let find_props cx id =
   try Type.Properties.Map.find_unsafe id cx.sig_cx.property_maps
   with Not_found -> raise (Props_not_found id)
@@ -283,6 +313,7 @@ let find_tvar cx id =
   with Not_found -> raise (Tvar_not_found id)
 let mem_nominal_id cx id = ISet.mem id cx.sig_cx.nominal_ids
 let graph cx = graph_sig cx.sig_cx
+let trust_graph cx = trust_graph_sig cx.sig_cx
 let import_stmts cx = cx.import_stmts
 let imported_ts cx = cx.imported_ts
 let is_checked cx = cx.metadata.checked
@@ -293,16 +324,12 @@ let is_strict_local cx = cx.metadata.strict_local
 let include_suppressions cx = cx.metadata.include_suppressions
 let severity_cover cx = cx.sig_cx.severity_cover
 let max_trace_depth cx = cx.metadata.max_trace_depth
-let module_kind cx = cx.module_kind
 let require_map cx = cx.require_map
 let module_map cx = cx.sig_cx.module_map
-let module_ref cx =
-  match cx.declare_module_ref with
-  | Some module_ref -> module_ref
-  | None -> cx.module_ref
 let property_maps cx = cx.sig_cx.property_maps
 let call_props cx = cx.sig_cx.call_props
 let export_maps cx = cx.sig_cx.export_maps
+let recursion_limit cx = cx.metadata.recursion_limit
 let root cx = cx.metadata.root
 let facebook_fbs cx = cx.metadata.facebook_fbs
 let facebook_fbt cx = cx.metadata.facebook_fbt
@@ -314,9 +341,10 @@ let suppress_comments cx = cx.metadata.suppress_comments
 let suppress_types cx = cx.metadata.suppress_types
 let default_lib_dir cx = cx.metadata.default_lib_dir
 
-let type_asserts cx = cx.sig_cx.type_asserts
+let type_asserts_map cx = cx.sig_cx.type_asserts_map
 let type_graph cx = cx.sig_cx.type_graph
 let trust_mode cx = cx.metadata.trust_mode
+let type_asserts cx = cx.metadata.type_asserts
 let verbose cx = cx.metadata.verbose
 let max_workers cx = cx.metadata.max_workers
 let jsx cx = cx.metadata.jsx
@@ -343,6 +371,7 @@ let copy_of_context cx = {
   sig_cx = {
     cx.sig_cx with
     graph = cx.sig_cx.graph;
+    trust_graph = cx.sig_cx.trust_graph;
   };
 }
 
@@ -374,10 +403,12 @@ let add_export_map cx id tmap =
   cx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.sig_cx.export_maps
 let add_tvar cx id bounds =
   cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.graph
+let add_trust_var cx id bounds =
+  cx.sig_cx.trust_graph <- IMap.add id bounds cx.sig_cx.trust_graph
 let add_nominal_id cx id =
   cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
 let add_type_assert cx k v =
-  cx.sig_cx.type_asserts <- ALocMap.add k v cx.sig_cx.type_asserts
+  cx.sig_cx.type_asserts_map <- ALocMap.add k v cx.sig_cx.type_asserts_map
 let remove_all_errors cx =
   cx.sig_cx.errors <- Flow_error.ErrorSet.empty
 let remove_all_error_suppressions cx =
@@ -394,8 +425,8 @@ let set_evaluated cx evaluated =
   cx.sig_cx.evaluated <- evaluated
 let set_graph cx graph =
   cx.sig_cx.graph <- graph
-let set_module_kind cx module_kind =
-  cx.module_kind <- module_kind
+let set_trust_graph cx trust_graph =
+  cx.sig_cx.trust_graph <- trust_graph
 let set_property_maps cx property_maps =
   cx.sig_cx.property_maps <- property_maps
 let set_call_props cx call_props =
@@ -417,6 +448,7 @@ let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
   cx.sig_cx.nominal_ids <- ISet.empty;
+  cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0; (* still 176 bytes :/ *)
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
@@ -433,6 +465,8 @@ let clear_intermediates cx =
 let clear_master_shared cx master_cx =
   set_graph cx (graph cx |> IMap.filter (fun id _ -> not
     (IMap.mem id master_cx.graph)));
+  set_trust_graph cx (trust_graph cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id master_cx.trust_graph)));
   set_property_maps cx (property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
     (Type.Properties.Map.mem id master_cx.property_maps)));
   set_call_props cx (call_props cx |> IMap.filter (fun id _ -> not
@@ -538,21 +572,9 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.call_props <- IMap.union sig_cx_other.call_props sig_cx.call_props;
   sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
   sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
-  sig_cx.type_graph <- Graph_explorer.union sig_cx_other.type_graph sig_cx.type_graph;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
-  sig_cx.type_asserts <- ALocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;
-
-  (* These entries are intermediates, and will be cleared from dep_cxs before
-     merge. However, initializing builtins is a bit different, and actually copy
-     these things from the lib cxs into the master sig_cx before we clear the
-     indeterminates and calculate the sig sig_cx. *)
-  sig_cx.envs <- IMap.union sig_cx_other.envs sig_cx.envs;
-  sig_cx.errors <- Flow_error.ErrorSet.union sig_cx_other.errors sig_cx.errors;
-  sig_cx.error_suppressions <- Error_suppressions.union sig_cx_other.error_suppressions sig_cx.error_suppressions;
-  sig_cx.severity_cover <- Utils_js.FilenameMap.union sig_cx_other.severity_cover sig_cx.severity_cover;
-  sig_cx.exists_checks <- ALocMap.union sig_cx_other.exists_checks sig_cx.exists_checks;
-  sig_cx.exists_excuses <- ALocMap.union sig_cx_other.exists_excuses sig_cx.exists_excuses;
-  sig_cx.all_unresolved <- IMap.union sig_cx_other.all_unresolved sig_cx.all_unresolved;
+  sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
+  sig_cx.type_asserts_map <- ALocMap.union sig_cx.type_asserts_map sig_cx_other.type_asserts_map;
   ()
 
 (* Find the constraints of a type variable in the graph.
@@ -594,8 +616,33 @@ let rec find_resolved cx = function
   | Type.OpenT (_, id) ->
     let open Constraint in
     begin match find_graph cx id with
-      | Resolved t | FullyResolved t -> Some t
+      | Resolved (_, t) | FullyResolved (_, t) -> Some t
       | Unresolved _ -> None
     end
   | Type.AnnotT (_, t, _) -> find_resolved cx t
   | t -> Some t
+
+let rec find_trust_root cx (id: Trust_constraint.ident) =
+  let open Trust_constraint in
+  match IMap.get id (trust_graph cx) with
+  | Some (TrustGoto next_id) ->
+      let root_id, root = find_trust_root cx next_id in
+      if root_id != next_id then Trust_constraint.new_goto root_id |> add_trust_var cx id;
+      root_id, root
+
+  | Some (TrustRoot root) ->
+      id, root
+
+  | None ->
+      let msg = Utils_js.spf "find_trust_root: trust var %d not found in file %s" id
+        (File_key.to_string @@ file cx)
+      in
+      Utils_js.assert_false msg
+
+let find_trust_constraints cx id =
+  let root_id, root = find_trust_root cx id in
+  root_id, Trust_constraint.get_constraints root
+
+let find_trust_graph cx id =
+  let _, constraints = find_trust_constraints cx id in
+  constraints

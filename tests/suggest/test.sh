@@ -43,6 +43,7 @@ do_file "replacement-class.js"
 do_file "replacement-dictionary.js"
 do_file "replacement-function.js"
 do_file "replacement-object.js"
+do_file "func-arg-only.js"
 
 "$FLOW" init $TEMP_DIR
 assert_ok "$FLOW" check $TEMP_DIR

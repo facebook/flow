@@ -149,9 +149,13 @@ var removeFlowVisitor = {
   DeclareVariable: removeNode,
   InterfaceDeclaration: removeNode,
   TypeAlias: removeNode,
-  TypeAnnotation: removeNode,
+  TypeAnnotation: removeNodeIfNotCommentType,
   TypeParameterDeclaration: removeNode,
   TypeParameterInstantiation: removeNode,
+  InferredPredicate: removeNode,
+  OpaqueType: removeNode,
+  DeclareOpaqueType: removeNode,
+  DeclareExportDeclaration: removeNode,
 
   ClassDeclaration: removeImplementedInterfaces,
   ClassExpression: removeImplementedInterfaces,
@@ -322,6 +326,15 @@ function removeNode(context, node) {
   }
 
   return false;
+}
+
+function removeNodeIfNotCommentType(context, node) {
+  var source = context.source;
+  var start = startOf(node);
+  if (source[start] === '/') {
+    return false;
+  }
+  return removeNode(context, node);
 }
 
 function getPragmaNode(context, start, size) {

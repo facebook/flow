@@ -94,5 +94,19 @@ References:
                 ^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- spread.js:64:22
 
-Found 6 errors
+Cannot assign array literal to `t2s` because array literal [1] has an arity of 3 but tuple type [2] has an arity of 4.
+
+   spread.js:64:22
+   64| let t2s: [1,2,3,4] = [...[t, t, t]]; // error tuple is only 3 long
+                            ^^^^^^^^^^^^^^ [1]
+
+References:
+   spread.js:64:10
+   64| let t2s: [1,2,3,4] = [...[t, t, t]]; // error tuple is only 3 long
+                ^^^^^^^^^ [2]
+
+
+
+Found 7 errors

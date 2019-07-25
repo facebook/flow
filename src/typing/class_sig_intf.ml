@@ -77,12 +77,12 @@ val append_constructor:
   t -> t
 
 (** Add field to signature. *)
-val add_field: static:bool -> string -> ALoc.t -> Type.polarity -> field -> t -> t
+val add_field: static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
 
 (** Add indexer to signature. *)
 val add_indexer:
   static:bool ->
-  Type.polarity ->
+  Polarity.t ->
   key:(ALoc.t * Type.t) ->
   value:(ALoc.t * Type.t) ->
   t -> t
@@ -91,10 +91,10 @@ val add_indexer:
 val add_name_field: t -> t
 
 (** Add proto field to signature. *)
-val add_proto_field: string -> ALoc.t -> Type.polarity -> field -> t -> t
+val add_proto_field: string -> ALoc.t -> Polarity.t -> field -> t -> t
 
 (** Add private field to signature. *)
-val add_private_field: string -> ALoc.t -> Type.polarity -> field -> static:bool -> t -> t
+val add_private_field: string -> ALoc.t -> Polarity.t -> field -> static:bool -> t -> t
 
 (** Add method to signature.
 

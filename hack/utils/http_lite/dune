@@ -1,0 +1,6 @@
+(library
+  (name http_lite)
+  (wrapped false)
+  (libraries
+    buffered_line_reader
+    utils_core))

@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -18,7 +17,7 @@ export default suite(
     test('invalid_method', [
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})
@@ -202,14 +201,9 @@ export default suite(
       ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
       }).verifyAllIDEMessagesInStep(
-          [
-            "textDocument/typeCoverage"
-          ],
-          [
-            "window/showStatus",
-            "$/cancelRequest"
-          ],
-        ),
+        ['textDocument/typeCoverage'],
+        ['window/showStatus', '$/cancelRequest'],
+      ),
     ]),
 
     test('textDocument/typeCoverage 2', [

@@ -10,7 +10,6 @@ module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
-module Error = Parse_error
 module SSet = Set.Make(String)
 
 open Parser_common
@@ -90,7 +89,7 @@ module Statement
           let (_, { Identifier.name; comments= _ }) as label =
             Parse.identifier env in
           if not (SSet.mem name (labels env))
-          then error env (Error.UnknownLabel name);
+          then error env (Parse_error.UnknownLabel name);
           Some label
         end
       in
@@ -98,12 +97,15 @@ module Statement
       label
     ) env in
     if label = None && not (in_loop env || in_switch env)
-    then error_at env (loc, Error.IllegalBreak);
+    then error_at env (loc, Parse_error.IllegalBreak);
     loc, Statement.Break { Statement.Break.label }
 
   and continue env =
+    let leading = Peek.comments env in
+    let trailingComments = ref [] in
     let loc, label = with_loc (fun env ->
       Expect.token env T_CONTINUE;
+      trailingComments := Peek.comments env;
       let label =
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
         then None
@@ -111,14 +113,16 @@ module Statement
           let (_, { Identifier.name; comments= _ }) as label =
             Parse.identifier env in
           if not (SSet.mem name (labels env))
-          then error env (Error.UnknownLabel name);
+          then error env (Parse_error.UnknownLabel name);
           Some label
         end in
       Eat.semicolon env;
       label
     ) env in
-    if not (in_loop env) then error_at env (loc, Error.IllegalContinue);
-    loc, Statement.Continue { Statement.Continue.label }
+    if not (in_loop env) then error_at env (loc, Parse_error.IllegalContinue);
+    let trailing = !trailingComments in
+    loc, Statement.Continue { Statement.Continue.label;
+    comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }
 
   and debugger = with_loc (fun env ->
     Expect.token env T_DEBUGGER;
@@ -127,6 +131,7 @@ module Statement
   )
 
   and do_while = with_loc (fun env ->
+    let leading = Peek.comments env in
     Expect.token env T_DO;
     let body = Parse.statement (env |> with_in_loop true) in
 
@@ -135,19 +140,23 @@ module Statement
        (see sec-semantics-static-semantics-early-errors). *)
     if not (in_strict_mode env) && is_labelled_function body
     then function_as_statement_error_at env (fst body);
-
+    let pre_keyword_trailing = Peek.comments env in
     Expect.token env T_WHILE;
+    let pre_cond_trailing = Peek.comments env in
     Expect.token env T_LPAREN;
     let test = Parse.expression env in
     Expect.token env T_RPAREN;
+    let past_cond_trailing = Peek.comments env in
     (* The rules of automatic semicolon insertion in ES5 don't mention this,
      * but the semicolon after a do-while loop is optional. This is properly
      * specified in ES6 *)
     if Peek.token env = T_SEMICOLON
     then Eat.semicolon env;
+    let trailing = pre_keyword_trailing @ pre_cond_trailing @ past_cond_trailing in
     Statement.DoWhile { Statement.DoWhile.
       body;
       test;
+      comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());
     }
   )
 
@@ -206,11 +215,11 @@ module Statement
       | t when t = T_OF || async ->
           let left = Statement.(match init with
           | Some (For_declaration decl) ->
-            assert_can_be_forin_or_forof env Error.InvalidLHSInForOf decl;
+            assert_can_be_forin_or_forof env Parse_error.InvalidLHSInForOf decl;
             ForOf.LeftDeclaration decl
           | Some (For_expression expr) ->
             (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
-            let patt = Pattern_cover.as_pattern ~err:Error.InvalidLHSInForOf env expr in
+            let patt = Pattern_cover.as_pattern ~err:Parse_error.InvalidLHSInForOf env expr in
             ForOf.LeftPattern patt
           | None -> assert false) in
           (* This is a for of loop *)
@@ -228,11 +237,11 @@ module Statement
       | T_IN ->
           let left = match init with
           | Some (For_declaration decl) ->
-            assert_can_be_forin_or_forof env Error.InvalidLHSInForIn decl;
+            assert_can_be_forin_or_forof env Parse_error.InvalidLHSInForIn decl;
             Statement.ForIn.LeftDeclaration decl
           | Some (For_expression expr) ->
             (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
-            let patt = Pattern_cover.as_pattern ~err:Error.InvalidLHSInForIn env expr in
+            let patt = Pattern_cover.as_pattern ~err:Parse_error.InvalidLHSInForIn env expr in
             Statement.ForIn.LeftPattern patt
           | None -> assert false in
           (* This is a for in loop *)
@@ -299,10 +308,14 @@ module Statement
     in
 
     with_loc (fun env ->
+      let pre_if_leading = Peek.comments env in
       Expect.token env T_IF;
+      let pre_cond_leading = Peek.comments env in
+      let leading = pre_if_leading @ pre_cond_leading in
       Expect.token env T_LPAREN;
       let test = Parse.expression env in
       Expect.token env T_RPAREN;
+      let trailing = Peek.comments env in
       let consequent = if_branch env in
       let alternate = if Peek.token env = T_ELSE
       then begin
@@ -313,12 +326,13 @@ module Statement
         test;
         consequent;
         alternate;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
       }
     )
 
   and return = with_loc (fun env ->
     if not (in_function env)
-    then error env Error.IllegalReturn;
+    then error env Parse_error.IllegalReturn;
     let leading = Peek.comments env in
     Expect.token env T_RETURN;
     let argument, trailing =
@@ -342,7 +356,7 @@ module Statement
         let test = match Peek.token env with
         | T_DEFAULT ->
             if seen_default
-            then error env Error.MultipleDefaultsInSwitch;
+            then error env Parse_error.MultipleDefaultsInSwitch;
             Expect.token env T_DEFAULT; None
         | _ ->
             Expect.token env T_CASE;
@@ -382,7 +396,7 @@ module Statement
     let start_loc = Peek.loc env in
     Expect.token env T_THROW;
     if Peek.is_line_terminator env
-    then error_at env (start_loc, Error.NewlineAfterThrow);
+    then error_at env (start_loc, Parse_error.NewlineAfterThrow);
     let argument = Parse.expression env in
     Eat.semicolon env;
     Statement.(Throw { Throw.argument; })
@@ -398,7 +412,7 @@ module Statement
           let param = if Peek.token env = T_LPAREN
           then begin
             Expect.token env T_LPAREN;
-            let p = Some (Parse.pattern env Error.StrictCatchVariable) in
+            let p = Some (Parse.pattern env Parse_error.StrictCatchVariable) in
             Expect.token env T_RPAREN;
             p
           end else
@@ -420,7 +434,7 @@ module Statement
 
     (* No catch or finally? That's an error! *)
     if handler = None && finalizer = None then
-      error_at env (fst block, Error.NoCatchOrFinally);
+      error_at env (fst block, Parse_error.NoCatchOrFinally);
 
     Statement.Try { Statement.Try.
       block;
@@ -488,7 +502,7 @@ module Statement
         body;
       }
     ) env in
-    strict_error_at env (loc, Error.StrictModeWith);
+    strict_error_at env (loc, Parse_error.StrictModeWith);
     loc, stmt
 
   and block env =
@@ -501,7 +515,7 @@ module Statement
         let _, { Identifier.name; comments= _ } = label in
         Expect.token env T_COLON;
         if SSet.mem name (labels env)
-        then error_at env (loc, Error.Redeclaration ("Label", name));
+        then error_at env (loc, Parse_error.Redeclaration ("Label", name));
         let env = add_label env name in
         let body =
           (* labelled FunctionDeclarations are allowed in non-strict mode
@@ -536,11 +550,11 @@ module Statement
 
   and type_alias_helper env =
     if not (should_parse_types env)
-    then error env Error.UnexpectedTypeAlias;
+    then error env Parse_error.UnexpectedTypeAlias;
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.semicolon env;
@@ -567,12 +581,12 @@ module Statement
 
   and opaque_type_helper ?(declare=false) env =
     if not (should_parse_types env)
-    then error env Error.UnexpectedOpaqueTypeAlias;
+    then error env Parse_error.UnexpectedOpaqueTypeAlias;
     Expect.token env T_OPAQUE;
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     let supertype = match Peek.token env with
     | T_COLON ->
         Expect.token env T_COLON;
@@ -607,10 +621,10 @@ module Statement
 
   and interface_helper env =
     if not (should_parse_types env)
-    then error env Error.UnexpectedTypeInterface;
+    then error env Parse_error.UnexpectedTypeInterface;
     Expect.token env T_INTERFACE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     let { Ast.Type.Interface.extends; body } = Type.interface_helper env in
     Statement.Interface.({
       id;
@@ -649,7 +663,7 @@ module Statement
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
-      let tparams = Type.type_parameter_declaration_with_defaults env in
+      let tparams = Type.type_parameter_declaration env in
       let extends = if Expect.maybe env T_EXTENDS then Some (Type.generic env) else None in
       let mixins = match Peek.token env with
       | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
@@ -703,7 +717,7 @@ module Statement
     Expect.token env T_DECLARE;
     begin match Peek.token env with
     | T_ASYNC ->
-      error env Error.DeclareAsync;
+      error env Parse_error.DeclareAsync;
       Expect.token env T_ASYNC
     | _ -> ()
     end;
@@ -714,7 +728,7 @@ module Statement
   and declare_var env =
     Expect.token env T_VAR;
     let _loc, { Pattern.Identifier.name; annot; _; } =
-      Parse.identifier_with_type env ~no_optional:true Error.StrictVarName in
+      Parse.identifier_with_type env ~no_optional:true Parse_error.StrictVarName in
     Eat.semicolon env;
     Statement.DeclareVariable.({ id=name; annot; })
 
@@ -793,7 +807,7 @@ module Statement
     let declare_module_ env start_loc =
       let id = match Peek.token env with
       | T_STRING (loc, value, raw, octal) ->
-          if octal then strict_error env Error.StrictOctalLiteral;
+          if octal then strict_error env Parse_error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
           Statement.DeclareModule.Literal (loc, { StringLiteral.value; raw; })
       | _ ->
@@ -834,7 +848,7 @@ module Statement
 
   and declare ?(in_module=false) env =
     if not (should_parse_types env)
-    then error env Error.UnexpectedTypeDeclaration;
+    then error env Parse_error.UnexpectedTypeDeclaration;
     (* eventually, just emit a wrapper AST node *)
     (match Peek.ith_token ~i:1 env with
       | T_CLASS ->
@@ -864,7 +878,7 @@ module Statement
       | _ when in_module -> (
           match Peek.token env with
           | T_IMPORT ->
-            error env Error.InvalidNonTypeImportInDeclareModule;
+            error env Parse_error.InvalidNonTypeImportInDeclareModule;
             Parse.statement env
           | _ ->
             (* Oh boy, found some bad stuff in a declare module. Let's just
@@ -879,7 +893,7 @@ module Statement
     Expect.identifier env "from";
     match Peek.token env with
     | T_STRING (loc, value, raw, octal) ->
-        if octal then strict_error env Error.StrictOctalLiteral;
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         loc, { StringLiteral.value; raw; }
     | _ ->
@@ -920,7 +934,7 @@ module Statement
     | T_RCURLY ->
         List.rev specifiers
     | _ ->
-        if not preceding_comma then error env Error.ExportSpecifierMissingComma;
+        if not preceding_comma then error env Parse_error.ExportSpecifierMissingComma;
         let specifier = with_loc (fun env ->
           let local = identifier_name env in
           let exported =
@@ -984,7 +998,7 @@ module Statement
         (* export type ... *)
         let open Statement.ExportNamedDeclaration in
         if not (should_parse_types env)
-        then error env Error.UnexpectedTypeExport;
+        then error env Parse_error.UnexpectedTypeExport;
         (match Peek.ith_token ~i:1 env with
         | T_MULT ->
           Expect.token env T_TYPE;
@@ -1025,7 +1039,7 @@ module Statement
         (* export interface I { ... } *)
         let open Statement.ExportNamedDeclaration in
         if not (should_parse_types env)
-        then error env Error.UnexpectedTypeExport;
+        then error env Parse_error.UnexpectedTypeExport;
         let interface = interface env in
         (match interface with
           | (loc, Statement.InterfaceDeclaration {Statement.Interface.id; _;}) ->
@@ -1065,10 +1079,10 @@ module Statement
           | (loc, FunctionDeclaration { Function.id = Some id; _; })
             -> [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
           | (loc, ClassDeclaration { Class.id = None; _; }) ->
-            error_at env (loc, Error.ExportNamelessClass);
+            error_at env (loc, Parse_error.ExportNamelessClass);
             []
           | (loc, FunctionDeclaration { Function.id = None; _; }) ->
-            error_at env (loc, Error.ExportNamelessFunction);
+            error_at env (loc, Parse_error.ExportNamelessFunction);
             []
           | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
         ) in
@@ -1092,7 +1106,7 @@ module Statement
             Eat.token env;
             if parse_export_star_as
             then Some (Parse.identifier env)
-            else (error env Error.UnexpectedTypeDeclaration; None)
+            else (error env Parse_error.UnexpectedTypeDeclaration; None)
           | _ ->
             None
         in
@@ -1137,7 +1151,7 @@ module Statement
 
   and declare_export_declaration ?(allow_export_type=false) = with_loc (fun env ->
     if not (should_parse_types env)
-    then error env Error.UnexpectedTypeDeclaration;
+    then error env Parse_error.UnexpectedTypeDeclaration;
     Expect.token env T_DECLARE;
 
     let env = env |> with_strict true |> with_in_export true in
@@ -1187,8 +1201,8 @@ module Statement
         | T_CONST
         | T_VAR as token ->
             (match token with
-            | T_LET -> error env Error.DeclareExportLet
-            | T_CONST -> error env Error.DeclareExportConst
+            | T_LET -> error env Parse_error.DeclareExportLet
+            | T_CONST -> error env Parse_error.DeclareExportConst
             | _ -> ());
             (* declare export var foo: ... *)
             let var = with_loc declare_var env in
@@ -1213,7 +1227,7 @@ module Statement
             Eat.token env;
             if parse_export_star_as
             then Some (Parse.identifier env)
-            else (error env Error.UnexpectedTypeDeclaration; None)
+            else (error env Parse_error.UnexpectedTypeDeclaration; None)
           | _ ->
             None
         in
@@ -1257,8 +1271,8 @@ module Statement
         }
     | _ ->
         (match Peek.token env with
-          | T_TYPE -> error env Error.DeclareExportType
-          | T_INTERFACE -> error env Error.DeclareExportInterface
+          | T_TYPE -> error env Parse_error.DeclareExportType
+          | T_INTERFACE -> error env Parse_error.DeclareExportInterface
           | _ -> ()
         );
         Expect.token env T_LCURLY;
@@ -1289,7 +1303,7 @@ module Statement
       Expect.identifier env "from";
       match Peek.token env with
       | T_STRING (loc, value, raw, octal) ->
-          if octal then strict_error env Error.StrictOctalLiteral;
+          if octal then strict_error env Parse_error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
           loc, { StringLiteral.value; raw; }
       | _ ->
@@ -1406,7 +1420,7 @@ module Statement
     in let type_specifier env =
       let remote, local = with_maybe_as env
         ~for_type:true
-        ~error_if_type:Error.ImportTypeShorthandOnlyInPureImport
+        ~error_if_type:Parse_error.ImportTypeShorthandOnlyInPureImport
       in
       { remote; local; kind = None }
 
@@ -1414,7 +1428,7 @@ module Statement
     in let typeof_specifier env =
       let remote, local = with_maybe_as env
         ~for_type:true
-        ~error_if_type:Error.ImportTypeShorthandOnlyInPureImport
+        ~error_if_type:Parse_error.ImportTypeShorthandOnlyInPureImport
       in
       { remote; local; kind = None }
 
@@ -1423,7 +1437,7 @@ module Statement
       | T_EOF
       | T_RCURLY -> List.rev acc
       | _ ->
-        if not preceding_comma then error env Error.ImportSpecifierMissingComma;
+        if not preceding_comma then error env Parse_error.ImportSpecifierMissingComma;
         let specifier = match statement_kind with
         | ImportType -> type_specifier env
         | ImportTypeof -> typeof_specifier env
@@ -1500,7 +1514,7 @@ module Statement
 
       (* `import "ModuleName";` *)
       | T_STRING (str_loc, value, raw, octal) ->
-        if octal then strict_error env Error.StrictOctalLiteral;
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
         Expect.token env (T_STRING (str_loc, value, raw, octal));
         let source = (str_loc, { StringLiteral.value; raw; }) in
         Eat.semicolon env;

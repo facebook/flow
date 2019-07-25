@@ -445,7 +445,20 @@ let check_version required_version =
   match required_version with
   | None -> Ok ()
   | Some version_constraint ->
-    if Semver.satisfies version_constraint Flow_version.version then
+    (* For the purposes of checking whether the *currently-running* version of Flow is compatible
+       with the given project, we'll include pre-releases. For example, this means that 0.61.0-beta
+       is compatible with >0.60.0, because it presumably implements the minimum necessary features
+       of 0.60.0.
+
+       This is subtly different than determining which version of Flow to run in the first place,
+       like when npm/yarn is solving the `flow-bin` constraint. In that case, we do not want
+       >0.60.0 to opt into pre-releases automatically. Those sorts of checks should not pass
+       `~includes_prereleases`.
+
+       So, if you've explicitly run v0.61.0-beta, and the flowconfig says `>0.60.0`, we'll allow it;
+       but if we were looking at the flowconfig to decide which version to run, you should not
+       choose the beta. *)
+    if Semver.satisfies ~include_prereleases:true version_constraint Flow_version.version then
       Ok ()
     else
       let msg = Utils_js.spf
@@ -1051,8 +1064,10 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports = FlowConfig.enforce_well_formed_exports flowconfig;
     opt_enforce_well_formed_exports_whitelist = FlowConfig.enforce_well_formed_exports_whitelist flowconfig;
+    opt_enums = FlowConfig.enums flowconfig;
     opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
+    opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
@@ -1083,6 +1098,9 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode = Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
+    opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
+    opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
+    opt_type_asserts = FlowConfig.type_asserts flowconfig;
   }
 
 let make_env flowconfig_name connect_flags root =
@@ -1171,6 +1189,35 @@ let guess_root flowconfig_name dir_or_file =
         FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   )
 
+(* Favor the root argument, over the input file, over the current directory
+   as the place to begin searching for the root. *)
+let find_a_root ?input ~base_flags root_arg =
+  let flowconfig_name = Base_flags.(base_flags.flowconfig_name) in
+  guess_root flowconfig_name (match root_arg, input with
+    | Some provided_root, _ -> Some provided_root
+    | None, Some provided_input -> File_input.path_of_file_input provided_input
+    | None, None -> None)
+
+(* If a root is given then validate it and use it. Otherwise, favor the input file
+   over the current directory as the place to begin searching for the root. *)
+let get_the_root ?input ~base_flags root_arg =
+  match root_arg with
+  | Some provided_root ->
+    let root_dir = Path.make provided_root in
+    if Path.file_exists root_dir && Path.is_directory root_dir then
+      let flowconfig_name = Base_flags.(base_flags.flowconfig_name) in
+      let root_config = Path.concat root_dir flowconfig_name in
+      if Path.file_exists root_config then
+        root_dir
+      else
+        let msg = spf "Failed to open %s" @@ Path.to_string root_config in
+        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    else
+      let msg = spf "Invalid root directory %s" provided_root in
+      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+  | None -> find_a_root ?input ~base_flags None
+
+
 (* convert 1,1 based line/column to 1,0 for internal use *)
 let convert_input_pos (line, column) =
   let column =
@@ -1215,6 +1262,29 @@ let get_file_from_filename_or_stdin ~cmd path = function
         | Some str -> Some (get_path_of_file str)
       ) in
       File_input.FileContent (filename, contents)
+
+(* Takes a list of strings. If there are 2 then they are both parsed as intengers
+   and stdin is read from. If there are 3 then the first is treated as a input file
+   and the following 2 are parsed as integers. *)
+let parse_location_with_optional_filename spec path args =
+  let exit () =
+      CommandSpec.usage spec;
+      FlowExitStatus.(exit Commandline_usage_error) in
+  let (file, line, column) =
+    begin match args with
+    | [file; line; column] ->
+      let file = expand_path file in
+      File_input.FileName file, line, column
+    | [line; column] ->
+      get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
+      line,
+      column
+    | _ -> exit ()
+    end in
+  let (line, column) = try (int_of_string line), (int_of_string column)
+    with Failure(_) -> exit () in
+  let (line, column) = convert_input_pos (line, column) in
+  file, line, column
 
 let range_string_of_loc ~strip_root loc = Loc.(
   let file = match loc.source with

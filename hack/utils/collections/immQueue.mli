@@ -31,6 +31,8 @@ val is_empty: 'a t -> bool
 
 val length: 'a t -> int
 
+val exists: 'a t -> f:('a -> bool) -> bool
+
 val iter: 'a t -> f:('a -> unit) -> unit
 
 (* from_list: the head of the list is the first one to be popped *)

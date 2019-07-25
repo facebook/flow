@@ -469,8 +469,8 @@ let program (algo : diff_algorithm)
       class_ class1 class2
     | (_, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2) ->
       interface intf1 intf2
-    | (_, If if1), (_, If if2) ->
-      if_statement if1 if2
+    | (loc, If if1), (_, If if2) ->
+      if_statement loc if1 if2
     | (_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2) ->
       expression_statement expr1 expr2
     | (_, Block block1), (_, Block block2) ->
@@ -483,8 +483,8 @@ let program (algo : diff_algorithm)
       Some (while_statement while1 while2)
     | (_, ForOf for_of1), (_, ForOf for_of2) ->
       for_of_statement for_of1 for_of2
-    | (_, DoWhile do_while1), (_, DoWhile do_while2) ->
-      Some (do_while_statement do_while1 do_while2)
+    | (loc, DoWhile do_while1), (_, DoWhile do_while2) ->
+      Some (do_while_statement loc do_while1 do_while2)
     | (_, Switch switch1), (_, Switch switch2) ->
       switch_statement switch1 switch2
     | (loc, Return return1), (_, Return return2) ->
@@ -709,18 +709,21 @@ let program (algo : diff_algorithm)
     else
       Some []
 
-  and if_statement (if1: (Loc.t, Loc.t) Ast.Statement.If.t) (if2: (Loc.t, Loc.t) Ast.Statement.If.t)
+  and if_statement loc (if1: (Loc.t, Loc.t) Ast.Statement.If.t)
+                       (if2: (Loc.t, Loc.t) Ast.Statement.If.t)
       : node change list option =
     let open Ast.Statement.If in
     let {
       test = test1;
       consequent = consequent1;
-      alternate = alternate1
+      alternate = alternate1;
+      comments = comments1
     } = if1 in
     let {
       test = test2;
       consequent = consequent2;
-      alternate = alternate2
+      alternate = alternate2;
+      comments = comments2
     } = if2 in
 
     let expr_diff = Some (diff_if_changed expression test1 test2) in
@@ -730,7 +733,8 @@ let program (algo : diff_algorithm)
       | Some _, None
       | None, Some _ -> None
       | Some a1, Some a2 -> Some (diff_if_changed statement a1 a2) in
-    join_diff_list [expr_diff; cons_diff; alt_diff]
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [comments; expr_diff; cons_diff; alt_diff]
 
   and with_statement (with1: (Loc.t, Loc.t) Ast.Statement.With.t)
                      (with2: (Loc.t, Loc.t) Ast.Statement.With.t)
@@ -876,8 +880,8 @@ let program (algo : diff_algorithm)
         Some (literal loc lit1 lit2)
       | (_, Binary b1), (_, Binary b2) ->
         binary b1 b2
-      | (_, Unary u1), (_, Unary u2) ->
-        unary u1 u2
+      | (loc, Unary u1), (_, Unary u2) ->
+        unary loc u1 u2
       | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
         identifier id1 id2 |> Option.return
       | (_, Conditional c1), (_, Conditional c2) ->
@@ -1170,7 +1174,7 @@ let program (algo : diff_algorithm)
     match expr1, expr2 with
     | ExpressionContainer.Expression expr1', ExpressionContainer.Expression expr2' ->
       Some (diff_if_changed expression expr1' expr2')
-    | ExpressionContainer.EmptyExpression _, ExpressionContainer.EmptyExpression _ ->
+    | ExpressionContainer.EmptyExpression, ExpressionContainer.EmptyExpression ->
       Some []
     | _ -> None
 
@@ -1244,14 +1248,17 @@ let program (algo : diff_algorithm)
     else
       Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
 
-  and unary (u1: (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2: (Loc.t, Loc.t) Ast.Expression.Unary.t): node change list option =
+  and unary loc (u1: (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2: (Loc.t, Loc.t) Ast.Expression.Unary.t): node change list option =
     let open Ast.Expression.Unary in
-    let { operator = op1; argument = arg1 } = u1 in
-    let { operator = op2; argument = arg2 } = u2 in
+    let { operator = op1; argument = arg1; comments = comments1 } = u1 in
+    let { operator = op2; argument = arg2; comments = comments2 } = u2 in
+    let comments = syntax_opt loc comments1 comments2
+      |> Option.value ~default:[]
+    in
     if op1 != op2 then
       None
     else
-      Some (expression arg1 arg2)
+      Some (comments @ (expression arg1 arg2))
 
   and identifier (id1: (Loc.t, Loc.t) Ast.Identifier.t) (id2: (Loc.t, Loc.t) Ast.Identifier.t): node change list =
     let (old_loc, { Ast.Identifier.name= name1; comments= comments1 }) = id1 in
@@ -1442,15 +1449,16 @@ let program (algo : diff_algorithm)
     | (LeftPattern _, LeftDeclaration _) ->
       None
 
-  and do_while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
-                         (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
+  and do_while_statement loc (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
+                             (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
       : node change list =
     let open Ast.Statement.DoWhile in
-    let { body = body1; test = test1 } = stmt1 in
-    let { body = body2; test = test2 } = stmt2 in
+    let { body = body1; test = test1; comments = comments1 } = stmt1 in
+    let { body = body2; test = test2; comments = comments2 } = stmt2 in
     let body = diff_if_changed statement body1 body2 in
     let test = diff_if_changed expression test1 test2 in
-    List.concat [body; test]
+    let comments = syntax_opt loc comments1 comments2 |> Option.value ~default:[] in
+    List.concat [body; test; comments]
 
   and return_statement loc (stmt1: (Loc.t, Loc.t) Ast.Statement.Return.t)
                            (stmt2: (Loc.t, Loc.t) Ast.Statement.Return.t)

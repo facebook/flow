@@ -331,7 +331,7 @@ let object_ cx t =
       key = StrT.why r |> with_trust bogus_trust;
       value = DefT (replace_reason_const MixedT.desc r, bogus_trust (), MixedT Mixed_everything);
       dict_name = None;
-      dict_polarity = Positive;
+      dict_polarity = Polarity.Positive;
     } in
     let proto = ObjProtoT reason in
     let obj = Obj_type.mk_with_proto cx reason ?dict proto in

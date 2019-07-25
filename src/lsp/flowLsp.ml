@@ -73,6 +73,8 @@ type open_file_info = {
    * parse errors, and to be a better source of truth about the parse errors
    * in this file than what the flow server has told us. It also gets computed lazily. *)
   o_live_diagnostics: PublishDiagnostics.diagnostic list option;
+  (* o_unsaved if true means that this open file has unsaved changes to the buffer. *)
+  o_unsaved: bool;
 }
 
 type initialized_env = {
@@ -220,12 +222,45 @@ let new_metadata (state: state) (message: Jsonrpc.message) : Persistent_connecti
     client_duration = None;
     extra_data = [];
     server_logging_context = None;
+    lsp_method_name = Jsonrpc.(message.method_);
+    interaction_tracking_id = None;
   }
 
 let edata_of_exception exn =
   let message = Exception.get_ctor_string exn in
   let stack = Exception.get_backtrace_string exn in
   { Marshal_tools.message; stack; }
+
+let selectively_omit_errors (request_name: string) (response: lsp_message) =
+  match response with
+  | ResponseMessage (id, ErrorResult _) ->
+    let new_response = match request_name with
+    (* Autocomplete requests are rarely manually-requested, so let's suppress errors from them to
+     * avoid spamming users if something isn't working. Once we reduce the error rate, we can undo
+     * this, but right now there are some known problems with the code in `members.ml` that often
+     * lead to errors. Once we migrate off of that, we will likely be able to display errors to
+     * users without degrading the experience.
+     *
+     * Another option would be to inspect the `completionTriggerKind` field, but `Invoked` doesn't
+     * actually mean that it was manually invoked. Typing an identifier char also results in an
+     * `Invoked` trigger.
+     *
+     * See https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
+     *)
+    | "textDocument/completion" ->
+      Some Completion.(CompletionResult {
+        isIncomplete = false;
+        items = [];
+      })
+    (* Like autocomplete requests, users rarely request these explicitly. The IDE sends them when
+     * people are simply moving the cursor around. For the same reasons, let's suppress errors here
+     * for now. *)
+    | "textDocument/documentHighlight" -> Some (DocumentHighlightResult [])
+    | _ -> None
+    in
+    Option.map ~f:(fun response -> ResponseMessage (id, response)) new_response
+    |> Option.value ~default:response
+  | _ -> response
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
   let r = begin try
@@ -417,7 +452,9 @@ let do_initialize () : Initialize.result =
         want_change = IncrementalSync;
         want_willSave = false;
         want_willSaveWaitUntil = false;
-        want_didSave = None;
+        want_didSave = Some {
+          includeText = false;
+        };
       };
       hoverProvider = true;
       completionProvider = Some {
@@ -426,12 +463,15 @@ let do_initialize () : Initialize.result =
       };
       signatureHelpProvider = None;
       definitionProvider = true;
+      typeDefinitionProvider = false;
       referencesProvider = true;
       documentHighlightProvider = true;
       documentSymbolProvider = true;
       workspaceSymbolProvider = false;
       codeActionProvider = false;
-      codeLensProvider = None;
+      codeLensProvider = Some {
+        codelens_resolveProvider = false;
+      };
       documentFormattingProvider = false;
       documentRangeFormattingProvider = false;
       documentOnTypeFormattingProvider = None;
@@ -579,11 +619,12 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
     let open_messages = env.d_ienv.i_open_files |> SMap.bindings
       |> List.map ~f:(fun (_, {o_open_doc; _}) -> make_open_message o_open_doc) in
     let open Hh_json in
+    let method_name = "synthetic/open" in
     let metadata = { Persistent_connection_prot.
       start_wall_time = Unix.gettimeofday ();
       start_server_status = Some (fst new_env.c_server_status);
       start_watcher_status = snd new_env.c_server_status;
-      start_json_truncated = JSON_Object ["method", JSON_String "synthetic/open"];
+      start_json_truncated = JSON_Object ["method", JSON_String method_name];
       start_lsp_state = None;
       start_lsp_state_reason = None;
       error_info = None;
@@ -591,6 +632,8 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
       client_duration = None;
       extra_data = [];
       server_logging_context = None;
+      lsp_method_name = method_name;
+      interaction_tracking_id = None;
     } in
     List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
     (* close the old UI and bring up the new *)
@@ -735,7 +778,7 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect)
     | _, NotificationMessage (DidOpenNotification params) ->
       let o_open_doc = params.DidOpen.textDocument in
       let uri = params.DidOpen.textDocument.TextDocumentItem.uri in
-      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None; o_unsaved=false; })
 
     | _, NotificationMessage (DidCloseNotification params) ->
       let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
@@ -752,7 +795,12 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect)
         version = params.DidChange.textDocument.VersionedTextDocumentIdentifier.version;
         text;
       } in
-      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None; o_unsaved=true;})
+
+    | Some open_files, NotificationMessage (DidSaveNotification params) ->
+      let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri in
+      let open_file = SMap.find uri open_files in
+      Some (uri, Some { open_file with o_unsaved = false; })
 
     | _, _ ->
       None
@@ -940,6 +988,7 @@ let parse_and_cache flowconfig_name (state: state) (uri: string)
       Server_files_js.config_file flowconfig_name root
       |> read_config_or_exit |> FlowConfig.modules_are_use_strict) in
     Some Parser_env.({
+      enums = true;
       esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;
       esproposal_decorators = true;
@@ -967,10 +1016,10 @@ let parse_and_cache flowconfig_name (state: state) (uri: string)
   match existing_open_file_info with
   | Some {o_ast=Some o_ast; o_live_diagnostics; _} ->
     state, o_ast, o_live_diagnostics
-  | Some {o_open_doc; _} ->
+  | Some {o_open_doc; o_unsaved; _} ->
     let file = lsp_DocumentItem_to_flow o_open_doc in
     let o_ast, o_live_diagnostics = parse file in
-    let open_file_info = Some {o_open_doc; o_ast=Some o_ast; o_live_diagnostics;} in
+    let open_file_info = Some {o_open_doc; o_ast=Some o_ast; o_live_diagnostics; o_unsaved} in
     let state = update_open_file uri open_file_info state in
     state, o_ast, o_live_diagnostics
   | None ->
@@ -1177,14 +1226,15 @@ module RagePrint = struct
     (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
     (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string)
 
-  let string_of_open_file {o_open_doc; o_ast; o_live_diagnostics} : string =
-    Printf.sprintf "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s])"
+  let string_of_open_file {o_open_doc; o_ast; o_live_diagnostics; o_unsaved} : string =
+    Printf.sprintf "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s] unsaved=%b)"
       o_open_doc.TextDocumentItem.uri
       o_open_doc.TextDocumentItem.version
       (String.length o_open_doc.TextDocumentItem.text)
       (Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
       (Option.value_map o_live_diagnostics ~default:"absent"
         ~f:(fun d -> List.length d |> string_of_int))
+      (o_unsaved)
 
   let string_of_open_files (files: open_file_info SMap.t) : string =
     SMap.bindings files
@@ -1389,11 +1439,63 @@ module LogFlusher = LwtLoop.Make (struct
 
   let main () =
     let%lwt () = Lwt_unix.sleep 5.0 in
-    EventLoggerLwt.flush ()
+    Lwt.join [
+      EventLoggerLwt.flush ();
+      FlowInteractionLogger.flush ();
+    ]
 
   let catch () exn =
     Exception.(reraise (wrap exn))
 end)
+
+(* Our interaction logging logs a snapshot of the state of the world at the start of an
+ * interaction (when the interaction is triggered) and at the end of an interaction (when the ux
+ * occurs). This function collects that state. This is called relatively often, so it should be
+ * pretty cheap *)
+let collect_interaction_state state =
+  let open LspInteraction in
+
+  let time = Unix.gettimeofday () in
+
+  let buffer_status = match get_open_files state with
+  | None ->
+    NoOpenBuffers
+  | Some files when files = SMap.empty ->
+    NoOpenBuffers
+  | Some files ->
+    if SMap.exists (fun _ file -> file.o_unsaved) files
+    then UnsavedBuffers
+    else NoUnsavedBuffers
+  in
+
+  let server_status = match state with
+  | Pre_init _
+  | Post_shutdown
+    -> Stopped
+  | Disconnected disconnected_env ->
+    if disconnected_env.d_server_status = None then Stopped else Initializing
+  | Connected connected_env ->
+    if connected_env.c_is_rechecking then Rechecking else Ready
+  in
+
+  { time; server_status; buffer_status; }
+
+(* Completed interactions clean themselves up, but we need to clean up pending interactions which
+ * have never been completed. *)
+let gc_pending_interactions =
+  let next_gc = ref (Unix.gettimeofday ()) in
+  fun state ->
+    if Unix.gettimeofday () >= !next_gc
+    then next_gc := LspInteraction.gc ~get_state:(fun () -> collect_interaction_state state)
+
+(* Kicks off the interaction tracking *)
+let start_interaction ~trigger state =
+  let start_state = collect_interaction_state state in
+  LspInteraction.start ~start_state ~trigger
+
+let log_interaction ~ux state id =
+  let end_state = collect_interaction_state state in
+  LspInteraction.log ~end_state ~ux ~id
 
 (************************************************************************)
 (** Main loop                                                          **)
@@ -1415,11 +1517,17 @@ and initial_lwt_thread flowconfig_name client state () =
     FlowExitStatus.(exit ~msg Unknown_error)
   );
 
+  LspInteraction.init ();
   Lwt.async LogFlusher.run;
 
   main_loop flowconfig_name client state
 
 and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit Lwt.t =
+  (* TODO - delete this line once this loop is fully lwt. At the moment, the idle loop never
+   * actually does any lwt io so never yields. This starves any asynchronous lwt. This pause call
+   * just yields *)
+  let%lwt () = Lwt.pause () in
+  gc_pending_interactions state;
   let%lwt event =
     try%lwt
       let%lwt event = get_next_event state client (parse_json state) in
@@ -1463,11 +1571,15 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
   | Pre_init i_connect_params,
     Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata) ->
     let i_root = Lsp_helpers.get_root i_initialize_params |> Path.make in
+    let flowconfig =
+      Server_files_js.config_file flowconfig_name i_root
+      |> read_config_or_exit ~allow_cache:false
+    in
     let d_ienv = {
       i_initialize_params;
       i_connect_params;
       i_root;
-      i_version = get_current_version flowconfig_name i_root;
+      i_version = FlowConfig.required_version flowconfig;
       i_can_autostart_after_version_mismatch = true;
       i_server_id = 0;
       i_outstanding_local_requests = IdMap.empty;
@@ -1478,11 +1590,15 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
       i_open_files = SMap.empty;
       i_outstanding_diagnostics = SSet.empty;
     } in
+    FlowInteractionLogger.set_server_config
+      ~flowconfig_name
+      ~root:(Path.to_string i_root)
+      ~root_name:(FlowConfig.root_name flowconfig);
     (* If the version in .flowconfig is simply incompatible with our current *)
     (* binary then it doesn't even make sense for us to start up. And future *)
     (* attempts by the client to launch us will fail as well. Clients which  *)
     (* receive the following response are expected to shut down their LSP.   *)
-    let required_version = get_current_version flowconfig_name i_root in
+    let required_version = FlowConfig.required_version flowconfig in
     begin match CommandUtils.check_version required_version with
       | Ok () -> ()
       | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
@@ -1556,10 +1672,16 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
     (* documentSymbols is handled in the client, not the server, since it's *)
     (* purely syntax-driven and we'd like it to work even if the server is  *)
     (* busy or disconnected *)
+    let interaction_id = start_interaction ~trigger:LspInteraction.DocumentSymbol state in
     let state = do_documentSymbol flowconfig_name state id params in
+    log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)
 
   | Connected cenv, Client_message (c, metadata) ->
+    let interaction_tracking_id =
+      LspInteraction.trigger_of_lsp_msg c
+      |> Option.map ~f:(fun trigger -> start_interaction ~trigger state)
+    in
     (* We'll track what's being sent to the server. This might involve some client *)
     (* computation work, which we'll profile, and send it over in metadata. *)
     (* Note: in the case where c is a cancel-notification for a request that *)
@@ -1571,8 +1693,10 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
       let state = Option.value_map changed_live_uri ~default:state
         ~f:(do_live_diagnostics flowconfig_name state) in
       state) in
-    let metadata = { metadata with
-      Persistent_connection_prot.client_duration=Some client_duration } in
+    let metadata = { metadata with Persistent_connection_prot.
+      client_duration = Some client_duration;
+      interaction_tracking_id;
+     } in
     send_lsp_to_server cenv metadata c;
     Ok (state, LogDeferred)
 
@@ -1591,12 +1715,20 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
   | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c, metadata)
   | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c, metadata)
   | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c, metadata) ->
+    let interaction_id =
+      LspInteraction.trigger_of_lsp_msg c
+      |> Option.map ~f:(fun trigger -> start_interaction ~trigger state)
+    in
+
     (* these are editor events that happen while disconnected. *)
     let client_duration, state = with_timer (fun () ->
       let state, {changed_live_uri} = track_to_server state c in
       let state = Option.value_map changed_live_uri ~default:state
         ~f:(do_live_diagnostics flowconfig_name state) in
       state) in
+    (* TODO - In the future if we start running check-contents on DidChange, we should probably
+     * log Errored instead of Responded for that one *)
+    Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Responded state);
     let metadata = { metadata with
       Persistent_connection_prot.client_duration=Some client_duration } in
     Ok (state, LogNeeded metadata)
@@ -1606,9 +1738,14 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
     Ok (state, LogNotNeeded)
 
   | Disconnected _, Client_message (c, _metadata) ->
+    let interaction_id =
+      LspInteraction.trigger_of_lsp_msg c
+      |> Option.map ~f:(fun trigger -> start_interaction ~trigger state)
+    in
     let (state, _) = track_to_server state c in
     let method_ = Lsp_fmt.denorm_message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
+    Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Errored state);
     let stack = Exception.get_current_callstack_string 100 in
     Error (state, e, Utils.Callstack stack)
 
@@ -1620,29 +1757,40 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
     Ok (state, LogNotNeeded)
 
   | Connected cenv, Server_message (Persistent_connection_prot.LspFromServer (msg, metadata)) ->
-    let state, metadata = match msg with
-      | None -> state, metadata
+    let state, metadata, ux = match msg with
+      | None -> state, metadata, LspInteraction.Responded
       | Some outgoing ->
         let state = track_from_server state outgoing in
-        let outgoing, metadata = match outgoing with
+        let outgoing, metadata, ux = match outgoing with
           | RequestMessage (id, request) ->
             let wrapped = { server_id = cenv.c_ienv.i_server_id; message_id = id; } in
-            RequestMessage (encode_wrapped wrapped, request), metadata
+            RequestMessage (encode_wrapped wrapped, request), metadata, LspInteraction.Responded
           | ResponseMessage (id, RageResult items) ->
             (* we'll zero out the "client_duration", which at the moment represents client-side *)
             (* work we did before sending out the request. By zeroing it out now, it'll get *)
             (* filled out with the client-side work that gets done right here and now. *)
             let metadata = { metadata with Persistent_connection_prot.client_duration = None} in
-            ResponseMessage (id, RageResult (items @ (do_rage flowconfig_name state))), metadata
-          | _ -> outgoing, metadata
+            let ux = LspInteraction.Responded in
+            ResponseMessage (id, RageResult (items @ (do_rage flowconfig_name state))), metadata, ux
+          | ResponseMessage (_, ErrorResult (e, _)) ->
+            let ux = LspInteraction.(
+              if e.Error.code = Error.Code.requestCancelled then Canceled else Errored
+            ) in
+            outgoing, metadata, ux
+          | _ -> outgoing, metadata, LspInteraction.Responded
         in
-        to_stdout (Lsp_fmt.print_lsp outgoing);
-        state, metadata
+        let outgoing =
+          selectively_omit_errors Persistent_connection_prot.(metadata.lsp_method_name) outgoing
+        in
+        to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
+        state, metadata, ux
     in
+    Option.iter metadata.Persistent_connection_prot.interaction_tracking_id
+      ~f:(log_interaction ~ux state);
     Ok (state, LogNeeded metadata)
 
   | Connected cenv,
-    Server_message (Persistent_connection_prot.Errors {errors; warnings; errors_reason=_; }) ->
+    Server_message (Persistent_connection_prot.Errors {errors; warnings; errors_reason; }) ->
     (* A note about the errors reported by this server message:               *)
     (* While a recheck is in progress, between StartRecheck and EndRecheck,   *)
     (* the server will periodically send errors+warnings. These are additive  *)
@@ -1665,6 +1813,9 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
     let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
     let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
     in
+    let () =
+      let end_state = collect_interaction_state state in
+      LspInteraction.log_pushed_errors ~end_state ~errors_reason in
     (* TODO (glevi) Log when errors are displayed to the user as part of the UX logging *)
     if cenv.c_is_rechecking then
       Ok (do_additional_diagnostics cenv all, LogNotNeeded)
@@ -1672,6 +1823,8 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
       Ok (do_replacement_diagnostics cenv all, LogNotNeeded)
 
   | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
+    let start_state = collect_interaction_state state in
+    LspInteraction.recheck_start ~start_state;
     let state = show_recheck_progress { cenv with
       c_is_rechecking = true;
       c_lazy_stats = None;
