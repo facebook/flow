@@ -1664,9 +1664,8 @@ end = struct
 
     let extract_schemes typed_ast (imported_locs: acc_t) =
       List.fold_left (fun acc (loc, name, import_mode) ->
-        let loc = ALoc.to_loc_exn loc in
-        match Typed_ast_utils.find_type_at_pos_annotation typed_ast loc with
-        | Some (_, scheme) ->  (name, loc, import_mode, scheme)::acc
+        match Typed_ast_utils.find_exact_match_annotation typed_ast loc with
+        | Some scheme -> (name, loc, import_mode, scheme)::acc
         | None -> acc
       ) [] imported_locs
 
@@ -1689,7 +1688,7 @@ end = struct
       let _, result = List.fold_left (fun (st, acc) (name, loc, import_mode, scheme) ->
         match run st (extract_ident ~options ~genv scheme) with
         | Ok (Some def_loc), st ->
-          st, ALocMap.add def_loc (ALoc.of_loc loc, name, import_mode) acc
+          st, ALocMap.add def_loc (loc, name, import_mode) acc
         | Ok None, st ->
           (* unrecognizable remote type *)
           st, acc
