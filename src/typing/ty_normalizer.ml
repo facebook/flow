@@ -1537,25 +1537,27 @@ end = struct
     | Type.LatentPredT _ -> latent_pred_t ~env id t
     | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
 
-  and module_t env reason exports t =
-    let name = match desc_of_reason reason with
+  and module_t =
+    let mk_module env symbol_opt exports =
+      let cjs_export = optM (type__ ~env) T.(exports.cjs_export) in
+      let exports = Context.find_exports Env.(env.genv.cx) T.(exports.exports_tmap)
+      |> SMap.map snd
+      |> SMap.bindings
+      |> mapM (type__ ~env |> sndMapM) in
+      exports >>= fun exports ->
+      cjs_export >>| fun cjs_export ->
+      Ty.Module (symbol_opt, Ty.{ exports; cjs_export })
+    in
+    fun env reason exports t ->
+      match desc_of_reason reason with
       | RModule name
       | RCommonJSExports name
-      | RUntypedModule name -> Some name
-      | RExports -> Some "exports"
-      | _ -> None in
-    match name with
-    | Some name ->
+      | RUntypedModule name ->
         let symbol = symbol_from_reason env reason name in
-        let cjs_export = optM (type__ ~env) T.(exports.cjs_export) in
-        let exports = Context.find_exports Env.(env.genv.cx) T.(exports.exports_tmap)
-        |> SMap.map snd
-        |> SMap.bindings
-        |> mapM (type__ ~env |> sndMapM) in
-        exports >>= fun exports ->
-        cjs_export >>| fun cjs_export ->
-        Ty.Module (symbol, Ty.{ exports; cjs_export })
-    | None ->
+        mk_module env (Some symbol) exports
+      | RExports ->
+        mk_module env None exports
+      | _ ->
         terr ~kind:UnsupportedTypeCtor (Some t)
 
   and uses_t =

@@ -176,7 +176,11 @@ and dump_t ?(depth = 10) t =
   | TypeOf (path, n) ->
     spf "Typeof(%s)" (String.concat "." (path@[n]))
   | Module (n, { exports; _ }) ->
-    spf "Module(%s, %s)" (dump_symbol n)
+    let name = match n with
+      | Some n -> dump_symbol n
+      | None -> "<no name>"
+    in
+    spf "Module(%s, %s)" name
       (dump_list (fun (name, t) -> dump_t ~depth t |> spf "%s : %s" name) ~sep:"," exports)
   | ClassDecl (name, ps) ->
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
@@ -298,7 +302,7 @@ let json_of_t ~strip_root =
         "name", JSON_String name;
       ]
     | Module (name, _) -> [
-        "name", json_of_symbol name;
+        "name", Option.value_map ~f:json_of_symbol ~default:JSON_Null name;
       ]
     | ClassDecl (name, tparams) -> [
         "name", json_of_symbol name;

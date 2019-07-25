@@ -37,7 +37,7 @@ type t =
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | Utility of utility
-  | Module of symbol * export_t
+  | Module of symbol option * export_t
   | Mu of int * t
 
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)

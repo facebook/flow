@@ -30,13 +30,13 @@ let check_type_visitor wrap =
     | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
     | Top -> wrap Reason.RMixed
     | Bot _ -> wrap Reason.REmpty
-    | Module ({ Ty.name; _ }, _) -> wrap (Reason.RModule name)
+    | Module (Some { Ty.name; _ }, _) -> wrap (Reason.RModule name)
     | TypeAlias { ta_tparams = None; ta_type = Some t; _ } -> self#on_t env t
     | TypeAlias { ta_name = { Ty.name; _ }; _ } ->
       wrap (Reason.RCustom ("type alias " ^ name))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
     | (Void|Null|Num _|Str _|Bool _|NumLit _|StrLit _|BoolLit _|TypeOf _|
-      Generic _|ClassDecl _|InterfaceDecl _|Utility _) -> ()
+      Generic _|ClassDecl _|InterfaceDecl _|Utility _|Module _) -> ()
   end
 
 let detect_invalid_calls ~full_cx file_sigs cxs tasts =
