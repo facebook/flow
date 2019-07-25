@@ -127,3 +127,28 @@ class YourClass {
 let test1: typeof MyClass = YourClass; // Error!
 let test2: typeof MyClass = MyClass;   // Works!
 ```
+
+## `typeof` with generics <a class="toc" id="toc-typeof-with-generics" href="#toc-typeof-typeof-with-generics"></a>
+
+The following syntax is NOT supported
+```js
+typeof foo<number>;
+```
+
+Instead, you must use the [`$Call`](../utilities/#toc-call) syntax to bind the generic of the function
+
+```js
+function foo<A>(a: A): A {
+  return a;
+}
+
+type Foo = $Call<typeof foo, number>;
+
+const bar: Foo = foo(5);
+const baz: Foo = 5;
+
+// $ExpectError
+const qux: Foo = 'a';
+```
+
+This works because `typeof foo` returns `<A>(a: A) => A`
