@@ -46,6 +46,38 @@ let tests = "ty_simplifier" >::: [
     assert_equal ~ctxt ~printer:Ty.show t_exp t_out;
   end;
 
+  (*
+   * {+f: number} | {-f: number}
+   * ~>
+   * {+f: number} | {-f: number}
+   *)
+  "simplify_union_obj" >:: begin fun ctxt ->
+    let t_in = Ty.Union (
+      (Ty.Obj
+        { Ty.obj_exact = false; obj_frozen = false; obj_literal = false;
+          obj_props =
+          [(Ty.NamedProp ("f",
+              (Ty.Field ((Ty.Num None),
+                 { Ty.fld_polarity = Ty.Positive; fld_optional = false }))
+              ))
+            ]
+          }),
+      (Ty.Obj
+        { Ty.obj_exact = false; obj_frozen = false; obj_literal = false;
+          obj_props =
+          [(Ty.NamedProp ("f",
+              (Ty.Field ((Ty.Num None),
+                 { Ty.fld_polarity = Ty.Negative; fld_optional = false }))
+              ))
+            ]
+          }),
+      []) in
+    let t_out = Ty_utils.simplify_type ~simplify_empty:true t_in in
+    let t_exp = t_in in
+    assert_equal ~ctxt ~printer:Ty.show t_exp t_out;
+  end;
+
+
   (* When simplify_empty is true, all kinds of `empty` are equivalent, even when
    * nested under a type constructor.
    *
@@ -134,4 +166,5 @@ let tests = "ty_simplifier" >::: [
     let t_exp = Ty.Num None in
     assert_equal ~ctxt ~printer:Ty.show t_exp t_out;
   end;
+
 ]

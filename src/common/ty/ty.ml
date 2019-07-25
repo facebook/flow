@@ -257,6 +257,7 @@ class ['A] comparator_ty = object(this)
   method! private fail_prop env x y = fail_gen this#tag_of_prop env x y
   method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
   method! private fail_utility env x y = fail_gen this#tag_of_utility env x y
+  method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
 
   (* No two elements of each variant can be assigned the same tag *)
   method tag_of_t _ = function
@@ -332,6 +333,11 @@ class ['A] comparator_ty = object(this)
     | ReactElementConfigType _ -> 19
     | ReactElementRefType _ -> 20
     | ReactConfigType _ -> 21
+
+  method tag_of_polarity _ = function
+    | Positive -> 0
+    | Negative -> 1
+    | Neutral -> 2
 
   method tag_of_bot_kind _env = function
     | EmptyType -> 0
