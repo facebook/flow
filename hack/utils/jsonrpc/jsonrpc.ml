@@ -303,6 +303,7 @@ let last_sent () : Hh_json.json option =
    to whether the json has an error-code or not. *)
 let respond
     (writer: writer)
+    ?(powered_by: string option)
     (in_response_to: message)
     (result_or_error: Hh_json.json)
   : unit =
@@ -318,6 +319,10 @@ let respond
       ["id", Option.value in_response_to.id ~default:JSON_Null]
     @
       (if is_error then ["error", result_or_error] else ["result", result_or_error])
+    @
+      (match powered_by with
+        | Some powered_by -> ["powered_by", JSON_String powered_by]
+        | None -> [])
   )
   in
   last_sent_ref := Some response;
@@ -325,15 +330,19 @@ let respond
 
 
 (* notify: sends a Notify message *)
-let notify (writer: writer) (method_: string) (params: Hh_json.json)
+let notify (writer: writer) ?(powered_by: string option) (method_: string) (params: Hh_json.json)
   : unit =
   let open Hh_json in
-  let message = JSON_Object [
-    "jsonrpc", JSON_String "2.0";
-    "method", JSON_String method_;
-    "params", params;
-  ]
-  in
+  let message = JSON_Object (
+    [
+      "jsonrpc", JSON_String "2.0";
+      "method", JSON_String method_;
+      "params", params;
+    ] @
+    (match powered_by with
+      | Some powered_by -> ["powered_by", JSON_String powered_by]
+      | None -> [])
+  ) in
   last_sent_ref := Some message;
   writer message
 
