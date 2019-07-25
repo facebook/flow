@@ -2,7 +2,7 @@
 layout: guide
 ---
 
-### ALE <a class="toc" id="vim-ale" href="#vim-ale"></a>
+## ALE <a class="toc" id="vim-ale" href="#vim-ale"></a>
 
 The Asynchronous Lint Engine (ALE) [vim-ale](https://github.com/w0rp/ale) plugin for Vim 8+ and NeoVim provides linting of many syntaxes during editing, before files are saved. Supported JavaScript linters include eslint, jscs, jshint, flow, standard, and xo.  Installation instructions can be found at [https://github.com/w0rp/ale#3-installation](https://github.com/w0rp/ale#3-installation).
 
@@ -26,7 +26,7 @@ nnoremap <leader>an :ALENextWrap<cr>
 nnoremap <leader>ap :ALEPreviousWrap<cr>
 ```
 
-### coc.nvim-neovim <a class="toc" id="cocnvim" href="#cocnvim"></a>
+## coc.nvim-neovim <a class="toc" id="cocnvim" href="#cocnvim"></a>
 
 [Coc](https://github.com/neoclide/coc.nvim) is an intellisense engine for vim8 & neovim.
 
@@ -85,7 +85,7 @@ if !empty(s:languageservers)
 </pre>
 </details>
 
-### LanguageClient-neovim <a class="toc" id="LanguageClient-neovim" href="#LanguageClient-neovim"></a>
+## LanguageClient-neovim <a class="toc" id="LanguageClient-neovim" href="#LanguageClient-neovim"></a>
 
 Another way to add support for Flow in Vim is to use [LanguageClient-neovim](https://github.com/autozimu/LanguageClient-neovim).
 
@@ -94,20 +94,20 @@ Another way to add support for Flow in Vim is to use [LanguageClient-neovim](htt
 * Checks JavaScript files for type errors on save
 * Look up types under cursor
 
-#### Requirements <a class="toc" id="vim-requirements" href="#vim-requirements"></a>
+### Requirements <a class="toc" id="lcn-vim-requirements" href="#lcn-vim-requirements"></a>
 
 * Requires Flow to be installed and available on your path.
 * Requires projects containing JavaScript files to be initialised with flow init.
 * Requires JavaScript files to be marked with /* @flow */ at the top.
 
-#### Pathogen <a class="toc" id="pathogen" href="#pathogen"></a>
+### Pathogen <a class="toc" id="lcn-pathogen" href="#lcn-pathogen"></a>
 
 ```sh
 cd ~/.vim/bundle
 git clone git://github.com/autozimu/LanguageClient-neovim.git
 ```
 
-#### NeoBundle <a class="toc" id="neobundle" href="#neobundle"></a>
+### NeoBundle <a class="toc" id="lcn-neobundle" href="#lcn-neobundle"></a>
 
 Add this to your ~/.vimrc
 
@@ -131,7 +131,7 @@ With Flow build step, using flow-bin
     \ }}
 ```
 
-#### VimPlug <a class="toc" id="vimplug" href="#vimplug"></a>
+### VimPlug <a class="toc" id="lcn-vimplug" href="#lcn-vimplug"></a>
 
 ```
   Plug 'autozimu/LanguageClient-neovim', {
@@ -140,7 +140,7 @@ With Flow build step, using flow-bin
     \ }
 ```
 
-#### Setup
+### Setup
 ```
 let g:LanguageClient_rootMarkers = {
 \   'javascript': ['tsconfig.json', '.flowconfig', 'package.json']
