@@ -156,3 +156,47 @@ let g:LanguageClient_serverCommands={
 nnoremap <leader>t :call LanguageClient_textDocument_hover()<CR>
 nnoremap <leader>y :call LanguageClient_textDocument_definition()<CR>
 ```
+
+## vim-flow <a class="toc" id="toc-vim-flow" href="#toc-vim-flow"></a>
+
+Another way to add support for Flow in Vim is to use [vim-flow](https://github.com/flowtype/vim-flow).
+
+* Adds completions to omnifunc
+* Checks JavaScript files for type errors on save
+
+### Requirements <a class="toc" id="toc-requirements" href="#toc-requirements"></a>
+
+* Requires Flow to be installed and available on your path.
+* Requires projects containing JavaScript files to be initialised with flow init.
+* Requires JavaScript files to be marked with /* @flow */ at the top.
+
+### Pathogen <a class="toc" id="toc-pathogen" href="#toc-pathogen"></a>
+
+```sh
+cd ~/.vim/bundle
+git clone git://github.com/flowtype/vim-flow.git
+```
+
+### NeoBundle <a class="toc" id="toc-neobundle" href="#toc-neobundle"></a>
+
+Add this to your ~/.vimrc
+
+```vim
+  NeoBundleLazy 'flowtype/vim-flow', {
+    \ 'autoload': {
+    \     'filetypes': 'javascript'
+    \ }}
+```
+
+With Flow build step, using flow-bin
+
+```vim
+  NeoBundleLazy 'flowtype/vim-flow', {
+    \ 'autoload': {
+    \     'filetypes': 'javascript'
+    \ },
+    \ 'build': {
+    \     'mac': 'npm install -g flow-bin',
+    \     'unix': 'npm install -g flow-bin'
+    \ }}
+```
