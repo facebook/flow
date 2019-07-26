@@ -119,6 +119,8 @@ module Object
         predicate = None; (* setters/getter are not predicates *)
         return;
         tparams;
+        (* TODO *)
+        comments = (Flow_ast_utils.mk_comments_opt ());
         sig_loc;
       }
     ) env in
@@ -203,6 +205,8 @@ module Object
           predicate = None;
           return;
           tparams;
+          (* TODO *)
+          comments = (Flow_ast_utils.mk_comments_opt ());
           sig_loc;
         }
       ) in
@@ -625,6 +629,8 @@ module Object
             predicate = None;
             return;
             tparams;
+            (* TODO: add leading and trailing comments to constructor method *)
+            comments = (Flow_ast_utils.mk_comments_opt ());
             sig_loc;
           }
         ) env in

@@ -809,6 +809,7 @@ module Expression
     as_expression env (member_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
   and _function env = with_loc (fun env ->
+    let leading = Peek.comments env in
     let async = Declaration.async env in
     let sig_loc, (id, params, generator, predicate, return, tparams) = with_loc (fun env ->
       Expect.token env T_FUNCTION;
@@ -843,6 +844,7 @@ module Expression
     let body, strict = Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
     Declaration.strict_post_check env ~strict ~simple id params;
+    let trailing = Peek.comments env in
     Expression.Function { Function.
       id;
       params;
@@ -852,6 +854,7 @@ module Expression
       predicate;
       return;
       tparams;
+      comments = (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());
       sig_loc;
     }
   ) env
@@ -1152,6 +1155,7 @@ module Expression
     fun env ->
       let env = env |> with_error_callback error_callback in
 
+      let leading = Peek.comments env in
       let start_loc = Peek.loc env in
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
@@ -1214,6 +1218,7 @@ module Expression
       let simple = Declaration.is_simple_function_params params in
       Declaration.strict_post_check env ~strict ~simple None params;
       let loc = Loc.btwn start_loc end_loc in
+      let trailing = Peek.comments env in
       Cover_expr (loc, Expression.(ArrowFunction { Function.
         id = None;
         params;
@@ -1223,6 +1228,7 @@ module Expression
         predicate;
         return;
         tparams;
+        comments = (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());
         sig_loc;
       }))
 

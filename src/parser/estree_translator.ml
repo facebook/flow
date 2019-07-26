@@ -370,6 +370,7 @@ end with type t = Impl.t) = struct
           return;
           body;
           sig_loc = _;
+          comments;
           (* TODO: arrows shouldn't have these: *)
           id = _; generator = _;
         } ->
@@ -380,7 +381,7 @@ end with type t = Impl.t) = struct
           let return = match return with
           | Ast.Type.Missing _ -> None
           | Ast.Type.Available t -> Some t in
-          node "ArrowFunctionExpression" loc [
+          node ?comments "ArrowFunctionExpression" loc [
             "id", null;
             "params", function_params params;
             "body", body;
@@ -530,6 +531,7 @@ end with type t = Impl.t) = struct
 
     and function_declaration (loc, { Function.
       id; params; async; generator; predicate = predicate_; tparams; return; body;
+      comments;
       sig_loc = _;
     }) =
       let body = match body with
@@ -539,7 +541,7 @@ end with type t = Impl.t) = struct
       let return = match return with
       | Ast.Type.Missing _ -> None
       | Ast.Type.Available t -> Some t in
-      node "FunctionDeclaration" loc [
+      node ?comments "FunctionDeclaration" loc [
         (* estree hasn't come around to the idea that function decls can have
            optional ids, but acorn, babel, espree and esprima all have, so let's
            do it too. see https://github.com/estree/estree/issues/98 *)
@@ -556,6 +558,7 @@ end with type t = Impl.t) = struct
 
     and function_expression (loc, { Function.
       id; params; async; generator; predicate = predicate_; tparams; return; body;
+      comments;
       sig_loc = _;
     }) =
       let body = match body with
@@ -565,7 +568,7 @@ end with type t = Impl.t) = struct
       let return = match return with
       | Ast.Type.Missing _ -> None
       | Ast.Type.Available t -> Some t in
-      node "FunctionExpression" loc [
+      node ?comments "FunctionExpression" loc [
         "id", option identifier id;
         "params", function_params params;
         "body", block body;

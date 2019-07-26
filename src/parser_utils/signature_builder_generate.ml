@@ -870,11 +870,11 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         loc, T.Outline (T.Class (Option.map ~f:Flow_ast_utils.source_of_ident id, class_ tparams body super super_targs implements))
       | loc, Function { Ast.Function.
           generator; tparams; params; return; body;
-          id = _; async; predicate = _; sig_loc = _;
+          id = _; async; predicate = _; comments = _; sig_loc = _;
         } ->
         loc, T.Function (function_ generator async tparams params return body)
       | loc, ArrowFunction { Ast.Function.
-          tparams; params; return; body; async; predicate = _; sig_loc = _;
+          tparams; params; return; body; async; predicate = _; comments = _; sig_loc = _;
           (* TODO: arrow functions can't have ids or be generators: *)
           id = _; generator = _;
         } ->
@@ -1176,7 +1176,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           let x = object_key key in
           let loc, {
             Ast.Function.generator; tparams; params; return; body;
-            id = _; async; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; comments = _; sig_loc = _;
           } = value in
           (elem_loc, T.CMethod
             (x, kind, static, (loc, function_ generator async tparams params return body))) :: acc
@@ -1240,21 +1240,21 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           let x = object_key key in
           let { Ast.Function.
             generator; tparams; params; return; body;
-            id = _; async; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; comments = _; sig_loc = _;
           } = fn in
           loc, T.OMethod (x, (fn_loc, function_ generator async tparams params return body))
         | loc, Get { key; value = (fn_loc, fn) } ->
           let x = object_key key in
           let { Ast.Function.
             generator; tparams; params; return; body;
-            id = _; async; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; comments = _; sig_loc = _;
           } = fn in
           loc, T.OGet (x, (fn_loc, function_ generator async tparams params return body))
         | loc, Set { key; value = (fn_loc, fn) } ->
           let x = object_key key in
           let { Ast.Function.
             generator; tparams; params; return; body;
-            id = _; async; predicate = _; sig_loc = _;
+            id = _; async; predicate = _; comments = _; sig_loc = _;
           } = fn in
           loc, T.OSet (x, (fn_loc, function_ generator async tparams params return body))
     in
@@ -1464,7 +1464,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     | Declaration (loc, Ast.Statement.FunctionDeclaration ({
         Ast.Function.id = None;
         generator; tparams; params; return; body;
-        async; predicate = _; sig_loc = _;
+        async; predicate = _; comments = _; sig_loc = _;
       })) ->
       `Expr (loc, T.Function (Eval.function_ generator async tparams params return body))
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->

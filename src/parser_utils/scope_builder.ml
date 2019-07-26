@@ -257,7 +257,7 @@ module Make
         let open Ast.Function in
         let {
           id; params; body; async = _; generator = _;
-          predicate = _; return = _; tparams = _; sig_loc = _;
+          predicate = _; return = _; tparams = _; comments = _; sig_loc = _;
         } = expr in
 
         run_opt this#function_identifier id;
@@ -279,7 +279,7 @@ module Make
         let open Ast.Function in
         let {
           id; params; body; async = _; generator = _;
-          predicate = _; return = _; tparams = _; sig_loc = _;
+          predicate = _; return = _; tparams = _; comments = _; sig_loc = _;
         } = expr in
 
         let bindings = match id with
