@@ -25,14 +25,14 @@ aliases:
     name: Install deps from opam
     command: |
       eval $(opam env)
-      opam switch create . 4.05.0 --deps-only | cat
+      opam switch create . 4.07.1 --deps-only | cat
 
   - &restore_opam_cache
     keys:
-      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
+      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
 
   - &save_opam_cache
-    key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
+    key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
     paths:
       - ~/.opam
 
@@ -154,9 +154,9 @@ jobs:
       - restore_cache: *restore_opam_cache
       - run:
           name: Install ocaml
-          command: opam init --comp 4.05.0 -yn | cat
+          command: opam init --comp 4.07.1 -yn | cat
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0
+          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1
           paths:
             - ~/.opam
       - run:
