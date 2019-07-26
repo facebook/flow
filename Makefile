@@ -129,6 +129,7 @@ MODULES=\
   src/state/heaps/context\
   src/state/heaps/module\
   src/state/heaps/parsing\
+  src/state/heaps/parsing/exceptions\
   src/state/locals/module\
   src/state/readers\
   src/third-party/lz4\
