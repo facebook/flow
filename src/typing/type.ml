@@ -1370,7 +1370,8 @@ end
 and Properties : sig
   type t = Property.t SMap.t
 
-  type id = private int
+  type id
+
   module Map : MyMap.S with type key = id
   module Set : Set.S with type elt = id
   type map = t Map.t
@@ -1380,7 +1381,11 @@ and Properties : sig
   val add_setter: string -> ALoc.t option -> TypeTerm.t -> t -> t
   val add_method: string -> ALoc.t option -> TypeTerm.t -> t -> t
 
-  val mk_id: unit -> id
+  val generate_id: unit -> id
+  val id_of_int: int -> id
+  val id_as_int: id -> int option
+  val id_of_aloc: ALoc.t -> id
+
   val fake_id: id
   val string_of_id: id -> string
   val extract_named_exports: t -> Exports.t
@@ -1395,7 +1400,15 @@ end = struct
 
   type t = Property.t SMap.t
 
-  type id = int
+  (* In order to minimize the frequency with which we unnecessarily compare
+     equivalent objects, we assign all objects created at the top level of a
+     source program an id of their location instead of an int. This way, if we
+     see the object twice between the merge and check phases, we still hit
+     the object to object fast path when checking *)
+  type id =
+    | Source of ALoc.t
+    | Generated of int
+
   module Map : MyMap.S with type key = id = MyMap.Make(struct
     type t = id
     let compare = Pervasives.compare
@@ -1427,9 +1440,21 @@ end = struct
   let add_method x loc t =
     SMap.add x (Method (loc, t))
 
-  let mk_id = Reason.mk_id
-  let fake_id = 0
-  let string_of_id = string_of_int
+  let id_of_int i = Generated i
+
+  let id_as_int = function
+  | Generated i -> Some i
+  | _ -> None
+
+  let generate_id = Reason.mk_id %> id_of_int
+
+  let id_of_aloc loc = Source loc
+
+  let fake_id = Generated 0
+
+  let string_of_id = function
+  | Generated id -> string_of_int id
+  | Source id -> string_of_aloc id
 
   let extract_named_exports pmap =
     SMap.fold (fun x p tmap ->

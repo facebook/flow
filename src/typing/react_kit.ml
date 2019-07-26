@@ -1068,8 +1068,8 @@ module Kit (Flow: Flow_common.S): REACT = struct
           class_id = ALoc.none;
           type_args = [];
           (* TODO: props are actually installed on the prototype *)
-          own_props = Context.make_property_map cx props;
-          proto_props = Context.make_property_map cx SMap.empty;
+          own_props = Context.generate_property_map cx props;
+          proto_props = Context.generate_property_map cx SMap.empty;
           initialized_fields = SSet.empty;
           initialized_static_fields = SSet.singleton "propTypes";
           inst_call_t = None;

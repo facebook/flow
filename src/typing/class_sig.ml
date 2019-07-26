@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module Flow = Flow_js
 
 open Reason
+open Utils_js
 
 include Class_sig_intf
 
@@ -429,8 +430,8 @@ let insttype cx ~initialized_static_fields s =
   { Type.
     class_id = s.id;
     type_args;
-    own_props = Context.make_property_map cx fields;
-    proto_props = Context.make_property_map cx methods;
+    own_props = Context.generate_property_map cx fields;
+    proto_props = Context.generate_property_map cx methods;
     inst_call_t = Option.map call ~f:(Context.make_call_prop cx);
     initialized_fields;
     initialized_static_fields;
@@ -690,7 +691,7 @@ let toplevels cx ~decls ~stmts ~expr x =
     in
 
     (* Bind private fields to the environment *)
-    let to_prop_map = fun x -> Context.make_property_map cx (SMap.map to_field x) in
+    let to_prop_map = SMap.map to_field %> Context.generate_property_map cx in
     Env.bind_class cx x.id (to_prop_map x.instance.private_fields)
     (to_prop_map x.static.private_fields);
 

@@ -220,7 +220,8 @@ val has_export: t -> Type.Exports.id -> string -> bool
 val set_export: t -> Type.Exports.id -> string -> (ALoc.t option * Type.t) -> unit
 
 (* constructors *)
-val make_property_map: t -> Type.Properties.t -> Type.Properties.id
+val generate_property_map: t -> Type.Properties.t -> Type.Properties.id
+val make_source_property_map: t -> Type.Properties.t -> ALoc.t -> Type.Properties.id
 val make_call_prop: t -> Type.t -> int
 val make_export_map: t -> Type.Exports.t -> Type.Exports.id
 val make_nominal: t -> int

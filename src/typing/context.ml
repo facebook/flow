@@ -545,9 +545,15 @@ let set_export cx id name t =
   |> add_export_map cx id
 
 (* constructors *)
-let make_property_map cx pmap =
-  let id = Type.Properties.mk_id () in
+let generate_property_map cx pmap =
+  let id = Reason.mk_id () in
   add_nominal_id cx (id :> int);
+  let id = Type.Properties.id_of_int id in
+  add_property_map cx id pmap;
+  id
+
+let make_source_property_map cx pmap loc =
+  let id = Type.Properties.id_of_aloc loc in
   add_property_map cx id pmap;
   id
 

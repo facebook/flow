@@ -408,3 +408,8 @@ let is_global scope =
   match scope.kind with
   | VarScope Global -> true
   | _ -> false
+
+let is_toplevel scope =
+  match scope.kind with
+  | VarScope Global | VarScope Module -> true
+  | _ -> false

@@ -971,7 +971,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
       | x::xs -> x, xs
       | [] -> assert false
     in
-    List.fold_left (Fn.const (TestID.run f)) (f hd_map) tl_maps
+    Core_list.fold_left ~f:(Fn.const (TestID.run f)) ~init:(f hd_map) tl_maps
 
 let inherited_method x = x <> "constructor"
 
@@ -2186,8 +2186,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             |> Properties.add_field "value" Polarity.Neutral None t
           in
           let id_succ, id_fail =
-            Context.make_property_map cx pmap_fail,
-            Context.make_property_map cx pmap_succ in
+            Context.generate_property_map cx pmap_fail,
+            Context.generate_property_map cx pmap_succ in
           let reason = mk_reason (RCustom "Result<T>") fun_loc in
           let obj_fail, obj_succ =
             mk_object_def_type ~reason ~dict:None ~call:None id_fail dummy_prototype,
@@ -3106,7 +3106,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
       Context.iter_real_props cx props_tmap (fun x p ->
         let pmap = SMap.singleton x p in
-        let id = Context.make_property_map cx pmap in
+        let id = Context.generate_property_map cx pmap in
         let obj = mk_objecttype ~flags ~dict:dict_t ~call:call_t id dummy_prototype in
         rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), ObjT obj)))
       );
@@ -4685,7 +4685,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let flags = { default_flags with sealed } in
         let dict = None in
         let call = None in
-        let pmap = Context.make_property_map cx SMap.empty in
+        let pmap = Context.generate_property_map cx SMap.empty in
         mk_objecttype ~flags ~dict ~call pmap proto
       in
       let new_obj = DefT (reason_c, bogus_trust (), ObjT objtype) in
@@ -5544,7 +5544,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.map_fields map_t
-        |> Context.make_property_map cx
+        |> Context.generate_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
         let value = map_t dict.value in
@@ -5576,7 +5576,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.mapi_fields mapi_field
-        |> Context.make_property_map cx
+        |> Context.generate_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
         let value = mapi_t dict.key dict.value in
@@ -11467,7 +11467,7 @@ and object_kit =
         in
         Field (None, t, Polarity.Neutral)
       ) props in
-      let id = Context.make_property_map cx props in
+      let id = Context.generate_property_map cx props in
       let proto = ObjProtoT reason in
       let flags =
         let exact = match target with
@@ -11675,7 +11675,7 @@ and object_kit =
         sealed = Sealed;
         exact = flags1.exact && Obj_type.sealed_in_op reason flags1.sealed;
       } in
-      let id = Context.make_property_map cx props in
+      let id = Context.generate_property_map cx props in
       let proto = ObjProtoT r1 in
       let call = None in
       let t = mk_object_def_type ~reason:r1 ~flags ~dict ~call id proto in
@@ -11723,7 +11723,7 @@ and object_kit =
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
       let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
       let call = None in
-      let id = Context.make_property_map cx props in
+      let id = Context.generate_property_map cx props in
       let proto = ObjProtoT reason in
       let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
       if flags.exact then ExactT (reason, t) else t
@@ -11749,7 +11749,7 @@ and object_kit =
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
       let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
       let call = None in
-      let id = Context.make_property_map cx props in
+      let id = Context.generate_property_map cx props in
       let proto = ObjProtoT reason in
       let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
       if flags.exact then ExactT (reason, t) else t
@@ -11867,7 +11867,7 @@ and object_kit =
       in
       let call = None in
       (* Finish creating our props object. *)
-      let id = Context.make_property_map cx props in
+      let id = Context.generate_property_map cx props in
       let proto = ObjProtoT reason in
       let t = DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
       if flags.exact then ExactT (reason, t) else t
@@ -12011,7 +12011,7 @@ and object_kit =
       | Some (Field (_, key, polarity)), Some (Field (_, value, polarity'))
         when polarity = polarity' ->
         let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
-        let id = Context.make_property_map cx props in
+        let id = Context.generate_property_map cx props in
         let dict = {dict_name = None; key; value; dict_polarity = polarity} in
         id, Some dict
       | _ -> id, None

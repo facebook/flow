@@ -123,3 +123,4 @@ val add_declare_func_annot : string -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.a
 val get_declare_func_annot : string -> t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation option
 val is_lex : t -> bool
 val is_global : t -> bool
+val is_toplevel : t -> bool

@@ -158,7 +158,7 @@ let rec merge_type cx =
         (* Shouldn't happen, per merge_map above. *)
         | _ -> None
       ) map1 map2 in
-      let id = Context.make_property_map cx map in
+      let id = Context.generate_property_map cx map in
       let sealed = match o1.flags.sealed, o2.flags.sealed with
       | Sealed, Sealed -> Sealed
       | UnsealedInFile s1, UnsealedInFile s2 when s1 = s2 -> UnsealedInFile s1

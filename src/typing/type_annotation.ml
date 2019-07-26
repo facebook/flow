@@ -1339,8 +1339,11 @@ and convert_object =
     let calls_rev acc = acc.calls
   end in
 
-  let mk_object cx loc ~exact call dict pmap proto =
-    let pmap = Context.make_property_map cx pmap in
+  let mk_object cx loc ~src_loc ~exact call dict pmap proto =
+    let pmap =
+      if src_loc && Env.peek_scope () |> Scope.is_toplevel
+      then Context.make_source_property_map cx pmap loc
+      else Context.generate_property_map cx pmap in
     let call = Option.map ~f:(Context.make_call_prop cx) call in
     let flags = {sealed = Sealed; exact; frozen = false} in
     DefT (mk_reason RObjectType loc, infer_trust cx,
@@ -1348,7 +1351,7 @@ and convert_object =
   in
 
   let mk_object_annot cx loc ~exact call dict pmap proto =
-    let t = mk_object cx loc ~exact call dict pmap proto in
+    let t = mk_object cx loc ~src_loc:true ~exact call dict pmap proto in
     if exact
     then ExactT (mk_reason (RExactType RObjectType) loc, t)
     else t
@@ -1565,7 +1568,7 @@ and convert_object =
       let t, ts = Nel.rev_map (function
         | Acc.Spread t -> t
         | Acc.Slice {dict; pmap} ->
-          mk_object cx loc ~exact:true None dict pmap obj_proto_t
+          mk_object cx loc ~src_loc:false ~exact:true None dict pmap obj_proto_t
       ) os in
       EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
     in
