@@ -1,0 +1,15 @@
+[ignore]
+
+[libs]
+
+[options]
+
+experimental.well_formed_exports=true
+experimental.types_first=true
+experimental.abstract_locations=true
+
+[lints]
+
+[strict]
+
+[version]

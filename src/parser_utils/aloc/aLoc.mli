@@ -26,6 +26,14 @@ val of_loc: Loc.t -> t
  * *)
 val abstractify: table -> t -> t
 
+(* Takes an ALoc.t with a concrete underlying representation and finds
+ * the existing abstract representation for it from a reverse table
+ *
+ * Preconditions:
+ * - The file key with which the table was created must match the `source` of the given location.
+ * *)
+val lookup_key_if_possible: (Loc.t, key) Hashtbl.t Lazy.t -> t -> t
+
 (* Converts an ALoc.t back to a Loc.t, looking up the underlying location in the given table if
  * necessary. We will have to look up tables in the shared heap at some point, so making it lazy
  * allows us to avoid fetching the table if the underlying location is actually concrete. *)
@@ -58,6 +66,8 @@ val concretize_equal: table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool
  * purposes. If you make any typechecking behavior depend on the result of this function you are a
  * bad person. *)
 val debug_to_string: ?include_source:bool -> t -> string
+
+val reverse_table : table -> (Loc.t, key) Hashtbl.t
 
 (* Exposes the internal representation of an ALoc.t. Typechecking behavior should not be
  * made to depend on this module. If you find yourself tempted to use anything here, really think

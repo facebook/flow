@@ -267,6 +267,21 @@ let to_string_no_source loc =
   else
     Loc.to_string_no_source (Repr.to_loc_exn loc)
 
+let lookup_key_if_possible rev_table loc =
+  match Repr.kind loc with
+  | Repr.Abstract
+  | Repr.ALocNone -> loc
+  | Repr.Concrete ->
+    let underlying_loc = Repr.to_loc_exn loc in
+    match Hashtbl.find_opt (Lazy.force rev_table) underlying_loc with
+    | Some key -> begin match Repr.source loc with
+      | Some source -> Repr.of_key (Some source) key
+      | None -> failwith "Unexpectedly encountered a location without a source"
+      end 
+    | None -> loc
+
+let reverse_table table = ResizableArray.to_hashtbl table.map
+
 module ALocRepresentationDoNotUse = struct
   let is_abstract = Repr.is_abstract
 

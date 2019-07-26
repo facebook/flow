@@ -279,10 +279,20 @@ let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_
   let sig_cx = Context.make_sig () in
   let need_merge_master_cx = ref true in
 
-  let aloc_tables =
-    Nel.fold_left (fun tables filename ->
-      FilenameMap.add filename (lazy (get_aloc_table_unsafe filename)) tables
-    ) FilenameMap.empty component
+  let aloc_tables, rev_aloc_tables =
+    Nel.fold_left (fun (tables, rev_tables) filename ->
+      let table = lazy (get_aloc_table_unsafe filename) in
+      let rev_table = lazy (
+        try Lazy.force table |> ALoc.reverse_table with
+        (* If we aren't in abstract locations mode, or are in a libdef, we
+          won't have an aloc table, so we just create an empty reverse table. We
+          handle this exception here rather than explicitly making an optional
+          version of the get_aloc_table function for simplicity. *)
+        | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ -> Hashtbl.create 0)
+      in
+      FilenameMap.add filename table tables,
+      FilenameMap.add filename rev_table rev_tables
+    ) (FilenameMap.empty, FilenameMap.empty) component
   in
 
   let rev_cxs, rev_tasts, impl_cxs =
@@ -292,7 +302,8 @@ let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
     let module_ref = Files.module_ref filename in
-    let cx = Context.make sig_cx metadata filename aloc_tables module_ref phase in
+    let rev_table = FilenameMap.find filename rev_aloc_tables in
+    let cx = Context.make sig_cx metadata filename aloc_tables rev_table module_ref phase in
 
     (* create builtins *)
     if !need_merge_master_cx then (

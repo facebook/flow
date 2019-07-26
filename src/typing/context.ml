@@ -132,6 +132,12 @@ type t = {
   phase: phase;
   (* Tables for the current component (cycle) *)
   aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
+  (* Reverse lookup table for the current file. Unlike the aloc_tables, we only
+     store the rev_table for the leader file, rather than the whole component.
+     We only need this table during the check phase, when we are checking single
+     files, so storing the rev table for the whole component would be a waste
+     of space/ *)
+  rev_aloc_table: (Loc.t, ALoc.key) Hashtbl.t Lazy.t;
   metadata: metadata;
 
   module_info: Module_info.t;
@@ -215,12 +221,13 @@ let make_sig () = {
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make sig_cx metadata file aloc_tables module_ref phase = {
+let make sig_cx metadata file aloc_tables rev_aloc_table module_ref phase = {
   sig_cx;
 
   file;
   phase;
   aloc_tables;
+  rev_aloc_table;
   metadata;
 
   module_info = Module_info.empty_cjs_module module_ref;
@@ -553,6 +560,11 @@ let generate_property_map cx pmap =
   id
 
 let make_source_property_map cx pmap loc =
+  (* To prevent cases where we might compare a concrete and an abstract
+     aloc (like in a cycle) we abstractify all incoming alocs before adding
+     them to the map. The only exception is for library files, which have only
+     concrete definitions and by definition cannot appear in cycles. *)
+  let loc = ALoc.lookup_key_if_possible cx.rev_aloc_table loc in
   let id = Type.Properties.id_of_aloc loc in
   add_property_map cx id pmap;
   id

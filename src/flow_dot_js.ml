@@ -85,7 +85,8 @@ let load_lib_files ~master_cx ~metadata files
       | Ok (ast, file_sig) ->
         let sig_cx = Context.make_sig () in
         let aloc_table = Utils_js.FilenameMap.empty in
-        let cx = Context.make sig_cx metadata lib_file aloc_table Files.lib_module_ref Context.Checking in
+        let rev_table = lazy (Hashtbl.create 0) in
+        let cx = Context.make sig_cx metadata lib_file aloc_table rev_table Files.lib_module_ref Context.Checking in
         Flow_js.mk_builtins cx;
         let syms = Type_inference_js.infer_lib_file cx ast
           ~exclude_syms ~file_sig:(File_sig.abstractify_locs file_sig) ~lint_severities:LintSettings.empty_severities ~file_options:None
@@ -181,10 +182,12 @@ let get_master_cx =
     | None ->
       let sig_cx = Context.make_sig () in
       let aloc_table = Utils_js.FilenameMap.empty in
+      let rev_table = lazy (Hashtbl.create 0) in
       let cx = Context.make sig_cx
         (stub_metadata ~root ~checked:false)
         File_key.Builtins
         aloc_table
+        rev_table
         Files.lib_module_ref
         Context.Checking in
       Flow_js.mk_builtins cx;

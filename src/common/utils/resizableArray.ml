@@ -53,3 +53,12 @@ let shrink arr =
 let size arr = arr.size
 
 let underlying_array_size_do_not_use arr = Array.length arr.arr
+
+let to_hashtbl arr =
+  let tbl = Hashtbl.create arr.size in
+  for i = 0 to arr.size - 1 do
+    match arr.arr.(i) with
+    | Some v -> Hashtbl.add tbl v i
+    | None -> ()
+  done;
+  tbl

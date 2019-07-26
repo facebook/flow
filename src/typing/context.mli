@@ -60,7 +60,7 @@ type phase = Checking | Merging
 type type_assert_kind = Is | Throws | Wraps
 
 val make_sig: unit -> sig_t
-val make: sig_t -> metadata -> File_key.t -> ALoc.table Lazy.t Utils_js.FilenameMap.t -> string -> phase -> t
+val make: sig_t -> metadata -> File_key.t -> ALoc.table Lazy.t Utils_js.FilenameMap.t -> (Loc.t, ALoc.key) Hashtbl.t Lazy.t -> string -> phase -> t
 val metadata_of_options: Options.t -> metadata
 
 val trust_constructor: t -> (unit -> Trust.trust_rep)

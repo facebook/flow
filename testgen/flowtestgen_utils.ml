@@ -567,10 +567,12 @@ let flow_check (code : string) : string option =
       let root = Path.dummy_path in
       let master_sig_cx = Context.make_sig () in
       let aloc_table = Utils_js.FilenameMap.empty in
+      let rev_table = lazy (Hashtbl.create 0) in
       let master_cx = Context.make master_sig_cx
         (stub_metadata ~root ~checked:false)
         File_key.Builtins
         aloc_table
+        rev_table
         Files.lib_module_ref
         Context.Checking in
 
@@ -584,7 +586,7 @@ let flow_check (code : string) : string option =
       in
       let builtins_sig_cx = Context.make_sig () in
       let builtins_cx = Context.make builtins_sig_cx builtin_metadata
-        File_key.Builtins aloc_table Files.lib_module_ref Context.Checking in
+        File_key.Builtins aloc_table rev_table Files.lib_module_ref Context.Checking in
       let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
         ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:(File_sig.abstractify_locs builtins_file_sig) in
       let () =
