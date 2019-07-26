@@ -1182,9 +1182,9 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       let accum_coverage (covered, total) (_loc, cov) =
         let covered =
           match cov with
-          | Coverage.Tainted | Coverage.Untainted -> covered + 1
-          | Coverage.Uncovered
-          | Coverage.Empty -> covered
+          | Coverage_response.Tainted | Coverage_response.Untainted -> covered + 1
+          | Coverage_response.Uncovered
+          | Coverage_response.Empty -> covered
         in
         covered, total + 1
       in
@@ -1193,9 +1193,9 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       (* Figure out each individual uncovered span *)
       let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, cov) ->
         match cov with
-        | Coverage.Tainted | Coverage.Untainted -> None
-        | Coverage.Uncovered
-        | Coverage.Empty -> Some loc
+        | Coverage_response.Tainted | Coverage_response.Untainted -> None
+        | Coverage_response.Uncovered
+        | Coverage_response.Empty -> Some loc
       ) in
       (* Imagine a tree of uncovered spans based on range inclusion. *)
       (* This sorted list is a pre-order flattening of that tree. *)

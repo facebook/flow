@@ -50,7 +50,7 @@ type env = {
     (* The files which didn't parse (skipped or errored) *)
     unparsed: Utils_js.FilenameSet.t;
     errors: errors;
-    coverage: Coverage.file_coverage Utils_js.FilenameMap.t;
+    coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
     collated_errors: collated_errors option ref;
     connections: Persistent_connection.t;
 }

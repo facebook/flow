@@ -174,12 +174,12 @@ module Response = struct
   type autofix_exports_response = ((Replacement_printer.patch * string list), string) result
 
   type coverage_response = (
-    (Loc.t * Coverage.expression_coverage) list,
+    (Loc.t * Coverage_response.expression_coverage) list,
     string
   ) result
 
   type batch_coverage_response = (
-    (File_key.t * Coverage.file_coverage) list,
+    (File_key.t * Coverage_response.file_coverage) list,
     string
   ) result
 

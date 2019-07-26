@@ -34,7 +34,7 @@ val coverage :
   trust:bool ->
   File_key.t ->
   string ->
-  ((Loc.t * Coverage.expression_coverage) list, string) Core_result.t Lwt.t
+  ((Loc.t * Coverage_response.expression_coverage) list, string) Core_result.t Lwt.t
 
 val suggest :
   options:Options.t ->

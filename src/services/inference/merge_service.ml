@@ -15,7 +15,7 @@ type acc =
   (Flow_error.ErrorSet.t *
    Flow_error.ErrorSet.t *
    Error_suppressions.t *
-   Coverage.file_coverage FilenameMap.t)
+   Coverage_response.file_coverage FilenameMap.t)
 
 type 'a merge_job_results = 'a file_keyed_result list
 type 'a merge_job =
@@ -40,7 +40,7 @@ type merge_context_result = {
   master_cx: Context.sig_t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
   typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
-  coverage_map: Coverage.file_coverage FilenameMap.t;
+  coverage_map: Coverage_response.file_coverage FilenameMap.t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the

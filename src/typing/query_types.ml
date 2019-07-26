@@ -103,7 +103,7 @@ let covered_types ~should_check ~check_trust cx tast =
       fun x -> x
     else
       function
-      | Coverage.Tainted -> Coverage.Untainted
+      | Coverage_response.Tainted -> Coverage_response.Untainted
       | x -> x
   in
   let compute_cov =
@@ -112,7 +112,7 @@ let covered_types ~should_check ~check_trust cx tast =
       Coverage.result_of_coverage %>
       check_trust
     else
-      fun _ -> Coverage.Empty
+      fun _ -> Coverage_response.Empty
   in
   let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t)::acc in
   coverage_fold_tast ~f:step ~init:[] tast |>
@@ -121,13 +121,14 @@ let covered_types ~should_check ~check_trust cx tast =
 let component_coverage:
   full_cx:Context.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program list ->
-  Coverage.file_coverage list
+  Coverage_response.file_coverage list
   =
+  let open Coverage_response in
   let open Coverage in
   let coverage_computer = new visitor in
   let step cx _ t acc =
     let coverage = coverage_computer#type_ cx t in
-    match Coverage.result_of_coverage coverage with
+    match result_of_coverage coverage with
     | Uncovered -> { acc with uncovered = acc.uncovered + 1 }
     | Untainted -> { acc with untainted = acc.untainted + 1 }
     | Tainted   -> { acc with tainted   = acc.tainted   + 1 }

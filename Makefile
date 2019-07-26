@@ -135,6 +135,7 @@ MODULES=\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
   src/typing\
+  src/typing/coverage_response\
   src/typing/errors\
   src/typing/polarity\
   hack/dfind\
