@@ -4386,7 +4386,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | None ->
           let reason_prop = replace_reason_const (RProperty prop_name) ureason in
           add_output cx ~trace (Error_message.EStrictLookupFailed
-            ((reason_prop, lreason), lreason, prop_name, Some use_op)))
+            ((reason_prop, lreason), lreason, prop_name, Some use_op, None)))
       );
 
       Context.iter_real_props cx uflds (fun s up ->
@@ -4442,7 +4442,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ ->
         let reason_prop = replace_reason_const (RProperty prop_name) reason_op in
         add_output cx ~trace (Error_message.EStrictLookupFailed
-          ((reason_prop, reason), reason, prop_name, Some use_op));
+          ((reason_prop, reason), reason, prop_name, Some use_op, None));
         AnyT.error reason_op
       in
       (match u with
@@ -4790,6 +4790,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | true, Strict _ -> NonstrictReturning (None, None)
         | _ -> kind
         in
+        let action = match action with
+        | ReadProp ({suggestion = None; _} as obj) ->
+          let known_props = SMap.keys pmap in
+          let suggestion = typo_suggestion known_props x in
+          ReadProp { obj with suggestion }
+        | t -> t
+        in
         rec_flow cx trace (super,
           LookupT (reason_op, kind, try_ts_on_failure, propref, action))
       | Some p ->
@@ -4899,7 +4906,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | None ->
           add_output cx ~trace (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
         | Some p ->
-          let action = ReadProp { use_op; obj_t = l; tout = tout } in
+          let action = ReadProp { use_op; obj_t = l; suggestion = None; tout = tout } in
           let propref = Named (reason_op, x) in
           perform_lookup_action cx trace propref p reason_c reason_op action)
 
@@ -5231,6 +5238,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | false, ShadowWrite ids ->
           ShadowWrite (Nel.cons o.props_tmap ids)
         | _ -> strict
+        in
+        let action = match action, propref with
+        | ReadProp ({suggestion = None; _} as obj), Named (_, x) ->
+          let pmap = Context.find_props cx o.props_tmap in
+          let known_props = SMap.keys pmap in
+          let suggestion = typo_suggestion known_props x in
+          ReadProp { obj with suggestion }
+        | (t, _) -> t
         in
         rec_flow cx trace (o.proto_t,
           LookupT (reason_op, strict, try_ts_on_failure, propref, action)));
@@ -6232,6 +6247,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, LookupT (reason_op, lookup_kind, [], propref, ReadProp {
         use_op = unknown_use;
         obj_t = l;
+        suggestion = None;
         tout = tout;
       }))
 
@@ -6298,6 +6314,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjProtoT _ | FunProtoT _),
       LookupT (reason_op, _, [], Named (_, "__proto__"), ReadProp {
         use_op = _;
+        suggestion = _;
         obj_t = l;
         tout;
       }) ->
@@ -6332,8 +6349,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       LookupT (reason_op, Strict strict_reason, [],
         (Named (reason_prop, x) as propref), action) ->
       let use_op = use_op_of_lookup_action action in
+      let suggestion = match action with
+      | ReadProp { suggestion; _ } -> suggestion
+      | _ -> None
+      in
       add_output cx ~trace (Error_message.EStrictLookupFailed
-        ((reason_prop, strict_reason), reason, Some x, use_op));
+        ((reason_prop, strict_reason), reason, Some x, use_op, suggestion));
       let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
       perform_lookup_action cx trace propref p reason reason_op action
 
@@ -6359,7 +6380,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason_prop = reason_of_t elem_t in
         let use_op = use_op_of_lookup_action action in
         add_output cx ~trace (Error_message.EStrictLookupFailed
-          ((reason_prop, strict_reason), reason, None, use_op)))
+          ((reason_prop, strict_reason), reason, None, use_op, None)))
 
     | (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
       LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [],
@@ -6370,7 +6391,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Some strict_reason ->
         let use_op = use_op_of_lookup_action action in
         add_output cx ~trace (Error_message.EStrictLookupFailed
-          ((reason_prop, strict_reason), reason, Some x, use_op)));
+          ((reason_prop, strict_reason), reason, Some x, use_op, None)));
 
       (* Install shadow prop (if necessary) and link up proto chain. *)
       let prop_loc = def_aloc_of_reason reason_prop in
@@ -6823,7 +6844,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     | None ->
       let reason_prop = replace_reason_const (RProperty prop_name) ureason in
       add_output cx ~trace (Error_message.EStrictLookupFailed
-        ((reason_prop, lreason), lreason, prop_name, Some use_op)))
+        ((reason_prop, lreason), lreason, prop_name, Some use_op, None)))
   | None -> ());
 
   (* Properties in u must either exist in l, or match l's indexer. *)
@@ -7530,7 +7551,7 @@ and structural_subtype cx trace ~use_op lower reason_struct
         RPropertyOf ("$call", desc)
       ) reason_struct in
       add_output cx ~trace (Error_message.EStrictLookupFailed
-        ((reason_prop, lreason), lreason, prop_name, Some use_op))
+        ((reason_prop, lreason), lreason, prop_name, Some use_op, None))
   );
 
 and check_super cx trace ~use_op lreason ureason t x p =
@@ -8846,7 +8867,9 @@ and access_prop cx trace reason_prop reason_op strict super x pmap action =
     lookup_prop cx trace super reason_prop reason_op strict x action
 
 and get_prop cx trace ~use_op reason_prop reason_op strict l super x map tout =
-  ReadProp { use_op; obj_t = l; tout }
+  let known_props = SMap.keys map in
+  let suggestion = typo_suggestion known_props x in
+  ReadProp { use_op; obj_t = l; suggestion; tout }
   |> access_prop cx trace reason_prop reason_op strict super x map
 
 and match_prop cx trace ~use_op reason_prop reason_op strict super x pmap prop_t =
@@ -8879,9 +8902,14 @@ and get_obj_prop cx trace o propref reason_op =
 
 and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
   let l = DefT (reason_obj, bogus_trust (), ObjT o) in
+  let known_props = SMap.keys (Context.find_props cx o.props_tmap) in
+  let suggestion = match propref with
+  | Named (_, x) -> typo_suggestion known_props x
+  | _ -> None
+  in
   (match get_obj_prop cx trace o propref reason_op with
   | Some p ->
-    let action = ReadProp { use_op; obj_t = l; tout = tout } in
+    let action = ReadProp { use_op; obj_t = l; suggestion; tout = tout } in
     perform_lookup_action cx trace propref p reason_obj reason_op action
   | None ->
     match propref with
@@ -8893,6 +8921,7 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
       in
       rec_flow cx trace (o.proto_t, LookupT (reason_op, strict, [], propref, ReadProp {
         use_op;
+        suggestion;
         obj_t = l;
         tout = tout;
       }))
@@ -10863,7 +10892,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
   | SuperProp (use_op, lp) ->
     rec_flow_p cx trace ~use_op ureason lreason propref (lp, p)
-  | ReadProp { use_op; obj_t = _; tout } ->
+  | ReadProp { use_op; obj_t = _; suggestion = _; tout } ->
     begin match Property.read_t p with
     (* TODO: Sam, comment repositioning logic here *)
     | Some t ->
@@ -10930,6 +10959,7 @@ and lookup_builtin cx ?trace x reason strict builtin =
   flow_opt cx ?trace (l, LookupT (reason, strict, [], propref, ReadProp {
     use_op = unknown_use;
     obj_t = l;
+    suggestion = None;
     tout = builtin;
   }))
 

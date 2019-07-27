@@ -87,7 +87,7 @@ and 'loc t' =
       expected_polarity: Polarity.t;
       actual_polarity: Polarity.t;
     }
-  | EStrictLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_reason * string option * 'loc virtual_use_op option
+  | EStrictLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_reason * string option * 'loc virtual_use_op option * string option
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
@@ -435,9 +435,9 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
        EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
-  | EStrictLookupFailed ((r1, r2), r, p, op) ->
+  | EStrictLookupFailed ((r1, r2), r, p, op, s) ->
       EStrictLookupFailed ((map_reason r1, map_reason r2), map_reason r, p,
-        Option.map ~f:map_use_op op)
+        Option.map ~f:map_use_op op, s)
   | EPrivateLookupFailed ((r1, r2), x, op) ->
       EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EAdditionMixed (r, op) -> EAdditionMixed (map_reason r, map_use_op op)
@@ -641,8 +641,8 @@ let util_use_op_of_msg nope util = function
 | EPropNotWritable { reason_prop; prop_name; use_op } ->
   util use_op (fun use_op -> EPropNotWritable { reason_prop; prop_name; use_op })
 | EPropPolarityMismatch (rs, p, ps, op) -> util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
-| EStrictLookupFailed (rs, r, p, Some op) ->
-  util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
+| EStrictLookupFailed (rs, r, p, Some op, s) ->
+  util op (fun op -> EStrictLookupFailed (rs, r, p, Some op, s))
 | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
 | EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
 | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
@@ -685,7 +685,7 @@ let util_use_op_of_msg nope util = function
 | EMissingTypeArgs {reason_tapp=_; reason_arity=_; min_arity=_; max_arity=_}
 | EValueUsedAsType _
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
-| EStrictLookupFailed (_, _, _, None)
+| EStrictLookupFailed (_, _, _, None, _)
 | EComparison (_, _)
 | ESpeculationAmbiguous _
 | EUnsupportedExact (_, _)
@@ -887,7 +887,7 @@ let aloc_of_msg : t -> ALoc.t option = function
       Some (ALoc.of_loc loc1)
   | EBindingError (_, loc, _, _) -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (aloc_of_reason reason)
-  | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason ALoc.source lreason ->
+  | EStrictLookupFailed ((reason, _), lreason, _, _, _) when is_builtin_reason ALoc.source lreason ->
       Some (aloc_of_reason reason)
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
@@ -978,7 +978,7 @@ type 'loc friendly_message_recipe =
       * 'loc Type.virtual_use_op
   | IncompatibleTrust of 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
       * 'loc Type.virtual_use_op
-  | PropMissing of 'loc * string option * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
+  | PropMissing of 'loc * string option * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op * string option
   | Normal of 'loc Errors.Friendly.message_feature list
   | UseOp of 'loc * 'loc Errors.Friendly.message_feature list * 'loc Type.virtual_use_op
   | PropPolarityMismatch of string option * ('loc Reason.virtual_reason * Polarity.t)
@@ -1018,7 +1018,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
     | EIncompatibleProp { prop; reason_prop; reason_obj; special=_; use_op } ->
       PropMissing
-        (loc_of_reason reason_prop, prop, reason_obj, Option.value ~default:unknown_use use_op)
+        (loc_of_reason reason_prop, prop, reason_obj, Option.value ~default:unknown_use use_op, None)
 
     | EDebugPrint (_, str) ->
       Normal [text str]
@@ -1172,7 +1172,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EPropNotFound (prop, reasons, use_op) ->
       let (reason_prop, reason_obj) = reasons in
       PropMissing
-        (loc_of_reason reason_prop, prop, reason_obj, use_op)
+        (loc_of_reason reason_prop, prop, reason_obj, use_op, None)
 
     | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
       UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text " is not readable"], use_op)
@@ -1200,7 +1200,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text (expected_polarity ^ " positions.");
       ]
 
-    | EStrictLookupFailed (reasons, lreason, x, use_op) ->
+    | EStrictLookupFailed (reasons, lreason, x, use_op, suggestion) ->
       (* if we're looking something up on the global/builtin object, then tweak
          the error to say that `x` doesn't exist. We can tell this is the
          global object because that should be the only object created with
@@ -1218,11 +1218,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       else
         let (reason_prop, reason_obj) = reasons in
         PropMissing
-          (loc_of_reason reason_prop, x, reason_obj, Option.value ~default:unknown_use use_op)
+          (loc_of_reason reason_prop, x, reason_obj, Option.value ~default:unknown_use use_op, suggestion)
 
     | EPrivateLookupFailed (reasons, x, use_op) ->
       PropMissing
-        (loc_of_reason (fst reasons), Some ("#" ^ x), snd reasons, use_op)
+        (loc_of_reason (fst reasons), Some ("#" ^ x), snd reasons, use_op, None)
 
     | EAdditionMixed (reason, use_op) ->
       UseOp (loc_of_reason reason,
