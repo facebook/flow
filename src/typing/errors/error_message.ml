@@ -1214,6 +1214,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
         | Some x -> [text "Cannot resolve name "; code x; text "."]
         in
+        let msg = msg @
+          match suggestion with
+          | None -> []
+          | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
+        in
         Normal msg
       else
         let (reason_prop, reason_obj) = reasons in
