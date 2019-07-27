@@ -2,7 +2,11 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":38}},
-      "message":"Unexpected token =>"
+      "message":"Unexpected token `=>`, expected the token `;`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":38}},
+      "message":"Unexpected token `=>`, expected the start of a statement"
     }
   ],
   "type":"Program",

@@ -899,7 +899,7 @@ module Statement
     | _ ->
         (* Just make up a string for the error case *)
         let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
-        error_unexpected env;
+        error_unexpected ~expected:"a string" env;
         ret
 
   and extract_pattern_binding_names =
@@ -1309,7 +1309,7 @@ module Statement
       | _ ->
           (* Just make up a string for the error case *)
           let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
-          error_unexpected env;
+          error_unexpected ~expected:"a string" env;
           ret
 
     in let is_type_import = function

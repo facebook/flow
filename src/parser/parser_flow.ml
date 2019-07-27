@@ -160,7 +160,7 @@ module rec Parse : PARSER = struct
   and statement env =
     Statement.(match Peek.token env with
     | T_EOF ->
-        error_unexpected env;
+        error_unexpected ~expected:"the start of a statement" env;
         Peek.loc env, Ast.Statement.Empty
     | T_SEMICOLON -> empty env
     | T_LCURLY -> block env
@@ -201,7 +201,7 @@ module rec Parse : PARSER = struct
     | T_STATIC
     | T_EXPORT (* TODO *)
     | T_ELLIPSIS ->
-        error_unexpected env;
+        error_unexpected ~expected:"the start of a statement" env;
         Eat.token env;
         statement env
 
@@ -263,7 +263,7 @@ module rec Parse : PARSER = struct
       if in_strict_mode env then
         strict_error_at env (loc, Parse_error.StrictReservedWord)
       else if no_let env then
-        error_at env (loc, Parse_error.UnexpectedToken name)
+        error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
     | "await" ->
       (* `allow_await` means that `await` is allowed to be a keyword,
          which makes it illegal to use as an identifier.
@@ -278,7 +278,7 @@ module rec Parse : PARSER = struct
     | _ when is_strict_reserved name ->
       strict_error_at env (loc, Parse_error.StrictReservedWord)
     | _ when is_reserved name ->
-      error_at env (loc, Parse_error.UnexpectedToken name)
+      error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
     | _ ->
       begin match restricted_error with
       | Some err when is_restricted name -> strict_error_at env (loc, err)
@@ -385,10 +385,10 @@ let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content file
     | T_NUMBER _ ->
       do_parse env Parse.expression fail
     | _ ->
-      error_unexpected env;
+      error_unexpected ~expected:"a number" env;
       raise (Parse_error.Error (errors env)))
   | _ ->
-    error_unexpected env;
+    error_unexpected ~expected:"a valid JSON value" env;
     raise (Parse_error.Error (errors env))
 
 let jsx_pragma_expression =

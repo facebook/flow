@@ -230,7 +230,7 @@ module Object
             }
           ) env in
           let errs = {
-            if_expr = [assignment_loc, Parse_error.UnexpectedToken "="];
+            if_expr = [assignment_loc, Parse_error.Unexpected (Token.quote_token_value "=")];
             if_patt = [];
           } in
           ast, errs

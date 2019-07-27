@@ -405,7 +405,7 @@ err-parse-0.js
 
 Error ----------------------------------------------------------------------------------------------- err-parse-0.js:3:4
 
-Unexpected identifier
+Unexpected identifier, expected the token `;`
 
    3| va r x = 1;   // InferError
          ^
@@ -416,7 +416,7 @@ err-parse-1.js
 
 Error ----------------------------------------------------------------------------------------------- err-parse-1.js:3:2
 
-Unexpected token @
+Unexpected token `@`
 
    3| @@@1`   +\   aaa
        ^

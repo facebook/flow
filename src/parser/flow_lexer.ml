@@ -177,13 +177,13 @@ let lex_error (env: Lex_env.t) loc err: Lex_env.t =
   { env with lex_state = { lex_errors_acc; } }
 
 let unexpected_error (env: Lex_env.t) (loc: Loc.t) value =
-  lex_error env loc (Parse_error.UnexpectedToken value)
+  lex_error env loc (Parse_error.Unexpected (quote_token_value value))
 
 let unexpected_error_w_suggest (env: Lex_env.t) (loc: Loc.t) value suggest =
   lex_error env loc (Parse_error.UnexpectedTokenWithSuggestion (value, suggest))
 
 let illegal (env: Lex_env.t) (loc: Loc.t) =
-  lex_error env loc (Parse_error.UnexpectedToken "ILLEGAL")
+  lex_error env loc (Parse_error.Unexpected "token ILLEGAL")
 
 let new_line env lexbuf =
   let offset = Sedlexing.lexeme_end lexbuf in

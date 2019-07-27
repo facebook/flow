@@ -54,7 +54,7 @@ module Pattern
           | Property.Get { key = _; value = (loc, _) }
           | Property.Set { key = _; value = (loc, _) } ->
             (* these should never happen *)
-            error_at env (loc, Parse_error.UnexpectedIdentifier);
+            error_at env (loc, Parse_error.Unexpected "identifier");
             acc
           in
           properties env acc remaining
@@ -245,7 +245,7 @@ module Pattern
             }))
 
           | _ ->
-            error_unexpected env; (* invalid shorthand destructuring *)
+            error_unexpected ~expected:"an identifier" env; (* invalid shorthand destructuring *)
             None
           )
       end

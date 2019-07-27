@@ -2,11 +2,19 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":14}},
-      "message":"Unexpected token extends"
+      "message":"Unexpected token `extends`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":14}},
+      "message":"Unexpected token `extends`, expected the token `;`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":14}},
+      "message":"Unexpected token `extends`, expected the start of a statement"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
-      "message":"Unexpected token ="
+      "message":"Unexpected token `=`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},

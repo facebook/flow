@@ -15,11 +15,9 @@ type t =
     {enum_name: string; explicit_type: Enum_common.explicit_type option; member_name: string}
   | EnumNumberMemberNotInitialized of {enum_name: string; member_name: string}
   | EnumStringMemberInconsistentlyInitailized of {enum_name: string}
-  | UnexpectedToken of string
+  | Unexpected of string
+  | UnexpectedWithExpected of string * string
   | UnexpectedTokenWithSuggestion of string * string
-  | UnexpectedNumber
-  | UnexpectedString
-  | UnexpectedIdentifier
   | UnexpectedReserved
   | UnexpectedReservedType
   | UnexpectedSuper
@@ -205,14 +203,14 @@ module PP =
           "String enum members need to consistently either all use initializers, \
           or use no initializers, in enum %s."
           enum_name
-      | UnexpectedToken token->  "Unexpected token "^token
+      | Unexpected unexpected ->
+        Printf.sprintf "Unexpected %s" unexpected
+      | UnexpectedWithExpected (unexpected, expected) ->
+        Printf.sprintf "Unexpected %s, expected %s" unexpected expected
       | UnexpectedTokenWithSuggestion (token, suggestion) ->
           Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?"
             token
             suggestion
-      | UnexpectedNumber ->  "Unexpected number"
-      | UnexpectedString ->  "Unexpected string"
-      | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
       | UnexpectedReservedType -> "Unexpected reserved type"
       | UnexpectedSuper -> "Unexpected `super` outside of a class method"

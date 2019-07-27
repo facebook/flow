@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------- sanity-conditional.js:5:50
 
-Unexpected token =
+Unexpected token `=`, expected the token `)`
 
    5| declare function foo(x: string): mixed %checks(x = "1");
                                                        ^

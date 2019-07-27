@@ -1,7 +1,7 @@
 ===== signature-verification error should not be reported, just the parsing error: =====
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -17,7 +17,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== suppressed signature-verification error should not be reported after focus-checking suppressed_signature_verification_error.js: =====
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -33,7 +33,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== suppressed signature-verification error should not be reported after focus-checking suppressed_bad_module_export.js: =====
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -57,7 +57,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -81,7 +81,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -123,7 +123,7 @@ annotation at function return: (`signature-verification-failure`)
 
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^

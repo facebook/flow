@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":14}},
-      "message":"Unexpected token typeof"
+      "message":"Unexpected token `typeof`"
     }
   ],
   "type":"Program",

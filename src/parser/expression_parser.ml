@@ -548,7 +548,7 @@ module Expression
     | _ ->
       if not allowed
         then error_at env (loc, Parse_error.UnexpectedSuper)
-        else error_unexpected env;
+        else error_unexpected ~expected:"either a call or access of `super`" env;
       super
 
   and import env = with_loc (fun env ->
@@ -615,7 +615,7 @@ module Expression
           property;
         }))
       | _ ->
-        error_unexpected env;
+        error_unexpected ~expected:"the identifier `target`" env;
         Eat.token env; (* skip unknown identifier *)
         start_loc, Expression.Identifier meta (* return `new` identifier *)
     end else
@@ -995,7 +995,7 @@ module Expression
           else template_parts env quasis expressions
       | _ ->
           (* Malformed template *)
-          error_unexpected env;
+          error_unexpected ~expected:"a template literal part" env;
           let imaginary_quasi = fst expr, { Expression.TemplateLiteral.Element.
             value = { Expression.TemplateLiteral.Element.
               raw = "";

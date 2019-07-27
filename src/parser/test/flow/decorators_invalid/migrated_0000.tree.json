@@ -2,11 +2,15 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
-      "message":"Unexpected token @"
+      "message":"Unexpected token `@`, expected the token `class`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `{`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",
@@ -31,8 +35,8 @@
         "range":[27,27],
         "body":[]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

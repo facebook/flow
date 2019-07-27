@@ -2,11 +2,19 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":1}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`, expected an identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
       "message":"Unexpected end of input"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",

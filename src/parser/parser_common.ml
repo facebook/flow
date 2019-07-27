@@ -123,7 +123,7 @@ let identifier_name env =
   | T_OF -> "of"
   | T_ASYNC -> "async"
   (* punctuators, types, literals, etc are not identifiers *)
-  | _ -> error_unexpected env; ""
+  | _ -> error_unexpected ~expected:"an identifier" env; ""
   in
   Eat.token env;
   let trailing = Peek.comments env in

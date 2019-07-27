@@ -178,7 +178,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- await_not_in_async.js:5:9
 
-Unexpected number
+Unexpected number, expected the token `;`
 
    5|   await 1;
               ^
@@ -186,7 +186,7 @@ Unexpected number
 
 Error --------------------------------------------------------------------------------------- await_not_in_async2.js:6:9
 
-Unexpected number
+Unexpected number, expected the token `,`
 
    6| f(await 1);
               ^
@@ -194,7 +194,7 @@ Unexpected number
 
 Error --------------------------------------------------------------------------------------- await_not_in_async3.js:6:9
 
-Unexpected number
+Unexpected number, expected the token `,`
 
    6| f(await 1);
               ^

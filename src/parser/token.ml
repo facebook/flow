@@ -443,3 +443,30 @@ let value_of_token = function
   | T_BIGINT_SINGLETON_TYPE { raw; _ } -> raw
   | T_STRING_TYPE -> "string"
   | T_VOID_TYPE -> "void"
+
+let quote_token_value value = Printf.sprintf "token `%s`" value
+
+let explanation_of_token ?(use_article=false) token =
+  let value, article = match token with
+    | T_NUMBER_SINGLETON_TYPE _
+    | T_NUMBER _ ->
+      "number", "a"
+    | T_BIGINT_SINGLETON_TYPE _
+    | T_BIGINT _ ->
+      "bigint", "a"
+    | T_JSX_TEXT _
+    | T_STRING _ ->
+      "string", "a"
+    | T_TEMPLATE_PART _ ->
+      "template literal part", "a"
+    | T_JSX_IDENTIFIER _
+    | T_IDENTIFIER _ ->
+      "identifier", "an"
+    | T_REGEXP _ ->
+      "regexp", "a"
+    | T_EOF ->
+      "end of input", "the"
+    | _ ->
+      quote_token_value (value_of_token token), "the"
+  in
+  if use_article then article ^ " " ^ value else value

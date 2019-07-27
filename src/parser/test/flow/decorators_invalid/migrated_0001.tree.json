@@ -6,7 +6,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the start of a statement"
     }
   ],
   "type":"Program",

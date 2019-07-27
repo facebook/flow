@@ -8,7 +8,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ==== ensure_parsed notices that B has changed ====
 Error --------------------------------------------------------------------------------------------------------- B.js:4:1
 
-Unexpected end of input
+Unexpected end of input, expected the token `(`
 
    4|
       

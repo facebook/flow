@@ -6,15 +6,19 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":13}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the identifier `as`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":19}},
-      "message":"Unexpected string"
+      "message":"Unexpected string, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the identifier `from`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
+      "message":"Unexpected end of input, expected a string"
     }
   ],
   "type":"Program",

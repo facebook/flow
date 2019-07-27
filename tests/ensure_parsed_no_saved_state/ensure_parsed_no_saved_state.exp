@@ -15,7 +15,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ==== Now we see the parse error ====
 Error --------------------------------------------------------------------------------------------------------- B.js:4:1
 
-Unexpected end of input
+Unexpected end of input, expected the token `(`
 
    4|
       
