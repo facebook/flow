@@ -207,12 +207,6 @@ module JSX (Parse: Parser_common.PARSER) = struct
       element
     ) env
 
-    type element_or_closing =
-      | Closing of (Loc.t, Loc.t) JSX.Closing.t
-      | ClosingFragment of Loc.t
-      | ChildElement of (Loc.t * (Loc.t, Loc.t) JSX.element)
-      | ChildFragment of (Loc.t * (Loc.t, Loc.t) JSX.fragment)
-
     let rec child env =
       match Peek.token env with
       | T_LCURLY -> expression_container_or_spread_child env
@@ -225,39 +219,30 @@ module JSX (Parse: Parser_common.PARSER) = struct
           | (loc, `Fragment fragment) -> loc, JSX.Fragment fragment)
 
     and element =
-      let element_or_closing env =
-        Eat.push_lex_mode env Lex_mode.JSX_TAG;
-        match Peek.token env, Peek.ith_token ~i:1 env with
-        | T_LESS_THAN, T_EOF
-        | T_LESS_THAN, T_DIV ->
-            let closing = closing_element env in
-            (* We double pop to avoid going back to childmode and re-lexing the
-             * lookahead *)
-            Eat.double_pop_lex_mode env;
-            (match closing with
-            | (loc, `Element ec) -> Closing (loc, ec)
-            | (loc, `Fragment) -> ClosingFragment loc)
-        | _ ->
-            (match element env with
-            | (loc, `Element e) -> ChildElement (loc, e)
-            | (loc, `Fragment f) -> ChildFragment (loc, f))
-
-      in let children_and_closing =
+      let children_and_closing =
         let rec children_and_closing env acc =
           let previous_loc = last_loc env in
           match Peek.token env with
-          | T_LESS_THAN -> (
-              match element_or_closing env with
-              | Closing closingElement ->
-                  List.rev acc, previous_loc, `Element closingElement
-              | ClosingFragment closingFragment ->
-                  List.rev acc, previous_loc, `Fragment closingFragment
-              | ChildElement element ->
-                  let element = fst element, JSX.Element (snd element) in
-                  children_and_closing env (element::acc)
-              | ChildFragment fragment ->
-                  let fragment = fst fragment, JSX.Fragment (snd fragment) in
-                  children_and_closing env (fragment::acc))
+          | T_LESS_THAN ->
+              Eat.push_lex_mode env Lex_mode.JSX_TAG;
+              begin match Peek.token env, Peek.ith_token ~i:1 env with
+              | T_LESS_THAN, T_EOF
+              | T_LESS_THAN, T_DIV ->
+                  let closing = match closing_element env with
+                  | (loc, `Element ec) -> `Element (loc, ec)
+                  | (loc, `Fragment) -> `Fragment loc
+                  in
+                  (* We double pop to avoid going back to childmode and re-lexing the
+                   * lookahead *)
+                  Eat.double_pop_lex_mode env;
+                  List.rev acc, previous_loc, closing
+              | _ ->
+                  let child = match element env with
+                  | (loc, `Element e) -> loc, JSX.Element e
+                  | (loc, `Fragment f) -> loc, JSX.Fragment f
+                  in
+                  children_and_closing env (child::acc)
+              end
           | T_EOF ->
               error_unexpected env;
               List.rev acc, previous_loc, `None
