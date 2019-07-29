@@ -13,6 +13,7 @@ type id = int
 
 (* What initiated this interaction *)
 type trigger =
+| CodeAction
 | Completion
 | Definition
 | DidChange
@@ -30,6 +31,7 @@ type trigger =
 | Rage
 | Rename
 | TypeCoverage
+
 
 (* Source of the trigger *)
 type source =
@@ -66,6 +68,7 @@ type state = {
 }
 
 let string_of_trigger = function
+| CodeAction -> "codeAction"
 | Completion -> "completion"
 | Definition -> "definition"
 | DidChange -> "didChange"
@@ -105,6 +108,7 @@ let string_of_buffer_status = function
 | UnsavedBuffers -> "UnsavedBuffers"
 
 let source_of_trigger = function
+| CodeAction
 | Completion
 | Definition
 | DidChange
@@ -250,6 +254,7 @@ let flush () =
  * enumerates which methods we care about and what trigger they correspond to *)
 let trigger_of_lsp_msg = Lsp.(function
 (* Requests from the client which we care about *)
+| RequestMessage (_, CodeActionRequest _) -> Some CodeAction
 | RequestMessage (_, CompletionRequest _) -> Some Completion
 | RequestMessage (_, DefinitionRequest _) -> Some Definition
 | RequestMessage (_, DocumentHighlightRequest _) -> Some DocumentHighlight
@@ -259,6 +264,7 @@ let trigger_of_lsp_msg = Lsp.(function
 | RequestMessage (_, RageRequest) -> Some Rage
 | RequestMessage (_, RenameRequest _) -> Some Rename
 | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
+
 
 (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
  * the client *)
@@ -303,6 +309,7 @@ let trigger_of_lsp_msg = Lsp.(function
 | ResponseMessage (_, RageResult _)
 | ResponseMessage (_, RenameResult _)
 | ResponseMessage (_, ErrorResult _)
+| ResponseMessage (_, CodeActionResult _)
   -> None
 
 (* Only a few notifications can trigger an interaction *)

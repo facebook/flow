@@ -80,6 +80,12 @@ let parse_range_exn (json: json option) : range =
     end_ = Jget.obj_exn json "end" |> parse_position;
   }
 
+let parse_location (j : json option) : Location.t =
+  let open Location in
+  {
+    uri=Jget.string_exn j "uri";
+    range=Jget.obj_exn j "range" |> parse_range_exn;
+  }
 let parse_range_opt (json: json option) : range option =
   if json = None then None
   else Some (parse_range_exn json)
@@ -150,6 +156,15 @@ let print_textEdit (edit: TextEdit.t) : json =
   JSON_Object [
     "range", print_range edit.range;
     "newText", JSON_String edit.newText;
+  ]
+
+let print_workspaceEdit (r: WorkspaceEdit.t) : json =
+  let open WorkspaceEdit in
+  let print_workspace_edit_changes (uri, text_edits) =
+      uri, JSON_Array (List.map ~f:print_textEdit text_edits)
+  in
+  JSON_Object [
+    "changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes);
   ]
 
 let print_command (command: Command.t) : json =
@@ -386,14 +401,7 @@ let parse_documentRename (params: json option) : Rename.params =
     newName = Jget.string_exn params "newName";
   }
 
-let print_documentRename (r: Rename.result) : json =
-  let open WorkspaceEdit in
-  let print_workspace_edit_changes (uri, text_edits) =
-      uri, JSON_Array (List.map ~f:print_textEdit text_edits)
-  in
-  JSON_Object [
-    "changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes);
-  ]
+let print_documentRename : Rename.result -> json = print_workspaceEdit
 
 (************************************************************************)
 (** textDocument/codeLens Request                                      **)
@@ -413,40 +421,119 @@ let print_documentCodeLens (r: DocumentCodeLens.result) : json =
 (** textDocument/publishDiagnostics notification                       **)
 (************************************************************************)
 
-let print_diagnostics (r: PublishDiagnostics.params) : json =
+let print_diagnostic (diagnostic: PublishDiagnostics.diagnostic) : json =
   let open PublishDiagnostics in
-  let print_diagnosticSeverity = function
-    | PublishDiagnostics.Error -> int_ 1
-    | PublishDiagnostics.Warning -> int_ 2
-    | PublishDiagnostics.Information -> int_ 3
-    | PublishDiagnostics.Hint -> int_ 4 in
+  let print_diagnosticSeverity = Fn.compose int_ diagnosticSeverity_to_enum  in
   let print_diagnosticCode = function
     | IntCode i -> Some (int_ i)
     | StringCode s -> Some (string_ s)
-    | NoCode -> None
-  in
+    | NoCode -> None in
   let print_related (related: relatedLocation) : json =
     Hh_json.JSON_Object [
       "location", print_location related.relatedLocation;
       "message", string_ related.relatedMessage;
     ]
   in
-  let print_diagnostic (diagnostic: diagnostic) : json =
-    Jprint.object_opt [
-      "range", Some (print_range diagnostic.range);
-      "severity", Option.map diagnostic.severity print_diagnosticSeverity;
-      "code", print_diagnosticCode diagnostic.code;
-      "source", Option.map diagnostic.source string_;
-      "message", Some (JSON_String diagnostic.message);
-      "relatedInformation",
-        Some (JSON_Array (List.map diagnostic.relatedInformation ~f:print_related));
-      "relatedLocations", Some (JSON_Array (List.map diagnostic.relatedLocations ~f:print_related));
-    ]
-  in
+  Jprint.object_opt [
+    "range", Some (print_range diagnostic.range);
+    "severity", Option.map diagnostic.severity print_diagnosticSeverity;
+    "code", print_diagnosticCode diagnostic.code;
+    "source", Option.map diagnostic.source string_;
+    "message", Some (JSON_String diagnostic.message);
+    "relatedInformation",
+      Some (JSON_Array (List.map diagnostic.relatedInformation ~f:print_related));
+    "relatedLocations", Some (JSON_Array (List.map diagnostic.relatedLocations ~f:print_related));
+  ]
+
+let print_diagnostic_list (ds : PublishDiagnostics.diagnostic list) : json =
+  JSON_Array (List.map ds ~f:print_diagnostic)
+
+let print_diagnostics (r: PublishDiagnostics.params) : json =
+  let open PublishDiagnostics in
   JSON_Object [
     "uri", JSON_String r.uri;
-    "diagnostics", JSON_Array (List.map r.diagnostics ~f:print_diagnostic)
+    "diagnostics", print_diagnostic_list r.diagnostics
   ]
+
+
+
+
+let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
+  let open PublishDiagnostics in
+  let parse_code = function
+    | None -> NoCode
+    | Some (JSON_String s) -> StringCode s
+    | Some (JSON_Number s) ->
+      begin try IntCode (int_of_string s) with
+        | Failure _ ->
+          let msg =  "Diagnostic code expected to be an int: " ^ s in
+          raise (Error.Parse msg)
+      end
+    | _ -> raise (Error.Parse "Diagnostic code expected to be an int or string") in
+  let parse_info j =
+    {
+      relatedLocation=Jget.obj_exn j "location" |> parse_location;
+      relatedMessage=Jget.string_exn j "message";
+    } in
+  {
+    range= Jget.obj_exn j "range" |> parse_range_exn;
+    severity=Jget.int_opt j "severity" |> Option.map ~f:diagnosticSeverity_of_enum |> Option.join;
+    code=Jget.val_opt j "code" |> parse_code;
+    source=Jget.string_opt j "source";
+    message=Jget.string_exn j "message";
+    relatedInformation=Jget.array_d j "relatedInformation" ~default:[] |> List.map ~f:parse_info;
+    relatedLocations=Jget.array_d j "relatedLocations" ~default:[] |> List.map ~f:parse_info;
+  }
+
+let parse_kind json : CodeActionKind.t option =
+  let open CodeActionKind in
+  match json with
+    | Some (JSON_String s) -> Some (kind_of_string s)
+    | _ -> None
+
+let parse_kinds jsons : CodeActionKind.t list =
+    List.map ~f:parse_kind jsons |> List.filter_opt
+
+let parse_codeActionRequest (j : json option) : CodeActionRequest.params =
+  let open CodeActionRequest in
+  let parse_context c : CodeActionRequest.codeActionContext =
+    {
+      diagnostics= Jget.array_exn c "diagnostics" |> List.map ~f:parse_diagnostic;
+      only = Jget.array_opt c "only" |> Option.map ~f:parse_kinds
+    }
+  in
+  {
+    textDocument= Jget.obj_exn j "textDocument" |> parse_textDocumentIdentifier;
+    range= Jget.obj_exn j "range" |> parse_range_exn;
+    context= Jget.obj_exn j "context" |> parse_context;
+  }
+
+(************************************************************************)
+(** textDocument/CodeAction result                                     **)
+(************************************************************************)
+
+let print_codeAction (c : CodeAction.t) : json =
+  let open CodeAction in
+  let (edit, command) = match c.action with
+    | EditOnly e -> Some e, None
+    | CommandOnly c -> None, Some c
+    | BothEditThenCommand (e,c) -> Some e, Some c in
+  Jprint.object_opt [
+    "title", Some (JSON_String c.title);
+    "kind", Some (JSON_String (CodeActionKind.string_of_kind c.kind));
+    "diagnostics", Some (print_diagnostic_list c.diagnostics);
+    "edit", Option.map edit ~f:print_documentRename;
+    "command", Option.map command ~f:print_command;
+  ]
+
+let print_codeActionResult (c : CodeAction.result) : json =
+  let open CodeAction in
+  let print_command_or_action = function
+    | Command c -> print_command c
+    | Action c -> print_codeAction c in
+  JSON_Array (List.map c ~f:print_command_or_action)
+
+(* print_codeAction *)
 
 
 (************************************************************************)
@@ -895,6 +982,7 @@ let parse_initialize (params: json option) : Initialize.params =
       synchronization =
         Jget.obj_opt json "synchronization" |> parse_synchronization;
       completion = Jget.obj_opt json "completion" |> parse_completion;
+      codeAction = Jget.obj_opt json "codeAction" |> parse_codeAction;
     }
   and parse_synchronization json =
     {
@@ -910,6 +998,17 @@ let parse_initialize (params: json option) : Initialize.params =
   and parse_completionItem json =
     { snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
     }
+  and parse_codeAction json =
+    {
+      codeAction_dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:(false);
+      codeActionLiteralSupport =
+        Jget.obj_opt json "codeActionLiteralSupport" |> parse_codeActionLiteralSupport;
+    }
+  and parse_codeActionLiteralSupport json =
+    let open Option in
+    Jget.array_opt json "valueSet" >>= fun ls ->
+    Some {codeAction_valueSet = parse_kinds ls}
+
   and parse_window json =
     {
       status = Jget.obj_opt json "status" |> Option.is_some;
@@ -1115,6 +1214,7 @@ let request_name_to_string (request: lsp_request) : string =
   | ShutdownRequest -> "shutdown"
   | CodeLensResolveRequest _ -> "codeLens/resolve"
   | HoverRequest _ -> "textDocument/hover"
+  | CodeActionRequest _ -> "textDocument/codeAction"
   | CompletionRequest _ -> "textDocument/completion"
   | CompletionItemResolveRequest _ -> "completionItem/resolve"
   | DefinitionRequest _ -> "textDocument/definition"
@@ -1140,6 +1240,7 @@ let result_name_to_string (result: lsp_result) : string =
   | ShutdownResult -> "shutdown"
   | CodeLensResolveResult _ -> "codeLens/resolve"
   | HoverResult _ -> "textDocument/hover"
+  | CodeActionResult _ -> "textDocument/codeAction"
   | CompletionResult _ -> "textDocument/completion"
   | CompletionItemResolveResult _ -> "completionItem/resolve"
   | DefinitionResult _ -> "textDocument/definition"
@@ -1201,6 +1302,7 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   | "shutdown" -> ShutdownRequest
   | "codeLens/resolve" -> CodeLensResolveRequest (parse_codeLensResolve params)
   | "textDocument/hover" -> HoverRequest (parse_hover params)
+  | "textDocument/codeAction" -> CodeActionRequest (parse_codeActionRequest params)
   | "textDocument/completion" -> CompletionRequest (parse_completion params)
   | "textDocument/definition" -> DefinitionRequest (parse_definition params)
   | "workspace/symbol" -> WorkspaceSymbolRequest (parse_workspaceSymbol params)
@@ -1254,6 +1356,7 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | ShutdownRequest
   | CodeLensResolveRequest _
   | HoverRequest _
+  | CodeActionRequest _
   | CompletionRequest _
   | CompletionItemResolveRequest _
   | DefinitionRequest _
@@ -1302,6 +1405,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _
+    | CodeActionRequest _
     | CodeLensResolveRequest _
     | CompletionRequest _
     | CompletionItemResolveRequest _
@@ -1335,6 +1439,7 @@ let print_lsp_response ?include_error_stack_trace (id: lsp_id) (result: lsp_resu
     | ShutdownResult -> print_shutdown ()
     | CodeLensResolveResult r -> print_codeLensResolve r
     | HoverResult r -> print_hover r
+    | CodeActionResult r -> print_codeActionResult r
     | CompletionResult r -> print_completion r
     | DefinitionResult r -> print_definition r
     | TypeDefinitionResult r -> print_definition r

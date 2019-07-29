@@ -104,6 +104,17 @@ module MessageType :
   sig type t = ErrorMessage | WarningMessage | InfoMessage | LogMessage end
 module CancelRequest :
   sig type params = cancelParams and cancelParams = { id : lsp_id; } end
+module CodeActionKind :
+  sig
+    type t = (string * string list)
+    val is_kind : t -> t -> bool
+    val contains_kind : t -> t list -> bool
+    val kind_of_string : string -> t
+    val string_of_kind : t -> string
+    val sub_kind : t -> string -> t
+    val quickfix : t
+    val source : t
+  end
 module Initialize :
   sig
     type params = {
@@ -140,6 +151,7 @@ module Initialize :
     and textDocumentClientCapabilities = {
       synchronization : synchronization;
       completion : completion;
+      codeAction : codeAction;
     }
     and synchronization = {
       can_willSave : bool;
@@ -148,6 +160,10 @@ module Initialize :
     }
     and completion = { completionItem : completionItem; }
     and completionItem = { snippetSupport : bool; }
+    and codeAction = {
+      codeAction_dynamicRegistration : bool;
+      codeActionLiteralSupport : codeActionliteralSupport option; }
+    and codeActionliteralSupport = { codeAction_valueSet: CodeActionKind.t list}
     and windowClientCapabilities = {
       status : bool;
       progress : bool;
@@ -222,6 +238,12 @@ module Hover :
   end
 module PublishDiagnostics :
   sig
+    type diagnosticCode = IntCode of int | StringCode of string | NoCode
+    type diagnosticSeverity = Error | Warning | Information | Hint
+    val min_diagnosticSeverity : int
+    val max_diagnosticSeverity : int
+    val diagnosticSeverity_to_enum : diagnosticSeverity -> int
+    val diagnosticSeverity_of_enum : int -> diagnosticSeverity option
     type params = publishDiagnosticsParams
     and publishDiagnosticsParams = {
       uri : documentUri;
@@ -236,8 +258,6 @@ module PublishDiagnostics :
       relatedInformation : diagnosticRelatedInformation list;
       relatedLocations : relatedLocation list;
     }
-    and diagnosticCode = IntCode of int | StringCode of string | NoCode
-    and diagnosticSeverity = Error | Warning | Information | Hint
     and diagnosticRelatedInformation = {
       relatedLocation : Location.t;
       relatedMessage : string;
@@ -307,6 +327,35 @@ module TypeDefinition :
   sig
     type params = TextDocumentPositionParams.t
     and result = DefinitionLocation.t list
+  end
+module CodeAction :
+  sig
+    type t = {
+      title: string;
+      kind: CodeActionKind.t;
+      diagnostics: PublishDiagnostics.diagnostic list;
+      action : edit_and_or_command;
+    }
+    and edit_and_or_command =
+    | EditOnly of WorkspaceEdit.t
+    | CommandOnly of Command.t
+    | BothEditThenCommand of (WorkspaceEdit.t * Command.t)
+    type result = command_or_action list
+    and command_or_action =
+    | Command of Command.t
+    | Action of t
+  end
+module CodeActionRequest :
+  sig
+    type params = {
+      textDocument: TextDocumentIdentifier.t;
+      range: range;
+      context: codeActionContext;
+    }
+    and codeActionContext = {
+      diagnostics: PublishDiagnostics.diagnostic list;
+      only: CodeActionKind.t list option
+    }
   end
 module Completion :
   sig
@@ -615,6 +664,7 @@ type lsp_request =
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
   | TypeDefinitionRequest of TypeDefinition.params
+  | CodeActionRequest of CodeActionRequest.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
@@ -638,6 +688,7 @@ type lsp_result =
   | HoverResult of Hover.result
   | DefinitionResult of Definition.result
   | TypeDefinitionResult of TypeDefinition.result
+  | CodeActionResult of CodeAction.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result

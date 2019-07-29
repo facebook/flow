@@ -1493,7 +1493,12 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     mk_parallelizable_persistent ~options (
       handle_persistent_infer_type ~options ~id ~params ~loc ~metadata
     )
-
+  | LspToServer (RequestMessage (id, CodeActionRequest _), metadata) ->
+    (* This is a no code actions available response and is a temporary stepping stone
+       for implementing insert-type as a code action. *)
+    Handle_persistent_immediately (fun ~client:_ ~profiling:_ ->
+      (LspResponse (Ok ((), Some (ResponseMessage (id, (CodeActionResult []))), metadata)))
+      |> Lwt.return)
   | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let loc = params.Completion.loc in

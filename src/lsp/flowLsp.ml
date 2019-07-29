@@ -468,7 +468,7 @@ let do_initialize () : Initialize.result =
       documentHighlightProvider = true;
       documentSymbolProvider = true;
       workspaceSymbolProvider = false;
-      codeActionProvider = false;
+      codeActionProvider = true;
       codeLensProvider = Some {
         codelens_resolveProvider = false;
       };
