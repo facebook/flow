@@ -10,7 +10,10 @@
 module TySimplifyQueries : Ty_utils.TopAndBotQueries = struct
   open Ty
   let is_top = Ty_utils.BotInsensitiveQueries.is_top
+
   let is_bot = Ty_utils.BotInsensitiveQueries.is_bot
+
+  let sort_types = true
 
   let comparator = object(_)
     inherit [unit] comparator_ty

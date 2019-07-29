@@ -223,12 +223,14 @@ let fail_gen: 'env 'x. ('env -> 'x -> int) -> 'env -> 'x -> 'x -> unit =
 (* Compare Ty.t for structural equality
    This class can be overridden to define new forms of equality on types *)
 class ['A] comparator_ty = object(this)
-  inherit [_] iter2_ty
+  inherit [_] iter2_ty as super
 
   method compare (env : 'A) (t1 : t) (t2 : t) =
     try this#on_t env t1 t2 ; 0 with
     | Difference n -> n
 
+  (* Take advantage of pointer equality at type nodes to short circut *)
+  method! private on_t env x y = if x == y then () else super#on_t env x y
   (* Base fields originally handled in the ancestor *)
   method! private on_int _env x y = assert0 (x - y)
   method! private on_string _env x y = assert0 (String.compare x y)

@@ -30,9 +30,9 @@ module.exports = {
     (cond ? 0 : (cond ? 1 : (cond ? 0 : 1))),
   n3: (n : number): number =>
     (cond ? 0 : (cond2 ? 1 : (cond3 ? 0 : n))),
-  s1: (): "1" | "0" =>
+  s1: (): "0" | "1" =>
     (cond ? "0" : "1"),
-  s2: (): "1" | "0" =>
+  s2: (): "0" | "1" =>
     (cond ? "0" : (cond ? "1" : (cond ? "0" : "1"))),
   s3: (s : string): string =>
     (cond ? "0" : (cond2 ? "1" : (cond3 ? s : "1"))),

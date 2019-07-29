@@ -33,11 +33,13 @@ module type TopAndBotQueries = sig
   val is_bot: Ty.t -> bool
   val is_top: Ty.t -> bool
   val compare: Ty.t -> Ty.t -> int
+  val sort_types: bool
 end
 
 (* TopAndBotQueries that collapse different types of bottom and
    compare using Pervasives.compare *)
 module BotInsensitiveQueries: TopAndBotQueries
+module BotSensitiveQueries: TopAndBotQueries
 
 module Simplifier(Q: TopAndBotQueries) : sig
   val run: Ty.t -> Ty.t

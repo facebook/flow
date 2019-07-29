@@ -338,7 +338,7 @@ No errors!
 union-0.js 3 15
 // @flow
 
-function foo(x: number | void | (() => void) | string) { }
+function foo(x: void | number | string | (() => void)) { }
 
 foo(1);
 foo("1");

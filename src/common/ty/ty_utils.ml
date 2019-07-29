@@ -98,6 +98,7 @@ module type TopAndBotQueries = sig
   val is_bot: Ty.t -> bool
   val is_top: Ty.t -> bool
   val compare: Ty.t -> Ty.t -> int
+  val sort_types: bool
 end
 
 (* Simplify union/intersection types
@@ -125,7 +126,7 @@ module Simplifier(Q: TopAndBotQueries) = struct
     | t::ts -> (t, ts)
 
   let mapper = object (self)
-    inherit [_] Ty.endo_ty as super
+    inherit [_] Ty.endo_ty
 
     method private on_nel f env nel =
       let (hd, tl) = nel in
@@ -135,31 +136,29 @@ module Simplifier(Q: TopAndBotQueries) = struct
 
     method private simplify env ~break ~is_zero ~is_one ~make ~default ts0 =
       let ts1 = self#on_nel self#on_t env ts0 in
+      let len1 = Nel.length ts1 in
       let ts2 = Nel.map_concat break ts1 in
-      let ts2 = if Nel.length ts1 <> Nel.length ts2 then ts2 else ts1 in
+      let len2 = Nel.length ts2 in
+      let (ts2, len2) = if len1 <> len2 then (ts2, len2) else (ts1, len1) in
       let ts3 = ts2 |> simplify_nel ~is_zero ~is_one |> Nel.dedup ~compare:Q.compare in
-      let ts3 = if Nel.length ts2 <> Nel.length ts3 then ts3 else ts2 in
+      (* Note we are currently giving up on pointer equality when we are sorting types *)
+      let ts3 = if Q.sort_types || (len2 <> Nel.length ts3) then ts3 else ts2 in
       if ts0 == ts3 then default else make ts3
 
-    method! on_t env t =
-      match t with
-      | Ty.Union (t0,t1,ts) ->
-        self#simplify
-          ~break:Ty.bk_union ~make:Ty.mk_union
-          ~is_zero:Q.is_top ~is_one:Q.is_bot
-          ~default:t env (t0, t1::ts)
-      | Ty.Inter (t0,t1,ts) ->
-        self#simplify
-          ~break:Ty.bk_inter ~make:Ty.mk_inter
-          ~is_zero:Q.is_bot ~is_one:Q.is_top
-          ~default:t env (t0, t1::ts)
-      | _ ->
-        super#on_t env t
+    method! on_Union env u t0 t1 ts =
+      self#simplify
+        ~break:Ty.bk_union ~make:Ty.mk_union
+        ~is_zero:Q.is_top ~is_one:Q.is_bot
+        ~default:u env (t0, t1::ts)
+
+    method! on_Inter env i t0 t1 ts =
+      self#simplify
+        ~break:Ty.bk_inter ~make:Ty.mk_inter
+        ~is_zero:Q.is_bot ~is_one:Q.is_top
+        ~default:i env (t0, t1::ts)
   end
 
-  let rec run t =
-    let t' = mapper#on_t () t in
-    if t == t' then t else run t'
+  let run t = mapper#on_t () t
 end
 
 module BotSensitiveQueries: TopAndBotQueries = struct
@@ -184,6 +183,7 @@ module BotSensitiveQueries: TopAndBotQueries = struct
 
   let comparator = new Ty.comparator_ty
   let compare = comparator#compare ()
+  let sort_types = false
 end
 
 module BotInsensitiveQueries: TopAndBotQueries = struct
@@ -202,6 +202,7 @@ module BotInsensitiveQueries: TopAndBotQueries = struct
   end
 
   let compare = comparator#compare ()
+  let sort_types = false
 end
 
 let simplify_type =
