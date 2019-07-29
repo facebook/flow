@@ -188,7 +188,7 @@ let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
 
 (* Generate an equivalent Flow_ast.Type *)
 let serialize ?(imports_react=false) loc ty =
-  (new Utils.patch_up_react_mapper ~imports_react ())#on_t loc ty
+  (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty
   |> Utils.TySimplify.run
   |> Ty_serializer.type_
   |> function

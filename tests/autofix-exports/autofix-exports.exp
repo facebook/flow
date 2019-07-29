@@ -6,7 +6,7 @@ declare var cond : bool
 
 const foo = 42;
 let foo2: number = foo;
-function bar(x: any): any | number {
+function bar(x: any): number | any {
   return x + x
 };
 bar(foo2);
@@ -21,6 +21,6 @@ module.exports = [{
  (): string => "string",
  bar,
  foo2,
- (bar(foo2): any | number)]
+ (bar(foo2): number | any)]
 > flow status
 No errors!

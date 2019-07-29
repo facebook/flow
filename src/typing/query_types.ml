@@ -169,7 +169,7 @@ let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~
     (* Insert-Types filters out literals at the users request.
      * Setting this flag preserves literal information so the we later
      * have the option of presenting it to the user in specialized types. *)
-    preserve_inferred_literal_types = false;
+    preserve_inferred_literal_types = true;
     (* Utility types won't are not serialized so it may be worth evaluating them away
      * if we find them in the resulting Ty.t. The trade off is that types might get
      * larger. *)
