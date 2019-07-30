@@ -196,7 +196,9 @@ end = struct
           env.instance <- Watchman_lwt.Watchman_alive watchman_env;
           (* scm queries can be a little slow, but they should usually be only a few seconds.
            * Lets set our worst case to 30s before we exit *)
-          let%lwt mergebase = Watchman_lwt.get_mergebase ~timeout:30. watchman_env in
+          let%lwt mergebase = Watchman_lwt.(
+            get_mergebase ~timeout:(Explicit_timeout 30.) watchman_env
+          ) in
           Lwt.return (Some mergebase)
         )
         ~on_dead:(fun dead_env ->
@@ -327,7 +329,7 @@ end = struct
           Watchman_lwt.subscribe_mode = Some Watchman_lwt.Defer_changes;
           (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
            * use 10 seconds. *)
-          init_timeout = 10;
+          init_timeout = Watchman_lwt.Explicit_timeout 10.;
           expression_terms = watchman_expression_terms;
           subscription_prefix = "flow_watcher";
           roots = Files.watched_paths file_options;
