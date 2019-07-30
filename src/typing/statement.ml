@@ -6116,7 +6116,11 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     let (_, spec), _ as config_ast = expression cx config in
     let tvar = Tvar.mk cx reason in
     let prop_reason = mk_reason (RProperty (Some x)) ploc in
-    Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
+    Flow.flow cx (spec, LookupT (reason, NonstrictReturning (None, None), [], Named (reason, "value"), ReadProp {
+      use_op = unknown_use;
+      obj_t = spec;
+      tout = tvar;
+    }));
     let prop_t = Tvar.mk cx prop_reason in
     Flow.flow cx (o, SetPropT (
       unknown_use, reason, Named (prop_reason, x), Normal, tvar, Some prop_t
