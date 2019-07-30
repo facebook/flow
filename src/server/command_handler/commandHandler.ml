@@ -260,9 +260,14 @@ let serialize_graph graph =
     (f, dep_fs)::acc
   ) graph []
 
-let output_dependencies ~env root strip_root outfile =
+let output_dependencies ~env root strip_root types_only outfile =
   let strip_root = if strip_root then Files.relative_path root else fun x -> x in
-  let graph = serialize_graph (Dependency_info.all_dependency_graph env.ServerEnv.dependency_info) in
+  let dep_graph =
+    if types_only
+    then Dependency_info.dependency_graph
+    else Dependency_info.all_dependency_graph
+  in
+  let graph = serialize_graph (dep_graph env.ServerEnv.dependency_info) in
   Hh_logger.info "printing dependency graph to %s\n" outfile;
   let%lwt out = Lwt_io.open_file ~mode:Lwt_io.Output outfile in
   let%lwt () = LwtUtils.output_graph out strip_root graph in
@@ -474,8 +479,8 @@ let handle_get_imports ~options ~reader ~module_names ~profiling:_ ~env:_ =
   Lwt.return (ServerProt.Response.GET_IMPORTS response, None)
 
 
-let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
-  let%lwt response = output_dependencies ~env root strip_root outfile in
+let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~env =
+  let%lwt response = output_dependencies ~env root strip_root types_only outfile in
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
 let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
@@ -618,9 +623,9 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.GET_IMPORTS { module_names; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_get_imports ~options ~reader ~module_names)
-  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; } ->
+  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; types_only; } ->
     (* The user preference is to make this wait for up-to-date data *)
-    Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~outfile)
+    Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~types_only ~outfile)
   | ServerProt.Request.INFER_TYPE {
       input; line; char; verbose; expand_aliases; omit_targ_defaults; wait_for_recheck;
     } ->

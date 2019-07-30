@@ -47,6 +47,7 @@ module Request = struct
       root: string;
       strip_root: bool;
       outfile: string;
+      types_only: bool;
     }
   | INFER_TYPE of {
       input: File_input.t;
