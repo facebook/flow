@@ -97,4 +97,11 @@ module Option = struct
 
   let show : (Format.formatter -> 'a -> unit) -> 'a t -> string = fun pp_x x_opt ->
     Format.asprintf "%a" (pp pp_x) x_opt
+
+  let if_none x_opt ~f =
+    match x_opt with
+    | Some x -> Some x
+    | None -> f ()
+
+  let (>>!) = if_none
 end
