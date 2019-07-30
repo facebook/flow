@@ -82,7 +82,7 @@ MODULES=\
   src/common/modulename\
   src/common/monad\
   src/common/profiling\
-	src/common/semver\
+  src/common/semver\
   src/common/span\
   src/common/tarjan\
   src/common/transaction\
@@ -149,6 +149,7 @@ MODULES=\
   hack/socket\
   hack/third-party/avl\
   hack/third-party/core\
+  hack/utils/cgroup\
   hack/utils/core\
   hack/utils/buffered_line_reader\
   hack/utils/build_mode/prod\

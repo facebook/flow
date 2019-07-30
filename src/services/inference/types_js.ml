@@ -48,6 +48,26 @@ let filter_duplicate_provider map file =
     FilenameMap.add file new_errset map
   | None -> map
 
+let with_memory_info callback =
+  let%lwt cgroup_stats = CGroup.get_stats () in
+  callback ~cgroup_stats;
+  Lwt.return_unit
+
+module MemorySamplingLoop = LwtLoop.Make (struct
+  type acc =
+    cgroup_stats:(CGroup.stats, string) result ->
+    unit
+  let main callback =
+    let%lwt () = with_memory_info callback in
+    let%lwt () = Lwt_unix.sleep 1.0 in
+    Lwt.return callback
+
+  let catch _ exn =
+    let exn = Exception.wrap exn in
+    Hh_logger.error "Exception in MemorySamplingLoop: %s" (Exception.to_string exn);
+    Lwt.return_unit
+end)
+
 let with_timer_lwt =
   let clear_worker_memory () =
     ["worker_rss_start"; "worker_rss_delta"; "worker_rss_hwm_delta";]
@@ -66,10 +86,62 @@ let with_timer_lwt =
       )
     )
   in
+
+  let sample_memory timer profiling ~cgroup_stats =
+    match cgroup_stats with
+    | Error _ -> ()
+    | Ok { CGroup.total; total_swap; anon; file; shmem; } -> begin
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_total"
+        ~value:(float total);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_swap"
+        ~value:(float total_swap);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_anon"
+        ~value:(float anon);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_shmem"
+        ~value:(float shmem);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_file"
+        ~value:(float file)
+    end
+  in
+
   fun ?options timer profiling f ->
     let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
+    let sample_memory = sample_memory timer profiling in
     clear_worker_memory ();
-    let%lwt ret = Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling in
+
+    (* Record the cgroup info at the start *)
+    let%lwt () = with_memory_info sample_memory in
+
+    (* Asynchronously run a thread that periodically grabs the cgroup stats *)
+    let sampling_loop = MemorySamplingLoop.run sample_memory in
+
+    let%lwt ret = try%lwt
+      let%lwt ret = Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling in
+      Lwt.cancel sampling_loop;
+      Lwt.return ret
+    with exn ->
+      let exn = Exception.wrap exn in
+      Lwt.cancel sampling_loop;
+      Exception.reraise exn
+    in
+
+    (* Record the cgroup info at the end *)
+    let%lwt () = with_memory_info sample_memory in
+
     profile_add_memory profiling Measure.get_mean timer "worker_rss_avg";
     profile_add_memory profiling Measure.get_max timer "worker_rss_max";
     clear_worker_memory ();
