@@ -50,12 +50,17 @@ let filter_duplicate_provider map file =
 
 let with_memory_info callback =
   let%lwt cgroup_stats = CGroup.get_stats () in
-  callback ~cgroup_stats;
+  (* Reading hash_stats while workers are writing can cause assertion errors *)
+  let hash_stats = try Some (SharedMem_js.hash_stats ()) with _ -> None in
+  let heap_size = SharedMem_js.heap_size () in
+  callback ~cgroup_stats ~hash_stats ~heap_size;
   Lwt.return_unit
 
 module MemorySamplingLoop = LwtLoop.Make (struct
   type acc =
     cgroup_stats:(CGroup.stats, string) result ->
+    hash_stats:SharedMem_js.table_stats option->
+    heap_size:int ->
     unit
   let main callback =
     let%lwt () = with_memory_info callback in
@@ -87,7 +92,29 @@ let with_timer_lwt =
     )
   in
 
-  let sample_memory timer profiling ~cgroup_stats =
+  let sample_memory timer profiling ~cgroup_stats ~hash_stats ~heap_size =
+    Profiling_js.sample_memory profiling
+      ~group:timer
+      ~metric:"heap"
+      ~value:(float heap_size);
+
+    Option.iter hash_stats ~f:(fun {SharedMem_js.nonempty_slots; used_slots; slots;} ->
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"hash_nonempty_slots"
+        ~value:(float nonempty_slots);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"hash_used_slots"
+        ~value:(float used_slots);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"hash_slots"
+        ~value:(float slots)
+    );
+
     match cgroup_stats with
     | Error _ -> ()
     | Ok { CGroup.total; total_swap; anon; file; shmem; } -> begin
