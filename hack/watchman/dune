@@ -10,7 +10,9 @@
     hh_json
     logging_common
     sys_utils
-    utils_core))
+    utils_core)
+  (preprocess (pps lwt_ppx)) ; See T41851208
+)
 
 (library
   (name watchman_lwt)
@@ -33,4 +35,6 @@
   (libraries
     hh_json
     logging
-    utils_core))
+    utils_core)
+  (preprocess (pps lwt_ppx)) ; See T41851208
+)

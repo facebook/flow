@@ -1,6 +1,7 @@
 (library
   (name flow_version)
   (wrapped false)
+  (preprocess (pps ppx_deriving.eq)) ; See T41851208
   (modules flow_version))
 
 (library
@@ -33,4 +34,5 @@
     flow_server_protocol
     lsp
   )
+  (preprocess (pps ppx_deriving.eq)) ; See T41851208
 )

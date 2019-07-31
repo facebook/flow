@@ -25,4 +25,5 @@
     flow_server_files
     flow_service_inference_module
   )
+  (preprocess (pps lwt_ppx)) ; See T41851208
 )
