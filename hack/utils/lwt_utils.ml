@@ -207,3 +207,11 @@ let read_all (path: string): (string, string) Lwt_result.t =
     Lwt.return (Error (Printf.sprintf
       "Could not read the contents of the file at path %s"
       path))
+
+module Promise = struct
+  type 'a t = 'a Lwt.t
+
+  let return = Lwt.return
+  let map e f = Lwt.map f e
+  let bind = Lwt.bind
+end
