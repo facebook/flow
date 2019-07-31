@@ -186,6 +186,12 @@ module BotSensitiveQueries: TopAndBotQueries = struct
   let sort_types = false
 end
 
+class botInsensitiveComparator = object(_)
+  inherit [unit] Ty.comparator_ty
+  (* All Bot kinds are equivalent *)
+  method! private on_bot_kind () _ _ = ()
+end
+
 module BotInsensitiveQueries: TopAndBotQueries = struct
   let is_top = function
     | Ty.Top -> true
@@ -195,12 +201,7 @@ module BotInsensitiveQueries: TopAndBotQueries = struct
     | Ty.Bot _ -> true
     | _ -> false
 
-  let comparator = object(_)
-    inherit [unit] Ty.comparator_ty
-    (* All Bot kinds are equivalent *)
-    method! private on_bot_kind () _ _ = ()
-  end
-
+  let comparator = new botInsensitiveComparator
   let compare = comparator#compare ()
   let sort_types = false
 end

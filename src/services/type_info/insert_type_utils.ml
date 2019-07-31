@@ -8,18 +8,14 @@
 (* The guiding principle of this query is whether or not two
    types will serialize the same. *)
 module TySimplifyQueries : Ty_utils.TopAndBotQueries = struct
-  open Ty
   let is_top = Ty_utils.BotInsensitiveQueries.is_top
-
   let is_bot = Ty_utils.BotInsensitiveQueries.is_bot
-
   let sort_types = true
-
   let comparator = object(_)
-    inherit [unit] comparator_ty
+    inherit Ty_utils.botInsensitiveComparator
+    (* Treat all Anys as equal *)
     method! private on_Any () _ _ = ()
   end
-
   let compare = comparator#compare ()
 end
 
@@ -29,11 +25,6 @@ end
 module TySimplify : sig
   val run: Ty.t -> Ty.t
 end = Ty_utils.Simplifier(TySimplifyQueries)
-
-module TySet = Set.Make(struct
-  type t = Ty.t
-  let compare = Pervasives.compare
-end)
 
 type validation_error =
   | TooBig of {size_limit:int; size:int option;}

@@ -36,6 +36,10 @@ module type TopAndBotQueries = sig
   val sort_types: bool
 end
 
+class botInsensitiveComparator : object
+  inherit [unit] Ty.comparator_ty
+end
+
 (* TopAndBotQueries that collapse different types of bottom and
    compare using Pervasives.compare *)
 module BotInsensitiveQueries: TopAndBotQueries

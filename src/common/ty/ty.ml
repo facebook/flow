@@ -233,7 +233,24 @@ class ['A] comparator_ty = object(this)
   method! private on_t env x y = if x == y then () else super#on_t env x y
   (* Base fields originally handled in the ancestor *)
   method! private on_int _env x y = assert0 (x - y)
-  method! private on_string _env x y = assert0 (String.compare x y)
+
+  method! private on_string env x y =
+    (* In order to sort integer literals we try to parse all strings as integers *)
+    match int_of_string x with
+    | x ->
+      begin match int_of_string y with
+      (* If both parse as integers then we compare them as integers *)
+      | y -> this#on_int env x y
+      (* If xor parses as an integer then that one is "less than" the other *)
+      | exception Failure _ -> raise (Difference (-1))
+      end
+    | exception Failure _ ->
+      begin match int_of_string y with
+      | _ -> raise (Difference 1)
+      (* If neither parse as integers then we compare them as strings *)
+      | exception Failure _ -> assert0 (String.compare x y)
+      end
+
   method! private on_bool _env x y = assert0 (Pervasives.compare x y)
   method! private on_symbol _env x y = assert0 (Pervasives.compare x y)
   method! private on_aloc _env x y = assert0 (ALoc.compare x y)
@@ -261,33 +278,37 @@ class ['A] comparator_ty = object(this)
   method! private fail_utility env x y = fail_gen this#tag_of_utility env x y
   method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
 
+  (* types will show up in unions and intersections in ascending order *)
   (* No two elements of each variant can be assigned the same tag *)
   method tag_of_t _ = function
-    | TVar _ -> 0
-    | Bound _ -> 1
-    | Generic _ -> 2
-    | Any _ -> 3
-    | Top -> 4
-    | Bot _ -> 5
-    | Void -> 6
-    | Null -> 7
+    (* Roughly in order of increasing complexity *)
+    (* Favor litererals over base types *)
+    (* Favor user defined types over structural types *)
+    | Bot _ -> 0
+    | Top -> 1
+    | Any _ -> 2
+    | Void -> 3
+    | Null -> 4
+    | BoolLit _ -> 5
+    | Bool _ -> 6
+    | NumLit _ -> 7
     | Num _ -> 8
-    | Str _ -> 9
-    | Bool _ -> 10
-    | NumLit _ -> 11
-    | StrLit _ -> 12
-    | BoolLit _ -> 13
-    | Fun _ -> 14
-    | Obj _ -> 15
-    | Arr _ -> 16
-    | Tup _ -> 17
-    | Union _ -> 18
-    | Inter _ -> 19
-    | TypeAlias _ -> 20
-    | TypeOf _ -> 21
-    | ClassDecl _ -> 22
-    | InterfaceDecl _ -> 23
-    | Utility _ -> 24
+    | StrLit _ -> 9
+    | Str _ -> 10
+    | TVar _ -> 11
+    | Bound _ -> 12
+    | Generic _ -> 13
+    | TypeAlias _ -> 14
+    | TypeOf _ -> 15
+    | ClassDecl _ -> 16
+    | Utility _ -> 17
+    | Tup _ -> 18
+    | Arr _ -> 19
+    | Fun _ -> 20
+    | Obj _ -> 21
+    | Inter _ -> 22
+    | Union _ -> 23
+    | InterfaceDecl _ -> 24
     | Module _ -> 25
     | Mu _ -> 26
 
