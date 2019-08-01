@@ -137,10 +137,8 @@ let add_field ~static name loc polarity field x =
   add_field' ~static name (Some loc, polarity, field) x
 
 let add_indexer ~static polarity ~key ~value x =
-  let kloc, k = key in
-  let vloc, v = value in
-  x |> add_field ~static "$key" kloc polarity (Annot k)
-    |> add_field ~static "$value" vloc polarity (Annot v)
+  x |> add_field' ~static "$key" (None, polarity, Annot key)
+    |> add_field' ~static "$value" (None, polarity, Annot value)
 
 let add_name_field x =
   let r = replace_reason (fun desc -> RNameProperty desc) x.instance.reason in
@@ -323,7 +321,8 @@ let elements cx ?constructor s =
     SMap.map
       (fun (loc, t, _, set_type) -> loc, F.settertype t, set_type)
       s.setters in
-(* Register getters and setters with the typed AST *)
+
+  (* Register getters and setters with the typed AST *)
   let register_accessors = SMap.iter (fun _ (loc, t, set_type) ->
     Option.iter ~f:(fun _ -> set_type t) loc
   ) in

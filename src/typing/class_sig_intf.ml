@@ -83,8 +83,8 @@ val add_field: static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
 val add_indexer:
   static:bool ->
   Polarity.t ->
-  key:(ALoc.t * Type.t) ->
-  value:(ALoc.t * Type.t) ->
+  key:Type.t ->
+  value:Type.t ->
   t -> t
 
 (** Add static `name` field. *)

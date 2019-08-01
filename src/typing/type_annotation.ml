@@ -1797,8 +1797,8 @@ and add_interface_properties cx tparams_map properties s =
       x, (Tast_utils.error_mapper#object_type_property indexer_prop)::rev_prop_asts
     | Indexer (loc, indexer) ->
       let { Indexer.key; value; static; variance; _ } = indexer in
-      let k, _ as key = convert cx tparams_map key in
-      let v, _ as value = convert cx tparams_map value in
+      let (_, k), _ as key = convert cx tparams_map key in
+      let (_, v), _ as value = convert cx tparams_map value in
       let polarity = polarity variance in
       add_indexer ~static polarity ~key:k ~value:v x,
       Indexer (loc, { indexer with Indexer.key; value; })::rev_prop_asts
