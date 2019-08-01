@@ -2945,6 +2945,9 @@ let dump_error_message =
       spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
     | ENonArraySpread reason ->
         spf "ENonArraySpread (%s)" (dump_reason cx reason)
+    | ECannotSpreadInterface {spread_reason; interface_reason} ->
+      spf "ECannotSpreadInterface (%s) (%s)" (dump_reason cx spread_reason)
+        (dump_reason cx interface_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace

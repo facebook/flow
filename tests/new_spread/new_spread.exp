@@ -34,6 +34,66 @@ References:
                                                                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:16:11
+
+Cannot determine a type for object type [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of
+their properties. Can you use an object type instead?
+
+   no_interfaces.js:16:11
+   16| spread<A, B>(a, b); // Error, can't spread interface
+                 ^ [2]
+
+References:
+   no_interfaces.js:9:4
+    9| ): {...A, ...B} {
+          ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:18:20
+
+Cannot determine a type for `X` [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Can you use an object type instead?
+
+   no_interfaces.js:18:20
+   18| type X = {...A, ...B}; // Error, can't spread interface
+                          ^ [2]
+
+References:
+   no_interfaces.js:18:10
+   18| type X = {...A, ...B}; // Error, can't spread interface
+                ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:23:14
+
+Cannot determine a type for `Y` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Can you use an object type instead?
+
+   no_interfaces.js:23:14
+   23| type Y = {...A, foo: number}; // Error, can't spread interface
+                    ^ [2]
+
+References:
+   no_interfaces.js:23:10
+   23| type Y = {...A, foo: number}; // Error, can't spread interface
+                ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:27:27
+
+Cannot determine a type for `Z` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Can you use an object type instead?
+
+   no_interfaces.js:27:27
+   27| type Z = {foo: number, ...A}; // Error, can't spread interface
+                                 ^ [2]
+
+References:
+   no_interfaces.js:27:10
+   27| type Z = {foo: number, ...A}; // Error, can't spread interface
+                ^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- type.js:13:2
 
 Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
@@ -887,4 +947,4 @@ References:
 
 
 
-Found 57 errors
+Found 61 errors

@@ -12036,9 +12036,15 @@ and object_kit =
     (* We take the fields from an InstanceT excluding methods (because methods
      * are always on the prototype). We also want to resolve fields from the
      * InstanceT's super class so we recurse. *)
-    | DefT (r, _, InstanceT (_, super, _, {own_props; _})) ->
+    | DefT (r, _, InstanceT (_, super, _, {own_props; structural; _})) ->
       let resolve_tool = Super (interface_slice cx r own_props, resolve_tool) in
-      rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
+      begin match tool with
+      | Spread _ when structural ->
+          add_output cx ~trace (Error_message.ECannotSpreadInterface {spread_reason = reason;
+            interface_reason = r});
+          rec_flow cx trace (AnyT.why AnyError reason, UseT (use_op,  tout))
+      | _ -> rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
+      end
     (* Statics of a class. TODO: This logic is unfortunately duplicated from the
      * top-level pattern matching against class lower bounds to object-like
      * uses. This duplication should be removed. *)

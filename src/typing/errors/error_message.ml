@@ -234,6 +234,10 @@ and 'loc t' =
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
   | ENonArraySpread of 'loc virtual_reason
+  | ECannotSpreadInterface of {
+      spread_reason: 'loc virtual_reason;
+      interface_reason: 'loc virtual_reason
+    }
 
 and binding_error =
   | ENameAlreadyBound
@@ -610,6 +614,10 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification _ as e -> e
   | ENonArraySpread r -> ENonArraySpread (map_reason r)
+  | ECannotSpreadInterface {spread_reason; interface_reason} -> ECannotSpreadInterface {
+      spread_reason = map_reason spread_reason;
+      interface_reason = map_reason interface_reason
+    }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -762,6 +770,7 @@ let util_use_op_of_msg nope util = function
 | EBigIntNotYetSupported _
 | ESignatureVerification _
 | ENonArraySpread _
+| ECannotSpreadInterface _
   -> nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -806,6 +815,9 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EDebugPrint (reason, _)
   | ENonArraySpread reason ->
         Some (aloc_of_reason reason)
+  | ECannotSpreadInterface {spread_reason=_; interface_reason = reason}
+    ->
+      Some (aloc_of_reason reason)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
   | ENonstrictImport loc
@@ -2056,6 +2068,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Cannot spread non-array iterable "; ref reason; text ". Use ";
         code "...Array.from(<iterable>)"; text " instead."
       ]
+  | ECannotSpreadInterface {spread_reason; interface_reason} ->
+    (* We position around the use of the interface instead of the spread because the
+     * spread may be part of a polymorphic type signature. If we add a suppression there,
+     * the reduction in coverage is far more drastic. *)
+    Normal [
+      text "Cannot determine a type for "; ref spread_reason; text ". ";
+      ref interface_reason; text " cannot be spread because interfaces do not ";
+      text "track the own-ness of their properties. Can you use an object type instead?";
+    ]
 )
 
 let is_lint_error = function
