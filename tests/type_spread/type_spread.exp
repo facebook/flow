@@ -16,8 +16,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- all_cases.js:10:26
 
 Cannot determine a type for `E` [1]. `D` [2] cannot be spread because the indexer string [3] may overwrite properties
-with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must appear before any
-spread.
+with explicit keys in a way that Flow cannot track.
 
    all_cases.js:10:26
    10| type E = {foo:number, ...D}; // Error

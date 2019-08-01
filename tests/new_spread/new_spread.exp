@@ -1116,8 +1116,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:32
 
 Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
+overwrite properties with explicit keys in a way that Flow cannot track.
 
    type_union.js:14:32
    14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right

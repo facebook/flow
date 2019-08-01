@@ -2149,7 +2149,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       text "Cannot determine a type for "; ref spread_reason; text ". ";
       ref object_reason; text " cannot be spread because the indexer "; ref key_reason;
       text " may overwrite properties with explicit keys in a way that Flow cannot track.";
-      text " Objects may only have one indexer, and it must appear before any spread.";
     ]
 
   | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname; error_kind}) ->

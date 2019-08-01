@@ -11431,9 +11431,11 @@ and object_kit =
     let open Object.Spread in
 
     (* Compute spread result: slice * slice -> slice *)
-    let spread2 reason {Object.reason = r1; props = props1; dict = dict1; flags = flags1}
-      {Object.reason = r2; props = props2; dict = dict2; flags = flags2} =
-      match dict1, dict2 with
+    let spread2 reason
+      (_inline1, {Object.reason = r1; props = props1; dict = dict1; flags = flags1})
+      (inline2, {Object.reason = r2; props = props2; dict = dict2; flags = flags2}) =
+      let dict = match dict1, dict2 with
+      | None, Some _ when inline2 -> Ok dict2
       | _, Some {key; value=_; dict_name=_; dict_polarity=_} ->
         Error (Error_message.ECannotSpreadIndexerOnRight {
           spread_reason = reason;
@@ -11447,7 +11449,11 @@ and object_kit =
           value_reason = reason_of_t value;
           object2_reason = r2;
         })
-      | _ ->
+      | _ -> Ok dict1 in
+
+      match dict with
+      | Error e -> Error e
+      | Ok dict ->
         let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
         let type_and_optionality t = match t with OptionalT (_, t) -> t, true | _ -> t, false in
         let merge_props (t1, _) (t2, _) =
@@ -11461,6 +11467,7 @@ and object_kit =
         let props = try Ok (SMap.merge (fun x p1 p2 ->
           match p1, p2 with
           | None, None -> None
+          | _, Some p2 when inline2 -> Some (fst p2, true)
           | Some p1, Some p2 -> Some (merge_props p1 p2)
           | Some p1, None ->
             if flags2.exact
@@ -11520,21 +11527,22 @@ and object_kit =
             Obj_type.sealed_in_op reason flags2.sealed;
         } in
         match props with
-        | Ok props -> Ok {Object.reason; props; dict = dict1; flags}
+        | Ok props -> Ok (false, {Object.reason; props; dict; flags})
         | Error e -> Error e
     in
 
     let resolved_of_acc_element = function
-      | Object.Spread.ResolvedSlice resolved -> resolved
+      | Object.Spread.ResolvedSlice resolved -> Nel.map (fun x -> (false, x)) resolved
       | Object.Spread.InlineSlice {Object.Spread.reason; prop_map; dict} ->
         let flags = {exact = true; frozen = false; sealed = Sealed} in
         let props = SMap.mapi (read_prop reason flags) prop_map in
-        Nel.one {Object.reason = reason; props; dict; flags}
+        Nel.one (true, {Object.reason = reason; props; dict; flags})
     in
 
     let spread reason = function
       | x, [] -> Ok (resolved_of_acc_element x)
-      | x0, (x1::xs: Object.Spread.acc_element list) -> merge_result (spread2 reason) resolved_of_acc_element x0 (x1, xs)
+      | x0, (x1::xs: Object.Spread.acc_element list) ->
+          merge_result (spread2 reason) resolved_of_acc_element x0 (x1, xs)
     in
 
     let mk_object cx reason target {Object.reason = r; props; dict; flags} =
@@ -11573,8 +11581,9 @@ and object_kit =
       let rec continue acc (x: Object.Spread.acc_element) = function
       | [] ->
         let t = match spread reason (x, acc) with
-        | Ok (x, []) -> mk_object cx reason options x
-        | Ok (x0, x1::xs) ->
+        | Ok ((_, x), []) -> mk_object cx reason options x
+        | Ok ((_, x0), (_, x1)::xs) ->
+          let xs = List.map snd xs in
           UnionT (reason, UnionRep.make
             (mk_object cx reason options x0)
             (mk_object cx reason options x1)
