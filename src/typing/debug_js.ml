@@ -2962,6 +2962,10 @@ let dump_error_message =
     | ECannotSpreadInterface {spread_reason; interface_reason} ->
       spf "ECannotSpreadInterface (%s) (%s)" (dump_reason cx spread_reason)
         (dump_reason cx interface_reason)
+    | ECannotSpreadIndexerOnRight {spread_reason; object_reason; key_reason} ->
+      spf "ECannotSpreadIndexerOnRight (%s) (%s) (%s)" (dump_reason cx spread_reason)
+        (dump_reason cx object_reason)
+        (dump_reason cx key_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace

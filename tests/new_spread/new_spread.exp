@@ -513,6 +513,158 @@ References:
               ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ type_dict.js:7:30
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:7:30
+   7| declare var o2: {...{p:T},...{[string]:U}};
+                                   ^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:7:17
+   7| declare var o2: {...{p:T},...{[string]:U}};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:7:32
+   7| declare var o2: {...{p:T},...{[string]:U}};
+                                     ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:10:37
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:10:37
+   10| declare var o3: {...{[string]:T},...{[string]:U}};
+                                           ^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:10:17
+   10| declare var o3: {...{[string]:T},...{[string]:U}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:10:39
+   10| declare var o3: {...{[string]:T},...{[string]:U}};
+                                             ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:16:32
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:16:32
+   16| declare var o5: {...{|p:T|},...{[string]:U}};
+                                      ^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:16:17
+   16| declare var o5: {...{|p:T|},...{[string]:U}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:16:34
+   16| declare var o5: {...{|p:T|},...{[string]:U}};
+                                        ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:19:39
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:19:39
+   19| declare var o6: {...{|[string]:T|},...{[string]:U}};
+                                             ^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:19:17
+   19| declare var o6: {...{|[string]:T|},...{[string]:U}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:19:41
+   19| declare var o6: {...{|[string]:T|},...{[string]:U}};
+                                               ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:25:30
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:25:30
+   25| declare var o8: {...{p:T},...{|[string]:U|}};
+                                    ^^^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:25:17
+   25| declare var o8: {...{p:T},...{|[string]:U|}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:25:33
+   25| declare var o8: {...{p:T},...{|[string]:U|}};
+                                       ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:28:37
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:28:37
+   28| declare var o9: {...{[string]:T},...{|[string]:U|}};
+                                           ^^^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:28:17
+   28| declare var o9: {...{[string]:T},...{|[string]:U|}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:28:40
+   28| declare var o9: {...{[string]:T},...{|[string]:U|}};
+                                              ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:34:35
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:34:35
+   34| declare var o11: {|...{|p :T|},...{|[string]:U|}|};
+                                         ^^^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:34:18
+   34| declare var o11: {|...{|p :T|},...{|[string]:U|}|};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:34:38
+   34| declare var o11: {|...{|p :T|},...{|[string]:U|}|};
+                                            ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_dict.js:37:41
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_dict.js:37:41
+   37| declare var o12: {|...{|[string]:T|},...{|[string]:U|}|};
+                                               ^^^^^^^^^^^^^^ [2]
+
+References:
+   type_dict.js:37:18
+   37| declare var o12: {|...{|[string]:T|},...{|[string]:U|}|};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:37:44
+   37| declare var o12: {|...{|[string]:T|},...{|[string]:U|}|};
+                                                  ^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------ type_empty.js:5:2
 
 Cannot cast `42` to `O` because number [1] is incompatible with empty [2].
@@ -928,4 +1080,4 @@ References:
 
 
 
-Found 60 errors
+Found 68 errors

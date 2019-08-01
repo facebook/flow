@@ -11431,60 +11431,63 @@ and object_kit =
 
     (* Compute spread result: slice * slice -> slice *)
     let spread2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
-      let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
-      let merge_props (t1, own1) (t2, own2) =
-        let t1, opt1 = match t1 with OptionalT (_, t) -> t, true | _ -> t1, false in
-        let t2, opt2 = match t2 with OptionalT (_, t) -> t, true | _ -> t2, false in
-        (* An own, non-optional property definitely overwrites earlier properties.
-           Otherwise, the type might come from either side. *)
-        let t, own =
-          if own2 && not opt2 then t2, own2
-          else union t1 t2, own1 || own2
+      match dict2 with
+      | Some {key; value=_; dict_name=_; dict_polarity=_} ->
+        Error (Error_message.ECannotSpreadIndexerOnRight {
+          spread_reason = reason;
+          object_reason = r2;
+          key_reason = reason_of_t key
+        })
+      | _ ->
+        let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
+        let merge_props (t1, own1) (t2, own2) =
+          let t1, opt1 = match t1 with OptionalT (_, t) -> t, true | _ -> t1, false in
+          let t2, opt2 = match t2 with OptionalT (_, t) -> t, true | _ -> t2, false in
+          (* An own, non-optional property definitely overwrites earlier properties.
+             Otherwise, the type might come from either side. *)
+          let t, own =
+            if own2 && not opt2 then t2, own2
+            else union t1 t2, own1 || own2
+          in
+          (* If either property is own, the result is non-optional unless the own
+             property is itself optional. Non-own implies optional (see mk_object),
+             so we don't need to handle those cases here. *)
+          let opt =
+            if own1 && own2 then opt1 && opt2
+            else own1 && opt1 || own2 && opt2
+          in
+          let t = if opt then optional t else t in
+          t, own
         in
-        (* If either property is own, the result is non-optional unless the own
-           property is itself optional. Non-own implies optional (see mk_object),
-           so we don't need to handle those cases here. *)
-        let opt =
-          if own1 && own2 then opt1 && opt2
-          else own1 && opt1 || own2 && opt2
-        in
-        let t = if opt then optional t else t in
-        t, own
-      in
-      let props = SMap.merge (fun x p1 p2 ->
-        (* Due to width subtyping, failing to read from an inexact object does not
-           imply non-existence, but rather an unknown result. *)
-        let unknown r =
-          let r = replace_reason_const (RUnknownProperty (Some x)) r in
-          DefT (r, bogus_trust (), MixedT Mixed_everything), false
-        in
-        match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
-        | None, None -> None
-        | Some p1, Some p2 -> Some (merge_props p1 p2)
-        | Some p1, None ->
-          if flags2.exact
-          then Some p1
-          else Some (merge_props p1 (unknown r2))
-        | None, Some p2 ->
-          if flags1.exact
-          then Some p2
-          else Some (merge_props (unknown r1) p2)
-      ) props1 props2 in
-      let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
-        dict_name = None;
-        key = union d1.key d2.key;
-        value = union (read_dict r1 d1) (read_dict r2 d2);
-        dict_polarity = Polarity.Neutral
-      }) in
-      let flags = {
-        frozen = flags1.frozen && flags2.frozen;
-        sealed = Sealed;
-        exact =
-          flags1.exact && flags2.exact &&
-          Obj_type.sealed_in_op reason flags1.sealed &&
-          Obj_type.sealed_in_op reason flags2.sealed;
-      } in
-      Ok (reason, props, dict, flags)
+        let props = SMap.merge (fun x p1 p2 ->
+          (* Due to width subtyping, failing to read from an inexact object does not
+             imply non-existence, but rather an unknown result. *)
+          let unknown r =
+            let r = replace_reason_const (RUnknownProperty (Some x)) r in
+            DefT (r, bogus_trust (), MixedT Mixed_everything), false
+          in
+          match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
+          | None, None -> None
+          | Some p1, Some p2 -> Some (merge_props p1 p2)
+          | Some p1, None ->
+            if flags2.exact
+            then Some p1
+            else Some (merge_props p1 (unknown r2))
+          | None, Some p2 ->
+            if flags1.exact
+            then Some p2
+            else Some (merge_props (unknown r1) p2)
+        ) props1 props2 in
+        let flags = {
+          frozen = flags1.frozen && flags2.frozen;
+          sealed = Sealed;
+          exact =
+            flags1.exact && flags2.exact &&
+            Obj_type.sealed_in_op reason flags1.sealed &&
+            Obj_type.sealed_in_op reason flags2.sealed;
+        } in
+        (* Since we error if there is a dict on the right, we can always just take dict1 *)
+        Ok (reason, props, dict1, flags)
     in
 
     let resolved_of_acc_element = function
