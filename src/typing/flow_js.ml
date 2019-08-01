@@ -12115,16 +12115,25 @@ and object_kit =
       let flags = { frozen = true; sealed = Sealed; exact = true } in
       let x = Nel.one (reason, SMap.empty, None, flags) in
       resolved cx trace use_op reason resolve_tool tool tout x
-    (* mixed is treated as {[string]: mixed}. Any JavaScript value may be
-     * treated as an object and so this is safe. *)
+    (* mixed is treated as {[string]: mixed} except in type spread, where it's treated as
+     * {}. Any JavaScript value may be treated as an object and so this is safe.
+     *
+     * We ought to use {} for everything since it is a more sound representation
+     * of `mixed` as an object.
+     *)
     | DefT (r, _, MixedT _) as t ->
       let flags = { frozen = true; sealed = Sealed; exact = true } in
-      let x = Nel.one (reason, SMap.empty, Some ({
-        dict_name = None;
-        key = StrT.make r |> with_trust bogus_trust;
-        value = t;
-        dict_polarity = Polarity.Neutral;
-      }), flags) in
+      let x = match tool with
+      | Spread _ ->
+        Nel.one (reason, SMap.empty, None, flags)
+      | _->
+        Nel.one (reason, SMap.empty, Some ({
+          dict_name = None;
+          key = StrT.make r |> with_trust bogus_trust;
+          value = t;
+          dict_polarity = Polarity.Neutral;
+        }), flags)
+      in
       resolved cx trace use_op reason resolve_tool tool tout x
     (* If we see an empty then propagate empty to tout. *)
     | DefT (r, trust, EmptyT _) ->

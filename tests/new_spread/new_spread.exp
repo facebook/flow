@@ -603,36 +603,30 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:2
 
-Cannot cast `o1.someProp` to empty because mixed [1] is incompatible with empty [2].
+Cannot get `o1.someProp` because property `someProp` is missing in `O1` [1].
 
    type_mixed.js:5:2
-   5| (o1.someProp: empty); // Error: mixed ~> empty
+   5| (o1.someProp: empty); // Error someProp does not exist
        ^^^^^^^^^^^
 
 References:
-   type_mixed.js:3:15
-   3| type O1 = {...mixed};
-                    ^^^^^ [1]
-   type_mixed.js:5:15
-   5| (o1.someProp: empty); // Error: mixed ~> empty
-                    ^^^^^ [2]
+   type_mixed.js:4:17
+   4| declare var o1: O1;
+                      ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:2
 
-Cannot cast `o2.someProp` to empty because mixed [1] is incompatible with empty [2].
+Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1].
 
    type_mixed.js:9:2
-   9| (o2.someProp: empty); // Error: mixed ~> empty
+   9| (o2.someProp: empty); // Error someProp does not exist
        ^^^^^^^^^^^
 
 References:
-   type_mixed.js:7:16
-   7| type O2 = {|...mixed|};
-                     ^^^^^ [1]
-   type_mixed.js:9:15
-   9| (o2.someProp: empty); // Error: mixed ~> empty
-                    ^^^^^ [2]
+   type_mixed.js:8:17
+   8| declare var o2: O2;
+                      ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:13:2
@@ -655,61 +649,48 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:14:2
 
 Cannot cast `o3.b` to empty because:
+ - number [1] is incompatible with empty [2].
  - undefined [1] is incompatible with empty [2].
- - mixed [3] is incompatible with empty [2].
- - number [4] is incompatible with empty [2].
 
    type_mixed.js:14:2
    14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
         ^^^^
 
 References:
-   type_mixed.js:11:11
+   type_mixed.js:11:42
    11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^ [1]
    type_mixed.js:14:8
    14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
               ^^^^^ [2]
-   type_mixed.js:11:15
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                     ^^^^^ [3]
-   type_mixed.js:11:42
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                                                ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:15:2
 
-Cannot cast `o3.c` to empty because mixed [1] is incompatible with empty [2].
+Cannot get `o3.c` because property `c` is missing in `O3` [1].
 
    type_mixed.js:15:2
-   15| (o3.c: empty); // Error: mixed ~> empty
+   15| (o3.c: empty); // Error c does not exist
         ^^^^
 
 References:
-   type_mixed.js:11:15
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                     ^^^^^ [1]
-   type_mixed.js:15:8
-   15| (o3.c: empty); // Error: mixed ~> empty
-              ^^^^^ [2]
+   type_mixed.js:12:17
+   12| declare var o3: O3;
+                       ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:18:4
 
-Cannot cast `obj.someProp` to empty because `O` [1] is incompatible with empty [2].
+Cannot get `obj.someProp` because property `someProp` is missing in object type [1].
 
    type_mixed.js:18:4
-   18|   (obj.someProp: empty); // Error: mixed ~> empty
+   18|   (obj.someProp: empty); // Error someProp does not exist
           ^^^^^^^^^^^^
 
 References:
-   type_mixed.js:17:25
+   type_mixed.js:17:21
    17| function fn<O>(obj: {...O}) {
-                               ^ [1]
-   type_mixed.js:18:18
-   18|   (obj.someProp: empty); // Error: mixed ~> empty
-                        ^^^^^ [2]
+                           ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- type_string.js:1:15
@@ -947,4 +928,4 @@ References:
 
 
 
-Found 61 errors
+Found 60 errors
