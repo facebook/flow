@@ -2042,7 +2042,7 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
   in
 
-  let slice (_, props, dict, {exact; _}) =
+  let slice {Object.reason=_; props; dict; flags = {exact; _}} =
     let xs = match dict with
     | Some {dict_polarity=p; _} -> [(Polarity.sigil p)^"[]"]
     | None -> []
@@ -2064,7 +2064,8 @@ and dump_use_t_ (depth, tvars) cx t =
       | _, Some t -> SMap.add k (t, true) acc
       | _ -> acc
     ) prop_map SMap.empty in
-    slice (reason, props, dict, {exact = true; sealed = Sealed; frozen = false})
+    let flags = {exact = true; sealed = Sealed; frozen = false} in
+    slice {Object.reason = reason; props; dict; flags}
   in
 
   let object_kit =

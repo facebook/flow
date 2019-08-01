@@ -917,7 +917,7 @@ class ['a] t = object(self)
       let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
       acc
 
-  method private object_kit_slice cx acc (_, props, dict, _) =
+  method private object_kit_slice cx acc {Object.reason=_; props; dict; flags=_} =
     let acc = self#smap (fun acc (t, _) -> self#type_ cx pole_TODO acc t) acc props in
     let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
     acc

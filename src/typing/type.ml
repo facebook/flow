@@ -1980,7 +1980,7 @@ and Object : sig
   (* A union type resolves to a resolved spread with more than one element *)
   and resolved = slice Nel.t
 
-  and slice = reason * props * dict * TypeTerm.flags
+  and slice = {reason: reason; props: props; dict: dict; flags: TypeTerm.flags}
 
   and props = prop SMap.t
   and prop = TypeTerm.t * bool (* own *)

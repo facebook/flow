@@ -11431,7 +11431,8 @@ and object_kit =
     let open Object.Spread in
 
     (* Compute spread result: slice * slice -> slice *)
-    let spread2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
+    let spread2 reason {Object.reason = r1; props = props1; dict = dict1; flags = flags1}
+      {Object.reason = r2; props = props2; dict = dict2; flags = flags2} =
       match dict1, dict2 with
       | _, Some {key; value=_; dict_name=_; dict_polarity=_} ->
         Error (Error_message.ECannotSpreadIndexerOnRight {
@@ -11519,7 +11520,7 @@ and object_kit =
             Obj_type.sealed_in_op reason flags2.sealed;
         } in
         match props with
-        | Ok props -> Ok (reason, props, dict1, flags)
+        | Ok props -> Ok {Object.reason; props; dict = dict1; flags}
         | Error e -> Error e
     in
 
@@ -11528,7 +11529,7 @@ and object_kit =
       | Object.Spread.InlineSlice {Object.Spread.reason; prop_map; dict} ->
         let flags = {exact = true; frozen = false; sealed = Sealed} in
         let props = SMap.mapi (read_prop reason flags) prop_map in
-        Nel.one (reason, props, dict, flags)
+        Nel.one {Object.reason = reason; props; dict; flags}
     in
 
     let spread reason = function
@@ -11536,7 +11537,7 @@ and object_kit =
       | x0, (x1::xs: Object.Spread.acc_element list) -> merge_result (spread2 reason) resolved_of_acc_element x0 (x1, xs)
     in
 
-    let mk_object cx reason target (r, props, dict, flags) =
+    let mk_object cx reason target {Object.reason = r; props; dict; flags} =
       let props = SMap.map (fun (t, _) ->
         Field (None, t, Polarity.Neutral)
       ) props in
@@ -11560,7 +11561,7 @@ and object_kit =
     fun options state cx trace use_op reason tout x ->
       let reason = replace_reason invalidate_rtype_alias reason in
       let {todo_rev; acc} = state in
-      Nel.iter (fun (r, _, _, {exact; _}) ->
+      Nel.iter (fun {Object.reason = r; props= _; dict=_; flags = {exact; _}} ->
         match options with
         | Annot { make_exact } when make_exact && not exact ->
           add_output cx ~trace (Error_message.
@@ -11624,8 +11625,8 @@ and object_kit =
      * it is not an own property of props2.
      *)
     let rest cx trace ~use_op reason merge_mode
-      (r1, props1, dict1, flags1)
-      (r2, props2, dict2, flags2) =
+      {Object.reason = r1; props = props1; dict = dict1; flags = flags1}
+      {Object.reason = r2; props = props2; dict = dict2; flags = flags2} =
       let props = SMap.merge (fun k p1 p2 ->
         match merge_mode, get_prop r1 p1 dict1, get_prop r2 p2 dict2, flags2.exact with
         (* If the object we are using to subtract has an optional property, non-own
@@ -11802,7 +11803,7 @@ and object_kit =
     let polarity = Polarity.Positive in
 
     let mk_read_only_object cx reason slice =
-      let (r, props, dict, flags) = slice in
+      let {Object.reason = r; props = props; dict; flags} = slice in
 
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
       let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
@@ -11827,7 +11828,7 @@ and object_kit =
   (**************)
 
   let object_rep =
-    let mk_object cx reason (r, props, dict, flags) =
+    let mk_object cx reason {Object.reason = r; props; dict; flags} =
       (* TODO(jmbrown): Add polarity information to props *)
       let polarity = Polarity.Neutral in
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
@@ -11863,7 +11864,12 @@ and object_kit =
     let prop_polarity = Polarity.Neutral in
 
     let finish cx trace reason config defaults children =
-      let (config_reason, config_props, config_dict, config_flags) = config in
+      let {
+        Object.reason = config_reason;
+        props = config_props;
+        dict = config_dict;
+        flags = config_flags;
+      } = config in
       (* If we have some type for children then we want to add a children prop
        * to our config props. *)
       let config_props =
@@ -11883,7 +11889,12 @@ and object_kit =
       let props, dict, flags = match defaults with
         (* If we have some default props then we want to add the types for those
          * default props to our final props object. *)
-        | Some (defaults_reason, defaults_props, defaults_dict, defaults_flags) ->
+        | Some {
+          Object.reason = defaults_reason;
+          props = defaults_props;
+          dict = defaults_dict;
+          flags = defaults_flags;
+        } ->
           (* Merge our props and default props. *)
           let props = SMap.merge (fun _ p1 p2 ->
             let p1 = get_prop config_reason p1 config_dict in
@@ -12010,7 +12021,9 @@ and object_kit =
    * {...A&(B|C)} = {...(A&B)|(A&C)}
    * {...(A|B)&C} = {...(A&C)|(B&C)}
    *)
-  let intersect2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
+  let intersect2 reason
+      {Object.reason = r1; props = props1; dict = dict1; flags = flags1}
+      {Object.reason = r2; props = props2; dict = dict2; flags = flags2} =
     let intersection t1 t2 = IntersectionT (reason, InterRep.make t1 t2 []) in
     let merge_props (t1, own1) (t2, own2) =
       let t1, t2, opt = match t1, t2 with
@@ -12051,8 +12064,8 @@ and object_kit =
 
   let intersect2_with_reason reason intersection_loc x1 x2 =
     let props, dict, flags = intersect2 reason x1 x2 in
-    let r = mk_reason RObjectType intersection_loc in
-    r, props, dict, flags
+    let reason = mk_reason RObjectType intersection_loc in
+    Object.{reason; props; dict; flags}
   in
 
   let resolved cx trace use_op reason resolve_tool tool tout x =
@@ -12084,7 +12097,7 @@ and object_kit =
       value = read_dict r d;
       dict_polarity = Polarity.Neutral;
     }) in
-    (r, props, dict, flags)
+    {Object.reason = r; props; dict; flags}
   in
 
   let interface_slice cx r id =
@@ -12105,7 +12118,7 @@ and object_kit =
 
   let resolve cx trace use_op reason resolve_tool tool tout = function
     (* We extract the props from an ObjT. *)
-    | DefT (r, _, ObjT {props_tmap; dict_t; flags; _}) ->
+    | DefT (r, _, ObjT {props_tmap; dict_t; Type.flags; _}) ->
       let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
       resolved cx trace use_op reason resolve_tool tool tout x
     (* We take the fields from an InstanceT excluding methods (because methods
@@ -12143,7 +12156,7 @@ and object_kit =
      * empty objects. *)
     | DefT (_, _, (NullT | VoidT)) ->
       let flags = { frozen = true; sealed = Sealed; exact = true } in
-      let x = Nel.one (reason, SMap.empty, None, flags) in
+      let x = Nel.one {Object.reason; props = SMap.empty; dict = None; flags} in
       resolved cx trace use_op reason resolve_tool tool tout x
     (* mixed is treated as {[string]: mixed} except in type spread, where it's treated as
      * {}. Any JavaScript value may be treated as an object and so this is safe.
@@ -12155,14 +12168,14 @@ and object_kit =
       let flags = { frozen = true; sealed = Sealed; exact = true } in
       let x = match tool with
       | Spread _ ->
-        Nel.one (reason, SMap.empty, None, flags)
+        Nel.one {Object.reason; props = SMap.empty; dict = None; flags}
       | _->
-        Nel.one (reason, SMap.empty, Some ({
+        Nel.one {Object.reason; props = SMap.empty; dict = Some ({
           dict_name = None;
           key = StrT.make r |> with_trust bogus_trust;
           value = t;
           dict_polarity = Polarity.Neutral;
-        }), flags)
+        }); flags}
       in
       resolved cx trace use_op reason resolve_tool tool tout x
     (* If we see an empty then propagate empty to tout. *)
@@ -12187,7 +12200,7 @@ and object_kit =
       let acc = intersect2 reason acc slice in
       let acc =
         let (props, dict, flags) = acc in
-        (reason, props, dict, flags)
+        {Object.reason; props; dict; flags}
       in
       let resolve_tool = Super (acc, resolve_tool) in
       rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))

@@ -1322,12 +1322,12 @@ class virtual ['a] t_with_uses = object(self)
         let r' = self#resolve cx map_cx r in
         if r' == r then t
         else Resolve r'
-    | Super ((reason, props, dict, flags), r) ->
+    | Super ({Object.reason; props; dict; flags}, r) ->
         let props' = SMap.ident_map (fun (t, b) -> (self#type_ cx map_cx t, b)) props in
         let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
         let r' = self#resolve cx map_cx r in
         if r' == r && props' == props then t
-        else Super ((reason, props', dict', flags), r')
+        else Super ({reason; Object.props = props'; dict = dict'; flags}, r')
 
   method object_kit_tool cx map_cx tool =
     let open Object in
@@ -1534,11 +1534,11 @@ class virtual ['a] t_with_uses = object(self)
     if t' == t then prop
     else (t', own)
 
-  method object_kit_slice cx map_cx ((r, props, dict, flags) as slice) =
+  method object_kit_slice cx map_cx ({Object.reason=_; props; dict; flags=_} as slice) =
     let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
     let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
     if props' == props && dict' == dict then slice
-    else (r, props', dict', flags)
+    else {slice with Object.props = props'; dict = dict'}
 
   method object_kit_acc_element cx map_cx el =
     let open Object.Spread in
