@@ -1329,8 +1329,6 @@ and convert_object =
         | [] -> empty_slice, []
         | x::xs -> x, xs
 
-    let elements acc = Nel.rev (elements_rev acc)
-
     let proto = function
       | {proto = Some t; _} -> t
       | {calls = _::_; _} -> fun_proto_t
@@ -1549,7 +1547,7 @@ and convert_object =
     in
     let proto = Acc.proto acc in
     let calls_rev = Acc.calls_rev acc in
-    let t = match Acc.elements acc with
+    let t = match Acc.elements_rev acc with
     | Acc.Slice {dict; pmap}, [] ->
       let ts = List.rev_map (fun call ->
         mk_object_annot cx loc ~exact (Some call) dict pmap proto
@@ -1566,7 +1564,7 @@ and convert_object =
       let reason = mk_reason RObjectType loc in
       let target = Annot {make_exact = exact} in
       let t, ts, head_slice =
-        let t, ts  = Nel.rev os in
+        let t, ts  = os in
         (* We don't need to do this recursively because every pair of slices must be separated
          * by a spread *)
         match t, ts with

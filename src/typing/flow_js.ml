@@ -11405,7 +11405,7 @@ and object_kit =
       let resolved_list = Nel.fold_left (fun acc slice1 ->
         bind (fun acc ->
           let resolved = Nel.fold_left (fun acc x ->
-            bind (fun acc -> bind (fun slice -> Ok (slice::acc)) (f slice1 x)) acc
+            bind (fun acc -> bind (fun slice -> Ok (slice::acc)) (f x slice1)) acc
           ) (Ok []) x0 in
           let resolved = resolved |> mapM List.rev in
           bind (fun resolved -> Ok (resolved::acc)) resolved
@@ -11541,7 +11541,7 @@ and object_kit =
 
       let rec continue acc (x: Object.Spread.acc_element) = function
       | [] ->
-        let t = match spread reason (Nel.rev (x, acc)) with
+        let t = match spread reason (x, acc) with
         | Ok (x, []) -> mk_object cx reason options x
         | Ok (x0, x1::xs) ->
           UnionT (reason, UnionRep.make
