@@ -390,10 +390,11 @@ class virtual ['a] t = object(self)
           if t'' == t' then t
           else Bind t''
       | ReadOnlyType -> t
-      | SpreadType (options, tlist) ->
+      | SpreadType (options, tlist, acc) ->
           let tlist' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) tlist in
-          if tlist' == tlist then t
-          else SpreadType (options, tlist')
+          let acc' = OptionUtils.ident_map (self#object_kit_spread_operand_slice cx map_cx) acc in
+          if tlist' == tlist && acc == acc' then t
+          else SpreadType (options, tlist', acc')
       | RestType (options, x) ->
           let x' = self#type_ cx map_cx x in
           if x' == x then t
@@ -415,14 +416,22 @@ class virtual ['a] t = object(self)
       | ReactElementConfigType
       | ReactElementRefType
         -> t
+
+
+  method object_kit_spread_operand_slice cx map_cx
+    ({Object.Spread.reason; prop_map; dict} as slice) =
+      let prop_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map in
+      let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
+      if prop_map' == prop_map && dict' == dict then slice
+      else {Object.Spread.reason = reason; prop_map = prop_map'; dict = dict'}
+
   method object_kit_spread_operand cx map_cx operand =
     let open Object.Spread in
     match operand with
-    | Slice {reason; prop_map; dict} ->
-      let prop_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map in
-      let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
-      if prop_map' == prop_map && dict' == dict then operand
-      else Slice {reason = reason; prop_map = prop_map'; dict = dict'}
+    | Slice slice ->
+        let slice' = self#object_kit_spread_operand_slice cx map_cx slice in
+        if slice' == slice then operand
+        else Slice slice'
     | Type t ->
       let t' = self#type_ cx map_cx t in
       if t' == t then operand
@@ -1329,7 +1338,7 @@ class virtual ['a] t_with_uses = object(self)
       let open Object.Spread in
       let todo_rev' =
         ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) state.todo_rev in
-      let acc' = ListUtils.ident_map (self#resolved cx map_cx) state.acc in
+      let acc' = ListUtils.ident_map (self#object_kit_acc_element cx map_cx) state.acc in
       if todo_rev' == state.todo_rev && acc' == state.acc then tool
       else Spread (options, {todo_rev = todo_rev'; acc = acc'})
     | Rest (options, state) ->
@@ -1530,6 +1539,18 @@ class virtual ['a] t_with_uses = object(self)
     let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
     if props' == props && dict' == dict then slice
     else (r, props', dict', flags)
+
+  method object_kit_acc_element cx map_cx el =
+    let open Object.Spread in
+    match el with
+    | InlineSlice slice ->
+        let slice' = self#object_kit_spread_operand_slice cx map_cx slice in
+        if slice' == slice then el
+        else InlineSlice slice'
+    | ResolvedSlice resolved ->
+        let resolved' = self#resolved cx map_cx resolved in
+        if resolved' == resolved then el
+        else ResolvedSlice resolved'
 
   method resolved cx map_cx t =
     let t' = Nel.ident_map (self#object_kit_slice cx map_cx) t in

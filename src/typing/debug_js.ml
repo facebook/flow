@@ -1225,7 +1225,7 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ReadOnlyType -> JSON_Object [
       "readOnly", JSON_Bool true
     ]
-  | SpreadType (target, ts) ->
+  | SpreadType (target, ts, head_slice) ->
     let open Object.Spread in
     JSON_Object (
       (match target with
@@ -1238,6 +1238,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
           ]
       ) @ [
         "spread", JSON_Array (Core_list.map ~f:(json_of_spread_operand json_cx) ts);
+        "head_slice", match head_slice with
+          | None -> JSON_Null
+          | Some head_slice -> json_of_spread_operand_slice json_cx head_slice;
       ]
     )
   | RestType (merge_mode, t) ->
@@ -1271,15 +1274,22 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   ]
 )
 
-and json_of_spread_operand json_cx = Hh_json.(function
-  | Object.Spread.Slice {reason; prop_map; dict} -> JSON_Object [
+and json_of_spread_operand_slice json_cx {Object.Spread.reason; prop_map; dict}= Hh_json.(
+  JSON_Object[
     "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason;
     "props", JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p)::acc) prop_map []);
     "dict", (match dict with
       | Some dict ->json_of_dicttype json_cx dict
       | None -> JSON_Null);
   ]
+)
+and json_of_spread_operand json_cx = Hh_json.(function
+  | Object.Spread.Slice operand_slice -> JSON_Object [
+    "kind", JSON_String "slice";
+    "slice", json_of_spread_operand_slice json_cx operand_slice;
+  ]
   | Object.Spread.Type t -> JSON_Object [
+    "kind", JSON_String "type";
     "type", _json_of_t json_cx t;
   ]
 )
@@ -2079,6 +2089,10 @@ and dump_use_t_ (depth, tvars) cx t =
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
+    let acc_element = function
+    | Spread.InlineSlice {Spread.reason; prop_map; dict} -> operand_slice reason prop_map dict
+    | Spread.ResolvedSlice xs -> resolved xs
+    in
     let spread target state =
       let open Object.Spread in
       let target =
@@ -2087,13 +2101,13 @@ and dump_use_t_ (depth, tvars) cx t =
           | Value -> "Value")
       in
       let spread_operand = function
-        | Slice {reason; prop_map; dict} -> operand_slice reason prop_map dict
+        | Slice {Spread.reason; prop_map; dict} -> operand_slice reason prop_map dict
         | Type t -> kid t in
       let state =
         let {todo_rev; acc} = state in
         spf "{todo_rev=[%s]; acc=[%s]}"
           (String.concat "; " (Core_list.map ~f:spread_operand todo_rev))
-          (String.concat "; " (Core_list.map ~f:resolved acc))
+          (String.concat "; " (Core_list.map ~f:acc_element acc))
       in
       spf "Spread (%s, %s)" target state
     in

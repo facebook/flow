@@ -7651,11 +7651,11 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     GetPropT (use_op, reason, Named (reason_op, x), tout)
   | ElementType t -> GetElemT (use_op, reason, t, tout)
   | Bind t -> BindT (use_op, reason, mk_methodcalltype t None [] tout, true)
-  | SpreadType (options, todo_rev) ->
+  | SpreadType (options, todo_rev, head_slice) ->
     let open Object in
     let open Object.Spread in
     let tool = Resolve Next in
-    let state = { todo_rev; acc = [] } in
+    let state = { todo_rev; acc = Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice} in
     ObjKitT (use_op, reason, tool, Spread (options, state), tout)
   | RestType (options, t) ->
     let open Object in
@@ -11389,7 +11389,7 @@ and object_kit =
 
   (* Lift a pairwise function that may return an error to a function over a resolved list
    * that may return an error, like spread2 *)
-  let merge_result (f: slice -> slice -> (slice, Error_message.t) result) =
+  let merge_result (f: 'a -> 'a -> ('a, Error_message.t) result) (conv: 'b -> 'a Nel.t) =
     let bind f = function
     | Ok data -> f data
     | Error e -> Error e
@@ -11400,7 +11400,8 @@ and object_kit =
     | Error e -> Error e
     in
 
-    let f' (x0: resolved) (x1: resolved): (resolved, Error_message.t) result =
+    let f' (x0: 'a Nel.t) (x1: 'b): ('a Nel.t, Error_message.t) result =
+      let x1 = conv x1 in
       let resolved_list = Nel.fold_left (fun acc slice1 ->
         bind (fun acc ->
           let resolved = Nel.fold_left (fun acc x ->
@@ -11414,11 +11415,11 @@ and object_kit =
          * Nel.of_list_exn is safe *)
         bind (fun lists -> Ok (Nel.of_list_exn (Core_list.join lists))) resolved_list
     in
-    let rec loop (x0: resolved) (xs: resolved list) = match xs with
+    let rec loop (x0: 'a Nel.t) (xs: 'b list) = match xs with
       | [] -> Ok x0
       | x1::xs -> bind (fun resolved -> loop resolved xs) (f' x0 x1)
     in
-    fun x0 (x1,xs) -> bind (fun resolved -> loop resolved xs) (f' x0 x1)
+    fun x0 (x1,xs) -> bind (fun resolved -> loop resolved xs) (f' (conv x0) x1)
   in
 
   (*****************)
@@ -11486,9 +11487,17 @@ and object_kit =
       Ok (reason, props, dict, flags)
     in
 
+    let resolved_of_acc_element = function
+      | Object.Spread.ResolvedSlice resolved -> resolved
+      | Object.Spread.InlineSlice {Object.Spread.reason; prop_map; dict} ->
+        let flags = {exact = true; frozen = false; sealed = Sealed} in
+        let props = SMap.mapi (read_prop reason flags) prop_map in
+        Nel.one (reason, props, dict, flags)
+    in
+
     let spread reason = function
-      | x, [] -> Ok x
-      | x0, x1::xs -> merge_result (spread2 reason) x0 (x1, xs)
+      | x, [] -> Ok (resolved_of_acc_element x)
+      | x0, (x1::xs: Object.Spread.acc_element list) -> merge_result (spread2 reason) resolved_of_acc_element x0 (x1, xs)
     in
 
     let mk_object cx reason target (r, props, dict, flags) =
@@ -11528,7 +11537,9 @@ and object_kit =
             EIncompatibleWithExact ((r, reason), use_op))
         | _ -> ()
       ) x;
-      let rec continue acc x = function
+      let x = Object.Spread.ResolvedSlice x in
+
+      let rec continue acc (x: Object.Spread.acc_element) = function
       | [] ->
         let t = match spread reason (Nel.rev (x, acc)) with
         | Ok (x, []) -> mk_object cx reason options x
@@ -11547,12 +11558,9 @@ and object_kit =
         let tool = Resolve Next in
         let state = {todo_rev; acc = x::acc} in
         rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Spread (options, state), tout))
-      | (Slice {reason = r; prop_map; dict})::todo_rev ->
+      | (Slice operand_slice)::todo_rev ->
         let acc = x::acc in
-        let flags = {exact = true; frozen = false; sealed = Sealed} in
-        let props = SMap.mapi (read_prop reason flags) prop_map in
-        let slice = (r, props, dict, flags) in
-        continue acc (Nel.one slice) todo_rev
+        continue acc (InlineSlice operand_slice) todo_rev
       in
       continue acc x todo_rev
   in

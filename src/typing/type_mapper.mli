@@ -29,6 +29,8 @@ class virtual ['a] t :
       Context.t -> 'a -> Type.insttype -> Type.insttype
     method object_kit_spread_operand :
       Context.t -> 'a -> Type.Object.Spread.operand -> Type.Object.Spread.operand
+    method object_kit_spread_operand_slice :
+      Context.t -> 'a -> Type.Object.Spread.operand_slice -> Type.Object.Spread.operand_slice
     method obj_type :
       Context.t -> 'a -> Type.objtype -> Type.objtype
     method predicate :
@@ -93,6 +95,8 @@ class virtual ['a] t_with_uses :
       Context.t -> 'a -> Type.lookup_action -> Type.lookup_action
     method lookup_kind :
       Context.t -> 'a -> Type.lookup_kind -> Type.lookup_kind
+    method object_kit_acc_element :
+      Context.t -> 'a -> Type.Object.Spread.acc_element -> Type.Object.Spread.acc_element
     method object_kit_resolve_tool :
       Context.t ->
       'a -> Type.Object.resolve_tool -> Type.Object.resolve_tool

@@ -260,7 +260,13 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | ElementType t -> collect_of_type ?log_unresolved cx acc t
   | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
-  | SpreadType (_, ts) -> collect_of_object_kit_spread_operands ?log_unresolved cx acc ts
+  | SpreadType (_, ts, head_slice) ->
+      let acc = collect_of_object_kit_spread_operands ?log_unresolved cx acc ts in
+      begin match head_slice with
+      | None -> acc
+      | Some head_slice ->
+        collect_of_object_kit_spread_operand_slice ?log_unresolved cx acc head_slice
+      end
   | RestType (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ValuesType -> acc
   | CallType ts -> collect_of_types ?log_unresolved cx acc ts
@@ -275,7 +281,8 @@ and collect_of_property ?log_unresolved cx name property acc =
   if is_internal_name name then acc else
   Property.fold_t (fun acc -> collect_of_type ?log_unresolved cx acc) acc property
 
-and collect_of_object_kit_operand_slice ?log_unresolved cx acc prop_map dict =
+and collect_of_object_kit_spread_operand_slice ?log_unresolved cx acc
+  {Object.Spread.reason=_; prop_map; dict} =
   let acc = SMap.fold (collect_of_property ?log_unresolved cx) prop_map acc in
   let ts = match dict with
   | Some {key; value; dict_polarity=_; dict_name=_} -> [key; value]
@@ -284,11 +291,10 @@ and collect_of_object_kit_operand_slice ?log_unresolved cx acc prop_map dict =
   collect_of_types ?log_unresolved cx acc ts
 
 and collect_of_object_kit_spread_operand ?log_unresolved cx acc =
-  let open Object.Spread in
   function
-  | Slice {reason=_; prop_map; dict} ->
-      collect_of_object_kit_operand_slice ?log_unresolved cx acc prop_map dict
-  | Type t -> collect_of_type ?log_unresolved cx acc t
+  | Object.Spread.Slice operand_slice ->
+      collect_of_object_kit_spread_operand_slice ?log_unresolved cx acc operand_slice
+  | Object.Spread.Type t -> collect_of_type ?log_unresolved cx acc t
 
 and collect_of_object_kit_spread_operands ?log_unresolved cx acc operands =
   List.fold_left (fun acc op -> collect_of_object_kit_spread_operand ?log_unresolved cx acc op)

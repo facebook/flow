@@ -239,7 +239,9 @@ class ['a] t = object(self)
   | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
   | ElementType t -> self#type_ cx pole_TODO acc t
   | Bind t -> self#type_ cx pole_TODO acc t
-  | SpreadType (_, ts) -> self#list (self#object_kit_spread_operand cx) acc ts
+  | SpreadType (_, ts, head_slice) ->
+      let acc = self#list (self#object_kit_spread_operand cx) acc ts in
+      self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
   | RestType (_,t) -> self#type_ cx pole_TODO acc t
   | CallType args -> self#list (self#type_ cx pole_TODO) acc args
   | TypeMap map -> self#type_map cx acc map
@@ -539,10 +541,7 @@ class ['a] t = object(self)
         let open Object.Spread in
         let { todo_rev; acc = object_spread_acc } = state in
         let acc = List.fold_left (self#object_kit_spread_operand cx) acc todo_rev in
-        let acc = List.fold_left
-          (Nel.fold_left (self#object_kit_slice cx))
-          acc object_spread_acc
-        in
+        let acc = List.fold_left (self#object_kit_acc_element cx) acc object_spread_acc in
         acc
       | Rest (_, state) ->
         let open Object.Rest in
@@ -923,14 +922,21 @@ class ['a] t = object(self)
     let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
     acc
 
-  method private object_kit_spread_operand_slice cx acc prop_map dict =
-    let acc = self#smap (self#prop cx pole_TODO) acc prop_map in
-    self#opt (self#dict_type cx pole_TODO) acc dict
+  method private object_kit_spread_operand_slice cx acc {Object.Spread.reason=_; prop_map; dict} =
+    let acc = self#smap (Property.fold_t (self#type_ cx pole_TODO)) acc prop_map in
+    let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
+    acc
 
+  method private object_kit_acc_element cx acc =
+    let open Object.Spread in
+    function
+    | InlineSlice slice -> self#object_kit_spread_operand_slice cx acc slice
+    | ResolvedSlice resolved -> Nel.fold_left (self#object_kit_slice cx) acc resolved
   method private object_kit_spread_operand cx acc =
     let open Object.Spread in
     function
-    | Slice {reason=_; prop_map; dict}-> self#object_kit_spread_operand_slice cx acc prop_map dict
+    | Slice operand_slice ->
+        self#object_kit_spread_operand_slice cx acc operand_slice
     | Type t -> self#type_ cx pole_TODO acc t
 
   method private react_resolved_object cx acc (_, props, dict, _) =

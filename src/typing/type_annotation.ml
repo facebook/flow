@@ -1565,18 +1565,29 @@ and convert_object =
       let open Type.Object.Spread in
       let reason = mk_reason RObjectType loc in
       let target = Annot {make_exact = exact} in
-      let t, ts = Nel.rev os in
-      let t = match t with
-      | Acc.Spread t -> t
-      | Acc.Slice {dict; pmap} ->
-        mk_object cx loc ~src_loc:false ~exact:true None dict pmap obj_proto_t
+      let t, ts, head_slice =
+        let t, ts  = Nel.rev os in
+        (* We don't need to do this recursively because every pair of slices must be separated
+         * by a spread *)
+        match t, ts with
+        | Acc.Spread t, ts ->
+          let ts = List.map (function
+            | Acc.Spread t -> Type t
+            | Acc.Slice {dict; pmap} ->
+              Slice ({Type.Object.Spread.reason; prop_map = pmap; dict})
+          ) ts in
+          t, ts, None
+        | Acc.Slice {dict; pmap = prop_map}, (Acc.Spread t)::ts ->
+          let head_slice = {Type.Object.Spread.reason = reason; prop_map; dict} in
+          let ts = List.map (function
+            | Acc.Spread t -> Type t
+            | Acc.Slice {dict; pmap} ->
+              Slice ({Type.Object.Spread.reason; prop_map = pmap; dict})
+          ) ts in
+          t, ts, Some head_slice
+        | _ -> failwith "Invariant Violation: spread list has two slices in a row"
       in
-      let ts = List.map (function
-        | Acc.Spread t -> Type t
-        | Acc.Slice {dict; pmap} ->
-          Slice ({reason; prop_map = pmap; dict})
-      ) ts in
-      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
+      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts, head_slice)), mk_id ())
     in
     t, List.rev rev_prop_asts
 

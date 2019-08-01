@@ -1157,7 +1157,7 @@ recursive.js:60:31 = {
   "end":31
 }
 spread.js:11:6 = {
-  "type":"type Obj1 = {w: O, y: O, x: O, z: O}",
+  "type":"type Obj1 = {w: O, x: O, y: O, z: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1172,7 +1172,7 @@ spread.js:11:6 = {
   "end":9
 }
 spread.js:12:6 = {
-  "type":"type EObj2 = {|w: O, y: O, x: O, z: O|}",
+  "type":"type EObj2 = {|w: O, x: O, y: O, z: O|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
