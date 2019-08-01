@@ -8,6 +8,8 @@
 module Ast = Flow_ast
 
 type patch = (int * int * string) list
+(* Location patches retain all the information needed to send edits over the LSP *)
+type loc_patch = (Loc.t * string) list
 
 let show_patch p: string =
   ListUtils.to_string ""
@@ -23,13 +25,16 @@ let with_content_of_file_input file f =
                       file_name in
     Utils_js.assert_false error_msg
 
+let mk_loc_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list)
+  (ast : (Loc.t, Loc.t) Ast.program) : loc_patch =
+  let attached_comments = Some (Flow_prettier_comments.attach_comments ast) in
+  Ast_diff_printer.edits_of_changes attached_comments diff
 
 let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list)
   (ast : (Loc.t, Loc.t) Ast.program) (content : string) : patch =
-   let offset_table = Offset_utils.make content in
-   let offset loc = Offset_utils.offset offset_table loc in
-   let attached_comments = Some (Flow_prettier_comments.attach_comments ast) in
-   Ast_diff_printer.edits_of_changes attached_comments diff
+  let offset_table = Offset_utils.make content in
+  let offset loc = Offset_utils.offset offset_table loc in
+   mk_loc_patch_ast_differ diff ast
    |> Core_list.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
 
 let mk_patch_ast_differ_unsafe diff ast file =

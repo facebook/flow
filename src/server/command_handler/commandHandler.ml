@@ -529,6 +529,21 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   let%lwt result = save_state ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
+let find_code_actions ~options ~env ~profiling ~params ~client =
+  let open CodeActionRequest in
+  let open Flow_lsp_conversions in
+  let {textDocument; range; _} = params in
+  (* The current ide-lsp-server/flow-lsp-client doesn't necisarrily get restart for every project.
+   * Checking the option here ensures the the flow server doesn't do too much work for code
+   * action requests on projects where code actions are not enabled in the `.flowconfig`.
+   *)
+  if not options.Options.opt_lsp_code_actions then Lwt.return (Ok []) else
+    let (file_key, file, loc) = lsp_textDocument_and_range_to_flow textDocument range client in
+    match File_input.content_of_file_input file with
+    | Error msg -> Lwt.return (Error msg)
+    | Ok file_contents ->
+      Type_info_service.code_actions_at_loc ~options ~env ~profiling
+              ~params ~file_key ~file_contents ~loc
 
 type command_handler =
 (* A command can be handled immediately if it is super duper fast and doesn't require the env.
@@ -1081,6 +1096,18 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
       Lwt.return (LspResponse (Error ((), with_error metadata ~reason)))
   end
 
+let handle_persistent_code_action_request ~options ~id ~params ~metadata
+    ~client ~profiling ~env =
+  let%lwt result = find_code_actions ~options  ~profiling ~env ~client ~params in
+  let response =
+    match result with
+    | Ok code_actions ->
+      Ok ((), Some (ResponseMessage (id, (CodeActionResult code_actions))), metadata)
+    | Error reason ->
+      Error ((), with_error metadata ~reason)
+  in
+  Lwt.return (LspResponse response)
+
 let handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let is_snippet_supported = Persistent_connection.client_snippet_support client in
   let open Completion in
@@ -1498,12 +1525,10 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     mk_parallelizable_persistent ~options (
       handle_persistent_infer_type ~options ~id ~params ~loc ~metadata
     )
-  | LspToServer (RequestMessage (id, CodeActionRequest _), metadata) ->
-    (* This is a no code actions available response and is a temporary stepping stone
-       for implementing insert-type as a code action. *)
-    Handle_persistent_immediately (fun ~client:_ ~profiling:_ ->
-      (LspResponse (Ok ((), Some (ResponseMessage (id, (CodeActionResult []))), metadata)))
-      |> Lwt.return)
+  | LspToServer (RequestMessage (id, CodeActionRequest params), metadata) ->
+    mk_parallelizable_persistent ~options (
+      handle_persistent_code_action_request ~options ~id ~params ~metadata
+    )
   | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let loc = params.Completion.loc in

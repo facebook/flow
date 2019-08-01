@@ -78,41 +78,7 @@ export default suite(
           ],
         },
       }).verifyAllIDEMessagesInStep(
-        [
-          `textDocument/codeAction{${JSON.stringify([
-            {
-              title: 'insert type annotation',
-              kind: 'quickfix',
-              diagnostics: [
-                {
-                  range: {
-                    start: {line: 1, character: 21},
-                    end: {line: 1, character: 22},
-                  },
-                  severity: 1,
-                  code: 'InferError',
-                  source: 'Flow',
-                  message: 'Missing type annotation for `a`.',
-                  relatedInformation: [],
-                  relatedLocations: [],
-                },
-              ],
-              edit: {
-                changes: {
-                  '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js': [
-                    {
-                      range: {
-                        start: {line: 1, character: 22},
-                        end: {line: 1, character: 22},
-                      },
-                      newText: ': any',
-                    },
-                  ],
-                },
-              },
-            },
-          ])}}`,
-        ],
+        [`textDocument/codeAction{[]}`],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -137,35 +103,7 @@ export default suite(
           diagnostics: [],
         },
       }).verifyAllIDEMessagesInStep(
-        [
-          `textDocument/codeAction{${JSON.stringify([
-            {
-              title: 'insert type annotation',
-              kind: 'quickfix',
-              diagnostics: [],
-              edit: {
-                changes: {
-                  '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js': [
-                    {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 17,
-                        },
-                        end: {
-                          line: 6,
-                          character: 17,
-                        },
-                      },
-                      newText:
-                        ': {a: number, b: (a: any, b: string) => number}',
-                    },
-                  ],
-                },
-              },
-            },
-          ])}}`,
-        ],
+        [`textDocument/codeAction{[]}`],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),

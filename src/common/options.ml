@@ -113,6 +113,7 @@ type t = {
   opt_weak : bool;
   opt_max_header_tokens: int;
   opt_lint_severities: Severity.severity LintSettings.t;
+  opt_lsp_code_actions: bool;
   opt_strict_mode: StrictModeSettings.t;
   opt_arch: arch;
   opt_include_suppressions : bool;

@@ -109,6 +109,7 @@ module CodeActionKind :
     type t = (string * string list)
     val is_kind : t -> t -> bool
     val contains_kind : t -> t list -> bool
+    val contains_kind_opt : default:bool -> t -> t list option -> bool
     val kind_of_string : string -> t
     val string_of_kind : t -> string
     val sub_kind : t -> string -> t

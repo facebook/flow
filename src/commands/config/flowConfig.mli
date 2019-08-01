@@ -65,6 +65,7 @@ val ignore_non_literal_requires: config -> bool
 val include_warnings: config -> bool
 val lazy_mode: config -> Options.lazy_mode option
 val log_file: config -> Path.t option
+val lsp_code_actions: config -> bool
 val max_files_checked_per_worker: config -> int
 val max_header_tokens: config -> int
 val max_literal_length: config -> int

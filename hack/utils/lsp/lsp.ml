@@ -256,6 +256,12 @@ module CodeActionKind = struct
   (* does `ks` contain kind `k` *)
   let contains_kind k ks = List.exists (is_kind k) ks
 
+  (* does an optional list of kinds `ks` contain kind `k` *)
+  let contains_kind_opt ~default k ks =
+    match ks with
+    | Some ks -> contains_kind k ks
+    | None -> default
+
   (* Create a kind from a string that follows the spec *)
   let kind_of_string : string -> t =
     fun s ->

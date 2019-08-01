@@ -600,7 +600,29 @@ export class TestBuilder {
     const url = this.getDirUrl();
     const urlslash = url + dir_sep;
     function replace(obj: Object) {
-      for (const k in obj) {
+      function do_url_replace(str: string): string {
+        if (str.startsWith(urlslash)) {
+          return (
+            '<PLACEHOLDER_PROJECT_URL_SLASH>' + str.substr(urlslash.length)
+          );
+        } else if (str.startsWith(url)) {
+          return '<PLACEHOLDER_PROJECT_URL>' + str.substr(url.length);
+        } else {
+          return str;
+        }
+      }
+      for (var k in obj) {
+        // workspace edits contain urls in the keys of a dictionary
+        if (typeof k == 'string') {
+          let new_k = do_url_replace(k);
+
+          if (k != new_k) {
+            obj[new_k] = obj[k];
+            delete obj[k];
+            k = new_k;
+          }
+        }
+
         if (!obj.hasOwnProperty(k)) {
           continue;
         }
@@ -614,12 +636,8 @@ export class TestBuilder {
           case 'string':
             if (k == 'flowVersion') {
               obj[k] = '<VERSION STUBBED FOR TEST>';
-            } else if (obj[k].startsWith(urlslash)) {
-              obj[k] =
-                '<PLACEHOLDER_PROJECT_URL_SLASH>' +
-                obj[k].substr(urlslash.length);
-            } else if (obj[k].startsWith(url)) {
-              obj[k] = '<PLACEHOLDER_PROJECT_URL>' + obj[k].substr(url.length);
+            } else {
+              obj[k] = do_url_replace(obj[k]);
             }
             break;
         }
