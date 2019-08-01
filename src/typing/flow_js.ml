@@ -11373,7 +11373,7 @@ and object_kit =
     | None, None -> None
   in
 
-  (* Lift a pairwise function like spread2 to a function over a resolved list *)
+  (* Lift a pairwise function to a function over a resolved list *)
   let merge (f: slice -> slice -> slice) =
     let f' (x0: resolved) (x1: resolved) =
       Nel.map_concat (fun slice1 ->
@@ -11385,6 +11385,40 @@ and object_kit =
       | x1::xs -> loop (f' x0 x1) xs
     in
     fun x0 (x1,xs) -> loop (f' x0 x1) xs
+  in
+
+  (* Lift a pairwise function that may return an error to a function over a resolved list
+   * that may return an error, like spread2 *)
+  let merge_result (f: slice -> slice -> (slice, Error_message.t) result) =
+    let bind f = function
+    | Ok data -> f data
+    | Error e -> Error e
+    in
+
+    let mapM f = function
+    | Ok data -> Ok (f data)
+    | Error e -> Error e
+    in
+
+    let f' (x0: resolved) (x1: resolved): (resolved, Error_message.t) result =
+      let resolved_list = Nel.fold_left (fun acc slice1 ->
+        bind (fun acc ->
+          let resolved = Nel.fold_left (fun acc x ->
+            bind (fun acc -> bind (fun slice -> Ok (slice::acc)) (f slice1 x)) acc
+          ) (Ok []) x0 in
+          let resolved = resolved |> mapM List.rev in
+          bind (fun resolved -> Ok (resolved::acc)) resolved
+        ) acc) (Ok []) x1 in
+        let resolved_list = resolved_list |> mapM List.rev in
+        (* Each of the lists were non-empty, so concatenating them creates a non-empty list. Thus,
+         * Nel.of_list_exn is safe *)
+        bind (fun lists -> Ok (Nel.of_list_exn (Core_list.join lists))) resolved_list
+    in
+    let rec loop (x0: resolved) (xs: resolved list) = match xs with
+      | [] -> Ok x0
+      | x1::xs -> bind (fun resolved -> loop resolved xs) (f' x0 x1)
+    in
+    fun x0 (x1,xs) -> bind (fun resolved -> loop resolved xs) (f' x0 x1)
   in
 
   (*****************)
@@ -11449,12 +11483,12 @@ and object_kit =
           Obj_type.sealed_in_op reason flags1.sealed &&
           Obj_type.sealed_in_op reason flags2.sealed;
       } in
-      reason, props, dict, flags
+      Ok (reason, props, dict, flags)
     in
 
     let spread reason = function
-      | x, [] -> x
-      | x0, x1::xs -> merge (spread2 reason) x0 (x1, xs)
+      | x, [] -> Ok x
+      | x0, x1::xs -> merge_result (spread2 reason) x0 (x1, xs)
     in
 
     let mk_object cx reason target (r, props, dict, flags) =
@@ -11497,12 +11531,15 @@ and object_kit =
       let rec continue acc x = function
       | [] ->
         let t = match spread reason (Nel.rev (x, acc)) with
-        | x, [] -> mk_object cx reason options x
-        | x0, x1::xs ->
+        | Ok (x, []) -> mk_object cx reason options x
+        | Ok (x0, x1::xs) ->
           UnionT (reason, UnionRep.make
             (mk_object cx reason options x0)
             (mk_object cx reason options x1)
             (Core_list.map ~f:(mk_object cx reason options) xs))
+        | Error e ->
+            add_output cx ~trace e;
+            AnyT.why AnyError reason
         in
         (* Intentional UnknownUse here. *)
         rec_flow_t cx ~use_op trace (t, tout)
