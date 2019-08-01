@@ -25,6 +25,7 @@ let spec = { CommandSpec.
       |> log_file_flags
       |> no_restart_flag
       |> file_watcher_flag
+      |> no_cgroup_flag
       |> anon "root" (optional string)
     );
   usage = Printf.sprintf
