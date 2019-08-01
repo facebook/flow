@@ -187,8 +187,6 @@ printf "recursive.js:60:31 = "
 assert_ok "$FLOW" type-at-pos recursive.js 60 31 --strip-root --pretty
 
 # spread.js
-printf "spread.js:11:6 = "
-assert_ok "$FLOW" type-at-pos spread.js 11 6 --strip-root --pretty
 printf "spread.js:12:6 = "
 assert_ok "$FLOW" type-at-pos spread.js 12 6 --strip-root --pretty
 printf "spread.js:13:6 = "
@@ -201,18 +199,10 @@ printf "spread.js:16:6 = "
 assert_ok "$FLOW" type-at-pos spread.js 16 6 --strip-root --pretty
 printf "spread.js:17:6 = "
 assert_ok "$FLOW" type-at-pos spread.js 17 6 --strip-root --pretty
-printf "spread.js:18:6 = "
-assert_ok "$FLOW" type-at-pos spread.js 18 6 --strip-root --pretty
 printf "spread.js:19:6 = "
 assert_ok "$FLOW" type-at-pos spread.js 19 6 --strip-root --pretty
-printf "spread.js:20:6 = "
-assert_ok "$FLOW" type-at-pos spread.js 20 6 --strip-root --pretty
-printf "spread.js:21:6 = "
-assert_ok "$FLOW" type-at-pos spread.js 21 6 --strip-root --pretty
 printf "spread.js:22:6 = "
 assert_ok "$FLOW" type-at-pos spread.js 22 6 --strip-root --pretty
-printf "spread.js:23:6 = "
-assert_ok "$FLOW" type-at-pos spread.js 23 6 --strip-root --pretty
 printf "spread.js:26:6 = "
 assert_ok "$FLOW" type-at-pos spread.js 26 6 --strip-root --pretty
 printf "spread.js:27:6 = "

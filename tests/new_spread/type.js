@@ -64,9 +64,9 @@ type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not ex
 // exact p + inexact p
 type O8 = {...{|p:T|},...{p:U}};
 declare var o8: O8;
-(o8: {p:T|U}); // ok
+(o8: {p:U}); // ok
 (o8.p: T); // error: U ~> T
-(o8.p: U); // error: T ~> U
+
 
 // inexact p + exact q
 type O9 = {...{p:T},...{|q:U|}};
@@ -76,14 +76,14 @@ declare var o9: O9;
 (o9.q: U); // ok
 
 // exact p + inexact q
-type O10 = {...{|p:T|},...{q:U}};
+type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
 declare var o10: O10;
-(o10: {p:mixed, q?: U}); // ok
+(o10: {p:any, q: any});
 
 // inexact p + inexact q
-type O11 = {...{p:T},...{q:U}};
+type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
 declare var o11: O11;
-(o11: {p:mixed, q: mixed}); // ok
+(o11: {p:any, q: any}); // Error
 
 // exact + exact
 type O12 = {...{|p:T|},...{|q:U|}};

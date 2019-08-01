@@ -2972,6 +2972,12 @@ let dump_error_message =
         (dump_reason cx object1_reason)
         (dump_reason cx object2_reason)
         propname
+    | EInexactMayOverwriteIndexer {spread_reason; key_reason; value_reason; object2_reason} ->
+        spf "EInexactMayOverwriteIndexer (%s) (%s) (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx key_reason)
+        (dump_reason cx value_reason)
+        (dump_reason cx object2_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace

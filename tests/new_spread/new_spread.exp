@@ -34,6 +34,122 @@ References:
                                                                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- error_messages.js:3:62
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `c` with a type that
+conflicts with `c`'s definition in object type [1]
+
+   error_messages.js:3:62
+   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
+                                                                   ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:3:16
+   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- error_messages.js:7:16
+
+Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [2]
+
+   error_messages.js:7:16
+   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:7:58
+   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
+                                                               ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:13:49
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts with
+`c`'s definition in object type [1]
+
+   error_messages.js:13:49
+   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                                                       ^ [2]
+
+References:
+   error_messages.js:13:17
+   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:19:17
+
+Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in `D` [2]
+
+   error_messages.js:19:17
+   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:19:49
+   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                                                       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- error_messages.js:26:6
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
+conflicts with `d`'s definition in object type [1]
+
+   error_messages.js:26:6
+   26|   ...{b: number},
+            ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:23:17
+                       v---------------------------------------------
+   23| declare var x3: { // Error, but message could use improvement.
+   24|   ...{a: number},
+   25|   d: number,
+   26|   ...{b: number},
+   27|   e: number,
+   28|   ...{c: number},
+   29|   f: number,
+   30| };
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:33:27
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts with
+`b`'s definition in `A` [3]
+
+   error_messages.js:33:27
+   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                                 ^ [2]
+
+References:
+   error_messages.js:33:17
+   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:33:21
+   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                           ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:36:47
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts with
+`foo`'s definition in object type [1]
+
+   error_messages.js:36:47
+   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                                                     ^ [2]
+
+References:
+   error_messages.js:36:17
+   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- no_interfaces.js:16:11
 
 Cannot determine a type for object type [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of
@@ -323,23 +439,6 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:67:2
-
-Cannot cast `o8` to object type because `U` [1] is incompatible with `T` [2] in property `p`.
-
-   type.js:67:2
-   67| (o8: {p:T|U}); // ok
-        ^^
-
-References:
-   type.js:65:29
-   65| type O8 = {...{|p:T|},...{p:U}};
-                                   ^ [1]
-   type.js:67:9
-   67| (o8: {p:T|U}); // ok
-               ^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- type.js:68:2
 
 Cannot cast `o8.p` to `T` because `U` [1] is incompatible with `T` [2].
@@ -380,15 +479,15 @@ Cannot determine a type for `O10` [1]. object type [2] is inexact, so it may con
 `p`'s definition in object type [3]
 
    type.js:79:27
-   79| type O10 = {...{|p:T|},...{q:U}};
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
                                  ^^^^^ [2]
 
 References:
    type.js:79:12
-   79| type O10 = {...{|p:T|},...{q:U}};
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
                   ^^^^^^^^^^^^^^^^^^^^^ [1]
    type.js:79:16
-   79| type O10 = {...{|p:T|},...{q:U}};
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
                       ^^^^^^^ [3]
 
 
@@ -398,15 +497,15 @@ Cannot determine a type for `O11` [1]. object type [2] is inexact, so it may con
 `p`'s definition in object type [3]
 
    type.js:84:25
-   84| type O11 = {...{p:T},...{q:U}};
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
                                ^^^^^ [2]
 
 References:
    type.js:84:12
-   84| type O11 = {...{p:T},...{q:U}};
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
                   ^^^^^^^^^^^^^^^^^^^ [1]
    type.js:84:16
-   84| type O11 = {...{p:T},...{q:U}};
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
                       ^^^^^ [3]
 
 
@@ -547,200 +646,25 @@ References:
               ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- type_dict.js:5:2
+Error ------------------------------------------------------------------------------------------------ type_dict.js:4:37
 
-Cannot cast `o1` to object type because:
- - `U` [1] is incompatible with `T` [2] in property `p`.
- - `U` [1] is incompatible with undefined [3] in property `p`.
+Cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts with
+string [3] or a property value that conflicts with `T` [4].
 
-   type_dict.js:5:2
-   5| (o1: {p?:T|U,[string]:T}); // ok
-       ^^
-
-References:
-   type_dict.js:4:40
-   4| declare var o1: {...{[string]:T},...{p:U}};
-                                             ^ [1]
-   type_dict.js:5:10
-   5| (o1: {p?:T|U,[string]:T}); // ok
-               ^ [2]
-   type_dict.js:5:10
-   5| (o1: {p?:T|U,[string]:T}); // ok
-               ^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------ type_dict.js:7:30
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:7:30
-   7| declare var o2: {...{p:T},...{[string]:U}};
-                                   ^^^^^^^^^^^^ [2]
+   type_dict.js:4:37
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                                          ^^^^^ [2]
 
 References:
-   type_dict.js:7:17
-   7| declare var o2: {...{p:T},...{[string]:U}};
+   type_dict.js:4:17
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:7:32
-   7| declare var o2: {...{p:T},...{[string]:U}};
-                                     ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- type_dict.js:10:37
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:10:37
-   10| declare var o3: {...{[string]:T},...{[string]:U}};
-                                           ^^^^^^^^^^^^ [2]
-
-References:
-   type_dict.js:10:17
-   10| declare var o3: {...{[string]:T},...{[string]:U}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:10:39
-   10| declare var o3: {...{[string]:T},...{[string]:U}};
-                                             ^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------ type_dict.js:14:2
-
-Cannot cast `o4` to object type because:
- - `U` [1] is incompatible with `T` [2] in property `p`.
- - `U` [1] is incompatible with undefined [3] in property `p`.
-
-   type_dict.js:14:2
-   14| (o4: {p?:T|U,[string]:T}); // ok
-        ^^
-
-References:
-   type_dict.js:13:42
-   13| declare var o4: {...{|[string]:T|},...{p:U}};
-                                                ^ [1]
-   type_dict.js:14:10
-   14| (o4: {p?:T|U,[string]:T}); // ok
-                ^ [2]
-   type_dict.js:14:10
-   14| (o4: {p?:T|U,[string]:T}); // ok
-                ^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- type_dict.js:16:32
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:16:32
-   16| declare var o5: {...{|p:T|},...{[string]:U}};
-                                      ^^^^^^^^^^^^ [2]
-
-References:
-   type_dict.js:16:17
-   16| declare var o5: {...{|p:T|},...{[string]:U}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:16:34
-   16| declare var o5: {...{|p:T|},...{[string]:U}};
-                                        ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- type_dict.js:19:39
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:19:39
-   19| declare var o6: {...{|[string]:T|},...{[string]:U}};
-                                             ^^^^^^^^^^^^ [2]
-
-References:
-   type_dict.js:19:17
-   19| declare var o6: {...{|[string]:T|},...{[string]:U}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:19:41
-   19| declare var o6: {...{|[string]:T|},...{[string]:U}};
-                                               ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- type_dict.js:25:30
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:25:30
-   25| declare var o8: {...{p:T},...{|[string]:U|}};
-                                    ^^^^^^^^^^^^^^ [2]
-
-References:
-   type_dict.js:25:17
-   25| declare var o8: {...{p:T},...{|[string]:U|}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:25:33
-   25| declare var o8: {...{p:T},...{|[string]:U|}};
-                                       ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- type_dict.js:28:37
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:28:37
-   28| declare var o9: {...{[string]:T},...{|[string]:U|}};
-                                           ^^^^^^^^^^^^^^ [2]
-
-References:
-   type_dict.js:28:17
-   28| declare var o9: {...{[string]:T},...{|[string]:U|}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:28:40
-   28| declare var o9: {...{[string]:T},...{|[string]:U|}};
-                                              ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- type_dict.js:34:35
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:34:35
-   34| declare var o11: {|...{|p :T|},...{|[string]:U|}|};
-                                         ^^^^^^^^^^^^^^ [2]
-
-References:
-   type_dict.js:34:18
-   34| declare var o11: {|...{|p :T|},...{|[string]:U|}|};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:34:38
-   34| declare var o11: {|...{|p :T|},...{|[string]:U|}|};
-                                            ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- type_dict.js:37:41
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
-appear before any spread.
-
-   type_dict.js:37:41
-   37| declare var o12: {|...{|[string]:T|},...{|[string]:U|}|};
-                                               ^^^^^^^^^^^^^^ [2]
-
-References:
-   type_dict.js:37:18
-   37| declare var o12: {|...{|[string]:T|},...{|[string]:U|}|};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_dict.js:37:44
-   37| declare var o12: {|...{|[string]:T|},...{|[string]:U|}|};
-                                                  ^^^^^^ [3]
+   type_dict.js:4:23
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                            ^^^^^^ [3]
+   type_dict.js:4:31
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                                    ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:5:2
@@ -823,7 +747,7 @@ Cannot cast `o1` to object type because:
     - Or undefined [2] is incompatible with number [4].
 
    type_instance.js:6:2
-   6| (o1: {p?:number}); // ok
+   6| (o1: {p?:number}); // Error
        ^^
 
 References:
@@ -831,7 +755,7 @@ References:
    2| class B extends A {p: number}
                             ^^^^^^ [1]
    type_instance.js:6:10
-   6| (o1: {p?:number}); // ok
+   6| (o1: {p?:number}); // Error
                ^^^^^^ [2]
    type_instance.js:1:14
    1| class A {+p: string|number}
@@ -1139,133 +1063,6 @@ References:
                            ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- type_optional.js:4:44
-
-Cannot cast `a` to object type because:
- - `U` [1] is incompatible with `T` [2] in property `p`.
- - `U` [1] is incompatible with undefined [3] in property `p`.
-
-   type_optional.js:4:44
-   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
-                                                 ^
-
-References:
-   type_optional.js:4:37
-   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
-                                          ^ [1]
-   type_optional.js:4:52
-   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
-                                                         ^ [2]
-   type_optional.js:4:52
-   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
-                                                         ^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------------- type_optional.js:5:44
-
-Cannot cast `b` to object type because:
- - `U` [1] is incompatible with `T` [2] in property `p`.
- - `U` [1] is incompatible with undefined [3] in property `p`.
-
-   type_optional.js:5:44
-   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
-                                                 ^
-
-References:
-   type_optional.js:5:37
-   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
-                                          ^ [1]
-   type_optional.js:5:52
-   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
-                                                         ^ [2]
-   type_optional.js:5:52
-   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
-                                                         ^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------------- type_optional.js:6:44
-
-Cannot cast `c` to object type because in property `p`:
- - Either undefined [1] is incompatible with `T` [2].
- - Or undefined [1] is incompatible with `U` [3].
-
-   type_optional.js:6:44
-   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
-                                                 ^
-
-References:
-   type_optional.js:6:52
-   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
-                                                         ^^^ [1]
-   type_optional.js:6:25
-   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
-                              ^ [2]
-   type_optional.js:6:37
-   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
-                                          ^ [3]
-
-
-Error -------------------------------------------------------------------------------------------- type_optional.js:9:44
-
-Cannot cast `e` to object type because `U` [1] is incompatible with `T` [2] in property `p`.
-
-   type_optional.js:9:44
-   9| declare var e: {...{|p :T|},...{ p :U }}; (e: { p :T|U });
-                                                 ^
-
-References:
-   type_optional.js:9:37
-   9| declare var e: {...{|p :T|},...{ p :U }}; (e: { p :T|U });
-                                          ^ [1]
-   type_optional.js:9:52
-   9| declare var e: {...{|p :T|},...{ p :U }}; (e: { p :T|U });
-                                                         ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- type_optional.js:10:44
-
-Cannot cast `f` to object type because:
- - `U` [1] is incompatible with `T` [2] in property `p`.
- - `U` [1] is incompatible with undefined [3] in property `p`.
-
-   type_optional.js:10:44
-   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
-                                                  ^
-
-References:
-   type_optional.js:10:37
-   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
-                                           ^ [1]
-   type_optional.js:10:52
-   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
-                                                          ^ [2]
-   type_optional.js:10:52
-   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
-                                                          ^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------- type_optional.js:16:44
-
-Cannot cast `k` to object type because in property `p`:
- - Either undefined [1] is incompatible with `T` [2].
- - Or undefined [1] is incompatible with `U` [3].
-
-   type_optional.js:16:44
-   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
-                                                  ^
-
-References:
-   type_optional.js:16:52
-   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
-                                                          ^^^ [1]
-   type_optional.js:16:25
-   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
-                               ^ [2]
-   type_optional.js:16:37
-   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
-                                           ^ [3]
-
-
 Error ---------------------------------------------------------------------------------------------- type_statics.js:5:2
 
 Cannot cast `o1` to object type because number [1] is incompatible with undefined [2] in property `p`.
@@ -1314,6 +1111,72 @@ References:
    type_union.js:9:17
    9| (o1: {p?:T}|{q?:U}); // ok
                       ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- type_union.js:14:32
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Objects may only have one indexer, and it must
+appear before any spread.
+
+   type_union.js:14:32
+   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
+                                      ^^^^^^ [2]
+
+References:
+   type_union.js:14:17
+   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
+                       ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_union.js:12:39
+   12| type Union2 = {| bar: number |} | {| [number]: string |};
+                                             ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- type_union.js:17:32
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
+conflicts with `foo`'s definition in object type [3]
+
+   type_union.js:17:32
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                                      ^^ [2]
+
+References:
+   type_union.js:17:17
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                       ^^^^^^^^^^^^^^^^^^ [1]
+   type_union.js:17:21
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                           ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_union.js:20:9
+
+Cannot assign object literal to `y` because object literal [1] is incompatible with `U` [2].
+
+   type_union.js:20:9
+   20| var y = {}; // unsealed
+               ^^ [1]
+
+References:
+   type_union.js:5:16
+    5| declare var y: U;
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- type_union.js:37:21
+
+Cannot determine a type for object type [1]. `I1` [2] cannot be spread because interfaces do not track the own-ness of
+their properties. Can you use an object type instead?
+
+   type_union.js:37:21
+   37| declare var x4: {...Union5};  // Error, cannot spread interface
+                           ^^^^^^ [2]
+
+References:
+   type_union.js:37:17
+   37| declare var x4: {...Union5};  // Error, cannot spread interface
+                       ^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:12:2
@@ -1513,7 +1376,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o6` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
    type_void.js:52:2
-   52| (o6: {p?:T}); // ok
+   52| (o6: {p?:T}); // error, void doesn't overwrite p
         ^^
 
 References:
@@ -1521,7 +1384,7 @@ References:
    50| type O6 = {...{p:T}, ...void};
                         ^ [1]
    type_void.js:52:10
-   52| (o6: {p?:T}); // ok
+   52| (o6: {p?:T}); // error, void doesn't overwrite p
                 ^ [2]
 
 
@@ -1543,7 +1406,7 @@ References:
 
 
 
-Found 102 errors
+Found 92 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

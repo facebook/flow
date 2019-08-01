@@ -11432,12 +11432,19 @@ and object_kit =
 
     (* Compute spread result: slice * slice -> slice *)
     let spread2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
-      match dict2 with
-      | Some {key; value=_; dict_name=_; dict_polarity=_} ->
+      match dict1, dict2 with
+      | _, Some {key; value=_; dict_name=_; dict_polarity=_} ->
         Error (Error_message.ECannotSpreadIndexerOnRight {
           spread_reason = reason;
           object_reason = r2;
           key_reason = reason_of_t key
+        })
+      | Some {key; value; dict_name=_; dict_polarity=_}, _ when not flags2.exact ->
+        Error (Error_message.EInexactMayOverwriteIndexer {
+          spread_reason = reason;
+          key_reason = reason_of_t key;
+          value_reason = reason_of_t value;
+          object2_reason = r2;
         })
       | _ ->
         let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in

@@ -296,23 +296,6 @@ function tick() {
 
 setInterval(tick, 1000);
 No errors!
-spread.js 10 3
-// @flow
-
-declare opaque type O;
-class C { f: O; }
-class D { g: O; }
-
-() => { declare var x: {w: O, ...{| x: O, y: O |}, z: O}; return x; };
-() => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
-// $FlowFixMe This error is fixed later in the spread stack.
-(): {f: O, o: O} => { declare var x: {...C, o: O}; return x; };
-// $FlowFixMe This error is fixed later in the spread stack.
-() => { declare var x: {o: O, ...C}; return x; };
-() => { declare var x: {...C} & {...D}; return x; };
-<T: {||}, S: {| f: O |}>() => { declare var x: {...T, ...S, o: O}; return x; };
-<T: {||}>() => { declare var x: {...T, o: O}; return x; };
-No errors!
 string-literal.js 11 14
 // @flow
 
