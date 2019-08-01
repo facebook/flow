@@ -484,6 +484,7 @@ end
 (*********************************************************************)
 
 exception SpeculativeError of Error_message.t
+exception CannotSpreadError of Error_message.t
 
 let add_output cx ?trace msg =
 
@@ -11448,25 +11449,33 @@ and object_kit =
           (* In this case, we know opt2 is true and opt1 is false *)
           else union t1 t2, true
         in
-        let props = SMap.merge (fun x p1 p2 ->
-          (* Due to width subtyping, failing to read from an inexact object does not
-             imply non-existence, but rather an unknown result. *)
-          let unknown r =
-            let r = replace_reason_const (RUnknownProperty (Some x)) r in
-            DefT (r, bogus_trust (), MixedT Mixed_everything), true
-          in
+        let props = try Ok (SMap.merge (fun x p1 p2 ->
           match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
           | None, None -> None
           | Some p1, Some p2 -> Some (merge_props p1 p2)
           | Some p1, None ->
             if flags2.exact
-            then Some p1
-            else Some (merge_props p1 (unknown r2))
+            then Some (fst p1, true)
+            else raise (CannotSpreadError
+              (Error_message.EUnableToSpread {
+                spread_reason = reason;
+                object1_reason = r1;
+                object2_reason = r2;
+                propname = x;
+              }))
           | None, Some p2 ->
             if flags1.exact
-            then Some p2
-            else Some (merge_props (unknown r1) p2)
-        ) props1 props2 in
+            then Some (fst p2, true)
+            else raise (CannotSpreadError
+              (Error_message.EUnableToSpread {
+                spread_reason = reason;
+                object1_reason = r1;
+                object2_reason = r2;
+                propname = x;
+              }))
+        ) props1 props2)
+        with CannotSpreadError e -> Error e
+        in
         let flags = {
           frozen = flags1.frozen && flags2.frozen;
           sealed = Sealed;
@@ -11475,8 +11484,9 @@ and object_kit =
             Obj_type.sealed_in_op reason flags1.sealed &&
             Obj_type.sealed_in_op reason flags2.sealed;
         } in
-        (* Since we error if there is a dict on the right, we can always just take dict1 *)
-        Ok (reason, props, dict1, flags)
+        match props with
+        | Ok props -> Ok (reason, props, dict1, flags)
+        | Error e -> Error e
     in
 
     let resolved_of_acc_element = function

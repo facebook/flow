@@ -8,7 +8,7 @@ class D { g: O; }
 type Ctor = Class<D>;
 
 // Concrete - should be evaluated before normalization
-type Obj1   = {w: O, ...{ x: O, y: O }, z: O};
+type Obj1   = {w: O, ...{| x: O, y: O |}, z: O};
 type EObj2  = {|w: O, ...{| x: O, y: O |}, z: O|};
 type C1     = {...C, o: O};
 type C2     = {o: O, ...C};

@@ -243,6 +243,12 @@ and 'loc t' =
       object_reason: 'loc virtual_reason;
       key_reason: 'loc virtual_reason;
     }
+  | EUnableToSpread of {
+      spread_reason: 'loc virtual_reason;
+      object1_reason: 'loc virtual_reason;
+      object2_reason: 'loc virtual_reason;
+      propname: string;
+    }
 
 and binding_error =
   | ENameAlreadyBound
@@ -629,6 +635,12 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         object_reason = map_reason object_reason;
         key_reason = map_reason key_reason;
       }
+  | EUnableToSpread {spread_reason; object1_reason; object2_reason; propname} -> EUnableToSpread {
+      spread_reason = map_reason spread_reason;
+      object1_reason = map_reason object1_reason;
+      object2_reason = map_reason object2_reason;
+      propname;
+    }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -783,6 +795,7 @@ let util_use_op_of_msg nope util = function
 | ENonArraySpread _
 | ECannotSpreadInterface _
 | ECannotSpreadIndexerOnRight _
+| EUnableToSpread _
   -> nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -829,6 +842,7 @@ let aloc_of_msg : t -> ALoc.t option = function
         Some (aloc_of_reason reason)
   | ECannotSpreadInterface {spread_reason=_; interface_reason = reason}
   | ECannotSpreadIndexerOnRight {spread_reason=_; object_reason = reason; key_reason=_}
+  | EUnableToSpread {spread_reason=_; object1_reason=_; object2_reason = reason; propname=_}
     ->
       Some (aloc_of_reason reason)
   | EUntypedTypeImport (loc, _)
@@ -2099,6 +2113,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ref object_reason; text " cannot be spread because the indexer "; ref key_reason;
       text " may overwrite properties with explicit keys in a way that Flow cannot track.";
       text " Objects may only have one indexer, and it must appear before any spread.";
+    ]
+
+  | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname}) ->
+    (* We position around the use of the object instead of the spread because the
+     * spread may be part of a polymorphic type signature. If we add a suppression there,
+     * the reduction in coverage is far more drastic. *)
+    Normal [
+      text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
+      text " is inexact, so it may contain "; code propname;
+      text " with a type that conflicts with ";
+      code propname; text "'s definition in "; ref object1_reason;
     ]
 )
 

@@ -60,58 +60,19 @@ Cannot assign `42` to `unionObj.q` because property `q` is not writable.
          ^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:36:3
+Error ---------------------------------------------------------------------------------------------------- test.js:33:23
 
-Cannot assign `42` to `spreadUnionObj.p` because property `p` is not writable.
+Cannot determine a type for `SpreadUnionObj` [1]. object type [1] is inexact, so it may contain `z` with a type that
+conflicts with `z`'s definition in object type [2]
 
-   36|   spreadUnionObj.p = 42; // Should error!
-         ^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:37:3
-
-Cannot assign `42` to `spreadUnionObj.z` because property `z` is not writable.
-
-   37|   spreadUnionObj.z = 42; // Should error!
-         ^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:40:4
-
-Cannot get `spreadUnionObj.q` because property `q` is missing in `SpreadUnionObj` [1].
-
-   test.js:40:4
-   40|   (spreadUnionObj.q: number); // Should error!
-          ^^^^^^^^^^^^^^^^
+   test.js:33:23
+   33| type SpreadUnionObj = {...UnionObj, z: number};
+                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:34:39
-   34| declare var spreadUnionObj: $ReadOnly<SpreadUnionObj>
-                                             ^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:42:3
-
-Cannot assign `42` to `spreadUnionObj.p` because property `p` is not writable.
-
-   42|   spreadUnionObj.p = 42; // Should error!
-         ^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:43:3
-
-Cannot assign `42` to `spreadUnionObj.q` because property `q` is not writable.
-
-   43|   spreadUnionObj.q = 42; // Should error!
-         ^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:44:3
-
-Cannot assign `42` to `spreadUnionObj.z` because property `z` is not writable.
-
-   44|   spreadUnionObj.z = 42; // Should error!
-         ^^^^^^^^^^^^^^^^
+   test.js:33:27
+   33| type SpreadUnionObj = {...UnionObj, z: number};
+                                 ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:52:1
@@ -217,4 +178,4 @@ References:
 
 
 
-Found 25 errors
+Found 20 errors

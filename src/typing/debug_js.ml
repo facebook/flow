@@ -2966,6 +2966,12 @@ let dump_error_message =
       spf "ECannotSpreadIndexerOnRight (%s) (%s) (%s)" (dump_reason cx spread_reason)
         (dump_reason cx object_reason)
         (dump_reason cx key_reason)
+    | EUnableToSpread {spread_reason; object1_reason; object2_reason; propname} ->
+      spf "EUnableToSpread (%s) (%s) (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx object1_reason)
+        (dump_reason cx object2_reason)
+        propname
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace
