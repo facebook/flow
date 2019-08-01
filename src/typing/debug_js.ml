@@ -2966,7 +2966,7 @@ let dump_error_message =
       spf "ECannotSpreadIndexerOnRight (%s) (%s) (%s)" (dump_reason cx spread_reason)
         (dump_reason cx object_reason)
         (dump_reason cx key_reason)
-    | EUnableToSpread {spread_reason; object1_reason; object2_reason; propname} ->
+    | EUnableToSpread {spread_reason; object1_reason; object2_reason; propname; error_kind=_} ->
       spf "EUnableToSpread (%s) (%s) (%s) (%s)"
         (dump_reason cx spread_reason)
         (dump_reason cx object1_reason)

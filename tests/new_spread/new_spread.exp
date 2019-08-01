@@ -94,27 +94,6 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:33:20
-
-Cannot determine a type for `G` [1]. statics of `F` [2] is inexact, so it may contain `name` with a type that conflicts
-with `name`'s definition in `F` [3]
-
-   no_interfaces.js:33:20
-   33| type G = {...F, ...Class<F>}; // Ok
-                          ^^^^^^^^
-
-References:
-   no_interfaces.js:33:10
-   33| type G = {...F, ...Class<F>}; // Ok
-                ^^^^^^^^^^^^^^^^^^^ [1]
-   no_interfaces.js:32:7
-   32| class F {}
-             ^ [2]
-   no_interfaces.js:33:14
-   33| type G = {...F, ...Class<F>}; // Ok
-                    ^ [3]
-
-
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
 Cannot cast `o1` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
@@ -378,22 +357,21 @@ References:
               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:72:24
+Error ----------------------------------------------------------------------------------------------------- type.js:74:2
 
-Cannot determine a type for `O9` [1]. object type [2] is inexact, so it may contain `q` with a type that conflicts with
-`q`'s definition in object type [3]
+Cannot cast `o9` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type.js:72:24
-   72| type O9 = {...{p:T},...{|q:U|}};
-                              ^^^^^^^ [2]
+   type.js:74:2
+   74| (o9: {p?:T,q:U});
+        ^^
 
 References:
-   type.js:72:11
+   type.js:72:18
    72| type O9 = {...{p:T},...{|q:U|}};
-                 ^^^^^^^^^^^^^^^^^^^^^ [1]
-   type.js:72:15
-   72| type O9 = {...{p:T},...{|q:U|}};
-                     ^^^^^ [3]
+                        ^ [1]
+   type.js:74:10
+   74| (o9: {p?:T,q:U});
+                ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- type.js:79:27
@@ -416,8 +394,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:84:25
 
-Cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `q` with a type that conflicts with
-`q`'s definition in object type [3]
+Cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in object type [3]
 
    type.js:84:25
    84| type O11 = {...{p:T},...{q:U}};
@@ -1565,7 +1543,7 @@ References:
 
 
 
-Found 103 errors
+Found 102 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -248,7 +248,12 @@ and 'loc t' =
       object1_reason: 'loc virtual_reason;
       object2_reason: 'loc virtual_reason;
       propname: string;
+      error_kind: spread_error_kind;
     }
+
+and spread_error_kind =
+  | Indexer
+  | Inexact
 
 and binding_error =
   | ENameAlreadyBound
@@ -635,11 +640,18 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         object_reason = map_reason object_reason;
         key_reason = map_reason key_reason;
       }
-  | EUnableToSpread {spread_reason; object1_reason; object2_reason; propname} -> EUnableToSpread {
+  | EUnableToSpread {
+      spread_reason;
+      object1_reason;
+      object2_reason;
+      propname;
+      error_kind
+    } -> EUnableToSpread {
       spread_reason = map_reason spread_reason;
       object1_reason = map_reason object1_reason;
       object2_reason = map_reason object2_reason;
       propname;
+      error_kind;
     }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
@@ -842,7 +854,13 @@ let aloc_of_msg : t -> ALoc.t option = function
         Some (aloc_of_reason reason)
   | ECannotSpreadInterface {spread_reason=_; interface_reason = reason}
   | ECannotSpreadIndexerOnRight {spread_reason=_; object_reason = reason; key_reason=_}
-  | EUnableToSpread {spread_reason=_; object1_reason=_; object2_reason = reason; propname=_}
+  | EUnableToSpread {
+      spread_reason=_;
+      object1_reason=_;
+      object2_reason = reason;
+      propname=_;
+      error_kind=_;
+    }
     ->
       Some (aloc_of_reason reason)
   | EUntypedTypeImport (loc, _)
@@ -2115,15 +2133,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       text " Objects may only have one indexer, and it must appear before any spread.";
     ]
 
-  | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname}) ->
+  | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname; error_kind}) ->
     (* We position around the use of the object instead of the spread because the
      * spread may be part of a polymorphic type signature. If we add a suppression there,
      * the reduction in coverage is far more drastic. *)
+    let string_of_spread_error_kind = function
+      | Inexact -> "is inexact"
+      | Indexer -> "has an indexer"
+    in
     Normal [
       text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
-      text " is inexact, so it may contain "; code propname;
-      text " with a type that conflicts with ";
-      code propname; text "'s definition in "; ref object1_reason;
+      text (" " ^ (string_of_spread_error_kind error_kind) ^ ", so it may contain ");
+      code propname; text " with a type that conflicts with "; code propname;
+      text "'s definition in "; ref object1_reason;
     ]
 )
 

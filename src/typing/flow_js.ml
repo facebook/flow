@@ -11441,16 +11441,17 @@ and object_kit =
         })
       | _ ->
         let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
+        let type_and_optionality t = match t with OptionalT (_, t) -> t, true | _ -> t, false in
         let merge_props (t1, _) (t2, _) =
-          let t1, opt1 = match t1 with OptionalT (_, t) -> t, true | _ -> t1, false in
-          let t2, opt2 = match t2 with OptionalT (_, t) -> t, true | _ -> t2, false in
+          let t1, opt1 = type_and_optionality t1 in
+          let t2, opt2 = type_and_optionality t2 in
           if not opt2 then t2, true
           else if opt1 && opt2 then optional (union t1 t2), true
           (* In this case, we know opt2 is true and opt1 is false *)
           else union t1 t2, true
         in
         let props = try Ok (SMap.merge (fun x p1 p2 ->
-          match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
+          match p1, p2 with
           | None, None -> None
           | Some p1, Some p2 -> Some (merge_props p1 p2)
           | Some p1, None ->
@@ -11462,20 +11463,46 @@ and object_kit =
                 object1_reason = r1;
                 object2_reason = r2;
                 propname = x;
+                error_kind = Error_message.Inexact;
               }))
+          (* We care about a few cases here. We want to make sure that we can
+           * infer a precise type. This is tricky when the left-hand slice is inexact,
+           * since it may contain p2 even though it's not explicitly specified.
+           *
+           * If p2 is not optional, then we won't have to worry about anything because it will
+           * definitely overwrite a property with a key matching p2's on the left.
+           *
+           * If p2 is optional, then we can split into a few more cases:
+           *   1. o1 is inexact: error, we cannot infer a precise type since o1 might contain p2
+           *   2. o1 has an indexer: error, we would have to infer a union with the indexer type.
+           *      This would be sound, but it's not likely that anyone would intend it. If that
+           *      assumption turns out to be false, we can easily add support for it later.
+           *   3. o1 is exact: no problem, we don't need to worry about o1 having the
+           *      same property.
+           *
+           *  The if statement below handles 1. and 2., and the else statement
+           *  handles 3. and the case when p2 is not optional.
+           *)
           | None, Some p2 ->
-            if flags1.exact
-            then Some (fst p2, true)
-            else raise (CannotSpreadError
-              (Error_message.EUnableToSpread {
-                spread_reason = reason;
-                object1_reason = r1;
-                object2_reason = r2;
-                propname = x;
-              }))
+            let _, opt2 = type_and_optionality (fst p2) in
+            if (dict1 <> None || not flags1.exact) && opt2 then
+                let error_kind = if dict1 <> None
+                  then Error_message.Indexer else Error_message.Inexact
+                in
+                raise (CannotSpreadError
+                  (Error_message.EUnableToSpread {
+                    spread_reason = reason;
+                    (* in this case, the object on the left is inexact. the error will say
+                     * that object2_reason is inexact and may contain propname, so
+                     * we should assign r2 to object1_reason and r1 to object2_reason *)
+                    object1_reason = r2;
+                    object2_reason = r1;
+                    propname = x;
+                    error_kind;
+                  }))
+            else Some (fst p2, true)
         ) props1 props2)
-        with CannotSpreadError e -> Error e
-        in
+        with CannotSpreadError e -> Error e  in
         let flags = {
           frozen = flags1.frozen && flags2.frozen;
           sealed = Sealed;
