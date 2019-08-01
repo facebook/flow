@@ -243,12 +243,12 @@ declare opaque type O;
 class C { f: O; }
 class D { g: O; }
 
-(): {w: mixed, x?: O, y?: O, z: O} => { declare var x: {w: O, ...{ x: O, y: O }, z: O}; return x; };
+(): {w: mixed, x: O, y: O, z: O} => { declare var x: {w: O, ...{ x: O, y: O }, z: O}; return x; };
 (): {|w: O, x: O, y: O, z: O|} => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
-(): {f?: O, o: O} => { declare var x: {...C, o: O}; return x; };
-(): {f?: O, o: mixed} => { declare var x: {o: O, ...C}; return x; };
+(): {f: O, o: O} => { declare var x: {...C, o: O}; return x; };
+(): {f: O, o: mixed} => { declare var x: {o: O, ...C}; return x; };
 (): {...C} & {...D} => { declare var x: {...C} & {...D}; return x; };
-<T: {}, S: { f: O}>(): T | S | {f?: mixed, o: O} => { declare var x: {...T, ...S, o: O}; return x; };
+<T: {}, S: { f: O}>(): T | S | {f: O, o: O} => { declare var x: {...T, ...S, o: O}; return x; };
 <T: {}>(): T | {o: O} => { declare var x: {...T, o: O}; return x; };
 string-literal.js
 // @flow

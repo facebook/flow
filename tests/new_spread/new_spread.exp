@@ -94,21 +94,21 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:13:2
+Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot cast `o1` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type.js:13:2
-   13| (o1: {p:T}); // error: o1.p is optional
+   type.js:12:2
+   12| (o1: {p?:T}); // ok
         ^^
 
 References:
    type.js:10:18
    10| type O1 = {...{p:T}};
                         ^ [1]
-   type.js:13:9
-   13| (o1: {p:T}); // error: o1.p is optional
-               ^ [2]
+   type.js:12:10
+   12| (o1: {p?:T}); // ok
+                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:16:2
@@ -323,6 +323,23 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- type.js:67:2
+
+Cannot cast `o8` to object type because `U` [1] is incompatible with `T` [2] in property `p`.
+
+   type.js:67:2
+   67| (o8: {p:T|U}); // ok
+        ^^
+
+References:
+   type.js:65:29
+   65| type O8 = {...{|p:T|},...{p:U}};
+                                   ^ [1]
+   type.js:67:9
+   67| (o8: {p:T|U}); // ok
+               ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- type.js:68:2
 
 Cannot cast `o8.p` to `T` because `U` [1] is incompatible with `T` [2].
@@ -340,55 +357,72 @@ References:
               ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:69:2
+Error ----------------------------------------------------------------------------------------------------- type.js:74:2
 
-Cannot cast `o8.p` to `U` because `T` [1] is incompatible with `U` [2].
+Cannot cast `o9` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type.js:69:2
-   69| (o8.p: U); // error: T ~> U
-        ^^^^
-
-References:
-   type.js:65:19
-   65| type O8 = {...{|p:T|},...{p:U}};
-                         ^ [1]
-   type.js:69:8
-   69| (o8.p: U); // error: T ~> U
-              ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- type.js:75:2
-
-Cannot cast `o9.p` to `T` because undefined [1] is incompatible with `T` [2].
-
-   type.js:75:2
-   75| (o9.p: T); // error: o9.p is optional
-        ^^^^
+   type.js:74:2
+   74| (o9: {p?:T,q:U});
+        ^^
 
 References:
    type.js:72:18
    72| type O9 = {...{p:T},...{|q:U|}};
                         ^ [1]
-   type.js:75:8
-   75| (o9.p: T); // error: o9.p is optional
-              ^ [2]
+   type.js:74:10
+   74| (o9: {p?:T,q:U});
+                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:101:2
+Error ----------------------------------------------------------------------------------------------------- type.js:81:2
 
-Cannot cast `o14` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot cast `o10` to object type because `U` [1] is incompatible with undefined [2] in property `q`.
 
-   type.js:101:2
-   101| (o14: {p:T}); // error: `p` is optional
+   type.js:81:2
+   81| (o10: {p:mixed, q?: U}); // ok
+        ^^^
+
+References:
+   type.js:79:30
+   79| type O10 = {...{|p:T|},...{q:U}};
+                                    ^ [1]
+   type.js:81:21
+   81| (o10: {p:mixed, q?: U}); // ok
+                           ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- type.js:86:2
+
+Cannot cast `o11` to object type because `U` [1] is incompatible with mixed [2] in property `q`.
+
+   type.js:86:2
+   86| (o11: {p:mixed, q: mixed}); // ok
+        ^^^
+
+References:
+   type.js:84:28
+   84| type O11 = {...{p:T},...{q:U}};
+                                  ^ [1]
+   type.js:86:20
+   86| (o11: {p:mixed, q: mixed}); // ok
+                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- type.js:102:2
+
+Cannot cast `o14` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+
+   type.js:102:2
+   102| (o14: {p?:T}); // ok
          ^^^
 
 References:
    type.js:99:24
     99| type O14 = {...{...{|p:T|}}};
                                ^ [1]
-   type.js:101:10
-   101| (o14: {p:T}); // error: `p` is optional
-                 ^ [2]
+   type.js:102:11
+   102| (o14: {p?:T}); // ok
+                  ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- type.js:105:2
@@ -427,9 +461,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:7:2
 
-Cannot cast `o1.p` to `T` because:
- - property `p` of unknown type [1] is incompatible with `T` [2].
- - undefined [1] is incompatible with `T` [2].
+Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2].
 
    type_contra.js:7:2
    7| (o1.p: T); // errors: undefined ~> T, unknown ~> T
@@ -513,6 +545,28 @@ References:
               ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- type_dict.js:5:2
+
+Cannot cast `o1` to object type because:
+ - `U` [1] is incompatible with `T` [2] in property `p`.
+ - `U` [1] is incompatible with undefined [3] in property `p`.
+
+   type_dict.js:5:2
+   5| (o1: {p?:T|U,[string]:T}); // ok
+       ^^
+
+References:
+   type_dict.js:4:40
+   4| declare var o1: {...{[string]:T},...{p:U}};
+                                             ^ [1]
+   type_dict.js:5:10
+   5| (o1: {p?:T|U,[string]:T}); // ok
+               ^ [2]
+   type_dict.js:5:10
+   5| (o1: {p?:T|U,[string]:T}); // ok
+               ^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------ type_dict.js:7:30
 
 Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
@@ -549,6 +603,28 @@ References:
    type_dict.js:10:39
    10| declare var o3: {...{[string]:T},...{[string]:U}};
                                              ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ type_dict.js:14:2
+
+Cannot cast `o4` to object type because:
+ - `U` [1] is incompatible with `T` [2] in property `p`.
+ - `U` [1] is incompatible with undefined [3] in property `p`.
+
+   type_dict.js:14:2
+   14| (o4: {p?:T|U,[string]:T}); // ok
+        ^^
+
+References:
+   type_dict.js:13:42
+   13| declare var o4: {...{|[string]:T|},...{p:U}};
+                                                ^ [1]
+   type_dict.js:14:10
+   14| (o4: {p?:T|U,[string]:T}); // ok
+                ^ [2]
+   type_dict.js:14:10
+   14| (o4: {p?:T|U,[string]:T}); // ok
+                ^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:16:32
@@ -736,6 +812,80 @@ References:
                                           ^^^^^ [4]
 
 
+Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
+
+Cannot cast `o1` to object type because:
+ - number [1] is incompatible with undefined [2] in property `p`.
+ - in property `p`:
+    - Either undefined [2] is incompatible with string [3].
+    - Or undefined [2] is incompatible with number [4].
+
+   type_instance.js:6:2
+   6| (o1: {p?:number}); // ok
+       ^^
+
+References:
+   type_instance.js:2:23
+   2| class B extends A {p: number}
+                            ^^^^^^ [1]
+   type_instance.js:6:10
+   6| (o1: {p?:number}); // ok
+               ^^^^^^ [2]
+   type_instance.js:1:14
+   1| class A {+p: string|number}
+                   ^^^^^^ [3]
+   type_instance.js:1:21
+   1| class A {+p: string|number}
+                          ^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------- type_intersection.js:9:2
+
+Cannot cast `o1` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [4] in property `q`.
+
+   type_intersection.js:9:2
+   9| (o1: {p?:T,q?:U}); // ok
+       ^^
+
+References:
+   type_intersection.js:7:18
+   7| type O1 = {...{p:T}&{q:U}};
+                       ^ [1]
+   type_intersection.js:9:10
+   9| (o1: {p?:T,q?:U}); // ok
+               ^ [2]
+   type_intersection.js:7:24
+   7| type O1 = {...{p:T}&{q:U}};
+                             ^ [3]
+   type_intersection.js:9:15
+   9| (o1: {p?:T,q?:U}); // ok
+                    ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
+
+Cannot cast `o2` to object type because:
+ - `A` [1] is incompatible with undefined [2] in property `p`.
+ - `B` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection.js:13:2
+   13| (o2: {p?:B}); // ok
+        ^^
+
+References:
+   type_intersection.js:11:18
+   11| type O2 = {...{p:A}&{p:B}};
+                        ^ [1]
+   type_intersection.js:13:10
+   13| (o2: {p?:B}); // ok
+                ^ [2]
+   type_intersection.js:11:24
+   11| type O2 = {...{p:A}&{p:B}};
+                              ^ [3]
+
+
 Error ---------------------------------------------------------------------------------------- type_intersection.js:15:2
 
 Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`.
@@ -751,6 +901,148 @@ References:
    type_intersection.js:11:24
    11| type O2 = {...{p:A}&{p:B}};
                               ^ [2]
+
+
+Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:2
+
+Cannot cast `o1` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:5:2
+   5| (o1: {p?:T&U}); // ok
+       ^^
+
+References:
+   type_intersection_optional.js:4:24
+   4| declare var o1: {...{p:T}&{p:U}};
+                             ^ [1]
+   type_intersection_optional.js:5:10
+   5| (o1: {p?:T&U}); // ok
+               ^^^ [2]
+   type_intersection_optional.js:4:30
+   4| declare var o1: {...{p:T}&{p:U}};
+                                   ^ [3]
+
+
+Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:2
+
+Cannot cast `o2` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:8:2
+   8| (o2: {p?:T&U}); // ok
+       ^^
+
+References:
+   type_intersection_optional.js:7:25
+   7| declare var o2: {...{p?:T}&{p:U}};
+                              ^ [1]
+   type_intersection_optional.js:8:10
+   8| (o2: {p?:T&U}); // ok
+               ^^^ [2]
+   type_intersection_optional.js:7:31
+   7| declare var o2: {...{p?:T}&{p:U}};
+                                    ^ [3]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:2
+
+Cannot cast `o3` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:11:2
+   11| (o3: {p?:T&U}); // ok
+        ^^
+
+References:
+   type_intersection_optional.js:10:24
+   10| declare var o3: {...{p:T}&{p?:U}};
+                              ^ [1]
+   type_intersection_optional.js:11:10
+   11| (o3: {p?:T&U}); // ok
+                ^^^ [2]
+   type_intersection_optional.js:10:31
+   10| declare var o3: {...{p:T}&{p?:U}};
+                                     ^ [3]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:53:2
+
+Cannot cast `o17` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [4] in property `q`.
+
+   type_intersection_optional.js:53:2
+   53| (o17: {p?:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:52:25
+   52| declare var o17: {...{p:T}&{q:U}};
+                               ^ [1]
+   type_intersection_optional.js:53:11
+   53| (o17: {p?:T,q?:U}); // ok
+                 ^ [2]
+   type_intersection_optional.js:52:31
+   52| declare var o17: {...{p:T}&{q:U}};
+                                     ^ [3]
+   type_intersection_optional.js:53:16
+   53| (o17: {p?:T,q?:U}); // ok
+                      ^ [4]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:2
+
+Cannot cast `o18` to object type because `U` [1] is incompatible with undefined [2] in property `q`.
+
+   type_intersection_optional.js:56:2
+   56| (o18: {p?:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:55:32
+   55| declare var o18: {...{p?:T}&{q:U}};
+                                      ^ [1]
+   type_intersection_optional.js:56:16
+   56| (o18: {p?:T,q?:U}); // ok
+                      ^ [2]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:59:2
+
+Cannot cast `o19` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:59:2
+   59| (o19: {p?:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:58:25
+   58| declare var o19: {...{p:T}&{q?:U}};
+                               ^ [1]
+   type_intersection_optional.js:59:11
+   59| (o19: {p?:T,q?:U}); // ok
+                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:65:2
+
+Cannot cast `o21` to object type because `U` [1] is incompatible with undefined [2] in property `q`.
+
+   type_intersection_optional.js:65:2
+   65| (o21: {p:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:64:33
+   64| declare var o21: {...{|p:T|}&{q:U}};
+                                       ^ [1]
+   type_intersection_optional.js:65:15
+   65| (o21: {p:T,q?:U}); // ok
+                     ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:2
@@ -845,12 +1137,181 @@ References:
                            ^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- type_optional.js:4:44
+
+Cannot cast `a` to object type because:
+ - `U` [1] is incompatible with `T` [2] in property `p`.
+ - `U` [1] is incompatible with undefined [3] in property `p`.
+
+   type_optional.js:4:44
+   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
+                                                 ^
+
+References:
+   type_optional.js:4:37
+   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
+                                          ^ [1]
+   type_optional.js:4:52
+   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
+                                                         ^ [2]
+   type_optional.js:4:52
+   4| declare var a: {...{ p :T },...{ p :U }}; (a: { p?:T|U });
+                                                         ^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- type_optional.js:5:44
+
+Cannot cast `b` to object type because:
+ - `U` [1] is incompatible with `T` [2] in property `p`.
+ - `U` [1] is incompatible with undefined [3] in property `p`.
+
+   type_optional.js:5:44
+   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
+                                                 ^
+
+References:
+   type_optional.js:5:37
+   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
+                                          ^ [1]
+   type_optional.js:5:52
+   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
+                                                         ^ [2]
+   type_optional.js:5:52
+   5| declare var b: {...{ p?:T },...{ p :U }}; (b: { p?:T|U });
+                                                         ^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- type_optional.js:6:44
+
+Cannot cast `c` to object type because in property `p`:
+ - Either undefined [1] is incompatible with `T` [2].
+ - Or undefined [1] is incompatible with `U` [3].
+
+   type_optional.js:6:44
+   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
+                                                 ^
+
+References:
+   type_optional.js:6:52
+   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
+                                                         ^^^ [1]
+   type_optional.js:6:25
+   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
+                              ^ [2]
+   type_optional.js:6:37
+   6| declare var c: {...{ p :T },...{ p?:U }}; (c: { p?:T|U });
+                                          ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- type_optional.js:9:44
+
+Cannot cast `e` to object type because `U` [1] is incompatible with `T` [2] in property `p`.
+
+   type_optional.js:9:44
+   9| declare var e: {...{|p :T|},...{ p :U }}; (e: { p :T|U });
+                                                 ^
+
+References:
+   type_optional.js:9:37
+   9| declare var e: {...{|p :T|},...{ p :U }}; (e: { p :T|U });
+                                          ^ [1]
+   type_optional.js:9:52
+   9| declare var e: {...{|p :T|},...{ p :U }}; (e: { p :T|U });
+                                                         ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- type_optional.js:10:44
+
+Cannot cast `f` to object type because:
+ - `U` [1] is incompatible with `T` [2] in property `p`.
+ - `U` [1] is incompatible with undefined [3] in property `p`.
+
+   type_optional.js:10:44
+   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
+                                                  ^
+
+References:
+   type_optional.js:10:37
+   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
+                                           ^ [1]
+   type_optional.js:10:52
+   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
+                                                          ^ [2]
+   type_optional.js:10:52
+   10| declare var f: {...{|p?:T|},...{ p :U }}; (f: { p?:T|U });
+                                                          ^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- type_optional.js:16:44
+
+Cannot cast `k` to object type because in property `p`:
+ - Either undefined [1] is incompatible with `T` [2].
+ - Or undefined [1] is incompatible with `U` [3].
+
+   type_optional.js:16:44
+   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
+                                                  ^
+
+References:
+   type_optional.js:16:52
+   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
+                                                          ^^^ [1]
+   type_optional.js:16:25
+   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
+                               ^ [2]
+   type_optional.js:16:37
+   16| declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
+                                           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- type_statics.js:5:2
+
+Cannot cast `o1` to object type because number [1] is incompatible with undefined [2] in property `p`.
+
+   type_statics.js:5:2
+   5| (o1: {p?:number}); // ok
+       ^^
+
+References:
+   type_statics.js:1:20
+   1| class A {static p: number}
+                         ^^^^^^ [1]
+   type_statics.js:5:10
+   5| (o1: {p?:number}); // ok
+               ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- type_string.js:1:15
 
 string literal `foo` [1] is not an object.
 
    1| type O1 = {..."foo"}; // error
                     ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
+
+Cannot cast `o1` to union type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [4] in property `q`.
+
+   type_union.js:9:2
+   9| (o1: {p?:T}|{q?:U}); // ok
+       ^^
+
+References:
+   type_union.js:7:18
+   7| type O1 = {...{p:T}|{q:U}};
+                       ^ [1]
+   type_union.js:9:10
+   9| (o1: {p?:T}|{q?:U}); // ok
+               ^ [2]
+   type_union.js:7:24
+   7| type O1 = {...{p:T}|{q:U}};
+                             ^ [3]
+   type_union.js:9:17
+   9| (o1: {p?:T}|{q?:U}); // ok
+                      ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:12:2
@@ -1011,21 +1472,21 @@ References:
                ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:44:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
-Cannot cast `o5` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot cast `o5` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type_void.js:44:2
-   44| (o5: {p:T}); // error: o5.p is optional
+   type_void.js:43:2
+   43| (o5: {p?:T}); // ok
         ^^
 
 References:
    type_void.js:41:27
    41| type O5 = {...void, ...{p:T}};
                                  ^ [1]
-   type_void.js:44:9
-   44| (o5: {p:T}); // error: o5.p is optional
-               ^ [2]
+   type_void.js:43:10
+   43| (o5: {p?:T}); // ok
+                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:47:2
@@ -1045,21 +1506,21 @@ References:
                                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:53:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:52:2
 
-Cannot cast `o6` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot cast `o6` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type_void.js:53:2
-   53| (o6: {p:T}); // error: o6.p is optional
+   type_void.js:52:2
+   52| (o6: {p?:T}); // ok
         ^^
 
 References:
    type_void.js:50:18
    50| type O6 = {...{p:T}, ...void};
                         ^ [1]
-   type_void.js:53:9
-   53| (o6: {p:T}); // error: o6.p is optional
-               ^ [2]
+   type_void.js:52:10
+   52| (o6: {p?:T}); // ok
+                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:56:2
@@ -1080,4 +1541,7 @@ References:
 
 
 
-Found 68 errors
+Found 102 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

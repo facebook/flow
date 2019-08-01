@@ -569,7 +569,7 @@ object-resolution.js:10:2 = {
   "end":5
 }
 object-resolution.js:13:5 = {
-  "type":"{p?: number, q?: string}",
+  "type":"{p: number, q: string}",
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",

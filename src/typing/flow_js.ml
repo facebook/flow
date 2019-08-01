@@ -11440,31 +11440,20 @@ and object_kit =
         })
       | _ ->
         let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
-        let merge_props (t1, own1) (t2, own2) =
+        let merge_props (t1, _) (t2, _) =
           let t1, opt1 = match t1 with OptionalT (_, t) -> t, true | _ -> t1, false in
           let t2, opt2 = match t2 with OptionalT (_, t) -> t, true | _ -> t2, false in
-          (* An own, non-optional property definitely overwrites earlier properties.
-             Otherwise, the type might come from either side. *)
-          let t, own =
-            if own2 && not opt2 then t2, own2
-            else union t1 t2, own1 || own2
-          in
-          (* If either property is own, the result is non-optional unless the own
-             property is itself optional. Non-own implies optional (see mk_object),
-             so we don't need to handle those cases here. *)
-          let opt =
-            if own1 && own2 then opt1 && opt2
-            else own1 && opt1 || own2 && opt2
-          in
-          let t = if opt then optional t else t in
-          t, own
+          if not opt2 then t2, true
+          else if opt1 && opt2 then optional (union t1 t2), true
+          (* In this case, we know opt2 is true and opt1 is false *)
+          else union t1 t2, true
         in
         let props = SMap.merge (fun x p1 p2 ->
           (* Due to width subtyping, failing to read from an inexact object does not
              imply non-existence, but rather an unknown result. *)
           let unknown r =
             let r = replace_reason_const (RUnknownProperty (Some x)) r in
-            DefT (r, bogus_trust (), MixedT Mixed_everything), false
+            DefT (r, bogus_trust (), MixedT Mixed_everything), true
           in
           match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
           | None, None -> None
@@ -11504,13 +11493,7 @@ and object_kit =
     in
 
     let mk_object cx reason target (r, props, dict, flags) =
-      let props = SMap.map (fun (t, own) ->
-        (* Spread only copies over own properties. If `not own`, then the property
-           might be on a proto object instead, so make the result optional. *)
-        let t = match t with
-        | OptionalT _ -> t
-        | _ -> if own then t else optional t
-        in
+      let props = SMap.map (fun (t, _) ->
         Field (None, t, Polarity.Neutral)
       ) props in
       let id = Context.generate_property_map cx props in
