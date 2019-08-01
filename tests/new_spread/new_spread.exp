@@ -419,6 +419,40 @@ References:
               ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- type_contra.js:18:2
+
+Cannot cast `o3` to object type because property `p` of unknown type [1] is incompatible with `T` [2] in property `p`.
+
+   type_contra.js:18:2
+   18| (o3: {p:T}); // error: unknown ~> T
+        ^^
+
+References:
+   type_contra.js:15:11
+   15| type O3 = {...{||}, -p: T};
+                 ^^^^^^^^^^^^^^^^ [1]
+   type_contra.js:18:9
+   18| (o3: {p:T}); // error: unknown ~> T
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- type_contra.js:19:2
+
+Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2].
+
+   type_contra.js:19:2
+   19| (o3.p: T); // errors: unknown ~> T
+        ^^^^
+
+References:
+   type_contra.js:15:11
+   15| type O3 = {...{||}, -p: T};
+                 ^^^^^^^^^^^^^^^^ [1]
+   type_contra.js:19:8
+   19| (o3.p: T); // errors: unknown ~> T
+              ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ type_empty.js:5:2
 
 Cannot cast `42` to `O` because number [1] is incompatible with empty [2].
@@ -853,4 +887,4 @@ References:
 
 
 
-Found 55 errors
+Found 57 errors

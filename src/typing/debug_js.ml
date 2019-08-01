@@ -1237,7 +1237,7 @@ and json_of_destructor_impl json_cx = Hh_json.(function
             "makeExact", JSON_Bool make_exact;
           ]
       ) @ [
-        "spread", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts);
+        "spread", JSON_Array (Core_list.map ~f:(json_of_spread_operand json_cx) ts);
       ]
     )
   | RestType (merge_mode, t) ->
@@ -1268,6 +1268,19 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ReactConfigType t -> JSON_Object [
       "reactConfig", JSON_Bool true;
       "default_props", _json_of_t json_cx t
+  ]
+)
+
+and json_of_spread_operand json_cx = Hh_json.(function
+  | Object.Spread.Slice {reason; prop_map; dict} -> JSON_Object [
+    "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason;
+    "props", JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p)::acc) prop_map []);
+    "dict", (match dict with
+      | Some dict ->json_of_dicttype json_cx dict
+      | None -> JSON_Null);
+  ]
+  | Object.Spread.Type t -> JSON_Object [
+    "type", _json_of_t json_cx t;
   ]
 )
 
@@ -2034,6 +2047,16 @@ and dump_use_t_ (depth, tvars) cx t =
     else spf "{%s}" xs
   in
 
+  let operand_slice reason prop_map dict =
+    let props = SMap.fold (fun k p acc ->
+      match Type.Property.read_t p, Type.Property.write_t p with
+      | Some t, _
+      | _, Some t -> SMap.add k (t, true) acc
+      | _ -> acc
+    ) prop_map SMap.empty in
+    slice (reason, props, dict, {exact = true; sealed = Sealed; frozen = false})
+  in
+
   let object_kit =
     let open Object in
     let join (_loc, op) = match op with And -> "And" | Or -> "Or" in
@@ -2063,10 +2086,13 @@ and dump_use_t_ (depth, tvars) cx t =
           | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
           | Value -> "Value")
       in
+      let spread_operand = function
+        | Slice {reason; prop_map; dict} -> operand_slice reason prop_map dict
+        | Type t -> kid t in
       let state =
         let {todo_rev; acc} = state in
         spf "{todo_rev=[%s]; acc=[%s]}"
-          (String.concat "; " (Core_list.map ~f:kid todo_rev))
+          (String.concat "; " (Core_list.map ~f:spread_operand todo_rev))
           (String.concat "; " (Core_list.map ~f:resolved acc))
       in
       spf "Spread (%s, %s)" target state

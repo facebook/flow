@@ -391,7 +391,7 @@ class virtual ['a] t = object(self)
           else Bind t''
       | ReadOnlyType -> t
       | SpreadType (options, tlist) ->
-          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+          let tlist' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) tlist in
           if tlist' == tlist then t
           else SpreadType (options, tlist')
       | RestType (options, x) ->
@@ -415,6 +415,19 @@ class virtual ['a] t = object(self)
       | ReactElementConfigType
       | ReactElementRefType
         -> t
+  method object_kit_spread_operand cx map_cx operand =
+    let open Object.Spread in
+    match operand with
+    | Slice {reason; prop_map; dict} ->
+      let prop_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map in
+      let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
+      if prop_map' == prop_map && dict' == dict then operand
+      else Slice {reason = reason; prop_map = prop_map'; dict = dict'}
+    | Type t ->
+      let t' = self#type_ cx map_cx t in
+      if t' == t then operand
+      else Type t'
+
 
   method private custom_fun_kind cx map_cx kind =
     match kind with
@@ -1314,7 +1327,8 @@ class virtual ['a] t_with_uses = object(self)
     | ObjectRep -> tool
     | Spread (options, state) ->
       let open Object.Spread in
-      let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) state.todo_rev in
+      let todo_rev' =
+        ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) state.todo_rev in
       let acc' = ListUtils.ident_map (self#resolved cx map_cx) state.acc in
       if todo_rev' == state.todo_rev && acc' == state.acc then tool
       else Spread (options, {todo_rev = todo_rev'; acc = acc'})
@@ -1511,12 +1525,14 @@ class virtual ['a] t_with_uses = object(self)
     if t' == t then prop
     else (t', own)
 
+  method object_kit_slice cx map_cx ((r, props, dict, flags) as slice) =
+    let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
+    let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
+    if props' == props && dict' == dict then slice
+    else (r, props', dict', flags)
+
   method resolved cx map_cx t =
-    let t' = Nel.ident_map (fun ((r, props, dict, flags) as slice) ->
-      let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
-      let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
-      if props' == props && dict' == dict then slice
-      else (r, props', dict', flags)) t in
+    let t' = Nel.ident_map (self#object_kit_slice cx map_cx) t in
     if t' == t then t
     else t'
 

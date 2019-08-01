@@ -1565,11 +1565,17 @@ and convert_object =
       let open Type.Object.Spread in
       let reason = mk_reason RObjectType loc in
       let target = Annot {make_exact = exact} in
-      let t, ts = Nel.rev_map (function
-        | Acc.Spread t -> t
+      let t, ts = Nel.rev os in
+      let t = match t with
+      | Acc.Spread t -> t
+      | Acc.Slice {dict; pmap} ->
+        mk_object cx loc ~src_loc:false ~exact:true None dict pmap obj_proto_t
+      in
+      let ts = List.map (function
+        | Acc.Spread t -> Type t
         | Acc.Slice {dict; pmap} ->
-          mk_object cx loc ~src_loc:false ~exact:true None dict pmap obj_proto_t
-      ) os in
+          Slice ({reason; prop_map = pmap; dict})
+      ) ts in
       EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
     in
     t, List.rev rev_prop_asts

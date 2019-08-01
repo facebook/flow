@@ -1074,7 +1074,7 @@ module rec TypeTerm : sig
   | ElementType of t
   | Bind of t
   | ReadOnlyType
-  | SpreadType of Object.Spread.target * t list
+  | SpreadType of Object.Spread.target * Object.Spread.operand list
   | RestType of Object.Rest.merge_mode * t
   | ValuesType
   | CallType of t list
@@ -1988,8 +1988,13 @@ and Object : sig
   and dict = TypeTerm.dicttype option
 
   module Spread : sig
+    (* This is the type we feed into SpreadType to be processed by object_kit. It's different
+     * than slice because object_kit processes the properties in ways that do not need to
+     * be exposed to other files. *)
+    type operand = Slice of {reason: reason; prop_map: Properties.t; dict: dict} | Type of TypeTerm.t
+
     type state = {
-      todo_rev: TypeTerm.t list;
+      todo_rev: operand list;
       acc: resolved list;
     }
 

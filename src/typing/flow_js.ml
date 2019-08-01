@@ -11494,7 +11494,7 @@ and object_kit =
             EIncompatibleWithExact ((r, reason), use_op))
         | _ -> ()
       ) x;
-      match todo_rev with
+      let rec continue acc x = function
       | [] ->
         let t = match spread reason (Nel.rev (x, acc)) with
         | x, [] -> mk_object cx reason options x
@@ -11504,11 +11504,20 @@ and object_kit =
             (mk_object cx reason options x1)
             (Core_list.map ~f:(mk_object cx reason options) xs))
         in
+        (* Intentional UnknownUse here. *)
         rec_flow_t cx ~use_op trace (t, tout)
-      | t::todo_rev ->
+      | (Type t)::todo_rev ->
         let tool = Resolve Next in
         let state = {todo_rev; acc = x::acc} in
         rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Spread (options, state), tout))
+      | (Slice {reason = r; prop_map; dict})::todo_rev ->
+        let acc = x::acc in
+        let flags = {exact = true; frozen = false; sealed = Sealed} in
+        let props = SMap.mapi (read_prop reason flags) prop_map in
+        let slice = (r, props, dict, flags) in
+        continue acc (Nel.one slice) todo_rev
+      in
+      continue acc x todo_rev
   in
 
   (***************)

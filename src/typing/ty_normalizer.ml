@@ -1474,8 +1474,32 @@ end = struct
         obj_frozen = false; (* default *)
       }
     in
+    let spread_operand ~env =
+      function
+      | Type.Object.Spread.Type t -> type__ ~env t
+      | Type.Object.Spread.Slice {reason=_; prop_map; dict} ->
+        let open Type.TypeTerm in
+        let obj_exact = true in
+        let obj_frozen = false in
+        let obj_literal = false in
+        let props = SMap.fold (fun k p acc -> (k, p)::acc) prop_map [] in
+        let obj_props = concat_fold_m (obj_prop ~env) props in
+        let obj_props_with_dict = obj_props >>= fun obj_props -> match dict with
+          | Some {key; value; dict_name; dict_polarity} ->
+            type__ ~env key >>= fun dict_key -> type__ ~env value >>= fun dict_value ->
+            return ((Ty.IndexProp {
+              Ty.dict_polarity = type_polarity dict_polarity;
+              dict_name;
+              dict_key;
+              dict_value;
+            })::obj_props)
+          | None -> return obj_props
+        in
+        obj_props_with_dict >>= fun obj_props ->
+        return @@ Ty.Obj {Ty.obj_exact; obj_frozen; obj_literal; obj_props}
+    in
     fun ~env ty target ts_rev ->
-      mapM (type__ ~env) ts_rev >>= fun tys_rev ->
+      mapM (spread_operand ~env) ts_rev >>= fun tys_rev ->
       let prefix_tys = List.fold_left (fun acc t ->
         List.rev_append (spread_of_ty t) acc
       ) [] tys_rev in
@@ -1513,7 +1537,7 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Rest (ty, ty'))
     | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
-    | T.SpreadType (target, ts) -> spread ~env ty target ts
+    | T.SpreadType (target, operands) -> spread ~env ty target operands
     | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
     | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
     | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
