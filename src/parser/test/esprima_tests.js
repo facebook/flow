@@ -255,7 +255,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token ILLEGAL',
-              actual: 'Unexpected token `#`, expected the token `;`'
+              actual: 'Unexpected token `#`, expected the end of an expression statement (`;`)'
             },
           }
         },
@@ -291,7 +291,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected number',
-              actual: 'Unexpected number, expected the token `;`'
+              actual: 'Unexpected number, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -302,7 +302,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected number',
-              actual: 'Unexpected number, expected the token `;`'
+              actual: 'Unexpected number, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -450,7 +450,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token =>',
-              actual: 'Unexpected token `=>`, expected the token `;`'
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -461,7 +461,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token =>',
-              actual: 'Unexpected token `=>`, expected the token `;`'
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -610,7 +610,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token =>',
-              actual: 'Unexpected token `=>`, expected the token `;`'
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -621,7 +621,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token =>',
-              actual: 'Unexpected token `=>`, expected the token `;`'
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -742,7 +742,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected identifier',
-              actual: 'Unexpected identifier, expected the token `;`'
+              actual: 'Unexpected identifier, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -764,7 +764,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token if',
-              actual: 'Unexpected token `if`, expected the token `;`'
+              actual: 'Unexpected token `if`, expected the end of an expression statement (`;`)'
             }
           }
         },
@@ -775,7 +775,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected reserved word',
-              actual: 'Unexpected token `class`, expected the token `;`',
+              actual: 'Unexpected token `class`, expected the end of an expression statement (`;`)',
             },
           },
         },
@@ -929,7 +929,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token let',
-              actual: 'Unexpected identifier, expected the token `;`',
+              actual: 'Unexpected identifier, expected the end of an expression statement (`;`)',
             },
           }
         },
@@ -1705,7 +1705,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Invalid left-hand side in formals list',
-              actual: 'Unexpected token `=>`, expected the token `;`',
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)',
             }
           },
         },
@@ -3013,7 +3013,7 @@ module.exports = {
           'root.errors.0.message': {
             type: 'Wrong error message',
             expected: 'Unexpected identifier',
-            actual: 'Unexpected identifier, expected the token `;`'
+            actual: 'Unexpected identifier, expected the end of an expression statement (`;`)'
           }
         }
       },

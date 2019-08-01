@@ -6,7 +6,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},
-      "message":"Unexpected token `:`, expected the token `;`"
+      "message":"Unexpected token `:`, expected the end of an expression statement (`;`)"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},

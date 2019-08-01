@@ -6,11 +6,11 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":20}},
-      "message":"Unexpected number, expected the token `;`"
+      "message":"Unexpected number, expected the end of an expression statement (`;`)"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":21}},
-      "message":"Unexpected token `)`, expected the token `;`"
+      "message":"Unexpected token `)`, expected the end of an expression statement (`;`)"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":21}},

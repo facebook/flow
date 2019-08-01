@@ -156,7 +156,7 @@ module Eat : sig
   val push_lex_mode : env -> Lex_mode.t -> unit
   val pop_lex_mode : env -> unit
   val double_pop_lex_mode : env -> unit
-  val semicolon : env -> unit
+  val semicolon : ?expected:string -> env -> unit
 end
 
 module Expect : sig

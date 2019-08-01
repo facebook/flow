@@ -525,13 +525,13 @@ module Statement
         in
         Statement.Labeled { Statement.Labeled.label; body; }
     | expression, _ ->
-        Eat.semicolon env;
+        Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
         Statement.(Expression { Expression.expression; directive = None; })
   )
 
   and expression = with_loc (fun env ->
     let expression = Parse.expression env in
-    Eat.semicolon env;
+    Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
     let directive = if allow_directive env
       then match expression with
       | _, Ast.Expression.Literal { Ast.Literal.

@@ -789,12 +789,12 @@ module Eat = struct
   * semicolons are inserted. First, if we reach the EOF. Second, if the next
   * token is } or is separated by a LineTerminator.
   *)
-  let semicolon env =
+  let semicolon ?(expected="the token `;`") env =
     if not (Peek.is_implicit_semicolon env)
     then
       if Peek.token env = Token.T_SEMICOLON
       then token env
-      else error_unexpected ~expected:("the token `;`") env
+      else error_unexpected ~expected env
 end
 
 module Expect = struct

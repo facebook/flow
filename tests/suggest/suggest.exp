@@ -404,7 +404,7 @@ err-parse-0.js
 
 Error ----------------------------------------------------------------------------------------------- err-parse-0.js:3:4
 
-Unexpected identifier, expected the token `;`
+Unexpected identifier, expected the end of an expression statement (`;`)
 
    3| va r x = 1;   // InferError
          ^
