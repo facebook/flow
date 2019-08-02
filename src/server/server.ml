@@ -61,6 +61,49 @@ let init ~profiling ?focus_targets genv =
      `errors` contains the current set of errors. *)
   Lwt.return (env, last_estimates)
 
+(* A thread that samples memory stats every second and then logs an idle heartbeat event even
+ * `idle_period_in_seconds` seconds. *)
+let rec log_on_idle =
+  (* The time in seconds to gather data before logging. Shouldn't be too small or we'll flood the
+   * logs. *)
+  let idle_period_in_seconds = 300 in
+
+  (* Grab memory stats. Since we're idle, we don't really care much about sharedmemory stats. But
+   * our cgroup stats may change depending on the memory pressure *)
+  let sample profiling =
+    let%lwt cgroup_stats = CGroup.get_stats () in
+    begin match cgroup_stats with
+    | Error _ -> ()
+    | Ok { CGroup.total; total_swap; anon; file; shmem; } ->
+      Profiling_js.sample_memory profiling ~metric:"cgroup_total" ~value:(float total);
+      Profiling_js.sample_memory profiling ~metric:"cgroup_swap" ~value:(float total_swap);
+      Profiling_js.sample_memory profiling ~metric:"cgroup_anon" ~value:(float anon);
+      Profiling_js.sample_memory profiling ~metric:"cgroup_shmem" ~value:(float shmem);
+      Profiling_js.sample_memory profiling ~metric:"cgroup_file" ~value:(float file)
+    end;
+    Lwt.return_unit
+  in
+
+  (* Sample every second for `seconds_remaining` seconds *)
+  let rec sample_and_sleep profiling seconds_remaining =
+    if seconds_remaining > 0 then (
+      let%lwt () = sample profiling in
+      let%lwt () = Lwt_unix.sleep 1.0 in
+      sample_and_sleep profiling (seconds_remaining - 1)
+    ) else Lwt.return_unit
+  in
+
+  fun ~options start_time ->
+    let should_print_summary = Options.should_profile options in
+    let%lwt profiling, () = Profiling_js.with_profiling_lwt
+      ~label:"Idle" ~should_print_summary (fun profiling ->
+        let%lwt () = sample_and_sleep profiling idle_period_in_seconds in
+        sample profiling
+      )
+    in
+    FlowEventLogger.idle_heartbeat ~idle_time:(Unix.gettimeofday () -. start_time) ~profiling;
+    log_on_idle ~options start_time
+
 let rec serve ~genv ~env =
   Hh_logger.debug "Starting aggressive shared mem GC";
   SharedMem_js.collect `aggressive;
@@ -68,11 +111,15 @@ let rec serve ~genv ~env =
 
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
+  let idle_logging_thread = log_on_idle ~options:(genv.ServerEnv.options) (Unix.gettimeofday ()) in
+
   (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
   let%lwt () = ServerMonitorListenerState.wait_for_anything
     ~process_updates:(Rechecker.process_updates genv env)
     ~get_forced:(fun () -> env.ServerEnv.checked_files) (* We're not in the middle of a recheck *)
   in
+
+  Lwt.cancel idle_logging_thread;
 
   (* If there's anything to recheck or updates to the env from the monitor, let's consume them *)
   let%lwt _profiling, env = Rechecker.recheck_loop genv env in
