@@ -274,35 +274,46 @@ let eval_property_assignment class_body =
           None
       )
   in
-  let this_errors: ALoc.t error list =
+  let this_errors: (ALoc.t error * string Nel.t) list =
     Core_list.rev_filter_map ~f:(fun (loc, desc, ssa_env) ->
-      match filter_uninitialized ssa_env properties with
-      | [] -> None
-      | _ -> Some { loc; desc; }
+      filter_uninitialized ssa_env properties
+      |> Core_list.map ~f:Flow_ast_utils.name_of_ident
+      |> Nel.of_list
+      |> Option.map ~f:(fun uninitialized_properties ->
+          ({ loc; desc; }, uninitialized_properties)
+        )
     ) ssa_walk#this_escape_errors
   in
   (* It's better to append new to old b/c new is always a singleton *)
   let combine_voidable_checks old new_ = Core_list.rev_append new_ old in
+  let add_to_errors error errors prefixed_name =
+    (* Check if it is private first since `this.` is a prefix of `this.#` *)
+    if String_utils.string_starts_with prefixed_name "this.#" then
+      { errors with private_property_errors =
+        SMap.add ~combine:combine_voidable_checks
+          (String_utils.lstrip prefixed_name "this.#")
+          [error] errors.private_property_errors
+      }
+    else if String_utils.string_starts_with prefixed_name "this." then
+      { errors with public_property_errors =
+        SMap.add ~combine:combine_voidable_checks
+          (String_utils.lstrip prefixed_name "this.")
+          [error] errors.public_property_errors
+      }
+    else
+      errors
+  in
   let single_property_errors errors checks =
     List.fold_left (fun acc (error, prefixed_name) ->
-      (* Check if it is private first since `this.` is a prefix of `this.#` *)
-      if String_utils.string_starts_with prefixed_name "this.#" then
-        { acc with private_property_errors =
-          SMap.add ~combine:combine_voidable_checks
-            (String_utils.lstrip prefixed_name "this.#")
-            [error] acc.private_property_errors
-        }
-      else if String_utils.string_starts_with prefixed_name "this." then
-        { acc with public_property_errors =
-          SMap.add ~combine:combine_voidable_checks
-            (String_utils.lstrip prefixed_name "this.")
-            [error] acc.public_property_errors
-        }
-      else
-        acc
+      add_to_errors error acc prefixed_name
+    ) checks errors
+  in
+  let multi_property_errors errors checks =
+    List.fold_left (fun acc (error, names) ->
+      Nel.fold_left (add_to_errors error) acc names
     ) checks errors
   in
   { public_property_errors = SMap.empty; private_property_errors = SMap.empty; }
   |> single_property_errors uninitialized_properties
-  |> single_property_errors read_before_initialized,
-  this_errors
+  |> single_property_errors read_before_initialized
+  |> multi_property_errors this_errors

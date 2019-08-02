@@ -6236,16 +6236,10 @@ and mk_class cx class_loc ~name_loc reason c =
       ~private_property_map;
 
     let class_body = Ast.Class.((snd c.body).Body.body) in
-    let potential_errors, rest_of_errors =
-      Property_assignment.eval_property_assignment class_body
-    in
-    List.iter (fun { Property_assignment.loc; desc } ->
-      Flow.add_output cx (Error_message.EUninitializedInstanceProperty (loc, desc))
-    ) rest_of_errors;
     Context.add_voidable_check cx {
       Context.public_property_map;
       private_property_map;
-      errors = potential_errors;
+      errors = Property_assignment.eval_property_assignment class_body;
     }
   );
   let class_t = Class_stmt_sig.classtype cx class_sig in
