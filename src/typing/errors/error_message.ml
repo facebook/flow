@@ -157,7 +157,7 @@ and 'loc t' =
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
   | EExperimentalClassProperties of 'loc * bool
-  | EUninitializedInstanceProperty of 'loc * uninitialized_property_error
+  | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EExperimentalDecorators of 'loc
   | EExperimentalExportStarAs of 'loc
   | EExperimentalEnums of 'loc
@@ -371,13 +371,6 @@ and 'loc upper_kind =
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
   | IncompatibleUnclassified of string
-
-and uninitialized_property_error =
-  | PropertyNotDefinitivelyInitialized
-  | ReadFromUninitializedProperty
-  | MethodCallBeforeEverythingInitialized
-  | ThisBeforeEverythingInitialized
-
 let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
   let map_reason = Reason.map_reason_locs f in
@@ -1728,7 +1721,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
 
     | EUninitializedInstanceProperty (_loc, err) ->
-      (match err with
+      Lints.(match err with
       | PropertyNotDefinitivelyInitialized -> Normal [
           text "Class property not definitively initialized in the constructor. ";
           text "Can you add an assignment to the property declaration?";

@@ -9,9 +9,8 @@
 
 module Ast = Flow_ast
 
-type this_error =
-  | ThisInConstructor
-  | MethodCallInConstructor
+type 'loc error =
+  { loc: 'loc; desc: Lints.property_assignment_kind }
 
 let public_property loc ident =
   let _, ({ Ast.Identifier.name; comments = _ } as r) = ident in
@@ -148,7 +147,7 @@ class property_assignment = object(this)
   (* PREVENT THIS FROM ESCAPING *)
 
   val mutable this_escape_errors:
-    (ALoc.t * this_error * Ssa_builder.With_ALoc.Env.t) list = []
+    (ALoc.t * Lints.property_assignment_kind * Ssa_builder.With_ALoc.Env.t) list = []
   method this_escape_errors = this_escape_errors
   method private add_this_escape_error error =
     this_escape_errors <- error :: this_escape_errors
@@ -156,7 +155,7 @@ class property_assignment = object(this)
   method! expression expr =
     (match expr with
     | (loc, Ast.Expression.This) ->
-      this#add_this_escape_error (loc, ThisInConstructor, this#ssa_env)
+      this#add_this_escape_error (loc, Lints.ThisBeforeEverythingInitialized, this#ssa_env)
     | _ -> ()
     );
     super#expression expr
@@ -170,13 +169,50 @@ class property_assignment = object(this)
                    | Ast.Expression.Member.PropertyPrivateName _
                    );
       }) ->
-      this#add_this_escape_error (loc, MethodCallInConstructor, this#ssa_env)
+      this#add_this_escape_error (loc, Lints.MethodCallBeforeEverythingInitialized, this#ssa_env)
     | _ -> ()
     );
     super#call loc expr
 end
 
-let eval_property_assignment properties ctor_body =
+let eval_property_assignment class_body =
+  let open Ast.Class in
+  let properties =
+    Core_list.filter_map ~f:(function
+      | Body.Property (_, {
+          Property.key = Ast.Expression.Object.Property.Identifier ((loc, _) as id);
+          value = None;
+          static = false;
+          annot = _;
+          variance = _;
+        }) -> Some (public_property loc id)
+      | Body.PrivateField (_, {
+          PrivateField.key = (loc, _) as id;
+          value = None;
+          static = false;
+          annot = _;
+          variance = _;
+        }) -> Some (private_property loc id)
+      | _ -> None
+    ) class_body
+  in
+
+  let ctor_body: (ALoc.t, ALoc.t) Ast.Statement.Block.t =
+    Core_list.find_map ~f:(function
+      | Body.Method (_, {
+          Method.kind = Method.Constructor;
+          value = (_, {
+            Ast.Function.body = Ast.Function.BodyBlock (_, block);
+            id = _; params = _; async = _; generator = _; predicate = _;
+            return = _; tparams = _; sig_loc = _;
+          });
+          key = _; static = _; decorators = _;
+        }) -> Some block
+      | _ -> None
+    ) class_body
+    |> Option.value ~default:{ Ast.Statement.Block.body = [] }
+  in
+
   let bindings: ALoc.t Hoister.Bindings.t =
     List.fold_left (fun bindings property ->
       Hoister.Bindings.add property bindings
@@ -191,15 +227,37 @@ let eval_property_assignment properties ctor_body =
     body
   ) ctor_body;
 
-  filter_uninitialized ssa_walk#final_ssa_env properties,
-  ssa_walk#values
-  |> Loc_collections.ALocMap.bindings
-  |> Core_list.filter_map ~f:(fun (read_loc, write_locs) ->
-    if not_definitively_initialized write_locs then
-      Some read_loc
-    else
-      None
-    ),
-  Core_list.map ~f:(fun (loc, error, ssa_env) ->
-    (loc, error, filter_uninitialized ssa_env properties)
-  ) ssa_walk#this_escape_errors
+  (* We make heavy use of the Core_list.rev_* functions below because they are
+   * tail recursive. We can do this freely because the order in which we
+   * process the errors doesn't actually matter (Flow will sort the errors
+   * before printing them anyway).
+   *)
+  let uninitialized_properties: ALoc.t error list =
+    properties
+    |> filter_uninitialized ssa_walk#final_ssa_env
+    |> Core_list.rev_map ~f:(fun id -> {
+        loc = Flow_ast_utils.loc_of_ident id;
+        desc = Lints.PropertyNotDefinitivelyInitialized;
+      })
+  in
+  let read_before_initialized: ALoc.t error list =
+    ssa_walk#values
+    |> Loc_collections.ALocMap.bindings
+    |> Core_list.rev_filter_map ~f:(fun (read_loc, write_locs) ->
+      if not_definitively_initialized write_locs then
+        Some {
+          loc = read_loc;
+          desc = Lints.ReadFromUninitializedProperty;
+        }
+      else
+        None
+      )
+  in
+  let this_errors: ALoc.t error list =
+    Core_list.rev_filter_map ~f:(fun (loc, desc, ssa_env) ->
+      match filter_uninitialized ssa_env properties with
+      | [] -> None
+      | _ -> Some { loc; desc; }
+    ) ssa_walk#this_escape_errors
+  in
+  Core_list.concat_no_order [uninitialized_properties; read_before_initialized; this_errors]

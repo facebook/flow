@@ -6211,70 +6211,6 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   | None -> (class_loc, "<<anonymous class>>")
 )
 
-and check_properties_initialized_before_use cx class_ast: unit =
-  let open Ast.Class in
-  let class_body = (snd class_ast.body).Body.body in
-  let properties =
-    Core_list.filter_map ~f:(function
-      | Body.Property (_, {
-          Property.key = Ast.Expression.Object.Property.Identifier ((loc, _) as id);
-          value = None;
-          static = false;
-          annot = _;
-          variance = _;
-        }) -> Some (Property_assignment.public_property loc id)
-      | Body.PrivateField (_, {
-          PrivateField.key = (loc, _) as id;
-          value = None;
-          static = false;
-          annot = _;
-          variance = _;
-        }) -> Some (Property_assignment.private_property loc id)
-      | _ -> None
-    ) class_body
-  in
-  let ctor_body: (ALoc.t, ALoc.t) Ast.Statement.Block.t =
-    Core_list.find_map ~f:(function
-      | Body.Method (_, {
-          Method.kind = Method.Constructor;
-          value = (_, {
-            Ast.Function.body = Ast.Function.BodyBlock (_, block);
-            id = _; params = _; async = _; generator = _; predicate = _;
-            return = _; tparams = _; sig_loc = _;
-          });
-          key = _; static = _; decorators = _;
-        }) -> Some block
-      | _ -> None
-    ) class_body
-    |> Option.value ~default:{ Ast.Statement.Block.body = [] }
-  in
-
-  let uninitialized_properties, read_before_initialized, this_errors =
-    Property_assignment.eval_property_assignment properties ctor_body
-  in
-  List.iter (fun id ->
-    Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-      Flow_ast_utils.loc_of_ident id,
-      PropertyNotDefinitivelyInitialized
-    ))
-  ) uninitialized_properties;
-  List.iter (fun loc ->
-    Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-      loc,
-      ReadFromUninitializedProperty
-    ))
-  ) read_before_initialized;
-  List.iter (fun (loc, error, uninitialized_properties) ->
-    List.iter (fun _id ->
-      Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-        loc,
-        match error with
-        | Property_assignment.ThisInConstructor -> ThisBeforeEverythingInitialized
-        | Property_assignment.MethodCallInConstructor -> MethodCallBeforeEverythingInitialized
-      ))
-    ) uninitialized_properties
-  ) this_errors
-
 and mk_class cx class_loc ~name_loc reason c =
   let def_reason = repos_reason class_loc reason in
   let this_in_class = Class_stmt_sig.This.in_class c in
@@ -6288,8 +6224,15 @@ and mk_class cx class_loc ~name_loc reason c =
       ~decls:toplevel_decls
       ~stmts:toplevels
       ~expr:expression;
+
+    let class_body = Ast.Class.((snd c.body).Body.body) in
+    let errors =
+      Property_assignment.eval_property_assignment class_body
+    in
+    List.iter (fun { Property_assignment.loc; desc } ->
+      Flow.add_output cx (Error_message.EUninitializedInstanceProperty (loc, desc))
+    ) errors;
   );
-  check_properties_initialized_before_use cx c;
   let class_t = Class_stmt_sig.classtype cx class_sig in
   Flow.unify cx self class_t;
   class_t, class_ast_f class_t

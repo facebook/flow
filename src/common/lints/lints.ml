@@ -14,6 +14,12 @@ type sketchy_null_kind =
 type sketchy_number_kind =
   | SketchyNumberAnd
 
+type property_assignment_kind =
+  | PropertyNotDefinitivelyInitialized
+  | ReadFromUninitializedProperty
+  | MethodCallBeforeEverythingInitialized
+  | ThisBeforeEverythingInitialized
+
 type lint_kind =
   | SketchyNull of sketchy_null_kind
   | SketchyNumber of sketchy_number_kind

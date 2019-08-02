@@ -7,20 +7,14 @@
 
 (* NOTE: This is a WIP and should not be used for anything yet *)
 
-module Ast = Flow_ast
+type 'loc error =
+  { loc: 'loc; desc: Lints.property_assignment_kind }
 
-type this_error =
-  | ThisInConstructor
-  | MethodCallInConstructor
-
-val public_property : 'loc -> ('loc, 'loc) Ast.Identifier.t -> ('loc, 'loc) Ast.Identifier.t
-val private_property : 'loc -> 'loc Ast.PrivateName.t -> ('loc, 'loc) Ast.Identifier.t
-
+(* The bulk of the definite instance property assignment analysis is performed
+ * by this function. It takes the elements of a class body as input and returns
+ * a map from property names to a list of errors that we should emit if that
+ * property isn't voidable
+ *)
 val eval_property_assignment :
-  (ALoc.t, ALoc.t) Ast.Identifier.t list ->
-  (ALoc.t, ALoc.t) Ast.Statement.Block.t ->
-  (
-    (ALoc.t, ALoc.t) Ast.Identifier.t list *
-    ALoc.t list *
-    (ALoc.t * this_error * (ALoc.t, ALoc.t) Ast.Identifier.t list) list
-  )
+  (ALoc.t, ALoc.t) Flow_ast.Class.Body.element list ->
+  ALoc.t error list
