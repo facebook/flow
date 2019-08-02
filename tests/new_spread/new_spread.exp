@@ -37,7 +37,7 @@ References:
 Error ------------------------------------------------------------------------------------------- error_messages.js:3:62
 
 Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `c` with a type that
-conflicts with `c`'s definition in object type [1]
+conflicts with `c`'s definition in object type [1]. Can you make object type [2] exact?
 
    error_messages.js:3:62
    3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
@@ -52,7 +52,7 @@ References:
 Error ------------------------------------------------------------------------------------------- error_messages.js:7:16
 
 Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
-conflicts with `b`'s definition in object type [2]
+conflicts with `b`'s definition in object type [2]. Can you make object type [1] exact?
 
    error_messages.js:7:16
    7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
@@ -67,7 +67,7 @@ References:
 Error ------------------------------------------------------------------------------------------ error_messages.js:13:49
 
 Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts with
-`c`'s definition in object type [1]
+`c`'s definition in object type [1]. Can you make `B` [2] exact?
 
    error_messages.js:13:49
    13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
@@ -82,7 +82,7 @@ References:
 Error ------------------------------------------------------------------------------------------ error_messages.js:19:17
 
 Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
-conflicts with `b`'s definition in `D` [2]
+conflicts with `b`'s definition in `D` [2]. Can you make object type [1] exact?
 
    error_messages.js:19:17
    19| declare var y2: {...C, c: number, d: number, ...D}; // Error
@@ -97,7 +97,7 @@ References:
 Error ------------------------------------------------------------------------------------------- error_messages.js:26:6
 
 Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
-conflicts with `d`'s definition in object type [1]
+conflicts with `d`'s definition in object type [1]. Can you make object type [2] exact?
 
    error_messages.js:26:6
    26|   ...{b: number},
@@ -120,7 +120,7 @@ References:
 Error ------------------------------------------------------------------------------------------ error_messages.js:33:27
 
 Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts with
-`b`'s definition in `A` [3]
+`b`'s definition in `A` [3]. Can you make `B` [2] exact?
 
    error_messages.js:33:27
    33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
@@ -138,7 +138,7 @@ References:
 Error ------------------------------------------------------------------------------------------ error_messages.js:36:47
 
 Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts with
-`foo`'s definition in object type [1]
+`foo`'s definition in object type [1]. Can you make `B` [2] exact?
 
    error_messages.js:36:47
    36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
@@ -476,7 +476,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- type.js:79:27
 
 Cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
-`p`'s definition in object type [3]
+`p`'s definition in object type [3]. Can you make object type [2] exact?
 
    type.js:79:27
    79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
@@ -494,7 +494,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- type.js:84:25
 
 Cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
-`p`'s definition in object type [3]
+`p`'s definition in object type [3]. Can you make object type [2] exact?
 
    type.js:84:25
    84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
@@ -649,7 +649,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:4:37
 
 Cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts with
-string [3] or a property value that conflicts with `T` [4].
+string [3] or a property value that conflicts with `T` [4]. Can you make object type [2] exact?
 
    type_dict.js:4:37
    4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
@@ -1116,7 +1116,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:32
 
 Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
-overwrite properties with explicit keys in a way that Flow cannot track.
+overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
+the indexer?
 
    type_union.js:14:32
    14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
@@ -1134,7 +1135,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_union.js:17:32
 
 Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
-conflicts with `foo`'s definition in object type [3]
+conflicts with `foo`'s definition in object type [3]. Can you make object type [2] exact?
 
    type_union.js:17:32
    17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer

@@ -870,6 +870,10 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EDebugPrint (reason, _)
   | ENonArraySpread reason ->
         Some (aloc_of_reason reason)
+
+  (* We position around the use of the object instead of the spread because the
+   * spread may be part of a polymorphic type signature. If we add a suppression there,
+   * the reduction in coverage is far more drastic. *)
   | ECannotSpreadInterface {spread_reason=_; interface_reason = reason}
   | ECannotSpreadIndexerOnRight {spread_reason=_; object_reason = reason; key_reason=_}
   | EUnableToSpread {
@@ -882,6 +886,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EInexactMayOverwriteIndexer {spread_reason=_; key_reason=_; value_reason=_; object2_reason = reason}
     ->
       Some (aloc_of_reason reason)
+
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
   | ENonstrictImport loc
@@ -2133,47 +2138,42 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "...Array.from(<iterable>)"; text " instead."
       ]
   | ECannotSpreadInterface {spread_reason; interface_reason} ->
-    (* We position around the use of the interface instead of the spread because the
-     * spread may be part of a polymorphic type signature. If we add a suppression there,
-     * the reduction in coverage is far more drastic. *)
     Normal [
       text "Cannot determine a type for "; ref spread_reason; text ". ";
       ref interface_reason; text " cannot be spread because interfaces do not ";
       text "track the own-ness of their properties. Can you use an object type instead?";
     ]
   | ECannotSpreadIndexerOnRight {spread_reason; object_reason; key_reason} ->
-    (* We position around the use of the interface instead of the spread because the
-     * spread may be part of a polymorphic type signature. If we add a suppression there,
-     * the reduction in coverage is far more drastic. *)
     Normal [
       text "Cannot determine a type for "; ref spread_reason; text ". ";
       ref object_reason; text " cannot be spread because the indexer "; ref key_reason;
-      text " may overwrite properties with explicit keys in a way that Flow cannot track.";
+      text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
+      text "Can you spread "; ref object_reason; text " first or remove the indexer?";
     ]
 
   | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname; error_kind}) ->
-    (* We position around the use of the object instead of the spread because the
-     * spread may be part of a polymorphic type signature. If we add a suppression there,
-     * the reduction in coverage is far more drastic. *)
-    let string_of_spread_error_kind = function
-      | Inexact -> "is inexact"
-      | Indexer -> "has an indexer"
+    let error_reason, fix_suggestion = match error_kind with
+      | Inexact -> "is inexact",
+        [text " Can you make "; ref object2_reason; text " exact?"]
+      | Indexer -> "has an indexer",
+        [
+          text " Can you remove the indexer in "; ref object2_reason;
+          text " or make "; code propname; text " a required property?";
+        ]
     in
-    Normal [
+    Normal ([
       text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
-      text (" " ^ (string_of_spread_error_kind error_kind) ^ ", so it may contain ");
+      text " "; text error_reason; text ", so it may contain ";
       code propname; text " with a type that conflicts with "; code propname;
-      text "'s definition in "; ref object1_reason;
-    ]
+      text "'s definition in "; ref object1_reason; text ".";
+    ] @ fix_suggestion)
 
   | EInexactMayOverwriteIndexer ({spread_reason; key_reason; value_reason; object2_reason}) ->
-    (* We position around the use of the object instead of the spread because the
-     * spread may be part of a polymorphic type signature. If we add a suppression there,
-     * the reduction in coverage is far more drastic. *)
     Normal [
       text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
       text " is inexact and may "; text "have a property key that conflicts with "; ref key_reason;
-      text " or a property value that conflicts with "; ref value_reason; text ".";
+      text " or a property value that conflicts with "; ref value_reason;
+      text ". Can you make "; ref object2_reason; text " exact?";
     ]
 )
 
