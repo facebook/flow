@@ -15,7 +15,7 @@ type sketchy_number_kind =
   | SketchyNumberAnd
 
 type property_assignment_kind =
-  | PropertyNotDefinitivelyInitialized
+  | PropertyNotDefinitelyInitialized
   | ReadFromUninitializedProperty
   | MethodCallBeforeEverythingInitialized
   | ThisBeforeEverythingInitialized

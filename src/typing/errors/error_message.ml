@@ -1722,17 +1722,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
     | EUninitializedInstanceProperty (_loc, err) ->
       Lints.(match err with
-      | PropertyNotDefinitivelyInitialized -> Normal [
-          text "Class property not definitively initialized in the constructor. ";
+      | PropertyNotDefinitelyInitialized -> Normal [
+          text "Class property not definitely initialized in the constructor. ";
           text "Can you add an assignment to the property declaration?";
         ]
       | ReadFromUninitializedProperty -> Normal [
           text "It is unsafe to read from a class property before it is ";
-          text "definitively initialized.";
+          text "definitely initialized.";
         ]
       | MethodCallBeforeEverythingInitialized -> Normal [
           text "It is unsafe to call a method in the constructor before all ";
-          text "class properties are definitively initialized.";
+          text "class properties are definitely initialized.";
         ]
       | PropertyFunctionCallBeforeEverythingInitialized -> Normal [
           text "It is unsafe to call a property function in the constructor ";
@@ -1740,7 +1740,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
       | ThisBeforeEverythingInitialized -> Normal [
           text "It is unsafe to use "; code "this"; text " in the constructor ";
-          text "before all class properties are definitively initialized.";
+          text "before all class properties are definitely initialized.";
         ]
       )
 

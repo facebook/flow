@@ -2792,7 +2792,7 @@ let dump_error_message =
         spf "EUninitializedInstanceProperty (%s, %s)"
           (string_of_aloc loc)
           Lints.(match err with
-          | PropertyNotDefinitivelyInitialized -> "PropertyNotDefinitivelyInitialized"
+          | PropertyNotDefinitelyInitialized -> "PropertyNotDefinitelyInitialized"
           | ReadFromUninitializedProperty -> "ReadFromUninitializedProperty"
           | MethodCallBeforeEverythingInitialized -> "MethodCallBeforeEverythingInitialized"
           | PropertyFunctionCallBeforeEverythingInitialized ->

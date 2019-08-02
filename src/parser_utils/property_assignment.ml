@@ -144,7 +144,7 @@ class property_assignment (property_names: SSet.t) = object(this)
          * here since in order for `this.x += e` to not cause an error, x must
          * already be assigned anyway. Also, not writing to x here leads to
          * more understandable error messages, as the write would mask the
-         * PropertyNotDefinitivelyInitialized error.
+         * PropertyNotDefinitelyInitialized error.
          *)
       );
       expr
@@ -267,7 +267,7 @@ let eval_property_assignment class_body =
     |> Core_list.rev_map ~f:(fun id -> (
         {
           loc = Flow_ast_utils.loc_of_ident id;
-          desc = Lints.PropertyNotDefinitivelyInitialized;
+          desc = Lints.PropertyNotDefinitelyInitialized;
         },
         Flow_ast_utils.name_of_ident id
       ))
