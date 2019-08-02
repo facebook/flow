@@ -139,7 +139,11 @@ class property_assignment = object(this)
       (match operator with
       | None ->
         (* given `this.x = e`, read e then write x *)
-        ignore @@ this#expression right;
+        (match snd right with
+        | Ast.Expression.ArrowFunction _
+        | Ast.Expression.Function _ -> ()
+        | _ -> ignore @@ this#expression right
+        );
         ignore @@ this#assignment_pattern left
       | Some _ ->
         (* given `this.x += e`, read x then read e *)

@@ -620,6 +620,69 @@ class E70 {
   }
 }
 
+class E71 {
+  f;
+  q: number;
+  constructor() {
+    this.f = () => {};
+    this.f(); // MethodCallBeforeEverythingInitialized
+    this.q = 0;
+  }
+}
+
+class E72 {
+  p: number;
+  constructor() {
+    let f = () => this.p++; // ReadFromUninitializedProperty
+    this.p = 0;
+  }
+}
+
+class E73 {
+  p: number;
+  constructor() {
+    (() => this.p++)(); // ReadFromUninitializedProperty
+    this.p = 0;
+  }
+}
+
+class E74 {
+  p = 0;
+  f;
+  q: number;
+  constructor() {
+    this.f = () => this.p++;
+    this.f(); // MethodCallBeforeEverythingInitialized
+    this.q = 0;
+  }
+}
+
+class E75 {
+  p: number;
+  f;
+  constructor() {
+    this.f = x => this.p += x;
+    this.f(this.f()); // MethodCallBeforeEverythingInitialized, MethodCallBeforeEverythingInitialized
+    this.p = 0;
+  }
+}
+
+class E76Parent {
+  f: () => number;
+  p: number;
+  constructor() {
+    this.f = () => 0;
+    this.f(); // MethodCallBeforeEverythingInitialized
+    this.p = 0;
+  }
+}
+class E76Child extends E76Parent {
+  f = () => this.p;
+  constructor() {
+    super();
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {
@@ -1020,4 +1083,46 @@ class P55 {
     this.m(); // TODO spurious error
   }
   m() { return this.#p1 }
+}
+
+class P56 {
+  p: number;
+  f;
+  constructor() {
+    this.f = () => this.p++;
+    this.p = 0;
+  }
+}
+
+class P57 {
+  p: number;
+  f: () => number;
+  constructor() {
+    this.f = () => this.p++;
+    this.p = 0;
+    this.f();
+  }
+}
+
+class P58 {
+  f: () => boolean;
+  constructor() {
+    let b = true;
+    this.f = () => {
+      if (b) {
+        b = false;
+        return this.f();
+      }
+      return b;
+    }
+  }
+}
+
+class P59 {
+  isEven: number => boolean;
+  isOdd: number => boolean;
+  constructor() {
+    this.isEven = x => x === 0 ? true : this.isOdd(x - 1);
+    this.isOdd = x => x === 0 ? false : this.isEven(x - 1);
+  }
 }
