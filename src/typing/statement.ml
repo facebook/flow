@@ -6217,6 +6217,11 @@ and mk_class cx class_loc ~name_loc reason c =
   let self = Tvar.mk cx reason in
   let class_sig, class_ast_f = mk_class_sig cx name_loc reason self c in
   class_sig |> Class_stmt_sig.generate_tests cx (fun class_sig ->
+    let public_property_map =
+      Class_stmt_sig.to_prop_map cx @@
+        Class_stmt_sig.public_fields_of_signature ~static:false class_sig
+    in
+
     Class_stmt_sig.check_super cx def_reason class_sig;
     Class_stmt_sig.check_implements cx def_reason class_sig;
     if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
@@ -6226,12 +6231,16 @@ and mk_class cx class_loc ~name_loc reason c =
       ~expr:expression;
 
     let class_body = Ast.Class.((snd c.body).Body.body) in
-    let errors =
+    let potential_errors, rest_of_errors =
       Property_assignment.eval_property_assignment class_body
     in
     List.iter (fun { Property_assignment.loc; desc } ->
       Flow.add_output cx (Error_message.EUninitializedInstanceProperty (loc, desc))
-    ) errors;
+    ) rest_of_errors;
+    Context.add_voidable_check cx {
+      Context.public_property_map;
+      errors = potential_errors;
+    }
   );
   let class_t = Class_stmt_sig.classtype cx class_sig in
   Flow.unify cx self class_t;

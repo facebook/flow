@@ -20,4 +20,4 @@ type 'loc errors = {
  *)
 val eval_property_assignment :
   (ALoc.t, ALoc.t) Flow_ast.Class.Body.element list ->
-  ALoc.t error list
+  (ALoc.t errors * ALoc.t error list)

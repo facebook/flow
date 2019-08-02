@@ -112,6 +112,9 @@ let add_private_field name loc polarity field = map_sig (fun s -> {
   private_fields = SMap.add name (Some loc, polarity, field) s.private_fields;
 })
 
+let public_fields_of_signature ~static s =
+  (if static then s.static else s.instance).fields
+
 let add_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
   {s with constructor = [loc, F.to_ctor_sig fsig, set_asts, set_type]}
 
@@ -281,6 +284,8 @@ let to_field (loc, polarity, field) =
   | Infer (fsig, _) -> F.gettertype fsig
   in
   Type.Field (loc, t, polarity)
+
+let to_prop_map cx = SMap.map to_field %> Context.generate_property_map cx
 
 let elements cx ?constructor s =
   let methods =
@@ -690,9 +695,8 @@ let toplevels cx ~decls ~stmts ~expr x =
     in
 
     (* Bind private fields to the environment *)
-    let to_prop_map = SMap.map to_field %> Context.generate_property_map cx in
-    Env.bind_class cx x.id (to_prop_map x.instance.private_fields)
-    (to_prop_map x.static.private_fields);
+    Env.bind_class cx x.id (to_prop_map cx x.instance.private_fields)
+    (to_prop_map cx x.static.private_fields);
 
     x |> with_sig ~static:true (fun s ->
       (* process static methods and fields *)

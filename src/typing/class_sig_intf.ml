@@ -22,6 +22,8 @@ and field =
   | Annot of Type.t
   | Infer of func_sig * set_asts
 
+type field' = ALoc.t option * Polarity.t * field
+
 type super =
   | Interface of {
       extends: typeapp list;
@@ -96,6 +98,9 @@ val add_proto_field: string -> ALoc.t -> Polarity.t -> field -> t -> t
 (** Add private field to signature. *)
 val add_private_field: string -> ALoc.t -> Polarity.t -> field -> static:bool -> t -> t
 
+(* Access public fields of signature *)
+val public_fields_of_signature: static:bool -> t -> field' SMap.t
+
 (** Add method to signature.
 
     Overwrites any existing synonymous method. This implements the behavior of
@@ -159,6 +164,8 @@ val add_this:
   Type.typeparams ->
   Type.t SMap.t -> (* tparams_map *)
   Type.t * Type.typeparams * Type.t SMap.t
+
+val to_prop_map: Context.t -> field' SMap.t -> Type.Properties.id
 
 (** 1. Manipulation *)
 

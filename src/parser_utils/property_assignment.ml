@@ -235,13 +235,16 @@ let eval_property_assignment class_body =
    * process the errors doesn't actually matter (Flow will sort the errors
    * before printing them anyway).
    *)
-  let uninitialized_properties: ALoc.t error list =
+  let uninitialized_properties: (ALoc.t error * string) list =
     properties
     |> filter_uninitialized ssa_walk#final_ssa_env
-    |> Core_list.rev_map ~f:(fun id -> {
-        loc = Flow_ast_utils.loc_of_ident id;
-        desc = Lints.PropertyNotDefinitivelyInitialized;
-      })
+    |> Core_list.rev_map ~f:(fun id -> (
+        {
+          loc = Flow_ast_utils.loc_of_ident id;
+          desc = Lints.PropertyNotDefinitivelyInitialized;
+        },
+        Flow_ast_utils.name_of_ident id
+      ))
   in
   let read_before_initialized: ALoc.t error list =
     ssa_walk#values
@@ -263,4 +266,28 @@ let eval_property_assignment class_body =
       | _ -> Some { loc; desc; }
     ) ssa_walk#this_escape_errors
   in
-  Core_list.concat_no_order [uninitialized_properties; read_before_initialized; this_errors]
+  (* It's better to append new to old b/c new is always a singleton *)
+  let combine_voidable_checks old new_ = Core_list.rev_append new_ old in
+  let single_property_errors errors checks =
+    List.fold_left (fun acc (error, prefixed_name) ->
+      if String_utils.string_starts_with prefixed_name "this." then
+        { acc with public_property_errors =
+          SMap.add ~combine:combine_voidable_checks
+            (String_utils.lstrip prefixed_name "this.")
+            [error] acc.public_property_errors
+        }
+      else
+        acc
+    ) checks errors
+  in
+  { public_property_errors = SMap.empty; private_property_errors = SMap.empty; }
+  |> single_property_errors uninitialized_properties,
+  let uninitialized_private_properties =
+    Core_list.rev_filter_map ~f:(fun (error, prefixed_name) ->
+      if String_utils.string_starts_with prefixed_name "this.#" then
+        Some error
+      else
+        None
+    ) uninitialized_properties
+  in
+  Core_list.concat_no_order [uninitialized_private_properties; read_before_initialized; this_errors]

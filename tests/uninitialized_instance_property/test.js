@@ -524,6 +524,25 @@ class E57 {
   }
 }
 
+class E58 {
+  p: number | string; // PropertyNotDefinitivelyInitialized
+}
+
+class E59 {
+  p: void & number; // PropertyNotDefinitivelyInitialized
+}
+
+class E60<T> {
+  p: T; // PropertyNotDefinitivelyInitialized
+}
+
+class E61 {
+  p: {x: number}; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    this.p.x; // ReadFromUninitializedProperty
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {
@@ -799,4 +818,49 @@ class P32 {
     this.p = 0;
     const x = this;
   }
+}
+
+class P33 {
+  p: void;
+}
+
+class P34 {
+  p: void;
+  constructor() {}
+}
+
+class P35 {
+  p: ?number;
+}
+
+class P36 {
+  p: ?number;
+}
+
+class P37 {
+  p;
+}
+
+class P38 {
+  p;
+  constructor() {}
+}
+
+class P39<T: void> {
+  p: T; // TODO spurious error
+}
+
+class P40 {
+  p; // TODO spurious error
+  constructor() {
+    (this.p: void); // TODO spurious error
+  }
+}
+
+class P41 {
+  p: string | void;
+}
+
+class P42 {
+  p: void & ?number;
 }
