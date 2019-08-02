@@ -655,31 +655,131 @@ It is unsafe to read from a class property before it is definitively initialized
             ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:850:3
+Error ---------------------------------------------------------------------------------------------------- test.js:547:3
 
 Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
 (`uninitialized-instance-property`)
 
-   850|   p: T; // TODO spurious error
+   547|   p; // PropertyNotDefinitivelyInitialized
           ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:854:3
-
-Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
-(`uninitialized-instance-property`)
-
-   854|   p; // TODO spurious error
-          ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:856:6
+Error ---------------------------------------------------------------------------------------------------- test.js:549:6
 
 It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
 
-   856|     (this.p: void); // TODO spurious error
+   549|     (this.p: string); // ReadFromUninitializedProperty
              ^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:554:3
 
-Found 76 errors
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   554|   #p; // PropertyNotDefinitivelyInitialized
+          ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:556:6
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   556|     (this.#p: string); // ReadFromUninitializedProperty
+             ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:566:10
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   566|     incr(this.p); // ReadFromUninitializedProperty
+                 ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:574:10
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   574|     incr(this.#p); // ReadFromUninitializedProperty
+                 ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:582:23
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   582|     const x: number = this.p; // ReadFromUninitializedProperty
+                              ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:590:23
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   590|     const x: number = this.#p; // ReadFromUninitializedProperty
+                              ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:899:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   899|   p: T; // TODO spurious error
+          ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:903:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   903|   p; // TODO spurious error
+          ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:905:6
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   905|     (this.p: void); // TODO spurious error
+             ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:958:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   958|   p; // TODO spurious error
+          ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:960:5
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   960|     this.p; // TODO spurious error
+            ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:965:3
+
+Class property not definitively initialized in the constructor. Can you add an assignment to the property declaration?
+(`uninitialized-instance-property`)
+
+   965|   #p; // TODO spurious error
+          ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:967:5
+
+It is unsafe to read from a class property before it is definitively initialized. (`uninitialized-instance-property`)
+
+   967|     this.#p; // TODO spurious error
+            ^^^^^^^
+
+
+
+Found 88 errors

@@ -543,6 +543,55 @@ class E61 {
   }
 }
 
+class E62 {
+  p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    (this.p: string); // ReadFromUninitializedProperty
+  }
+}
+
+class E63 {
+  #p; // PropertyNotDefinitivelyInitialized
+  constructor() {
+    (this.#p: string); // ReadFromUninitializedProperty
+  }
+}
+
+function incr(x: number) {
+  return x + 1;
+}
+class E64 {
+  p;
+  constructor() {
+    incr(this.p); // ReadFromUninitializedProperty
+    this.p = 0;
+  }
+}
+
+class E65 {
+  #p;
+  constructor() {
+    incr(this.#p); // ReadFromUninitializedProperty
+    this.#p = 0;
+  }
+}
+
+class E66 {
+  p;
+  constructor() {
+    const x: number = this.p; // ReadFromUninitializedProperty
+    this.p = 0;
+  }
+}
+
+class E67 {
+  #p;
+  constructor() {
+    const x: number = this.#p; // ReadFromUninitializedProperty
+    this.#p = 0;
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {
@@ -889,4 +938,32 @@ class P47 {
 class P48 {
   #p;
   constructor() {}
+}
+
+class P49 {
+  p: void;
+  constructor() {
+    this.p;
+  }
+}
+
+class P50 {
+  p: ?number;
+  constructor() {
+    this.p;
+  }
+}
+
+class P51 {
+  p; // TODO spurious error
+  constructor() {
+    this.p; // TODO spurious error
+  }
+}
+
+class P52 {
+  #p; // TODO spurious error
+  constructor() {
+    this.#p; // TODO spurious error
+  }
 }

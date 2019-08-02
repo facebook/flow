@@ -91,6 +91,11 @@ class property_assignment = object(this)
 
   (* READS *)
 
+  val mutable read_loc_metadata: string Loc_collections.ALocMap.t =
+    Loc_collections.ALocMap.empty
+  method metadata_of_read_loc (read_loc: ALoc.t): string option =
+    Loc_collections.ALocMap.get read_loc read_loc_metadata
+
   method! identifier (ident: (ALoc.t, ALoc.t) Ast.Identifier.t) =
     ident
 
@@ -105,12 +110,16 @@ class property_assignment = object(this)
                    | Ast.Expression.Member.PropertyPrivateName _
                    ) as property;
       } ->
-      ignore @@ this#any_identifier loc @@ Flow_ast_utils.name_of_ident @@
-        Ast.Expression.Member.(match property with
+      let property_name: string =
+        Flow_ast_utils.name_of_ident Ast.Expression.Member.(match property with
         | PropertyIdentifier id -> public_property loc id
         | PropertyPrivateName id -> private_property loc id
         | PropertyExpression _ -> failwith "match on expr makes this impossible"
-        );
+        )
+      in
+      read_loc_metadata <-
+        Loc_collections.ALocMap.add loc property_name read_loc_metadata;
+      ignore @@ this#any_identifier loc property_name;
       expr
     | _ -> super#member loc expr
     )
@@ -246,17 +255,23 @@ let eval_property_assignment class_body =
         Flow_ast_utils.name_of_ident id
       ))
   in
-  let read_before_initialized: ALoc.t error list =
+  let read_before_initialized: (ALoc.t error * string) list =
     ssa_walk#values
     |> Loc_collections.ALocMap.bindings
     |> Core_list.rev_filter_map ~f:(fun (read_loc, write_locs) ->
-      if not_definitively_initialized write_locs then
-        Some {
-          loc = read_loc;
-          desc = Lints.ReadFromUninitializedProperty;
-        }
-      else
-        None
+        if not_definitively_initialized write_locs then
+          ssa_walk#metadata_of_read_loc read_loc
+          |> Option.map ~f:(fun name ->
+              (
+                {
+                  loc = read_loc;
+                  desc = Lints.ReadFromUninitializedProperty;
+                },
+                name
+              )
+            )
+        else
+          None
       )
   in
   let this_errors: ALoc.t error list =
@@ -288,5 +303,6 @@ let eval_property_assignment class_body =
     ) checks errors
   in
   { public_property_errors = SMap.empty; private_property_errors = SMap.empty; }
-  |> single_property_errors uninitialized_properties,
-  Core_list.rev_append read_before_initialized this_errors
+  |> single_property_errors uninitialized_properties
+  |> single_property_errors read_before_initialized,
+  this_errors
