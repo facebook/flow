@@ -5,12 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* NOTE: This is a WIP and should not be used for anything yet *)
-
 module Ast = Flow_ast
 
 type 'loc error =
   { loc: 'loc; desc: Lints.property_assignment_kind }
+
+type 'loc errors = {
+  public_property_errors: 'loc error list SMap.t;
+  private_property_errors: 'loc error list SMap.t;
+}
 
 let public_property loc ident =
   let _, ({ Ast.Identifier.name; comments = _ } as r) = ident in

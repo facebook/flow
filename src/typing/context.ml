@@ -62,6 +62,11 @@ type test_prop_hit_or_miss =
 
 type type_assert_kind = Is | Throws | Wraps
 
+type voidable_check = {
+  public_property_map: Type.Properties.id;
+  errors: ALoc.t Property_assignment.errors;
+}
+
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -115,6 +120,20 @@ type sig_t = {
   (* The above example assumes that x is a string. If it were a different type
    * it wouldn't be excused. *)
   mutable exists_excuses: ExistsCheck.t ALocMap.t;
+
+  (* For the definite instance property assignment analysis, we should only
+   * emit errors for a given property if VoidT flows to the type of that
+   * property. Ideally, we would create a VoidT ~> property type flow when we
+   * perform the analysis. The problem is that doing that causes the type
+   * inference behavior to depend on lint settings which can lead to some weird
+   * behavior, such as extra errors even when the lint is off. The solution is
+   * to collect all of potential errors that we would have created a flow for
+   * in the context and deal with them post-merge. At this point, the tvars of
+   * nearly all properties will have a concrete type that we can safely pattern
+   * match on without affecting other constraints. For the unresolved tvars, we
+   * conservatively emit errors.
+   *)
+  mutable voidable_checks: voidable_check list;
 
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
 
@@ -213,6 +232,7 @@ let make_sig () = {
   severity_cover = Utils_js.FilenameMap.empty;
   exists_checks = ALocMap.empty;
   exists_excuses = ALocMap.empty;
+  voidable_checks = [];
   test_prop_hits_and_misses = IMap.empty;
   optional_chains_useful = ALocMap.empty;
   invariants_useful = ALocMap.empty;
@@ -357,6 +377,7 @@ let max_workers cx = cx.metadata.max_workers
 let jsx cx = cx.metadata.jsx
 let exists_checks cx = cx.sig_cx.exists_checks
 let exists_excuses cx = cx.sig_cx.exists_excuses
+let voidable_checks cx = cx.sig_cx.voidable_checks
 let use_def cx = cx.use_def
 let trust_tracking cx =
   match cx.metadata.trust_mode with
@@ -416,6 +437,8 @@ let add_nominal_id cx id =
   cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
 let add_type_assert cx k v =
   cx.sig_cx.type_asserts_map <- ALocMap.add k v cx.sig_cx.type_asserts_map
+let add_voidable_check cx voidable_check =
+  cx.sig_cx.voidable_checks <- voidable_check :: cx.sig_cx.voidable_checks
 let remove_all_errors cx =
   cx.sig_cx.errors <- Flow_error.ErrorSet.empty
 let remove_all_error_suppressions cx =
@@ -458,6 +481,7 @@ let clear_intermediates cx =
   cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0; (* still 176 bytes :/ *)
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
+  cx.sig_cx.voidable_checks <- [];
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
   cx.sig_cx.optional_chains_useful <- ALocMap.empty;
   cx.sig_cx.invariants_useful <- ALocMap.empty;

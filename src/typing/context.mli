@@ -59,6 +59,11 @@ type metadata = {
 type phase = Checking | Merging
 type type_assert_kind = Is | Throws | Wraps
 
+type voidable_check = {
+  public_property_map: Type.Properties.id;
+  errors: ALoc.t Property_assignment.errors;
+}
+
 val make_sig: unit -> sig_t
 val make: sig_t -> metadata -> File_key.t -> ALoc.table Lazy.t Utils_js.FilenameMap.t -> (Loc.t, ALoc.key) Hashtbl.t Lazy.t -> string -> phase -> t
 val metadata_of_options: Options.t -> metadata
@@ -140,6 +145,7 @@ val max_workers: t -> int
 val jsx: t -> Options.jsx_mode
 val exists_checks: t -> ExistsCheck.t ALocMap.t
 val exists_excuses: t -> ExistsCheck.t ALocMap.t
+val voidable_checks: t -> voidable_check list
 val use_def: t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values
 val pid_prefix: t -> string
 
@@ -168,6 +174,7 @@ val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_trust_var: t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
 val add_type_assert: t -> ALoc.t -> (type_assert_kind * ALoc.t) -> unit
+val add_voidable_check: t -> voidable_check -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_all_lint_severities: t -> unit

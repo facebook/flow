@@ -239,6 +239,70 @@ let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
 
   metadata
 
+let detect_non_voidable_properties cx =
+  (* This function approximately checks whether VoidT can flow to the provided
+   * type without actually creating the flow so as not to disturb type inference.
+   * Even though this is happening post-merge, it is possible to encounter an
+   * unresolved tvar, in which case it conservatively returns false.
+   *)
+  let rec is_voidable = Type.(function
+    | OpenT (_, id) ->
+      (match Flow_js.possible_types cx id with
+      (* tvar has no lower bounds: we conservatively assume it's non-voidable
+       * except in the special case when it also has no upper bounds
+       *)
+      | [] -> Flow_js.possible_uses cx id = []
+      (* tvar is resolved: look at voidability of the resolved type *)
+      | [t] -> is_voidable t
+      (* tvar is unresolved: conservatively assume it is non-voidable *)
+      | _ -> false
+      )
+
+    (* a union is voidable if any of its members are voidable *)
+    | UnionT (_, rep) -> UnionRep.members rep |> List.exists is_voidable
+
+    (* an intersection is voidable if all of its members are voidable *)
+    | IntersectionT (_, rep) -> InterRep.members rep |> List.for_all is_voidable
+
+    (* trivially voidable *)
+    | MaybeT _
+    | DefT (_, _, (VoidT | MixedT (Mixed_everything | Mixed_non_null)))
+    | OptionalT _
+    | AnyT _
+      -> true
+
+    (* conservatively assume all other types are non-voidable *)
+    | _ -> false
+    )
+  in
+
+  let check_properties
+    (property_map: Type.Properties.id):
+    ALoc.t Property_assignment.error list SMap.t -> unit =
+    let pmap = Context.find_props cx property_map in
+    SMap.iter (fun name errors ->
+      let should_error =
+        (match SMap.get name pmap with
+        | Some (Type.Field (_, t, _)) -> not @@ is_voidable t
+        | _ -> true
+        )
+      in
+      if should_error then
+        List.iter (fun { Property_assignment.loc; desc } ->
+          Flow_js.add_output cx (Error_message.EUninitializedInstanceProperty (loc, desc))
+        ) errors
+    )
+  in
+
+  List.iter (fun {
+    Context.public_property_map;
+    errors = {
+      Property_assignment.public_property_errors;
+      private_property_errors = _;
+    };
+  } ->
+    check_properties public_property_map public_property_errors;
+  ) (Context.voidable_checks cx)
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
@@ -391,6 +455,7 @@ let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_
    * which require complete knowledge of tvar bounds.
    *)
   detect_sketchy_null_checks cx;
+  detect_non_voidable_properties cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
