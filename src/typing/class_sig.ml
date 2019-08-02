@@ -115,6 +115,9 @@ let add_private_field name loc polarity field = map_sig (fun s -> {
 let public_fields_of_signature ~static s =
   (if static then s.static else s.instance).fields
 
+let private_fields_of_signature ~static s =
+  (if static then s.static else s.instance).private_fields
+
 let add_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
   {s with constructor = [loc, F.to_ctor_sig fsig, set_asts, set_type]}
 
@@ -647,7 +650,7 @@ let classtype cx ?(check_polarity=true) x =
   poly_type_of_tparams (Context.make_nominal cx) tparams t
 
 (* Processes the bodies of instance and static class members. *)
-let toplevels cx ~decls ~stmts ~expr x =
+let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
   Env.in_lex_scope cx (fun () ->
     let new_entry ?(state=Scope.State.Initialized) t =
       Scope.Entry.new_let ~loc:(Type.loc_of_t t) ~state t
@@ -695,8 +698,7 @@ let toplevels cx ~decls ~stmts ~expr x =
     in
 
     (* Bind private fields to the environment *)
-    Env.bind_class cx x.id (to_prop_map cx x.instance.private_fields)
-    (to_prop_map cx x.static.private_fields);
+    Env.bind_class cx x.id private_property_map (to_prop_map cx x.static.private_fields);
 
     x |> with_sig ~static:true (fun s ->
       (* process static methods and fields *)

@@ -296,12 +296,15 @@ let detect_non_voidable_properties cx =
 
   List.iter (fun {
     Context.public_property_map;
+    private_property_map;
     errors = {
       Property_assignment.public_property_errors;
-      private_property_errors = _;
+      private_property_errors;
     };
   } ->
     check_properties public_property_map public_property_errors;
+    check_properties private_property_map private_property_errors;
+
   ) (Context.voidable_checks cx)
 
 (* Merge a component with its "implicit requires" and "explicit requires." The

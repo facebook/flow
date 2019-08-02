@@ -6221,6 +6221,10 @@ and mk_class cx class_loc ~name_loc reason c =
       Class_stmt_sig.to_prop_map cx @@
         Class_stmt_sig.public_fields_of_signature ~static:false class_sig
     in
+    let private_property_map =
+      Class_stmt_sig.to_prop_map cx @@
+        Class_stmt_sig.private_fields_of_signature ~static:false class_sig
+    in
 
     Class_stmt_sig.check_super cx def_reason class_sig;
     Class_stmt_sig.check_implements cx def_reason class_sig;
@@ -6228,7 +6232,8 @@ and mk_class cx class_loc ~name_loc reason c =
       Class_stmt_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels
-      ~expr:expression;
+      ~expr:expression
+      ~private_property_map;
 
     let class_body = Ast.Class.((snd c.body).Body.body) in
     let potential_errors, rest_of_errors =
@@ -6239,6 +6244,7 @@ and mk_class cx class_loc ~name_loc reason c =
     ) rest_of_errors;
     Context.add_voidable_check cx {
       Context.public_property_map;
+      private_property_map;
       errors = potential_errors;
     }
   );

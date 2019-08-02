@@ -101,6 +101,9 @@ val add_private_field: string -> ALoc.t -> Polarity.t -> field -> static:bool ->
 (* Access public fields of signature *)
 val public_fields_of_signature: static:bool -> t -> field' SMap.t
 
+(* Access private fields of signature *)
+val private_fields_of_signature: static:bool -> t -> field' SMap.t
+
 (** Add method to signature.
 
     Overwrites any existing synonymous method. This implements the behavior of
@@ -188,6 +191,7 @@ val toplevels: Context.t ->
                       (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
   expr:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
                       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
+  private_property_map:Type.Properties.id ->
   t -> unit
 
 (** 1. Type Conversion *)

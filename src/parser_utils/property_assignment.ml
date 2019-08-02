@@ -270,7 +270,14 @@ let eval_property_assignment class_body =
   let combine_voidable_checks old new_ = Core_list.rev_append new_ old in
   let single_property_errors errors checks =
     List.fold_left (fun acc (error, prefixed_name) ->
-      if String_utils.string_starts_with prefixed_name "this." then
+      (* Check if it is private first since `this.` is a prefix of `this.#` *)
+      if String_utils.string_starts_with prefixed_name "this.#" then
+        { acc with private_property_errors =
+          SMap.add ~combine:combine_voidable_checks
+            (String_utils.lstrip prefixed_name "this.#")
+            [error] acc.private_property_errors
+        }
+      else if String_utils.string_starts_with prefixed_name "this." then
         { acc with public_property_errors =
           SMap.add ~combine:combine_voidable_checks
             (String_utils.lstrip prefixed_name "this.")
@@ -282,12 +289,4 @@ let eval_property_assignment class_body =
   in
   { public_property_errors = SMap.empty; private_property_errors = SMap.empty; }
   |> single_property_errors uninitialized_properties,
-  let uninitialized_private_properties =
-    Core_list.rev_filter_map ~f:(fun (error, prefixed_name) ->
-      if String_utils.string_starts_with prefixed_name "this.#" then
-        Some error
-      else
-        None
-    ) uninitialized_properties
-  in
-  Core_list.concat_no_order [uninitialized_private_properties; read_before_initialized; this_errors]
+  Core_list.rev_append read_before_initialized this_errors

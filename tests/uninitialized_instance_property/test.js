@@ -864,3 +864,29 @@ class P41 {
 class P42 {
   p: void & ?number;
 }
+
+class P43 {
+  #p: void;
+}
+
+class P44 {
+  #p: void;
+  constructor() {}
+}
+
+class P45 {
+  #p: ?number;
+}
+
+class P46 {
+  #p: ?number;
+}
+
+class P47 {
+  #p;
+}
+
+class P48 {
+  #p;
+  constructor() {}
+}

@@ -61,6 +61,7 @@ type type_assert_kind = Is | Throws | Wraps
 
 type voidable_check = {
   public_property_map: Type.Properties.id;
+  private_property_map: Type.Properties.id;
   errors: ALoc.t Property_assignment.errors;
 }
 
