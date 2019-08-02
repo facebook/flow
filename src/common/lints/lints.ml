@@ -19,6 +19,7 @@ type property_assignment_kind =
   | ReadFromUninitializedProperty
   | MethodCallBeforeEverythingInitialized
   | ThisBeforeEverythingInitialized
+  | PropertyFunctionCallBeforeEverythingInitialized
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind

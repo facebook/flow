@@ -1734,6 +1734,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text "It is unsafe to call a method in the constructor before all ";
           text "class properties are definitively initialized.";
         ]
+      | PropertyFunctionCallBeforeEverythingInitialized -> Normal [
+          text "It is unsafe to call a property function in the constructor ";
+          text "before all class properties are definitely initialized.";
+        ]
       | ThisBeforeEverythingInitialized -> Normal [
           text "It is unsafe to use "; code "this"; text " in the constructor ";
           text "before all class properties are definitively initialized.";

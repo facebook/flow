@@ -2795,6 +2795,8 @@ let dump_error_message =
           | PropertyNotDefinitivelyInitialized -> "PropertyNotDefinitivelyInitialized"
           | ReadFromUninitializedProperty -> "ReadFromUninitializedProperty"
           | MethodCallBeforeEverythingInitialized -> "MethodCallBeforeEverythingInitialized"
+          | PropertyFunctionCallBeforeEverythingInitialized ->
+            "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
     | EExperimentalExportStarAs loc ->
         spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)

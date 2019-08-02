@@ -49,7 +49,7 @@ let filter_uninitialized
     | None -> true
   ) properties;
 
-class property_assignment = object(this)
+class property_assignment (property_names: SSet.t) = object(this)
   inherit Ssa_builder.With_ALoc.ssa_builder as super
 
   (* ABRUPT COMPLETIONS *)
@@ -170,13 +170,25 @@ class property_assignment = object(this)
   method! call loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
     (match expr.Ast.Expression.Call.callee with
     (* match on method calls *)
-    | (_, Ast.Expression.Member {
+    | (member_loc, Ast.Expression.Member {
         Ast.Expression.Member._object = (_, Ast.Expression.This);
         property = ( Ast.Expression.Member.PropertyIdentifier _
                    | Ast.Expression.Member.PropertyPrivateName _
-                   );
+                   ) as property;
       }) ->
-      this#add_this_escape_error (loc, Lints.MethodCallBeforeEverythingInitialized, this#ssa_env)
+      let name = Flow_ast_utils.name_of_ident @@ Ast.Expression.Member.(match property with
+        | PropertyIdentifier id -> public_property member_loc id
+        | PropertyPrivateName id -> private_property member_loc id
+        | PropertyExpression _ -> failwith "match on expr.callee makes this impossible"
+        )
+      in
+      let error =
+        if SSet.mem name property_names then
+          Lints.PropertyFunctionCallBeforeEverythingInitialized
+        else
+          Lints.MethodCallBeforeEverythingInitialized
+      in
+      this#add_this_escape_error (loc, error, this#ssa_env)
     | _ -> ()
     );
     super#call loc expr
@@ -228,7 +240,10 @@ let eval_property_assignment class_body =
     ) Hoister.Bindings.empty properties
   in
 
-  let ssa_walk = new property_assignment in
+  let property_names = List.fold_left (fun acc property ->
+    SSet.add (Flow_ast_utils.name_of_ident property) acc
+  ) SSet.empty properties in
+  let ssa_walk = new property_assignment property_names in
   ignore @@ ssa_walk#with_bindings ALoc.none bindings (fun body ->
     ssa_walk#expecting_return_or_throw (fun () ->
       List.iter (function

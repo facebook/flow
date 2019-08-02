@@ -625,7 +625,7 @@ class E71 {
   q: number;
   constructor() {
     this.f = () => {};
-    this.f(); // MethodCallBeforeEverythingInitialized
+    this.f(); // PropertyFunctionCallBeforeEverythingInitialized
     this.q = 0;
   }
 }
@@ -652,7 +652,7 @@ class E74 {
   q: number;
   constructor() {
     this.f = () => this.p++;
-    this.f(); // MethodCallBeforeEverythingInitialized
+    this.f(); // PropertyFunctionCallBeforeEverythingInitialized
     this.q = 0;
   }
 }
@@ -662,7 +662,7 @@ class E75 {
   f;
   constructor() {
     this.f = x => this.p += x;
-    this.f(this.f()); // MethodCallBeforeEverythingInitialized, MethodCallBeforeEverythingInitialized
+    this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
   }
 }
@@ -672,7 +672,7 @@ class E76Parent {
   p: number;
   constructor() {
     this.f = () => 0;
-    this.f(); // MethodCallBeforeEverythingInitialized
+    this.f(); // PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
   }
 }
@@ -718,7 +718,7 @@ class E82 {
   p: number;
   f = () => this.p++;
   constructor() {
-    this.f(); // MethodCallBeforeEverythingInitialized
+    this.f(); // PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
   }
 }
@@ -743,7 +743,7 @@ class E85 {
   f = () => {};
   q: number;
   constructor() {
-    this.f(); // MethodCallBeforeEverythingInitialized
+    this.f(); // PropertyFunctionCallBeforeEverythingInitialized
     this.q = 0;
   }
 }
@@ -753,7 +753,7 @@ class E86 {
   f = () => this.p++;
   q: number;
   constructor() {
-    this.f(); // MethodCallBeforeEverythingInitialized
+    this.f(); // PropertyFunctionCallBeforeEverythingInitialized
     this.q = 0;
   }
 }
@@ -762,8 +762,39 @@ class E87 {
   p: number;
   f = x => this.p += x;
   constructor() {
-    this.f(this.f()); // MethodCallBeforeEverythingInitialized, MethodCallBeforeEverythingInitialized
+    this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
+  }
+}
+
+class E88 {
+  p = 0;
+  constructor() {
+    this.p(); // ExpectError Cannot call `this.p` because number is not a function.
+  }
+}
+
+class E89 {
+  p = () => "property function";
+  p() {
+    return "method";
+  }
+  q: number;
+  constructor() {
+    this.p(); // PropertyFunctionCallBeforeEverythingInitialized
+    this.q = 0;
+  }
+}
+
+class E90 {
+  p() {
+    return "method";
+  }
+  p = () => "property function";
+  q: number;
+  constructor() {
+    this.p(); // PropertyFunctionCallBeforeEverythingInitialized
+    this.q = 0;
   }
 }
 
@@ -1238,4 +1269,11 @@ class P62 {
 class P63 {
   p1: number;
   p2 = this.p1 = 0;
+}
+
+class P64 {
+  constructor() {
+    this.p;
+  }
+  p = 0;
 }
