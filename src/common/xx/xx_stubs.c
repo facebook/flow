@@ -45,30 +45,50 @@ CAMLexport value caml_xx_update_int(value state, value v) {
   return Val_unit;
 }
 
-CAMLexport value caml_xx_digest(value state) {
-  CAMLparam1(state);
-  CAMLlocal1(v);
-  XXH64_hash_t hash = XXH64_digest(&State_val(state));
-  v = caml_alloc_string(sizeof(XXH64_hash_t));
-  memcpy(String_val(v), &hash, sizeof(XXH64_hash_t));
-  CAMLreturn(v);
+CAMLexport value caml_xx_update_int64_unboxed(value state, int64_t v) {
+  XXH64_update(&State_val(state), &v, sizeof(int64_t));
+  return Val_unit;
 }
 
-/*
- * XXH64_hash_t is an unsigned 64 bit integer. This is too big for an OCaml
- * int, so we just copy it into a string and pass that around abstractly. But to
- * actually print as a readable string, we need to convert it back to an int
- * and sprintf it into a new string
- */
+CAMLexport value caml_xx_update_int64(value state, value v) {
+  return caml_xx_update_int64_unboxed(state, Int64_val(v));
+}
+
+CAMLexport XXH64_hash_t caml_xx_digest_unboxed(value state) {
+  return XXH64_digest(&State_val(state));
+}
+
+CAMLexport value caml_xx_digest(value state) {
+  return caml_copy_int64(caml_xx_digest_unboxed(state));
+}
+
+CAMLexport value caml_xx_to_string_unboxed(XXH64_hash_t hash) {
+  CAMLparam0();
+  CAMLlocal1(str);
+  /* Max unsigned long long is 7FFFFFFFFFFFFFFF which is 16 bytes.
+   *
+   * Note that OCaml strings are not null-terminated, but rather use a somewhat
+   * clever encoding that combines the wosize from the header and the last byte
+   * of the data segment. When we allocate a string to hold 16 bytes (2 words),
+   * OCaml will actually allocate 24 bytes (3 words), where the final byte
+   * stores an offset which is 7 in our case.
+   *
+   * When calculating the length of a string, OCaml combines the byte size of
+   * the value (23) and the offset (7) to arrive at the actual size 16 = 23 - 7.
+   *
+   * The caml_alloc_string API hides this detail for us, so we don't need to
+   * worry about it at all, except to know that it's safe to write into the
+   * first 16 bytes. We could even write a null character into those bytes if we
+   * wanted.
+   */
+  str = caml_alloc_string(16);
+  snprintf(String_val(str), 16, "%016llx", hash);
+  CAMLreturn(str);
+}
+
 CAMLexport value caml_xx_to_string(value hash) {
   CAMLparam1(hash);
   CAMLlocal1(str);
-  // Max unsigned long long is 7FFFFFFFFFFFFFFF which is 16 characters. It
-  // doesn't seem like you need to ask for extra space for the null terminator
-  str = caml_alloc_string(16);
-  XXH64_hash_t hash_as_int;
-  memcpy(&hash_as_int, String_val(hash), sizeof(XXH64_hash_t));
-  // 17 is 16 hex characters plus a null terminator
-  snprintf(String_val(str), 17, "%016llx", hash_as_int);
+  str = caml_xx_to_string_unboxed(Int64_val(hash));
   CAMLreturn(str);
 }
