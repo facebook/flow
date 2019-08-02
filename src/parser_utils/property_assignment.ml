@@ -71,23 +71,13 @@ class property_assignment = object(this)
     final_ssa_env <- this#ssa_env;
     super#pop_ssa_env saved_state
 
-  method! pattern_expression (expr: (ALoc.t, ALoc.t) Ast.Expression.t) =
-    (match expr with
-    | loc, Ast.Expression.Member {
-        Ast.Expression.Member._object = (_, Ast.Expression.This);
-        property = ( Ast.Expression.Member.PropertyIdentifier _
-                   | Ast.Expression.Member.PropertyPrivateName _
-                   ) as property;
-      } ->
-      ignore @@ this#pattern_identifier @@
-        Ast.Expression.Member.(match property with
-        | PropertyIdentifier id -> public_property loc id
-        | PropertyPrivateName id -> private_property loc id
-        | PropertyExpression _ -> failwith "match on expr makes this impossible"
-        );
-      expr
-    | _ -> super#pattern_expression expr
-    )
+  method initialize_property property_id value =
+    (match snd value with
+    | Ast.Expression.ArrowFunction _
+    | Ast.Expression.Function _ -> ()
+    | _ -> ignore @@ this#expression value
+    );
+    ignore @@ this#pattern_identifier property_id
 
   (* READS *)
 
@@ -134,17 +124,18 @@ class property_assignment = object(this)
         Ast.Expression.Member._object = (_, Ast.Expression.This);
         property = ( Ast.Expression.Member.PropertyIdentifier _
                    | Ast.Expression.Member.PropertyPrivateName _
-                   );
+                   ) as property;
       } as left_member)) ->
       (match operator with
       | None ->
         (* given `this.x = e`, read e then write x *)
-        (match snd right with
-        | Ast.Expression.ArrowFunction _
-        | Ast.Expression.Function _ -> ()
-        | _ -> ignore @@ this#expression right
-        );
-        ignore @@ this#assignment_pattern left
+        this#initialize_property
+          Ast.Expression.Member.(match property with
+          | PropertyIdentifier id -> public_property member_loc id
+          | PropertyPrivateName id -> private_property member_loc id
+          | PropertyExpression _ -> failwith "match on expr makes this impossible"
+          )
+          right
       | Some _ ->
         (* given `this.x += e`, read x then read e *)
         ignore @@ this#member member_loc left_member;
@@ -193,22 +184,22 @@ end
 
 let eval_property_assignment class_body =
   let open Ast.Class in
-  let properties =
+  let property_declarations =
     Core_list.filter_map ~f:(function
       | Body.Property (_, {
           Property.key = Ast.Expression.Object.Property.Identifier ((loc, _) as id);
-          value = None;
+          value;
           static = false;
           annot = _;
           variance = _;
-        }) -> Some (public_property loc id)
+        }) -> Some (public_property loc id, value)
       | Body.PrivateField (_, {
           PrivateField.key = (loc, _) as id;
-          value = None;
+          value;
           static = false;
           annot = _;
           variance = _;
-        }) -> Some (private_property loc id)
+        }) -> Some (private_property loc id, value)
       | _ -> None
     ) class_body
   in
@@ -229,6 +220,8 @@ let eval_property_assignment class_body =
     |> Option.value ~default:{ Ast.Statement.Block.body = [] }
   in
 
+  let properties = Core_list.map ~f:fst property_declarations in
+
   let bindings: ALoc.t Hoister.Bindings.t =
     List.fold_left (fun bindings property ->
       Hoister.Bindings.add property bindings
@@ -238,6 +231,11 @@ let eval_property_assignment class_body =
   let ssa_walk = new property_assignment in
   ignore @@ ssa_walk#with_bindings ALoc.none bindings (fun body ->
     ssa_walk#expecting_return_or_throw (fun () ->
+      List.iter (function
+        | (property_id, Some default_initializer) ->
+          ssa_walk#initialize_property property_id default_initializer
+        | _ -> ()
+      ) property_declarations;
       ignore @@ ssa_walk#block ALoc.none body
     );
     body

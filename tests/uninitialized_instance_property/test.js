@@ -683,6 +683,90 @@ class E76Child extends E76Parent {
   }
 }
 
+class E77 {
+  p1: number;
+  p2: number = this.p1; // ReadFromUninitializedProperty
+  constructor() {
+    this.p1 = 0;
+  }
+}
+
+class E78 {
+  p1: number;
+  #p2: number = this.p1; // ReadFromUninitializedProperty
+  constructor() {
+    this.p1 = 0;
+  }
+}
+
+class E79 {
+  p: number = this.m(); // MethodCallBeforeEverythingInitialized
+  constructor() {}
+  m(): number { return 0; }
+}
+
+class E80 {
+  p: number = this.m(); // MethodCallBeforeEverythingInitialized
+  m(): number { return 0; }
+}
+
+class E81 {
+  p = this; // ThisBeforeEverythingInitialized
+}
+
+class E82 {
+  p: number;
+  f = () => this.p++;
+  constructor() {
+    this.f(); // MethodCallBeforeEverythingInitialized
+    this.p = 0;
+  }
+}
+
+class E83 {
+  p: number;
+  constructor() {
+    let f = () => this.p++; // ReadFromUninitializedProperty
+    this.p = 0;
+  }
+}
+
+class E84 {
+  p: number;
+  constructor() {
+    (() => this.p++)(); // ReadFromUninitializedProperty
+    this.p = 0;
+  }
+}
+
+class E85 {
+  f = () => {};
+  q: number;
+  constructor() {
+    this.f(); // MethodCallBeforeEverythingInitialized
+    this.q = 0;
+  }
+}
+
+class E86 {
+  p = 0;
+  f = () => this.p++;
+  q: number;
+  constructor() {
+    this.f(); // MethodCallBeforeEverythingInitialized
+    this.q = 0;
+  }
+}
+
+class E87 {
+  p: number;
+  f = x => this.p += x;
+  constructor() {
+    this.f(this.f()); // MethodCallBeforeEverythingInitialized, MethodCallBeforeEverythingInitialized
+    this.p = 0;
+  }
+}
+
 /* EXPECTED TO NOT ERROR */
 
 class P1 {
@@ -1125,4 +1209,33 @@ class P59 {
     this.isEven = x => x === 0 ? true : this.isOdd(x - 1);
     this.isOdd = x => x === 0 ? false : this.isEven(x - 1);
   }
+}
+
+class P60 {
+  p: number;
+  f = () => this.p++;
+  constructor() {
+    this.p = 0;
+    this.f();
+  }
+}
+
+class P61 {
+  p: number = 0;
+  constructor() {
+    this;
+  }
+}
+
+class P62 {
+  p: number = 0;
+  constructor() {
+    this.m();
+  }
+  m() {}
+}
+
+class P63 {
+  p1: number;
+  p2 = this.p1 = 0;
 }
