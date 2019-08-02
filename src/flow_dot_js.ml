@@ -235,7 +235,12 @@ let infer_and_merge ~root filename ast file_sig =
   let ((cx, tast, _), _other_cxs) = Merge_js.merge_component
     ~metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
-    ~get_aloc_table_unsafe:(fun _ -> failwith "Did not expect to need an ALoc table")
+    (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
+     * shouldn't use them to decide whether or not to use abstract locations. We should pass through
+     * whatever options we need instead *)
+    ~get_aloc_table_unsafe:(
+      fun _ -> raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found "")
+    )
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     ~phase:Context.Checking
     (Nel.one filename) reqs [] (Context.sig_cx master_cx)
