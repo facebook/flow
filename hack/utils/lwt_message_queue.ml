@@ -55,5 +55,8 @@ let close (queue: 'a t): unit =
 let is_empty (queue: 'a t): bool =
   ImmQueue.is_empty queue.messages
 
+let length (queue: 'a t): int =
+  ImmQueue.length queue.messages
+
 let exists (queue: 'a t) ~(f: 'a -> bool): bool =
   ImmQueue.exists ~f queue.messages
