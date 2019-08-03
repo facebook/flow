@@ -108,7 +108,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     watchman_retries: int;
     max_purgatory_clients: int;
     (** Version of this running server, as specified in the config file. *)
-    current_version: string option;
+    current_version: Config_file.version;
     (** After sending a Server_not_alive_dormant during Prehandoff,
      * clients are put here waiting for a server to come alive, at
      * which point they get pushed through the rest of prehandoff and
@@ -202,14 +202,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       ~silent:true
       (Relative_path.to_absolute filename)
     in
-    let new_version = SMap.get "version" config in
-    match env.current_version, new_version with
-    | None, None -> true
-    | None, Some _
-    | Some _, None ->
-      false
-    | Some cv, Some nv ->
-      String.equal cv nv
+    let new_version = Config_file.parse_version (SMap.get "version" config) in
+    0 = Config_file.compare_versions env.current_version new_version
 
   (** Actually starts a new server. *)
   let start_new_server ?target_saved_state env exit_status =
@@ -653,9 +647,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let env = check_and_run_loop_ env monitor_config socket in
     env, monitor_config, socket
 
-  let start_monitor ?current_version ~waiting_client ~max_purgatory_clients
-    server_start_options informant_init_env
-    monitor_config =
+  let start_monitor
+      ~current_version
+      ~waiting_client
+      ~max_purgatory_clients
+      server_start_options
+      informant_init_env
+      monitor_config =
     let socket = Socket.init_unix_socket monitor_config.socket_file in
     (* If the client started the server, it opened an FD before forking, so it
      * can be notified when the monitor socket is ready. The FD number was
@@ -700,11 +698,18 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     } in
     env, monitor_config, socket
 
-  let start_monitoring ?current_version ~waiting_client ~max_purgatory_clients
+  let start_monitoring
+      ~current_version
+      ~waiting_client
+      ~max_purgatory_clients
     server_start_options informant_init_env
     monitor_config =
     let env, monitor_config, socket = start_monitor
-      ?current_version ~waiting_client ~max_purgatory_clients
-      server_start_options informant_init_env monitor_config in
+      ~current_version
+      ~waiting_client
+      ~max_purgatory_clients
+      server_start_options
+      informant_init_env
+      monitor_config in
     check_and_run_loop env monitor_config socket
 end

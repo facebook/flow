@@ -15,7 +15,7 @@ module Make_monitor :
 
       (** Start a monitor without running the check loop. Useful for testing. *)
       val start_monitor:
-        ?current_version:string ->
+        current_version:Config_file.version ->
         waiting_client:Unix.file_descr option ->
         max_purgatory_clients:int ->
         SC.server_start_options ->
@@ -29,7 +29,7 @@ module Make_monitor :
       (** Start the monitor and repeatedly run the check and run loop.
        * Does not return. *)
       val start_monitoring:
-        ?current_version:string ->
+        current_version:Config_file.version ->
         waiting_client:Unix.file_descr option ->
         max_purgatory_clients:int ->
         SC.server_start_options ->
