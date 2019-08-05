@@ -33,30 +33,35 @@
             "range":[4,20],
             "types":[
               {
-                "type":"FunctionTypeAnnotation",
+                "type":"TupleTypeElement",
                 "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":19}},
                 "range":[5,19],
-                "params":[
-                  {
-                    "type":"FunctionTypeParam",
-                    "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":11}},
-                    "range":[5,11],
-                    "name":null,
-                    "typeAnnotation":{
-                      "type":"NumberTypeAnnotation",
+                "argument":{
+                  "type":"FunctionTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":19}},
+                  "range":[5,19],
+                  "params":[
+                    {
+                      "type":"FunctionTypeParam",
                       "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":11}},
-                      "range":[5,11]
-                    },
-                    "optional":false
-                  }
-                ],
-                "returnType":{
-                  "type":"VoidTypeAnnotation",
-                  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":19}},
-                  "range":[15,19]
-                },
-                "rest":null,
-                "typeParameters":null
+                      "range":[5,11],
+                      "name":null,
+                      "typeAnnotation":{
+                        "type":"NumberTypeAnnotation",
+                        "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":11}},
+                        "range":[5,11]
+                      },
+                      "optional":false
+                    }
+                  ],
+                  "returnType":{
+                    "type":"VoidTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":19}},
+                    "range":[15,19]
+                  },
+                  "rest":null,
+                  "typeParameters":null
+                }
               }
             ]
           }

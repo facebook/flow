@@ -1780,11 +1780,18 @@ let program (algo : diff_algorithm)
       diff_if_changed_ret_opt function_type ft1 ft2
     | _ -> None
 
+  and tuple_type_element el1 el2 =
+    let open Ast.Type.Tuple in
+    match el1, el2 with
+    | Element t0, Element t1 -> Some (diff_if_changed type_ t0 t1)
+    | SpreadElement _, SpreadElement _ -> None (* TODO *)
+    | _ -> None
+
   and tuple_type
-      (tp1: (Loc.t, Loc.t) Ast.Type.t list)
-      (tp2: (Loc.t, Loc.t) Ast.Type.t list)
+      (tp1: (Loc.t, Loc.t) Ast.Type.Tuple.t)
+      (tp2: (Loc.t, Loc.t) Ast.Type.Tuple.t)
       : node change list option =
-    diff_and_recurse_nonopt_no_trivial type_ tp1 tp2
+    diff_and_recurse_no_trivial tuple_type_element tp1 tp2
 
   and type_or_implicit
       (t1: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)

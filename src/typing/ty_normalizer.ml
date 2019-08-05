@@ -916,7 +916,7 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
     | T.TupleAT (_, ts) ->
-      mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
+      mapM (type__ ~env) ts >>| fun ts -> Ty.Tup (Core_list.map ~f:(fun t -> Ty.Elem t) ts)
 
   and name_of_instance_reason r =
     (* This should cover all cases but throw an error just in case. *)
@@ -1519,6 +1519,21 @@ end = struct
       ) [] tys_rev in
       mk_spread ty target prefix_tys head_slice
 
+  and spread_tuple =
+    let spread_of_ty = function
+      | Ty.Tup ts -> ts
+      | t -> [Ty.SpreadElem t]
+    in
+    let mk_spread ty prefix_tys =
+      return (Ty.Tup (prefix_tys @ spread_of_ty ty))
+    in
+    fun ~env ty ts_rev ->
+      mapM (type__ ~env) ts_rev >>= fun tys_rev ->
+      let prefix_tys = List.fold_left (fun acc t ->
+        List.append (spread_of_ty t) acc
+      ) [] tys_rev in
+      mk_spread ty prefix_tys
+
   and type_destructor_t ~env id t d =
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
@@ -1552,6 +1567,7 @@ end = struct
     | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
     | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
+    | T.SpreadTupleType ts -> spread_tuple ~env ty ts
     | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
     | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
     | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))

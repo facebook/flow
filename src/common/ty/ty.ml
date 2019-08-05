@@ -29,7 +29,7 @@ type t =
   | Fun of fun_t
   | Obj of obj_t
   | Arr of arr_t
-  | Tup of t list
+  | Tup of element list
   | Union of t * t * t list
   | Inter of t * t * t list
   | TypeAlias of type_alias
@@ -118,6 +118,10 @@ and prop =
   | IndexProp of dict
   | CallProp of fun_t
   | SpreadProp of t
+
+and element =
+  | Elem of t
+  | SpreadElem of t
 
 and named_prop =
   | Field of t * field

@@ -27,14 +27,24 @@
                 "range":[8,24],
                 "types":[
                   {
-                    "type":"NumberTypeAnnotation",
+                    "type":"TupleTypeElement",
                     "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":15}},
-                    "range":[9,15]
+                    "range":[9,15],
+                    "argument":{
+                      "type":"NumberTypeAnnotation",
+                      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":15}},
+                      "range":[9,15]
+                    }
                   },
                   {
-                    "type":"StringTypeAnnotation",
+                    "type":"TupleTypeElement",
                     "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":23}},
-                    "range":[17,23]
+                    "range":[17,23],
+                    "argument":{
+                      "type":"StringTypeAnnotation",
+                      "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":23}},
+                      "range":[17,23]
+                    }
                   }
                 ]
               }
