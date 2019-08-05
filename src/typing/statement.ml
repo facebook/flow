@@ -695,8 +695,38 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
             },
             abnormal_opt
 
+        | ((ploc, Object _) as id)
+        | ((ploc, Array _) as id) ->
+            let id_reason = mk_reason RDestructuring ploc in
+            let annot = Destructuring.type_of_pattern id in
+            match annot with
+            | Ast.Type.Available (_, (loc, _)) ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
+              Tast_utils.error_mapper#catch_clause catch_clause, None
+            | _ ->
+              let annot_t, _ = Anno.mk_type_annotation cx SMap.empty id_reason annot in
+              let init = Destructuring.empty annot_t ~annot:false in
+              let (stmts, abnormal_opt), id_ast = Env.in_lex_scope cx (fun () ->
+                let id_ast = Destructuring.pattern cx ~expr:expression init id ~f:(fun ~use_op loc name default t ->
+                  let reason = mk_reason (RIdentifier name) loc in
+                  Scope.(Env.bind_implicit_let ~state:State.Initialized Entry.CatchParamBinding cx name t loc);
+                  (* Env.declare_let cx name loc; *)
+                  (* Env.init_let cx ~use_op name ~has_anno:false t loc; *)
+                  Flow.flow cx (t, AssertImportIsValueT (reason, name));
+                  Option.iter default ~f:(fun d ->
+                    let default_t = Flow.mk_default cx reason d in
+                    Flow.flow cx (default_t, UseT (use_op, t))
+                  )
+                ) in
+                check cx b, id_ast
+              ) in
+              { Try.CatchClause.
+                param = Some id_ast;
+                body = b_loc, { Block.body = stmts };
+              },
+              abnormal_opt
 
-        | loc, Identifier _ ->
+        | _, Identifier { Identifier.annot = Ast.Type.Available (_, (loc, _)); _ } ->
             Flow.add_output cx
               Error_message.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
             Tast_utils.error_mapper#catch_clause catch_clause, None
