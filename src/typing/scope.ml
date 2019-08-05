@@ -52,6 +52,7 @@ module Entry = struct
     | ConstImportBinding
     | ConstParamBinding
     | ConstVarBinding
+    | EnumNameBinding
 
   and let_binding_kind =
     | LetVarBinding
@@ -70,6 +71,7 @@ module Entry = struct
   | Const ConstImportBinding -> "import"
   | Const ConstParamBinding -> "const param"
   | Const ConstVarBinding -> "const"
+  | Const EnumNameBinding -> "enum"
   | Let LetVarBinding -> "let"
   | Let ConstlikeLetVarBinding -> "let"
   | Let ClassNameBinding -> "class"

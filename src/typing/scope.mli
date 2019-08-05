@@ -21,6 +21,7 @@ module Entry :
       | ConstImportBinding
       | ConstParamBinding
       | ConstVarBinding
+      | EnumNameBinding
     and let_binding_kind =
       | LetVarBinding
       | ConstlikeLetVarBinding

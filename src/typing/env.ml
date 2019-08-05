@@ -596,9 +596,10 @@ let declare_value_entry kind cx name loc =
   )
 
 let declare_let = declare_value_entry Entry.(Let LetVarBinding)
-let declare_implicit_let kind =
-  declare_value_entry (Entry.Let kind)
+let declare_implicit_let kind = declare_value_entry (Entry.Let kind)
+
 let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
+let declare_implicit_const kind = declare_value_entry (Entry.Const kind)
 
 let promote_to_const_like cx loc =
   try
@@ -671,6 +672,7 @@ let init_let = init_value_entry Entry.(Let LetVarBinding)
 let init_implicit_let kind = init_value_entry (Entry.Let kind)
 let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 let init_const = init_value_entry Entry.(Const ConstVarBinding)
+let init_implicit_const kind = init_value_entry Entry.(Const kind)
 
 (* update type alias to reflect initialization in code *)
 let init_type cx name type_ loc =
@@ -919,6 +921,10 @@ let update_var op cx ~use_op name specific loc =
     Some change
   | Value { Entry.kind = Const ConstVarBinding; _ } ->
     let msg = Error_message.EConstReassigned in
+    binding_error msg cx name entry loc;
+    None
+  | Value { Entry.kind = Const EnumNameBinding; _ } ->
+    let msg = Error_message.EEnumReassigned in
     binding_error msg cx name entry loc;
     None
   | Value { Entry.kind = Const ConstImportBinding; _; } ->

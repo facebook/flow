@@ -269,6 +269,7 @@ and binding_error =
   | EConstReassigned
   | EConstParamReassigned
   | EImportReassigned
+  | EEnumReassigned
 
 and docblock_error =
   | MultipleFlowAttributes
@@ -1666,6 +1667,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         -> [text "Cannot reassign constant "; ref x; text "."]
       | EImportReassigned ->
         [text "Cannot reassign import "; ref x; text "."]
+      | EEnumReassigned ->
+        [text "Cannot reassign enum "; ref x; text "."]
       in
       Normal msg
 
