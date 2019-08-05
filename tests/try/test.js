@@ -75,8 +75,8 @@ function maz() {
 // type annotation is banned
 function maz() {
   try {
-  } catch (e: any) {
-    e;
+  } catch (e: string) { // error
+    (e: number); // ok
     var c: string = 1; // it typechecks
   }
 }

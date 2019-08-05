@@ -32,3 +32,13 @@ function f() {
     const foo: string = 1; // it typechecks
   }
 }
+
+// type annotation doesn't affect type
+function f() {
+  try {
+
+  } catch ({message}: {message: string}) { // error
+    ;(message: number) // ok
+    const foo: string = 1; // it typechecks
+  }
+}
