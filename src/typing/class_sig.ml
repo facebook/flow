@@ -143,7 +143,7 @@ let add_field ~static name loc polarity field x =
   add_field' ~static name (Some loc, polarity, field) x
 
 let add_indexer ~static polarity ~key ~value x =
-  x |> add_field' ~static "$key" (None, polarity, Annot key)
+  x |> add_field' ~static "$key" (None, Polarity.Neutral, Annot key)
     |> add_field' ~static "$value" (None, polarity, Annot value)
 
 let add_name_field x =
