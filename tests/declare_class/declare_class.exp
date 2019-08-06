@@ -22,62 +22,62 @@ References:
                ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- declare_class.js:8:7
+Error -------------------------------------------------------------------------------------------- declare_class.js:10:7
 
 Cannot assign empty string to `C.x` because string [1] is incompatible with number [2].
 
-   declare_class.js:8:7
-   8| C.x = "";
-            ^^ [1]
+   declare_class.js:10:7
+   10| C.x = "";
+             ^^ [1]
 
 References:
-   declare_class.js:2:15
-   2|     static x: number;
-                    ^^^^^^ [2]
+   declare_class.js:4:15
+    4|     static x: number;
+                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- declare_class.js:9:7
+Error -------------------------------------------------------------------------------------------- declare_class.js:11:7
 
 Cannot call `C.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
 
-   declare_class.js:9:7
-   9| C.foo("");
-            ^^ [1]
+   declare_class.js:11:7
+   11| C.foo("");
+             ^^ [1]
 
 References:
-   declare_class.js:3:19
-   3|     static foo(x: number): void;
-                        ^^^^^^ [2]
+   declare_class.js:5:19
+    5|     static foo(x: number): void;
+                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- declare_class.js:12:2
+Error -------------------------------------------------------------------------------------------- declare_class.js:14:2
 
 Cannot cast `C.name` to number because string [1] is incompatible with number [2].
 
-   declare_class.js:12:2
-   12| (C.name: number); // error, it's a string
+   declare_class.js:14:2
+   14| (C.name: number); // error, it's a string
         ^^^^^^
 
 References:
-   declare_class.js:1:15
-    1| declare class C {
+   declare_class.js:3:15
+    3| declare class C {
                      ^ [1]
-   declare_class.js:12:10
-   12| (C.name: number); // error, it's a string
+   declare_class.js:14:10
+   14| (C.name: number); // error, it's a string
                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- declare_class.js:15:7
+Error -------------------------------------------------------------------------------------------- declare_class.js:17:7
 
 Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2].
 
-   declare_class.js:15:7
-   15| new D(123); // error, number ~> string
+   declare_class.js:17:7
+   17| new D(123); // error, number ~> string
              ^^^ [1]
 
 References:
-   declare_class.js:5:20
-    5|     constructor(x: string): void;
+   declare_class.js:7:20
+    7|     constructor(x: string): void;
                           ^^^^^^ [2]
 
 
