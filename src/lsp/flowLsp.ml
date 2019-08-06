@@ -469,9 +469,7 @@ let do_initialize () : Initialize.result =
       documentSymbolProvider = true;
       workspaceSymbolProvider = false;
       codeActionProvider = true;
-      codeLensProvider = Some {
-        codelens_resolveProvider = false;
-      };
+      codeLensProvider = None;
       documentFormattingProvider = false;
       documentRangeFormattingProvider = false;
       documentOnTypeFormattingProvider = None;
