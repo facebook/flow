@@ -2,4 +2,9 @@
   (name cgroup)
   (wrapped false)
   (libraries
-    ))
+    core_kernel
+    lwt
+    lwt.unix
+    procfs
+  )
+  (preprocess (pps lwt_ppx)))
