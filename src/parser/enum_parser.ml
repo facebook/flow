@@ -127,7 +127,7 @@ end = struct
 
   let rec enum_members ~enum_name ~explicit_type acc env =
     match Peek.token env with
-    | T_RCURLY -> {
+    | T_RCURLY | T_EOF -> {
         boolean_members = List.rev acc.members.boolean_members;
         number_members = List.rev acc.members.number_members;
         string_members = List.rev acc.members.string_members;
