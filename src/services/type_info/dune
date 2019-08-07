@@ -3,6 +3,7 @@
   (wrapped false)
   (libraries
     flow_common
+    flow_common_lsp_conversions
     flow_parser
     flow_parser_utils
     flow_server_env
