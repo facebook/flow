@@ -4370,7 +4370,8 @@ and unary cx loc = Ast.Expression.Unary.(function
   | { operator = BitNot; argument; comments } ->
       let t = NumT.at loc |> with_trust literal_trust in
       let (_, argt), _ as argument = expression cx argument in
-      Flow.flow_t cx (argt, t);
+      let reason = mk_reason (RUnaryOperator ("bit not", desc_of_t argt)) loc in
+      Flow.flow cx (argt, AssertArithmeticOperandT reason);
       t, { operator = BitNot; argument; comments}
 
   | { operator = Typeof; argument; comments } ->
