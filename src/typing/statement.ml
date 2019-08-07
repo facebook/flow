@@ -5134,7 +5134,7 @@ and op_assignment cx loc lhs op rhs =
   | Assignment.BitAndAssign
     ->
       (* lhs (numop)= rhs *)
-      let reason = mk_reason (RCustom "(numop)=") loc in
+      let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) loc in
       let (_, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
       let (_, rhs_t), _ as rhs_ast = expression cx rhs in
       let t = NumT.at loc |> with_trust literal_trust in
