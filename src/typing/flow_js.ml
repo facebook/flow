@@ -414,22 +414,33 @@ module Cache = struct
     type id_cache_key = Type.t * Type.defer_use_t
     type repos_cache_key = Type.t * Type.defer_use_t * int
 
+    let eval_id_cache: (int, Type.t) Hashtbl.t = Hashtbl.create 0
     let id_cache: (id_cache_key, int) Hashtbl.t = Hashtbl.create 0
     let repos_cache: (repos_cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
 
     let id t defer_use =
-      let cache_key = t, defer_use in
-      try
-        Hashtbl.find id_cache cache_key
-      with _ ->
-        let i = mk_id () in
-        Hashtbl.add id_cache cache_key i;
-        i
+      match t with
+      | EvalT (_, d, i) when d = defer_use ->
+        (match Hashtbl.find_opt eval_id_cache i with
+        | Some t -> t
+        | None ->
+          let i = mk_id () in
+          Hashtbl.add eval_id_cache i t;
+          EvalT (t, defer_use, i))
+      | _ ->
+        let cache_key = t, defer_use in
+        let id = match Hashtbl.find_opt id_cache cache_key with
+          | Some i -> i
+          | None ->
+            let i = mk_id () in
+            Hashtbl.add id_cache cache_key i;
+            i
+        in
+        EvalT (t, defer_use, id)
 
     let find_repos t defer_use id =
       let cache_key = t, defer_use, id in
-      try Some (Hashtbl.find repos_cache cache_key)
-      with _ -> None
+      Hashtbl.find_opt repos_cache cache_key
 
     let add_repos t defer_use id tvar =
       let cache_key = t, defer_use, id in
@@ -443,8 +454,7 @@ module Cache = struct
 
     let find reason i =
       let cache_key = reason, i in
-      try Some (Hashtbl.find cache cache_key)
-      with _ -> None
+      Hashtbl.find_opt cache cache_key
 
     let add reason i tvar =
       let cache_key = reason, i in
@@ -456,6 +466,7 @@ module Cache = struct
     Hashtbl.clear Subst.cache;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
+    Hashtbl.clear Eval.eval_id_cache;
     Hashtbl.clear Eval.id_cache;
     Hashtbl.clear Eval.repos_cache;
     Hashtbl.clear Fix.cache;
@@ -7615,29 +7626,29 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
 | TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts in
-  rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
+  rec_flow_t cx trace (Cache.Eval.id t destructor, tout)
 (* If we are destructuring a union, evaluating the destructor on the union
    itself may have the effect of splitting the union into separate lower
    bounds, which prevents the speculative match process from working.
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
 | UnionT (r, rep) ->
+  let destructor = TypeDestructorT (use_op, reason, d) in
   rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
-    let destructor = TypeDestructorT (use_op, reason, d) in
-    EvalT (t, destructor, Cache.Eval.id t destructor)
+    Cache.Eval.id t destructor
   )), tout)
 | MaybeT (r, t) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let reason = replace_reason_const RNullOrVoid r in
   let rep = UnionRep.make
-    (let null = NullT.make reason |> with_trust bogus_trust in EvalT (null, destructor, Cache.Eval.id null destructor))
-    (let void = VoidT.make reason |> with_trust bogus_trust in EvalT (void, destructor, Cache.Eval.id void destructor))
-    [EvalT (t, destructor, Cache.Eval.id t destructor)]
+    (let null = NullT.make reason |> with_trust bogus_trust in Cache.Eval.id null destructor)
+    (let void = VoidT.make reason |> with_trust bogus_trust in Cache.Eval.id void destructor)
+    [Cache.Eval.id t destructor]
   in
   rec_flow_t cx trace (UnionT (r, rep), tout)
 | AnnotT (_, t, _) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
-  rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
+  rec_flow_t cx trace (Cache.Eval.id t destructor, tout)
 | _ ->
   rec_flow cx trace (t, match d with
   | NonMaybeType ->
