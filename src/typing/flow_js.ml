@@ -3969,14 +3969,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* When looking at properties of an AbstractComponent, we delegate to a union of
      * function component and class component
      *)
-    | DefT (r, _, ReactAbstractComponentT _),(
+    | DefT (r, _, ReactAbstractComponentT {config; _}),(
         TestPropT _
       | GetPropT  _
       | SetPropT _
       | GetElemT _
       | SetElemT _
     ) ->
-      let statics = get_builtin_type cx ~trace r "React$AbstractComponentStatics" in
+      let statics = get_builtin_typeapp cx ~trace r "React$AbstractComponentStatics" [config] in
       rec_flow cx trace (statics, u)
 
     (******************)
