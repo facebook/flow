@@ -127,6 +127,7 @@ module Func_stmt_config = struct
     | Array of {
         annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
         elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element option list;
+        comments: (ALoc.t, unit) Ast.Syntax.t option;
       }
 
   type param = Param of {
@@ -247,7 +248,7 @@ module Func_stmt_config = struct
         default;
       }
 
-    | Array { annot; elements } ->
+    | Array { annot; elements; comments } ->
       let default = eval_default cx ~expr default in
       let elements =
         let default = Option.map default (fun ((_, t), _) ->
@@ -265,6 +266,7 @@ module Func_stmt_config = struct
         argument = ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.
           elements;
           annot;
+          comments;
         });
         default;
       }
@@ -6589,10 +6591,10 @@ and mk_func_sig =
       let reason = mk_reason RDestructuring ploc in
       let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
       t, Func_stmt_config.Object { annot; properties }
-    | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements } ->
+    | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
       let reason = mk_reason RDestructuring ploc in
       let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
-      t, Func_stmt_config.Array { annot; elements; }
+      t, Func_stmt_config.Array { annot; elements; comments }
     | Ast.Pattern.Expression _ ->
       failwith "unexpected expression pattern in param"
     in

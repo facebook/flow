@@ -820,7 +820,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         if default
         then loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot
         else loc, None, false, annotated_type annot
-      | loc, Array { Array.annot; elements = _ } ->
+      | loc, Array { Array.annot; elements = _; comments = _ } ->
         if default
         then loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot
         else loc, None, false, annotated_type annot

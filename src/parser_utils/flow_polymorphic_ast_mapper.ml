@@ -1321,10 +1321,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let properties' = Core_list.map ~f:(this#pattern_object_p ?kind) properties in
       let annot' = this#type_annotation_hint annot in
       Object { Object.properties = properties'; annot = annot' }
-    | Array { Array.elements; annot } ->
+    | Array { Array.elements; annot; comments; } ->
       let elements' = Core_list.map ~f:(Option.map ~f:(this#pattern_array_e ?kind)) elements in
       let annot' = this#type_annotation_hint annot in
-      Array { Array.elements = elements'; annot = annot' }
+      let comments' = Option.map ~f:this#syntax comments in
+      Array { Array.elements = elements'; annot = annot'; comments = comments' }
     | Identifier { Identifier.name; annot; optional } ->
       let name' = this#t_pattern_identifier ?kind name in
       let annot' = this#type_annotation_hint annot in

@@ -889,8 +889,8 @@ end with type t = Impl.t) = struct
             "properties", array_of_list object_pattern_property properties;
             "typeAnnotation", hint type_annotation annot;
           ]
-      | loc, Array { Array.elements; annot } ->
-          node "ArrayPattern" loc [
+      | loc, Array { Array.elements; annot; comments } ->
+          node ?comments "ArrayPattern" loc [
             "elements", array_of_list (option array_pattern_element) elements;
             "typeAnnotation", hint type_annotation annot;
           ]

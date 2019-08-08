@@ -248,10 +248,10 @@ let identifier cx ~f acc loc name =
 let rec pattern cx ~expr ~f acc (loc, p) =
   let open Ast.Pattern in
   (loc, acc.current), match p with
-  | Array { Array.elements; annot } ->
+  | Array { Array.elements; annot; comments } ->
     let elements = array_elements cx ~expr ~f acc elements in
     let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-    Array { Array.elements; annot }
+    Array { Array.elements; annot; comments }
   | Object { Object.properties; annot } ->
     let properties = object_properties cx ~expr ~f acc properties in
     let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in

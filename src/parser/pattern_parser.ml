@@ -131,10 +131,11 @@ module Pattern
     )
     in
 
-    fun env (loc, { Ast.Expression.Array.elements = elems; comments = _ (* TODO *) }) ->
+    fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
       loc, Pattern.Array { Pattern.Array.
         elements = elements env [] elems;
         annot = missing_annot env;
+        comments;
       }
 
   and from_expr env (loc, expr) =
@@ -339,6 +340,7 @@ module Pattern
         elements env ((Some element)::acc)
     in
     with_loc (fun env ->
+      let leading = Peek.comments env in
       Expect.token env T_LBRACKET;
       let elements = elements env [] in
       Expect.token env T_RBRACKET;
@@ -346,7 +348,9 @@ module Pattern
         if Peek.token env = T_COLON then Ast.Type.Available (Type.annotation env)
         else missing_annot env
       in
-      Pattern.Array { Pattern.Array.elements; annot; }
+      let trailing = Peek.comments env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Pattern.Array { Pattern.Array.elements; annot; comments; }
     )
 
   and pattern env restricted_error =

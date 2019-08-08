@@ -1527,8 +1527,8 @@ let program (algo : diff_algorithm)
     let changes = match p1, p2 with
       | (_, Ast.Pattern.Identifier i1), (_, Ast.Pattern.Identifier i2) ->
           pattern_identifier i1 i2
-      | (_, Ast.Pattern.Array a1), (_, Ast.Pattern.Array a2) ->
-          pattern_array a1 a2
+      | (loc, Ast.Pattern.Array a1), (_, Ast.Pattern.Array a2) ->
+          pattern_array loc a1 a2
       | (_, Ast.Pattern.Object o1), (_, Ast.Pattern.Object o2) ->
           pattern_object o1 o2
       | (_, Ast.Pattern.Expression e1), (_, Ast.Pattern.Expression e2) ->
@@ -1588,16 +1588,17 @@ let program (algo : diff_algorithm)
     | _, _ ->
         None
 
-  and pattern_array (a1: (Loc.t, Loc.t) Ast.Pattern.Array.t)
-                    (a2: (Loc.t, Loc.t) Ast.Pattern.Array.t)
+  and pattern_array loc (a1: (Loc.t, Loc.t) Ast.Pattern.Array.t)
+                        (a2: (Loc.t, Loc.t) Ast.Pattern.Array.t)
       : node change list option =
     let open Ast.Pattern.Array in
-    let { elements = elements1; annot = annot1 } = a1 in
-    let { elements = elements2; annot = annot2 } = a2 in
+    let { elements = elements1; annot = annot1; comments = comments1 } = a1 in
+    let { elements = elements2; annot = annot2; comments = comments2 } = a2 in
     let elements_diff =
       diff_and_recurse_no_trivial pattern_array_e elements1 elements2 in
     let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Option.return in
-    join_diff_list [elements_diff; annot_diff]
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [comments_diff; elements_diff; annot_diff]
 
   and pattern_array_e (eo1: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
                             (eo2: (Loc.t, Loc.t) Ast.Pattern.Array.element option)

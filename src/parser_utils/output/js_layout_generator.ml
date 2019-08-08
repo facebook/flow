@@ -1131,7 +1131,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
           );
         hint type_annotation annot;
       ]
-    | P.Array { P.Array.elements; annot } ->
+    | P.Array { P.Array.elements; annot; comments } ->
       group [
         new_list
           ~wrap:(Atom "[", Atom "]")
@@ -1153,7 +1153,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
             | Some P.Array.RestElement (loc, { P.Array.RestElement.
                 argument
               }) ->
-              source_location_with_comments (loc, fuse [Atom "..."; pattern argument])
+              source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern argument])
             )
             elements);
         hint type_annotation annot;

@@ -1256,11 +1256,12 @@ class ['loc] mapper = object(this)
         let annot' = this#type_annotation_hint annot in
         if properties' == properties && annot' == annot then patt
         else Object { Object.properties = properties'; annot = annot' }
-      | Array { Array.elements; annot } ->
+      | Array { Array.elements; annot; comments } ->
         let elements' = ListUtils.ident_map (map_opt (this#pattern_array_e ?kind)) elements in
         let annot' = this#type_annotation_hint annot in
-        if elements' == elements && annot' == annot then patt
-        else Array { Array.elements = elements'; annot = annot' }
+        let comments' = this#syntax_opt comments in
+        if comments == comments' && elements' == elements && annot' == annot then patt
+        else Array { Array.elements = elements'; annot = annot'; comments = comments' }
       | Identifier { Identifier.name; annot; optional } ->
         let name' = this#pattern_identifier ?kind name in
         let annot' = this#type_annotation_hint annot in

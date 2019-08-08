@@ -1244,6 +1244,7 @@ and Pattern : sig
     and ('M, 'T) t = {
       elements: ('M, 'T) element option list;
       annot: ('M, 'T) Type.annotation_or_hint;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

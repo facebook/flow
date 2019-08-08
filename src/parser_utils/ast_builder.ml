@@ -91,6 +91,7 @@ module Patterns = struct
     Loc.none, Array { Array.
       elements;
       annot = Ast.Type.Missing Loc.none;
+      comments = Flow_ast_utils.mk_comments_opt ();
     }
 
   let object_ str =
