@@ -336,21 +336,21 @@ let types_to_json types ~strip_root =
   ) in
   JSON_Array types_json
 
-let coverage_to_json ~strip_root ~trust (types : (Loc.t * Coverage.expression_coverage) list) content =
+let coverage_to_json ~strip_root ~trust (types : (Loc.t * Coverage_response.expression_coverage) list) content =
   let accum_coverage (untainted, tainted, empty, total) (_loc, cov) =
   match cov with
-  | Coverage.Uncovered -> (untainted, tainted, empty, total + 1)
-  | Coverage.Empty     -> (untainted, tainted, empty + 1, total + 1)
-  | Coverage.Untainted -> (untainted + 1, tainted, empty, total + 1)
-  | Coverage.Tainted   -> (untainted, tainted + 1, empty, total + 1)
+  | Coverage_response.Uncovered -> (untainted, tainted, empty, total + 1)
+  | Coverage_response.Empty     -> (untainted, tainted, empty + 1, total + 1)
+  | Coverage_response.Untainted -> (untainted + 1, tainted, empty, total + 1)
+  | Coverage_response.Tainted   -> (untainted, tainted + 1, empty, total + 1)
   in
 
   let accum_coverage_locs (untainted, tainted, empty, uncovered) (loc, cov) =
   match cov with
-  | Coverage.Uncovered -> (untainted, tainted, empty, loc::uncovered)
-  | Coverage.Empty     -> (untainted, tainted, loc::empty, loc::uncovered)
-  | Coverage.Untainted -> (loc::untainted, tainted, empty, uncovered)
-  | Coverage.Tainted   -> (untainted, loc::tainted, empty, uncovered)
+  | Coverage_response.Uncovered -> (untainted, tainted, empty, loc::uncovered)
+  | Coverage_response.Empty     -> (untainted, tainted, loc::empty, loc::uncovered)
+  | Coverage_response.Untainted -> (loc::untainted, tainted, empty, uncovered)
+  | Coverage_response.Tainted   -> (untainted, loc::tainted, empty, uncovered)
   in
 
   let offset_table = lazy (Offset_utils.make content) in
