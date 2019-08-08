@@ -815,10 +815,10 @@ let run =
     (* We take the fields from an InstanceT excluding methods (because methods
      * are always on the prototype). We also want to resolve fields from the
      * InstanceT's super class so we recurse. *)
-    | DefT (r, _, InstanceT (_, super, _, {own_props; structural; _})) ->
+    | DefT (r, _, InstanceT (_, super, _, {own_props; inst_kind; _})) ->
       let resolve_tool = Super (interface_slice cx r own_props, resolve_tool) in
-      begin match tool with
-      | Spread _ when structural ->
+      begin match tool, inst_kind with
+      | Spread _, InterfaceKind _ ->
           add_output cx ~trace (Error_message.ECannotSpreadInterface {spread_reason = reason;
             interface_reason = r});
           rec_flow cx trace (AnyT.why AnyError reason, UseT (use_op,  tout))

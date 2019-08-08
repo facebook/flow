@@ -1194,7 +1194,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         | CallProperty (_, { CallProperty.static; _ }) -> not static
         | _ -> false
       ) properties in
-      Class_type_sig.Interface { extends; callable }
+      Class_type_sig.Interface { inline = true; extends; callable }
     in
     Class_type_sig.empty id reason None tparams_map super, extend_asts
   in
@@ -1929,7 +1929,6 @@ let mk_interface_sig cx reason decl =
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx tparams in
 
-
   let iface_sig, extends_ast =
     let id = id_loc in
     let extends, extends_ast =
@@ -1941,7 +1940,7 @@ let mk_interface_sig cx reason decl =
         | CallProperty (_, { CallProperty.static; _ }) -> not static
         | _ -> false
       ) properties in
-      Interface { extends; callable }
+      Interface { inline = false; extends; callable }
     in
     empty id reason tparams tparams_map super, extends_ast
   in

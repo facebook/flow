@@ -26,6 +26,7 @@ type field' = ALoc.t option * Polarity.t * field
 
 type super =
   | Interface of {
+      inline: bool;
       extends: typeapp list;
       callable: bool;
     }

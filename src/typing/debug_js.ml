@@ -1173,6 +1173,12 @@ and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Hh_json.(
   let own_props = Context.find_props json_cx.cx insttype.own_props in
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
+  let inst_kind = match insttype.inst_kind with
+    | ClassKind -> JSON_String "class"
+    | InterfaceKind { inline } -> JSON_Object [
+        "inline", JSON_Bool inline;
+      ]
+  in
   JSON_Object [
     "classId", json_of_aloc ~offset_table:None insttype.class_id;
     "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
@@ -1185,7 +1191,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
     "fieldTypes", json_of_pmap json_cx own_props;
     "methodTypes", json_of_pmap json_cx proto_props;
     "mixins", JSON_Bool insttype.has_unknown_react_mixins;
-    "structural", JSON_Bool insttype.structural;
+    "inst_kind", inst_kind;
   ]
 )
 

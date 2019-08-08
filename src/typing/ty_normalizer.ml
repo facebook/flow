@@ -988,9 +988,9 @@ end = struct
     let symbol = symbol_from_reason env r name in
     mapM (fun (_, _, t, _) -> type__ ~env t) inst.type_args >>| fun tys ->
     let targs = match tys with [] -> None | _ -> Some tys in
-    if inst.structural
-    then generic_interface symbol targs
-    else generic_class symbol targs
+    match inst.inst_kind with
+    | InterfaceKind _ -> generic_interface symbol targs
+    | ClassKind -> generic_class symbol targs
 
   and class_t =
     let rec go ~env ps ty =

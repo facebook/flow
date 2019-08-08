@@ -4493,10 +4493,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (use_op, ShapeT proto) ->
       let own_props = Context.find_props cx i.own_props in
       let proto_props = Context.find_props cx i.proto_props in
-      let proto_props =
-        if i.structural
-        then proto_props
-        else SMap.remove "constructor" proto_props
+      let proto_props = match i.inst_kind with
+        | InterfaceKind _ -> proto_props
+        | ClassKind -> SMap.remove "constructor" proto_props
       in
       let props = SMap.union own_props proto_props in
       match_shape cx trace ~use_op proto reason props
@@ -5877,7 +5876,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, _, FunT (statics, _, _)),
       UseT (use_op, DefT (reason_inst, _, InstanceT (_, _, _, {
         own_props;
-        structural = true;
+        inst_kind = InterfaceKind _;
         _;
       }))) ->
       if not
@@ -5891,7 +5890,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
-    | _, UseT (use_op, (DefT (_, _, InstanceT (_,_,_,{structural=true;_})) as i)) ->
+    | _, UseT (use_op, (DefT (_, _, InstanceT (_,_,_,{
+        inst_kind = InterfaceKind _;
+      _})) as i)) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
 
     | (ObjProtoT _ | FunProtoT _ | DefT (_, _, NullT)), ImplementsT _ -> ()
@@ -5900,7 +5901,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         own_props;
         proto_props;
         inst_call_t;
-        structural = true;
+        inst_kind = InterfaceKind _;
         _;
       })),
       ImplementsT (use_op, t) ->
@@ -6495,7 +6496,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         own_props;
         proto_props;
         inst_call_t;
-        structural = true;
+        inst_kind = InterfaceKind _;
         _;
       }))) ->
       structural_subtype cx trace ~use_op l reason_inst

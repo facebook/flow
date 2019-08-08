@@ -328,7 +328,7 @@ class virtual ['a] t = object(self)
       initialized_fields;
       initialized_static_fields;
       has_unknown_react_mixins;
-      structural
+      inst_kind
     } = i in
     let type_args' = ListUtils.ident_map (fun x ->
       let (s, r, t, p) = x in
@@ -354,7 +354,7 @@ class virtual ['a] t = object(self)
       initialized_fields;
       initialized_static_fields;
       has_unknown_react_mixins;
-      structural;
+      inst_kind;
     }
 
   method type_param cx map_cx ({reason; name; bound; polarity; default} as t) =

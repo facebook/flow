@@ -1004,8 +1004,12 @@ module rec TypeTerm : sig
     initialized_fields: SSet.t;
     initialized_static_fields: SSet.t;
     has_unknown_react_mixins: bool;
-    structural: bool;
+    inst_kind: instance_kind;
   }
+
+  and instance_kind =
+    | ClassKind
+    | InterfaceKind of { inline: bool }
 
   and opaquetype = {
     opaque_id: ALoc.t;

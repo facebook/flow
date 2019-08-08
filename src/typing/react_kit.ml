@@ -1074,7 +1074,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           initialized_static_fields = SSet.singleton "propTypes";
           inst_call_t = None;
           has_unknown_react_mixins = spec.unknown_mixins <> [];
-          structural = false;
+          inst_kind = ClassKind;
         } in
         rec_flow cx trace (super, SuperT (use_op, reason_op, Derived {
           own = props;

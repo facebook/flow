@@ -785,7 +785,7 @@ class ['a] t = object(self)
       initialized_fields = _;
       initialized_static_fields = _;
       has_unknown_react_mixins = _;
-      structural = _;
+      inst_kind = _;
     } = i in
     let acc = self#list (fun acc (_, _, t, pole') ->
       self#type_ cx (P.mult (pole, pole')) acc t

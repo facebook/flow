@@ -60,6 +60,7 @@ type t = {
 
 and super =
   | Interface of {
+      inline: bool; (* Anonymous interface, can appear anywhere inside a type *)
       extends: typeapp list;
       callable: bool;
     }
@@ -98,6 +99,11 @@ let structural x =
   match x.super with
   | Interface _ -> true
   | Class _ -> false
+
+let inst_kind x =
+  match x.super with
+  | Interface { inline; _ } -> Type.InterfaceKind { inline }
+  | Class _ -> Type.ClassKind
 
 let map_sig ~static f s =
   if static
@@ -255,8 +261,9 @@ let subst_extends cx map = function
   | Implicit {null=_} as extends -> extends
 
 let subst_super cx map = function
-  | Interface { extends; callable } ->
+  | Interface { inline; extends; callable } ->
     Interface {
+      inline;
       extends = Core_list.map ~f:(subst_typeapp cx map) extends;
       callable;
     }
@@ -443,7 +450,7 @@ let insttype cx ~initialized_static_fields s =
     initialized_fields;
     initialized_static_fields;
     has_unknown_react_mixins = false;
-    structural = structural s;
+    inst_kind = inst_kind s;
   }
 
 let add_this self cx reason tparams tparams_map =
@@ -510,7 +517,7 @@ let supertype cx tparams_with_this x =
   let super_reason = replace_reason (fun d -> RSuperOf d) x.instance.reason in
   let open Type in
   match x.super with
-  | Interface {extends; callable} ->
+  | Interface {inline = _; extends; callable} ->
     let extends = Core_list.map ~f:(function
     | loc, c, None ->
       let reason = annot_reason (repos_reason loc (reason_of_t c)) in
