@@ -78,14 +78,18 @@ end = struct
           Parse_error.EnumInvalidMemberInitializer {enum_name; explicit_type; member_name});
     | _ -> ()
 
+  let is_a_to_z c = c >= 'a' && c <= 'z'
+
   let enum_member ~enum_name ~explicit_type acc env =
     let {members; seen_names} = acc in
     let member_loc, (id, init) = member_raw env in
     let id_loc, {Identifier.name = member_name; _} = id in
+    (* if we parsed an empty name, something has gone wrong and we should abort analysis *)
+    if member_name = "" then acc else begin
+    if is_a_to_z @@ String.get member_name 0 then
+      error_at env (id_loc, Parse_error.EnumInvalidMemberName {enum_name; member_name});
     if SSet.mem member_name seen_names then
       error_at env (id_loc, Parse_error.EnumDuplicateMemberName {enum_name; member_name});
-    (* if we parsed an empty name, something has gone wrong and we should abort analysis *)
-    if member_name = "" then acc else
     let acc = {acc with seen_names = SSet.add member_name seen_names} in
     let check_explicit_type_mismatch =
       check_explicit_type_mismatch env ~enum_name ~explicit_type ~member_name
@@ -124,6 +128,7 @@ end = struct
         {acc with
           members = {members with defaulted_members = member :: members.defaulted_members}}
       end
+    end
 
   let rec enum_members ~enum_name ~explicit_type acc env =
     match Peek.token env with

@@ -13,6 +13,7 @@ type t =
   | EnumInvalidExplicitType of {enum_name: string; supplied_type: string option}
   | EnumInvalidMemberInitializer of
     {enum_name: string; explicit_type: Enum_common.explicit_type option; member_name: string}
+  | EnumInvalidMemberName of {enum_name: string; member_name: string}
   | EnumNumberMemberNotInitialized of {enum_name: string; member_name: string}
   | EnumStringMemberInconsistentlyInitailized of {enum_name: string}
   | Unexpected of string
@@ -194,6 +195,15 @@ module PP =
             member_name
             enum_name
         end
+      | EnumInvalidMemberName {enum_name; member_name} ->
+        (* Based on the error condition, we will only receive member names starting with [a-z] *)
+        let suggestion = String.capitalize_ascii member_name in
+        Printf.sprintf
+          "Enum member names cannot start with lowercase 'a' through 'z'. Instead of using `%s`, \
+          consider using `%s`, in enum `%s`."
+          member_name
+          suggestion
+          enum_name
       | EnumNumberMemberNotInitialized {enum_name; member_name} ->
         Printf.sprintf
           "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
