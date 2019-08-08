@@ -305,23 +305,38 @@ let commit_modules, commit_modules_from_saved_state =
   in
   commit_modules, commit_modules_from_saved_state
 
+let clear_cache_if_resolved_requires_changed resolved_requires_changed =
+  if resolved_requires_changed
+  then begin
+    Hh_logger.info "Resolved requires changed"
+  end else
+    Hh_logger.info "Resolved requires are unchanged"
+
 let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
   let mutator = Module_heaps.Resolved_requires_mutator.create transaction parsed_set in
-  with_timer_lwt ~options "ResolveRequires" profiling (fun () ->
-    MultiWorkerLwt.call workers
-      ~job: (List.fold_left (fun errors_acc filename ->
-        let errors = Module_js.add_parsed_resolved_requires filename
-          ~mutator ~reader ~options ~node_modules_containers in
-        if Flow_error.ErrorSet.is_empty errors
-        then errors_acc
-        else FilenameMap.add filename errors errors_acc
-      )
-      )
-      ~neutral: FilenameMap.empty
-      ~merge: FilenameMap.union
-      ~next:(MultiWorkerLwt.next workers parsed)
-  )
+  let merge (changed1, errors1) (changed2, errors2) =
+    changed1 || changed2, FilenameMap.union errors1 errors2
+  in
+  let%lwt resolved_requires_changed, errors =
+    with_timer_lwt ~options "ResolveRequires" profiling (fun () ->
+      MultiWorkerLwt.call workers
+        ~job: (List.fold_left (fun (changed, errors_acc) filename ->
+          let resolved_requires_changed, errors = Module_js.add_parsed_resolved_requires filename
+            ~mutator ~reader ~options ~node_modules_containers in
+          let changed = changed || resolved_requires_changed in
+          if Flow_error.ErrorSet.is_empty errors
+          then changed, errors_acc
+          else changed, FilenameMap.add filename errors errors_acc
+        )
+        )
+        ~neutral: (false, FilenameMap.empty)
+        ~merge
+        ~next:(MultiWorkerLwt.next workers parsed)
+    )
+  in
+  clear_cache_if_resolved_requires_changed resolved_requires_changed;
+  Lwt.return errors
 
 let commit_modules_and_resolve_requires
   ~transaction
@@ -1500,19 +1515,26 @@ end = struct
 
     let node_modules_containers = !Files.node_modules_containers in
     (* requires in direct_dependent_files must be re-resolved before merging. *)
-    let mutator = Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files in
+    let mutator =
+      Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files
+    in
     let%lwt () = with_timer_lwt ~options "ReresolveDirectDependents" profiling (fun () ->
-      MultiWorkerLwt.call workers
-        ~job: (fun () files ->
-          List.iter (fun filename ->
-            let errors = Module_js.add_parsed_resolved_requires filename
-              ~mutator ~reader ~options ~node_modules_containers in
-            ignore errors (* TODO: why, FFS, why? *)
-          ) files
-        )
-        ~neutral: ()
-        ~merge: (fun () () -> ())
-        ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
+      let%lwt resolved_requires_changed =
+        MultiWorkerLwt.call workers
+          ~job: (fun anything_changed files ->
+            List.fold_left (fun anything_changed filename ->
+              let changed, errors = Module_js.add_parsed_resolved_requires filename
+                ~mutator ~reader ~options ~node_modules_containers in
+              ignore errors; (* TODO: why, FFS, why? *)
+              anything_changed || changed
+            ) anything_changed files
+          )
+          ~neutral:false
+          ~merge:(fun changed1 changed2 -> changed1 || changed2)
+          ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
+      in
+      clear_cache_if_resolved_requires_changed resolved_requires_changed;
+      Lwt.return_unit
     ) in
 
     Hh_logger.info "Recalculating dependency graph";

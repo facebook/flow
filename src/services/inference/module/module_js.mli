@@ -95,7 +95,7 @@ val add_parsed_resolved_requires:
   options:Options.t ->
   node_modules_containers: SSet.t ->
   File_key.t ->
-  Flow_error.ErrorSet.t
+  bool * Flow_error.ErrorSet.t
 
 val add_package: string -> Loc.t Package_json.t_or_error -> unit
 

@@ -169,7 +169,7 @@ let currently_oldified_resolved_requires: Utils_js.FilenameSet.t ref =
 module Resolved_requires_mutator: sig
   type t
   val create: Transaction.t -> Utils_js.FilenameSet.t -> t
-  val add_resolved_requires: t -> File_key.t -> resolved_requires -> unit
+  val add_resolved_requires: t -> File_key.t -> resolved_requires -> bool
 end = struct
   type t = unit
 
@@ -200,9 +200,15 @@ end = struct
 
   (* This function runs on a worker process. Ideally, we'd assert that file is a member of
    * oldified_files, but for init and large rechecks this would involve sending a very large
-   * set to the workers, which is really slow. *)
+   * set to the workers, which is really slow.
+   *
+   * It returns true if the resolved requires changed and false otherwise *)
   let add_resolved_requires () file resolved_requires =
-    ResolvedRequiresHeap.add file resolved_requires
+    ResolvedRequiresHeap.add file resolved_requires;
+    (* Check to see if the resolved requires changed at all with this addition *)
+    match ResolvedRequiresHeap.get_old file with
+    | None -> true
+    | Some old_resolve_requires -> old_resolve_requires.hash <> resolved_requires.hash
 end
 
 let currently_oldified_infoheap_files: Utils_js.FilenameSet.t option ref = ref None

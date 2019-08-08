@@ -682,11 +682,15 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     resolved_requires_of ~options ~reader node_modules_containers file require_loc
   in
-  Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires;
-  List.fold_left (fun acc msg ->
+  let resolved_requires_changed =
+    Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires
+  in
+  let errorset = List.fold_left (fun acc msg ->
     Flow_error.ErrorSet.add (
       Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg
     ) acc) Flow_error.ErrorSet.empty errors
+  in
+  resolved_requires_changed, errorset
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.
