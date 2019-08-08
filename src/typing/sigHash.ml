@@ -48,6 +48,7 @@ type hash =
   | FunProtoApplyH
   | FunProtoBindH
   | FunProtoCallH
+  | GlobalThisH
   | ObjH
   | ObjProtoH
   | MatchingPropH
@@ -222,6 +223,7 @@ let hash_of_ctor = Type.(function
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH
+  | GlobalThisT _ -> GlobalThisH
   | IntersectionT _ -> IntersectionH
   | KeysT _ -> KeysH
   | MaybeT _ -> MaybeH

@@ -6606,6 +6606,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
 
+    | GlobalThisT _,
+      SetPropT (_, _, Named (_, name), _, tin, _) ->
+      set_builtin cx ~trace name tin;
+
+    | GlobalThisT _, _ ->
+      let t = builtins cx in
+      rec_flow cx trace (t, u)
+
     | _, LookupT (_, _, _, propref, lookup_action) ->
       let use_op = use_op_of_lookup_action lookup_action in
       add_output cx ~trace (Error_message.EIncompatibleProp {
@@ -7392,7 +7400,8 @@ and any_propagated_use cx trace use_op any l =
   | FunProtoCallT _
   | FunProtoT _
   | ObjProtoT _
-  | NullProtoT _ ->
+  | NullProtoT _
+  | GlobalThisT _ ->
       true
 
   (* Handled already in __flow *)
@@ -7813,6 +7822,7 @@ and check_polarity cx ?trace polarity = function
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | GlobalThisT _
   | EvalT _
   | InternalT (ExtendsT _)
   | InternalT (ChoiceKitT _)

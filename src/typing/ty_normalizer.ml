@@ -714,6 +714,7 @@ end = struct
     | ModuleT (reason, exports, _) -> module_t env reason exports t
 
     | DefT (_, _, CharSetT _)
+    | GlobalThisT _
     | NullProtoT _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
