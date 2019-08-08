@@ -511,6 +511,20 @@ implicit-instantiation.js:10:21{
   "start":21,
   "end":21
 }
+interface.js:6:7 = type I1 = interface {}
+interface.js:6:6,6:7
+interface.js:7:7 = type I2 = interface {(): number}
+interface.js:7:6,7:7
+interface.js:8:7 = type I3 = interface {+[string]: number}
+interface.js:8:6,8:7
+interface.js:9:7 = type I4 = interface {-[string]: number}
+interface.js:9:6,9:7
+interface.js:10:7 = type I5 = interface {[string]: number}
+interface.js:10:6,10:7
+interface.js:11:7 = type I6 = interface extends C, D {}
+interface.js:11:6,11:7
+interface.js:12:7 = type I7 = interface extends C {(): number}
+interface.js:12:6,12:7
 mixed.js:18:17 = {
   "type":"AB",
   "reasons":[],

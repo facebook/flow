@@ -90,20 +90,22 @@ let parameter_name is_opt name =
   let opt = if is_opt then "?" else "" in
   (Option.value name ~default:"_") ^ opt
 
-let lsp_completion_of_type (ty: Ty.t) =
-  let open Lsp.Completion in
-  match ty with
-  | Ty.InterfaceDecl _ -> Some Interface
-  | Ty.ClassDecl _ -> Some Class
-  | Ty.(StrLit _ | NumLit _ | BoolLit _) -> Some Value
-  | Ty.Fun _ -> Some Function
-  | Ty.TypeAlias _
-  | Ty.Union _ -> Some Enum
-  | Ty.Module _ -> Some Module
-  | Ty.(Tup _ | Bot _ | Null | Obj _ | Inter _ | TVar _ | Bound _ | Generic _ |
-      Any _ | Top | Void | Num _ | Str _ | Bool _ | Arr _ | TypeOf _ |
-      Utility _ | Mu _
-    ) ->  Some Variable
+let lsp_completion_of_type = Ty.(function
+  | InterfaceDecl _
+  | InlineInterface _ -> Some Lsp.Completion.Interface
+  | ClassDecl _ -> Some Lsp.Completion.Class
+  | StrLit _
+  | NumLit _
+  | BoolLit _ -> Some Lsp.Completion.Value
+  | Fun _ -> Some Lsp.Completion.Function
+  | TypeAlias _
+  | Union _ -> Some Lsp.Completion.Enum
+  | Module _ -> Some Lsp.Completion.Module
+  | Tup _ | Bot _ | Null | Obj _ | Inter _ | TVar _ | Bound _ | Generic _
+  | Any _ | Top | Void | Num _ | Str _ | Bool _ | Arr _ | TypeOf _
+  | Utility _ | Mu _ ->
+    Some Lsp.Completion.Variable
+)
 
 let autocomplete_create_result (name, loc) (ty, ty_loc) =
   let res_ty = ty_loc, Ty_printer.string_of_t ~with_comments:false ty in

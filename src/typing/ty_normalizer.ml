@@ -36,6 +36,7 @@ type error_kind =
   | BadPoly
   | BadTypeAlias
   | BadTypeApp
+  | BadInlineInterfaceExtends
   | BadInternalT
   | BadInstanceT
   | BadEvalT
@@ -56,6 +57,7 @@ let error_kind_to_string = function
   | BadPoly -> "Bad polymorphic type"
   | BadTypeAlias -> "Bad type alias"
   | BadTypeApp -> "Bad type application"
+  | BadInlineInterfaceExtends -> "Bad inline interface extends"
   | BadInternalT -> "Bad internal type"
   | BadInstanceT -> "Bad instance type"
   | BadEvalT -> "Bad eval"
@@ -644,7 +646,7 @@ end = struct
     | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
     | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
-    | DefT (r, _, InstanceT (_, _, _, t)) -> instance_t ~env r t
+    | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
     | DefT (_, _, ClassT t) -> class_t ~env t None
     | DefT (_, _, IdxWrapper t) -> type__ ~env t
     | DefT (_, _, ReactAbstractComponentT {config; instance}) ->
@@ -919,16 +921,6 @@ end = struct
     | T.TupleAT (_, ts) ->
       mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
 
-  and name_of_instance_reason r =
-    (* This should cover all cases but throw an error just in case. *)
-    match desc_of_reason ~unwrap:false r  with
-    | RType name
-    | RIdentifier name -> return name
-    | r ->
-      let msg = spf "could not extract name from reason: %s"
-        (Reason.string_of_desc r) in
-      terr ~kind:BadInstanceT ~msg None
-
   (* Used for instances of React.createClass(..) *)
   and react_component =
     let react_props ~env ~default props name =
@@ -982,15 +974,81 @@ end = struct
       } in
       Ty.mk_inter (parent_class, [props_obj])
 
-  and instance_t ~env r inst =
-    let open Type in
-    name_of_instance_reason r >>= fun name ->
-    let symbol = symbol_from_reason env r name in
-    mapM (fun (_, _, t, _) -> type__ ~env t) inst.type_args >>| fun tys ->
-    let targs = match tys with [] -> None | _ -> Some tys in
-    match inst.inst_kind with
-    | InterfaceKind _ -> generic_interface symbol targs
-    | ClassKind -> generic_class symbol targs
+  and instance_t =
+    let to_generic ~env kind r inst =
+      match desc_of_reason ~unwrap:false r with
+      | RType name
+      | RIdentifier name ->
+        (* class or interface declaration *)
+        let symbol = symbol_from_reason env r name in
+        mapM (fun (_, _, t, _) -> type__ ~env t) inst.T.type_args >>| fun tys ->
+        let targs = match tys with [] -> None | _ -> Some tys in
+        Ty.Generic (symbol, kind, targs)
+      | r ->
+        let desc = Reason.string_of_desc r in
+        let msg = "could not extract name from reason: " ^ desc in
+        terr ~kind:BadInstanceT ~msg None
+    in
+    fun ~env r super inst ->
+      let { T.inst_kind; own_props; inst_call_t; _ } = inst in
+      match inst_kind with
+      | T.InterfaceKind { inline = true } -> inline_interface ~env super own_props inst_call_t
+      | T.InterfaceKind { inline = false } -> to_generic ~env Ty.InterfaceKind r inst
+      | T.ClassKind -> to_generic ~env Ty.ClassKind r inst
+
+  and inline_interface =
+    let rec extends = function
+      | Ty.Generic g ->
+        return [g]
+      | Ty.Inter (t1, t2, ts) ->
+        mapM extends (t1::t2::ts) >>| Core_list.concat
+      | Ty.TypeOf Ty.ObjProto (* interface {} *)
+      | Ty.TypeOf Ty.FunProto (* interface { (): void } *)
+        ->
+        (* Do not contribute to the extends clause *)
+        return []
+      | _ ->
+        (* Top-level syntax only allows generics in extends *)
+        terr ~kind:BadInlineInterfaceExtends None
+    in
+    let fix_dict_props props =
+      let key, value, pole, props =
+        List.fold_left (fun (key, value, pole, ps) p ->
+          match p with
+          | Ty.NamedProp ("$key", Ty.Field (t, _)) ->
+            (* The $key's polarity is fixed to neutral so we ignore it *)
+            Some t, value, pole, ps
+          | Ty.NamedProp ("$value", Ty.Field (t, { Ty.fld_polarity; _ })) ->
+            (* The dictionary's polarity is determined by that of $value *)
+            key, Some t, Some fld_polarity, ps
+          | _ ->
+            key, value, pole, p::ps
+        ) (None, None, None, []) props
+      in
+      let props = List.rev props in
+      match key, value, pole with
+      | Some dict_key, Some dict_value, Some dict_polarity ->
+        let ind_prop = Ty.IndexProp {
+          Ty.dict_polarity;
+          dict_name = None; (* This seems to be lost *)
+          dict_key;
+          dict_value;
+        } in
+        ind_prop::props
+      | _, _, _ -> props
+    in
+    fun ~env super own_props inst_call_t ->
+      type__ ~env super >>= fun super ->
+      extends super >>= fun if_extends ->
+      obj_props ~env own_props inst_call_t None (* dict *) >>| fun obj_props ->
+      let obj_props = fix_dict_props obj_props in
+      let if_body = {
+        Ty.obj_exact = false;
+        obj_frozen = false;
+        obj_literal = false;
+        obj_props;
+      } in
+      Ty.InlineInterface { Ty.if_extends; if_body }
 
   and class_t =
     let rec go ~env ps ty =

@@ -36,7 +36,7 @@ let check_type_visitor wrap =
       wrap (Reason.RCustom ("type alias " ^ name))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
     | (Void|Null|Num _|Str _|Bool _|NumLit _|StrLit _|BoolLit _|TypeOf _|
-      Generic _|ClassDecl _|InterfaceDecl _|Utility _|Module _) -> ()
+      Generic _|ClassDecl _|InterfaceDecl _|Utility _|Module _|InlineInterface _) -> ()
   end
 
 let detect_invalid_calls ~full_cx file_sigs cxs tasts =

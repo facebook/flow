@@ -27,15 +27,14 @@ let id_from_symbol x =
   else Ok (id_from_string name)
 
 let mk_generic x targs =
-  Loc.none, T.Generic {
-    T.Generic.
-    id = T.Generic.Identifier.Unqualified x;
-    targs;
-  }
+  { T.Generic.id = T.Generic.Identifier.Unqualified x; targs }
+
+let mk_generic_type x targs =
+  Loc.none, T.Generic (mk_generic x targs)
 
 let builtin_from_string ?targs x =
   let x = id_from_string x in
-  mk_generic x targs
+  mk_generic_type x targs
 
 let tvar (RVar _) = Error "Unsupported recursive variables."
 
@@ -49,7 +48,7 @@ let rec type_ t =
   match t with
   | TVar (v, _) -> tvar v
   | Bound (_, name) -> Ok (builtin_from_string name)
-  | Generic (x, _, ts) -> generic x ts
+  | Generic (x, _, ts) -> generic_type x ts
   | Any _ -> just T.Any
   | Top -> just T.Mixed
   | Bot _ -> just T.Empty
@@ -78,7 +77,7 @@ let rec type_ t =
   | Inter (t0, t1, ts) -> intersection (t0,t1,ts)
   | ClassDecl (s, _) -> class_decl s
   | Utility s -> utility s
-
+  | InlineInterface i -> inline_interface i
   | InterfaceDecl _
   | TypeOf _
   | TypeAlias _
@@ -92,6 +91,11 @@ and generic x targs =
   id_from_symbol x >>= fun id ->
   opt type_arguments targs >>| fun targs ->
   mk_generic id targs
+
+and generic_type x targs =
+  id_from_symbol x >>= fun id ->
+  opt type_arguments targs >>| fun targs ->
+  mk_generic_type id targs
 
 and union t (t0, t1, rest) =
   let ts = bk_union t |> Nel.to_list in
@@ -294,14 +298,27 @@ and setter t = function_ {
 }
 
 and class_decl name =
-  generic name None >>| fun name ->
+  generic_type name None >>| fun name ->
   (Loc.none, T.Typeof name)
+
+and interface_extends e =
+  let (x, _, ts) = e in
+  generic x ts >>| fun gen ->
+  Loc.none, gen
+
+and inline_interface i =
+  let { if_extends; if_body } = i in
+  let { obj_props; _ } = if_body in
+  mapM interface_extends if_extends >>= fun extends ->
+  mapM obj_prop obj_props >>| fun properties ->
+  let body = Loc.none, { T.Object.exact = false; inexact = false; properties } in
+  Loc.none, T.Interface { T.Interface.body; extends }
 
 and utility u =
   let ctor = Ty.string_of_utility_ctor u in
   let ts = Ty.types_of_utility u in
   let id = id_from_string ctor in
   opt type_arguments ts >>| fun ts ->
-  mk_generic id ts
+  mk_generic_type id ts
 
 and annotation t = type_ t >>| fun t -> (Loc.none, t)

@@ -79,7 +79,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
 
   and type_impl ~depth (t: Ty.t) =
     match t with
-    | TVar (v, ts) -> type_generic ~depth (type_var v) ts
+    | TVar (v, ts) -> type_reference ~depth (type_var v) ts
     | Bound (_, name) -> Atom name
     | Any k -> any ~depth k
     | Top -> Atom "mixed"
@@ -95,13 +95,16 @@ let type_ ?(size=5000) ?(with_comments=true) t =
         func
     | Obj obj -> type_object ~depth obj
     | Arr arr -> type_array ~depth arr
-    | Generic ({ name; _ }, _, ts) -> type_generic ~depth (identifier name) ts
+    | Generic g ->
+      type_generic ~depth g
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
     | Inter (t1, t2, ts) ->
       type_intersection ~depth (t1::t2::ts)
-    | ClassDecl (n, ps) -> class_decl ~depth n ps
-    | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
+    | ClassDecl (n, ps) ->
+      class_decl ~depth n ps
+    | InterfaceDecl (n, ps) ->
+      interface_decl ~depth n ps
     | Utility s -> utility ~depth s
     | Tup ts ->
       list
@@ -113,6 +116,8 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     | NumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")
     | TypeAlias ta -> type_alias ta
+    | InlineInterface { if_extends; if_body } ->
+      type_interface ~depth if_extends if_body
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
     | Module (sym, { cjs_export; exports }) ->
         module_t ~depth sym exports cjs_export
@@ -139,11 +144,14 @@ let type_ ?(size=5000) ?(with_comments=true) t =
 
   and type_var (RVar i) = Atom (varname i)
 
-  and type_generic ~depth base typeParameters =
-    fuse [
-      base;
-      option (type_parameter_instantiation ~depth) typeParameters;
-    ]
+  and type_generic ~depth g =
+    let { name; _ }, _, params = g in
+    let name = identifier name in
+    type_reference ~depth name params
+
+  and type_reference ~depth name params =
+    let params = option (type_parameter_instantiation ~depth) params in
+    fuse [name; params]
 
   and type_parameter_instantiation ~depth params =
     list
@@ -169,6 +177,23 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     @ Option.value_map ta_type ~default:[] ~f:(fun t -> [
         pretty_space; Atom "="; pretty_space; type_ ~depth:0 t
       ]))
+
+  and type_interface ~depth extends body =
+    let extends = match extends with
+      | [] -> Empty
+      | _ ->
+        fuse_with_space [
+          Atom "extends";
+          list ~sep:(Atom ",")
+            (Core_list.map ~f:(type_generic ~depth) extends);
+        ]
+    in
+    let body = type_object ~depth body in
+    fuse_with_space [
+      Atom "interface";
+      extends;
+      body
+    ]
 
   and type_function ~depth ~sep
     { fun_params; fun_rest_param; fun_return; fun_type_params } =
@@ -349,7 +374,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
   and utility ~depth u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in
-    type_generic ~depth (identifier ctor) ts
+    type_reference ~depth (identifier ctor) ts
 
   and type_parameter ~depth params =
     list

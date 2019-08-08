@@ -86,6 +86,22 @@ assert_ok "$FLOW" type-at-pos implicit-instantiation.js 6 10 --strip-root --pret
 printf "implicit-instantiation.js:10:21"
 assert_ok "$FLOW" type-at-pos implicit-instantiation.js 10 21 --strip-root --pretty --expand-json-output
 
+# interface.js
+printf "interface.js:6:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 6 7 --strip-root
+printf "interface.js:7:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 7 7 --strip-root
+printf "interface.js:8:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 8 7 --strip-root
+printf "interface.js:9:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 9 7 --strip-root
+printf "interface.js:10:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 10 7 --strip-root
+printf "interface.js:11:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 11 7 --strip-root
+printf "interface.js:12:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 12 7 --strip-root
+
 # mixed.js
 printf "mixed.js:18:17 = "
 assert_ok "$FLOW" type-at-pos mixed.js 18 17 --strip-root --pretty

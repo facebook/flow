@@ -15,7 +15,7 @@ type aloc = ALoc.t
 type t =
   | TVar of tvar * t list option
   | Bound of aloc * string
-  | Generic of symbol * gen_kind * t list option
+  | Generic of generic_t
   | Any of any_kind
   | Top
   | Bot of bot_kind
@@ -33,6 +33,7 @@ type t =
   | Union of t * t * t list
   | Inter of t * t * t list
   | TypeAlias of type_alias
+  | InlineInterface of interface_t
   | TypeOf of builtin_value
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
@@ -41,6 +42,8 @@ type t =
   | Mu of int * t
 
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
+
+and generic_t = symbol * gen_kind * t list option
 
 and any_kind =
   | Implicit
@@ -105,6 +108,11 @@ and type_alias = {
   ta_name: symbol;
   ta_tparams: type_param list option;
   ta_type: t option
+}
+
+and interface_t = {
+  if_extends: generic_t list;
+  if_body: obj_t;
 }
 
 and fun_param = {
@@ -316,6 +324,7 @@ class ['A] comparator_ty = object(this)
     | InterfaceDecl _ -> 24
     | Module _ -> 25
     | Mu _ -> 26
+    | InlineInterface _ -> 27
 
   method tag_of_gen_kind _ = function
     | ClassKind -> 0
@@ -440,7 +449,7 @@ let rec mk_exact ty =
   (* Not applicable *)
   | Any _ | Top | Bot _ | Void | Null
   | Num _ | Str _ | Bool _ | NumLit _ | StrLit _ | BoolLit _
-  | Fun _ | Arr _ | Tup _ -> ty
+  | Fun _ | Arr _ | Tup _ | InlineInterface _ -> ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
   (* Wrap in $Exact<...> *)
