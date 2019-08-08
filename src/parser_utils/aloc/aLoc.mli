@@ -13,6 +13,8 @@ type key
 
 type t
 
+val hash: t -> int
+
 (* Creates an ALoc.t with a concrete underlying representation *)
 val of_loc: Loc.t -> t
 

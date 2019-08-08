@@ -32,6 +32,8 @@ module Repr: sig
     | Abstract
     | Concrete
 
+  val hash: t -> int
+
   val of_loc: Loc.t -> t
   val of_key: File_key.t option -> key -> t
 
@@ -67,6 +69,11 @@ end = struct
     | Concrete
 
   type t = Loc.t
+
+  (* The number of nodes of t is expected to remain small, so to hash t we can use Hashtbl.hash with
+     maximum settings for meaningful and total nodes to minimize collisions *)
+  let hash (loc: t) =
+    Hashtbl.hash_param 256 256 loc
 
   type abstract_t = {
     (* This field has the same type in Loc.t *)
@@ -128,6 +135,8 @@ end = struct
 end
 
 type t = Repr.t
+
+let hash = Repr.hash
 
 let of_loc = Repr.of_loc
 
@@ -277,7 +286,7 @@ let lookup_key_if_possible rev_table loc =
     | Some key -> begin match Repr.source loc with
       | Some source -> Repr.of_key (Some source) key
       | None -> failwith "Unexpectedly encountered a location without a source"
-      end 
+      end
     | None -> loc
 
 let reverse_table table = ResizableArray.to_hashtbl table.map
