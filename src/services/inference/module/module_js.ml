@@ -671,10 +671,7 @@ let checked_file ~reader ~audit f =
 let resolved_requires_of ~options ~reader node_modules_containers f require_loc =
   let resolved_modules, { paths; errors } =
     imported_modules ~options ~reader node_modules_containers f require_loc in
-  errors, { Module_heaps.
-    resolved_modules;
-    phantom_dependents = paths;
-  }
+  errors, Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents:paths
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_sig =

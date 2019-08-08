@@ -33,7 +33,21 @@ type resolved_requires = {
                                  when resolving module references in the file:
                                  when the paths come into existence, the module
                                  references need to be re-resolved. *)
+  hash: Xx.hash; (* An easy way to compare two resolved_requires to see if they've changed *)
 }
+
+let mk_resolved_requires ~resolved_modules ~phantom_dependents =
+  let state = Xx.init () in
+  SMap.iter (fun reference modulename ->
+    Xx.update state reference;
+    Xx.update state (Modulename.to_string modulename)
+  ) resolved_modules;
+  SSet.iter (Xx.update state) phantom_dependents;
+  {
+    resolved_modules;
+    phantom_dependents;
+    hash = Xx.digest state;
+  }
 
 module ResolvedRequiresHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
   type t = resolved_requires

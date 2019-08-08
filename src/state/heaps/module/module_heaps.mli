@@ -8,7 +8,13 @@
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
+  hash: Xx.hash;
 }
+
+val mk_resolved_requires:
+  resolved_modules: Modulename.t SMap.t ->
+  phantom_dependents: SSet.t ->
+  resolved_requires
 
 type info = {
   module_name: Modulename.t;
