@@ -713,8 +713,9 @@ end = struct
 
     | ModuleT (reason, exports, _) -> module_t env reason exports t
 
-    | DefT (_, _, CharSetT _)
-    | NullProtoT _ ->
+    | NullProtoT _ -> return Ty.Null
+
+    | DefT (_, _, CharSetT _) ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
 
