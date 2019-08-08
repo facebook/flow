@@ -8,9 +8,7 @@ import 'codemirror/mode/jsx/jsx';
 import * as LZString from 'lz-string';
 import {load as initFlowLocally} from 'flow-loader';
 
-CodeMirror.defineOption('flow', null, function(editor) {
-  editor.performLint();
-});
+CodeMirror.defineOption('flow', null);
 
 function appendMsg(container, msg, editor) {
   const clickHandler = (msg) => {
@@ -105,10 +103,10 @@ function removeChildren(node) {
   while (node.lastChild) node.removeChild(node.lastChild);
 }
 
-function getAnnotations(text, callback, options, editor) {
-  const flow = Promise.resolve(editor.getOption('flow'));
-  const sources = Promise.all([
-    flow
+function coverage(text, flow, isCoverageEnabled, editor) {
+  const isCoverageEnabled = editor.getOption('coverageEnabled');
+  if (isCoverageEnabled) {
+    return flow
       .then(flowProxy => flowProxy.coverage('-', text))
       .then(coverage => {
         CodeMirror.signal(editor, 'flowCoverage', coverage);
@@ -117,13 +115,26 @@ function getAnnotations(text, callback, options, editor) {
       .catch(err => {
         console.error(err)
         return []
-      }),
-    flow
-      .then(flowProxy => flowProxy.checkContent('-', text))
-      .then(errors => {
-        CodeMirror.signal(editor, 'flowErrors', errors);
-        return errors
       })
+  }
+  return Promise.resolve([])
+}
+
+function checkContent(text, flow, editor) {
+  return flow
+    .then(flowProxy => flowProxy.checkContent('-', text))
+    .then(errors => {
+      CodeMirror.signal(editor, 'flowErrors', errors);
+      return errors
+    })
+}
+
+function getAnnotations(text, callback, options, editor) {
+  const flow = Promise.resolve(editor.getOption('flow'));
+
+  const sources = Promise.all([
+    coverage(text, flow, editor),
+    checkContent(text, flow, editor),
   ]);
 
   sources.then(([coverage, errors]) => {
@@ -312,6 +323,7 @@ function initFlow(version) {
 
 function createEditor(
   flowVersion,
+  optionsNode,
   domNode,
   resultsNode,
   flowVersions
@@ -397,6 +409,14 @@ function createEditor(
 
     resultsNode.className += " show-errors";
 
+    const coverageOption = document.createElement('label');
+    const coverageCheckbox = document.createElement('input');
+    coverageCheckbox.type = 'checkbox';
+    coverageOption.appendChild(coverageCheckbox);
+    coverageOption.appendChild(document.createTextNode(' coverage'));
+
+    optionsNode.appendChild(coverageOption);
+
     const cursorPositionNode = document.querySelector('footer .cursor-position');
     const typeAtPosNode = document.querySelector('footer .type-at-pos');
 
@@ -432,7 +452,8 @@ function createEditor(
         typeAtPosNode.title = typeAtPos ? typeAtPos.c : '';
         typeAtPosNode.textContent = typeAtPos ? typeAtPos.c : '';
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         typeAtPosNode.title = '';
         typeAtPosNode.textContent = '';
       });
@@ -499,6 +520,12 @@ function createEditor(
         removeClass(resultsNode, 'show-loading');
       });
       editor.setOption('flow', flowProxy);
+    });
+
+    coverageCheckbox.addEventListener('change', function(evt) {
+      const checked = evt.target.checked;
+      editor.setOption('coverageEnabled', checked);
+      editor.performLint();
     });
   });
 }

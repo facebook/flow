@@ -12,6 +12,23 @@ html.site-fullscreen .content {
   position: relative;
   height: 100%;
 
+  .options {
+    position: absolute;
+    right: 50%;
+    z-index: 3;
+
+    label {
+      cursor: pointer;
+      float: left;
+      font-size: 14px;
+      padding: 7px 15px;
+
+      input {
+        margin-right: 8px;
+      }
+    }
+  }
+
   .code,
   .results {
     position: absolute;

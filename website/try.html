@@ -9,6 +9,8 @@ scripts:
 ---
 
 <div class="try-editor">
+  <div class="options" id="options">
+  </div>
   <div class="code" id="code">
   </div>
   <div class="results show-loading" id="results">
@@ -26,6 +28,7 @@ scripts:
   requirejs(['{% asset_name "tryFlow" %}'], function(tryFlow) {
     tryFlow.createEditor(
       '{{ site.flow.version }}',
+      document.getElementById("options"),
       document.getElementById("code"),
       document.getElementById("results"),
       {{ site.flow.versions | jsonify }}
