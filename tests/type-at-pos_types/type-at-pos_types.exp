@@ -2447,8 +2447,8 @@ type-destructor-trigger.js:11:7 = {
   "loc":{
     "source":"type-destructor-trigger.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":7,"offset":476},
-    "end":{"line":11,"column":27,"offset":497}
+    "start":{"line":11,"column":7,"offset":478},
+    "end":{"line":11,"column":27,"offset":499}
   },
   "path":"type-destructor-trigger.js",
   "line":11,

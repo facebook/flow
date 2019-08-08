@@ -7,7 +7,7 @@
 // as well.
 
 import keyMirrorRecursive from './keyMirrorRecursive';
-import type KeyMirrorRecursive from './keyMirrorRecursive';
+import typeof KeyMirrorRecursive from './keyMirrorRecursive';
 const keyMirrorRecursiveObj = keyMirrorRecursive({ A: '' });
 
 module.exports = keyMirrorRecursiveObj;
