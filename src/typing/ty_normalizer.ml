@@ -666,9 +666,9 @@ end = struct
       let loc = Reason.def_aloc_of_reason r in
       return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
     | MergedT (_, uses) -> merged_t ~env uses
-    | ExistsT _ -> return (Ty.Utility Ty.Exists)
-    | ObjProtoT _ -> return (Ty.TypeOf (["Object"], "prototype"))
-    | FunProtoT _ -> return (Ty.TypeOf (["Function"], "prototype"))
+    | ExistsT _ -> return Ty.(Utility Exists)
+    | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
+    | FunProtoT _ -> return Ty.(TypeOf FunProto)
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
@@ -681,7 +681,7 @@ end = struct
           ]
           explicit_any)
       else
-        return Ty.(TypeOf (["Function"; "prototype"], "apply"))
+        return Ty.(TypeOf FunProtoApply)
 
     | FunProtoBindT _ ->
       if Env.expand_internal_types env then
@@ -695,7 +695,7 @@ end = struct
           })
           explicit_any)
       else
-         return Ty.(TypeOf (["Function"; "prototype"], "bind"))
+         return Ty.(TypeOf FunProtoBind)
 
     | FunProtoCallT _ ->
       if Env.expand_internal_types env then
@@ -709,7 +709,7 @@ end = struct
           })
           explicit_any)
       else
-         return Ty.(TypeOf (["Function"; "prototype"], "call"))
+         return Ty.(TypeOf FunProtoCall)
 
     | ModuleT (reason, exports, _) -> module_t env reason exports t
 

@@ -60,6 +60,14 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     type_list_aux [] xs |> List.rev
   in
 
+  let builtin_value = function
+    | FunProto -> Atom "Function.prototype"
+    | ObjProto -> Atom "Object.prototype"
+    | FunProtoApply -> Atom "Function.prototype.apply"
+    | FunProtoBind -> Atom "Function.prototype.bind"
+    | FunProtoCall -> Atom "Function.prototype.call"
+  in
+
   (* The depth parameter is useful for formatting unions: Top-level does not
      get parentheses.
   *)
@@ -105,10 +113,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     | NumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")
     | TypeAlias ta -> type_alias ta
-    | TypeOf (path, name) ->
-      let path = Core_list.map ~f:(fun x -> [Atom x; Atom "."]) path in
-      let value = (List.concat path) @ [Atom name] in
-      fuse ([Atom "typeof"; space] @ value)
+    | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
     | Module (sym, { cjs_export; exports }) ->
         module_t ~depth sym exports cjs_export
     | Mu (i, t) ->

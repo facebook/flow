@@ -6,9 +6,9 @@
  *)
 
 type import_mode =
- | ValueMode
- | TypeMode
- | TypeofMode
+  | ValueMode
+  | TypeMode
+  | TypeofMode
 
 and imported_ident =
   ALoc.t * string * import_mode

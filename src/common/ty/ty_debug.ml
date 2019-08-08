@@ -25,6 +25,13 @@ let dump_bot_kind = function
   | EmptyTypeDestructorTriggerT _ -> "EmptyTypeDestructorTriggerT"
   | NoLowerWithUpper u -> spf "NoLowerWithUpper (%s)" (dump_bot_upper_bound_kind u)
 
+let builtin_value = function
+  | FunProto -> "Function.prototype"
+  | ObjProto -> "Object.prototype"
+  | FunProtoApply -> "Function.prototype.apply"
+  | FunProtoBind -> "Function.prototype.bind"
+  | FunProtoCall -> "Function.prototype.call"
+
 let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with
   | Some t -> f t
   | None -> ""
@@ -173,15 +180,21 @@ and dump_t ?(depth = 10) t =
       (dump_symbol ta_name)
       (dump_type_params ~depth ta_tparams)
       (Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
-  | TypeOf (path, n) ->
-    spf "Typeof(%s)" (String.concat "." (path@[n]))
+  | TypeOf v ->
+    spf "Typeof (%s)" (builtin_value v)
   | Module (n, { exports; _ }) ->
     let name = match n with
       | Some n -> dump_symbol n
       | None -> "<no name>"
     in
-    spf "Module(%s, %s)" name
-      (dump_list (fun (name, t) -> dump_t ~depth t |> spf "%s : %s" name) ~sep:"," exports)
+    let exports =
+      dump_list
+        (fun (name, t) -> dump_t ~depth t |> spf "%s : %s" name)
+        ~sep:","
+        exports
+    in
+    spf "Module(%s, %s)" name exports
+
   | ClassDecl (name, ps) ->
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
   | InterfaceDecl (name, ps) ->
@@ -297,9 +310,8 @@ let json_of_t ~strip_root =
         "typeParams", json_of_type_params ta_tparams;
         "body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type
       ]
-    | TypeOf (path, name) -> [
-        "path", JSON_Array (Core_list.map ~f:(fun x -> JSON_String x) path);
-        "name", JSON_String name;
+    | TypeOf b -> [
+        "name", JSON_String (builtin_value b);
       ]
     | Module (name, _) -> [
         "name", Option.value_map ~f:json_of_symbol ~default:JSON_Null name;

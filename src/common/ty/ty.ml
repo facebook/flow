@@ -33,7 +33,7 @@ type t =
   | Union of t * t * t list
   | Inter of t * t * t list
   | TypeAlias of type_alias
-  | TypeOf of path * string
+  | TypeOf of builtin_value
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | Utility of utility
@@ -41,8 +41,6 @@ type t =
   | Mu of int * t
 
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
-
-and path = string list
 
 and any_kind =
   | Implicit
@@ -173,6 +171,13 @@ and utility =
   | ReactConfigType of t * t
 
 and polarity = Positive | Negative | Neutral
+
+and builtin_value =
+  | FunProto
+  | ObjProto
+  | FunProtoApply
+  | FunProtoBind
+  | FunProtoCall
 [@@deriving visitors {
   name="iter_ty";
   nude=true;
