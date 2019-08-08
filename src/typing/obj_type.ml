@@ -15,9 +15,9 @@ let mk_with_proto cx reason ?(sealed=false) ?(exact=true) ?(frozen=false)
   in
   let flags = { sealed; exact; frozen } in
   let call = Option.map call ~f:(Context.make_call_prop cx) in
-  let pmap =
-    Option.value_map ~f:(Context.make_source_property_map cx props)
-    ~default:(Context.generate_property_map cx props) loc in
+  let pmap = match loc with
+    | None -> Context.generate_property_map cx props
+    | Some loc -> Context.make_source_property_map cx props loc in
   DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
 
 let mk_exact_empty cx reason =
