@@ -70,6 +70,9 @@ open Utils_js
        the key is the module provided by a file;
        the value is the subset of files which require that module directly
    (2) a subset of those files that phantom depend on root_fileset
+
+   IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
+                function to read any other state, make sure to update the DirectDependentFilesCache!
  *)
 let calc_direct_dependents_utils ~reader workers fileset root_fileset = Module_heaps.(
   let root_fileset = FilenameSet.fold (fun f root_fileset ->
@@ -147,6 +150,9 @@ let calc_direct_dependents_utils ~reader workers fileset root_fileset = Module_h
    which have new providers.
 
    Return the subset of candidates directly dependent on root_modules / root_files.
+
+  IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
+               function to read any other state, make sure to update the DirectDependentFilesCache!
 *)
 let calc_direct_dependents ~reader workers ~candidates ~root_files ~root_modules =
   if FilenameSet.is_empty root_files && Modulename.Set.is_empty root_modules
