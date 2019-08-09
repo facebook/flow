@@ -43,7 +43,8 @@ let set_server_options ~server_options =
   | Options.TypesFirst -> "types_first"
   in
   let abstract_locations = if Options.abstract_locations server_options then "on" else "off" in
-  FlowEventLogger.set_server_options ~lazy_mode ~arch ~abstract_locations
+  let max_workers = Options.max_workers server_options in
+  FlowEventLogger.set_server_options ~lazy_mode ~arch ~abstract_locations ~max_workers
 
 let disable_logging () =
   EventLogger.disable_logging ();
