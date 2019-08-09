@@ -1,3 +1,51 @@
+### 0.105.0
+
+Likely to cause new Flow errors:
+
+* Types for `FileReader` properties and methods are now more precise (e.g., some parameters typed
+  `any` are now typed `ProgressEvent`; some properties now have `null` added to their types). Thanks, @nwoltman!
+
+* The value type parameter `V` of `$ReadOnlyMap` and `$ReadOnlyWeakMap` is now covariant. Thanks, @goodmind!
+
+* Types for the `vm` module in node.js are now more precise. Thanks, @goodmind!
+
+* The deprecated `$Enum<...>` utility type has now been deleted. Use `$Keys<...>` instead.
+
+* Indexing tuples with floats is no longer allowed.
+
+New Features:
+
+* Added support for `React.Profiler` (React v16.9+). Thanks, @bvaughn!
+
+* Added a `--types` flag to `flow graph dep-graph` to output only "type" dependencies: the subset of
+  imports that the types of a module's exports depends on. (Without the flag, we output "code"
+  dependencies: the set of all imports of a module.)
+
+* Preliminary support for automatically inserting annotations on a module's exports through
+  LSP. Thanks to @akuhlens (summer intern with the Flow team)!
+
+* Preliminary support for definite assignment checking of class instance properties. Thanks to
+  @pzp1997 (summer intern with the Flow team)!
+
+* Added an option to `.flowconfig` for exact-by-default objects.
+
+Perf fixes:
+
+* Fixed a non-termination issue with a recursive use of mapped types.
+* Fixed an exponential-blowup issue with a combined use of spreads and unions.
+* Fixed an exponential-blowup issue with recursive use of array spreads.
+
+Misc:
+
+* Fixed LSP init to say codeLens is not supported.
+* Fixed lots of cases of bad error positioning, unblocking improvements to error suppressions and
+  error streaming. Thanks to @mvcccccc (summer intern with the Flow team)!
+
+Parser:
+
+* Improved a bunch of "unexpected" parse errors, providing what was expected in the error message.
+* Fixed a bug in parsing of params in function types.
+
 ### 0.104.0
 
 Likely to cause new Flow errors:
