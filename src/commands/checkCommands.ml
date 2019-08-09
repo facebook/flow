@@ -78,6 +78,7 @@ module CheckCommand = struct
         |> shm_flags
         |> ignore_version_flag
         |> from_flag
+        |> no_cgroup_flag
         |> anon "root" (optional string)
       );
     usage = Printf.sprintf
@@ -155,6 +156,7 @@ module FocusCheckCommand = struct
         |> from_flag
         |> root_flag
         |> input_file_flag "check"
+        |> no_cgroup_flag
         |> anon "root" (list_of string)
       );
     usage = Printf.sprintf

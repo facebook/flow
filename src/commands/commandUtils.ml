@@ -966,6 +966,65 @@ let json_version_flag prev = CommandSpec.ArgSpec.(
        ~doc:"The version of the JSON format (defaults to 1)"
 )
 
+(* If a command uses this flag, then it will automatically exec systemd-run (if systemd-run is
+ * available). This can add a couple hundred ms to the start up time of the command. Only commands
+ * that are resource-intensive (or spawn resource intensive processes) and probably should run in
+ * cgroups should use this flag.
+ *)
+let no_cgroup_flag =
+  (* We only trigger this behavior if we're on Unix and systemd-run is in the path *)
+  let get_systemd_binary () =
+    if Sys.unix
+    then begin
+      let ic = Unix.open_process_in "which systemd-run 2> /dev/null" in
+      let systemd_exe = try Some (input_line ic) with _ -> None in
+      if Unix.close_process_in ic = Unix.WEXITED 0 then systemd_exe else None
+    end else None
+  in
+
+  (* Sometimes systemd-run is available but we can't use it. For example, the systemd might not have
+   * a proper working user session, so we might not be able to run commands via systemd-run as a
+   * user process *)
+  let can_run_systemd () =
+    (* Use `timeout` in case it hangs mysteriously. `--quiet` only suppresses stdout. *)
+    let ic = Unix.open_process_in "timeout 1 systemd-run --quiet --user -- true 2> /dev/null" in
+    (* If all goes right, `systemd-run` will return immediately with exit code 0 and run `true`
+     * asynchronously as a service. If it goes wrong, it will exit with a non-zero exit code *)
+    Unix.close_process_in ic = Unix.WEXITED 0
+  in
+
+  (* Basically re-exec ourselves with the --no-cgroup flag using systemd-run *)
+  let exec_in_cgroup_if_systemd_available () =
+    match get_systemd_binary () with
+    | None -> ()
+    | Some systemd_exe ->
+      if can_run_systemd () then begin
+        let flow_args = match Array.to_list Sys.argv with
+        | [] -> failwith "The argv should never be empty. Element 0 should be the executable."
+        | [_] -> failwith "`flow` doesn't use `--no-cgroup` so we shouldn't hit this"
+        | flow_exe :: command :: args ->
+          flow_exe :: command :: "--no-cgroup" :: args
+        in
+        systemd_exe :: "--quiet" :: "--user" :: "--scope" :: "--slice" :: "flow.slice" ::
+          "--" :: flow_args
+        |> Array.of_list
+        |> Unix.execv systemd_exe
+      end
+  in
+
+  let collect_no_cgroup_flag main no_cgroup =
+    if not no_cgroup
+    then exec_in_cgroup_if_systemd_available ();
+    main
+  in
+
+  fun prev -> CommandSpec.ArgSpec.(
+    prev
+    |> CommandSpec.ArgSpec.collect collect_no_cgroup_flag
+    |> flag "--no-cgroup" no_arg
+      ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)"
+  )
+
 let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir
