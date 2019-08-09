@@ -4,6 +4,7 @@
   (modules :standard \ recheck_updates)
   (libraries
     flow_common
+    flow_exit_status
     flow_server_env
     flow_server_error_collator
     flow_server_files
@@ -21,6 +22,7 @@
   (modules recheck_updates)
   (libraries
     flow_common
+    flow_exit_status
     flow_parsing
     flow_server_files
     flow_service_inference_module

@@ -4,6 +4,7 @@
   (libraries
     flow_common
     flow_common_lsp_conversions
+    flow_exit_status
     flow_parser_utils
     flow_server_env
     flow_server_find_refs

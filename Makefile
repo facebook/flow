@@ -77,7 +77,9 @@ MODULES=\
   src/common/audit\
   src/common/build_id\
   src/common/errors\
+  src/common/exit_status\
   src/common/lints\
+  src/common/logging_utils\
   src/common/lwt\
   src/common/modulename\
   src/common/monad\

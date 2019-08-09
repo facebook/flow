@@ -3,6 +3,7 @@
   (wrapped false)
   (libraries
     flow_common
+    flow_exit_status
     flow_monitor_rpc
     flow_parser
     flow_parsing
