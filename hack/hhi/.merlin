@@ -1,2 +1,0 @@
-REC
-FLG -ppx "../../../../buck-out/bin/hphp/hack/src/ppx/ppx_gen_hhi/ppx_gen_hhi ~/fbsource/fbcode/buck-out/gen/hphp/hack/hhi/hhi_lib/hhi_lib__srcs"
