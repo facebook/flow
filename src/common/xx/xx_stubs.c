@@ -92,3 +92,12 @@ CAMLexport value caml_xx_to_string(value hash) {
   str = caml_xx_to_string_unboxed(Int64_val(hash));
   CAMLreturn(str);
 }
+
+CAMLexport value caml_xx_mod_unboxed(XXH64_hash_t hash, value mod) {
+  assert(Is_long(mod));
+  return Val_long(hash % Long_val(mod));
+}
+
+CAMLexport value caml_xx_mod(value hash, value mod) {
+  return caml_xx_mod_unboxed(hash, mod);
+}
