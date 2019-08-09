@@ -5367,9 +5367,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action) ->
       let propref = match l with
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
-          let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
-          Named (reason_prop, x)
-      | _ -> Computed l
+        let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
+        Named (reason_prop, x)
+      | DefT (reason_x, _, InstanceT _) when DescFormat.name_of_instance_reason reason_x = "$SymbolIterator" ->
+        let reason_prop = replace_reason_const (RProperty (Some "@@iterator")) reason_x in
+        Named (reason_prop, "@@iterator")
+      | _ ->
+        Computed l
       in
       (match action with
       | ReadElem t ->
