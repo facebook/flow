@@ -437,6 +437,7 @@ module Expression
 
   and peek_unary_op env =
     let open Expression.Unary in
+    let options = parse_options env in
     match Peek.token env with
     | T_NOT -> Some Not
     | T_BIT_NOT -> Some BitNot
@@ -445,7 +446,9 @@ module Expression
     | T_TYPEOF -> Some Typeof
     | T_VOID -> Some Void
     | T_DELETE -> Some Delete
-    | T_THROW -> Some Throw
+    | T_THROW ->
+      if not options.esproposal_throw_expressions then error env Parse_error.ThrowExpressionsDisabled;
+      Some Throw
     (* If we are in a unary expression context, and within an async function,
      * assume that a use of "await" is intended as a keyword, not an ordinary
      * identifier. This is a little bit inconsistent, since it can be used as

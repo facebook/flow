@@ -4411,6 +4411,7 @@ and unary cx loc = Ast.Expression.Unary.(function
 
   | { operator = Throw; argument; comments } ->
     let open Ast.Expression in
+    warn_or_ignore_throw_expressions cx loc;
     let argument_ast = expression cx argument in
     Env.reset_current_activation loc;
     Abnormal.save Abnormal.Throw;
@@ -6943,3 +6944,9 @@ and warn_or_ignore_optional_chaining optional cx loc =
   | Options.ESPROPOSAL_IGNORE -> ()
   | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
   else ()
+
+and warn_or_ignore_throw_expressions cx loc =
+  match Context.esproposal_throw_expressions cx with
+  | Options.ESPROPOSAL_ENABLE
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalThrowExpressions loc)

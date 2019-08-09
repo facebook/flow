@@ -256,6 +256,7 @@ and 'loc t' =
     value_reason: 'loc virtual_reason;
     object2_reason: 'loc virtual_reason;
   }
+  | EExperimentalThrowExpressions of 'loc
 
 and spread_error_kind =
   | Indexer
@@ -664,6 +665,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       value_reason = map_reason value_reason;
       object2_reason = map_reason object2_reason;
     }
+  | EExperimentalThrowExpressions loc -> EExperimentalThrowExpressions (f loc)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -820,6 +822,7 @@ let util_use_op_of_msg nope util = function
 | ECannotSpreadIndexerOnRight _
 | EUnableToSpread _
 | EInexactMayOverwriteIndexer _
+| EExperimentalThrowExpressions _
   -> nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -905,6 +908,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
+  | EExperimentalThrowExpressions loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
   | EExperimentalClassProperties (loc, _)
@@ -1028,6 +1032,7 @@ let kind_of_msg = Errors.(function
   | EDocblockError _
   | ELintSetting _
   | EExperimentalOptionalChaining _
+  | EExperimentalThrowExpressions _
   | EOptionalChainingMethods _      -> PseudoParseError
   | _ -> InferError
 )
@@ -2099,6 +2104,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Optional chaining is an active early-stage feature proposal that ";
         text "may change. You may opt in to using it anyway by putting ";
         code "esproposal.optional_chaining=enable"; text " into the ";
+        code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+      ]
+
+    | EExperimentalThrowExpressions _ ->
+      Normal [
+        text "Experimental "; code "throw"; text " expressions usage. ";
+        text "Throw expressions is an active early-stage feature proposal that ";
+        text "may change. You may opt in to using it anyway by putting ";
+        code "esproposal.throw_expressions=enable"; text " into the ";
         code "[options]"; text " section of your "; code ".flowconfig"; text ".";
       ]
 

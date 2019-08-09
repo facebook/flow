@@ -288,6 +288,7 @@ let run_test (name, frontmatter, content) =
       esproposal_export_star_as = false;
       esproposal_optional_chaining = false;
       esproposal_nullish_coalescing = false;
+      esproposal_throw_expressions = false;
       types = false;
       use_strict;
   } in

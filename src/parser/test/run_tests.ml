@@ -139,6 +139,9 @@ end = struct
         | "esproposal_nullish_coalescing" -> get_bool k v >>= fun v ->
           return (test_opts, { opts with Parser_env.esproposal_nullish_coalescing = v })
 
+        | "esproposal_throw_expressions" -> get_bool k v >>= fun v ->
+          return (test_opts, { opts with Parser_env.esproposal_throw_expressions = v })
+
         | "types" -> get_bool k v >>= fun v ->
           return (test_opts, { opts with Parser_env.types = v })
 

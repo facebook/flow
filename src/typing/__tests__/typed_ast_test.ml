@@ -32,6 +32,7 @@ let metadata = { Context.
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  esproposal_throw_expressions = Options.ESPROPOSAL_ENABLE;
   exact_by_default = false;
   facebook_fbs = None;
   facebook_fbt = None;
@@ -59,6 +60,7 @@ let parse_content file content =
     esproposal_export_star_as = true;
     esproposal_optional_chaining = true;
     esproposal_nullish_coalescing = true;
+    esproposal_throw_expressions = true;
     types = true;
     use_strict = false;
   }) in

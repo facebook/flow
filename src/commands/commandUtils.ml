@@ -1139,6 +1139,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
       FlowConfig.esproposal_class_instance_fields flowconfig;
     opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;
     opt_esproposal_nullish_coalescing = FlowConfig.esproposal_nullish_coalescing flowconfig;
+    opt_esproposal_throw_expressions =
+      FlowConfig.esproposal_throw_expressions flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;

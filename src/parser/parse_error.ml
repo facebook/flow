@@ -128,6 +128,7 @@ type t =
   | NullishCoalescingDisabled
   | NullishCoalescingUnexpectedLogical of string
   | WhitespaceInPrivateName
+  | ThrowExpressionsDisabled
 
 exception Error of (Loc.t * t) list
 
@@ -392,4 +393,8 @@ module PP =
             expressions."
             operator
       | WhitespaceInPrivateName -> "Unexpected whitespace between `#` and identifier"
+      | ThrowExpressionsDisabled -> "The throw expressions plugin must be enabled in order to \
+        use the throw operator (`throw`). Throw expressions is an active early-stage \
+        feature proposal which may change and is not enabled by default. To enable support in \
+        the parser, use the `esproposal_throw_expressions` option."
   end

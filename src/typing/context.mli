@@ -39,6 +39,7 @@ type metadata = {
   esproposal_export_star_as: Options.esproposal_feature_mode;
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  esproposal_throw_expressions: Options.esproposal_feature_mode;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -93,6 +94,7 @@ val esproposal_decorators: t -> Options.esproposal_feature_mode
 val esproposal_export_star_as: t -> Options.esproposal_feature_mode
 val esproposal_optional_chaining: t -> Options.esproposal_feature_mode
 val esproposal_nullish_coalescing: t -> Options.esproposal_feature_mode
+val esproposal_throw_expressions: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val exact_by_default: t -> bool
 val file: t -> File_key.t
