@@ -97,3 +97,4 @@ let saved_state_fb_fetcher_error ~step:_ ~trace:_ ~profiling:_ = ()
 
 let load_saved_state_success ~changed_files_count:_ = ()
 let load_saved_state_error ~saved_state_filename:_ ~changed_files_count:_ ~invalid_reason:_ = ()
+let idle_heartbeat ~idle_time:_ ~profiling:_ = ()

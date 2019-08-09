@@ -1059,13 +1059,17 @@ let legacy_sample_memory ~metric ~value profile =
 
 let total_memory_group = "<Total>"
 
-let sample_memory ~group ~metric ~value profile =
+let sample_memory ?group ~metric ~value profile =
   Memory.sample_memory ~group:total_memory_group ~metric ~value profile.running_memory;
-  Memory.sample_memory ~group ~metric ~value profile.running_memory
+  Option.iter group ~f:(fun group ->
+    Memory.sample_memory ~group ~metric ~value profile.running_memory
+  )
 
-let add_memory ~group ~metric ~start ~delta ~hwm_delta profile =
+let add_memory ?group ~metric ~start ~delta ~hwm_delta profile =
   Memory.add_memory ~group:total_memory_group ~metric ~start ~delta ~hwm_delta profile.running_memory;
-  Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory
+  Option.iter group ~f:(fun group ->
+    Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory
+  )
 
 let to_json_properties profile =
   [
