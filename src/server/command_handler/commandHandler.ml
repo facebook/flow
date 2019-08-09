@@ -941,6 +941,7 @@ type 'a persistent_handling_result =
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
   let response = ResponseMessage (id, ErrorResult (e, "")) in
+  let metadata = with_error metadata ~reason:"cancelled" in
   Lwt.return (LspResponse (Ok (ret, Some response, metadata)))
 
 let handle_persistent_subscribe ~reader ~options ~client ~profiling:_ ~env =
