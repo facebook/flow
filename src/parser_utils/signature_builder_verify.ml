@@ -490,6 +490,7 @@ module Eval(Env: EvalEnv) = struct
       | Typeof
       | Void
       | Delete
+      | Throw
         ->
         (* These operations have simple result types. *)
         ignore tps; ignore argument; Deps.bot

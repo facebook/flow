@@ -419,6 +419,7 @@ end with type t = Impl.t) = struct
             | Typeof -> "typeof"
             | Void -> "void"
             | Delete -> "delete"
+            | Throw -> "throw"
             | Await -> failwith "matched above"
             in
             node ?comments "UnaryExpression" loc [

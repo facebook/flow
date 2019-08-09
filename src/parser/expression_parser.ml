@@ -445,6 +445,7 @@ module Expression
     | T_TYPEOF -> Some Typeof
     | T_VOID -> Some Void
     | T_DELETE -> Some Delete
+    | T_THROW -> Some Throw
     (* If we are in a unary expression context, and within an async function,
      * assume that a use of "await" is intended as a keyword, not an ordinary
      * identifier. This is a little bit inconsistent, since it can be used as

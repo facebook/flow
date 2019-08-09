@@ -1083,6 +1083,7 @@ Ast.Expression.(match x with
   | Void -> "void "
   | Delete -> "delete "
   | Await -> "await "
+  | Throw -> "throw "
   ) in
   do_wrap (op ^ x)
 | Update { Update.operator; prefix; argument } ->

@@ -4408,6 +4408,15 @@ and unary cx loc = Ast.Expression.Unary.(function
     }) in
     func_call cx reason ~use_op await None [Arg arg],
     { operator = Await; argument = argument_ast; comments }
+
+  | { operator = Throw; argument; comments } ->
+    let open Ast.Expression in
+    let argument_ast = expression cx argument in
+    Env.reset_current_activation loc;
+    Abnormal.save Abnormal.Throw;
+    Abnormal.throw_expr_control_flow_exception
+      loc ((loc, VoidT.at loc |> with_trust bogus_trust), Unary { Unary.operator = Throw; argument = argument_ast; comments })
+      Abnormal.Throw
 )
 
 (* numeric pre/post inc/dec *)
