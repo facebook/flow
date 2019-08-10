@@ -881,7 +881,7 @@ module Make
           ignore @@ this#block loc block
         ) in
         let env1 = this#ssa_env in
-        let catch_completion_state, env2 = match handler with
+        let catch_completion_state_opt, env2 = match handler with
           | Some (loc, clause) ->
             (* NOTE: Havoc-ing the state when entering the handler is probably
                overkill. We can be more precise but still correct by collecting all
@@ -891,11 +891,11 @@ module Make
             let catch_completion_state = this#run_to_completion (fun () ->
               ignore @@ this#catch_clause loc clause
             ) in
-            catch_completion_state, this#ssa_env
-          | None -> None, this#empty_ssa_env
+            [catch_completion_state], this#ssa_env
+          | None -> [], this#empty_ssa_env
         in
         this#merge_ssa_env env1 env2;
-        let try_catch_completion_states = try_completion_state, [catch_completion_state] in
+        let try_catch_completion_states = try_completion_state, catch_completion_state_opt in
         let completion_state = this#run_to_completion (fun () ->
           this#merge_completion_states try_catch_completion_states
         ) in
