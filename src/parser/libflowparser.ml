@@ -58,6 +58,8 @@ let convert_options opts =
         { opts with esproposal_export_star_as = v }, tokens
     | "esproposal_optional_chaining" ->
         { opts with esproposal_optional_chaining = v }, tokens
+    | "esproposal_nullish_coalescing" ->
+        { opts with esproposal_nullish_coalescing = v }, tokens
     | "types" ->
         { opts with types = v }, tokens
     | "use_strict" ->
