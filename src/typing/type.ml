@@ -1659,7 +1659,7 @@ end = struct
     match !specialization with
     | Some Empty -> replace_reason_const REmpty r
     | Some (Singleton t) -> TypeUtil.reason_of_t t
-    | Some (Enum _) -> replace_reason_const REnum r
+    | Some (Enum _) -> replace_reason_const RUnionEnum r
     | _ -> r
 
   (********** Optimizations **********)

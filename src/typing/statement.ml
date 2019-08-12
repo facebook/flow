@@ -1886,7 +1886,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     let open EnumDeclaration in
     let {id = name_loc, ident; body} = enum in
     let {Ast.Identifier.name; _} = ident in
-    let t = AnyT.untyped @@ mk_reason REnumDeclaration loc in
+    let t = AnyT.untyped @@ mk_reason REnum loc in
     let id' = (name_loc, t), ident in
     Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
     let use_op = Op (AssignVar {

@@ -9609,7 +9609,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
           | Enum.(One Bool b) -> RBooleanLit b
           | Enum.(One Null) -> RNull
           | Enum.(One Void) -> RVoid
-          | Enum.(Many _enums) -> REnum
+          | Enum.(Many _enums) -> RUnionEnum
         ) in
         let reason = replace_reason_const desc (reason_of_t result) in
         let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in

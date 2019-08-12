@@ -49,8 +49,8 @@ type 'loc virtual_reason_desc =
   | RLogical of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
   | RTemplateString
   | RUnknownString
+  | RUnionEnum
   | REnum
-  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
