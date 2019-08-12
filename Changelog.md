@@ -1,3 +1,11 @@
+### 0.105.2
+
+v0.105.0 started running the Flow server in a cgroup on Linux distros that support [cgroup v2](https://www.kernel.org/doc/Documentation/cgroup-v2.txt). However, some versions of `systemd`, which manages cgroups, contain a bug that caused the Flow server to fail to start. This release avoids using `cgroup` on these systems. (#8012)
+
+### 0.105.1
+
+This was an npm-only release to fix a packaging issue. No updated binaries were published.
+
 ### 0.105.0
 
 Likely to cause new Flow errors:
