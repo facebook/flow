@@ -15,6 +15,22 @@ References:
              ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- expression.js:20:3
+
+Unreachable code.
+
+   20|   return a * 1; // TODO: a is not null
+         ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:24:3
+
+Unreachable code.
+
+   24|   return a * 1; // TODO: a is not null
+         ^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:13:12
 
 Cannot perform arithmetic operation because string [1] is not a number.
@@ -30,4 +46,4 @@ References:
 
 
 
-Found 2 errors
+Found 4 errors
