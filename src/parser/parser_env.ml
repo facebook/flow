@@ -144,6 +144,7 @@ type parse_options = {
   esproposal_export_star_as: bool;
   esproposal_optional_chaining: bool;
   esproposal_nullish_coalescing: bool;
+  esproposal_throw_expressions: bool;
   types: bool;
   use_strict: bool;
 }
@@ -155,6 +156,7 @@ let default_parse_options = {
   esproposal_export_star_as = false;
   esproposal_optional_chaining = false;
   esproposal_nullish_coalescing = false;
+  esproposal_throw_expressions = false;
   types = true;
   use_strict = false;
 }

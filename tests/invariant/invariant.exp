@@ -54,5 +54,22 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- index.js:31:5
 
-Found 4 errors
+Cannot cast `a` to string because number [1] is incompatible with string [2].
+
+   index.js:31:5
+   31|   ;(a: string)
+           ^
+
+References:
+   index.js:30:15
+   30| function x(a: number = invariant()) {
+                     ^^^^^^ [1]
+   index.js:31:8
+   31|   ;(a: string)
+              ^^^^^^ [2]
+
+
+
+Found 5 errors

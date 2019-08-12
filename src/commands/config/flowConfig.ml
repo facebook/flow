@@ -57,6 +57,7 @@ module Opts = struct
     esproposal_export_star_as: Options.esproposal_feature_mode;
     esproposal_nullish_coalescing: Options.esproposal_feature_mode;
     esproposal_optional_chaining: Options.esproposal_feature_mode;
+    esproposal_throw_expressions: Options.esproposal_feature_mode;
     exact_by_default: bool;
     facebook_fbs: string option;
     facebook_fbt: string option;
@@ -150,6 +151,7 @@ module Opts = struct
     esproposal_export_star_as = Options.ESPROPOSAL_WARN;
     esproposal_nullish_coalescing = Options.ESPROPOSAL_WARN;
     esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
+    esproposal_throw_expressions = Options.ESPROPOSAL_WARN;
     exact_by_default = false;
     facebook_fbs = None;
     facebook_fbt = None;
@@ -369,6 +371,11 @@ module Opts = struct
       esproposal_feature_flag
         ~allow_enable:true
         (fun opts v -> Ok { opts with esproposal_nullish_coalescing = v });
+
+    "esproposal.throw_expressions",
+      esproposal_feature_flag
+        ~allow_enable:true
+        (fun opts v -> Ok { opts with esproposal_throw_expressions = v });
 
     "exact_by_default",
       boolean (fun opts v -> Ok { opts with exact_by_default = v });
@@ -1039,6 +1046,7 @@ let esproposal_decorators c = c.options.Opts.esproposal_decorators
 let esproposal_export_star_as c = c.options.Opts.esproposal_export_star_as
 let esproposal_optional_chaining c = c.options.Opts.esproposal_optional_chaining
 let esproposal_nullish_coalescing c = c.options.Opts.esproposal_nullish_coalescing
+let esproposal_throw_expressions c = c.options.Opts.esproposal_throw_expressions
 let exact_by_default c = c.options.Opts.exact_by_default
 let file_watcher c = c.options.Opts.file_watcher
 let facebook_fbs c = c.options.Opts.facebook_fbs

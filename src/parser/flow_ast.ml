@@ -831,6 +831,7 @@ and Expression : sig
       | Typeof
       | Void
       | Delete
+      | Throw
       | Await
 
     and ('M, 'T) t = {

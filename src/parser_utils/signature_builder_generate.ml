@@ -1067,6 +1067,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         | _ -> loc, T.Boolean
         end
 
+      | Throw
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
         T.FixMe.mk_expr_type loc

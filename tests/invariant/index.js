@@ -26,3 +26,7 @@ invariant(g);
 
 declare var h: false | true;
 invariant(h);
+
+function x(a: number = invariant()) {
+  ;(a: string)
+}

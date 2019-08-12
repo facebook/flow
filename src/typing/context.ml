@@ -39,6 +39,7 @@ type metadata = {
   esproposal_export_star_as: Options.esproposal_feature_mode;
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  esproposal_throw_expressions: Options.esproposal_feature_mode;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -196,6 +197,7 @@ let metadata_of_options options = {
   esproposal_export_star_as = Options.esproposal_export_star_as options;
   esproposal_optional_chaining = Options.esproposal_optional_chaining options;
   esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
+  esproposal_throw_expressions = Options.esproposal_throw_expressions options;
   exact_by_default = Options.exact_by_default options;
   facebook_fbs = Options.facebook_fbs options;
   facebook_fbt = Options.facebook_fbt options;
@@ -319,6 +321,7 @@ let esproposal_decorators cx = cx.metadata.esproposal_decorators
 let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
 let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
 let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
+let esproposal_throw_expressions cx = cx.metadata.esproposal_throw_expressions
 let evaluated cx = cx.sig_cx.evaluated
 let exact_by_default cx = cx.metadata.exact_by_default
 let file cx = cx.file

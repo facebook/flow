@@ -202,7 +202,9 @@ module Func_stmt_config = struct
 
   let eval_default cx ~expr = function
     | None -> None
-    | Some e -> Some (expr cx e)
+    | Some e ->
+      let e, _ = Abnormal.catch_expr_control_flow_exception (fun () -> expr cx e) in
+      Some e
 
   let eval_param cx (Param {t; loc; ploc; pattern; default; expr}) =
     match pattern with
@@ -3848,7 +3850,7 @@ and subscript =
             Env.reset_current_activation loc;
             Abnormal.save Abnormal.Throw;
             Abnormal.throw_expr_control_flow_exception loc
-              ((loc, VoidT.at loc |> with_trust bogus_trust), (Ast.Expression.Call ( { Call.
+              ((loc, EmptyT.at loc |> with_trust bogus_trust), (Ast.Expression.Call ( { Call.
                 callee = callee;
                 targs;
                 arguments = [];
@@ -3864,7 +3866,7 @@ and subscript =
             Abnormal.save Abnormal.Throw;
             let lit_exp = expression cx lit_exp in
             Abnormal.throw_expr_control_flow_exception loc
-              ((loc, VoidT.at loc |> with_trust bogus_trust), (Ast.Expression.Call ( { Call.
+              ((loc, EmptyT.at loc |> with_trust bogus_trust), (Ast.Expression.Call ( { Call.
                 callee = callee;
                 targs;
                 arguments = Expression lit_exp :: arguments;
@@ -3892,7 +3894,7 @@ and subscript =
             });
             List.map Tast_utils.error_mapper#expression_or_spread arguments
         in
-        let lhs_t = VoidT.at loc |> with_trust bogus_trust in
+        let lhs_t = EmptyT.at loc |> with_trust bogus_trust in
         ex, lhs_t, acc, ((loc, lhs_t), call_ast { Call.callee; targs; arguments; })
 
     | Call { Call.callee; targs; arguments } ->
@@ -4408,6 +4410,16 @@ and unary cx loc = Ast.Expression.Unary.(function
     }) in
     func_call cx reason ~use_op await None [Arg arg],
     { operator = Await; argument = argument_ast; comments }
+
+  | { operator = Throw; argument; comments } ->
+    let open Ast.Expression in
+    warn_or_ignore_throw_expressions cx loc;
+    let argument_ast = expression cx argument in
+    Env.reset_current_activation loc;
+    Abnormal.save Abnormal.Throw;
+    Abnormal.throw_expr_control_flow_exception
+      loc ((loc, EmptyT.at loc |> with_trust bogus_trust), Unary { Unary.operator = Throw; argument = argument_ast; comments })
+      Abnormal.Throw
 )
 
 (* numeric pre/post inc/dec *)
@@ -6934,3 +6946,9 @@ and warn_or_ignore_optional_chaining optional cx loc =
   | Options.ESPROPOSAL_IGNORE -> ()
   | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
   else ()
+
+and warn_or_ignore_throw_expressions cx loc =
+  match Context.esproposal_throw_expressions cx with
+  | Options.ESPROPOSAL_ENABLE
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalThrowExpressions loc)

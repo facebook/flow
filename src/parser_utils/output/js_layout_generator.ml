@@ -878,6 +878,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
       | E.Unary.Void -> Atom "void", true
       | E.Unary.Delete -> Atom "delete", true
       | E.Unary.Await -> Atom "await", true
+      | E.Unary.Throw -> Atom "throw", true
       end in
       let expr =
         let ctxt = { ctxt with left =
