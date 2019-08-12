@@ -983,11 +983,13 @@ let no_cgroup_flag =
   in
 
   (* Sometimes systemd-run is available but we can't use it. For example, the systemd might not have
-   * a proper working user session, so we might not be able to run commands via systemd-run as a
-   * user process *)
+     a proper working user session, so we might not be able to run commands via systemd-run as a
+     user process. Notably, `--user --scope` is broken under cgroupv2 in systemd < 238, and exits
+     code 1 (https://github.com/facebook/flow/issues/8012). *)
   let can_run_systemd () =
     (* Use `timeout` in case it hangs mysteriously. `--quiet` only suppresses stdout. *)
-    let ic = Unix.open_process_in "timeout 1 systemd-run --quiet --user -- true 2> /dev/null" in
+    let ic = Unix.open_process_in
+      "timeout 1 systemd-run --quiet --user --scope -- true 2> /dev/null" in
     (* If all goes right, `systemd-run` will return immediately with exit code 0 and run `true`
      * asynchronously as a service. If it goes wrong, it will exit with a non-zero exit code *)
     Unix.close_process_in ic = Unix.WEXITED 0
