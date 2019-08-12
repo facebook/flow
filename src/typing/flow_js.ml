@@ -2934,7 +2934,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
           (* If both enums are subsets of each other, they contain the same elements.
             2 n log n still grows slower than n^2 *)
-          | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2 && EnumSet.subset enums2 enums1
+          | Some enums1, Some enums2 ->
+            UnionEnumSet.subset enums1 enums2 && UnionEnumSet.subset enums2 enums1
           | _ -> false
         then () else
           UnionRep.members rep1 |> Core_list.iter ~f:(fun t -> rec_flow cx trace (t, u))
@@ -2946,28 +2947,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* we have the check l.key === sentinel where l.key is a union *)
       if sense then
         match sentinel with
-        | Enum.One enum ->
+        | UnionEnum.One enum ->
           begin
             let def = match enum with
-              | Enum.Str v -> SingletonStrT v
-              | Enum.Num v -> SingletonNumT v
-              | Enum.Bool v -> SingletonBoolT v
-              | Enum.Void -> VoidT
-              | Enum.Null -> NullT in
+              | UnionEnum.Str v -> SingletonStrT v
+              | UnionEnum.Num v -> SingletonNumT v
+              | UnionEnum.Bool v -> SingletonBoolT v
+              | UnionEnum.Void -> VoidT
+              | UnionEnum.Null -> NullT in
             match UnionRep.quick_mem_enum (Context.trust_errors cx) (DefT (r, Trust.bogus_trust (), def)) rep with
             | UnionRep.No -> ()  (* provably unreachable, so prune *)
             | UnionRep.Yes -> rec_flow_t cx trace (l, result)
             | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
               UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
           end
-        | Enum.Many enums ->
-          let acc = EnumSet.fold (fun enum acc ->
+        | UnionEnum.Many enums ->
+          let acc = UnionEnumSet.fold (fun enum acc ->
             let def = match enum with
-              | Enum.Str v -> SingletonStrT v
-              | Enum.Num v -> SingletonNumT v
-              | Enum.Bool v -> SingletonBoolT v
-              | Enum.Void -> VoidT
-              | Enum.Null -> NullT in
+              | UnionEnum.Str v -> SingletonStrT v
+              | UnionEnum.Num v -> SingletonNumT v
+              | UnionEnum.Bool v -> SingletonBoolT v
+              | UnionEnum.Void -> VoidT
+              | UnionEnum.Null -> NullT in
             UnionRep.join_quick_mem_results (acc,
               UnionRep.quick_mem_enum (Context.trust_errors cx) (DefT (r, Trust.bogus_trust (), def)) rep)
           ) enums UnionRep.No in
@@ -3025,7 +3026,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason_l, _, StrT Literal (_, x)), UseT (use_op, UnionT (reason_u, rep)) when
         match UnionRep.check_enum rep with
         | Some enums ->
-            if not (EnumSet.mem (Enum.Str x) enums)
+            if not (UnionEnumSet.mem (UnionEnum.Str x) enums)
             then add_output cx ~trace (Error_message.EIncompatibleWithUseOp
               (reason_l, UnionRep.specialized_reason reason_u rep, use_op));
             true
@@ -6051,7 +6052,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       guard cx trace l pred result sink
 
     | DefT (_, _, StrT lit),
-      SentinelPropTestT (reason, l, key, sense, Enum.(One Str sentinel), result) ->
+      SentinelPropTestT (reason, l, key, sense, UnionEnum.(One Str sentinel), result) ->
       begin match lit with
         | Literal (_, value) when (value = sentinel) != sense ->
           if not sense
@@ -6064,7 +6065,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, _, NumT lit),
-      SentinelPropTestT (reason, l, key, sense, Enum.(One Num sentinel_lit), result) ->
+      SentinelPropTestT (reason, l, key, sense, UnionEnum.(One Num sentinel_lit), result) ->
       let sentinel, _ = sentinel_lit in
       begin match lit with
         | Literal (_, (value, _)) when (value = sentinel) != sense ->
@@ -6078,7 +6079,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, _, BoolT lit),
-      SentinelPropTestT (reason, l, key, sense, Enum.(One Bool sentinel), result) ->
+      SentinelPropTestT (reason, l, key, sense, UnionEnum.(One Bool sentinel), result) ->
         begin match lit with
         | Some value when (value = sentinel) != sense ->
           if not sense
@@ -6091,13 +6092,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         end
 
     | DefT (_, _, NullT),
-      SentinelPropTestT (_reason, l, _key, sense, Enum.(One Null), result) ->
+      SentinelPropTestT (_reason, l, _key, sense, UnionEnum.(One Null), result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
 
     | DefT (_, _, VoidT),
-      SentinelPropTestT (_reason, l, _key, sense, Enum.(One Void), result) ->
+      SentinelPropTestT (_reason, l, _key, sense, UnionEnum.(One Void), result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
@@ -9604,12 +9605,12 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       (match Property.read_t p with
       | Some t ->
         let desc = RMatchingProp (key, match sentinel with
-          | Enum.(One Str s) -> RStringLit s
-          | Enum.(One Num (_, n)) -> RNumberLit n
-          | Enum.(One Bool b) -> RBooleanLit b
-          | Enum.(One Null) -> RNull
-          | Enum.(One Void) -> RVoid
-          | Enum.(Many _enums) -> RUnionEnum
+          | UnionEnum.(One Str s) -> RStringLit s
+          | UnionEnum.(One Num (_, n)) -> RNumberLit n
+          | UnionEnum.(One Bool b) -> RBooleanLit b
+          | UnionEnum.(One Null) -> RNull
+          | UnionEnum.(One Void) -> RVoid
+          | UnionEnum.(Many _enums) -> RUnionEnum
         ) in
         let reason = replace_reason_const desc (reason_of_t result) in
         let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
@@ -9634,16 +9635,16 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
   in
   let sentinel_of_literal = function
     | DefT (_, _, StrT (Literal (_, value)))
-    | DefT (_, _, SingletonStrT value)       -> Some Enum.(One (Str value))
+    | DefT (_, _, SingletonStrT value)       -> Some UnionEnum.(One (Str value))
     | DefT (_, _, NumT (Literal (_, value)))
-    | DefT (_, _, SingletonNumT value)       -> Some Enum.(One (Num value))
+    | DefT (_, _, SingletonNumT value)       -> Some UnionEnum.(One (Num value))
     | DefT (_, _, BoolT (Some value))
-    | DefT (_, _, SingletonBoolT value)      -> Some Enum.(One (Bool value))
-    | DefT (_, _, VoidT) -> Some Enum.(One Void)
-    | DefT (_, _, NullT) -> Some Enum.(One Null)
+    | DefT (_, _, SingletonBoolT value)      -> Some UnionEnum.(One (Bool value))
+    | DefT (_, _, VoidT) -> Some UnionEnum.(One Void)
+    | DefT (_, _, NullT) -> Some UnionEnum.(One Null)
     | UnionT (_, rep) ->
       begin match UnionRep.check_enum rep with
-        | Some enums -> Some Enum.(Many enums)
+        | Some enums -> Some UnionEnum.(Many enums)
         | None -> None
       end
     | _ -> None
@@ -11011,7 +11012,7 @@ and union_optimization_guard =
       rep1 = rep2 ||
       (* Try n log n check before n^2 check *)
       begin match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
-      | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2
+      | Some enums1, Some enums2 -> UnionEnumSet.subset enums1 enums2
       | _, _ ->
         (* Check if u contains l after unwrapping annots, tvars and repos types.
            This is faster than the n^2 case below because it avoids flattening both

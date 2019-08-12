@@ -46,16 +46,17 @@ let string_of_polarity = function
   | Polarity.Neutral -> "Neutral"
   | Polarity.Positive -> "Positive"
 
-let string_of_enum = function
-  | Enum.Str x -> spf "string %s" x
-  | Enum.Num (_,x) -> spf "number %s" x
-  | Enum.Bool x -> spf "boolean %b" x
-  | Enum.Null -> "null"
-  | Enum.Void -> "void"
+let string_of_union_enum = function
+  | UnionEnum.Str x -> spf "string %s" x
+  | UnionEnum.Num (_,x) -> spf "number %s" x
+  | UnionEnum.Bool x -> spf "boolean %b" x
+  | UnionEnum.Null -> "null"
+  | UnionEnum.Void -> "void"
 
 let string_of_sentinel = function
-  | Enum.One enum -> string_of_enum enum
-  | Enum.Many enums -> ListUtils.to_string " | " string_of_enum @@ EnumSet.elements enums
+  | UnionEnum.One enum -> string_of_union_enum enum
+  | UnionEnum.Many enums ->
+    ListUtils.to_string " | " string_of_union_enum @@ UnionEnumSet.elements enums
 
 let string_of_selector = function
   | Elem _ -> "Elem _" (* TODO print info about the key *)
@@ -986,18 +987,18 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
 ))
 
 and _json_of_enum _json_cx = function
-  | Enum.Str s -> Hh_json.JSON_String s
-  | Enum.Num (_, raw) -> Hh_json.JSON_String raw
-  | Enum.Bool b -> Hh_json.JSON_Bool b
-  | Enum.Null -> Hh_json.JSON_Null
-  | Enum.Void -> Hh_json.JSON_Null (* hmm, undefined doesn't exist in JSON *)
+  | UnionEnum.Str s -> Hh_json.JSON_String s
+  | UnionEnum.Num (_, raw) -> Hh_json.JSON_String raw
+  | UnionEnum.Bool b -> Hh_json.JSON_Bool b
+  | UnionEnum.Null -> Hh_json.JSON_Null
+  | UnionEnum.Void -> Hh_json.JSON_Null (* hmm, undefined doesn't exist in JSON *)
 
 and json_of_sentinel json_cx = check_depth json_of_sentinel_impl json_cx
 and json_of_sentinel_impl json_cx = function
-  | Enum.One enum -> _json_of_enum json_cx enum
-  | Enum.Many enums ->
+  | UnionEnum.One enum -> _json_of_enum json_cx enum
+  | UnionEnum.Many enums ->
     Hh_json.JSON_Array (
-      Core_list.map ~f:(_json_of_enum json_cx) @@ EnumSet.elements enums
+      Core_list.map ~f:(_json_of_enum json_cx) @@ UnionEnumSet.elements enums
     )
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
