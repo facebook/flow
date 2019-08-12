@@ -16,19 +16,17 @@ let locmap_of_bindings =
   end LocMap.empty
 
 let sort_and_dedup =
-  Core_result.map ~f:begin
-    Option.map ~f:begin fun (name, refs) ->
-      let refs =
-        (* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
-         * if we ever need to report multiple ref kinds for a single location. *)
-        refs
-        |> Core_list.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
-        |> locmap_of_bindings
-        |> LocMap.bindings
-        |> Core_list.map ~f:snd
-      in
-      name, refs
-    end
+  Option.map ~f:begin fun (name, refs) ->
+    let refs =
+      (* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
+       * if we ever need to report multiple ref kinds for a single location. *)
+      refs
+      |> Core_list.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
+      |> locmap_of_bindings
+      |> LocMap.bindings
+      |> Core_list.map ~f:snd
+    in
+    name, refs
   end
 
 let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
@@ -45,7 +43,8 @@ let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~mult
         let%lwt def_info =
           GetDefUtils.get_def_info ~reader genv (!env) profiling file_key content start_loc
         in
-        PropertyFindRefs.find_refs ~reader genv env ~content file_key def_info ~global ~multi_hop
+        def_info %>>= fun def_info ->
+          PropertyFindRefs.find_refs ~reader genv env ~content file_key def_info ~global ~multi_hop
       in
       (* Start by running local variable find references *)
       match VariableFindRefs.local_find_refs ast loc with
@@ -63,8 +62,11 @@ let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~mult
       | _ -> []
     in
     (* Drop the dependent file count  from the result *)
-    let result = result >>| Option.map ~f:(fun (result, _) -> result) in
-    let result = sort_and_dedup result in
+    let result =
+      result
+      >>| Option.map ~f:(fun (result, _) -> result)
+      >>| sort_and_dedup
+    in
     let json_data =
       ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE"))
       :: ("global", Hh_json.JSON_Bool global)
