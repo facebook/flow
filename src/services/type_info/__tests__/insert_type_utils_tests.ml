@@ -43,18 +43,18 @@ let tests = "insert_type_utils" >::: [
     assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in);
   end;
   "sort_types_top_any" >:: begin fun ctxt ->
-    let t_in = Union (Top, Any Implicit, []) in
+    let t_in = Union (Top, Any Annotated, []) in
     let t_exp = Top in
     assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in);
   end;
   "sort_types_bot_any" >:: begin fun ctxt ->
-    let t_in = Union (Bot EmptyType, Any Implicit, []) in
-    let t_exp = Any Implicit in
+    let t_in = Union (Bot EmptyType, Any Annotated, []) in
+    let t_exp = Any Annotated in
     assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in);
   end;
   "sort_types_any_first" >:: begin fun ctxt ->
-    let t_in = Union (Void, Any Implicit, [Null; Str None; NumLit "5"; Bool None]) in
-    let t_exp = Union (Any Implicit, Void, [Null; Bool None; NumLit "5"; Str None;]) in
+    let t_in = Union (Void, Any Annotated, [Null; Str None; NumLit "5"; Bool None]) in
+    let t_exp = Union (Any Annotated, Void, [Null; Bool None; NumLit "5"; Str None;]) in
     assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in);
   end;
 ]

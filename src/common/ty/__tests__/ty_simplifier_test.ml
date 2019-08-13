@@ -179,18 +179,64 @@ module BotAndTopSimplification = struct
   ]
 end
 
+module AnySimplification = struct
+  open Ty
+  (* When merge_kinds is false, we preserve the different kinds of any.
+   *
+   * any | (any' & (any & any'))
+   * ~>
+   * any | (any' & (any & any'))
+   *)
+  let tests = [
+    "merge_any_kinds_sensitive" >:: begin fun ctxt ->
+      let t_in = Union (
+        Any (Unsound BoundFunctionThis),
+        Inter (Any Annotated,
+          Union (Any (Unsound BoundFunctionThis), Ty.Any Annotated, []), []),
+        []
+      ) in
+      let t_out = Ty_utils.simplify_type ~merge_kinds:false t_in in
+      let t_exp = t_in in
+      assert_equal ~ctxt ~printer:Ty.show t_exp t_out;
+    end;
+
+    (* When merge_kinds is true, all kinds of any are considered equal and so
+     * are merged when appearing in unions or intersections.
+     *
+     * any | (any' & (any & any'))
+     * ~>
+     * any
+     *
+     * The output could also be any'. The kind of the resulting any type when
+     * merge_kinds is true, is not specified.
+     *)
+    "merge_any_kinds_insensitive" >:: begin fun ctxt ->
+      let t_in = Union (
+        Any (Unsound BoundFunctionThis),
+        Inter (Any Annotated,
+          Union (Any (Unsound BoundFunctionThis), Ty.Any Annotated, []), []),
+        []
+      ) in
+      let t_out = Ty_utils.simplify_type ~merge_kinds:true t_in in
+      let t_exp = Any (Unsound BoundFunctionThis) in
+      assert_equal ~ctxt ~printer:Ty.show t_exp t_out;
+    end;
+  ]
+
+end
+
 module Sorting = struct
   let simplify_base = simplify_type ~merge_kinds:false ~sort:false
   let simplify_sort = simplify_type ~merge_kinds:false ~sort:true
 
-  let t0 = Union (Any Explicit, Num None, [NumLit "42"])
+  let t0 = Union (Any Annotated, Num None, [NumLit "42"])
   let t1 = Union (NumLit "1", NumLit "2", [NumLit "42"])
   let t2 = Union (NumLit "2", t0, [t1])
   let t3 = Union (t0, t1, [t2])
   let t4 = Union (t3, t2, [t1; t0])
   let t5 = Union (t0, t1, [t2; t3; t4])
   let t6 = Union (t3, t2, [t4; t0; t1; t5])
-  let t6_sorted = Union (Any Explicit, NumLit "1", [NumLit "2"; NumLit "42"; Num None])
+  let t6_sorted = Union (Any Annotated, NumLit "1", [NumLit "2"; NumLit "42"; Num None])
 
   let tests = [
     "idempotence" >:: begin fun ctxt ->
@@ -209,11 +255,11 @@ module Sorting = struct
     end;
 
     "union/intersection" >:: begin fun ctxt ->
-      let t_in = Inter (Union (Void, Inter (Void, Any Explicit, [NumLit "1"]),
-                                [Inter (NumLit "1", Any Explicit, [Void])]),
-                        Union (Inter (Any Explicit, Void, [NumLit "1"]), Void, []), []) in
+      let t_in = Inter (Union (Void, Inter (Void, Any Annotated, [NumLit "1"]),
+                                [Inter (NumLit "1", Any Annotated, [Void])]),
+                        Union (Inter (Any Annotated, Void, [NumLit "1"]), Void, []), []) in
       let t_out = simplify_sort t_in in
-      let t_exp = Union (Void, Inter (Any Explicit, Void,[NumLit "1"]), []) in
+      let t_exp = Union (Void, Inter (Any Annotated, Void,[NumLit "1"]), []) in
       assert_equal ~ctxt ~printer:Ty.show t_exp t_out;
     end;
 
@@ -223,5 +269,6 @@ end
 let tests = "ty_simplifier" >::: (
   UnionSimplification.tests @
   BotAndTopSimplification.tests @
+  AnySimplification.tests @
   Sorting.tests
 )

@@ -601,8 +601,7 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Supertype t)
     | DefT (_, _, MixedT _) -> return Ty.Top
-    | AnyT (_, Annotated) -> Ty.explicit_any |> return
-    | AnyT _ -> Ty.implicit_any |> return
+    | AnyT (_, kind) -> return (Ty.Any (any_t kind))
     | DefT (_, _, VoidT) -> return Ty.Void
     | DefT (_, _, NumT (Literal (_, (_, x))))
       when Env.preserve_inferred_literal_types env ->
@@ -811,6 +810,29 @@ end = struct
     uses_t ~env uses >>| fun use_kind ->
     Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
+  and any_t = function
+    | T.Annotated -> Ty.Annotated
+    | T.AnyError -> Ty.AnyError
+    | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
+    | T.Untyped -> Ty.Untyped
+
+  and unsoundness_any_t = function
+    | T.BoundFunctionThis -> Ty.BoundFunctionThis
+    | T.ComputedNonLiteralKey -> Ty.ComputedNonLiteralKey
+    | T.Constructor -> Ty.Constructor
+    | T.DummyStatic -> Ty.DummyStatic
+    | T.Existential -> Ty.Existential
+    | T.Exports -> Ty.Exports
+    | T.FunctionPrototype -> Ty.FunctionPrototype
+    | T.InferenceHooks -> Ty.InferenceHooks
+    | T.InstanceOfRefinement -> Ty.InstanceOfRefinement
+    | T.Merged -> Ty.Merged
+    | T.ResolveSpread -> Ty.ResolveSpread
+    | T.Unchecked -> Ty.Unchecked
+    | T.Unimplemented -> Ty.Unimplemented
+    | T.UnresolvedType -> Ty.UnresolvedType
+    | T.WeakContext -> Ty.WeakContext
+
   and bound_t ~env reason name =
     let { Ty.def_loc; name; _ } = symbol_from_reason env reason name in
     return (Ty.Bound (def_loc, name))
@@ -947,8 +969,8 @@ end = struct
     fun ~env static own_props ->
       let cx = Env.(env.genv.cx) in
       let own_props = Context.find_props cx own_props in
-      react_props ~env ~default:Ty.implicit_any own_props "props" >>= fun props_ty ->
-      react_props ~env ~default:Ty.implicit_any own_props "state" >>= fun state_ty ->
+      react_props ~env ~default:Ty.explicit_any own_props "props" >>= fun props_ty ->
+      react_props ~env ~default:Ty.explicit_any own_props "state" >>= fun state_ty ->
       react_static_props ~env static >>| fun static_flds ->
 
       (* The inferred type for state is unsealed, which has its exact bit set.
@@ -1259,26 +1281,27 @@ end = struct
     function
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
     | ObjectAssign -> return Ty.(mk_fun
-        ~params:[(Some "target", implicit_any, non_opt_param)]
+        ~params:[(Some "target", explicit_any, non_opt_param)]
         ~rest:(Some "sources", Arr {
           arr_readonly = false;
           arr_literal = false;
-          arr_elt_t = implicit_any
+          arr_elt_t = explicit_any
         })
-        implicit_any
+        explicit_any
       )
 
     (* Object.getPrototypeOf: (o: any): any *)
     | ObjectGetPrototypeOf ->
-      return Ty.(mk_fun ~params:[(Some "o", implicit_any, non_opt_param)] implicit_any)
+      return Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] explicit_any)
+
 
     (* Object.setPrototypeOf: (o: any, p: any): any *)
     | ObjectSetPrototypeOf ->
       let params = [
-        (Some "o", Ty.implicit_any, non_opt_param);
-        (Some "p", Ty.implicit_any, non_opt_param);
+        (Some "o", Ty.explicit_any, non_opt_param);
+        (Some "p", Ty.explicit_any, non_opt_param);
       ] in
-      return (mk_fun ~params (Ty.implicit_any))
+      return (mk_fun ~params Ty.explicit_any)
 
     (* var idx:
        <IdxObject: Any, IdxResult>
@@ -1289,7 +1312,7 @@ end = struct
       let idxObject = Ty.Bound (ALoc.none, "IdxObject") in
       let idxResult = Ty.Bound (ALoc.none, "IdxResult") in
       let tparams = [
-        mk_tparam ~bound:(Ty.implicit_any) "IdxObject";
+        mk_tparam ~bound:Ty.explicit_any "IdxObject";
         mk_tparam "IdxResult";
       ]
       in
@@ -1335,13 +1358,13 @@ end = struct
 
     (* debugPrint: (_: any[]) => void *)
     | DebugPrint -> return Ty.(
-        mk_fun ~params:[(Some "_", Arr {
-            arr_readonly = false;
-            arr_literal = false;
-            arr_elt_t = implicit_any;
-          }, non_opt_param
-        )] Void
-      )
+       mk_fun ~params:[(Some "_", Arr {
+           arr_readonly = false;
+           arr_literal = false;
+           arr_elt_t = explicit_any;
+         }, non_opt_param
+       )] Void
+     )
 
     (* debugThrow: () => empty *)
     | DebugThrow -> return (mk_fun (mk_empty Ty.EmptyType))
@@ -1352,13 +1375,13 @@ end = struct
       )
 
     (* reactPropType: any (TODO) *)
-    | ReactPropType _ -> Ty.implicit_any |> return
+    | ReactPropType _ -> return Ty.explicit_any
 
     (* reactCreateClass: (spec: any) => ReactClass<any> *)
     | ReactCreateClass ->
-      let params = [(Some "spec", Ty.implicit_any, non_opt_param)] in
+      let params = [(Some "spec", Ty.explicit_any, non_opt_param)] in
       let x = Ty.builtin_symbol "ReactClass" in
-      return (mk_fun ~params (generic_talias x (Some [Ty.implicit_any])))
+      return (mk_fun ~params (generic_talias x (Some [Ty.explicit_any])))
 
     (* 1. Component class:
           <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -1375,21 +1398,21 @@ end = struct
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
-          (Some "children", implicit_any, opt_param);
+          (Some "children", explicit_any, opt_param);
         ]
         in
         let reactElement = generic_builtin_t "React$Element" [t] in
         let f1 = mk_fun ~tparams ~params reactElement in
         let params = [
           (Some "config", t, non_opt_param);
-          (Some "context", implicit_any, non_opt_param);
+          (Some "context", explicit_any, non_opt_param);
         ]
         in
         let sfc = mk_fun ~tparams ~params reactElement in
         let params = [
           (Some "fn", sfc, non_opt_param);
           (Some "config", t, non_opt_param);
-          (Some "children", implicit_any, opt_param);
+          (Some "children", explicit_any, opt_param);
         ]
         in
         let f2 = mk_fun ~tparams ~params reactElement in

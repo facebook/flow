@@ -46,8 +46,27 @@ and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
 and generic_t = symbol * gen_kind * t list option
 
 and any_kind =
-  | Implicit
-  | Explicit
+  | Annotated
+  | AnyError
+  | Unsound of unsoundness_kind
+  | Untyped
+
+and unsoundness_kind =
+  | BoundFunctionThis
+  | ComputedNonLiteralKey
+  | Constructor
+  | DummyStatic
+  | Existential
+  | Exports
+  | FunctionPrototype
+  | InferenceHooks
+  | InstanceOfRefinement
+  | Merged
+  | ResolveSpread
+  | Unchecked
+  | Unimplemented
+  | UnresolvedType
+  | WeakContext
 
 (* The purpose of adding this distinction is to enable normalized types to mimic
  * the behavior of the signature optimizer when exporting types that contain
@@ -290,6 +309,7 @@ class ['A] comparator_ty = object(this)
   method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
   method! private fail_utility env x y = fail_gen this#tag_of_utility env x y
   method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
+  method! private fail_unsoundness_kind env x y = fail_gen this#tag_of_unsoundness_kind env x y
 
   (* types will show up in unions and intersections in ascending order *)
   (* No two elements of each variant can be assigned the same tag *)
@@ -332,8 +352,27 @@ class ['A] comparator_ty = object(this)
     | TypeAliasKind -> 2
 
   method tag_of_any_kind _ = function
-    | Implicit -> 0
-    | Explicit -> 1
+    | Annotated -> 0
+    | AnyError -> 1
+    | Unsound _ -> 2
+    | Untyped -> 3
+
+  method tag_of_unsoundness_kind _ = function
+    | BoundFunctionThis -> 0
+    | ComputedNonLiteralKey -> 1
+    | Constructor -> 2
+    | DummyStatic -> 3
+    | Existential -> 4
+    | Exports -> 5
+    | FunctionPrototype -> 6
+    | InferenceHooks -> 7
+    | InstanceOfRefinement -> 8
+    | Merged -> 9
+    | ResolveSpread -> 10
+    | Unchecked -> 11
+    | Unimplemented -> 12
+    | UnresolvedType -> 13
+    | WeakContext -> 14
 
   method tag_of_prop _env = function
     | NamedProp _ -> 0
@@ -416,8 +455,8 @@ let mk_inter ?(flattened=false) nel_ts =
   | [] -> t
   | hd::tl -> Inter (t, hd, tl)
 
-let explicit_any = Any Explicit
-let implicit_any = Any Implicit
+let explicit_any = Any Annotated
+
 let is_dynamic = function Any _ -> true | _ -> false
 let mk_maybe t =
   mk_union (Null, [Void; t])

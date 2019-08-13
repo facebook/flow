@@ -36,6 +36,29 @@ let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with
   | Some t -> f t
   | None -> ""
 
+and dump_any_kind = function
+  | Annotated -> "Annotated"
+  | AnyError -> "AnyError"
+  | Unsound kind -> spf "Unsound (%s)" (dump_any_unsoundness_kind kind)
+  | Untyped -> "Untyped"
+
+and dump_any_unsoundness_kind = function
+  | BoundFunctionThis -> "BoundFunctionThis"
+  | ComputedNonLiteralKey -> "ComputedNonLiteralKey"
+  | Constructor -> "Constructor"
+  | DummyStatic -> "DummyStatic"
+  | Existential -> "Existential"
+  | Exports -> "Exports"
+  | FunctionPrototype -> "FunctionPrototype"
+  | InferenceHooks -> "InferenceHooks"
+  | InstanceOfRefinement -> "InstanceOfRefinement"
+  | Merged -> "Merged"
+  | ResolveSpread -> "ResolveSpread"
+  | Unchecked -> "Unchecked"
+  | Unimplemented -> "Unimplemented"
+  | UnresolvedType -> "UnresolvedType"
+  | WeakContext -> "WeakContext"
+
 and dump_list : 'a . ('a -> string) -> ?sep:string -> 'a list -> string =
   fun f ?(sep=", ") ls ->
     Core_list.map ~f:f ls |> String.concat sep
@@ -153,8 +176,7 @@ and dump_t ?(depth = 10) t =
       (dump_generics ~depth ts)
   | Bound (_, s) -> spf "Bound(%s)" s
   | Generic g -> dump_generic ~depth g
-  | Any Implicit -> "Implicit Any"
-  | Any Explicit -> "Explicit Any"
+  | Any kind -> spf "Any (%s)" (dump_any_kind kind)
   | Top -> "Top"
   | Bot k -> spf "Bot (%s)" (dump_bot_kind k)
   | Void -> "Void"
@@ -222,8 +244,8 @@ let string_of_ctor = function
   | TVar (RVar _, _) -> "RecVar"
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
-  | Any Implicit -> "Implicit Any"
-  | Any Explicit -> "Explicit Any"
+  | Any Annotated -> "Explicit Any"
+  | Any _ -> "Implicit Any"
   | Top -> "Top"
   | Bot _ -> "Bot"
   | Void -> "Void"
@@ -275,8 +297,8 @@ let json_of_t ~strip_root =
         "bound", JSON_String name
       ]
     | Generic g -> json_of_generic g
-    | Any Implicit -> [ "any", JSON_String "implicit" ]
-    | Any Explicit -> [ "any", JSON_String "explicit" ]
+    | Any Annotated -> [ "any", JSON_String "explicit" ]
+    | Any _ -> [ "any", JSON_String "implicit" ]
     | Top | Bot _
     | Void | Null
     | Num _ | Str _ | Bool _ -> []

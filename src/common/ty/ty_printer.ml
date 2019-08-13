@@ -162,7 +162,10 @@ let type_ ?(size=5000) ?(with_comments=true) t =
   and identifier name = Atom name
 
   and any ~depth kind =
-    let kind = match kind with Explicit -> "explicit" | Implicit -> "implicit" in
+    let kind = match kind with
+      | Annotated -> "explicit"
+      | _ -> "implicit"
+    in
     fuse [
       Atom "any";
       if depth = 1 && with_comments then fuse [pretty_space; Atom kind |> wrap_in_parens] else Empty
