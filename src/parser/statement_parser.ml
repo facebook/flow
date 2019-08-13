@@ -80,7 +80,8 @@ module Statement
     loc, Statement.Empty
 
   and break env =
-    let loc, label = with_loc (fun env ->
+    let leading = Peek.comments env in
+    let loc, (label, trailing) = with_loc (fun env ->
       Expect.token env T_BREAK;
       let label =
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
@@ -93,12 +94,14 @@ module Statement
           Some label
         end
       in
+      let trailingComments = Peek.comments env in
       Eat.semicolon env;
-      label
+      (label, trailingComments)
     ) env in
     if label = None && not (in_loop env || in_switch env)
     then error_at env (loc, Parse_error.IllegalBreak);
-    loc, Statement.Break { Statement.Break.label }
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    loc, Statement.Break { Statement.Break.label; comments; }
 
   and continue env =
     let leading = Peek.comments env in
@@ -122,7 +125,7 @@ module Statement
     if not (in_loop env) then error_at env (loc, Parse_error.IllegalContinue);
     let trailing = !trailingComments in
     loc, Statement.Continue { Statement.Continue.label;
-    comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }
+      comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }
 
   and debugger = with_loc (fun env ->
     Expect.token env T_DEBUGGER;

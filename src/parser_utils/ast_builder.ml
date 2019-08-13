@@ -283,8 +283,8 @@ module Statements = struct
   let switch_case ?(loc=Loc.none) ?test consequent =
     loc, { Switch.Case.test; consequent }
 
-  let break ?label () =
-    Loc.none, Break { Break.label }
+  let break ?comments ?label () =
+    Loc.none, Break { Break.label; comments }
 
   let with_ _object body =
     Loc.none, With { With._object; body }

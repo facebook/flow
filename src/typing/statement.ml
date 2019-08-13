@@ -904,14 +904,14 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         ast
       )
 
-  | (loc, Break { Break.label }) ->
+  | (loc, Break { Break.label; comments }) ->
       (* save environment at unlabeled breaks, prior to activation clearing *)
       let label_opt, env, label_ast = match label with
         | None -> None, Env.(clone_env (peek_env ())), None
         | Some (_, { Ast.Identifier.name; comments= _ } as lab_ast) -> Some name, [], Some lab_ast
       in
       Env.reset_current_activation loc;
-      let ast = loc, Break { Break.label = label_ast } in
+      let ast = loc, Break { Break.label = label_ast; comments } in
       let abnormal = Abnormal.Break label_opt in
       Abnormal.save abnormal ~env;
       Abnormal.throw_stmt_control_flow_exception ast abnormal

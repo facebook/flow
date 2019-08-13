@@ -240,9 +240,11 @@ class ['loc] mapper = object(this)
 
   method break _loc (break: 'loc Ast.Statement.Break.t) =
     let open Ast.Statement.Break in
-    let { label } = break in
+    let { label; comments } = break in
     let label' = map_opt this#label_identifier label in
-    if label == label' then break else { label = label' }
+    let comments' = this#syntax_opt comments in
+    if label == label' && comments == comments' then break
+    else { label = label'; comments = comments' }
 
   method call _loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
     let open Ast.Expression.Call in

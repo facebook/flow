@@ -197,9 +197,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method break (break: 'M Ast.Statement.Break.t) : 'N Ast.Statement.Break.t =
     let open Ast.Statement.Break in
-    let { label } = break in
+    let { label; comments } = break in
     let label' = Option.map ~f:this#label_identifier label in
-    { label = label' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { label = label'; comments = comments' }
 
   method call _annot (expr: ('M, 'T) Ast.Expression.Call.t) : ('N, 'U) Ast.Expression.Call.t =
     let open Ast.Expression.Call in

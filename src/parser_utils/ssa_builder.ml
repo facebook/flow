@@ -488,7 +488,7 @@ module Make
     (* things that cause abrupt completions *)
     method! break _loc (stmt: L.t Ast.Statement.Break.t) =
       let open Ast.Statement.Break in
-      let { label } = stmt in
+      let { label; comments = _ } = stmt in
       this#raise_abrupt_completion (AbruptCompletion.break label)
 
     method! continue _loc (stmt: L.t Ast.Statement.Continue.t) =
