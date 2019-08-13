@@ -5814,9 +5814,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let property = Member.PropertyIdentifier ((prop_loc, t), id) in
       let ast = (loc, t), Member { Member._object = _object_ast; property; } in
 
-      (* since we never called `expression cx e`, we have to add to the
-         type table ourselves *)
-
       let out = match Refinement.key e with
       | Some name -> result ast name t (ExistsP (Some loc)) true
       | None -> empty_result ast
