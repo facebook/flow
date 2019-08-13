@@ -50,7 +50,7 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
      preserve_inferred_literal_types = false;
      optimize_types = true;
      omit_targ_defaults = false;
-     simplify_empty = true;
+     merge_bot_and_any_kinds = true;
    } in
    let check_valid_call ~genv (call_loc: ALoc.t) (_, targ_loc) =
      let typed_ast = genv.Ty_normalizer_env.typed_ast in

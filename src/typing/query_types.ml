@@ -65,7 +65,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
     evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults;
-    simplify_empty = true;
+    merge_bot_and_any_kinds = true;
   } in
   match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
@@ -83,7 +83,7 @@ let dump_types ~printer cx file_sig typed_ast =
     evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults = false;
-    simplify_empty = true;
+    merge_bot_and_any_kinds = true;
   } in
   let file = Context.file cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
@@ -149,7 +149,7 @@ let suggest_types cx file_sig typed_ast loc =
     evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults = false;
-    simplify_empty = true;
+    merge_bot_and_any_kinds = true;
   } in
   let file = Context.file cx in
   let aLoc = ALoc.of_loc loc in
@@ -178,6 +178,6 @@ let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~
        a custom comparison operation *)
     optimize_types = false;
     omit_targ_defaults;
-    simplify_empty = true; }
+    merge_bot_and_any_kinds = true; }
   in
   type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme

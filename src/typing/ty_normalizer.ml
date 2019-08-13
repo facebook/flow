@@ -1695,8 +1695,8 @@ end = struct
     let result, state = run state (type__ ~env t) in
     let result = match result with
       | Ok t when options.Env.optimize_types ->
-        let { Env.simplify_empty; _ } = options in
-        Ok (Ty_utils.simplify_type ~simplify_empty t)
+        let { Env.merge_bot_and_any_kinds = merge_kinds; _ } = options in
+        Ok (Ty_utils.simplify_type ~merge_kinds ~sort:false t)
       | _ -> result
     in
     result, state

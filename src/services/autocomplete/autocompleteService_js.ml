@@ -191,7 +191,7 @@ let autocomplete_member
       evaluate_type_destructors = true;
       optimize_types = true;
       omit_targ_defaults = false;
-      simplify_empty = true;
+      merge_bot_and_any_kinds = true;
     } in
     let file = Context.file cx in
     let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
@@ -241,7 +241,7 @@ let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
         evaluate_type_destructors = true;
         optimize_types = true;
         omit_targ_defaults = false;
-        simplify_empty = true;
+        merge_bot_and_any_kinds = true;
       } in
       let file = Context.file cx in
       let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in

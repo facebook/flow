@@ -5,27 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* The guiding principle of this query is whether or not two
-   types will serialize the same. *)
-module TySimplifyQueries : Ty_utils.TopAndBotQueries = struct
-  let is_top = Ty_utils.BotInsensitiveQueries.is_top
-  let is_bot = Ty_utils.BotInsensitiveQueries.is_bot
-  let sort_types = true
-  let comparator = object(_)
-    inherit Ty_utils.botInsensitiveComparator
-    (* Treat all Anys as equal *)
-    method! private on_Any () _ _ = ()
-  end
-  let compare = comparator#compare ()
-end
-
-(* This simplifier deduplicates types in unions and intersections that *)
-(* will serialize to the same type, removes top from intersections, and removes *)
-(* bottom from unions. *)
-module TySimplify : sig
-  val run: Ty.t -> Ty.t
-end = Ty_utils.Simplifier(TySimplifyQueries)
-
 type validation_error =
   | TooBig of {size_limit:int; size:int option;}
   | Anonymous of Loc.t
