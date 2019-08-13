@@ -4,7 +4,7 @@ declare var cond : bool
 
 const foo = 42;
 let foo2 = foo;
-function bar(x) {
+function bar(x): number {
   return x + x
 };
 bar(foo2);

@@ -8,6 +8,7 @@
 type validation_error =
   | TooBig of {size_limit:int; size:int option;}
   | Anonymous of Loc.t
+  | Any_Unsound of Ty.unsoundness_kind
   | Recursive
   | ReactElementConfigFunArg
   | Empty_MatchingPropT
@@ -17,6 +18,7 @@ type validation_error =
 let serialize_validation_error = function
   | TooBig _ -> "TooBig"
   | Anonymous loc -> Utils_js.spf "Anonymous (def: %s)" (Loc.to_string_no_source loc)
+  | Any_Unsound kind -> Utils_js.spf "Any_Unsound %s" (Ty_debug.dump_any_unsoundness_kind kind)
   | Recursive -> "Recursive"
   | ReactElementConfigFunArg -> "ReactElementConfigFunArg"
   | Empty_MatchingPropT -> "Empty_MatchingPropT"
@@ -47,6 +49,30 @@ class type_validator_visitor = object(_)
       raise (Fatal (Empty_TypeDestructorTriggerT (ALoc.to_loc_exn loc)))
 
     | _ -> super#on_t () t
+
+  method! on_unsoundness_kind env kind =
+    match kind with
+    (* These are okay *)
+    | Ty.BoundFunctionThis
+    | Ty.ComputedNonLiteralKey
+      ->
+      super#on_unsoundness_kind env kind
+    (* Ban all the rest *)
+    | Ty.Constructor
+    | Ty.DummyStatic
+    | Ty.Existential
+    | Ty.Exports
+    | Ty.FunctionPrototype
+    | Ty.InferenceHooks
+    | Ty.InstanceOfRefinement
+    | Ty.Merged
+    | Ty.ResolveSpread
+    | Ty.Unchecked
+    | Ty.Unimplemented
+    | Ty.UnresolvedType
+    | Ty.WeakContext
+      ->
+      raise (Fatal (Any_Unsound kind))
 
   method! on_ReactElementConfigType () targ =
     match targ with
