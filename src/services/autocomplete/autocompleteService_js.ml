@@ -215,13 +215,13 @@ let autocomplete_member
 (* env is all visible bound names at cursor *)
 let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let result = SMap.fold (fun name entry acc ->
+  let (result, errors) = SMap.fold (fun name entry (acc, errors) ->
     (* Filter out internal environment variables except for this and
        super. *)
     let is_this = name = (Reason.internal_name "this") in
     let is_super = name = (Reason.internal_name "super") in
     if not (is_this || is_super) && Reason.is_internal_name name
-    then acc
+    then (acc, errors)
     else (
       let (ty_loc, name) =
         (* renaming of this/super *)
@@ -247,11 +247,28 @@ let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
       let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
       let type_ = Scope.Entry.actual_type entry in
       match Ty_normalizer.from_type ~options ~genv type_ with
-      | Ok ty -> autocomplete_create_result (name, ac_loc) (ty, ty_loc) :: acc
-      | Error _ -> acc
+      | Ok ty ->
+        let result = autocomplete_create_result (name, ac_loc) (ty, ty_loc) in
+        result :: acc, errors
+      | Error err -> acc, err :: errors
     )
-  ) env [] in
-  Ok (result, None)
+  ) env ([], []) in
+  let json_data_to_log =
+    let open Hh_json in
+    let result_str = match result, errors with
+    | _, [] -> "SUCCESS"
+    | [], _ -> "FAILURE_NORMALIZER"
+    | _, _ -> "PARTIAL"
+    in
+    JSON_Object [
+      "ac_type", JSON_String "Acid";
+      "result", JSON_String result_str;
+      "count", JSON_Number (result |> List.length |> string_of_int);
+      "errors", JSON_Array (Core_list.rev_map errors
+        ~f:(fun err -> JSON_String (Ty_normalizer.error_to_string err)));
+    ]
+  in
+  Ok (result, Some json_data_to_log)
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
@@ -282,4 +299,11 @@ let autocomplete_get_results ~reader cx file_sig typed_ast state docblock =
       cx file_sig typed_ast this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
     autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock
-  | None -> Ok ([], None)
+  | None ->
+    let json_data_to_log =
+      let open Hh_json in
+      JSON_Object [
+        "ac_type", JSON_String "None";
+      ]
+    in
+    Ok ([], Some json_data_to_log)
