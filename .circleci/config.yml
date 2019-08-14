@@ -5,27 +5,6 @@ aliases:
     TERM: dumb
     OPAMYES: true
 
-  # Saves the currently-installed opam version to a file, which we include
-  # in cache keys.
-  - &opam_version
-    name: Calculate opam version
-    command: opam --version > .circleci/opamversion
-
-  - &opam_deps
-    name: Install deps from opam
-    command: |
-      eval $(opam env)
-      opam switch create . 4.07.1 --deps-only | cat
-
-  - &restore_opam_cache
-    keys:
-      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
-
-  - &save_opam_cache
-    key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
-    paths:
-      - ~/.opam
-
   - &run_on_tags
     filters:
       tags:
@@ -61,6 +40,31 @@ executors:
       - image: xueshanf/awscli:latest
     working_directory: ~/flow
 
+commands:
+  restore-opam-cache:
+    steps:
+      - run:
+          name: Calculate opam version
+          command: opam --version > .circleci/opamversion
+      - restore_cache:
+          keys:
+          - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+
+  save-opam-cache:
+    steps:
+      - save_cache:
+          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          paths:
+            - ~/.opam
+
+  create-opam-switch:
+    steps:
+      - run:
+          name: Install deps from opam
+          command: |
+            eval $(opam env)
+            opam switch create . 4.07.1 --deps-only | cat
+
 jobs:
   checkout:
     executor: linux-node
@@ -95,19 +99,18 @@ jobs:
             echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
             echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
             sudo apt-get update && sudo apt-get --yes install zip m4
-      - run: *opam_version
-      - restore_cache: *restore_opam_cache
+      - restore-opam-cache
       - run:
           name: Update opam repo
           command: |
             opam remote list -s | grep upstream >/dev/null || \
               opam remote add upstream https://opam.ocaml.org | cat
             opam update | cat
-      - run: *opam_deps
+      - create-opam-switch
       - run:
           name: Install extra deps from opam
           command: opam install js_of_ocaml.3.4.0 | cat
-      - save_cache: *save_opam_cache
+      - save-opam-cache
       - run:
           name: Build flow
           command: |
@@ -165,8 +168,7 @@ jobs:
       - run:
           name: Install opam
           command: command -v opam || brew install opam aspcud
-      - run: *opam_version
-      - restore_cache: *restore_opam_cache
+      - restore-opam-cache
       - run:
           name: Install ocaml
           command: opam init --comp 4.07.1 -yn | cat
@@ -177,8 +179,8 @@ jobs:
       - run:
           name: Update opam repo
           command: opam update | cat
-      - run: *opam_deps
-      - save_cache: *save_opam_cache
+      - create-opam-switch
+      - save-opam-cache
       - run:
           name: Build flow
           command: |
