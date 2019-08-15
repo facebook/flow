@@ -1,3 +1,5 @@
+declare var undefined: void;
+
 declare class Object {}
 
 declare class Function {}
