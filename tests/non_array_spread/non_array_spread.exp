@@ -10,13 +10,13 @@ References:
    apply.js:3:11
      3| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:308:22
+   <BUILTINS>/core.js:304:22
                              v
-   308| type $ArrayLike<T> = {
-   309|   [indexer: number]: T,
-   310|   length: number,
-   311|   ...
-   312| }
+   304| type $ArrayLike<T> = {
+   305|   [indexer: number]: T,
+   306|   length: number,
+   307|   ...
+   308| }
         ^ [2]
 
 

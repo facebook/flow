@@ -204,8 +204,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 323,
-               "endline": 323,
+               "line": 319,
+               "endline": 319,
                "start": 5,
                "end": 34
              },
@@ -222,8 +222,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 324,
-               "endline": 324,
+               "line": 320,
+               "endline": 320,
                "start": 5,
                "end": 32
              },
@@ -240,8 +240,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 325,
-               "endline": 325,
+               "line": 321,
+               "endline": 321,
                "start": 5,
                "end": 31
              },
@@ -258,8 +258,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 326,
-               "endline": 326,
+               "line": 322,
+               "endline": 322,
                "start": 5,
                "end": 37
              },
@@ -276,8 +276,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 327,
-               "endline": 327,
+               "line": 323,
+               "endline": 323,
                "start": 5,
                "end": 38
              },
@@ -294,8 +294,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 328,
-               "endline": 328,
+               "line": 324,
+               "endline": 324,
                "start": 5,
                "end": 45
              },
@@ -316,8 +316,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 330,
-               "endline": 330,
+               "line": 326,
+               "endline": 326,
                "start": 5,
                "end": 62
              },
@@ -338,8 +338,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 331,
-               "endline": 331,
+               "line": 327,
+               "endline": 327,
                "start": 5,
                "end": 62
              },
@@ -360,8 +360,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 332,
-               "endline": 332,
+               "line": 328,
+               "endline": 328,
                "start": 5,
                "end": 60
              },
@@ -382,8 +382,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 333,
-               "endline": 333,
+               "line": 329,
+               "endline": 329,
                "start": 5,
                "end": 64
              },
@@ -392,8 +392,8 @@ export default suite(({addFile, flowCmd}) => [
                "type": "number",
                "func_details": null,
                "path": "[LIB] core.js",
-               "line": 359,
-               "endline": 359,
+               "line": 355,
+               "endline": 355,
                "start": 13,
                "end": 18
              },
@@ -410,8 +410,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 334,
-               "endline": 334,
+               "line": 330,
+               "endline": 330,
                "start": 5,
                "end": 30
              },
@@ -436,8 +436,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 335,
-               "endline": 335,
+               "line": 331,
+               "endline": 331,
                "start": 5,
                "end": 105
              },
@@ -454,8 +454,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 336,
-               "endline": 336,
+               "line": 332,
+               "endline": 332,
                "start": 5,
                "end": 61
              },
@@ -472,8 +472,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 337,
-               "endline": 337,
+               "line": 333,
+               "endline": 333,
                "start": 5,
                "end": 38
              },
@@ -494,8 +494,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 338,
-               "endline": 338,
+               "line": 334,
+               "endline": 334,
                "start": 5,
                "end": 60
              },
@@ -516,8 +516,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 339,
-               "endline": 339,
+               "line": 335,
+               "endline": 335,
                "start": 5,
                "end": 62
              },
@@ -534,8 +534,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 340,
-               "endline": 340,
+               "line": 336,
+               "endline": 336,
                "start": 5,
                "end": 33
              },
@@ -556,8 +556,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 341,
-               "endline": 341,
+               "line": 337,
+               "endline": 337,
                "start": 5,
                "end": 124
              },
@@ -574,8 +574,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 342,
-               "endline": 342,
+               "line": 338,
+               "endline": 338,
                "start": 5,
                "end": 43
              },
@@ -596,8 +596,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 343,
-               "endline": 343,
+               "line": 339,
+               "endline": 339,
                "start": 5,
                "end": 47
              },
@@ -618,8 +618,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 344,
-               "endline": 344,
+               "line": 340,
+               "endline": 340,
                "start": 5,
                "end": 69
              },
@@ -640,8 +640,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 345,
-               "endline": 345,
+               "line": 341,
+               "endline": 341,
                "start": 5,
                "end": 64
              },
@@ -662,8 +662,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 346,
-               "endline": 346,
+               "line": 342,
+               "endline": 342,
                "start": 5,
                "end": 49
              },
@@ -684,8 +684,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 347,
-               "endline": 347,
+               "line": 343,
+               "endline": 343,
                "start": 5,
                "end": 50
              },
@@ -702,8 +702,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 348,
-               "endline": 348,
+               "line": 344,
+               "endline": 344,
                "start": 5,
                "end": 62
              },
@@ -720,8 +720,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "[LIB] core.js",
-               "line": 349,
-               "endline": 349,
+               "line": 345,
+               "endline": 345,
                "start": 5,
                "end": 62
              },
@@ -733,65 +733,13 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 350,
-               "endline": 350,
+               "line": 346,
+               "endline": 346,
                "start": 5,
                "end": 25
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 358,
-               "endline": 358,
-               "start": 5,
-               "end": 22
-             },
-             {
-               "name": "toUpperCase",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 351,
-               "endline": 351,
-               "start": 5,
-               "end": 25
-             },
-             {
-               "name": "trim",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 352,
-               "endline": 352,
-               "start": 5,
-               "end": 18
-             },
-             {
-               "name": "trimEnd",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 353,
-               "endline": 353,
-               "start": 5,
-               "end": 21
-             },
-             {
-               "name": "trimLeft",
                "type": "() => string",
                "func_details": {
                  "return_type": "string",
@@ -804,6 +752,58 @@ export default suite(({addFile, flowCmd}) => [
                "end": 22
              },
              {
+               "name": "toUpperCase",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 347,
+               "endline": 347,
+               "start": 5,
+               "end": 25
+             },
+             {
+               "name": "trim",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 348,
+               "endline": 348,
+               "start": 5,
+               "end": 18
+             },
+             {
+               "name": "trimEnd",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 349,
+               "endline": 349,
+               "start": 5,
+               "end": 21
+             },
+             {
+               "name": "trimLeft",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 350,
+               "endline": 350,
+               "start": 5,
+               "end": 22
+             },
+             {
                "name": "trimRight",
                "type": "() => string",
                "func_details": {
@@ -811,8 +811,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 355,
-               "endline": 355,
+               "line": 351,
+               "endline": 351,
                "start": 5,
                "end": 23
              },
@@ -824,8 +824,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 356,
-               "endline": 356,
+               "line": 352,
+               "endline": 352,
                "start": 5,
                "end": 23
              },
@@ -837,8 +837,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 357,
-               "endline": 357,
+               "line": 353,
+               "endline": 353,
                "start": 5,
                "end": 21
              }
