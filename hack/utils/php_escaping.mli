@@ -36,3 +36,4 @@ val unescape_single_or_nowdoc : is_nowdoc:bool -> string -> string
 val unescape_single : string -> string
 val unescape_nowdoc : string -> string
 val unescape_long_string : string -> string
+val extract_unquoted_string : start:int -> len:int -> string -> string
