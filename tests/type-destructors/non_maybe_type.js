@@ -1,4 +1,6 @@
 // @flow
+declare var undefined: void; // TODO
+
 
 function foo(x: ?string): $NonMaybeType<?string> {
   if (x != null) { return x; }
