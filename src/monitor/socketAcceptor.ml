@@ -167,16 +167,16 @@ let perform_handshake_and_get_client_handshake ~client_fd =
 
   (* handshake step 1: client sends handshake *)
   let%lwt (wire: client_handshake_wire) = Marshal_tools_lwt.from_fd_with_preamble client_fd in
-  let client1 = try fst wire |> Hh_json.json_of_string |> json_to__client_to_monitor_1
+  let client_handshake = try fst wire |> Hh_json.json_of_string |> json_to__client_to_monitor_1
   with exn ->
     Logger.error ~exn "Failed to parse JSON section of handshake: %s" (fst wire);
     default_client_to_monitor_1 in
-  let client2 = if client1.client_build_id <> server_build_id then None
+  let client = if client_handshake.client_build_id <> server_build_id then None
     else Some (Marshal.from_string (snd wire) 0 : client_to_monitor_2) in
 
   (* handshake step 2: server sends back handshake *)
   let respond server_intent server2 =
-    assert (server2 = None || client1.client_build_id = server_build_id);
+    assert (server2 = None || client_handshake.client_build_id = server_build_id);
     (* the client will trust our invariant that server2=Some means the client *)
     (* can certainly deserialize server2. *)
     let server_version = Flow_version.version in
@@ -204,18 +204,18 @@ let perform_handshake_and_get_client_handshake ~client_fd =
   let fd_as_int = client_fd |> Lwt_unix.unix_file_descr |> Obj.magic in
 
   (* Stop request *)
-  if client1.is_stop_request then begin
+  if client_handshake.is_stop_request then begin
     let%lwt () = respond Server_will_exit None in
     let%lwt () = close client_fd () in
     Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error;
 
   (* Binary version mismatch *)
-  end else if client1.client_build_id <> build_revision then begin
-    match client1.version_mismatch_strategy with
+  end else if client_handshake.client_build_id <> build_revision then begin
+    match client_handshake.version_mismatch_strategy with
     | Always_stop_server ->
       stop_server ()
     | Stop_server_if_older ->
-      if Semver.compare Flow_version.version client1.client_version < 0
+      if Semver.compare Flow_version.version client_handshake.client_version < 0
       then stop_server () (* server < client *)
       else error_client ()
     | Error_client ->
@@ -232,28 +232,29 @@ let perform_handshake_and_get_client_handshake ~client_fd =
 
   (* Server still initializing *)
   end else if not (StatusStream.ever_been_free ()) then begin
-    let client2 = Option.value_exn client2 in
+    let client = Option.value_exn client in
     let status = StatusStream.get_status () in
-    if client1.server_should_hangup_if_still_initializing then begin
+    if client_handshake.server_should_hangup_if_still_initializing then begin
       let%lwt () = respond Server_will_hangup (Some (Server_still_initializing status)) in
       (* In the case of Ephemeral, CommandConnect will use that response to display *)
       (* a message to the user about "--retry-if-init false and still initializing" *)
       (* In the case of Persistent, lspCommand will retry a second later. *)
-      (* The message we failwith here solely goes to the logs, not the user. *)
+      (* The message we log here solely goes to the logs, not the user. *)
       let (server_status, watchman_status) = status in
-      failwith ("Server still initializing -> hangup."
-        ^ " server_status=" ^ (ServerStatus.string_of_status server_status)
-        ^ " watchman_status=" ^ (FileWatcherStatus.string_of_status watchman_status))
+      Logger.info "Server still initializing -> hangup. server_status=%s watchman_status=%s"
+        (ServerStatus.string_of_status server_status)
+        (FileWatcherStatus.string_of_status watchman_status);
+      Lwt.return None
     end else begin
       let%lwt () = respond Server_will_continue (Some (Server_still_initializing status)) in
-      Lwt.return (client1, client2)
+      Lwt.return (Some client)
     end
 
   (* Success *)
   end else begin
-    let client2 = Option.value_exn client2 in
+    let client = Option.value_exn client in
     let%lwt () = respond Server_will_continue (Some Server_ready) in
-    Lwt.return (client1, client2)
+    Lwt.return (Some client)
   end
 
 let catch close exn =
@@ -310,12 +311,15 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         Lwt.return_unit
     in
     try%lwt
-      let%lwt (_client1, client2) = perform_handshake_and_get_client_handshake ~client_fd in
-      match client2.SocketHandshake.client_type with
-      | SocketHandshake.Ephemeral ->
+      let%lwt client = perform_handshake_and_get_client_handshake ~client_fd in
+      SocketHandshake.(match client with
+      | Some { client_type = Ephemeral; _; } ->
         create_ephemeral_connection ~client_fd ~close
-      | SocketHandshake.Persistent {logging_context; lsp} ->
+      | Some { client_type = Persistent {logging_context; lsp}; _; } ->
         create_persistent_connection ~client_fd ~close ~logging_context ~lsp
+      | None ->
+        Lwt.return_unit
+      )
     with exn ->  catch close_without_autostop exn
       (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
       (* from 1 connections to 0 connections then it might stop the server. *)
