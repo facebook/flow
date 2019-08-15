@@ -787,6 +787,11 @@ let ground_subtype = function
   | DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _))
   | DefT (_, _, NullT), UseT (_, DefT (_, _, NullT))
   | DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))
+    -> true
+
+  | DefT (_, _, NullT), UseT (_, DefT (_, _, MixedT (Mixed_non_maybe | Mixed_non_null)))
+  | DefT (_, _, VoidT), UseT (_, DefT (_, _, MixedT (Mixed_non_maybe | Mixed_non_void)))
+    -> false
   | _, UseT (_, DefT (_, _, MixedT _))
     -> true
 
@@ -2280,6 +2285,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************)
 
     (** The type maybe(T) is the same as null | undefined | UseT *)
+
+    | DefT (r, trust, MixedT Mixed_everything), UseT (use_op, MaybeT (_, tout)) ->
+      rec_flow cx trace (DefT (r, trust, MixedT Mixed_non_maybe), UseT (use_op, tout))
 
     | DefT (r, trust, (NullT | VoidT)), UseT (use_op, MaybeT (_, tout)) ->
       rec_flow cx trace (EmptyT.why r trust, UseT (use_op, tout))
