@@ -707,6 +707,7 @@ let use_op_of_lookup_action = function
   | ReadProp { use_op; _ } -> Some use_op
   | WriteProp { use_op; _ } -> Some use_op
   | DeleteProp (use_op, _) -> Some use_op
+  | LookupProp (use_op, _) -> Some use_op
   | SuperProp (use_op, _) -> Some use_op
   | MatchProp (use_op, _) -> Some use_op
 
@@ -5345,23 +5346,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********************************)
 
     | DefT (_, _, ObjT {flags; _}),
-      DeletePropT (use_op, reason_op, Named (prop, "constructor"), _) ->
+      DeletePropT (use_op, _, Named (reason_prop, "constructor"), _) ->
       if flags.frozen
       then
-        add_output cx ~trace
-          (Error_message.EPropAccess ((prop, reason_op), Some "constructor",
-            Positive, Write (Normal, None), use_op))
+        add_output cx ~trace (Error_message.EPropNotWritable {
+          reason_prop;
+          prop_name = Some "constructor";
+          use_op;
+        })
 
     (** `delete o.x;` has the additional effect of `delete o[_];` **)
 
-    | DefT (_, _, ObjT { flags; _ }), DeletePropT (use_op, reason_op, prop, _)
+    | DefT (_, _, ObjT { flags; _ }), DeletePropT (use_op, _, prop, _)
       when flags.frozen ->
       let reason_prop, prop = match prop with
       | Named (r, prop) -> r, Some prop
       | Computed t -> reason_of_t t, None
       in
-      add_output cx ~trace (Error_message.EPropAccess ((reason_prop, reason_op), prop,
-        Positive, Write (Normal, None), use_op))
+      add_output cx ~trace (Error_message.EPropNotWritable {
+        reason_prop;
+        prop_name = prop;
+        use_op;
+      })
 
     | DefT (reason_obj, _, ObjT o), DeletePropT (use_op, reason_op, propref, prop_t) ->
       delete_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t
@@ -5512,7 +5518,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* This isn't *)
         | WriteElem _
         | DeleteElem _ ->
-          let reasons = (reason, reason_tup) in
           let error =
             match ts with
             | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
@@ -10992,17 +10997,20 @@ and perform_lookup_action cx trace propref p lreason ureason = function
         add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
   | DeleteProp (use_op, _) ->
-    begin match Property.access (Write (Normal, None)) p with
-      | Some _ ->
-        (* TODO: add delete write semantics *)
-        ()
+    begin match Property.write_t p with
+      | Some t ->
+        (* TODO: this is probably inaccurate to runtime semantics *)
+        rec_flow cx trace (VoidT.why (reason_of_t t) |> with_trust literal_trust, UseT (use_op, t))
       | None ->
-        let r, x = match propref with
+        let reason_prop, prop_name = match propref with
         | Named (r, x) -> r, Some x
         | Computed t -> reason_of_t t, None
         in
-        add_output cx ~trace
-          (Error_message.EPropAccess ((r, ureason), x, Property.polarity p, Write (Normal, None), use_op))
+        add_output cx ~trace (Error_message.EPropNotWritable {
+          reason_prop;
+          prop_name;
+          use_op;
+        })
     end
 
 and perform_elem_action cx trace ~use_op reason_op l value = function
@@ -11013,7 +11021,8 @@ and perform_elem_action cx trace ~use_op reason_op l value = function
     rec_flow cx trace (tin, UseT (use_op, value));
     Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
   | DeleteElem t ->
-    rec_flow cx trace (t, UseT (use_op, value))
+    (* TODO *)
+    rec_flow cx trace (VoidT.why (reason_of_t t) |> with_trust literal_trust, UseT (use_op, value))
   | CallElem (reason_call, ft) ->
     rec_flow cx trace (value, CallT (use_op, reason_call, ft))
 
