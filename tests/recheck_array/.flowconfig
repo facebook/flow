@@ -1,0 +1,8 @@
+[ignore]
+<PROJECT_ROOT>/commit_a
+<PROJECT_ROOT>/commit_b
+
+[options]
+experimental.well_formed_exports=true
+experimental.types_first=true
+experimental.abstract_locations=true
