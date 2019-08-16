@@ -29,15 +29,13 @@ let g:ale_linters = {
 \}
 ```
 
-## coc.nvim-neovim <a class="toc" id="cocnvim" href="#cocnvim"></a>
+## coc.nvim-neovim <a class="toc" id="toc-coc-nvim-neovim" href="#toc-coc-nvim-neovim"></a>
 
 [Coc](https://github.com/neoclide/coc.nvim) is an intellisense engine for vim8 & neovim.
 
-### [Setup](https://gist.github.com/antonk52/4587b2687268a5dde494240ce975a708)
+### Setup <a class="toc" id="toc-setup" href="#toc-setup"></a>
 
-<details>
-<summary>Minimal vimrc</summar>
-<pre>
+```vim
 set nocompatible
 filetype off
 
@@ -53,11 +51,12 @@ set updatetime=300
 set shortmess+=c
 
 " Use leader T to show documentation in preview window
-nnoremap <leader>t :call <SID>show_documentation()<CR>
+nnoremap &lt;leader&gt;t :call &lt;SID&gt;show_documentation()&lt;CR&gt;
+
 
 function! s:show_documentation()
   if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
+    execute 'h '.expand('&lt;cword&gt;')
   else
     call CocAction('doHover')
   endif
@@ -65,16 +64,16 @@ endfunction
 
 " instead of having ~/.vim/coc-settings.json
 let s:LSP_CONFIG = {
-      \  'flow': {
-      \    'command': exepath('flow'),
-      \    'args': ['lsp'],
-      \    'filetypes': ['javascript', 'javascriptreact'],
-      \    'initializationOptions': {},
-      \    'requireRootPattern': 1,
-      \    'settings': {},
-      \    'rootPatterns': ['.flowconfig']
-      \  }
-      \}
+\  'flow': {
+\    'command': exepath('flow'),
+\    'args': ['lsp'],
+\    'filetypes': ['javascript', 'javascriptreact'],
+\    'initializationOptions': {},
+\    'requireRootPattern': 1,
+\    'settings': {},
+\    'rootPatterns': ['.flowconfig']
+\  }
+\}
 
 let s:languageservers = {}
 for [lsp, config] in items(s:LSP_CONFIG)
@@ -85,10 +84,9 @@ endfor
 if !empty(s:languageservers)
   call coc#config('languageserver', s:languageservers)
   endif
-</pre>
-</details>
+```
 
-## LanguageClient-neovim <a class="toc" id="LanguageClient-neovim" href="#LanguageClient-neovim"></a>
+## LanguageClient-neovim <a class="toc" id="toc-languageclient-neovim" href="#toc-languageclient-neovim"></a>
 
 Another way to add support for Flow in Vim is to use [LanguageClient-neovim](https://github.com/autozimu/LanguageClient-neovim).
 
@@ -97,24 +95,24 @@ Another way to add support for Flow in Vim is to use [LanguageClient-neovim](htt
 * Checks JavaScript files for type errors on save
 * Look up types under cursor
 
-### Requirements <a class="toc" id="lcn-vim-requirements" href="#lcn-vim-requirements"></a>
+### Requirements <a class="toc" id="toc-requirements" href="#toc-requirements"></a>
 
 * Requires Flow to be installed and available on your path.
 * Requires projects containing JavaScript files to be initialised with flow init.
 * Requires JavaScript files to be marked with /* @flow */ at the top.
 
-### Pathogen <a class="toc" id="lcn-pathogen" href="#lcn-pathogen"></a>
+### Pathogen <a class="toc" id="toc-pathogen" href="#toc-pathogen"></a>
 
 ```sh
 cd ~/.vim/bundle
 git clone git://github.com/autozimu/LanguageClient-neovim.git
 ```
 
-### NeoBundle <a class="toc" id="lcn-neobundle" href="#lcn-neobundle"></a>
+### NeoBundle <a class="toc" id="toc-neobundle" href="#toc-neobundle"></a>
 
 Add this to your ~/.vimrc
 
-```
+```vim
   NeoBundleLazy 'autozimu/LanguageClient-neovim', {
     \ 'autoload': {
     \     'filetypes': 'javascript'
@@ -123,7 +121,7 @@ Add this to your ~/.vimrc
 
 With Flow build step, using flow-bin
 
-```
+```vim
   NeoBundleLazy 'autozimu/LanguageClient-neovim', {
     \ 'autoload': {
     \     'filetypes': 'javascript'
@@ -134,22 +132,20 @@ With Flow build step, using flow-bin
     \ }}
 ```
 
-### VimPlug <a class="toc" id="lcn-vimplug" href="#lcn-vimplug"></a>
+### VimPlug <a class="toc" id="toc-vimplug" href="#toc-vimplug"></a>
 
-```
+```vim
   Plug 'autozimu/LanguageClient-neovim', {
     \ 'branch': 'next',
     \ 'do': 'bash install.sh && npm install -g flow-bin',
     \ }
 ```
 
-### Setup
-```
+### Setup <a class="toc" id="toc-setup" href="#toc-setup"></a>
+```vim
 let g:LanguageClient_rootMarkers = {
-\   'javascript': ['tsconfig.json', '.flowconfig', 'package.json']
+\   'javascript': ['.flowconfig', 'package.json']
 \ }
-" auto start server for these file types
-let g:LSP_ts_command = ['typescript-language-server', '--stdio']
 let g:LanguageClient_serverCommands={
 \   'javascript': ['flow', 'lsp'],
 \   'javascript.jsx': ['flow', 'lsp']
