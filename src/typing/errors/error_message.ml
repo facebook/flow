@@ -871,7 +871,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EImportTypeAsTypeof (reason, _)
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
-  | ENonArraySpread reason ->
+  | ENonArraySpread reason
   | EDeleteSuperReference reason
   | EDeleteOperand reason
   | EDebugPrint (reason, _) ->
