@@ -4396,7 +4396,7 @@ and unary cx loc = Ast.Expression.Unary.(function
         let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
         let super = super_ cx rhs_loc in
         let prop_t = Tvar.mk cx prop_reason in
-        Flow.add_output cx (Error_message.EDeleteSuperReference op_prop_reason);
+        Flow.add_output cx (Error_message.EDeleteUnsupportedReference op_prop_reason);
         let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
         (rhs_loc, prop_t), Member { Member.
           _object = (super_loc, super), Super;
@@ -4460,12 +4460,12 @@ and unary cx loc = Ast.Expression.Unary.(function
       | _, Identifier _
       | _, Member _ ->
         let (_, _), _ as argument = expression cx argument in
-        Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
+        Flow.add_output cx (Error_message.EDeleteUnsupportedReference op_prop_reason);
         argument
       | _, OptionalMember _ ->
         let (_, _), _ as argument = expression cx argument in
         (* TODO: support optional member *)
-        Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
+        Flow.add_output cx (Error_message.EDeleteUnsupportedReference op_prop_reason);
         argument
       | _ ->
         let (_, _), _ as argument = expression cx argument in

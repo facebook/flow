@@ -3000,8 +3000,8 @@ let dump_error_message =
         (dump_reason cx key_reason)
         (dump_reason cx value_reason)
         (dump_reason cx object2_reason)
-    | EDeleteSuperReference reason ->
-      spf "EDeleteSuperReference (%s)" (dump_reason cx reason)
+    | EDeleteUnsupportedReference reason ->
+      spf "EDeleteUnsupportedReference (%s)" (dump_reason cx reason)
     | EDeleteOperand reason ->
       spf "EDeleteOperand (%s)" (dump_reason cx reason)
 

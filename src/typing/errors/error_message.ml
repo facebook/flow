@@ -231,7 +231,7 @@ and 'loc t' =
   | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
   | EBigIntNotYetSupported of 'loc virtual_reason
-  | EDeleteSuperReference of 'loc virtual_reason
+  | EDeleteUnsupportedReference of 'loc virtual_reason
   | EDeleteOperand of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
@@ -634,7 +634,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
-  | EDeleteSuperReference r -> EDeleteSuperReference (map_reason r)
+  | EDeleteUnsupportedReference r -> EDeleteUnsupportedReference (map_reason r)
   | EDeleteOperand r -> EDeleteOperand (map_reason r)
   | ESignatureVerification _ as e -> e
   | ENonArraySpread r -> ENonArraySpread (map_reason r)
@@ -822,7 +822,7 @@ let util_use_op_of_msg nope util = function
 | EInexactSpread _
 | EUnexpectedTemporaryBaseType _
 | EBigIntNotYetSupported _
-| EDeleteSuperReference (_)
+| EDeleteUnsupportedReference (_)
 | EDeleteOperand (_)
 | ESignatureVerification _
 | ENonArraySpread _
@@ -872,7 +872,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | ENonArraySpread reason
-  | EDeleteSuperReference reason
+  | EDeleteUnsupportedReference reason
   | EDeleteOperand reason
   | EDebugPrint (reason, _) ->
         Some (aloc_of_reason reason)
@@ -2187,7 +2187,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " or a property value that conflicts with "; ref value_reason;
         text ". Can you make "; ref object2_reason; text " exact?";
       ]
-    | EDeleteSuperReference reason ->
+    | EDeleteUnsupportedReference reason ->
       Normal [
         text "Cannot perform delete operation because "; ref reason; text " ";
         text "is unsupported reference.";
