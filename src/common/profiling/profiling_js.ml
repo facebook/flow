@@ -823,7 +823,7 @@ end = struct
     finished_sub_results: finished list;
   }
 
-  let legacy_group = "<Legacy>"
+  let legacy_group = "LEGACY"
 
   let with_memory_lwt ~label ~f =
     let running_memory = ref {
@@ -1057,7 +1057,7 @@ let with_timer_lwt ?should_print ~timer ~f profile =
 let legacy_sample_memory ~metric ~value profile =
   Memory.legacy_sample_memory ~metric ~value profile.running_memory
 
-let total_memory_group = "<Total>"
+let total_memory_group = "TOTAL"
 
 let sample_memory ?group ~metric ~value profile =
   Memory.sample_memory ~group:total_memory_group ~metric ~value profile.running_memory;
