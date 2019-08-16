@@ -133,6 +133,7 @@ module Initialize :
       useTextEditAutocomplete : bool;
       liveSyntaxErrors : bool;
       namingTableSavedStatePath : string option;
+      sendServerStatusEvents : bool;
     }
     and client_capabilities = {
       workspace : workspaceClientCapabilities;
