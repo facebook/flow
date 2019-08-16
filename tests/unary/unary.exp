@@ -1,79 +1,259 @@
-Error -------------------------------------------------------------------------------------------------- delete.js:12:12
+Error -------------------------------------------------------------------------------------------------- delete.js:11:12
+
+Cannot delete `foo.a` because undefined [1] is incompatible with number [1].
+
+   delete.js:11:12
+   11|     delete foo.a; // error
+                  ^^^^^
+
+References:
+   delete.js:10:23
+   10|   function (foo: { a: number }) {
+                             ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:14:12
+
+Cannot delete `foo['a']` because undefined [1] is incompatible with number [1].
+
+   delete.js:14:12
+   14|     delete foo['a']; // error
+                  ^^^^^^^^
+
+References:
+   delete.js:13:23
+   13|   function (foo: { a: number }) {
+                             ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:18:12
 
 Cannot delete `foo.a` because property `a` is not writable.
 
-   12|     delete foo.a; // error
+   18|     delete foo.a; // error
                   ^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:15:12
+Error -------------------------------------------------------------------------------------------------- delete.js:21:12
 
 Cannot delete `foo['a']` because property `a` is not writable.
 
-   15|     delete foo['a']; // error
+   21|     delete foo['a']; // error
                   ^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:29:12
+Error -------------------------------------------------------------------------------------------------- delete.js:31:12
 
-Cannot delete `foo[1]` because tuple type [1] only has 1 element, so index 1 is out of bounds.
+Cannot delete `foo.a` because undefined [1] is incompatible with number [1].
 
-   delete.js:29:12
-   29|     delete foo[1] // error
+   delete.js:31:12
+   31|     delete foo.a; // error
+                  ^^^^^
+
+References:
+   delete.js:30:24
+   30|   function (foo: { -a: number }) {
+                              ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:34:12
+
+Cannot delete `foo['a']` because undefined [1] is incompatible with number [1].
+
+   delete.js:34:12
+   34|     delete foo['a']; // error
+                  ^^^^^^^^
+
+References:
+   delete.js:33:24
+   33|   function (foo: { -a: number }) {
+                              ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:41:12
+
+Cannot delete `foo[0]` because undefined [1] is incompatible with number [2].
+
+   delete.js:41:12
+   41|     delete foo[0] // error
                   ^^^^^^
 
 References:
-   delete.js:28:18
-   28|   function (foo: [number]) {
+   delete.js:41:5
+   41|     delete foo[0] // error
+           ^^^^^^^^^^^^^ [1]
+   delete.js:40:18
+   40|   function (foo: number[]) {
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:44:12
+
+Cannot delete `foo[1]` because tuple type [1] only has 1 element, so index 1 is out of bounds.
+
+   delete.js:44:12
+   44|     delete foo[1] // error
+                  ^^^^^^
+
+References:
+   delete.js:43:18
+   43|   function (foo: [number]) {
                         ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:32:12
+Error -------------------------------------------------------------------------------------------------- delete.js:47:12
 
-Cannot delete `foo[0]` because read-only arrays cannot be written to.
+Cannot delete `foo[0]` because:
+ - undefined [1] is incompatible with number [2].
+ - read-only arrays cannot be written to.
 
-   32|     delete foo[0] // error
+   delete.js:47:12
+   47|     delete foo[0] // error
                   ^^^^^^
 
+References:
+   delete.js:47:5
+   47|     delete foo[0] // error
+           ^^^^^^^^^^^^^ [1]
+   delete.js:46:33
+   46|   function (foo: $ReadOnlyArray<number>) {
+                                       ^^^^^^ [2]
 
-Error -------------------------------------------------------------------------------------------------- delete.js:42:12
+
+Error -------------------------------------------------------------------------------------------------- delete.js:51:12
+
+Cannot perform delete operation because `foo?.a` [1] is unsupported reference.
+
+   51|     delete foo?.a // TODO
+                  ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:54:12
+
+Cannot perform delete operation because `foo?.a` [1] is unsupported reference.
+
+   54|     delete foo?.a // TODO
+                  ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:57:12
 
 Cannot get `foo?.a` because property `a` is not readable.
 
-   42|     delete foo?.a // TODO
+   57|     delete foo?.a // TODO
                   ^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:49:12
+Error -------------------------------------------------------------------------------------------------- delete.js:57:12
+
+Cannot perform delete operation because `foo?.a` [1] is unsupported reference.
+
+   57|     delete foo?.a // TODO
+                  ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:67:12
+
+Cannot delete `foo['bar']` because undefined [1] is incompatible with number [1].
+
+   delete.js:67:12
+   67|     delete foo['bar'] // error
+                  ^^^^^^^^^^
+
+References:
+   delete.js:66:35
+   66|   function (foo: { [key: string]: number }) {
+                                         ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:70:12
 
 Cannot delete `foo['bar']` because property `bar` is not writable.
 
-   49|     delete foo['bar'] // error
+   70|     delete foo['bar'] // error
                   ^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:59:12
+Error -------------------------------------------------------------------------------------------------- delete.js:73:12
+
+Cannot delete `foo['bar']` because undefined [1] is incompatible with number [1].
+
+   delete.js:73:12
+   73|     delete foo['bar'] // error
+                  ^^^^^^^^^^
+
+References:
+   delete.js:72:36
+   72|   function (foo: { -[key: string]: number }) {
+                                          ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:83:12
+
+Cannot delete `foo[0]` because undefined [1] is incompatible with number [1].
+
+   delete.js:83:12
+   83|     delete foo[0] // error
+                  ^^^^^^
+
+References:
+   delete.js:82:35
+   82|   function (foo: { [key: number]: number }) {
+                                         ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:86:12
 
 Cannot delete `foo[1]` because an index signature declaring the expected key / value type is not writable.
 
-   59|     delete foo[1] // error
+   86|     delete foo[1] // error
                   ^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:66:12
+Error -------------------------------------------------------------------------------------------------- delete.js:89:12
+
+Cannot delete `foo[1]` because undefined [1] is incompatible with number [1].
+
+   delete.js:89:12
+   89|     delete foo[1] // error
+                  ^^^^^^
+
+References:
+   delete.js:88:35
+   88|   function (foo: {-[key: number]: number}) {
+                                         ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:93:12
+
+Cannot perform delete operation because `a` [1] is unsupported reference.
+
+   93|     delete a;
+                  ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:96:12
 
 Cannot perform delete operation because object literal [1] is not a property reference.
 
-   66|     delete { a: 1 } // error
+   96|     delete { a: 1 } // error
                   ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:69:12
+Error -------------------------------------------------------------------------------------------------- delete.js:99:12
 
 Cannot perform delete operation because array literal [1] is not a property reference.
 
-   69|     delete [1, 2, 3] // error
+   99|     delete [1, 2, 3] // error
                   ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- delete.js:104:16
+
+Cannot perform delete operation because `super.name` [1] is unsupported reference.
+
+   104|         delete super.name;
+                       ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:8:10
@@ -276,4 +456,4 @@ References:
 
 
 
-Found 23 errors
+Found 38 errors
