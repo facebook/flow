@@ -1,0 +1,32 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:10:12
+
+Cannot resolve name `doesNotExist`.
+
+   10| <a:b prop={doesNotExist} />; // Error, doesNotExist does not exist
+                  ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:12
+
+Cannot get `{...}.y` because property `y` is missing in object literal [1].
+
+   test.js:12:12
+   12| <a:b prop={{x: 3}.y} />; // Error, y does not exist on the object
+                  ^^^^^^^^
+
+References:
+   test.js:12:12
+   12| <a:b prop={{x: 3}.y} />; // Error, y does not exist on the object
+                  ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:12
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   14| <a:b prop={'string' * 3} />; // Error, can't multiply string by number
+                  ^^^^^^^^ [1]
+
+
+
+Found 3 errors

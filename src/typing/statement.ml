@@ -4979,12 +4979,24 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     in
     (t, MemberExpression member', attributes')
 
-  | _ ->
-      (* TODO? covers namespaced names as element names *)
+  | MemberExpression member,  Options.(Jsx_csx | Jsx_pragma _), _->
     let t = Unsoundness.at InferenceHooks loc_element in
-    let name = Tast_utils.error_mapper#jsx_name name in
-    let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-    t, name, attributes
+    let name' = Tast_utils.error_mapper#jsx_name name in
+    let el_name = jsx_title_member_to_string member in
+    let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
+    let c = mod_reason_of_t (replace_reason_const (RIdentifier el_name)) t in
+    let _o, attributes' = jsx_mk_props cx reason c el_name attributes children in
+    t, name', attributes'
+
+  | NamespacedName namespace, _, _ ->
+    (* TODO? covers namespaced names as element names *)
+    let t = Unsoundness.at InferenceHooks loc_element in
+    let name' = Tast_utils.error_mapper#jsx_name name in
+    let el_name = jsx_title_namespaced_name_to_string namespace in
+    let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
+    let c = mod_reason_of_t (replace_reason_const (RIdentifier el_name)) t in
+    let _o, attributes' = jsx_mk_props cx reason c el_name attributes children in
+    t, name', attributes'
   in
 
   let closingElement =
@@ -5308,6 +5320,11 @@ and jsx_title_member_to_string (_, member) = Ast.JSX.MemberExpression.(
   | MemberExpression member -> (jsx_title_member_to_string member) ^ "." ^ name
   | Identifier (_, { Ast.JSX.Identifier.name = obj }) -> obj ^ "." ^ name
 )
+
+and jsx_title_namespaced_name_to_string namespaced_name =
+  let (_, {Ast.JSX.NamespacedName.namespace = (_, namespace); name = (_, name)}) = namespaced_name
+  in
+  namespace.Ast.JSX.Identifier.name ^ name.Ast.JSX.Identifier.name
 
 and jsx_title_member_to_expression member =
   let (mloc, member) = member in
