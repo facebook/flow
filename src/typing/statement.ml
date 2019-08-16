@@ -4460,14 +4460,16 @@ and unary cx loc = Ast.Expression.Unary.(function
       | _, Identifier _
       | _, Member _ ->
         let (_, _), _ as argument = expression cx argument in
+        Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
         argument
       | _, OptionalMember _ ->
         let (_, _), _ as argument = expression cx argument in
         (* TODO: support optional member *)
+        Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
         argument
       | _ ->
-        Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
         let (_, _), _ as argument = expression cx argument in
+        Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
         argument
       in
       BoolT.at loc |> with_trust literal_trust, { operator = Delete; argument; comments }
