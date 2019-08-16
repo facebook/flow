@@ -105,7 +105,7 @@ let lsp_completion_of_type (ty: Ty.t) =
       Utility _ | Mu _
     ) ->  Some Variable
 
-let autocomplete_create_result ((name, loc), (ty, ty_loc)) =
+let autocomplete_create_result (name, loc) (ty, ty_loc) =
   let res_ty = ty_loc, Ty_printer.string_of_t ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   Ty.(match ty with
@@ -135,18 +135,16 @@ let autocomplete_create_result ((name, loc), (ty, ty_loc)) =
         func_details = None }
   )
 
-let autocomplete_filter_members members =
-  SMap.filter (fun key _ ->
-    (* This is really for being better safe than sorry. It shouldn't happen. *)
-    not (is_autocomplete key)
-    &&
-    (* filter out constructor, it shouldn't be called manually *)
-    not (key = "constructor")
-    &&
-    (* strip out members from prototypes which are implicitly created for
-       internal reasons *)
-    not (Reason.is_internal_name key)
-  ) members
+let autocomplete_is_valid_member key =
+  (* This is really for being better safe than sorry. It shouldn't happen. *)
+  not (is_autocomplete key)
+  &&
+  (* filter out constructor, it shouldn't be called manually *)
+  not (key = "constructor")
+  &&
+  (* strip out members from prototypes which are implicitly created for
+     internal reasons *)
+  not (Reason.is_internal_name key)
 
 let autocomplete_member
     ~reader ~exclude_proto_members ~ac_type
@@ -195,17 +193,20 @@ let autocomplete_member
     } in
     let file = Context.file cx in
     let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
-    let result = result_map
-    |> autocomplete_filter_members
-    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> loc_of_aloc ~reader), t))
-    |> SMap.values
-    |> Ty_normalizer.from_types ~options ~genv
-    |> Core_list.filter_map ~f:(function
-     | (name, ty_loc), Ok ty -> Some ((name, ac_loc), (ty, ty_loc))
-     | _ -> None
-     )
-    |> Core_list.map ~f:autocomplete_create_result
-    |> List.rev in
+    let rev_result = SMap.fold (fun name (_id_loc, t) acc ->
+      if not (autocomplete_is_valid_member name) then acc else
+      let loc = Type.loc_of_t t |> loc_of_aloc ~reader in
+      ((name, loc), t)::acc
+    ) result_map [] in
+    let result =
+      rev_result
+      |> Ty_normalizer.from_types ~options ~genv
+      |> Core_list.rev_filter_map ~f:(function
+          | (name, ty_loc), Ok ty ->
+            Some (autocomplete_create_result (name, ac_loc) (ty, ty_loc))
+          | _ -> None
+        )
+    in
     Ok (result, Some json_data_to_log)
 
 
@@ -244,7 +245,7 @@ let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
       let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
       let type_ = Scope.Entry.actual_type entry in
       match Ty_normalizer.from_type ~options ~genv type_ with
-      | Ok ty -> autocomplete_create_result ((name, ac_loc), (ty, ty_loc)) :: acc
+      | Ok ty -> autocomplete_create_result (name, ac_loc) (ty, ty_loc) :: acc
       | Error _ -> acc
     )
   ) env [] in
