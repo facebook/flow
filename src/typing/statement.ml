@@ -4458,9 +4458,12 @@ and unary cx loc = Ast.Expression.Unary.(function
           property = Member.PropertyExpression index;
         }
       | _, Identifier _
-      | _, Member _
+      | _, Member _ ->
+        let (_, _), _ as argument = expression cx argument in
+        argument
       | _, OptionalMember _ ->
         let (_, _), _ as argument = expression cx argument in
+        (* TODO: support optional member *)
         argument
       | _ ->
         Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
