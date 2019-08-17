@@ -25,20 +25,6 @@ val tvar_appears_in_type: is_toplevel:bool -> Ty.tvar -> Ty.t -> bool
  *)
 val size_of_type: ?max:int -> Ty.t -> int option
 
-val simplify_type: simplify_empty:bool -> Ty.t -> Ty.t
+val simplify_type: merge_kinds:bool -> ?sort:bool -> Ty.t -> Ty.t
 
 val symbols_of_type: Ty.t -> Ty_symbol.symbol list
-
-module type TopAndBotQueries = sig
-  val is_bot: Ty.t -> bool
-  val is_top: Ty.t -> bool
-  val compare: Ty.t -> Ty.t -> int
-end
-
-(* TopAndBotQueries that collapse different types of bottom and
-   compare using Pervasives.compare *)
-module BotInsensitiveQueries: TopAndBotQueries
-
-module Simplifier(Q: TopAndBotQueries) : sig
-  val run: Ty.t -> Ty.t
-end

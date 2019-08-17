@@ -31,7 +31,7 @@ type saved_state_data = {
   ordered_non_flowlib_libs: string list;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage : Coverage.file_coverage Utils_js.FilenameMap.t;
+  coverage : Coverage_response.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 }
 

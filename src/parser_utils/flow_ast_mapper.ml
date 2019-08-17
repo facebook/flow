@@ -240,9 +240,11 @@ class ['loc] mapper = object(this)
 
   method break _loc (break: 'loc Ast.Statement.Break.t) =
     let open Ast.Statement.Break in
-    let { label } = break in
+    let { label; comments } = break in
     let label' = map_opt this#label_identifier label in
-    if label == label' then break else { label = label' }
+    let comments' = this#syntax_opt comments in
+    if label == label' && comments == comments' then break
+    else { label = label'; comments = comments' }
 
   method call _loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
@@ -1256,11 +1258,12 @@ class ['loc] mapper = object(this)
         let annot' = this#type_annotation_hint annot in
         if properties' == properties && annot' == annot then patt
         else Object { Object.properties = properties'; annot = annot' }
-      | Array { Array.elements; annot } ->
+      | Array { Array.elements; annot; comments } ->
         let elements' = ListUtils.ident_map (map_opt (this#pattern_array_e ?kind)) elements in
         let annot' = this#type_annotation_hint annot in
-        if elements' == elements && annot' == annot then patt
-        else Array { Array.elements = elements'; annot = annot' }
+        let comments' = this#syntax_opt comments in
+        if comments == comments' && elements' == elements && annot' == annot then patt
+        else Array { Array.elements = elements'; annot = annot'; comments = comments' }
       | Identifier { Identifier.name; annot; optional } ->
         let name' = this#pattern_identifier ?kind name in
         let annot' = this#type_annotation_hint annot in

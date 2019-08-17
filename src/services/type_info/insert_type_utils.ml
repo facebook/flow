@@ -5,36 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* The guiding principle of this query is whether or not two
-   types will serialize the same. *)
-module TySimplifyQueries : Ty_utils.TopAndBotQueries = struct
-  open Ty
-  let is_top = Ty_utils.BotInsensitiveQueries.is_top
-  let is_bot = Ty_utils.BotInsensitiveQueries.is_bot
-
-  let comparator = object(_)
-    inherit [unit] comparator_ty
-    method! private on_Any () _ _ = ()
-  end
-
-  let compare = comparator#compare ()
-end
-
-(* This simplifier deduplicates types in unions and intersections that *)
-(* will serialize to the same type, removes top from intersections, and removes *)
-(* bottom from unions. *)
-module TySimplify : sig
-  val run: Ty.t -> Ty.t
-end = Ty_utils.Simplifier(TySimplifyQueries)
-
-module TySet = Set.Make(struct
-  type t = Ty.t
-  let compare = Pervasives.compare
-end)
-
 type validation_error =
   | TooBig of {size_limit:int; size:int option;}
   | Anonymous of Loc.t
+  | Any_Unsound of Ty.unsoundness_kind
   | Recursive
   | ReactElementConfigFunArg
   | Empty_MatchingPropT
@@ -44,6 +18,7 @@ type validation_error =
 let serialize_validation_error = function
   | TooBig _ -> "TooBig"
   | Anonymous loc -> Utils_js.spf "Anonymous (def: %s)" (Loc.to_string_no_source loc)
+  | Any_Unsound kind -> Utils_js.spf "Any_Unsound %s" (Ty_debug.dump_any_unsoundness_kind kind)
   | Recursive -> "Recursive"
   | ReactElementConfigFunArg -> "ReactElementConfigFunArg"
   | Empty_MatchingPropT -> "Empty_MatchingPropT"
@@ -61,7 +36,7 @@ class type_validator_visitor = object(_)
   inherit [_] Ty.iter_ty as super
   method! on_t () t =
     match t with
-    | Ty.Mu _ -> raise (Fatal Recursive)
+    | Ty.Mu _ | Ty.TVar _ -> raise (Fatal Recursive)
 
     (* We cannot serialize the following Bot-like types *)
     | Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper u)) ->
@@ -74,6 +49,30 @@ class type_validator_visitor = object(_)
       raise (Fatal (Empty_TypeDestructorTriggerT (ALoc.to_loc_exn loc)))
 
     | _ -> super#on_t () t
+
+  method! on_unsoundness_kind env kind =
+    match kind with
+    (* These are okay *)
+    | Ty.BoundFunctionThis
+    | Ty.ComputedNonLiteralKey
+      ->
+      super#on_unsoundness_kind env kind
+    (* Ban all the rest *)
+    | Ty.Constructor
+    | Ty.DummyStatic
+    | Ty.Existential
+    | Ty.Exports
+    | Ty.FunctionPrototype
+    | Ty.InferenceHooks
+    | Ty.InstanceOfRefinement
+    | Ty.Merged
+    | Ty.ResolveSpread
+    | Ty.Unchecked
+    | Ty.Unimplemented
+    | Ty.UnresolvedType
+    | Ty.WeakContext
+      ->
+      raise (Fatal (Any_Unsound kind))
 
   method! on_ReactElementConfigType () targ =
     match targ with
@@ -193,6 +192,52 @@ class patch_up_react_mapper ?(imports_react=false) () = object (this)
         | prop -> prop
       in
       super#on_prop loc prop
+end
+
+let reverse_append_all : 'a list list -> 'a list =
+  List.fold_left List.rev_append []
+
+type partition_acc =
+  {
+    bools:Ty.t list;
+    nums: Ty.t list;
+    strings: Ty.t list;
+    others: Ty.t list;
+  }
+
+class stylize_ty_mapper ?(imports_react=false) () = object(_)
+  inherit patch_up_react_mapper ~imports_react () as super
+  (* remove literals when the base type is in the union, and simplify true | false to bool *)
+  (* These simplifications should always be sound *)
+  method! on_Union loc t _ _ _ =
+    let open Ty in
+    let filter_union (a : partition_acc) t =
+      match t, a with
+      (* If element of a base type and the base type is already present in the union
+       * ignore the element *)
+      | (Bool None | BoolLit _), {bools=[Bool None]; _}
+      | (Num None | NumLit _), {nums=[Num None]; _}
+      | (Str None | StrLit _), {strings=[Str None]; _} -> a
+      (* Otherwise, if we see the base element automatically discard all other elements *)
+      | Bool None, _ -> {a with bools=[t]}
+      | Num None, _ -> {a with nums=[t]}
+      | Str None, _ -> {a with strings=[t]}
+      (* Otherwise, if it is bool check to see if we have enumerated both element *)
+      | BoolLit true, {bools=[(BoolLit false)]; _}
+      | BoolLit false, {bools=[(BoolLit true)]; _} -> {a with bools=[(Bool None)]}
+      (* Otherwise, add literal types to the union *)
+      | BoolLit _, {bools; _} -> {a with bools=t::bools}
+      | NumLit _, {nums; _} -> {a with nums=t::nums}
+      | StrLit _, {strings; _} -> {a with strings=t::strings}
+      (* Note, any temporary base types get passed through with others *)
+      | t, {others; _} -> {a with others=t::others} in
+    let empty = {bools=[];nums=[];strings=[];others=[];} in
+    let {bools;nums;strings;others} = Nel.fold_left filter_union empty (bk_union t) in
+    match reverse_append_all [others;strings;nums;bools;] with
+    | [] ->
+      failwith "Impossible! this only removes elements when others are added/present"
+    | [t] -> super#on_t loc t
+    | (t1::t2::ts) -> super#on_Union loc (Union (t1,t2,ts)) t1 t2 ts
 end
 
 (* Returns true if the location given a zero width location. *)

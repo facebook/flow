@@ -101,8 +101,8 @@ type 'loc virtual_reason_desc =
   | RLogical of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
   | RTemplateString
   | RUnknownString
-  | REnum (* TODO(T45400747): Rename union based "enums" code to something else *)
-  | REnumDeclaration
+  | RUnionEnum
+  | REnum
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -264,8 +264,8 @@ let rec map_desc_locs f = function
   | RLogical  (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
   | RTemplateString
   | RUnknownString
+  | RUnionEnum
   | REnum
-  | REnumDeclaration
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -624,8 +624,8 @@ let rec string_of_desc = function
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
-  | REnum -> "enum"
-  | REnumDeclaration -> "Enum declarations are not yet implemented."
+  | RUnionEnum -> "enum"
+  | REnum -> "Enums are not yet implemented."
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -1263,7 +1263,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RFbt
 | RTemplateString
 | RUnknownString
-| REnum
+| RUnionEnum
 | RKeySet
 | RRegExp
   -> `Scalar
@@ -1412,7 +1412,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RReactConfig
 | RTrusted _
 | RPrivate _
-| REnumDeclaration
+| REnum
   -> `Unclassified
 
 let is_nullish_reason r =

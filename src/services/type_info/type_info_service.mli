@@ -34,7 +34,7 @@ val coverage :
   trust:bool ->
   File_key.t ->
   string ->
-  ((Loc.t * Coverage.expression_coverage) list, string) Core_result.t Lwt.t
+  ((Loc.t * Coverage_response.expression_coverage) list, string) Core_result.t Lwt.t
 
 val suggest :
   options:Options.t ->
@@ -68,3 +68,13 @@ val autofix_exports:
   file_key:File_key.t ->
   file_content:string ->
   (Replacement_printer.patch * string list, string) Core_result.t Lwt.t
+
+val code_actions_at_loc :
+options:Options.t ->
+env:ServerEnv.env ->
+profiling:Profiling_js.running ->
+params:Lsp.CodeActionRequest.params ->
+file_key:File_key.t ->
+file_contents:string ->
+loc:Loc.t ->
+(Lsp.CodeAction.command_or_action list, string) Core_result.t Lwt.t

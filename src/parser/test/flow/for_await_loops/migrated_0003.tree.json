@@ -6,15 +6,19 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
-      "message":"Unexpected token ;"
+      "message":"Unexpected token `;`, expected the token `of`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
-      "message":"Unexpected token ;"
+      "message":"Unexpected token `;`, expected the token `)`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
-      "message":"Unexpected token )"
+      "message":"Unexpected token `)`, expected the end of an expression statement (`;`)"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
+      "message":"Unexpected token `)`, expected the start of a statement"
     }
   ],
   "type":"Program",

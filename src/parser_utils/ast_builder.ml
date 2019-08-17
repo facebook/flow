@@ -91,6 +91,7 @@ module Patterns = struct
     Loc.none, Array { Array.
       elements;
       annot = Ast.Type.Missing Loc.none;
+      comments = Flow_ast_utils.mk_comments_opt ();
     }
 
   let object_ str =
@@ -282,8 +283,8 @@ module Statements = struct
   let switch_case ?(loc=Loc.none) ?test consequent =
     loc, { Switch.Case.test; consequent }
 
-  let break ?label () =
-    Loc.none, Break { Break.label }
+  let break ?comments ?label () =
+    Loc.none, Break { Break.label; comments }
 
   let with_ _object body =
     Loc.none, With { With._object; body }

@@ -89,7 +89,8 @@ let load_lib_files ~sig_cx ~options ~reader files =
 
           (* Lib files use only concrete locations, so this is not needed. *)
           let aloc_tables = FilenameMap.empty in
-          let cx = Context.make sig_cx metadata lib_file aloc_tables Files.lib_module_ref Context.Checking in
+          let rev_table = lazy (Hashtbl.create 0) in
+          let cx = Context.make sig_cx metadata lib_file aloc_tables rev_table Files.lib_module_ref Context.Checking in
 
           let syms = Infer.infer_lib_file cx ast
             ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig
@@ -164,7 +165,8 @@ let init ~options ~reader lib_files =
     in
     (* Builtins use only concrete locations, so this is not needed. *)
     let aloc_tables = FilenameMap.empty in
-    Context.make sig_cx metadata File_key.Builtins aloc_tables Files.lib_module_ref Context.Checking
+    let rev_table = lazy (Hashtbl.create 0) in
+    Context.make sig_cx metadata File_key.Builtins aloc_tables rev_table Files.lib_module_ref Context.Checking
   in
 
   Flow_js.mk_builtins master_cx;

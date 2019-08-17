@@ -2,15 +2,15 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":15},"end":{"line":2,"column":21}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `{`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
-      "message":"Unexpected token ;"
+      "message":"Unexpected token `;`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",

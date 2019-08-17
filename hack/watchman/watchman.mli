@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -11,6 +11,8 @@ module Watchman_process_helpers: sig
   module J = Hh_json_helpers.AdhocJsonHelpers
 
   val debug: bool
+
+  val timeout_to_secs: Watchman_sig.Types.timeout -> float option
 
   exception Read_payload_too_long
 

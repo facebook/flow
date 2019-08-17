@@ -36,6 +36,7 @@ type error_kind =
   | BadPoly
   | BadTypeAlias
   | BadTypeApp
+  | BadInlineInterfaceExtends
   | BadInternalT
   | BadInstanceT
   | BadEvalT
@@ -56,6 +57,7 @@ let error_kind_to_string = function
   | BadPoly -> "Bad polymorphic type"
   | BadTypeAlias -> "Bad type alias"
   | BadTypeApp -> "Bad type application"
+  | BadInlineInterfaceExtends -> "Bad inline interface extends"
   | BadInternalT -> "Bad internal type"
   | BadInstanceT -> "Bad instance type"
   | BadEvalT -> "Bad eval"
@@ -599,8 +601,7 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Supertype t)
     | DefT (_, _, MixedT _) -> return Ty.Top
-    | AnyT (_, Annotated) -> Ty.explicit_any |> return
-    | AnyT _ -> Ty.implicit_any |> return
+    | AnyT (_, kind) -> return (Ty.Any (any_t kind))
     | DefT (_, _, VoidT) -> return Ty.Void
     | DefT (_, _, NumT (Literal (_, (_, x))))
       when Env.preserve_inferred_literal_types env ->
@@ -644,7 +645,7 @@ end = struct
     | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
     | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
-    | DefT (r, _, InstanceT (_, _, _, t)) -> instance_t ~env r t
+    | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
     | DefT (_, _, ClassT t) -> class_t ~env t None
     | DefT (_, _, IdxWrapper t) -> type__ ~env t
     | DefT (_, _, ReactAbstractComponentT {config; instance}) ->
@@ -666,9 +667,9 @@ end = struct
       let loc = Reason.def_aloc_of_reason r in
       return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
     | MergedT (_, uses) -> merged_t ~env uses
-    | ExistsT _ -> return (Ty.Utility Ty.Exists)
-    | ObjProtoT _ -> return (Ty.TypeOf (["Object"], "prototype"))
-    | FunProtoT _ -> return (Ty.TypeOf (["Function"], "prototype"))
+    | ExistsT _ -> return Ty.(Utility Exists)
+    | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
+    | FunProtoT _ -> return Ty.(TypeOf FunProto)
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
@@ -681,7 +682,7 @@ end = struct
           ]
           explicit_any)
       else
-        return Ty.(TypeOf (["Function"; "prototype"], "apply"))
+        return Ty.(TypeOf FunProtoApply)
 
     | FunProtoBindT _ ->
       if Env.expand_internal_types env then
@@ -695,7 +696,7 @@ end = struct
           })
           explicit_any)
       else
-         return Ty.(TypeOf (["Function"; "prototype"], "bind"))
+         return Ty.(TypeOf FunProtoBind)
 
     | FunProtoCallT _ ->
       if Env.expand_internal_types env then
@@ -709,12 +710,13 @@ end = struct
           })
           explicit_any)
       else
-         return Ty.(TypeOf (["Function"; "prototype"], "call"))
+         return Ty.(TypeOf FunProtoCall)
 
     | ModuleT (reason, exports, _) -> module_t env reason exports t
 
-    | DefT (_, _, CharSetT _)
-    | NullProtoT _ ->
+    | NullProtoT _ -> return Ty.Null
+
+    | DefT (_, _, CharSetT _) ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
 
@@ -807,6 +809,29 @@ end = struct
     let uses = T.UseTypeMap.keys bounds.Constraint.upper in
     uses_t ~env uses >>| fun use_kind ->
     Ty.Bot (Ty.NoLowerWithUpper use_kind)
+
+  and any_t = function
+    | T.Annotated -> Ty.Annotated
+    | T.AnyError -> Ty.AnyError
+    | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
+    | T.Untyped -> Ty.Untyped
+
+  and unsoundness_any_t = function
+    | T.BoundFunctionThis -> Ty.BoundFunctionThis
+    | T.ComputedNonLiteralKey -> Ty.ComputedNonLiteralKey
+    | T.Constructor -> Ty.Constructor
+    | T.DummyStatic -> Ty.DummyStatic
+    | T.Existential -> Ty.Existential
+    | T.Exports -> Ty.Exports
+    | T.FunctionPrototype -> Ty.FunctionPrototype
+    | T.InferenceHooks -> Ty.InferenceHooks
+    | T.InstanceOfRefinement -> Ty.InstanceOfRefinement
+    | T.Merged -> Ty.Merged
+    | T.ResolveSpread -> Ty.ResolveSpread
+    | T.Unchecked -> Ty.Unchecked
+    | T.Unimplemented -> Ty.Unimplemented
+    | T.UnresolvedType -> Ty.UnresolvedType
+    | T.WeakContext -> Ty.WeakContext
 
   and bound_t ~env reason name =
     let { Ty.def_loc; name; _ } = symbol_from_reason env reason name in
@@ -918,16 +943,6 @@ end = struct
     | T.TupleAT (_, ts) ->
       mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
 
-  and name_of_instance_reason r =
-    (* This should cover all cases but throw an error just in case. *)
-    match desc_of_reason ~unwrap:false r  with
-    | RType name
-    | RIdentifier name -> return name
-    | r ->
-      let msg = spf "could not extract name from reason: %s"
-        (Reason.string_of_desc r) in
-      terr ~kind:BadInstanceT ~msg None
-
   (* Used for instances of React.createClass(..) *)
   and react_component =
     let react_props ~env ~default props name =
@@ -954,8 +969,8 @@ end = struct
     fun ~env static own_props ->
       let cx = Env.(env.genv.cx) in
       let own_props = Context.find_props cx own_props in
-      react_props ~env ~default:Ty.implicit_any own_props "props" >>= fun props_ty ->
-      react_props ~env ~default:Ty.implicit_any own_props "state" >>= fun state_ty ->
+      react_props ~env ~default:Ty.explicit_any own_props "props" >>= fun props_ty ->
+      react_props ~env ~default:Ty.explicit_any own_props "state" >>= fun state_ty ->
       react_static_props ~env static >>| fun static_flds ->
 
       (* The inferred type for state is unsealed, which has its exact bit set.
@@ -981,15 +996,81 @@ end = struct
       } in
       Ty.mk_inter (parent_class, [props_obj])
 
-  and instance_t ~env r inst =
-    let open Type in
-    name_of_instance_reason r >>= fun name ->
-    let symbol = symbol_from_reason env r name in
-    mapM (fun (_, _, t, _) -> type__ ~env t) inst.type_args >>| fun tys ->
-    let targs = match tys with [] -> None | _ -> Some tys in
-    if inst.structural
-    then generic_interface symbol targs
-    else generic_class symbol targs
+  and instance_t =
+    let to_generic ~env kind r inst =
+      match desc_of_reason ~unwrap:false r with
+      | RType name
+      | RIdentifier name ->
+        (* class or interface declaration *)
+        let symbol = symbol_from_reason env r name in
+        mapM (fun (_, _, t, _) -> type__ ~env t) inst.T.type_args >>| fun tys ->
+        let targs = match tys with [] -> None | _ -> Some tys in
+        Ty.Generic (symbol, kind, targs)
+      | r ->
+        let desc = Reason.string_of_desc r in
+        let msg = "could not extract name from reason: " ^ desc in
+        terr ~kind:BadInstanceT ~msg None
+    in
+    fun ~env r super inst ->
+      let { T.inst_kind; own_props; inst_call_t; _ } = inst in
+      match inst_kind with
+      | T.InterfaceKind { inline = true } -> inline_interface ~env super own_props inst_call_t
+      | T.InterfaceKind { inline = false } -> to_generic ~env Ty.InterfaceKind r inst
+      | T.ClassKind -> to_generic ~env Ty.ClassKind r inst
+
+  and inline_interface =
+    let rec extends = function
+      | Ty.Generic g ->
+        return [g]
+      | Ty.Inter (t1, t2, ts) ->
+        mapM extends (t1::t2::ts) >>| Core_list.concat
+      | Ty.TypeOf Ty.ObjProto (* interface {} *)
+      | Ty.TypeOf Ty.FunProto (* interface { (): void } *)
+        ->
+        (* Do not contribute to the extends clause *)
+        return []
+      | _ ->
+        (* Top-level syntax only allows generics in extends *)
+        terr ~kind:BadInlineInterfaceExtends None
+    in
+    let fix_dict_props props =
+      let key, value, pole, props =
+        List.fold_left (fun (key, value, pole, ps) p ->
+          match p with
+          | Ty.NamedProp ("$key", Ty.Field (t, _)) ->
+            (* The $key's polarity is fixed to neutral so we ignore it *)
+            Some t, value, pole, ps
+          | Ty.NamedProp ("$value", Ty.Field (t, { Ty.fld_polarity; _ })) ->
+            (* The dictionary's polarity is determined by that of $value *)
+            key, Some t, Some fld_polarity, ps
+          | _ ->
+            key, value, pole, p::ps
+        ) (None, None, None, []) props
+      in
+      let props = List.rev props in
+      match key, value, pole with
+      | Some dict_key, Some dict_value, Some dict_polarity ->
+        let ind_prop = Ty.IndexProp {
+          Ty.dict_polarity;
+          dict_name = None; (* This seems to be lost *)
+          dict_key;
+          dict_value;
+        } in
+        ind_prop::props
+      | _, _, _ -> props
+    in
+    fun ~env super own_props inst_call_t ->
+      type__ ~env super >>= fun super ->
+      extends super >>= fun if_extends ->
+      obj_props ~env own_props inst_call_t None (* dict *) >>| fun obj_props ->
+      let obj_props = fix_dict_props obj_props in
+      let if_body = {
+        Ty.obj_exact = false;
+        obj_frozen = false;
+        obj_literal = false;
+        obj_props;
+      } in
+      Ty.InlineInterface { Ty.if_extends; if_body }
 
   and class_t =
     let rec go ~env ps ty =
@@ -1200,26 +1281,27 @@ end = struct
     function
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
     | ObjectAssign -> return Ty.(mk_fun
-        ~params:[(Some "target", implicit_any, non_opt_param)]
+        ~params:[(Some "target", explicit_any, non_opt_param)]
         ~rest:(Some "sources", Arr {
           arr_readonly = false;
           arr_literal = false;
-          arr_elt_t = implicit_any
+          arr_elt_t = explicit_any
         })
-        implicit_any
+        explicit_any
       )
 
     (* Object.getPrototypeOf: (o: any): any *)
     | ObjectGetPrototypeOf ->
-      return Ty.(mk_fun ~params:[(Some "o", implicit_any, non_opt_param)] implicit_any)
+      return Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] explicit_any)
+
 
     (* Object.setPrototypeOf: (o: any, p: any): any *)
     | ObjectSetPrototypeOf ->
       let params = [
-        (Some "o", Ty.implicit_any, non_opt_param);
-        (Some "p", Ty.implicit_any, non_opt_param);
+        (Some "o", Ty.explicit_any, non_opt_param);
+        (Some "p", Ty.explicit_any, non_opt_param);
       ] in
-      return (mk_fun ~params (Ty.implicit_any))
+      return (mk_fun ~params Ty.explicit_any)
 
     (* var idx:
        <IdxObject: Any, IdxResult>
@@ -1230,7 +1312,7 @@ end = struct
       let idxObject = Ty.Bound (ALoc.none, "IdxObject") in
       let idxResult = Ty.Bound (ALoc.none, "IdxResult") in
       let tparams = [
-        mk_tparam ~bound:(Ty.implicit_any) "IdxObject";
+        mk_tparam ~bound:Ty.explicit_any "IdxObject";
         mk_tparam "IdxResult";
       ]
       in
@@ -1276,13 +1358,13 @@ end = struct
 
     (* debugPrint: (_: any[]) => void *)
     | DebugPrint -> return Ty.(
-        mk_fun ~params:[(Some "_", Arr {
-            arr_readonly = false;
-            arr_literal = false;
-            arr_elt_t = implicit_any;
-          }, non_opt_param
-        )] Void
-      )
+       mk_fun ~params:[(Some "_", Arr {
+           arr_readonly = false;
+           arr_literal = false;
+           arr_elt_t = explicit_any;
+         }, non_opt_param
+       )] Void
+     )
 
     (* debugThrow: () => empty *)
     | DebugThrow -> return (mk_fun (mk_empty Ty.EmptyType))
@@ -1293,13 +1375,13 @@ end = struct
       )
 
     (* reactPropType: any (TODO) *)
-    | ReactPropType _ -> Ty.implicit_any |> return
+    | ReactPropType _ -> return Ty.explicit_any
 
     (* reactCreateClass: (spec: any) => ReactClass<any> *)
     | ReactCreateClass ->
-      let params = [(Some "spec", Ty.implicit_any, non_opt_param)] in
+      let params = [(Some "spec", Ty.explicit_any, non_opt_param)] in
       let x = Ty.builtin_symbol "ReactClass" in
-      return (mk_fun ~params (generic_talias x (Some [Ty.implicit_any])))
+      return (mk_fun ~params (generic_talias x (Some [Ty.explicit_any])))
 
     (* 1. Component class:
           <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -1316,21 +1398,21 @@ end = struct
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
-          (Some "children", implicit_any, opt_param);
+          (Some "children", explicit_any, opt_param);
         ]
         in
         let reactElement = generic_builtin_t "React$Element" [t] in
         let f1 = mk_fun ~tparams ~params reactElement in
         let params = [
           (Some "config", t, non_opt_param);
-          (Some "context", implicit_any, non_opt_param);
+          (Some "context", explicit_any, non_opt_param);
         ]
         in
         let sfc = mk_fun ~tparams ~params reactElement in
         let params = [
           (Some "fn", sfc, non_opt_param);
           (Some "config", t, non_opt_param);
-          (Some "children", implicit_any, opt_param);
+          (Some "children", explicit_any, opt_param);
         ]
         in
         let f2 = mk_fun ~tparams ~params reactElement in
@@ -1465,21 +1547,59 @@ end = struct
       | Type.Object.Spread.Value ->
         terr ~kind:BadEvalT ~msg:"spread-target-value" None
     in
-    let mk_spread ty target prefix_tys =
+    let mk_spread ty target prefix_tys head_slice =
+      let obj_props = prefix_tys @ spread_of_ty ty in
+      let obj_props = match head_slice with
+      | None -> obj_props
+      | Some obj -> obj_props @ spread_of_ty obj
+      in
       obj_exact target >>| fun obj_exact ->
       Ty.Obj { Ty.
-        obj_props = prefix_tys @ spread_of_ty ty;
+        obj_props;
         obj_exact;
         obj_literal = false;
         obj_frozen = false; (* default *)
       }
     in
-    fun ~env ty target ts_rev ->
-      mapM (type__ ~env) ts_rev >>= fun tys_rev ->
+
+    let spread_operand_slice ~env {T.Object.Spread.reason=_; prop_map; dict} =
+      let open Type.TypeTerm in
+      let obj_exact = true in
+      let obj_frozen = false in
+      let obj_literal = false in
+      let props = SMap.fold (fun k p acc -> (k, p)::acc) prop_map [] in
+      let obj_props = concat_fold_m (obj_prop ~env) props in
+      let obj_props_with_dict = obj_props >>= fun obj_props -> match dict with
+        | Some {key; value; dict_name; dict_polarity} ->
+          type__ ~env key >>= fun dict_key -> type__ ~env value >>= fun dict_value ->
+          return ((Ty.IndexProp {
+            Ty.dict_polarity = type_polarity dict_polarity;
+            dict_name;
+            dict_key;
+            dict_value;
+          })::obj_props)
+        | None -> return obj_props
+      in
+      obj_props_with_dict >>= fun obj_props ->
+      return @@ Ty.Obj {Ty.obj_exact; obj_frozen; obj_literal; obj_props}
+    in
+
+    let spread_operand ~env =
+      function
+      | T.Object.Spread.Type t -> type__ ~env t
+      | T.Object.Spread.Slice slice -> spread_operand_slice ~env slice
+    in
+
+    fun ~env ty target ts_rev head_slice ->
+      let head_slice = match head_slice with
+      | None -> return None
+      | Some s -> spread_operand_slice ~env s >>= fun s -> return (Some s) in
+      mapM (spread_operand ~env) ts_rev >>= fun tys_rev ->
+      head_slice >>= fun head_slice ->
       let prefix_tys = List.fold_left (fun acc t ->
         List.rev_append (spread_of_ty t) acc
       ) [] tys_rev in
-      mk_spread ty target prefix_tys
+      mk_spread ty target prefix_tys head_slice
 
   and type_destructor_t ~env id t d =
     if Env.evaluate_type_destructors env then
@@ -1513,7 +1633,7 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Rest (ty, ty'))
     | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
-    | T.SpreadType (target, ts) -> spread ~env ty target ts
+    | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
     | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
     | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
     | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
@@ -1537,25 +1657,27 @@ end = struct
     | Type.LatentPredT _ -> latent_pred_t ~env id t
     | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
 
-  and module_t env reason exports t =
-    let name = match desc_of_reason reason with
+  and module_t =
+    let mk_module env symbol_opt exports =
+      let cjs_export = optM (type__ ~env) T.(exports.cjs_export) in
+      let exports = Context.find_exports Env.(env.genv.cx) T.(exports.exports_tmap)
+      |> SMap.map snd
+      |> SMap.bindings
+      |> mapM (type__ ~env |> sndMapM) in
+      exports >>= fun exports ->
+      cjs_export >>| fun cjs_export ->
+      Ty.Module (symbol_opt, Ty.{ exports; cjs_export })
+    in
+    fun env reason exports t ->
+      match desc_of_reason reason with
       | RModule name
       | RCommonJSExports name
-      | RUntypedModule name -> Some name
-      | RExports -> Some "exports"
-      | _ -> None in
-    match name with
-    | Some name ->
+      | RUntypedModule name ->
         let symbol = symbol_from_reason env reason name in
-        let cjs_export = optM (type__ ~env) T.(exports.cjs_export) in
-        let exports = Context.find_exports Env.(env.genv.cx) T.(exports.exports_tmap)
-        |> SMap.map snd
-        |> SMap.bindings
-        |> mapM (type__ ~env |> sndMapM) in
-        exports >>= fun exports ->
-        cjs_export >>| fun cjs_export ->
-        Ty.Module (symbol, Ty.{ exports; cjs_export })
-    | None ->
+        mk_module env (Some symbol) exports
+      | RExports ->
+        mk_module env None exports
+      | _ ->
         terr ~kind:UnsupportedTypeCtor (Some t)
 
   and uses_t =
@@ -1596,8 +1718,8 @@ end = struct
     let result, state = run state (type__ ~env t) in
     let result = match result with
       | Ok t when options.Env.optimize_types ->
-        let { Env.simplify_empty; _ } = options in
-        Ok (Ty_utils.simplify_type ~simplify_empty t)
+        let { Env.merge_bot_and_any_kinds = merge_kinds; _ } = options in
+        Ok (Ty_utils.simplify_type ~merge_kinds ~sort:false t)
       | _ -> result
     in
     result, state
@@ -1664,9 +1786,8 @@ end = struct
 
     let extract_schemes typed_ast (imported_locs: acc_t) =
       List.fold_left (fun acc (loc, name, import_mode) ->
-        let loc = ALoc.to_loc_exn loc in
-        match Typed_ast_utils.find_type_at_pos_annotation typed_ast loc with
-        | Some (_, scheme) ->  (name, loc, import_mode, scheme)::acc
+        match Typed_ast_utils.find_exact_match_annotation typed_ast loc with
+        | Some scheme -> (name, loc, import_mode, scheme)::acc
         | None -> acc
       ) [] imported_locs
 
@@ -1689,7 +1810,7 @@ end = struct
       let _, result = List.fold_left (fun (st, acc) (name, loc, import_mode, scheme) ->
         match run st (extract_ident ~options ~genv scheme) with
         | Ok (Some def_loc), st ->
-          st, ALocMap.add def_loc (ALoc.of_loc loc, name, import_mode) acc
+          st, ALocMap.add def_loc (loc, name, import_mode) acc
         | Ok None, st ->
           (* unrecognizable remote type *)
           st, acc

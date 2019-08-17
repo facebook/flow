@@ -823,7 +823,7 @@ end = struct
     finished_sub_results: finished list;
   }
 
-  let legacy_group = "<Legacy>"
+  let legacy_group = "LEGACY"
 
   let with_memory_lwt ~label ~f =
     let running_memory = ref {
@@ -1057,15 +1057,19 @@ let with_timer_lwt ?should_print ~timer ~f profile =
 let legacy_sample_memory ~metric ~value profile =
   Memory.legacy_sample_memory ~metric ~value profile.running_memory
 
-let total_memory_group = "<Total>"
+let total_memory_group = "TOTAL"
 
-let sample_memory ~group ~metric ~value profile =
+let sample_memory ?group ~metric ~value profile =
   Memory.sample_memory ~group:total_memory_group ~metric ~value profile.running_memory;
-  Memory.sample_memory ~group ~metric ~value profile.running_memory
+  Option.iter group ~f:(fun group ->
+    Memory.sample_memory ~group ~metric ~value profile.running_memory
+  )
 
-let add_memory ~group ~metric ~start ~delta ~hwm_delta profile =
+let add_memory ?group ~metric ~start ~delta ~hwm_delta profile =
   Memory.add_memory ~group:total_memory_group ~metric ~start ~delta ~hwm_delta profile.running_memory;
-  Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory
+  Option.iter group ~f:(fun group ->
+    Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory
+  )
 
 let to_json_properties profile =
   [

@@ -74,15 +74,17 @@ type options = {
    *)
   omit_targ_defaults: bool;
 
-  (* Consider all kinds of Ty.Bot the same when simplifying types.
+  (* Consider all kinds of Bot and Any the same when simplifying types.
    *
    * The normalized type Ty.Bot may correspond to either the `Empty` type, not
    * lower-bounds or the internal types MatchingPropT or TypeDestructorTriggerT.
    * These types are not easy to normalize, but may still encode some constraint.
    * When using normalized types for codemods we might want to know if there might
    * be some constraints that we missing in the normalized type.
+   *
+   * Any can be due to an annotation or implicitly arising from inference.
    *)
-  simplify_empty: bool;
+  merge_bot_and_any_kinds: bool;
 }
 
 (* This is a global environment that should not change during normalization *)
@@ -190,7 +192,7 @@ let evaluate_type_destructors e = e.options.evaluate_type_destructors
 let flag_shadowed_type_params e = e.options.flag_shadowed_type_params
 let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
 let omit_targ_defaults e = e.options.omit_targ_defaults
-let simplify_empty e = e.options.simplify_empty
+let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
 
 let current_file e = e.genv.file
 

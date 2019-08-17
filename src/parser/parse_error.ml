@@ -13,13 +13,12 @@ type t =
   | EnumInvalidExplicitType of {enum_name: string; supplied_type: string option}
   | EnumInvalidMemberInitializer of
     {enum_name: string; explicit_type: Enum_common.explicit_type option; member_name: string}
+  | EnumInvalidMemberName of {enum_name: string; member_name: string}
   | EnumNumberMemberNotInitialized of {enum_name: string; member_name: string}
   | EnumStringMemberInconsistentlyInitailized of {enum_name: string}
-  | UnexpectedToken of string
+  | Unexpected of string
+  | UnexpectedWithExpected of string * string
   | UnexpectedTokenWithSuggestion of string * string
-  | UnexpectedNumber
-  | UnexpectedString
-  | UnexpectedIdentifier
   | UnexpectedReserved
   | UnexpectedReservedType
   | UnexpectedSuper
@@ -127,6 +126,7 @@ type t =
   | OptionalChainNew
   | OptionalChainTemplate
   | NullishCoalescingDisabled
+  | NullishCoalescingUnexpectedLogical of string
   | WhitespaceInPrivateName
 
 exception Error of (Loc.t * t) list
@@ -195,6 +195,15 @@ module PP =
             member_name
             enum_name
         end
+      | EnumInvalidMemberName {enum_name; member_name} ->
+        (* Based on the error condition, we will only receive member names starting with [a-z] *)
+        let suggestion = String.capitalize_ascii member_name in
+        Printf.sprintf
+          "Enum member names cannot start with lowercase 'a' through 'z'. Instead of using `%s`, \
+          consider using `%s`, in enum `%s`."
+          member_name
+          suggestion
+          enum_name
       | EnumNumberMemberNotInitialized {enum_name; member_name} ->
         Printf.sprintf
           "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
@@ -205,14 +214,14 @@ module PP =
           "String enum members need to consistently either all use initializers, \
           or use no initializers, in enum %s."
           enum_name
-      | UnexpectedToken token->  "Unexpected token "^token
+      | Unexpected unexpected ->
+        Printf.sprintf "Unexpected %s" unexpected
+      | UnexpectedWithExpected (unexpected, expected) ->
+        Printf.sprintf "Unexpected %s, expected %s" unexpected expected
       | UnexpectedTokenWithSuggestion (token, suggestion) ->
           Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?"
             token
             suggestion
-      | UnexpectedNumber ->  "Unexpected number"
-      | UnexpectedString ->  "Unexpected string"
-      | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
       | UnexpectedReservedType -> "Unexpected reserved type"
       | UnexpectedSuper -> "Unexpected `super` outside of a class method"
@@ -377,5 +386,10 @@ module PP =
         use the nullish coalescing operator (`??`). Nullish coalescing is an active early-stage \
         feature proposal which may change and is not enabled by default. To enable support in \
         the parser, use the `esproposal_nullish_coalescing` option."
+      | NullishCoalescingUnexpectedLogical operator ->
+          Printf.sprintf
+            "Unexpected token `%s`. Parentheses are required to combine `??` with `&&` or `||` \
+            expressions."
+            operator
       | WhitespaceInPrivateName -> "Unexpected whitespace between `#` and identifier"
   end

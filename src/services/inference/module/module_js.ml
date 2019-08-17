@@ -671,10 +671,7 @@ let checked_file ~reader ~audit f =
 let resolved_requires_of ~options ~reader node_modules_containers f require_loc =
   let resolved_modules, { paths; errors } =
     imported_modules ~options ~reader node_modules_containers f require_loc in
-  errors, { Module_heaps.
-    resolved_modules;
-    phantom_dependents = paths;
-  }
+  errors, Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents:paths
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_sig =
@@ -685,11 +682,15 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     resolved_requires_of ~options ~reader node_modules_containers file require_loc
   in
-  Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires;
-  List.fold_left (fun acc msg ->
+  let resolved_requires_changed =
+    Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires
+  in
+  let errorset = List.fold_left (fun acc msg ->
     Flow_error.ErrorSet.add (
       Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg
     ) acc) Flow_error.ErrorSet.empty errors
+  in
+  resolved_requires_changed, errorset
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.

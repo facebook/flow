@@ -186,10 +186,12 @@ end
 
 let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
 
+let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
+
 (* Generate an equivalent Flow_ast.Type *)
 let serialize ?(imports_react=false) loc ty =
-  (new Utils.patch_up_react_mapper ~imports_react ())#on_t loc ty
-  |> Utils.TySimplify.run
+  (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty
+  |> simplify
   |> Ty_serializer.type_
   |> function
   | Ok ast -> Utils.patch_up_type_ast ast
@@ -421,6 +423,7 @@ let insert_type ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_default
   let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
   (new mapper ~normalize ~ty_lookup ~strict ~ambiguity_strategy target)#program ast
 
+let mk_diff ast new_ast =Flow_ast_differ.(program Standard ast new_ast)
+
 let mk_patch ast new_ast file_content =
-  let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
-  Replacement_printer.mk_patch_ast_differ ast_diff ast file_content
+  Replacement_printer.mk_patch_ast_differ (mk_diff ast new_ast) ast file_content

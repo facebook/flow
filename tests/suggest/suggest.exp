@@ -240,15 +240,14 @@ spread.js
 // @flow
 
 declare opaque type O;
-class C { f: O; }
-class D { g: O; }
+type C = { f: O; }
+type D = { g: O; }
 
-(): {w: mixed, x?: O, y?: O, z: O} => { declare var x: {w: O, ...{ x: O, y: O }, z: O}; return x; };
+(): {w: O, x: O, y: O, z: O} => { declare var x: {w: O, ...{| x: O, y: O |}, z: O}; return x; };
 (): {|w: O, x: O, y: O, z: O|} => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
-(): {f?: O, o: O} => { declare var x: {...C, o: O}; return x; };
-(): {f?: O, o: mixed} => { declare var x: {o: O, ...C}; return x; };
+(): {f: O, o: O} => { declare var x: {...C, o: O}; return x; };
 (): {...C} & {...D} => { declare var x: {...C} & {...D}; return x; };
-<T: {}, S: { f: O}>(): T | S | {f?: mixed, o: O} => { declare var x: {...T, ...S, o: O}; return x; };
+<T: {}, S: { f: O}>(): T | S | {f: O, o: O} => { declare var x: {...T, ...S, o: O}; return x; };
 <T: {}>(): T | {o: O} => { declare var x: {...T, o: O}; return x; };
 string-literal.js
 // @flow
@@ -405,7 +404,7 @@ err-parse-0.js
 
 Error ----------------------------------------------------------------------------------------------- err-parse-0.js:3:4
 
-Unexpected identifier
+Unexpected identifier, expected the end of an expression statement (`;`)
 
    3| va r x = 1;   // InferError
          ^
@@ -416,7 +415,7 @@ err-parse-1.js
 
 Error ----------------------------------------------------------------------------------------------- err-parse-1.js:3:2
 
-Unexpected token @
+Unexpected token `@`
 
    3| @@@1`   +\   aaa
        ^

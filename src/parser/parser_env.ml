@@ -700,26 +700,27 @@ let error env e =
   let loc = Peek.loc env in
   error_at env (loc, e)
 
-let get_unexpected_error token =
-  let open Token in
-  match token with
-  | T_EOF -> Parse_error.UnexpectedEOS
-  | T_NUMBER _ -> Parse_error.UnexpectedNumber
-  | T_JSX_TEXT _
-  | T_STRING _ -> Parse_error.UnexpectedString
-  | T_IDENTIFIER _ -> Parse_error.UnexpectedIdentifier
-  | t when token_is_future_reserved t -> Parse_error.UnexpectedReserved
-  | t when token_is_strict_reserved t -> Parse_error.StrictReservedWord
-  | _ -> Parse_error.UnexpectedToken (value_of_token token)
+let get_unexpected_error ?expected token =
+  if token_is_future_reserved token then
+    Parse_error.UnexpectedReserved
+  else if token_is_strict_reserved token then
+    Parse_error.StrictReservedWord
+  else
+    let unexpected = Token.explanation_of_token token in
+    match expected with
+    | Some expected_msg ->
+      Parse_error.UnexpectedWithExpected (unexpected, expected_msg)
+    | None ->
+      Parse_error.Unexpected unexpected
 
-let error_unexpected env =
+let error_unexpected ?expected env =
   (* So normally we consume the lookahead lex result when Eat.token calls
    * Parser_env.advance, which will add any lexing errors to our list of errors.
    * However, raising an unexpected error for a lookahead is kind of like
    * consuming that token, so we should process any lexing errors before
    * complaining about the unexpected token *)
   error_list env (Peek.errors env);
-  error env (get_unexpected_error (Peek.token env))
+  error env (get_unexpected_error ?expected (Peek.token env))
 
 let error_on_decorators env = List.iter
   (fun decorator -> error_at env ((fst decorator), Parse_error.UnsupportedDecorator))
@@ -788,23 +789,29 @@ module Eat = struct
   * semicolons are inserted. First, if we reach the EOF. Second, if the next
   * token is } or is separated by a LineTerminator.
   *)
-  let semicolon env =
+  let semicolon ?(expected="the token `;`") env =
     if not (Peek.is_implicit_semicolon env)
     then
       if Peek.token env = Token.T_SEMICOLON
       then token env
-      else error_unexpected env
+      else error_unexpected ~expected env
 end
 
 module Expect = struct
   let token env t =
-    if Peek.token env <> t then error_unexpected env;
+    if Peek.token env <> t then begin
+      let expected = Token.explanation_of_token ~use_article:true t in
+      error_unexpected ~expected env
+    end;
     Eat.token env
 
   let identifier env name =
-    begin match Peek.token env with
+    let t = Peek.token env in
+    begin match t with
     | Token.T_IDENTIFIER { raw; _ } when raw = name -> ()
-    | _ -> error_unexpected env
+    | _ ->
+      let expected = Printf.sprintf "the identifier `%s`" name in
+      error_unexpected ~expected env
     end;
     Eat.token env
 

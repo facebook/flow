@@ -8,7 +8,13 @@
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
+  hash: Xx.hash;
 }
+
+val mk_resolved_requires:
+  resolved_modules: Modulename.t SMap.t ->
+  phantom_dependents: SSet.t ->
+  resolved_requires
 
 type info = {
   module_name: Modulename.t;
@@ -54,7 +60,7 @@ end
 module Resolved_requires_mutator : sig
   type t
   val create: Transaction.t -> Utils_js.FilenameSet.t -> t
-  val add_resolved_requires: t -> File_key.t -> resolved_requires -> unit
+  val add_resolved_requires: t -> File_key.t -> resolved_requires -> bool
 end
 
 module Introduce_files_mutator : sig

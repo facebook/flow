@@ -326,6 +326,7 @@ and Statement : sig
   module Break : sig
     type 'M t = {
       label: ('M, 'M) Identifier.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -1244,6 +1245,7 @@ and Pattern : sig
     and ('M, 'T) t = {
       elements: ('M, 'T) element option list;
       annot: ('M, 'T) Type.annotation_or_hint;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

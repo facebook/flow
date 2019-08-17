@@ -260,9 +260,14 @@ let serialize_graph graph =
     (f, dep_fs)::acc
   ) graph []
 
-let output_dependencies ~env root strip_root outfile =
+let output_dependencies ~env root strip_root types_only outfile =
   let strip_root = if strip_root then Files.relative_path root else fun x -> x in
-  let graph = serialize_graph (Dependency_info.all_dependency_graph env.ServerEnv.dependency_info) in
+  let dep_graph =
+    if types_only
+    then Dependency_info.dependency_graph
+    else Dependency_info.all_dependency_graph
+  in
+  let graph = serialize_graph (dep_graph env.ServerEnv.dependency_info) in
   Hh_logger.info "printing dependency graph to %s\n" outfile;
   let%lwt out = Lwt_io.open_file ~mode:Lwt_io.Output outfile in
   let%lwt () = LwtUtils.output_graph out strip_root graph in
@@ -474,8 +479,8 @@ let handle_get_imports ~options ~reader ~module_names ~profiling:_ ~env:_ =
   Lwt.return (ServerProt.Response.GET_IMPORTS response, None)
 
 
-let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
-  let%lwt response = output_dependencies ~env root strip_root outfile in
+let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~env =
+  let%lwt response = output_dependencies ~env root strip_root types_only outfile in
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
 let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
@@ -524,6 +529,21 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   let%lwt result = save_state ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
+let find_code_actions ~options ~env ~profiling ~params ~client =
+  let open CodeActionRequest in
+  let open Flow_lsp_conversions in
+  let {textDocument; range; _} = params in
+  (* The current ide-lsp-server/flow-lsp-client doesn't necisarrily get restart for every project.
+   * Checking the option here ensures the the flow server doesn't do too much work for code
+   * action requests on projects where code actions are not enabled in the `.flowconfig`.
+   *)
+  if not options.Options.opt_lsp_code_actions then Lwt.return (Ok []) else
+    let (file_key, file, loc) = lsp_textDocument_and_range_to_flow textDocument range client in
+    match File_input.content_of_file_input file with
+    | Error msg -> Lwt.return (Error msg)
+    | Ok file_contents ->
+      Type_info_service.code_actions_at_loc ~options ~env ~profiling
+              ~params ~file_key ~file_contents ~loc
 
 type command_handler =
 (* A command can be handled immediately if it is super duper fast and doesn't require the env.
@@ -618,9 +638,9 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.GET_IMPORTS { module_names; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_get_imports ~options ~reader ~module_names)
-  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; } ->
+  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; types_only; } ->
     (* The user preference is to make this wait for up-to-date data *)
-    Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~outfile)
+    Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~types_only ~outfile)
   | ServerProt.Request.INFER_TYPE {
       input; line; char; verbose; expand_aliases; omit_targ_defaults; wait_for_recheck;
     } ->
@@ -921,6 +941,7 @@ type 'a persistent_handling_result =
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
   let response = ResponseMessage (id, ErrorResult (e, "")) in
+  let metadata = with_error metadata ~reason:"cancelled" in
   Lwt.return (LspResponse (Ok (ret, Some response, metadata)))
 
 let handle_persistent_subscribe ~reader ~options ~client ~profiling:_ ~env =
@@ -1076,6 +1097,18 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
       Lwt.return (LspResponse (Error ((), with_error metadata ~reason)))
   end
 
+let handle_persistent_code_action_request ~options ~id ~params ~metadata
+    ~client ~profiling ~env =
+  let%lwt result = find_code_actions ~options  ~profiling ~env ~client ~params in
+  let response =
+    match result with
+    | Ok code_actions ->
+      Ok ((), Some (ResponseMessage (id, (CodeActionResult code_actions))), metadata)
+    | Error reason ->
+      Error ((), with_error metadata ~reason)
+  in
+  Lwt.return (LspResponse response)
+
 let handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let is_snippet_supported = Persistent_connection.client_snippet_support client in
   let open Completion in
@@ -1182,9 +1215,9 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       let accum_coverage (covered, total) (_loc, cov) =
         let covered =
           match cov with
-          | Coverage.Tainted | Coverage.Untainted -> covered + 1
-          | Coverage.Uncovered
-          | Coverage.Empty -> covered
+          | Coverage_response.Tainted | Coverage_response.Untainted -> covered + 1
+          | Coverage_response.Uncovered
+          | Coverage_response.Empty -> covered
         in
         covered, total + 1
       in
@@ -1193,9 +1226,9 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       (* Figure out each individual uncovered span *)
       let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, cov) ->
         match cov with
-        | Coverage.Tainted | Coverage.Untainted -> None
-        | Coverage.Uncovered
-        | Coverage.Empty -> Some loc
+        | Coverage_response.Tainted | Coverage_response.Untainted -> None
+        | Coverage_response.Uncovered
+        | Coverage_response.Empty -> Some loc
       ) in
       (* Imagine a tree of uncovered spans based on range inclusion. *)
       (* This sorted list is a pre-order flattening of that tree. *)
@@ -1493,7 +1526,10 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     mk_parallelizable_persistent ~options (
       handle_persistent_infer_type ~options ~id ~params ~loc ~metadata
     )
-
+  | LspToServer (RequestMessage (id, CodeActionRequest params), metadata) ->
+    mk_parallelizable_persistent ~options (
+      handle_persistent_code_action_request ~options ~id ~params ~metadata
+    )
   | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let loc = params.Completion.loc in

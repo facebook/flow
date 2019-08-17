@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module Flow = Flow_js
 
 open Reason
+open Utils_js
 
 include Class_sig_intf
 
@@ -59,6 +60,7 @@ type t = {
 
 and super =
   | Interface of {
+      inline: bool; (* Anonymous interface, can appear anywhere inside a type *)
       extends: typeapp list;
       callable: bool;
     }
@@ -98,6 +100,11 @@ let structural x =
   | Interface _ -> true
   | Class _ -> false
 
+let inst_kind x =
+  match x.super with
+  | Interface { inline; _ } -> Type.InterfaceKind { inline }
+  | Class _ -> Type.ClassKind
+
 let map_sig ~static f s =
   if static
   then {s with static = f s.static}
@@ -110,6 +117,12 @@ let add_private_field name loc polarity field = map_sig (fun s -> {
   s with
   private_fields = SMap.add name (Some loc, polarity, field) s.private_fields;
 })
+
+let public_fields_of_signature ~static s =
+  (if static then s.static else s.instance).fields
+
+let private_fields_of_signature ~static s =
+  (if static then s.static else s.instance).private_fields
 
 let add_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
   {s with constructor = [loc, F.to_ctor_sig fsig, set_asts, set_type]}
@@ -136,10 +149,8 @@ let add_field ~static name loc polarity field x =
   add_field' ~static name (Some loc, polarity, field) x
 
 let add_indexer ~static polarity ~key ~value x =
-  let kloc, k = key in
-  let vloc, v = value in
-  x |> add_field ~static "$key" kloc polarity (Annot k)
-    |> add_field ~static "$value" vloc polarity (Annot v)
+  x |> add_field' ~static "$key" (None, Polarity.Neutral, Annot key)
+    |> add_field' ~static "$value" (None, polarity, Annot value)
 
 let add_name_field x =
   let r = replace_reason (fun desc -> RNameProperty desc) x.instance.reason in
@@ -250,8 +261,9 @@ let subst_extends cx map = function
   | Implicit {null=_} as extends -> extends
 
 let subst_super cx map = function
-  | Interface { extends; callable } ->
+  | Interface { inline; extends; callable } ->
     Interface {
+      inline;
       extends = Core_list.map ~f:(subst_typeapp cx map) extends;
       callable;
     }
@@ -282,6 +294,8 @@ let to_field (loc, polarity, field) =
   | Infer (fsig, _) -> F.gettertype fsig
   in
   Type.Field (loc, t, polarity)
+
+let to_prop_map cx = SMap.map to_field %> Context.generate_property_map cx
 
 let elements cx ?constructor s =
   let methods =
@@ -322,7 +336,8 @@ let elements cx ?constructor s =
     SMap.map
       (fun (loc, t, _, set_type) -> loc, F.settertype t, set_type)
       s.setters in
-(* Register getters and setters with the typed AST *)
+
+  (* Register getters and setters with the typed AST *)
   let register_accessors = SMap.iter (fun _ (loc, t, set_type) ->
     Option.iter ~f:(fun _ -> set_type t) loc
   ) in
@@ -429,13 +444,13 @@ let insttype cx ~initialized_static_fields s =
   { Type.
     class_id = s.id;
     type_args;
-    own_props = Context.make_property_map cx fields;
-    proto_props = Context.make_property_map cx methods;
+    own_props = Context.generate_property_map cx fields;
+    proto_props = Context.generate_property_map cx methods;
     inst_call_t = Option.map call ~f:(Context.make_call_prop cx);
     initialized_fields;
     initialized_static_fields;
     has_unknown_react_mixins = false;
-    structural = structural s;
+    inst_kind = inst_kind s;
   }
 
 let add_this self cx reason tparams tparams_map =
@@ -502,7 +517,7 @@ let supertype cx tparams_with_this x =
   let super_reason = replace_reason (fun d -> RSuperOf d) x.instance.reason in
   let open Type in
   match x.super with
-  | Interface {extends; callable} ->
+  | Interface {inline = _; extends; callable} ->
     let extends = Core_list.map ~f:(function
     | loc, c, None ->
       let reason = annot_reason (repos_reason loc (reason_of_t c)) in
@@ -642,7 +657,7 @@ let classtype cx ?(check_polarity=true) x =
   poly_type_of_tparams (Context.make_nominal cx) tparams t
 
 (* Processes the bodies of instance and static class members. *)
-let toplevels cx ~decls ~stmts ~expr x =
+let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
   Env.in_lex_scope cx (fun () ->
     let new_entry ?(state=Scope.State.Initialized) t =
       Scope.Entry.new_let ~loc:(Type.loc_of_t t) ~state t
@@ -690,9 +705,7 @@ let toplevels cx ~decls ~stmts ~expr x =
     in
 
     (* Bind private fields to the environment *)
-    let to_prop_map = fun x -> Context.make_property_map cx (SMap.map to_field x) in
-    Env.bind_class cx x.id (to_prop_map x.instance.private_fields)
-    (to_prop_map x.static.private_fields);
+    Env.bind_class cx x.id private_property_map (to_prop_map cx x.static.private_fields);
 
     x |> with_sig ~static:true (fun s ->
       (* process static methods and fields *)

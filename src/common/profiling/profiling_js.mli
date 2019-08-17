@@ -25,9 +25,9 @@ val with_timer_lwt:
   'a Lwt.t
 
 val legacy_sample_memory: metric:string -> value:float -> running -> unit
-val sample_memory: group:string -> metric:string -> value:float -> running -> unit
+val sample_memory: ?group:string -> metric:string -> value:float -> running -> unit
 val add_memory:
-  group: string ->
+  ?group: string ->
   metric:string ->
   start:float ->
   delta:float ->

@@ -65,7 +65,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
     evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults;
-    simplify_empty = true;
+    merge_bot_and_any_kinds = true;
   } in
   match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
@@ -83,7 +83,7 @@ let dump_types ~printer cx file_sig typed_ast =
     evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults = false;
-    simplify_empty = true;
+    merge_bot_and_any_kinds = true;
   } in
   let file = Context.file cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
@@ -103,7 +103,7 @@ let covered_types ~should_check ~check_trust cx tast =
       fun x -> x
     else
       function
-      | Coverage.Tainted -> Coverage.Untainted
+      | Coverage_response.Tainted -> Coverage_response.Untainted
       | x -> x
   in
   let compute_cov =
@@ -112,7 +112,7 @@ let covered_types ~should_check ~check_trust cx tast =
       Coverage.result_of_coverage %>
       check_trust
     else
-      fun _ -> Coverage.Empty
+      fun _ -> Coverage_response.Empty
   in
   let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t)::acc in
   coverage_fold_tast ~f:step ~init:[] tast |>
@@ -121,13 +121,14 @@ let covered_types ~should_check ~check_trust cx tast =
 let component_coverage:
   full_cx:Context.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program list ->
-  Coverage.file_coverage list
+  Coverage_response.file_coverage list
   =
+  let open Coverage_response in
   let open Coverage in
   let coverage_computer = new visitor in
   let step cx _ t acc =
     let coverage = coverage_computer#type_ cx t in
-    match Coverage.result_of_coverage coverage with
+    match result_of_coverage coverage with
     | Uncovered -> { acc with uncovered = acc.uncovered + 1 }
     | Untainted -> { acc with untainted = acc.untainted + 1 }
     | Tainted   -> { acc with tainted   = acc.tainted   + 1 }
@@ -148,7 +149,7 @@ let suggest_types cx file_sig typed_ast loc =
     evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults = false;
-    simplify_empty = true;
+    merge_bot_and_any_kinds = true;
   } in
   let file = Context.file cx in
   let aLoc = ALoc.of_loc loc in
@@ -168,7 +169,7 @@ let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~
     (* Insert-Types filters out literals at the users request.
      * Setting this flag preserves literal information so the we later
      * have the option of presenting it to the user in specialized types. *)
-    preserve_inferred_literal_types = false;
+    preserve_inferred_literal_types = true;
     (* Utility types won't are not serialized so it may be worth evaluating them away
      * if we find them in the resulting Ty.t. The trade off is that types might get
      * larger. *)
@@ -177,6 +178,6 @@ let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~
        a custom comparison operation *)
     optimize_types = false;
     omit_targ_defaults;
-    simplify_empty = true; }
+    merge_bot_and_any_kinds = true; }
   in
   type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme

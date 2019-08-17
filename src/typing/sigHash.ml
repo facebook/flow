@@ -52,7 +52,9 @@ type hash =
   | ObjProtoH
   | MatchingPropH
   | NullProtoH
-  | ArrH
+  | ArrATH
+  | ArrTupleATH
+  | ArrROArrayATH
   | ClassH
   | OptionalH
   | EvalH
@@ -182,7 +184,9 @@ let hash_of_def_ctor = Type.(function
   | PolyT _ -> failwith "undefined hash of PolyT"
   | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
 
-  | ArrT _ -> ArrH
+  | ArrT (ArrayAT _) -> ArrATH
+  | ArrT (TupleAT _) -> ArrTupleATH
+  | ArrT (ROArrayAT _) -> ArrROArrayATH
   | BoolT _ -> BoolH
   | CharSetT _ -> CharSetH
   | ClassT _ -> ClassH

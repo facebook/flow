@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
@@ -26,11 +26,16 @@ module Types = struct
     | Drop_changes
     | Scm_aware
 
+  type timeout =
+  | No_timeout
+  | Default_timeout
+  | Explicit_timeout of float
+
   type init_settings = {
     (** None for query mode, otherwise specify subscriptions mode. *)
     subscribe_mode: subscribe_mode option;
-    (** Seconds used for init timeout - will be reused for reinitialization. *)
-    init_timeout: int;
+    (** Seconds used for init timeout - will be reused for reinitialization. None -> no timeout *)
+    init_timeout: timeout;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     debug_logging: bool;
@@ -97,12 +102,12 @@ module type WATCHMAN_PROCESS = sig
 
   val list_fold_values: 'a list -> init:'b -> f:('b -> 'a -> 'b result) -> 'b result
 
-  val open_connection: timeout:float -> conn result
+  val open_connection: timeout:Types.timeout -> conn result
   val request:
-    debug_logging:bool -> ?conn:conn -> ?timeout:float -> Hh_json.json -> Hh_json.json result
+    debug_logging:bool -> ?conn:conn -> ?timeout:Types.timeout -> Hh_json.json -> Hh_json.json result
   val send_request_and_do_not_wait_for_response:
     debug_logging:bool -> conn:conn -> Hh_json.json -> unit result
-  val blocking_read: debug_logging:bool -> ?timeout:float -> conn:conn -> Hh_json.json option result
+  val blocking_read: debug_logging:bool -> ?timeout:Types.timeout -> conn:conn -> Hh_json.json option result
   val close_connection: conn -> unit result
 
   module Testing: sig
@@ -122,9 +127,9 @@ module type S = sig
 
   val get_all_files: env -> string list result
 
-  val get_changes_since_mergebase: ?timeout:float -> env -> string list result
+  val get_changes_since_mergebase: ?timeout:timeout -> env -> string list result
 
-  val get_mergebase: ?timeout:float -> env -> string result
+  val get_mergebase: ?timeout:timeout -> env -> string result
 
   val get_changes: ?deadline:float ->
     watchman_instance -> (watchman_instance * changes) result

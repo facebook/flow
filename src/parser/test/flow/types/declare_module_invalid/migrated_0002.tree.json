@@ -2,19 +2,19 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `.`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Unexpected token {"
+      "message":"Unexpected token `{`, expected the identifier `exports`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":38}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":40}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`"
     }
   ],
   "type":"Program",

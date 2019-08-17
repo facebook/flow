@@ -1493,7 +1493,7 @@ References:
 
 Error ---------------------------------------------------------------------------- invalid_package_file/package.json:1:1
 
-Unexpected end of input
+Unexpected end of input, expected a valid JSON value
 
    1|
       
@@ -1501,7 +1501,7 @@ Unexpected end of input
 
 Error ---------------------------------------------------------------------------------- json_file/json_invalid.json:1:1
 
-Unexpected token :
+Unexpected token `:`, expected a valid JSON value
 
    1| :derp
       ^

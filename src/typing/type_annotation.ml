@@ -1194,7 +1194,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         | CallProperty (_, { CallProperty.static; _ }) -> not static
         | _ -> false
       ) properties in
-      Class_type_sig.Interface { extends; callable }
+      Class_type_sig.Interface { inline = true; extends; callable }
     in
     Class_type_sig.empty id reason None tparams_map super, extend_asts
   in
@@ -1329,8 +1329,6 @@ and convert_object =
         | [] -> empty_slice, []
         | x::xs -> x, xs
 
-    let elements acc = Nel.rev (elements_rev acc)
-
     let proto = function
       | {proto = Some t; _} -> t
       | {calls = _::_; _} -> fun_proto_t
@@ -1339,8 +1337,11 @@ and convert_object =
     let calls_rev acc = acc.calls
   end in
 
-  let mk_object cx loc ~exact call dict pmap proto =
-    let pmap = Context.make_property_map cx pmap in
+  let mk_object cx loc ~src_loc ~exact call dict pmap proto =
+    let pmap =
+      if src_loc && Env.peek_scope () |> Scope.is_toplevel
+      then Context.make_source_property_map cx pmap loc
+      else Context.generate_property_map cx pmap in
     let call = Option.map ~f:(Context.make_call_prop cx) call in
     let flags = {sealed = Sealed; exact; frozen = false} in
     DefT (mk_reason RObjectType loc, infer_trust cx,
@@ -1348,7 +1349,7 @@ and convert_object =
   in
 
   let mk_object_annot cx loc ~exact call dict pmap proto =
-    let t = mk_object cx loc ~exact call dict pmap proto in
+    let t = mk_object cx loc ~src_loc:true ~exact call dict pmap proto in
     if exact
     then ExactT (mk_reason (RExactType RObjectType) loc, t)
     else t
@@ -1546,7 +1547,7 @@ and convert_object =
     in
     let proto = Acc.proto acc in
     let calls_rev = Acc.calls_rev acc in
-    let t = match Acc.elements acc with
+    let t = match Acc.elements_rev acc with
     | Acc.Slice {dict; pmap}, [] ->
       let ts = List.rev_map (fun call ->
         mk_object_annot cx loc ~exact (Some call) dict pmap proto
@@ -1562,12 +1563,29 @@ and convert_object =
       let open Type.Object.Spread in
       let reason = mk_reason RObjectType loc in
       let target = Annot {make_exact = exact} in
-      let t, ts = Nel.rev_map (function
-        | Acc.Spread t -> t
-        | Acc.Slice {dict; pmap} ->
-          mk_object cx loc ~exact:true None dict pmap obj_proto_t
-      ) os in
-      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
+      let t, ts, head_slice =
+        let t, ts  = os in
+        (* We don't need to do this recursively because every pair of slices must be separated
+         * by a spread *)
+        match t, ts with
+        | Acc.Spread t, ts ->
+          let ts = List.map (function
+            | Acc.Spread t -> Type t
+            | Acc.Slice {dict; pmap} ->
+              Slice ({Type.Object.Spread.reason; prop_map = pmap; dict})
+          ) ts in
+          t, ts, None
+        | Acc.Slice {dict; pmap = prop_map}, (Acc.Spread t)::ts ->
+          let head_slice = {Type.Object.Spread.reason = reason; prop_map; dict} in
+          let ts = List.map (function
+            | Acc.Spread t -> Type t
+            | Acc.Slice {dict; pmap} ->
+              Slice ({Type.Object.Spread.reason; prop_map = pmap; dict})
+          ) ts in
+          t, ts, Some head_slice
+        | _ -> failwith "Invariant Violation: spread list has two slices in a row"
+      in
+      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts, head_slice)), mk_id ())
     in
     t, List.rev rev_prop_asts
 
@@ -1779,8 +1797,8 @@ and add_interface_properties cx tparams_map properties s =
       x, (Tast_utils.error_mapper#object_type_property indexer_prop)::rev_prop_asts
     | Indexer (loc, indexer) ->
       let { Indexer.key; value; static; variance; _ } = indexer in
-      let k, _ as key = convert cx tparams_map key in
-      let v, _ as value = convert cx tparams_map value in
+      let (_, k), _ as key = convert cx tparams_map key in
+      let (_, v), _ as value = convert cx tparams_map value in
       let polarity = polarity variance in
       add_indexer ~static polarity ~key:k ~value:v x,
       Indexer (loc, { indexer with Indexer.key; value; })::rev_prop_asts
@@ -1911,7 +1929,6 @@ let mk_interface_sig cx reason decl =
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx tparams in
 
-
   let iface_sig, extends_ast =
     let id = id_loc in
     let extends, extends_ast =
@@ -1923,7 +1940,7 @@ let mk_interface_sig cx reason decl =
         | CallProperty (_, { CallProperty.static; _ }) -> not static
         | _ -> false
       ) properties in
-      Interface { extends; callable }
+      Interface { inline = false; extends; callable }
     in
     empty id reason tparams tparams_map super, extends_ast
   in

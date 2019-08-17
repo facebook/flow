@@ -52,6 +52,7 @@ module Entry = struct
     | ConstImportBinding
     | ConstParamBinding
     | ConstVarBinding
+    | EnumNameBinding
 
   and let_binding_kind =
     | LetVarBinding
@@ -70,6 +71,7 @@ module Entry = struct
   | Const ConstImportBinding -> "import"
   | Const ConstParamBinding -> "const param"
   | Const ConstVarBinding -> "const"
+  | Const EnumNameBinding -> "enum"
   | Let LetVarBinding -> "let"
   | Let ConstlikeLetVarBinding -> "let"
   | Let ClassNameBinding -> "class"
@@ -407,4 +409,9 @@ let is_lex scope =
 let is_global scope =
   match scope.kind with
   | VarScope Global -> true
+  | _ -> false
+
+let is_toplevel scope =
+  match scope.kind with
+  | VarScope Global | VarScope Module -> true
   | _ -> false

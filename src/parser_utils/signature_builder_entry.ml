@@ -40,7 +40,7 @@ let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
         | RestProperty (_, { RestProperty.argument = p }) ->
           acc @ (pattern loc p)
       ) [] properties
-    | _, Array { Array.elements; annot = _ } ->
+    | _, Array { Array.elements; annot = _; comments = _ } ->
       let open Array in
       List.fold_left (fun acc -> function
         | None -> acc

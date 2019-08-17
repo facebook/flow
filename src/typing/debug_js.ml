@@ -46,16 +46,17 @@ let string_of_polarity = function
   | Polarity.Neutral -> "Neutral"
   | Polarity.Positive -> "Positive"
 
-let string_of_enum = function
-  | Enum.Str x -> spf "string %s" x
-  | Enum.Num (_,x) -> spf "number %s" x
-  | Enum.Bool x -> spf "boolean %b" x
-  | Enum.Null -> "null"
-  | Enum.Void -> "void"
+let string_of_union_enum = function
+  | UnionEnum.Str x -> spf "string %s" x
+  | UnionEnum.Num (_,x) -> spf "number %s" x
+  | UnionEnum.Bool x -> spf "boolean %b" x
+  | UnionEnum.Null -> "null"
+  | UnionEnum.Void -> "void"
 
 let string_of_sentinel = function
-  | Enum.One enum -> string_of_enum enum
-  | Enum.Many enums -> ListUtils.to_string " | " string_of_enum @@ EnumSet.elements enums
+  | UnionEnum.One enum -> string_of_union_enum enum
+  | UnionEnum.Many enums ->
+    ListUtils.to_string " | " string_of_union_enum @@ UnionEnumSet.elements enums
 
 let string_of_selector = function
   | Elem _ -> "Elem _" (* TODO print info about the key *)
@@ -986,18 +987,18 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
 ))
 
 and _json_of_enum _json_cx = function
-  | Enum.Str s -> Hh_json.JSON_String s
-  | Enum.Num (_, raw) -> Hh_json.JSON_String raw
-  | Enum.Bool b -> Hh_json.JSON_Bool b
-  | Enum.Null -> Hh_json.JSON_Null
-  | Enum.Void -> Hh_json.JSON_Null (* hmm, undefined doesn't exist in JSON *)
+  | UnionEnum.Str s -> Hh_json.JSON_String s
+  | UnionEnum.Num (_, raw) -> Hh_json.JSON_String raw
+  | UnionEnum.Bool b -> Hh_json.JSON_Bool b
+  | UnionEnum.Null -> Hh_json.JSON_Null
+  | UnionEnum.Void -> Hh_json.JSON_Null (* hmm, undefined doesn't exist in JSON *)
 
 and json_of_sentinel json_cx = check_depth json_of_sentinel_impl json_cx
 and json_of_sentinel_impl json_cx = function
-  | Enum.One enum -> _json_of_enum json_cx enum
-  | Enum.Many enums ->
+  | UnionEnum.One enum -> _json_of_enum json_cx enum
+  | UnionEnum.Many enums ->
     Hh_json.JSON_Array (
-      Core_list.map ~f:(_json_of_enum json_cx) @@ EnumSet.elements enums
+      Core_list.map ~f:(_json_of_enum json_cx) @@ UnionEnumSet.elements enums
     )
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
@@ -1173,6 +1174,12 @@ and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Hh_json.(
   let own_props = Context.find_props json_cx.cx insttype.own_props in
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
+  let inst_kind = match insttype.inst_kind with
+    | ClassKind -> JSON_String "class"
+    | InterfaceKind { inline } -> JSON_Object [
+        "inline", JSON_Bool inline;
+      ]
+  in
   JSON_Object [
     "classId", json_of_aloc ~offset_table:None insttype.class_id;
     "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
@@ -1185,7 +1192,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
     "fieldTypes", json_of_pmap json_cx own_props;
     "methodTypes", json_of_pmap json_cx proto_props;
     "mixins", JSON_Bool insttype.has_unknown_react_mixins;
-    "structural", JSON_Bool insttype.structural;
+    "inst_kind", inst_kind;
   ]
 )
 
@@ -1225,7 +1232,7 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ReadOnlyType -> JSON_Object [
       "readOnly", JSON_Bool true
     ]
-  | SpreadType (target, ts) ->
+  | SpreadType (target, ts, head_slice) ->
     let open Object.Spread in
     JSON_Object (
       (match target with
@@ -1237,7 +1244,10 @@ and json_of_destructor_impl json_cx = Hh_json.(function
             "makeExact", JSON_Bool make_exact;
           ]
       ) @ [
-        "spread", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts);
+        "spread", JSON_Array (Core_list.map ~f:(json_of_spread_operand json_cx) ts);
+        "head_slice", match head_slice with
+          | None -> JSON_Null
+          | Some head_slice -> json_of_spread_operand_slice json_cx head_slice;
       ]
     )
   | RestType (merge_mode, t) ->
@@ -1268,6 +1278,26 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ReactConfigType t -> JSON_Object [
       "reactConfig", JSON_Bool true;
       "default_props", _json_of_t json_cx t
+  ]
+)
+
+and json_of_spread_operand_slice json_cx {Object.Spread.reason; prop_map; dict}= Hh_json.(
+  JSON_Object[
+    "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason;
+    "props", JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p)::acc) prop_map []);
+    "dict", (match dict with
+      | Some dict ->json_of_dicttype json_cx dict
+      | None -> JSON_Null);
+  ]
+)
+and json_of_spread_operand json_cx = Hh_json.(function
+  | Object.Spread.Slice operand_slice -> JSON_Object [
+    "kind", JSON_String "slice";
+    "slice", json_of_spread_operand_slice json_cx operand_slice;
+  ]
+  | Object.Spread.Type t -> JSON_Object [
+    "kind", JSON_String "type";
+    "type", _json_of_t json_cx t;
   ]
 )
 
@@ -2019,7 +2049,7 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
   in
 
-  let slice (_, props, dict, {exact; _}) =
+  let slice {Object.reason=_; props; dict; flags = {exact; _}} =
     let xs = match dict with
     | Some {dict_polarity=p; _} -> [(Polarity.sigil p)^"[]"]
     | None -> []
@@ -2032,6 +2062,17 @@ and dump_use_t_ (depth, tvars) cx t =
     if exact
     then spf "{|%s|}" xs
     else spf "{%s}" xs
+  in
+
+  let operand_slice reason prop_map dict =
+    let props = SMap.fold (fun k p acc ->
+      match Type.Property.read_t p, Type.Property.write_t p with
+      | Some t, _
+      | _, Some t -> SMap.add k (t, true) acc
+      | _ -> acc
+    ) prop_map SMap.empty in
+    let flags = {exact = true; sealed = Sealed; frozen = false} in
+    slice {Object.reason = reason; props; dict; flags}
   in
 
   let object_kit =
@@ -2056,6 +2097,10 @@ and dump_use_t_ (depth, tvars) cx t =
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
+    let acc_element = function
+    | Spread.InlineSlice {Spread.reason; prop_map; dict} -> operand_slice reason prop_map dict
+    | Spread.ResolvedSlice xs -> resolved xs
+    in
     let spread target state =
       let open Object.Spread in
       let target =
@@ -2063,11 +2108,14 @@ and dump_use_t_ (depth, tvars) cx t =
           | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
           | Value -> "Value")
       in
+      let spread_operand = function
+        | Slice {Spread.reason; prop_map; dict} -> operand_slice reason prop_map dict
+        | Type t -> kid t in
       let state =
         let {todo_rev; acc} = state in
         spf "{todo_rev=[%s]; acc=[%s]}"
-          (String.concat "; " (Core_list.map ~f:kid todo_rev))
-          (String.concat "; " (Core_list.map ~f:resolved acc))
+          (String.concat "; " (Core_list.map ~f:spread_operand todo_rev))
+          (String.concat "; " (Core_list.map ~f:acc_element acc))
       in
       spf "Spread (%s, %s)" target state
     in
@@ -2750,10 +2798,12 @@ let dump_error_message =
     | EUninitializedInstanceProperty (loc, err) ->
         spf "EUninitializedInstanceProperty (%s, %s)"
           (string_of_aloc loc)
-          (match err with
-          | PropertyNotDefinitivelyInitialized -> "PropertyNotDefinitivelyInitialized"
+          Lints.(match err with
+          | PropertyNotDefinitelyInitialized -> "PropertyNotDefinitelyInitialized"
           | ReadFromUninitializedProperty -> "ReadFromUninitializedProperty"
           | MethodCallBeforeEverythingInitialized -> "MethodCallBeforeEverythingInitialized"
+          | PropertyFunctionCallBeforeEverythingInitialized ->
+            "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
     | EExperimentalExportStarAs loc ->
         spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
@@ -2919,6 +2969,25 @@ let dump_error_message =
       spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
     | ENonArraySpread reason ->
         spf "ENonArraySpread (%s)" (dump_reason cx reason)
+    | ECannotSpreadInterface {spread_reason; interface_reason} ->
+      spf "ECannotSpreadInterface (%s) (%s)" (dump_reason cx spread_reason)
+        (dump_reason cx interface_reason)
+    | ECannotSpreadIndexerOnRight {spread_reason; object_reason; key_reason} ->
+      spf "ECannotSpreadIndexerOnRight (%s) (%s) (%s)" (dump_reason cx spread_reason)
+        (dump_reason cx object_reason)
+        (dump_reason cx key_reason)
+    | EUnableToSpread {spread_reason; object1_reason; object2_reason; propname; error_kind=_} ->
+      spf "EUnableToSpread (%s) (%s) (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx object1_reason)
+        (dump_reason cx object2_reason)
+        propname
+    | EInexactMayOverwriteIndexer {spread_reason; key_reason; value_reason; object2_reason} ->
+        spf "EInexactMayOverwriteIndexer (%s) (%s) (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx key_reason)
+        (dump_reason cx value_reason)
+        (dump_reason cx object2_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace

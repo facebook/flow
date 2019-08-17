@@ -59,17 +59,17 @@ let handle_error ~json ~pretty err =
 
 let accum_coverage (untainted, tainted, empty, total) (_loc, cov) =
   match cov with
-  | Coverage.Uncovered -> (untainted, tainted, empty, total + 1)
-  | Coverage.Empty     -> (untainted, tainted, empty + 1, total + 1)
-  | Coverage.Untainted -> (untainted + 1, tainted, empty, total + 1)
-  | Coverage.Tainted   -> (untainted, tainted + 1, empty, total + 1)
+  | Coverage_response.Uncovered -> (untainted, tainted, empty, total + 1)
+  | Coverage_response.Empty     -> (untainted, tainted, empty + 1, total + 1)
+  | Coverage_response.Untainted -> (untainted + 1, tainted, empty, total + 1)
+  | Coverage_response.Tainted   -> (untainted, tainted + 1, empty, total + 1)
 
 let accum_coverage_locs (untainted, tainted, empty, uncovered) (loc, cov) =
   match cov with
-  | Coverage.Uncovered -> (untainted, tainted, empty, loc::uncovered)
-  | Coverage.Empty     -> (untainted, tainted, loc::empty, loc::uncovered)
-  | Coverage.Untainted -> (loc::untainted, tainted, empty, uncovered)
-  | Coverage.Tainted   -> (untainted, loc::tainted, empty, uncovered)
+  | Coverage_response.Uncovered -> (untainted, tainted, empty, loc::uncovered)
+  | Coverage_response.Empty     -> (untainted, tainted, loc::empty, loc::uncovered)
+  | Coverage_response.Untainted -> (loc::untainted, tainted, empty, uncovered)
+  | Coverage_response.Tainted   -> (untainted, loc::tainted, empty, uncovered)
 
 let colorize content from_offset to_offset color accum =
   if to_offset > from_offset then
@@ -90,10 +90,10 @@ let rec colorize_file content last_offset accum = function
     (* catch up to the start of this range *)
     let accum, offset = colorize content last_offset offset Tty.Default accum in
     let color = match kind with
-      | Coverage.Uncovered -> Tty.Red
-      | Coverage.Empty     -> Tty.Blue
-      | Coverage.Tainted   -> Tty.Yellow
-      | Coverage.Untainted -> Tty.Default
+      | Coverage_response.Uncovered -> Tty.Red
+      | Coverage_response.Empty     -> Tty.Blue
+      | Coverage_response.Tainted   -> Tty.Yellow
+      | Coverage_response.Untainted -> Tty.Default
     in
     let accum, offset = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
@@ -177,7 +177,7 @@ let rec split_overlapping_ranges accum = function
       split_overlapping_ranges accum todo
 
 let handle_response ~json ~pretty ~strip_root ~color ~debug ~trust
-    (types : (Loc.t * Coverage.expression_coverage) list) content =
+    (types : (Loc.t * Coverage_response.expression_coverage) list) content =
   if debug then Core_list.iter ~f:debug_range types;
 
   let offset_table = lazy (Offset_utils.make content) in

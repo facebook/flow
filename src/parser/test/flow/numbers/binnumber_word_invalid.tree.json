@@ -10,11 +10,11 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":3},"end":{"line":1,"column":5}},
-      "message":"Unexpected number"
+      "message":"Unexpected number, expected the end of an expression statement (`;`)"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":10}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the end of an expression statement (`;`)"
     }
   ],
   "type":"Program",

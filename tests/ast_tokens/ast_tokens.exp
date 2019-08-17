@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":14,"column":4},"end":{"line":14,"column":7}},
-      "message":"Unexpected token var"
+      "message":"Unexpected token `var`"
     }
   ],
   "tokens":[

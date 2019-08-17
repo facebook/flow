@@ -8,6 +8,7 @@
 type id = int
 
 type trigger =
+| CodeAction
 | Completion
 | Definition
 | DidChange

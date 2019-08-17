@@ -239,6 +239,73 @@ let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
 
   metadata
 
+let detect_non_voidable_properties cx =
+  (* This function approximately checks whether VoidT can flow to the provided
+   * type without actually creating the flow so as not to disturb type inference.
+   * Even though this is happening post-merge, it is possible to encounter an
+   * unresolved tvar, in which case it conservatively returns false.
+   *)
+  let rec is_voidable = Type.(function
+    | OpenT (_, id) ->
+      (match Flow_js.possible_types cx id with
+      (* tvar has no lower bounds: we conservatively assume it's non-voidable
+       * except in the special case when it also has no upper bounds
+       *)
+      | [] -> Flow_js.possible_uses cx id = []
+      (* tvar is resolved: look at voidability of the resolved type *)
+      | [t] -> is_voidable t
+      (* tvar is unresolved: conservatively assume it is non-voidable *)
+      | _ -> false
+      )
+
+    (* a union is voidable if any of its members are voidable *)
+    | UnionT (_, rep) -> UnionRep.members rep |> List.exists is_voidable
+
+    (* an intersection is voidable if all of its members are voidable *)
+    | IntersectionT (_, rep) -> InterRep.members rep |> List.for_all is_voidable
+
+    (* trivially voidable *)
+    | MaybeT _
+    | DefT (_, _, (VoidT | MixedT (Mixed_everything | Mixed_non_null)))
+    | OptionalT _
+    | AnyT _
+      -> true
+
+    (* conservatively assume all other types are non-voidable *)
+    | _ -> false
+    )
+  in
+
+  let check_properties
+    (property_map: Type.Properties.id):
+    ALoc.t Property_assignment.error list SMap.t -> unit =
+    let pmap = Context.find_props cx property_map in
+    SMap.iter (fun name errors ->
+      let should_error =
+        (match SMap.get name pmap with
+        | Some (Type.Field (_, t, _)) -> not @@ is_voidable t
+        | _ -> true
+        )
+      in
+      if should_error then
+        List.iter (fun { Property_assignment.loc; desc } ->
+          Flow_js.add_output cx (Error_message.EUninitializedInstanceProperty (loc, desc))
+        ) errors
+    )
+  in
+
+  List.iter (fun {
+    Context.public_property_map;
+    private_property_map;
+    errors = {
+      Property_assignment.public_property_errors;
+      private_property_errors;
+    };
+  } ->
+    check_properties public_property_map public_property_errors;
+    check_properties private_property_map private_property_errors;
+
+  ) (Context.voidable_checks cx)
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
@@ -279,10 +346,20 @@ let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_
   let sig_cx = Context.make_sig () in
   let need_merge_master_cx = ref true in
 
-  let aloc_tables =
-    Nel.fold_left (fun tables filename ->
-      FilenameMap.add filename (lazy (get_aloc_table_unsafe filename)) tables
-    ) FilenameMap.empty component
+  let aloc_tables, rev_aloc_tables =
+    Nel.fold_left (fun (tables, rev_tables) filename ->
+      let table = lazy (get_aloc_table_unsafe filename) in
+      let rev_table = lazy (
+        try Lazy.force table |> ALoc.reverse_table with
+        (* If we aren't in abstract locations mode, or are in a libdef, we
+          won't have an aloc table, so we just create an empty reverse table. We
+          handle this exception here rather than explicitly making an optional
+          version of the get_aloc_table function for simplicity. *)
+        | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ -> Hashtbl.create 0)
+      in
+      FilenameMap.add filename table tables,
+      FilenameMap.add filename rev_table rev_tables
+    ) (FilenameMap.empty, FilenameMap.empty) component
   in
 
   let rev_cxs, rev_tasts, impl_cxs =
@@ -292,7 +369,8 @@ let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
     let module_ref = Files.module_ref filename in
-    let cx = Context.make sig_cx metadata filename aloc_tables module_ref phase in
+    let rev_table = FilenameMap.find filename rev_aloc_tables in
+    let cx = Context.make sig_cx metadata filename aloc_tables rev_table module_ref phase in
 
     (* create builtins *)
     if !need_merge_master_cx then (
@@ -380,6 +458,7 @@ let merge_component ~metadata ~lint_severities ~file_options ~strict_mode ~file_
    * which require complete knowledge of tvar bounds.
    *)
   detect_sketchy_null_checks cx;
+  detect_non_voidable_properties cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
@@ -603,25 +682,23 @@ module ContextOptimizer = struct
     method props cx pole id =
       if (Properties.Map.mem id reduced_property_maps)
       then
-        let () =
-          let id_int = (id :> int) in
+        let () = Option.iter ~f:(fun id_int ->
           let stable_id =
             if Context.mem_nominal_id cx id_int
             then IMap.find_unsafe id_int stable_props_ids
             else id_int in
-          SigHash.add_int sig_hash stable_id in
+          SigHash.add_int sig_hash stable_id) (Properties.id_as_int id) in
         id
       else
-        let () =
-          let id_int = (id :> int) in
+        let () = Option.iter ~f:(fun id_int ->
           let stable_id =
             if Context.mem_nominal_id cx id_int
             then
               let stable_id = self#fresh_stable_id in
-              stable_props_ids <- IMap.add (id :> int) stable_id stable_props_ids;
+              stable_props_ids <- IMap.add id_int stable_id stable_props_ids;
               stable_id
             else id_int in
-          SigHash.add_int sig_hash stable_id in
+          SigHash.add_int sig_hash stable_id) (Properties.id_as_int id) in
         let pmap = Context.find_props cx id in
         let () = SigHash.add_props_map sig_hash pmap in
         reduced_property_maps <- Properties.Map.add id pmap reduced_property_maps;

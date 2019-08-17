@@ -62,6 +62,12 @@ type test_prop_hit_or_miss =
 
 type type_assert_kind = Is | Throws | Wraps
 
+type voidable_check = {
+  public_property_map: Type.Properties.id;
+  private_property_map: Type.Properties.id;
+  errors: ALoc.t Property_assignment.errors;
+}
+
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -116,6 +122,20 @@ type sig_t = {
    * it wouldn't be excused. *)
   mutable exists_excuses: ExistsCheck.t ALocMap.t;
 
+  (* For the definite instance property assignment analysis, we should only
+   * emit errors for a given property if VoidT flows to the type of that
+   * property. Ideally, we would create a VoidT ~> property type flow when we
+   * perform the analysis. The problem is that doing that causes the type
+   * inference behavior to depend on lint settings which can lead to some weird
+   * behavior, such as extra errors even when the lint is off. The solution is
+   * to collect all of potential errors that we would have created a flow for
+   * in the context and deal with them post-merge. At this point, the tvars of
+   * nearly all properties will have a concrete type that we can safely pattern
+   * match on without affecting other constraints. For the unresolved tvars, we
+   * conservatively emit errors.
+   *)
+  mutable voidable_checks: voidable_check list;
+
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
 
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
@@ -132,6 +152,12 @@ type t = {
   phase: phase;
   (* Tables for the current component (cycle) *)
   aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
+  (* Reverse lookup table for the current file. Unlike the aloc_tables, we only
+     store the rev_table for the leader file, rather than the whole component.
+     We only need this table during the check phase, when we are checking single
+     files, so storing the rev table for the whole component would be a waste
+     of space/ *)
+  rev_aloc_table: (Loc.t, ALoc.key) Hashtbl.t Lazy.t;
   metadata: metadata;
 
   module_info: Module_info.t;
@@ -207,6 +233,7 @@ let make_sig () = {
   severity_cover = Utils_js.FilenameMap.empty;
   exists_checks = ALocMap.empty;
   exists_excuses = ALocMap.empty;
+  voidable_checks = [];
   test_prop_hits_and_misses = IMap.empty;
   optional_chains_useful = ALocMap.empty;
   invariants_useful = ALocMap.empty;
@@ -215,12 +242,13 @@ let make_sig () = {
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make sig_cx metadata file aloc_tables module_ref phase = {
+let make sig_cx metadata file aloc_tables rev_aloc_table module_ref phase = {
   sig_cx;
 
   file;
   phase;
   aloc_tables;
+  rev_aloc_table;
   metadata;
 
   module_info = Module_info.empty_cjs_module module_ref;
@@ -350,6 +378,7 @@ let max_workers cx = cx.metadata.max_workers
 let jsx cx = cx.metadata.jsx
 let exists_checks cx = cx.sig_cx.exists_checks
 let exists_excuses cx = cx.sig_cx.exists_excuses
+let voidable_checks cx = cx.sig_cx.voidable_checks
 let use_def cx = cx.use_def
 let trust_tracking cx =
   match cx.metadata.trust_mode with
@@ -409,6 +438,8 @@ let add_nominal_id cx id =
   cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
 let add_type_assert cx k v =
   cx.sig_cx.type_asserts_map <- ALocMap.add k v cx.sig_cx.type_asserts_map
+let add_voidable_check cx voidable_check =
+  cx.sig_cx.voidable_checks <- voidable_check :: cx.sig_cx.voidable_checks
 let remove_all_errors cx =
   cx.sig_cx.errors <- Flow_error.ErrorSet.empty
 let remove_all_error_suppressions cx =
@@ -451,6 +482,7 @@ let clear_intermediates cx =
   cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0; (* still 176 bytes :/ *)
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
+  cx.sig_cx.voidable_checks <- [];
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
   cx.sig_cx.optional_chains_useful <- ALocMap.empty;
   cx.sig_cx.invariants_useful <- ALocMap.empty;
@@ -545,9 +577,20 @@ let set_export cx id name t =
   |> add_export_map cx id
 
 (* constructors *)
-let make_property_map cx pmap =
-  let id = Type.Properties.mk_id () in
+let generate_property_map cx pmap =
+  let id = Reason.mk_id () in
   add_nominal_id cx (id :> int);
+  let id = Type.Properties.id_of_int id in
+  add_property_map cx id pmap;
+  id
+
+let make_source_property_map cx pmap loc =
+  (* To prevent cases where we might compare a concrete and an abstract
+     aloc (like in a cycle) we abstractify all incoming alocs before adding
+     them to the map. The only exception is for library files, which have only
+     concrete definitions and by definition cannot appear in cycles. *)
+  let loc = ALoc.lookup_key_if_possible cx.rev_aloc_table loc in
+  let id = Type.Properties.id_of_aloc loc in
   add_property_map cx id pmap;
   id
 

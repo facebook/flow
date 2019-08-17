@@ -116,7 +116,7 @@ let max_depth_of_trace limit trace =
       | Parent [] -> depth
       | Parent trace -> List.fold_left f (depth + 1) trace
     )
-  in List.fold_left f 0 trace
+  in List.fold_left f 1 trace
 
 
 (* reformat a reason's description with

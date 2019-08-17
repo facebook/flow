@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -468,7 +468,7 @@ let select ds additional_fds =
     if fds = [] || List.length processing <> List.length ds then
       [], [], []
     else
-      Sys_utils.select_non_intr (fds @ additional_fds) [] [] ~-.1. in
+      Sys_utils.select_non_intr (fds @ additional_fds) [] [] (-1.) in
   let additional_ready_fds =
     List.filter ~f:(List.mem ~equal:(=) ready_fds) additional_fds in
   List.fold_right

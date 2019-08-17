@@ -15,7 +15,7 @@ type aloc = ALoc.t
 type t =
   | TVar of tvar * t list option
   | Bound of aloc * string
-  | Generic of symbol * gen_kind * t list option
+  | Generic of generic_t
   | Any of any_kind
   | Top
   | Bot of bot_kind
@@ -33,20 +33,40 @@ type t =
   | Union of t * t * t list
   | Inter of t * t * t list
   | TypeAlias of type_alias
-  | TypeOf of path * string
+  | InlineInterface of interface_t
+  | TypeOf of builtin_value
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | Utility of utility
-  | Module of symbol * export_t
+  | Module of symbol option * export_t
   | Mu of int * t
 
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
 
-and path = string list
+and generic_t = symbol * gen_kind * t list option
 
 and any_kind =
-  | Implicit
-  | Explicit
+  | Annotated
+  | AnyError
+  | Unsound of unsoundness_kind
+  | Untyped
+
+and unsoundness_kind =
+  | BoundFunctionThis
+  | ComputedNonLiteralKey
+  | Constructor
+  | DummyStatic
+  | Existential
+  | Exports
+  | FunctionPrototype
+  | InferenceHooks
+  | InstanceOfRefinement
+  | Merged
+  | ResolveSpread
+  | Unchecked
+  | Unimplemented
+  | UnresolvedType
+  | WeakContext
 
 (* The purpose of adding this distinction is to enable normalized types to mimic
  * the behavior of the signature optimizer when exporting types that contain
@@ -107,6 +127,11 @@ and type_alias = {
   ta_name: symbol;
   ta_tparams: type_param list option;
   ta_type: t option
+}
+
+and interface_t = {
+  if_extends: generic_t list;
+  if_body: obj_t;
 }
 
 and fun_param = {
@@ -173,6 +198,13 @@ and utility =
   | ReactConfigType of t * t
 
 and polarity = Positive | Negative | Neutral
+
+and builtin_value =
+  | FunProto
+  | ObjProto
+  | FunProtoApply
+  | FunProtoBind
+  | FunProtoCall
 [@@deriving visitors {
   name="iter_ty";
   nude=true;
@@ -223,15 +255,34 @@ let fail_gen: 'env 'x. ('env -> 'x -> int) -> 'env -> 'x -> 'x -> unit =
 (* Compare Ty.t for structural equality
    This class can be overridden to define new forms of equality on types *)
 class ['A] comparator_ty = object(this)
-  inherit [_] iter2_ty
+  inherit [_] iter2_ty as super
 
   method compare (env : 'A) (t1 : t) (t2 : t) =
     try this#on_t env t1 t2 ; 0 with
     | Difference n -> n
 
+  (* Take advantage of pointer equality at type nodes to short circut *)
+  method! private on_t env x y = if x == y then () else super#on_t env x y
   (* Base fields originally handled in the ancestor *)
   method! private on_int _env x y = assert0 (x - y)
-  method! private on_string _env x y = assert0 (String.compare x y)
+
+  method! private on_string env x y =
+    (* In order to sort integer literals we try to parse all strings as integers *)
+    match int_of_string x with
+    | x ->
+      begin match int_of_string y with
+      (* If both parse as integers then we compare them as integers *)
+      | y -> this#on_int env x y
+      (* If xor parses as an integer then that one is "less than" the other *)
+      | exception Failure _ -> raise (Difference (-1))
+      end
+    | exception Failure _ ->
+      begin match int_of_string y with
+      | _ -> raise (Difference 1)
+      (* If neither parse as integers then we compare them as strings *)
+      | exception Failure _ -> assert0 (String.compare x y)
+      end
+
   method! private on_bool _env x y = assert0 (Pervasives.compare x y)
   method! private on_symbol _env x y = assert0 (Pervasives.compare x y)
   method! private on_aloc _env x y = assert0 (ALoc.compare x y)
@@ -258,36 +309,42 @@ class ['A] comparator_ty = object(this)
   method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
   method! private fail_utility env x y = fail_gen this#tag_of_utility env x y
   method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
+  method! private fail_unsoundness_kind env x y = fail_gen this#tag_of_unsoundness_kind env x y
 
+  (* types will show up in unions and intersections in ascending order *)
   (* No two elements of each variant can be assigned the same tag *)
   method tag_of_t _ = function
-    | TVar _ -> 0
-    | Bound _ -> 1
-    | Generic _ -> 2
-    | Any _ -> 3
-    | Top -> 4
-    | Bot _ -> 5
-    | Void -> 6
-    | Null -> 7
+    (* Roughly in order of increasing complexity *)
+    (* Favor litererals over base types *)
+    (* Favor user defined types over structural types *)
+    | Bot _ -> 0
+    | Top -> 1
+    | Any _ -> 2
+    | Void -> 3
+    | Null -> 4
+    | BoolLit _ -> 5
+    | Bool _ -> 6
+    | NumLit _ -> 7
     | Num _ -> 8
-    | Str _ -> 9
-    | Bool _ -> 10
-    | NumLit _ -> 11
-    | StrLit _ -> 12
-    | BoolLit _ -> 13
-    | Fun _ -> 14
-    | Obj _ -> 15
-    | Arr _ -> 16
-    | Tup _ -> 17
-    | Union _ -> 18
-    | Inter _ -> 19
-    | TypeAlias _ -> 20
-    | TypeOf _ -> 21
-    | ClassDecl _ -> 22
-    | InterfaceDecl _ -> 23
-    | Utility _ -> 24
+    | StrLit _ -> 9
+    | Str _ -> 10
+    | TVar _ -> 11
+    | Bound _ -> 12
+    | Generic _ -> 13
+    | TypeAlias _ -> 14
+    | TypeOf _ -> 15
+    | ClassDecl _ -> 16
+    | Utility _ -> 17
+    | Tup _ -> 18
+    | Arr _ -> 19
+    | Fun _ -> 20
+    | Obj _ -> 21
+    | Inter _ -> 22
+    | Union _ -> 23
+    | InterfaceDecl _ -> 24
     | Module _ -> 25
     | Mu _ -> 26
+    | InlineInterface _ -> 27
 
   method tag_of_gen_kind _ = function
     | ClassKind -> 0
@@ -295,8 +352,27 @@ class ['A] comparator_ty = object(this)
     | TypeAliasKind -> 2
 
   method tag_of_any_kind _ = function
-    | Implicit -> 0
-    | Explicit -> 1
+    | Annotated -> 0
+    | AnyError -> 1
+    | Unsound _ -> 2
+    | Untyped -> 3
+
+  method tag_of_unsoundness_kind _ = function
+    | BoundFunctionThis -> 0
+    | ComputedNonLiteralKey -> 1
+    | Constructor -> 2
+    | DummyStatic -> 3
+    | Existential -> 4
+    | Exports -> 5
+    | FunctionPrototype -> 6
+    | InferenceHooks -> 7
+    | InstanceOfRefinement -> 8
+    | Merged -> 9
+    | ResolveSpread -> 10
+    | Unchecked -> 11
+    | Unimplemented -> 12
+    | UnresolvedType -> 13
+    | WeakContext -> 14
 
   method tag_of_prop _env = function
     | NamedProp _ -> 0
@@ -379,8 +455,8 @@ let mk_inter ?(flattened=false) nel_ts =
   | [] -> t
   | hd::tl -> Inter (t, hd, tl)
 
-let explicit_any = Any Explicit
-let implicit_any = Any Implicit
+let explicit_any = Any Annotated
+
 let is_dynamic = function Any _ -> true | _ -> false
 let mk_maybe t =
   mk_union (Null, [Void; t])
@@ -412,7 +488,7 @@ let rec mk_exact ty =
   (* Not applicable *)
   | Any _ | Top | Bot _ | Void | Null
   | Num _ | Str _ | Bool _ | NumLit _ | StrLit _ | BoolLit _
-  | Fun _ | Arr _ | Tup _ -> ty
+  | Fun _ | Arr _ | Tup _ | InlineInterface _ -> ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
   (* Wrap in $Exact<...> *)

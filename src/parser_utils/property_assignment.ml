@@ -5,13 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* NOTE: This is a WIP and should not be used for anything yet *)
-
 module Ast = Flow_ast
 
-type this_error =
-  | ThisInConstructor
-  | MethodCallInConstructor
+type 'loc error =
+  { loc: 'loc; desc: Lints.property_assignment_kind }
+
+type 'loc errors = {
+  public_property_errors: 'loc error list SMap.t;
+  private_property_errors: 'loc error list SMap.t;
+}
 
 let public_property loc ident =
   let _, ({ Ast.Identifier.name; comments = _ } as r) = ident in
@@ -47,7 +49,7 @@ let filter_uninitialized
     | None -> true
   ) properties;
 
-class property_assignment = object(this)
+class property_assignment (property_names: SSet.t) = object(this)
   inherit Ssa_builder.With_ALoc.ssa_builder as super
 
   (* ABRUPT COMPLETIONS *)
@@ -69,25 +71,20 @@ class property_assignment = object(this)
     final_ssa_env <- this#ssa_env;
     super#pop_ssa_env saved_state
 
-  method! pattern_expression (expr: (ALoc.t, ALoc.t) Ast.Expression.t) =
-    (match expr with
-    | loc, Ast.Expression.Member {
-        Ast.Expression.Member._object = (_, Ast.Expression.This);
-        property = ( Ast.Expression.Member.PropertyIdentifier _
-                   | Ast.Expression.Member.PropertyPrivateName _
-                   ) as property;
-      } ->
-      ignore @@ this#pattern_identifier @@
-        Ast.Expression.Member.(match property with
-        | PropertyIdentifier id -> public_property loc id
-        | PropertyPrivateName id -> private_property loc id
-        | PropertyExpression _ -> failwith "match on expr makes this impossible"
-        );
-      expr
-    | _ -> super#pattern_expression expr
-    )
+  method initialize_property property_id value =
+    (match snd value with
+    | Ast.Expression.ArrowFunction _
+    | Ast.Expression.Function _ -> ()
+    | _ -> ignore @@ this#expression value
+    );
+    ignore @@ this#pattern_identifier property_id
 
   (* READS *)
+
+  val mutable read_loc_metadata: string Loc_collections.ALocMap.t =
+    Loc_collections.ALocMap.empty
+  method metadata_of_read_loc (read_loc: ALoc.t): string option =
+    Loc_collections.ALocMap.get read_loc read_loc_metadata
 
   method! identifier (ident: (ALoc.t, ALoc.t) Ast.Identifier.t) =
     ident
@@ -103,12 +100,16 @@ class property_assignment = object(this)
                    | Ast.Expression.Member.PropertyPrivateName _
                    ) as property;
       } ->
-      ignore @@ this#any_identifier loc @@ Flow_ast_utils.name_of_ident @@
-        Ast.Expression.Member.(match property with
+      let property_name: string =
+        Flow_ast_utils.name_of_ident Ast.Expression.Member.(match property with
         | PropertyIdentifier id -> public_property loc id
         | PropertyPrivateName id -> private_property loc id
         | PropertyExpression _ -> failwith "match on expr makes this impossible"
-        );
+        )
+      in
+      read_loc_metadata <-
+        Loc_collections.ALocMap.add loc property_name read_loc_metadata;
+      ignore @@ this#any_identifier loc property_name;
       expr
     | _ -> super#member loc expr
     )
@@ -123,13 +124,18 @@ class property_assignment = object(this)
         Ast.Expression.Member._object = (_, Ast.Expression.This);
         property = ( Ast.Expression.Member.PropertyIdentifier _
                    | Ast.Expression.Member.PropertyPrivateName _
-                   );
+                   ) as property;
       } as left_member)) ->
       (match operator with
       | None ->
         (* given `this.x = e`, read e then write x *)
-        ignore @@ this#expression right;
-        ignore @@ this#assignment_pattern left
+        this#initialize_property
+          Ast.Expression.Member.(match property with
+          | PropertyIdentifier id -> public_property member_loc id
+          | PropertyPrivateName id -> private_property member_loc id
+          | PropertyExpression _ -> failwith "match on expr makes this impossible"
+          )
+          right
       | Some _ ->
         (* given `this.x += e`, read x then read e *)
         ignore @@ this#member member_loc left_member;
@@ -138,7 +144,7 @@ class property_assignment = object(this)
          * here since in order for `this.x += e` to not cause an error, x must
          * already be assigned anyway. Also, not writing to x here leads to
          * more understandable error messages, as the write would mask the
-         * PropertyNotDefinitivelyInitialized error.
+         * PropertyNotDefinitelyInitialized error.
          *)
       );
       expr
@@ -148,7 +154,7 @@ class property_assignment = object(this)
   (* PREVENT THIS FROM ESCAPING *)
 
   val mutable this_escape_errors:
-    (ALoc.t * this_error * Ssa_builder.With_ALoc.Env.t) list = []
+    (ALoc.t * Lints.property_assignment_kind * Ssa_builder.With_ALoc.Env.t) list = []
   method this_escape_errors = this_escape_errors
   method private add_this_escape_error error =
     this_escape_errors <- error :: this_escape_errors
@@ -156,7 +162,7 @@ class property_assignment = object(this)
   method! expression expr =
     (match expr with
     | (loc, Ast.Expression.This) ->
-      this#add_this_escape_error (loc, ThisInConstructor, this#ssa_env)
+      this#add_this_escape_error (loc, Lints.ThisBeforeEverythingInitialized, this#ssa_env)
     | _ -> ()
     );
     super#expression expr
@@ -164,42 +170,167 @@ class property_assignment = object(this)
   method! call loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
     (match expr.Ast.Expression.Call.callee with
     (* match on method calls *)
-    | (_, Ast.Expression.Member {
+    | (member_loc, Ast.Expression.Member {
         Ast.Expression.Member._object = (_, Ast.Expression.This);
         property = ( Ast.Expression.Member.PropertyIdentifier _
                    | Ast.Expression.Member.PropertyPrivateName _
-                   );
+                   ) as property;
       }) ->
-      this#add_this_escape_error (loc, MethodCallInConstructor, this#ssa_env)
+      let name = Flow_ast_utils.name_of_ident @@ Ast.Expression.Member.(match property with
+        | PropertyIdentifier id -> public_property member_loc id
+        | PropertyPrivateName id -> private_property member_loc id
+        | PropertyExpression _ -> failwith "match on expr.callee makes this impossible"
+        )
+      in
+      let error =
+        if SSet.mem name property_names then
+          Lints.PropertyFunctionCallBeforeEverythingInitialized
+        else
+          Lints.MethodCallBeforeEverythingInitialized
+      in
+      this#add_this_escape_error (loc, error, this#ssa_env)
     | _ -> ()
     );
     super#call loc expr
 end
 
-let eval_property_assignment properties ctor_body =
+let eval_property_assignment class_body =
+  let open Ast.Class in
+  let property_declarations =
+    Core_list.filter_map ~f:(function
+      | Body.Property (_, {
+          Property.key = Ast.Expression.Object.Property.Identifier ((loc, _) as id);
+          value;
+          static = false;
+          annot = _;
+          variance = _;
+        }) -> Some (public_property loc id, value)
+      | Body.PrivateField (_, {
+          PrivateField.key = (loc, _) as id;
+          value;
+          static = false;
+          annot = _;
+          variance = _;
+        }) -> Some (private_property loc id, value)
+      | _ -> None
+    ) class_body
+  in
+
+  let ctor_body: (ALoc.t, ALoc.t) Ast.Statement.Block.t =
+    Core_list.find_map ~f:(function
+      | Body.Method (_, {
+          Method.kind = Method.Constructor;
+          value = (_, {
+            Ast.Function.body = Ast.Function.BodyBlock (_, block);
+            id = _; params = _; async = _; generator = _; predicate = _;
+            return = _; tparams = _; sig_loc = _;
+          });
+          key = _; static = _; decorators = _;
+        }) -> Some block
+      | _ -> None
+    ) class_body
+    |> Option.value ~default:{ Ast.Statement.Block.body = [] }
+  in
+
+  let properties = Core_list.map ~f:fst property_declarations in
+
   let bindings: ALoc.t Hoister.Bindings.t =
     List.fold_left (fun bindings property ->
       Hoister.Bindings.add property bindings
     ) Hoister.Bindings.empty properties
   in
 
-  let ssa_walk = new property_assignment in
+  let property_names = List.fold_left (fun acc property ->
+    SSet.add (Flow_ast_utils.name_of_ident property) acc
+  ) SSet.empty properties in
+  let ssa_walk = new property_assignment property_names in
   ignore @@ ssa_walk#with_bindings ALoc.none bindings (fun body ->
     ssa_walk#expecting_return_or_throw (fun () ->
+      List.iter (function
+        | (property_id, Some default_initializer) ->
+          ssa_walk#initialize_property property_id default_initializer
+        | _ -> ()
+      ) property_declarations;
       ignore @@ ssa_walk#block ALoc.none body
     );
     body
   ) ctor_body;
 
-  filter_uninitialized ssa_walk#final_ssa_env properties,
-  ssa_walk#values
-  |> Loc_collections.ALocMap.bindings
-  |> Core_list.filter_map ~f:(fun (read_loc, write_locs) ->
-    if not_definitively_initialized write_locs then
-      Some read_loc
+  (* We make heavy use of the Core_list.rev_* functions below because they are
+   * tail recursive. We can do this freely because the order in which we
+   * process the errors doesn't actually matter (Flow will sort the errors
+   * before printing them anyway).
+   *)
+  let uninitialized_properties: (ALoc.t error * string) list =
+    properties
+    |> filter_uninitialized ssa_walk#final_ssa_env
+    |> Core_list.rev_map ~f:(fun id -> (
+        {
+          loc = Flow_ast_utils.loc_of_ident id;
+          desc = Lints.PropertyNotDefinitelyInitialized;
+        },
+        Flow_ast_utils.name_of_ident id
+      ))
+  in
+  let read_before_initialized: (ALoc.t error * string) list =
+    ssa_walk#values
+    |> Loc_collections.ALocMap.bindings
+    |> Core_list.rev_filter_map ~f:(fun (read_loc, write_locs) ->
+        if not_definitively_initialized write_locs then
+          ssa_walk#metadata_of_read_loc read_loc
+          |> Option.map ~f:(fun name ->
+              (
+                {
+                  loc = read_loc;
+                  desc = Lints.ReadFromUninitializedProperty;
+                },
+                name
+              )
+            )
+        else
+          None
+      )
+  in
+  let this_errors: (ALoc.t error * string Nel.t) list =
+    Core_list.rev_filter_map ~f:(fun (loc, desc, ssa_env) ->
+      filter_uninitialized ssa_env properties
+      |> Core_list.map ~f:Flow_ast_utils.name_of_ident
+      |> Nel.of_list
+      |> Option.map ~f:(fun uninitialized_properties ->
+          ({ loc; desc; }, uninitialized_properties)
+        )
+    ) ssa_walk#this_escape_errors
+  in
+  (* It's better to append new to old b/c new is always a singleton *)
+  let combine_voidable_checks old new_ = Core_list.rev_append new_ old in
+  let add_to_errors error errors prefixed_name =
+    (* Check if it is private first since `this.` is a prefix of `this.#` *)
+    if String_utils.string_starts_with prefixed_name "this.#" then
+      { errors with private_property_errors =
+        SMap.add ~combine:combine_voidable_checks
+          (String_utils.lstrip prefixed_name "this.#")
+          [error] errors.private_property_errors
+      }
+    else if String_utils.string_starts_with prefixed_name "this." then
+      { errors with public_property_errors =
+        SMap.add ~combine:combine_voidable_checks
+          (String_utils.lstrip prefixed_name "this.")
+          [error] errors.public_property_errors
+      }
     else
-      None
-    ),
-  Core_list.map ~f:(fun (loc, error, ssa_env) ->
-    (loc, error, filter_uninitialized ssa_env properties)
-  ) ssa_walk#this_escape_errors
+      errors
+  in
+  let single_property_errors errors checks =
+    List.fold_left (fun acc (error, prefixed_name) ->
+      add_to_errors error acc prefixed_name
+    ) checks errors
+  in
+  let multi_property_errors errors checks =
+    List.fold_left (fun acc (error, names) ->
+      Nel.fold_left (add_to_errors error) acc names
+    ) checks errors
+  in
+  { public_property_errors = SMap.empty; private_property_errors = SMap.empty; }
+  |> single_property_errors uninitialized_properties
+  |> single_property_errors read_before_initialized
+  |> multi_property_errors this_errors

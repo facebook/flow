@@ -19,7 +19,12 @@ Trace:
   2: ({p: 42}: {p: empty});
           ^^ NumT [number]
   2: ({p: 42}: {p: empty});
-                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+  2: ({p: 42}: {p: empty});
+      ^^^^^^^ ObjT [object literal]
+  2: ({p: 42}: {p: empty});
+               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type]
 
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:4:2
@@ -43,7 +48,12 @@ Trace:
   4: ({p: 42}: {p: empty});
           ^^ NumT [number]
   4: ({p: 42}: {p: empty});
-                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+  4: ({p: 42}: {p: empty});
+      ^^^^^^^ ObjT [object literal]
+  4: ({p: 42}: {p: empty});
+               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type]
 
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:6:2
@@ -70,7 +80,18 @@ Trace:
   7:   p: 42,
           ^^ NumT [number]
   9:   p: empty,
-          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+      v
+  6: ({
+  7:   p: 42,
+  8: }: {
+     ^ ObjT [object literal]
+        v
+  8: }: {
+  9:   p: empty,
+ 10: });
+     ^ ~> UseT(Cast, ObjT) [object type]
 
 
 Error ----------------------------------------------------------------------------------------------- code_frame.js:12:2
@@ -94,7 +115,12 @@ Trace:
  12: ({p: 42}: {p: empty});
           ^^ NumT [number]
  12: ({p: 42}: {p: empty});
-                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+ 12: ({p: 42}: {p: empty});
+      ^^^^^^^ ObjT [object literal]
+ 12: ({p: 42}: {p: empty});
+               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
@@ -121,7 +147,18 @@ Trace:
   7:   p: 42, // Error: number ~> empty
           ^^ NumT [number]
   9:   p: empty,
-          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+      v
+  6: ({
+  7:   p: 42, // Error: number ~> empty
+  8: }: {
+     ^ ObjT [object literal]
+        v
+  8: }: {
+  9:   p: empty,
+ 10: });
+     ^ ~> UseT(Cast, ObjT) [object type]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
@@ -150,7 +187,22 @@ Trace:
  13:   a: 1, // Error: number ~> empty
           ^ NumT [number]
  17:   a: empty,
-          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+      v
+ 12: ({
+ 13:   a: 1, // Error: number ~> empty
+ 14:   b: 2, // Error: number ~> empty
+ 15:   c: 3, // Error: number ~> empty
+ 16: }: {
+     ^ ObjT [object literal]
+        v
+ 16: }: {
+ 17:   a: empty,
+ 18:   b: empty,
+ 19:   c: empty,
+ 20: });
+     ^ ~> UseT(Cast, ObjT) [object type]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
@@ -179,7 +231,22 @@ Trace:
  14:   b: 2, // Error: number ~> empty
           ^ NumT [number]
  18:   b: empty,
-          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+      v
+ 12: ({
+ 13:   a: 1, // Error: number ~> empty
+ 14:   b: 2, // Error: number ~> empty
+ 15:   c: 3, // Error: number ~> empty
+ 16: }: {
+     ^ ObjT [object literal]
+        v
+ 16: }: {
+ 17:   a: empty,
+ 18:   b: empty,
+ 19:   c: empty,
+ 20: });
+     ^ ~> UseT(Cast, ObjT) [object type]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
@@ -208,7 +275,22 @@ Trace:
  15:   c: 3, // Error: number ~> empty
           ^ NumT [number]
  19:   c: empty,
-          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
+* path 2:
+      v
+ 12: ({
+ 13:   a: 1, // Error: number ~> empty
+ 14:   b: 2, // Error: number ~> empty
+ 15:   c: 3, // Error: number ~> empty
+ 16: }: {
+     ^ ObjT [object literal]
+        v
+ 16: }: {
+ 17:   a: empty,
+ 18:   b: empty,
+ 19:   c: empty,
+ 20: });
+     ^ ~> UseT(Cast, ObjT) [object type]
 
 
 

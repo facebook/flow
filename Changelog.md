@@ -1,3 +1,86 @@
+### 0.105.2
+
+v0.105.0 started running the Flow server in a cgroup on Linux distros that support [cgroup v2](https://www.kernel.org/doc/Documentation/cgroup-v2.txt). However, some versions of `systemd`, which manages cgroups, contain a bug that caused the Flow server to fail to start. This release avoids using `cgroup` on these systems. (#8012)
+
+### 0.105.1
+
+This was an npm-only release to fix a packaging issue. No updated binaries were published.
+
+### 0.105.0
+
+Likely to cause new Flow errors:
+
+* Types for `FileReader` properties and methods are now more precise (e.g., some parameters typed
+  `any` are now typed `ProgressEvent`; some properties now have `null` added to their types). Thanks, @nwoltman!
+
+* The value type parameter `V` of `$ReadOnlyMap` and `$ReadOnlyWeakMap` is now covariant. Thanks, @goodmind!
+
+* Types for the `vm` module in node.js are now more precise. Thanks, @goodmind!
+
+* The deprecated `$Enum<...>` utility type has now been deleted. Use `$Keys<...>` instead.
+
+* Indexing tuples with floats is no longer allowed.
+
+New Features:
+
+* Added support for `React.Profiler` (React v16.9+). Thanks, @bvaughn!
+
+* Added a `--types` flag to `flow graph dep-graph` to output only "type" dependencies: the subset of
+  imports that the types of a module's exports depends on. (Without the flag, we output "code"
+  dependencies: the set of all imports of a module.)
+
+* Preliminary support for automatically inserting annotations on a module's exports through
+  LSP. Thanks to @akuhlens (summer intern with the Flow team)!
+
+* Preliminary support for definite assignment checking of class instance properties. Thanks to
+  @pzp1997 (summer intern with the Flow team)!
+
+* Added an option to `.flowconfig` for exact-by-default objects.
+
+Perf fixes:
+
+* Fixed a non-termination issue with a recursive use of mapped types.
+* Fixed an exponential-blowup issue with a combined use of spreads and unions.
+* Fixed an exponential-blowup issue with recursive use of array spreads.
+
+Misc:
+
+* Fixed LSP init to say codeLens is not supported.
+* Fixed lots of cases of bad error positioning, unblocking improvements to error suppressions and
+  error streaming. Thanks to @mvcccccc (summer intern with the Flow team)!
+
+Parser:
+
+* Improved a bunch of "unexpected" parse errors, providing what was expected in the error message.
+* Fixed a bug in parsing of params in function types.
+
+### 0.104.0
+
+Likely to cause new Flow errors:
+* Fixed the definition of `Function.prototype.apply` to only accept array-like objects, not any iterable.
+* Improved error positioning, which may cause previously-suppressed errors to become unsuppressed.
+
+New Features:
+* `non-array-spread` lint rule: Fires when a non-array iterable is spread. This is useful for modeling the `loose: true` mode of `@babel/plugin-transform-spread`, where such code causes a runtime error.
+
+Notable Bug Fixes:
+* Fixed a performance regression when computing dependencies in large projects
+* Fixed built-in library definitions that needed to be explicitly inexact to pass the `implicit-inexact-object` linter.
+* Improved libdefs for many browser APIs (e.g. Media Streams, MIDI, Permissions, Workers) (#7737, #7805, #7806, thanks @goodmind!)
+
+Misc:
+* Various improvements to the types-first signature generator
+* Improved the name of the server master process in `ps`
+* Improved the output of `flow check --profile`
+
+`flow-remove-types`:
+* Remove opaque types and `declare export`
+
+Parser:
+* Fixed a bug allowing `await` to be a parameter in async functions
+* Several improvements to the experimental comment attachment algorithm
+
+
 ### 0.103.0
 
 New Features:

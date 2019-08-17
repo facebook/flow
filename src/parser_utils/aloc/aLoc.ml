@@ -32,6 +32,8 @@ module Repr: sig
     | Abstract
     | Concrete
 
+  val hash: t -> int
+
   val of_loc: Loc.t -> t
   val of_key: File_key.t option -> key -> t
 
@@ -68,22 +70,17 @@ end = struct
 
   type t = Loc.t
 
+  (* The number of nodes of t is expected to remain small, so to hash t we can use Hashtbl.hash with
+     maximum settings for meaningful and total nodes to minimize collisions *)
+  let hash (loc: t) =
+    Hashtbl.hash_param 256 256 loc
+
   type abstract_t = {
     (* This field has the same type in Loc.t *)
     abstract_source: File_key.t option;
     (* In Loc.t, this is the `start` field. We will use it as an integer key here. *)
     key: key;
-    (* In Loc.t, this is the `_end` field. We will use `0` as a sentinel value here to indicate that
-     * this is an ALoc with an abstract underlying representation. Because the `_end` field is a
-     * pointer, this will never be 0 (or any other integer, for that matter) if we are actually
-     * dealing with a concrete representation.
-     *
-     * In the future we could optimize memory further by omitting this field, and checking whether
-     * start/key is a pointer or an immediate value. *)
-    kind: int;
   }
-
-  let abstract_sentinel_value = 0
 
   let of_loc: Loc.t -> t = Obj.magic
 
@@ -91,19 +88,16 @@ end = struct
     let loc: abstract_t = {
       abstract_source = source;
       key;
-      kind = abstract_sentinel_value;
     } in
     Obj.magic loc
 
   let source {Loc.source; _} = source
 
-  let update_source f loc = Loc.({
-    loc with
-    source = f loc.source;
-  })
-
-  (* See the definition site of the `kind` property for an explanation *)
-  let is_abstract (loc: t): bool = (Obj.magic loc).kind = abstract_sentinel_value
+  (* The `key` field is an integer in `abstract_t`, but the field in the corresponding location in
+   * `Loc.t` is `start`, which is a pointer. We can use this fact to determine whether we have an
+   * `abstract_t` or a `t` here, since OCaml keeps track of whether a value is an integer or a
+   * pointer. If it's an integer, the value is abstract. *)
+  let is_abstract (loc: t): bool = (Obj.magic loc).key |> Obj.repr |> Obj.is_int
 
   let kind (loc: t): kind =
     if is_abstract loc then
@@ -125,9 +119,20 @@ end = struct
       invalid_arg "loc must be concrete"
     else
       ((Obj.magic loc): Loc.t)
+
+  let update_source f loc =
+    if is_abstract loc then
+      let loc: abstract_t = Obj.magic loc in
+      let updated_loc: abstract_t = { loc with abstract_source = f loc.abstract_source } in
+      (Obj.magic updated_loc: t)
+    else
+      let open Loc in
+      { loc with source = f loc.source }
 end
 
 type t = Repr.t
+
+let hash = Repr.hash
 
 let of_loc = Repr.of_loc
 
@@ -266,6 +271,21 @@ let to_string_no_source loc =
     string_of_key key
   else
     Loc.to_string_no_source (Repr.to_loc_exn loc)
+
+let lookup_key_if_possible rev_table loc =
+  match Repr.kind loc with
+  | Repr.Abstract
+  | Repr.ALocNone -> loc
+  | Repr.Concrete ->
+    let underlying_loc = Repr.to_loc_exn loc in
+    match Hashtbl.find_opt (Lazy.force rev_table) underlying_loc with
+    | Some key -> begin match Repr.source loc with
+      | Some source -> Repr.of_key (Some source) key
+      | None -> failwith "Unexpectedly encountered a location without a source"
+      end
+    | None -> loc
+
+let reverse_table table = ResizableArray.to_hashtbl table.map
 
 module ALocRepresentationDoNotUse = struct
   let is_abstract = Repr.is_abstract

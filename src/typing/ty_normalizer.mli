@@ -16,6 +16,7 @@ type error_kind =
   | BadPoly
   | BadTypeAlias
   | BadTypeApp
+  | BadInlineInterfaceExtends
   | BadInternalT
   | BadInstanceT
   | BadEvalT

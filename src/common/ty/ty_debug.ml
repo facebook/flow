@@ -25,9 +25,39 @@ let dump_bot_kind = function
   | EmptyTypeDestructorTriggerT _ -> "EmptyTypeDestructorTriggerT"
   | NoLowerWithUpper u -> spf "NoLowerWithUpper (%s)" (dump_bot_upper_bound_kind u)
 
+let builtin_value = function
+  | FunProto -> "Function.prototype"
+  | ObjProto -> "Object.prototype"
+  | FunProtoApply -> "Function.prototype.apply"
+  | FunProtoBind -> "Function.prototype.bind"
+  | FunProtoCall -> "Function.prototype.call"
+
 let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with
   | Some t -> f t
   | None -> ""
+
+and dump_any_kind = function
+  | Annotated -> "Annotated"
+  | AnyError -> "AnyError"
+  | Unsound kind -> spf "Unsound (%s)" (dump_any_unsoundness_kind kind)
+  | Untyped -> "Untyped"
+
+and dump_any_unsoundness_kind = function
+  | BoundFunctionThis -> "BoundFunctionThis"
+  | ComputedNonLiteralKey -> "ComputedNonLiteralKey"
+  | Constructor -> "Constructor"
+  | DummyStatic -> "DummyStatic"
+  | Existential -> "Existential"
+  | Exports -> "Exports"
+  | FunctionPrototype -> "FunctionPrototype"
+  | InferenceHooks -> "InferenceHooks"
+  | InstanceOfRefinement -> "InstanceOfRefinement"
+  | Merged -> "Merged"
+  | ResolveSpread -> "ResolveSpread"
+  | Unchecked -> "Unchecked"
+  | Unimplemented -> "Unimplemented"
+  | UnresolvedType -> "UnresolvedType"
+  | WeakContext -> "WeakContext"
 
 and dump_list : 'a . ('a -> string) -> ?sep:string -> 'a list -> string =
   fun f ?(sep=", ") ls ->
@@ -112,6 +142,12 @@ and dump_arr ~depth { arr_readonly; arr_elt_t; _ } =
   let ctor = if arr_readonly then "$ReadOnlyArray" else "Array" in
   spf "%s<%s>" ctor (dump_t ~depth arr_elt_t)
 
+and dump_generic ~depth (s, kind, ts) =
+  spf "Generic (%s, kind= %s, params=%s)"
+    (dump_symbol s)
+    (Ty.debug_string_of_generic_kind kind)
+    (dump_generics ~depth ts)
+
 and dump_generics ~depth = function
   | Some ts -> "<" ^ dump_list (dump_t ~depth) ts ^ ">"
   | _ -> ""
@@ -139,13 +175,8 @@ and dump_t ?(depth = 10) t =
     spf "TVAR(%s, params=%s)" (dump_tvar v)
       (dump_generics ~depth ts)
   | Bound (_, s) -> spf "Bound(%s)" s
-  | Generic (s, kind, ts) ->
-    spf "Generic (%s, kind= %s, params=%s)"
-      (dump_symbol s)
-      (Ty.debug_string_of_generic_kind kind)
-      (dump_generics ~depth ts)
-  | Any Implicit -> "Implicit Any"
-  | Any Explicit -> "Explicit Any"
+  | Generic g -> dump_generic ~depth g
+  | Any kind -> spf "Any (%s)" (dump_any_kind kind)
   | Top -> "Top"
   | Bot k -> spf "Bot (%s)" (dump_bot_kind k)
   | Void -> "Void"
@@ -173,11 +204,25 @@ and dump_t ?(depth = 10) t =
       (dump_symbol ta_name)
       (dump_type_params ~depth ta_tparams)
       (Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
-  | TypeOf (path, n) ->
-    spf "Typeof(%s)" (String.concat "." (path@[n]))
+  | InlineInterface { if_extends; if_body } ->
+    spf "InlineInterface (%s, %s)"
+      (dump_list (dump_generic ~depth) if_extends)
+      (dump_obj ~depth if_body)
+  | TypeOf v ->
+    spf "Typeof (%s)" (builtin_value v)
   | Module (n, { exports; _ }) ->
-    spf "Module(%s, %s)" (dump_symbol n)
-      (dump_list (fun (name, t) -> dump_t ~depth t |> spf "%s : %s" name) ~sep:"," exports)
+    let name = match n with
+      | Some n -> dump_symbol n
+      | None -> "<no name>"
+    in
+    let exports =
+      dump_list
+        (fun (name, t) -> dump_t ~depth t |> spf "%s : %s" name)
+        ~sep:","
+        exports
+    in
+    spf "Module(%s, %s)" name exports
+
   | ClassDecl (name, ps) ->
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
   | InterfaceDecl (name, ps) ->
@@ -199,8 +244,8 @@ let string_of_ctor = function
   | TVar (RVar _, _) -> "RecVar"
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
-  | Any Implicit -> "Implicit Any"
-  | Any Explicit -> "Explicit Any"
+  | Any Annotated -> "Explicit Any"
+  | Any _ -> "Implicit Any"
   | Top -> "Top"
   | Bot _ -> "Bot"
   | Void -> "Void"
@@ -218,6 +263,7 @@ let string_of_ctor = function
   | Union _ -> "Union"
   | Inter _ -> "Inter"
   | TypeAlias _ -> "TypeAlias"
+  | InlineInterface _ -> "InlineInterface"
   | TypeOf _ -> "Typeof"
   | ClassDecl _ -> "ClassDecl"
   | InterfaceDecl _ -> "InterfaceDecl"
@@ -250,13 +296,9 @@ let json_of_t ~strip_root =
     | Bound (_, name) -> [
         "bound", JSON_String name
       ]
-    | Generic (s, k, targs_opt) ->
-      json_of_targs targs_opt @ [
-        "type", json_of_symbol s;
-        "kind", JSON_String (Ty.debug_string_of_generic_kind k);
-      ]
-    | Any Implicit -> [ "any", JSON_String "implicit" ]
-    | Any Explicit -> [ "any", JSON_String "explicit" ]
+    | Generic g -> json_of_generic g
+    | Any Annotated -> [ "any", JSON_String "explicit" ]
+    | Any _ -> [ "any", JSON_String "implicit" ]
     | Top | Bot _
     | Void | Null
     | Num _ | Str _ | Bool _ -> []
@@ -268,12 +310,7 @@ let json_of_t ~strip_root =
         "literal", JSON_Bool b
       ]
     | Fun f -> json_of_fun_t f
-    | Obj { obj_exact; obj_props; obj_literal; obj_frozen } -> [
-        "exact", JSON_Bool obj_exact;
-        "frozen", JSON_Bool obj_frozen;
-        "literal", JSON_Bool obj_literal;
-        "props", JSON_Array (Core_list.map ~f:json_of_prop obj_props);
-      ]
+    | Obj o -> json_of_obj_t o
     | Arr { arr_readonly; arr_literal; arr_elt_t; } -> [
         "readonly", JSON_Bool arr_readonly;
         "literal", JSON_Bool arr_literal;
@@ -291,14 +328,21 @@ let json_of_t ~strip_root =
     | TypeAlias { ta_name; ta_tparams; ta_type } -> [
         "name", json_of_symbol ta_name;
         "typeParams", json_of_type_params ta_tparams;
-        "body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type
+        "body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type;
       ]
-    | TypeOf (path, name) -> [
-        "path", JSON_Array (Core_list.map ~f:(fun x -> JSON_String x) path);
-        "name", JSON_String name;
+    | InlineInterface { if_extends; if_body } -> Hh_json.(
+      let extends = Core_list.map ~f:(fun g ->
+        JSON_Object (json_of_generic g)
+      ) if_extends in
+      [
+        "extends", JSON_Array extends;
+        "body", JSON_Object (json_of_obj_t if_body);
+      ])
+    | TypeOf b -> [
+        "name", JSON_String (builtin_value b);
       ]
     | Module (name, _) -> [
-        "name", json_of_symbol name;
+        "name", Option.value_map ~f:json_of_symbol ~default:JSON_Null name;
       ]
     | ClassDecl (name, tparams) -> [
         "name", json_of_symbol name;
@@ -317,6 +361,12 @@ let json_of_t ~strip_root =
   )
 
   and json_of_tvar (RVar i) = Hh_json.(["id", int_ i])
+
+  and json_of_generic (s, k, targs_opt) =
+    json_of_targs targs_opt @ [
+      "type", json_of_symbol s;
+      "kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k);
+    ]
 
   and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
     Hh_json.(
@@ -342,6 +392,16 @@ let json_of_t ~strip_root =
         "returnType", json_of_t fun_return;
       ]
     )
+
+  and json_of_obj_t o = Hh_json.(
+    let { obj_exact; obj_props; obj_literal; obj_frozen } = o in
+    [
+      "exact", JSON_Bool obj_exact;
+      "frozen", JSON_Bool obj_frozen;
+      "literal", JSON_Bool obj_literal;
+      "props", JSON_Array (Core_list.map ~f:json_of_prop obj_props);
+    ]
+  )
 
   and json_of_type_params ps = Hh_json.(
     match ps with

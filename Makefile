@@ -77,12 +77,14 @@ MODULES=\
   src/common/audit\
   src/common/build_id\
   src/common/errors\
+  src/common/exit_status\
   src/common/lints\
+  src/common/logging_utils\
   src/common/lwt\
   src/common/modulename\
   src/common/monad\
   src/common/profiling\
-	src/common/semver\
+  src/common/semver\
   src/common/span\
   src/common/tarjan\
   src/common/transaction\
@@ -129,12 +131,14 @@ MODULES=\
   src/state/heaps/context\
   src/state/heaps/module\
   src/state/heaps/parsing\
+  src/state/heaps/parsing/exceptions\
   src/state/locals/module\
   src/state/readers\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
   src/typing\
+  src/typing/coverage_response\
   src/typing/errors\
   src/typing/polarity\
   hack/dfind\
@@ -147,6 +151,7 @@ MODULES=\
   hack/socket\
   hack/third-party/avl\
   hack/third-party/core\
+  hack/utils/cgroup\
   hack/utils/core\
   hack/utils/buffered_line_reader\
   hack/utils/build_mode/prod\

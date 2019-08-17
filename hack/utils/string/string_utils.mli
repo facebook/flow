@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2019, Facebook, Inc.
  * All rights reserved.
  *
@@ -92,3 +92,5 @@ module CharSet :
     val of_string : string -> t
     val to_string : t -> string
   end
+
+val levenshtein_distance : string -> string -> int

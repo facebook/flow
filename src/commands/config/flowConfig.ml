@@ -70,6 +70,7 @@ module Opts = struct
     include_warnings: bool;
     lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
+    lsp_code_actions: bool;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
@@ -162,6 +163,7 @@ module Opts = struct
     include_warnings = false;
     lazy_mode = None;
     log_file = None;
+    lsp_code_actions = false;
     max_header_tokens = 10;
     max_files_checked_per_worker = 100;
     max_literal_length = 100;
@@ -593,6 +595,9 @@ module Opts = struct
 
     "experimental.enums",
       boolean (fun opts v -> Ok { opts with enums = v });
+
+    "experimental.lsp.code_actions",
+      boolean (fun opts v -> Ok { opts with lsp_code_actions = v });
 
     "experimental.strict_call_arity",
       boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v });
@@ -1047,6 +1052,7 @@ let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 let include_warnings c = c.options.Opts.include_warnings
 let lazy_mode c = c.options.Opts.lazy_mode
 let log_file c = c.options.Opts.log_file
+let lsp_code_actions c = c.options.Opts.lsp_code_actions
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_workers c = c.options.Opts.max_workers

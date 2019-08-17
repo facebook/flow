@@ -24,10 +24,14 @@ let set_of_fixable_signature_verification_locations file_sig =
   in
   List.fold_left add_fixable_sig_ver_error  LocSet.empty tolerable_errors
 
+let fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast =
+  let open Insert_type in
+  insert_type ~full_cx ~file_sig ~typed_ast ~expand_aliases:false
+    ~omit_targ_defaults:false ~strict:false ~ambiguity_strategy:Autofix_options.Generalize
+
 let fix_signature_verification_errors ~full_cx ~file_sig ~typed_ast =
   let open Insert_type in
-  let do_it = insert_type ~full_cx ~file_sig ~typed_ast ~expand_aliases:false
-    ~omit_targ_defaults:false ~strict:false ~ambiguity_strategy:Autofix_options.Generalize in
+  let do_it = fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast in
   let try_it loc (ast, it_errs) = try
     (do_it ast loc, it_errs)
     with FailedToInsertType err -> (ast, (error_to_string err) :: it_errs) in

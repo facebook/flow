@@ -299,31 +299,61 @@ module Expression
           Expect.token env T_AND;
           let rloc, right = with_loc binary_cover env in
           let loc = Loc.btwn lloc rloc in
-          logical_and env (make_logical env left right Logical.And loc) loc
+          let left = make_logical env left right Logical.And loc in
+
+          (* `a && b ?? c` is an error, but to recover, try to parse it like `(a && b) ?? c`. *)
+          let loc, left = coalesce ~allowed:false env left loc in
+
+          logical_and env left loc
       | _  -> lloc, left
     and logical_or env left lloc =
-      let options = parse_options env in
       match Peek.token env with
       | T_OR ->
           Expect.token env T_OR;
           let rloc, right = with_loc binary_cover env in
           let rloc, right = logical_and env right rloc in
           let loc = Loc.btwn lloc rloc in
-          logical_or env (make_logical env left right Logical.Or loc) loc
+          let left = make_logical env left right Logical.Or loc in
+
+          (* `a || b ?? c` is an error, but to recover, try to parse it like `(a || b) ?? c`. *)
+          let loc, left = coalesce ~allowed:false env left loc in
+
+          logical_or env left loc
+      | _ -> lloc, left
+    and coalesce ~allowed env left lloc =
+      match Peek.token env with
       | T_PLING_PLING ->
+          let options = parse_options env in
           if not options.esproposal_nullish_coalescing
           then error env Parse_error.NullishCoalescingDisabled;
 
+          if not allowed
+          then error env (Parse_error.NullishCoalescingUnexpectedLogical "??");
+
           Expect.token env T_PLING_PLING;
           let rloc, right = with_loc binary_cover env in
-          let rloc, right = logical_and env right rloc in
+          let rloc, right = match Peek.token env with
+          | (T_AND | T_OR) as t ->
+            (* `a ?? b || c` is an error. To recover, treat it like `a ?? (b || c)`. *)
+            error env (Parse_error.NullishCoalescingUnexpectedLogical (Token.value_of_token t));
+            let rloc, right = logical_and env right rloc in
+            logical_or env right rloc
+          | _ ->
+            rloc, right
+          in
           let loc = Loc.btwn lloc rloc in
-          logical_or env (make_logical env left right Logical.NullishCoalesce loc) loc
-      | _ -> left
+          coalesce ~allowed:true env (make_logical env left right Logical.NullishCoalesce loc) loc
+      | _ ->
+          lloc, left
     in fun env ->
       let loc, left = with_loc binary_cover env in
-      let loc, left = logical_and env left loc in
-      logical_or env left loc
+      let _, left = match Peek.token env with
+      | T_PLING_PLING -> coalesce ~allowed:true env left loc
+      | _ ->
+          let loc, left = logical_and env left loc in
+          logical_or env left loc
+      in
+      left
 
   and binary_cover =
     let binary_op env =
@@ -548,7 +578,7 @@ module Expression
     | _ ->
       if not allowed
         then error_at env (loc, Parse_error.UnexpectedSuper)
-        else error_unexpected env;
+        else error_unexpected ~expected:"either a call or access of `super`" env;
       super
 
   and import env = with_loc (fun env ->
@@ -615,7 +645,7 @@ module Expression
           property;
         }))
       | _ ->
-        error_unexpected env;
+        error_unexpected ~expected:"the identifier `target`" env;
         Eat.token env; (* skip unknown identifier *)
         start_loc, Expression.Identifier meta (* return `new` identifier *)
     end else
@@ -995,7 +1025,7 @@ module Expression
           else template_parts env quasis expressions
       | _ ->
           (* Malformed template *)
-          error_unexpected env;
+          error_unexpected ~expected:"a template literal part" env;
           let imaginary_quasi = fst expr, { Expression.TemplateLiteral.Element.
             value = { Expression.TemplateLiteral.Element.
               raw = "";

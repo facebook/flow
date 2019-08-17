@@ -90,22 +90,24 @@ let parameter_name is_opt name =
   let opt = if is_opt then "?" else "" in
   (Option.value name ~default:"_") ^ opt
 
-let lsp_completion_of_type (ty: Ty.t) =
-  let open Lsp.Completion in
-  match ty with
-  | Ty.InterfaceDecl _ -> Some Interface
-  | Ty.ClassDecl _ -> Some Class
-  | Ty.(StrLit _ | NumLit _ | BoolLit _) -> Some Value
-  | Ty.Fun _ -> Some Function
-  | Ty.TypeAlias _
-  | Ty.Union _ -> Some Enum
-  | Ty.Module _ -> Some Module
-  | Ty.(Tup _ | Bot _ | Null | Obj _ | Inter _ | TVar _ | Bound _ | Generic _ |
-      Any _ | Top | Void | Num _ | Str _ | Bool _ | Arr _ | TypeOf _ |
-      Utility _ | Mu _
-    ) ->  Some Variable
+let lsp_completion_of_type = Ty.(function
+  | InterfaceDecl _
+  | InlineInterface _ -> Some Lsp.Completion.Interface
+  | ClassDecl _ -> Some Lsp.Completion.Class
+  | StrLit _
+  | NumLit _
+  | BoolLit _ -> Some Lsp.Completion.Value
+  | Fun _ -> Some Lsp.Completion.Function
+  | TypeAlias _
+  | Union _ -> Some Lsp.Completion.Enum
+  | Module _ -> Some Lsp.Completion.Module
+  | Tup _ | Bot _ | Null | Obj _ | Inter _ | TVar _ | Bound _ | Generic _
+  | Any _ | Top | Void | Num _ | Str _ | Bool _ | Arr _ | TypeOf _
+  | Utility _ | Mu _ ->
+    Some Lsp.Completion.Variable
+)
 
-let autocomplete_create_result ((name, loc), (ty, ty_loc)) =
+let autocomplete_create_result (name, loc) (ty, ty_loc) =
   let res_ty = ty_loc, Ty_printer.string_of_t ~with_comments:false ty in
   let res_kind = lsp_completion_of_type ty in
   Ty.(match ty with
@@ -135,18 +137,16 @@ let autocomplete_create_result ((name, loc), (ty, ty_loc)) =
         func_details = None }
   )
 
-let autocomplete_filter_members members =
-  SMap.filter (fun key _ ->
-    (* This is really for being better safe than sorry. It shouldn't happen. *)
-    not (is_autocomplete key)
-    &&
-    (* filter out constructor, it shouldn't be called manually *)
-    not (key = "constructor")
-    &&
-    (* strip out members from prototypes which are implicitly created for
-       internal reasons *)
-    not (Reason.is_internal_name key)
-  ) members
+let autocomplete_is_valid_member key =
+  (* This is really for being better safe than sorry. It shouldn't happen. *)
+  not (is_autocomplete key)
+  &&
+  (* filter out constructor, it shouldn't be called manually *)
+  not (key = "constructor")
+  &&
+  (* strip out members from prototypes which are implicitly created for
+     internal reasons *)
+  not (Reason.is_internal_name key)
 
 let autocomplete_member
     ~reader ~exclude_proto_members ~ac_type
@@ -191,34 +191,37 @@ let autocomplete_member
       evaluate_type_destructors = true;
       optimize_types = true;
       omit_targ_defaults = false;
-      simplify_empty = true;
+      merge_bot_and_any_kinds = true;
     } in
     let file = Context.file cx in
     let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
-    let result = result_map
-    |> autocomplete_filter_members
-    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> loc_of_aloc ~reader), t))
-    |> SMap.values
-    |> Ty_normalizer.from_types ~options ~genv
-    |> Core_list.filter_map ~f:(function
-     | (name, ty_loc), Ok ty -> Some ((name, ac_loc), (ty, ty_loc))
-     | _ -> None
-     )
-    |> Core_list.map ~f:autocomplete_create_result
-    |> List.rev in
+    let rev_result = SMap.fold (fun name (_id_loc, t) acc ->
+      if not (autocomplete_is_valid_member name) then acc else
+      let loc = Type.loc_of_t t |> loc_of_aloc ~reader in
+      ((name, loc), t)::acc
+    ) result_map [] in
+    let result =
+      rev_result
+      |> Ty_normalizer.from_types ~options ~genv
+      |> Core_list.rev_filter_map ~f:(function
+          | (name, ty_loc), Ok ty ->
+            Some (autocomplete_create_result (name, ac_loc) (ty, ty_loc))
+          | _ -> None
+        )
+    in
     Ok (result, Some json_data_to_log)
 
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let result = SMap.fold (fun name entry acc ->
+  let (result, errors) = SMap.fold (fun name entry (acc, errors) ->
     (* Filter out internal environment variables except for this and
        super. *)
     let is_this = name = (Reason.internal_name "this") in
     let is_super = name = (Reason.internal_name "super") in
     if not (is_this || is_super) && Reason.is_internal_name name
-    then acc
+    then (acc, errors)
     else (
       let (ty_loc, name) =
         (* renaming of this/super *)
@@ -238,17 +241,34 @@ let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
         evaluate_type_destructors = true;
         optimize_types = true;
         omit_targ_defaults = false;
-        simplify_empty = true;
+        merge_bot_and_any_kinds = true;
       } in
       let file = Context.file cx in
       let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
       let type_ = Scope.Entry.actual_type entry in
       match Ty_normalizer.from_type ~options ~genv type_ with
-      | Ok ty -> autocomplete_create_result ((name, ac_loc), (ty, ty_loc)) :: acc
-      | Error _ -> acc
+      | Ok ty ->
+        let result = autocomplete_create_result (name, ac_loc) (ty, ty_loc) in
+        result :: acc, errors
+      | Error err -> acc, err :: errors
     )
-  ) env [] in
-  Ok (result, None)
+  ) env ([], []) in
+  let json_data_to_log =
+    let open Hh_json in
+    let result_str = match result, errors with
+    | _, [] -> "SUCCESS"
+    | [], _ -> "FAILURE_NORMALIZER"
+    | _, _ -> "PARTIAL"
+    in
+    JSON_Object [
+      "ac_type", JSON_String "Acid";
+      "result", JSON_String result_str;
+      "count", JSON_Number (result |> List.length |> string_of_int);
+      "errors", JSON_Array (Core_list.rev_map errors
+        ~f:(fun err -> JSON_String (Ty_normalizer.error_to_string err)));
+    ]
+  in
+  Ok (result, Some json_data_to_log)
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
@@ -279,4 +299,11 @@ let autocomplete_get_results ~reader cx file_sig typed_ast state docblock =
       cx file_sig typed_ast this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
     autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock
-  | None -> Ok ([], None)
+  | None ->
+    let json_data_to_log =
+      let open Hh_json in
+      JSON_Object [
+        "ac_type", JSON_String "None";
+      ]
+    in
+    Ok ([], Some json_data_to_log)

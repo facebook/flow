@@ -270,15 +270,7 @@ class visitor = object (self)
     | Kind.Empty -> self#types_ cx op (init_kind, init_trust) ts
 end
 
-(* Expressions can be in one of four states:
-    - Uncovered: This is an any or any-like type and is not covered by Flow.
-    - Empty: This is an empty type, representing unreachable code, and is not covered by Flow.
-    - Tainted: This is covered in that it has a static type, but trust analysis has indicated
-               that this type may not accurately represent its type at runtime.
-    - Untainted: This is covered, and its static type can be shown to accurately reflect
-               its runtime type.
- *)
-type expression_coverage = Uncovered | Empty | Tainted | Untainted
+open Coverage_response
 
 let result_of_coverage = function
   | Kind.Any, Taint.Untainted     ->
@@ -299,13 +291,6 @@ let m_or = function
   | Empty, m2 | Untainted, m2 -> m2
   | m1, Empty | m1, Untainted -> m1
   | Tainted, Tainted -> Tainted
-
-type file_coverage = {
-  untainted: int;
-  tainted: int;
-  uncovered: int;
-  empty: int;
-}
 
 let initial_coverage = {
   untainted = 0;

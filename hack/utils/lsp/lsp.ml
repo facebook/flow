@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
@@ -232,6 +232,59 @@ module MessageType = struct
     | LogMessage  (* 4 *)
 end
 
+module CodeActionKind = struct
+  (*  The kind of a code action.
+   *  Kinds are a hierarchical list of identifiers separated by `.`, e.g.
+   * `"refactor.extract.function"`.
+   * The set of kinds is open and client needs to announce the kinds it supports
+   * to the server during initialization.
+   * CodeActionKind.t uses a pair to represent a non-empty list and provides utility
+   * functions for creation, membership, printing.
+   * Module CodeAction below also references this module as Kind.
+   *)
+  type t = (string * string list)
+
+  (* is x of kind k? *)
+  let is_kind : t -> t -> bool =
+    let rec is_prefix_of ks xs =
+      match ks, xs with
+      | [], _ -> true
+      | (k :: ks), (x :: xs) when String.equal k x -> is_prefix_of ks xs
+      | _, _ -> false in
+    fun (k, ks) (x, xs) -> String.equal k x && is_prefix_of ks xs
+
+  (* does `ks` contain kind `k` *)
+  let contains_kind k ks = List.exists (is_kind k) ks
+
+  (* does an optional list of kinds `ks` contain kind `k` *)
+  let contains_kind_opt ~default k ks =
+    match ks with
+    | Some ks -> contains_kind k ks
+    | None -> default
+
+  (* Create a kind from a string that follows the spec *)
+  let kind_of_string : string -> t =
+    fun s ->
+    match String.split_on_char '.' s with
+    | [] -> failwith "split_on_char does not return an empty list"
+    | (k :: ks) -> (k, ks)
+
+  (* Create the equivalent string that the spec would have required *)
+  let string_of_kind : t -> string =
+    fun (k, ks) -> String.concat "." (k :: ks)
+
+  (* Create a new sub-kind of an existing kind *)
+  let sub_kind : t -> string -> t =
+    let cons_to_end (ss : string list) (s : string) =
+      Core_list.(fold_right ss ~f:cons ~init:[s]) in
+    fun (k, ks) s -> (k, cons_to_end ks s)
+
+  (* Some of the constants defined by the spec *)
+  let quickfix = kind_of_string "quickfix"
+
+  (* Document wide code actions *)
+  let source = kind_of_string "source"
+end
 
 (* Cancellation notification, method="$/cancelRequest" *)
 module CancelRequest = struct
@@ -274,6 +327,7 @@ module Initialize = struct
     useTextEditAutocomplete: bool; (* only supported for Hack so far *)
     liveSyntaxErrors: bool; (* implicitly true for Hack; supported in Flow *)
     namingTableSavedStatePath: string option; (* only supported for Hack *)
+    sendServerStatusEvents: bool; (* only supported for Hack *)
   }
 
   and client_capabilities = {
@@ -303,6 +357,7 @@ module Initialize = struct
   and textDocumentClientCapabilities = {
     synchronization: synchronization;
     completion: completion;  (* textDocument/completion *)
+    codeAction: codeAction;
     (* omitted: dynamic-registration fields *)
   }
 
@@ -321,6 +376,22 @@ module Initialize = struct
 
   and completionItem = {
     snippetSupport: bool;  (* client can do snippets as insert text *)
+  }
+
+  and codeAction = {
+    (* Whether code action supports dynamic registration. *)
+    codeAction_dynamicRegistration : bool; (* wire: dynamicRegistraction *)
+    (* The client support code action literals as a valid
+     * response of the `textDocument/codeAction` request. *)
+    codeActionLiteralSupport : codeActionliteralSupport option;
+  }
+
+  and codeActionliteralSupport = {
+    (* The code action kind values the client supports. When this
+     * property exists the client also guarantees that it will
+     * handle values outside its set gracefully and falls back
+     * to a default value when unknown. *)
+    codeAction_valueSet: CodeActionKind.t list (* wire: valueSet *)
   }
 
   and windowClientCapabilities = {
@@ -444,6 +515,14 @@ end
 
 (* PublishDiagnostics notification, method="textDocument/PublishDiagnostics" *)
 module PublishDiagnostics = struct
+
+  type diagnosticSeverity =
+    | Error [@value 1]
+    | Warning [@value 2]
+    | Information [@value 3]
+    | Hint [@value 4]
+    [@@ deriving enum]
+
   type params = publishDiagnosticsParams
 
   and publishDiagnosticsParams = {
@@ -466,11 +545,6 @@ module PublishDiagnostics = struct
     | StringCode of string
     | NoCode
 
-  and diagnosticSeverity =
-    | Error (* 1 *)
-    | Warning (* 2 *)
-    | Information (* 3 *)
-    | Hint (* 4 *)
 
   and diagnosticRelatedInformation = {
     relatedLocation: Location.t;  (* wire: just "location" *)
@@ -563,6 +637,52 @@ module TypeDefinition = struct
   type params = TextDocumentPositionParams.t
 
   and result = DefinitionLocation.t list
+end
+
+module CodeAction = struct
+  (* A code action represents a change that can be performed in code, e.g. to fix a problem or
+    to refactor code. *)
+  type t = {
+    (* A short, human-readable, title for this code action. *)
+    title: string;
+    (* The kind of the code action. Used to filter code actions. *)
+    kind: CodeActionKind.t;
+    (* The diagnostics that this code action resolves. *)
+    diagnostics: PublishDiagnostics.diagnostic list;
+    (* A CodeAction must set either `edit` and/or a `command`.
+       If both are supplied, the `edit` is applied first, then the `command` is executed. *)
+    action : edit_and_or_command;
+  }
+
+  and edit_and_or_command =
+  | EditOnly of WorkspaceEdit.t
+  | CommandOnly of Command.t
+  | BothEditThenCommand of (WorkspaceEdit.t * Command.t)
+
+  type result = command_or_action list
+
+  and command_or_action =
+  | Command of Command.t
+  | Action of t
+end
+
+(* Code Action Request, method="textDocument/codeAction" *)
+module CodeActionRequest = struct
+  type params = {
+    (* The document in which the command was invoked. *)
+    textDocument: TextDocumentIdentifier.t;
+    (* The range for which the command was invoked. *)
+    range: range;
+    (* Context carrying additional information. *)
+    context: codeActionContext;
+  }
+
+  (* Contains additional diagnostic information about the context in which
+     a code action is run. *)
+  and codeActionContext = {
+    diagnostics: PublishDiagnostics.diagnostic list;
+    only: CodeActionKind.t list option
+  }
 end
 
 (* Completion request, method="textDocument/completion" *)
@@ -1021,6 +1141,7 @@ type lsp_request =
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
   | TypeDefinitionRequest of TypeDefinition.params
+  | CodeActionRequest of CodeActionRequest.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
@@ -1045,6 +1166,7 @@ type lsp_result =
   | HoverResult of Hover.result
   | DefinitionResult of Definition.result
   | TypeDefinitionResult of TypeDefinition.result
+  | CodeActionResult of CodeAction.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result

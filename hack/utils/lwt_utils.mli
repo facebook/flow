@@ -60,3 +60,5 @@ raises an exception. *)
 val read_all: string -> (string, string) Lwt_result.t
 (** Reads all the contents from the given file on disk, or returns an error
 message if unable to do so. *)
+
+module Promise: Promise.S with type 'a t = 'a Lwt.t

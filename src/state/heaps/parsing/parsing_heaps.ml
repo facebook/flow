@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Parsing_heaps_exceptions
 
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
@@ -153,14 +154,6 @@ module ParsingHeaps = struct
     SigFileSigHeap.revive_batch files;
     FileHashHeap.revive_batch files
 end
-
-exception Ast_not_found of string
-exception Sig_ast_not_found of string
-exception Sig_ast_ALoc_table_not_found of string
-exception Docblock_not_found of string
-exception Requires_not_found of string
-exception Sig_requires_not_found of string
-exception Hash_not_found of string
 
 module type READER = sig
   type reader

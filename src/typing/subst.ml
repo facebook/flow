@@ -29,7 +29,11 @@ let substituter = object(self)
     let props_map = Context.find_props cx id in
     let props_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props_map in
     let id' = if props_map == props_map' then id
-      else Context.make_property_map cx props_map' in
+      (* When substitution results in a new property map, we have to use a
+         generated id, rather than a location from source. The substituted
+         object will have the same location as the generic version, meaning
+         that this location will not serve as a unique identifier. *)
+      else Context.generate_property_map cx props_map' in
     id'
 
   method exports cx map_cx id =

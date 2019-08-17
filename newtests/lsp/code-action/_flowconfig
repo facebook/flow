@@ -1,0 +1,5 @@
+[options]
+experimental.types_first=true
+experimental.well_formed_exports=true
+experimental.lsp.code_actions=true
+all=true

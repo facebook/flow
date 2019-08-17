@@ -27,6 +27,10 @@ class virtual ['a] t :
       Context.t -> 'a -> Type.funtype -> Type.funtype
     method inst_type :
       Context.t -> 'a -> Type.insttype -> Type.insttype
+    method object_kit_spread_operand :
+      Context.t -> 'a -> Type.Object.Spread.operand -> Type.Object.Spread.operand
+    method object_kit_spread_operand_slice :
+      Context.t -> 'a -> Type.Object.Spread.operand_slice -> Type.Object.Spread.operand_slice
     method obj_type :
       Context.t -> 'a -> Type.objtype -> Type.objtype
     method predicate :
@@ -91,9 +95,13 @@ class virtual ['a] t_with_uses :
       Context.t -> 'a -> Type.lookup_action -> Type.lookup_action
     method lookup_kind :
       Context.t -> 'a -> Type.lookup_kind -> Type.lookup_kind
+    method object_kit_acc_element :
+      Context.t -> 'a -> Type.Object.Spread.acc_element -> Type.Object.Spread.acc_element
     method object_kit_resolve_tool :
       Context.t ->
       'a -> Type.Object.resolve_tool -> Type.Object.resolve_tool
+    method object_kit_slice :
+      Context.t -> 'a -> Type.Object.slice -> Type.Object.slice
     method object_kit_tool :
       Context.t ->
       'a -> Type.Object.tool -> Type.Object.tool
@@ -104,6 +112,9 @@ class virtual ['a] t_with_uses :
     method resolve :
       Context.t ->
       'a -> Type.Object.resolve -> Type.Object.resolve
+    method resolved_prop :
+      Context.t ->
+      'a -> Type.Object.prop -> Type.Object.prop
     method resolve_array :
       Context.t ->
       'a -> Type.React.resolve_array -> Type.React.resolve_array
@@ -113,9 +124,6 @@ class virtual ['a] t_with_uses :
     method resolve_spread :
       Context.t ->
       'a -> Type.resolve_spread_type -> Type.resolve_spread_type
-    method resolved_prop :
-      Context.t ->
-      'a -> Type.Object.prop -> Type.Object.prop
     method resolved :
       Context.t ->
       'a -> Type.Object.resolved -> Type.Object.resolved

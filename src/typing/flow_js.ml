@@ -414,22 +414,33 @@ module Cache = struct
     type id_cache_key = Type.t * Type.defer_use_t
     type repos_cache_key = Type.t * Type.defer_use_t * int
 
+    let eval_id_cache: (int, Type.t) Hashtbl.t = Hashtbl.create 0
     let id_cache: (id_cache_key, int) Hashtbl.t = Hashtbl.create 0
     let repos_cache: (repos_cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
 
     let id t defer_use =
-      let cache_key = t, defer_use in
-      try
-        Hashtbl.find id_cache cache_key
-      with _ ->
-        let i = mk_id () in
-        Hashtbl.add id_cache cache_key i;
-        i
+      match t with
+      | EvalT (_, d, i) when d = defer_use ->
+        (match Hashtbl.find_opt eval_id_cache i with
+        | Some t -> t
+        | None ->
+          let i = mk_id () in
+          Hashtbl.add eval_id_cache i t;
+          EvalT (t, defer_use, i))
+      | _ ->
+        let cache_key = t, defer_use in
+        let id = match Hashtbl.find_opt id_cache cache_key with
+          | Some i -> i
+          | None ->
+            let i = mk_id () in
+            Hashtbl.add id_cache cache_key i;
+            i
+        in
+        EvalT (t, defer_use, id)
 
     let find_repos t defer_use id =
       let cache_key = t, defer_use, id in
-      try Some (Hashtbl.find repos_cache cache_key)
-      with _ -> None
+      Hashtbl.find_opt repos_cache cache_key
 
     let add_repos t defer_use id tvar =
       let cache_key = t, defer_use, id in
@@ -443,8 +454,7 @@ module Cache = struct
 
     let find reason i =
       let cache_key = reason, i in
-      try Some (Hashtbl.find cache cache_key)
-      with _ -> None
+      Hashtbl.find_opt cache cache_key
 
     let add reason i tvar =
       let cache_key = reason, i in
@@ -456,6 +466,7 @@ module Cache = struct
     Hashtbl.clear Subst.cache;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
+    Hashtbl.clear Eval.eval_id_cache;
     Hashtbl.clear Eval.id_cache;
     Hashtbl.clear Eval.repos_cache;
     Hashtbl.clear Fix.cache;
@@ -971,7 +982,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
       | x::xs -> x, xs
       | [] -> assert false
     in
-    List.fold_left (Fn.const (TestID.run f)) (f hd_map) tl_maps
+    Core_list.fold_left ~f:(Fn.const (TestID.run f)) ~init:(f hd_map) tl_maps
 
 let inherited_method x = x <> "constructor"
 
@@ -992,6 +1003,7 @@ module M__flow
   (AssertGround: Flow_common.ASSERT_GROUND)
   (TrustChecking: Flow_common.TRUST_CHECKING)
   (CustomFunKit: Custom_fun_kit.CUSTOM_FUN)
+  (ObjectKit: Object_kit.OBJECT)
 = struct
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
@@ -2186,8 +2198,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             |> Properties.add_field "value" Polarity.Neutral None t
           in
           let id_succ, id_fail =
-            Context.make_property_map cx pmap_fail,
-            Context.make_property_map cx pmap_succ in
+            Context.generate_property_map cx pmap_fail,
+            Context.generate_property_map cx pmap_succ in
           let reason = mk_reason (RCustom "Result<T>") fun_loc in
           let obj_fail, obj_succ =
             mk_object_def_type ~reason ~dict:None ~call:None id_fail dummy_prototype,
@@ -2870,7 +2882,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
 
     | UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
-      object_kit cx trace ~use_op reason resolve_tool tool tout l
+      ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
 
     (* cases where there is no loss of precision *)
 
@@ -2922,7 +2934,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
           (* If both enums are subsets of each other, they contain the same elements.
             2 n log n still grows slower than n^2 *)
-          | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2 && EnumSet.subset enums2 enums1
+          | Some enums1, Some enums2 ->
+            UnionEnumSet.subset enums1 enums2 && UnionEnumSet.subset enums2 enums1
           | _ -> false
         then () else
           UnionRep.members rep1 |> Core_list.iter ~f:(fun t -> rec_flow cx trace (t, u))
@@ -2934,28 +2947,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* we have the check l.key === sentinel where l.key is a union *)
       if sense then
         match sentinel with
-        | Enum.One enum ->
+        | UnionEnum.One enum ->
           begin
             let def = match enum with
-              | Enum.Str v -> SingletonStrT v
-              | Enum.Num v -> SingletonNumT v
-              | Enum.Bool v -> SingletonBoolT v
-              | Enum.Void -> VoidT
-              | Enum.Null -> NullT in
+              | UnionEnum.Str v -> SingletonStrT v
+              | UnionEnum.Num v -> SingletonNumT v
+              | UnionEnum.Bool v -> SingletonBoolT v
+              | UnionEnum.Void -> VoidT
+              | UnionEnum.Null -> NullT in
             match UnionRep.quick_mem_enum (Context.trust_errors cx) (DefT (r, Trust.bogus_trust (), def)) rep with
             | UnionRep.No -> ()  (* provably unreachable, so prune *)
             | UnionRep.Yes -> rec_flow_t cx trace (l, result)
             | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
               UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
           end
-        | Enum.Many enums ->
-          let acc = EnumSet.fold (fun enum acc ->
+        | UnionEnum.Many enums ->
+          let acc = UnionEnumSet.fold (fun enum acc ->
             let def = match enum with
-              | Enum.Str v -> SingletonStrT v
-              | Enum.Num v -> SingletonNumT v
-              | Enum.Bool v -> SingletonBoolT v
-              | Enum.Void -> VoidT
-              | Enum.Null -> NullT in
+              | UnionEnum.Str v -> SingletonStrT v
+              | UnionEnum.Num v -> SingletonNumT v
+              | UnionEnum.Bool v -> SingletonBoolT v
+              | UnionEnum.Void -> VoidT
+              | UnionEnum.Null -> NullT in
             UnionRep.join_quick_mem_results (acc,
               UnionRep.quick_mem_enum (Context.trust_errors cx) (DefT (r, Trust.bogus_trust (), def)) rep)
           ) enums UnionRep.No in
@@ -3013,7 +3026,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason_l, _, StrT Literal (_, x)), UseT (use_op, UnionT (reason_u, rep)) when
         match UnionRep.check_enum rep with
         | Some enums ->
-            if not (EnumSet.mem (Enum.Str x) enums)
+            if not (UnionEnumSet.mem (UnionEnum.Str x) enums)
             then add_output cx ~trace (Error_message.EIncompatibleWithUseOp
               (reason_l, UnionRep.specialized_reason reason_u rep, use_op));
             true
@@ -3106,7 +3119,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
       Context.iter_real_props cx props_tmap (fun x p ->
         let pmap = SMap.singleton x p in
-        let id = Context.make_property_map cx pmap in
+        let id = Context.generate_property_map cx pmap in
         let obj = mk_objecttype ~flags ~dict:dict_t ~call:call_t id dummy_prototype in
         rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), ObjT obj)))
       );
@@ -3147,7 +3160,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
 
     | IntersectionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
-      object_kit cx trace ~use_op reason resolve_tool tool tout l
+      ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
 
     (* CallT uses that arise from the CallType type destructor are processed
        without preparation (see below). This is because in these cases, the
@@ -4481,10 +4494,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (use_op, ShapeT proto) ->
       let own_props = Context.find_props cx i.own_props in
       let proto_props = Context.find_props cx i.proto_props in
-      let proto_props =
-        if i.structural
-        then proto_props
-        else SMap.remove "constructor" proto_props
+      let proto_props = match i.inst_kind with
+        | InterfaceKind _ -> proto_props
+        | ClassKind -> SMap.remove "constructor" proto_props
       in
       let props = SMap.union own_props proto_props in
       match_shape cx trace ~use_op proto reason props
@@ -4685,7 +4697,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let flags = { default_flags with sealed } in
         let dict = None in
         let call = None in
-        let pmap = Context.make_property_map cx SMap.empty in
+        let pmap = Context.generate_property_map cx SMap.empty in
         mk_objecttype ~flags ~dict ~call pmap proto
       in
       let new_obj = DefT (reason_c, bogus_trust (), ObjT objtype) in
@@ -5501,7 +5513,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************)
 
     | _, ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
-      object_kit cx trace ~use_op reason resolve_tool tool tout l
+      ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
 
     (**************************************************)
     (* function types can be mapped over a structure  *)
@@ -5544,7 +5556,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.map_fields map_t
-        |> Context.make_property_map cx
+        |> Context.generate_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
         let value = map_t dict.value in
@@ -5576,7 +5588,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.mapi_fields mapi_field
-        |> Context.make_property_map cx
+        |> Context.generate_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
         let value = mapi_t dict.key dict.value in
@@ -5865,7 +5877,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, _, FunT (statics, _, _)),
       UseT (use_op, DefT (reason_inst, _, InstanceT (_, _, _, {
         own_props;
-        structural = true;
+        inst_kind = InterfaceKind _;
         _;
       }))) ->
       if not
@@ -5879,7 +5891,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
-    | _, UseT (use_op, (DefT (_, _, InstanceT (_,_,_,{structural=true;_})) as i)) ->
+    | _, UseT (use_op, (DefT (_, _, InstanceT (_,_,_,{
+        inst_kind = InterfaceKind _;
+      _})) as i)) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
 
     | (ObjProtoT _ | FunProtoT _ | DefT (_, _, NullT)), ImplementsT _ -> ()
@@ -5888,7 +5902,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         own_props;
         proto_props;
         inst_call_t;
-        structural = true;
+        inst_kind = InterfaceKind _;
         _;
       })),
       ImplementsT (use_op, t) ->
@@ -6038,7 +6052,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       guard cx trace l pred result sink
 
     | DefT (_, _, StrT lit),
-      SentinelPropTestT (reason, l, key, sense, Enum.(One Str sentinel), result) ->
+      SentinelPropTestT (reason, l, key, sense, UnionEnum.(One Str sentinel), result) ->
       begin match lit with
         | Literal (_, value) when (value = sentinel) != sense ->
           if not sense
@@ -6051,7 +6065,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, _, NumT lit),
-      SentinelPropTestT (reason, l, key, sense, Enum.(One Num sentinel_lit), result) ->
+      SentinelPropTestT (reason, l, key, sense, UnionEnum.(One Num sentinel_lit), result) ->
       let sentinel, _ = sentinel_lit in
       begin match lit with
         | Literal (_, (value, _)) when (value = sentinel) != sense ->
@@ -6065,7 +6079,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, _, BoolT lit),
-      SentinelPropTestT (reason, l, key, sense, Enum.(One Bool sentinel), result) ->
+      SentinelPropTestT (reason, l, key, sense, UnionEnum.(One Bool sentinel), result) ->
         begin match lit with
         | Some value when (value = sentinel) != sense ->
           if not sense
@@ -6078,13 +6092,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         end
 
     | DefT (_, _, NullT),
-      SentinelPropTestT (_reason, l, _key, sense, Enum.(One Null), result) ->
+      SentinelPropTestT (_reason, l, _key, sense, UnionEnum.(One Null), result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
 
     | DefT (_, _, VoidT),
-      SentinelPropTestT (_reason, l, _key, sense, Enum.(One Void), result) ->
+      SentinelPropTestT (_reason, l, _key, sense, UnionEnum.(One Void), result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
@@ -6483,7 +6497,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         own_props;
         proto_props;
         inst_call_t;
-        structural = true;
+        inst_kind = InterfaceKind _;
         _;
       }))) ->
       structural_subtype cx trace ~use_op l reason_inst
@@ -7615,29 +7629,29 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
 | TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts in
-  rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
+  rec_flow_t cx trace (Cache.Eval.id t destructor, tout)
 (* If we are destructuring a union, evaluating the destructor on the union
    itself may have the effect of splitting the union into separate lower
    bounds, which prevents the speculative match process from working.
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
 | UnionT (r, rep) ->
+  let destructor = TypeDestructorT (use_op, reason, d) in
   rec_flow_t cx trace (UnionT (r, rep |> UnionRep.ident_map (fun t ->
-    let destructor = TypeDestructorT (use_op, reason, d) in
-    EvalT (t, destructor, Cache.Eval.id t destructor)
+    Cache.Eval.id t destructor
   )), tout)
 | MaybeT (r, t) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let reason = replace_reason_const RNullOrVoid r in
   let rep = UnionRep.make
-    (let null = NullT.make reason |> with_trust bogus_trust in EvalT (null, destructor, Cache.Eval.id null destructor))
-    (let void = VoidT.make reason |> with_trust bogus_trust in EvalT (void, destructor, Cache.Eval.id void destructor))
-    [EvalT (t, destructor, Cache.Eval.id t destructor)]
+    (let null = NullT.make reason |> with_trust bogus_trust in Cache.Eval.id null destructor)
+    (let void = VoidT.make reason |> with_trust bogus_trust in Cache.Eval.id void destructor)
+    [Cache.Eval.id t destructor]
   in
   rec_flow_t cx trace (UnionT (r, rep), tout)
 | AnnotT (_, t, _) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
-  rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
+  rec_flow_t cx trace (Cache.Eval.id t destructor, tout)
 | _ ->
   rec_flow cx trace (t, match d with
   | NonMaybeType ->
@@ -7651,11 +7665,11 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     GetPropT (use_op, reason, Named (reason_op, x), tout)
   | ElementType t -> GetElemT (use_op, reason, t, tout)
   | Bind t -> BindT (use_op, reason, mk_methodcalltype t None [] tout, true)
-  | SpreadType (options, todo_rev) ->
+  | SpreadType (options, todo_rev, head_slice) ->
     let open Object in
     let open Object.Spread in
     let tool = Resolve Next in
-    let state = { todo_rev; acc = [] } in
+    let state = { todo_rev; acc = Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice} in
     ObjKitT (use_op, reason, tool, Spread (options, state), tout)
   | RestType (options, t) ->
     let open Object in
@@ -9591,12 +9605,12 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       (match Property.read_t p with
       | Some t ->
         let desc = RMatchingProp (key, match sentinel with
-          | Enum.(One Str s) -> RStringLit s
-          | Enum.(One Num (_, n)) -> RNumberLit n
-          | Enum.(One Bool b) -> RBooleanLit b
-          | Enum.(One Null) -> RNull
-          | Enum.(One Void) -> RVoid
-          | Enum.(Many _enums) -> REnum
+          | UnionEnum.(One Str s) -> RStringLit s
+          | UnionEnum.(One Num (_, n)) -> RNumberLit n
+          | UnionEnum.(One Bool b) -> RBooleanLit b
+          | UnionEnum.(One Null) -> RNull
+          | UnionEnum.(One Void) -> RVoid
+          | UnionEnum.(Many _enums) -> RUnionEnum
         ) in
         let reason = replace_reason_const desc (reason_of_t result) in
         let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
@@ -9621,16 +9635,16 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
   in
   let sentinel_of_literal = function
     | DefT (_, _, StrT (Literal (_, value)))
-    | DefT (_, _, SingletonStrT value)       -> Some Enum.(One (Str value))
+    | DefT (_, _, SingletonStrT value)       -> Some UnionEnum.(One (Str value))
     | DefT (_, _, NumT (Literal (_, value)))
-    | DefT (_, _, SingletonNumT value)       -> Some Enum.(One (Num value))
+    | DefT (_, _, SingletonNumT value)       -> Some UnionEnum.(One (Num value))
     | DefT (_, _, BoolT (Some value))
-    | DefT (_, _, SingletonBoolT value)      -> Some Enum.(One (Bool value))
-    | DefT (_, _, VoidT) -> Some Enum.(One Void)
-    | DefT (_, _, NullT) -> Some Enum.(One Null)
+    | DefT (_, _, SingletonBoolT value)      -> Some UnionEnum.(One (Bool value))
+    | DefT (_, _, VoidT) -> Some UnionEnum.(One Void)
+    | DefT (_, _, NullT) -> Some UnionEnum.(One Null)
     | UnionT (_, rep) ->
       begin match UnionRep.check_enum rep with
-        | Some enums -> Some Enum.(Many enums)
+        | Some enums -> Some UnionEnum.(Many enums)
         | None -> None
       end
     | _ -> None
@@ -10998,7 +11012,7 @@ and union_optimization_guard =
       rep1 = rep2 ||
       (* Try n log n check before n^2 check *)
       begin match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
-      | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2
+      | Some enums1, Some enums2 -> UnionEnumSet.subset enums1 enums2
       | _, _ ->
         (* Check if u contains l after unwrapping annots, tvars and repos types.
            This is faster than the n^2 case below because it avoids flattening both
@@ -11335,774 +11349,6 @@ and continue_repos cx trace reason ?(use_desc=false) t = function
   | Lower (use_op, l) -> rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, l))
   | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
-and object_kit =
-  let open Object in
-
-  (*******************************)
-  (* Shared Object Kit Utilities *)
-  (*******************************)
-
-  let read_prop r flags x p =
-    let t = match Property.read_t p with
-    | Some t -> t
-    | None ->
-      let reason = replace_reason_const (RUnknownProperty (Some x)) r in
-      let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
-      t
-    in
-    t, flags.exact
-  in
-
-  let read_dict r {value; dict_polarity; _} =
-    if Polarity.compat (dict_polarity, Polarity.Positive)
-    then value
-    else
-      let reason = replace_reason_const (RUnknownProperty None) r in
-      DefT (reason, bogus_trust (), MixedT Mixed_everything)
-  in
-
-  (* Treat dictionaries as optional, own properties. Dictionary reads should
-   * be exact. TODO: Forbid writes to indexers through the photo chain.
-   * Property accesses which read from dictionaries normally result in a
-   * non-optional result, but that leads to confusing spread results. For
-   * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
-  let get_prop r p dict =
-    match p, dict with
-    | Some _, _ -> p
-    | None, Some d -> Some (optional (read_dict r d), true)
-    | None, None -> None
-  in
-
-  (* Lift a pairwise function like spread2 to a function over a resolved list *)
-  let merge (f: slice -> slice -> slice) =
-    let f' (x0: resolved) (x1: resolved) =
-      Nel.map_concat (fun slice1 ->
-        Nel.map (f slice1) x0
-      ) x1
-    in
-    let rec loop x0 = function
-      | [] -> x0
-      | x1::xs -> loop (f' x0 x1) xs
-    in
-    fun x0 (x1,xs) -> loop (f' x0 x1) xs
-  in
-
-  (*****************)
-  (* Object Spread *)
-  (*****************)
-
-  let object_spread =
-    let open Object.Spread in
-
-    (* Compute spread result: slice * slice -> slice *)
-    let spread2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
-      let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
-      let merge_props (t1, own1) (t2, own2) =
-        let t1, opt1 = match t1 with OptionalT (_, t) -> t, true | _ -> t1, false in
-        let t2, opt2 = match t2 with OptionalT (_, t) -> t, true | _ -> t2, false in
-        (* An own, non-optional property definitely overwrites earlier properties.
-           Otherwise, the type might come from either side. *)
-        let t, own =
-          if own2 && not opt2 then t2, own2
-          else union t1 t2, own1 || own2
-        in
-        (* If either property is own, the result is non-optional unless the own
-           property is itself optional. Non-own implies optional (see mk_object),
-           so we don't need to handle those cases here. *)
-        let opt =
-          if own1 && own2 then opt1 && opt2
-          else own1 && opt1 || own2 && opt2
-        in
-        let t = if opt then optional t else t in
-        t, own
-      in
-      let props = SMap.merge (fun x p1 p2 ->
-        (* Due to width subtyping, failing to read from an inexact object does not
-           imply non-existence, but rather an unknown result. *)
-        let unknown r =
-          let r = replace_reason_const (RUnknownProperty (Some x)) r in
-          DefT (r, bogus_trust (), MixedT Mixed_everything), false
-        in
-        match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
-        | None, None -> None
-        | Some p1, Some p2 -> Some (merge_props p1 p2)
-        | Some p1, None ->
-          if flags2.exact
-          then Some p1
-          else Some (merge_props p1 (unknown r2))
-        | None, Some p2 ->
-          if flags1.exact
-          then Some p2
-          else Some (merge_props (unknown r1) p2)
-      ) props1 props2 in
-      let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
-        dict_name = None;
-        key = union d1.key d2.key;
-        value = union (read_dict r1 d1) (read_dict r2 d2);
-        dict_polarity = Polarity.Neutral
-      }) in
-      let flags = {
-        frozen = flags1.frozen && flags2.frozen;
-        sealed = Sealed;
-        exact =
-          flags1.exact && flags2.exact &&
-          Obj_type.sealed_in_op reason flags1.sealed &&
-          Obj_type.sealed_in_op reason flags2.sealed;
-      } in
-      reason, props, dict, flags
-    in
-
-    let spread reason = function
-      | x, [] -> x
-      | x0, x1::xs -> merge (spread2 reason) x0 (x1, xs)
-    in
-
-    let mk_object cx reason target (r, props, dict, flags) =
-      let props = SMap.map (fun (t, own) ->
-        (* Spread only copies over own properties. If `not own`, then the property
-           might be on a proto object instead, so make the result optional. *)
-        let t = match t with
-        | OptionalT _ -> t
-        | _ -> if own then t else optional t
-        in
-        Field (None, t, Polarity.Neutral)
-      ) props in
-      let id = Context.make_property_map cx props in
-      let proto = ObjProtoT reason in
-      let flags =
-        let exact = match target with
-        (* Type spread result is exact if annotated to be exact *)
-        | Annot { make_exact } -> make_exact
-        (* Value spread result is exact if all inputs are exact *)
-        | Value -> flags.exact
-        in
-        { sealed = Sealed; frozen = false; exact }
-      in
-      let call = None in
-      let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
-      (* Wrap the final type in an `ExactT` if we have an exact flag *)
-      if flags.exact then ExactT (reason, t) else t
-    in
-
-    fun options state cx trace use_op reason tout x ->
-      let reason = replace_reason invalidate_rtype_alias reason in
-      let {todo_rev; acc} = state in
-      Nel.iter (fun (r, _, _, {exact; _}) ->
-        match options with
-        | Annot { make_exact } when make_exact && not exact ->
-          add_output cx ~trace (Error_message.
-            EIncompatibleWithExact ((r, reason), use_op))
-        | _ -> ()
-      ) x;
-      match todo_rev with
-      | [] ->
-        let t = match spread reason (Nel.rev (x, acc)) with
-        | x, [] -> mk_object cx reason options x
-        | x0, x1::xs ->
-          UnionT (reason, UnionRep.make
-            (mk_object cx reason options x0)
-            (mk_object cx reason options x1)
-            (Core_list.map ~f:(mk_object cx reason options) xs))
-        in
-        rec_flow_t cx ~use_op trace (t, tout)
-      | t::todo_rev ->
-        let tool = Resolve Next in
-        let state = {todo_rev; acc = x::acc} in
-        rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Spread (options, state), tout))
-  in
-
-  (***************)
-  (* Object Rest *)
-  (***************)
-
-  let object_rest =
-    let open Object.Rest in
-
-    let optional = function
-    | (OptionalT _) as t -> t
-    | t -> Type.optional t
-    in
-
-    (* Subtract the second slice from the first slice and return the difference
-     * slice. The runtime implementation of this type operation is:
-     *
-     *     const result = {};
-     *
-     *     for (const p in props1) {
-     *       if (hasOwnProperty(props1, p)) {
-     *         if (!hasOwnProperty(props2, p)) {
-     *           result[p] = props1[p];
-     *         }
-     *       }
-     *     }
-     *
-     * The resulting object only has a property if the property is own in props1 and
-     * it is not an own property of props2.
-     *)
-    let rest cx trace ~use_op reason merge_mode
-      (r1, props1, dict1, flags1)
-      (r2, props2, dict2, flags2) =
-      let props = SMap.merge (fun k p1 p2 ->
-        match merge_mode, get_prop r1 p1 dict1, get_prop r2 p2 dict2, flags2.exact with
-        (* If the object we are using to subtract has an optional property, non-own
-         * property, or is inexact then we should add this prop to our result, but
-         * make it optional as we cannot know for certain whether or not at runtime
-         * the property would be subtracted.
-         *
-         * Sound subtraction also considers exactness and owness to determine
-         * optionality. If p2 is maybe-own then sometimes it may not be
-         * subtracted and so is optional. If props2 is not exact then we may
-         * optionally have some undocumented prop. *)
-        | (Sound | IgnoreExactAndOwn),
-          Some (t1, _), Some ((OptionalT _ as t2), _), _
-        | Sound,
-          Some (t1, _), Some (t2, false), _
-        | Sound,
-          Some (t1, _), Some (t2, _), false ->
-          rec_flow cx trace (t1, UseT (use_op, optional t2));
-          Some (Field (None, optional t1, Polarity.Neutral))
-
-        (* Otherwise if the object we are using to subtract has a non-optional own
-         * property and the object is exact then we never add that property to our
-         * source object. *)
-        | (Sound | IgnoreExactAndOwn),
-          None, Some (t2, _), _ ->
-          let reason = replace_reason_const (RUndefinedProperty k) r1 in
-          rec_flow cx trace (VoidT.make reason |> with_trust bogus_trust, UseT (use_op, t2));
-          None
-        | (Sound | IgnoreExactAndOwn),
-          Some (t1, _), Some (t2, _), _ ->
-          rec_flow cx trace (t1, UseT (use_op, t2));
-          None
-
-        (* If we have some property in our first object and none in our second
-         * object, but our second object is inexact then we want to make our
-         * property optional and flow that type to mixed. *)
-        | Sound,
-          Some (t1, _), None, false ->
-          rec_flow cx trace (t1, UseT (use_op, MixedT.make r2 |> with_trust bogus_trust));
-          Some (Field (None, optional t1, Polarity.Neutral))
-
-        (* If neither object has the prop then we don't add a prop to our
-         * result here. *)
-        | (Sound | IgnoreExactAndOwn | ReactConfigMerge _),
-          None, None, _
-            -> None
-
-        (* If our first object has a prop and our second object does not have that
-         * prop then we will copy over that prop. If the first object's prop is
-         * non-own then sometimes we may not copy it over so we mark it
-         * as optional. *)
-        | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (None, t, Polarity.Neutral))
-        | ReactConfigMerge _, Some (t, _), None, _ -> Some (Field (None, t, Polarity.Positive))
-        | Sound, Some (t, true), None, _ -> Some (Field (None, t, Polarity.Neutral))
-        | Sound, Some (t, false), None, _ -> Some (Field (None, optional t, Polarity.Neutral))
-
-        (* React config merging is special. We are trying to solve for C
-         * in the equation (where ... represents spread instead of rest):
-         *
-         *     {...DP, ...C} = P
-         *
-         * Where DP and P are known. Consider this case:
-         *
-         *     {...{p?}, ...C} = {p}
-         *
-         * The solution for C here is {p} instead of {p?} since
-         * {...{p?}, ...{p?}} is {p?} instead of {p}. This is inconsistent with
-         * the behavior of other object rest merge modes implemented in this
-         * pattern match. *)
-        | ReactConfigMerge _,
-          Some (t1, _), Some (OptionalT (_, t2), _), _ ->
-          (* We only test the subtyping relation of t1 and t2 if both t1 and t2
-           * are optional types. If t1 is required then t2 will always
-           * be overwritten. *)
-          (match t1 with
-          | OptionalT (_, t1) -> rec_flow_t cx trace (t2, t1)
-          | _ -> ());
-          Some (Field (None, t1, Polarity.Positive))
-        (* Using our same equation. Consider this case:
-         *
-         *     {...{p}, ...C} = {p}
-         *
-         * The solution for C here is {p?}. An empty object, {}, is not a valid
-         * solution unless that empty object is exact. Even for exact objects,
-         * {|p?|} is the best solution since it accepts more valid
-         * programs then {||}. *)
-        | ReactConfigMerge _,
-          Some (t1, _), Some (t2, _), _ ->
-          (* The DP type for p must be a subtype of the P type for p. *)
-          rec_flow_t cx trace (t2, t1);
-          Some (Field (None, optional t1, Polarity.Positive))
-        (* Consider this case:
-         *
-         *     {...{p}, ...C} = {}
-         *
-         * For C there will be no prop. However, if the props object is exact
-         * then we need to throw an error. *)
-        | ReactConfigMerge _,
-          None, Some (_, _), _ ->
-          if flags1.exact then (
-            let use_op = Frame (PropertyCompatibility {
-              prop = Some k;
-              lower = r2;
-              upper = r1;
-            }, unknown_use) in
-            let r2 = replace_reason_const (RProperty (Some k)) r2 in
-            let err = Error_message.EPropNotFound (Some k, (r2, r1), use_op) in
-            add_output cx ~trace err
-          );
-          None
-
-      ) props1 props2 in
-      let dict = match dict1, dict2 with
-        | None, None -> None
-        | Some dict, None -> Some dict
-        | None, Some _ -> None
-        (* If our first and second objects have a dictionary then we use our first
-         * dictionary, but we make the value optional since any set of keys may have
-         * been removed. *)
-        | Some dict1, Some dict2 ->
-          rec_flow cx trace (dict1.value, UseT (use_op, dict2.value));
-          Some ({
-            dict_name = None;
-            key = dict1.key;
-            value = optional dict1.value;
-            dict_polarity = Polarity.Neutral;
-          })
-      in
-      let flags = {
-        frozen = false;
-        sealed = Sealed;
-        exact = flags1.exact && Obj_type.sealed_in_op reason flags1.sealed;
-      } in
-      let id = Context.make_property_map cx props in
-      let proto = ObjProtoT r1 in
-      let call = None in
-      let t = mk_object_def_type ~reason:r1 ~flags ~dict ~call id proto in
-      (* Wrap the final type in an `ExactT` if we have an exact flag *)
-      if flags.exact then ExactT (r1, t) else t
-    in
-
-    fun options state cx trace use_op reason tout x ->
-      match state with
-      | One t ->
-        let tool = Resolve Next in
-        let state = Done x in
-        rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Rest (options, state), tout))
-      | Done base ->
-        let xs = Nel.map_concat (fun slice ->
-          Nel.map (rest cx trace ~use_op reason options slice) x
-        ) base in
-        let t = match xs with
-          | (x, []) -> x
-          | (x0, x1::xs) -> UnionT (reason, UnionRep.make x0 x1 xs)
-        in
-        let use_op p = Frame (ReactGetConfig {polarity = p}, use_op) in
-        match options with
-        | ReactConfigMerge Polarity.Neutral ->
-            rec_unify cx trace ~use_op:(use_op Polarity.Neutral) t tout
-        | ReactConfigMerge Polarity.Negative ->
-            rec_flow_t cx trace ~use_op:(use_op Polarity.Negative) (tout, t)
-        | ReactConfigMerge Polarity.Positive ->
-            rec_flow_t cx trace ~use_op:(use_op Polarity.Positive) (t, tout)
-        | _ ->
-            (* Intentional UnknownUse here. *)
-            rec_flow_t cx trace (t, tout)
-  in
-
-  (********************)
-  (* Object Read Only *)
-  (********************)
-
-  let object_read_only =
-    let polarity = Polarity.Positive in
-
-    let mk_read_only_object cx reason slice =
-      let (r, props, dict, flags) = slice in
-
-      let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-      let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
-      let call = None in
-      let id = Context.make_property_map cx props in
-      let proto = ObjProtoT reason in
-      let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
-      if flags.exact then ExactT (reason, t) else t
-    in
-
-    fun cx trace _ reason tout x ->
-      let t = match Nel.map (mk_read_only_object cx reason) x with
-        | (t, []) -> t
-        | (t0, t1::ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
-      in
-      (* Intentional UnknownUse here. *)
-      rec_flow_t cx trace (t, tout)
-  in
-
-  (**************)
-  (* Object Rep *)
-  (**************)
-
-  let object_rep =
-    let mk_object cx reason (r, props, dict, flags) =
-      (* TODO(jmbrown): Add polarity information to props *)
-      let polarity = Polarity.Neutral in
-      let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-      let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
-      let call = None in
-      let id = Context.make_property_map cx props in
-      let proto = ObjProtoT reason in
-      let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
-      if flags.exact then ExactT (reason, t) else t
-    in
-
-    fun cx trace use_op reason tout x ->
-      let t = match Nel.map (mk_object cx reason) x with
-      | (t, []) -> t
-      | (t0, t1::ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
-      in
-      rec_flow_t cx trace ~use_op (t, tout)
-  in
-
-  (****************)
-  (* React Config *)
-  (****************)
-
-  let react_config =
-    let open Object.ReactConfig in
-
-    (* All props currently have a neutral polarity. However, they should have a
-     * positive polarity (or even better, constant) since React.createElement()
-     * freezes the type of props. We use a neutral polarity today because the
-     * props type we flow the config into is written by users who very rarely
-     * add a positive variance annotation. We may consider marking that type as
-     * constant in the future as well. *)
-    let prop_polarity = Polarity.Neutral in
-
-    let finish cx trace reason config defaults children =
-      let (config_reason, config_props, config_dict, config_flags) = config in
-      (* If we have some type for children then we want to add a children prop
-       * to our config props. *)
-      let config_props =
-        Option.value_map children ~default:config_props ~f:(fun children ->
-          SMap.add "children" (children, true) config_props
-        )
-      in
-      (* Remove the key and ref props from our config. We check key and ref
-       * independently of our config. So we must remove them so the user can't
-       * see them. *)
-      let config_props = SMap.remove "key" config_props in
-      let config_props = SMap.remove "ref" config_props in
-      (* Create the final props map and dict.
-       *
-       * NOTE: React will copy any enumerable prop whether or not it
-       * is own to the config. *)
-      let props, dict, flags = match defaults with
-        (* If we have some default props then we want to add the types for those
-         * default props to our final props object. *)
-        | Some (defaults_reason, defaults_props, defaults_dict, defaults_flags) ->
-          (* Merge our props and default props. *)
-          let props = SMap.merge (fun _ p1 p2 ->
-            let p1 = get_prop config_reason p1 config_dict in
-            let p2 = get_prop defaults_reason p2 defaults_dict in
-            match p1, p2 with
-            | None, None -> None
-            | Some (t, _), None -> Some (Field (None, t, prop_polarity))
-            | None, Some (t, _) -> Some (Field (None, t, prop_polarity))
-            (* If a property is defined in both objects, and the first property's
-             * type includes void then we want to replace every occurrence of void
-             * with the second property's type. This is consistent with the behavior
-             * of function default arguments. If you call a function, `f`, like:
-             * `f(undefined)` and there is a default value for the first argument,
-             * then we will ignore the void type and use the type for the default
-             * parameter instead. *)
-            | Some (t1, _), Some (t2, _) ->
-              (* Use CondT to replace void with t1. *)
-              let t = Tvar.mk_where cx reason (fun tvar ->
-                rec_flow cx trace (filter_optional cx ~trace reason t1,
-                  CondT (reason, None, t2, tvar))
-              ) in
-              Some (Field (None, t, prop_polarity))
-          ) config_props defaults_props in
-          (* Merge the dictionary from our config with the defaults dictionary. *)
-          let dict = Option.merge config_dict defaults_dict (fun d1 d2 -> {
-            dict_name = None;
-            key = UnionT (reason, UnionRep.make d1.key d2.key []);
-            value = UnionT (reason, UnionRep.make
-              (read_dict config_reason d1)
-              (read_dict defaults_reason d2) []);
-            dict_polarity = prop_polarity;
-          }) in
-          (* React freezes the config so we set the frozen flag to true. The
-           * final object is only exact if both the config and defaults objects
-           * are exact. *)
-          let flags = {
-            frozen = true;
-            sealed = Sealed;
-            exact =
-              config_flags.exact && defaults_flags.exact &&
-              Obj_type.sealed_in_op reason config_flags.sealed &&
-              Obj_type.sealed_in_op reason defaults_flags.sealed;
-          } in
-          props, dict, flags
-        (* Otherwise turn our slice props map into an object props. *)
-        | None ->
-          (* All of the fields are read-only so we create positive fields. *)
-          let props = SMap.map (fun (t, _) -> Field (None, t, prop_polarity)) config_props in
-          (* Create a new dictionary from our config's dictionary with a
-           * positive polarity. *)
-          let dict = Option.map config_dict (fun d -> {
-            dict_name = None;
-            key = d.key;
-            value = d.value;
-            dict_polarity = prop_polarity;
-          }) in
-          (* React freezes the config so we set the frozen flag to true. The
-           * final object is only exact if the config object is exact. *)
-          let flags = {
-            frozen = true;
-            sealed = Sealed;
-            exact = config_flags.exact && Obj_type.sealed_in_op reason config_flags.sealed;
-          } in
-          props, dict, flags
-      in
-      let call = None in
-      (* Finish creating our props object. *)
-      let id = Context.make_property_map cx props in
-      let proto = ObjProtoT reason in
-      let t = DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
-      if flags.exact then ExactT (reason, t) else t
-    in
-
-    fun state cx trace use_op reason tout x ->
-      match state with
-      (* If we have some type for default props then we need to wait for that
-       * type to resolve before finishing our props type. *)
-      | Config { defaults = Some t; children } ->
-        let tool = Resolve Next in
-        let state = Defaults { config = x; children } in
-        rec_flow cx trace (t, ObjKitT (use_op, reason, tool, ReactConfig state, tout))
-      (* If we have no default props then finish our object and flow it to our
-       * tout type. *)
-      | Config { defaults = None; children } ->
-        let ts = Nel.map (fun x -> finish cx trace reason x None children) x in
-        let t = match ts with
-          | t, [] -> t
-          | t0, t1::ts -> UnionT (reason, UnionRep.make t0 t1 ts)
-        in
-        rec_flow cx trace (t, UseT (use_op, tout))
-      (* If we had default props and those defaults resolved then finish our
-       * props object with those default props. *)
-      | Defaults { config; children } ->
-        let ts = Nel.map_concat (fun c ->
-          Nel.map (fun d -> finish cx trace reason c (Some d) children) x
-        ) config in
-        let t = match ts with
-          | t, [] -> t
-          | t0, t1::ts -> UnionT (reason, UnionRep.make t0 t1 ts)
-        in
-        rec_flow cx trace (t, UseT (use_op, tout))
-  in
-
-  (*********************)
-  (* Object Resolution *)
-  (*********************)
-
-  let next = function
-  | Spread (options, state) -> object_spread options state
-  | Rest (options, state) -> object_rest options state
-  | ReactConfig state -> react_config state
-  | ReadOnly -> object_read_only
-  | ObjectRep -> object_rep
-  in
-
-  (* Intersect two object slices: slice * slice -> slice
-   *
-   * In general it is unsound to combine intersection types, but since object
-   * kit utilities never write to their arguments, it is safe in this specific
-   * case.
-   *
-   * {...{p:T}&{q:U}} = {...{p:T,q:U}}
-   * {...{p:T}&{p:U}} = {...{p:T&U}}
-   * {...A&(B|C)} = {...(A&B)|(A&C)}
-   * {...(A|B)&C} = {...(A&C)|(B&C)}
-   *)
-  let intersect2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
-    let intersection t1 t2 = IntersectionT (reason, InterRep.make t1 t2 []) in
-    let merge_props (t1, own1) (t2, own2) =
-      let t1, t2, opt = match t1, t2 with
-      | OptionalT (_, t1), OptionalT (_, t2) -> t1, t2, true
-      | OptionalT (_, t1), t2 | t1, OptionalT (_, t2) | t1, t2 -> t1, t2, false
-      in
-      let t = intersection t1 t2 in
-      let t = if opt then optional t else t in
-      t, own1 || own2
-    in
-    let props = SMap.merge (fun _ p1 p2 ->
-      let read_dict r d = optional (read_dict r d), true in
-      match p1, p2 with
-      | None, None -> None
-      | Some p1, Some p2 -> Some (merge_props p1 p2)
-      | Some p1, None ->
-        (match dict2 with
-        | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
-        | None -> Some p1)
-      | None, Some p2 ->
-        (match dict1 with
-        | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
-        | None -> Some p2)
-    ) props1 props2 in
-    let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
-      dict_name = None;
-      key = intersection d1.key d2.key;
-      value = intersection (read_dict r1 d1) (read_dict r2 d2);
-      dict_polarity = Polarity.Neutral;
-    }) in
-    let flags = {
-      frozen = flags1.frozen || flags2.frozen;
-      sealed = Sealed;
-      exact = flags1.exact || flags2.exact;
-    } in
-    props, dict, flags
-  in
-
-  let intersect2_with_reason reason intersection_loc x1 x2 =
-    let props, dict, flags = intersect2 reason x1 x2 in
-    let r = mk_reason RObjectType intersection_loc in
-    r, props, dict, flags
-  in
-
-  let resolved cx trace use_op reason resolve_tool tool tout x =
-    match resolve_tool with
-    | Next -> next tool cx trace use_op reason tout x
-    | List0 ((t, todo), join) ->
-      let resolve_tool = Resolve (List (todo, Nel.one x, join)) in
-      rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
-    | List (todo, done_rev, join) ->
-      match todo with
-      | [] ->
-        let x = match join with
-        | _, Or -> Nel.cons x done_rev |> Nel.concat
-        | loc, And -> merge (intersect2_with_reason reason loc) x done_rev
-        in
-        next tool cx trace use_op reason tout x
-      | t::todo ->
-        let done_rev = Nel.cons x done_rev in
-        let resolve_tool = Resolve (List (todo, done_rev, join)) in
-        rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
-  in
-
-  let object_slice cx r id dict flags =
-    let props = Context.find_props cx id in
-    let props = SMap.mapi (read_prop r flags) props in
-    let dict = Option.map dict (fun d -> {
-      dict_name = None;
-      key = d.key;
-      value = read_dict r d;
-      dict_polarity = Polarity.Neutral;
-    }) in
-    (r, props, dict, flags)
-  in
-
-  let interface_slice cx r id =
-    let flags = {frozen=false; exact=false; sealed=Sealed} in
-    let id, dict =
-      let props = Context.find_props cx id in
-      match SMap.get "$key" props, SMap.get "$value" props with
-      | Some (Field (_, key, polarity)), Some (Field (_, value, polarity'))
-        when polarity = polarity' ->
-        let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
-        let id = Context.make_property_map cx props in
-        let dict = {dict_name = None; key; value; dict_polarity = polarity} in
-        id, Some dict
-      | _ -> id, None
-    in
-    object_slice cx r id dict flags
-  in
-
-  let resolve cx trace use_op reason resolve_tool tool tout = function
-    (* We extract the props from an ObjT. *)
-    | DefT (r, _, ObjT {props_tmap; dict_t; flags; _}) ->
-      let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
-      resolved cx trace use_op reason resolve_tool tool tout x
-    (* We take the fields from an InstanceT excluding methods (because methods
-     * are always on the prototype). We also want to resolve fields from the
-     * InstanceT's super class so we recurse. *)
-    | DefT (r, _, InstanceT (_, super, _, {own_props; _})) ->
-      let resolve_tool = Super (interface_slice cx r own_props, resolve_tool) in
-      rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
-    (* Statics of a class. TODO: This logic is unfortunately duplicated from the
-     * top-level pattern matching against class lower bounds to object-like
-     * uses. This duplication should be removed. *)
-    | DefT (r, _, ClassT i) ->
-      let t = Tvar.mk cx r in
-      rec_flow cx trace (i, GetStaticsT (r, t));
-      rec_flow cx trace (t, ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout))
-    (* Resolve each member of a union. *)
-    | UnionT (union_reason, rep) ->
-      let union_loc = aloc_of_reason union_reason in
-      let t, todo = UnionRep.members_nel rep in
-      let resolve_tool = Resolve (List0 (todo, (union_loc, Or))) in
-      rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
-    (* Resolve each member of an intersection. *)
-    | IntersectionT (intersection_reason, rep) ->
-      let intersection_loc = aloc_of_reason intersection_reason in
-      let t, todo = InterRep.members_nel rep in
-      let resolve_tool = Resolve (List0 (todo, (intersection_loc, And))) in
-      rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
-    (* Mirroring Object.assign() and {...null} semantics, treat null/void as
-     * empty objects. *)
-    | DefT (_, _, (NullT | VoidT)) ->
-      let flags = { frozen = true; sealed = Sealed; exact = true } in
-      let x = Nel.one (reason, SMap.empty, None, flags) in
-      resolved cx trace use_op reason resolve_tool tool tout x
-    (* mixed is treated as {[string]: mixed}. Any JavaScript value may be
-     * treated as an object and so this is safe. *)
-    | DefT (r, _, MixedT _) as t ->
-      let flags = { frozen = true; sealed = Sealed; exact = true } in
-      let x = Nel.one (reason, SMap.empty, Some ({
-        dict_name = None;
-        key = StrT.make r |> with_trust bogus_trust;
-        value = t;
-        dict_polarity = Polarity.Neutral;
-      }), flags) in
-      resolved cx trace use_op reason resolve_tool tool tout x
-    (* If we see an empty then propagate empty to tout. *)
-    | DefT (r, trust, EmptyT _) ->
-      rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
-    (* Propagate any. *)
-    | AnyT (_, src) ->
-      rec_flow cx trace (AnyT.why src reason, UseT (use_op, tout))
-    (* Other types have reasonable object representations that may be added as
-     * new uses of the object kit resolution code is found. *)
-    | t ->
-      add_output cx ~trace (Error_message.EInvalidObjectKit {
-        reason = reason_of_t t;
-        reason_op = reason;
-        use_op;
-      })
-  in
-
-  let super cx trace use_op reason resolve_tool tool tout acc = function
-    | DefT (r, _, InstanceT (_, super, _, {own_props; _})) ->
-      let slice = interface_slice cx r own_props in
-      let acc = intersect2 reason acc slice in
-      let acc =
-        let (props, dict, flags) = acc in
-        (reason, props, dict, flags)
-      in
-      let resolve_tool = Super (acc, resolve_tool) in
-      rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
-    | AnyT _ ->
-      rec_flow cx trace (AnyT.untyped reason, UseT (use_op, tout))
-    | _ ->
-      next tool cx trace use_op reason tout (Nel.one acc)
-  in
-
-  fun cx trace ~use_op reason resolve_tool tool tout l ->
-    match resolve_tool with
-    | Resolve resolve_tool -> resolve cx trace use_op reason resolve_tool tool tout l
-    | Super (acc, resolve_tool) -> super cx trace use_op reason resolve_tool tool tout acc l
-
   include AssertGround
   include TrustChecking
 end
@@ -12111,7 +11357,8 @@ module rec FlowJs: Flow_common.S = struct
   module AssertGround = Assert_ground.Kit (FlowJs)
   module TrustKit = Trust_checking.TrustKit (FlowJs)
   module CustomFun = Custom_fun_kit.Kit (FlowJs)
-  include M__flow (React) (AssertGround) (TrustKit) (CustomFun)
+  module ObjectKit = Object_kit.Kit (FlowJs)
+  include M__flow (React) (AssertGround) (TrustKit) (CustomFun) (ObjectKit)
   let add_output = add_output
   let union_of_ts = union_of_ts
   let generate_tests = generate_tests

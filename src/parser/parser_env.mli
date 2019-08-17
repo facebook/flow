@@ -83,7 +83,7 @@ val should_parse_types : env -> bool
 (* mutators: *)
 val error_at : env -> Loc.t * Parse_error.t -> unit
 val error : env -> Parse_error.t -> unit
-val error_unexpected : env -> unit
+val error_unexpected : ?expected:string -> env -> unit
 val error_on_decorators : env -> (Loc.t * 'a) list -> unit
 val strict_error : env -> Parse_error.t -> unit
 val strict_error_at : env -> Loc.t * Parse_error.t -> unit
@@ -156,7 +156,7 @@ module Eat : sig
   val push_lex_mode : env -> Lex_mode.t -> unit
   val pop_lex_mode : env -> unit
   val double_pop_lex_mode : env -> unit
-  val semicolon : env -> unit
+  val semicolon : ?expected:string -> env -> unit
 end
 
 module Expect : sig

@@ -30,7 +30,7 @@ expression. (`signature-verification-failure`)
 
 Error ----------------------------------------------------------------------------------------------- parse-error.js:7:1
 
-Unexpected end of input
+Unexpected end of input, expected the token `}`
 
    7|
       

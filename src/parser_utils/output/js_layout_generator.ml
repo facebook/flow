@@ -499,9 +499,9 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         pretty_space;
         statement body
       ]
-    | S.Break { S.Break.label } ->
+    | S.Break { S.Break.label; comments } ->
       let s_break = Atom "break" in
-      with_semicolon (
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (
         match label with
         | Some l -> fuse [s_break; space; identifier l]
         | None -> s_break;
@@ -1131,7 +1131,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
           );
         hint type_annotation annot;
       ]
-    | P.Array { P.Array.elements; annot } ->
+    | P.Array { P.Array.elements; annot; comments } ->
       group [
         new_list
           ~wrap:(Atom "[", Atom "]")
@@ -1153,7 +1153,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
             | Some P.Array.RestElement (loc, { P.Array.RestElement.
                 argument
               }) ->
-              source_location_with_comments (loc, fuse [Atom "..."; pattern argument])
+              source_location_with_comments ?comments (loc, fuse [Atom "..."; pattern argument])
             )
             elements);
         hint type_annotation annot;

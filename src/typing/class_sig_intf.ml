@@ -22,8 +22,11 @@ and field =
   | Annot of Type.t
   | Infer of func_sig * set_asts
 
+type field' = ALoc.t option * Polarity.t * field
+
 type super =
   | Interface of {
+      inline: bool;
       extends: typeapp list;
       callable: bool;
     }
@@ -83,8 +86,8 @@ val add_field: static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
 val add_indexer:
   static:bool ->
   Polarity.t ->
-  key:(ALoc.t * Type.t) ->
-  value:(ALoc.t * Type.t) ->
+  key:Type.t ->
+  value:Type.t ->
   t -> t
 
 (** Add static `name` field. *)
@@ -95,6 +98,12 @@ val add_proto_field: string -> ALoc.t -> Polarity.t -> field -> t -> t
 
 (** Add private field to signature. *)
 val add_private_field: string -> ALoc.t -> Polarity.t -> field -> static:bool -> t -> t
+
+(* Access public fields of signature *)
+val public_fields_of_signature: static:bool -> t -> field' SMap.t
+
+(* Access private fields of signature *)
+val private_fields_of_signature: static:bool -> t -> field' SMap.t
 
 (** Add method to signature.
 
@@ -160,6 +169,8 @@ val add_this:
   Type.t SMap.t -> (* tparams_map *)
   Type.t * Type.typeparams * Type.t SMap.t
 
+val to_prop_map: Context.t -> field' SMap.t -> Type.Properties.id
+
 (** 1. Manipulation *)
 
 (** Emits constraints to ensure the signature is compatible with its declared
@@ -181,6 +192,7 @@ val toplevels: Context.t ->
                       (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
   expr:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
                       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
+  private_property_map:Type.Properties.id ->
   t -> unit
 
 (** 1. Type Conversion *)

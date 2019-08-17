@@ -52,7 +52,7 @@ type saved_state_data = {
    *)
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage : Coverage.file_coverage Utils_js.FilenameMap.t;
+  coverage : Coverage_response.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 
   (* TODO - Figure out what to do about module.resolver *)
@@ -136,13 +136,13 @@ end = struct
     let file_sig = (new file_sig_normalizer root)#file_sig parsed_file_data.normalized_file_data.file_sig in
 
     (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents } =
+    let { Module_heaps.resolved_modules; phantom_dependents; hash; } =
       parsed_file_data.normalized_file_data.resolved_requires
     in
     let phantom_dependents = SSet.map (Files.relative_path root) phantom_dependents in
     let resolved_modules = SMap.map
       (modulename_map_fn ~f:(normalize_file_key ~root)) resolved_modules in
-    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
+    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash; } in
 
     {
       info;
@@ -408,11 +408,13 @@ end = struct
     let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
 
     (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents } = file_data.resolved_requires in
+    let { Module_heaps.resolved_modules; phantom_dependents; hash; } =
+      file_data.resolved_requires
+    in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules = SMap.map
       (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules in
-    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
+    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash; } in
 
     {
       package = file_data.package;

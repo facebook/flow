@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -25,7 +25,7 @@ module Testing_common = struct
   open Watchman_sig.Types
   let test_settings = {
     subscribe_mode = Some Defer_changes;
-    init_timeout = 0;
+    init_timeout = Watchman_sig.Types.No_timeout;
     expression_terms = [];
     debug_logging = false;
     roots = [Path.dummy_path];
@@ -36,6 +36,11 @@ end
 module Watchman_process_helpers = struct
   include Watchman_sig.Types
   module J = Hh_json_helpers.AdhocJsonHelpers
+
+  let timeout_to_secs = function
+  | No_timeout -> None
+  | Default_timeout -> Some 120.
+  | Explicit_timeout timeout -> Some timeout
 
   let debug = false
 
@@ -118,6 +123,8 @@ end = struct
     if Buffered_line_reader.has_buffered_content reader
     then true
     else
+      (* Negative means "no timeout" to select *)
+      let timeout = Option.value (timeout_to_secs timeout) ~default:~-.1. in
       match Sys_utils.select_non_intr [Buffered_line_reader.get_fd reader] [] [] timeout with
       | [], _, _ -> false
       | _ -> true
@@ -128,16 +135,20 @@ end = struct
     then
       raise Timeout
     else
-      let remaining = start_t +. timeout -. Unix.time () in
-      let timeout = int_of_float remaining in
-      let timeout = max timeout 10 in
-      Timeout.with_timeout
-        ~do_: (fun _ -> Buffered_line_reader.get_next_line reader)
-        ~timeout
-        ~on_timeout:(fun () ->
-          let () = EventLogger.watchman_timeout () in
-          raise Read_payload_too_long
-        )
+      match timeout_to_secs timeout with
+      | None ->
+        Buffered_line_reader.get_next_line reader
+      | Some timeout ->
+        let remaining = start_t +. timeout -. Unix.time () in
+        let timeout = int_of_float remaining in
+        let timeout = max timeout 10 in
+        Timeout.with_timeout
+          ~do_: (fun _ -> Buffered_line_reader.get_next_line reader)
+          ~timeout
+          ~on_timeout:(fun () ->
+            let () = EventLogger.watchman_timeout () in
+            raise Read_payload_too_long
+          )
 
   (* Asks watchman for the path to the socket file *)
   let get_sockname timeout =
@@ -178,7 +189,7 @@ end = struct
 
   (* Sends a request to watchman and returns the response. If we don't have a connection,
    * a new connection will be created before the request and destroyed after the response *)
-  let rec request ~debug_logging ?conn ?(timeout=120.0) json =
+  let rec request ~debug_logging ?conn ?(timeout=Default_timeout) json =
     match conn with
     | None ->
       with_watchman_conn ~timeout (fun conn -> request ~debug_logging ~conn ~timeout json)
@@ -190,12 +201,13 @@ end = struct
   let send_request_and_do_not_wait_for_response ~debug_logging ~conn:(_, oc) json =
     send_request ~debug_logging oc json
 
-  let blocking_read ~debug_logging ?timeout ~conn =
-    let timeout = Option.value timeout ~default:0.0 in
+  let blocking_read ~debug_logging ?(timeout=Explicit_timeout 0.) ~conn =
     let ready = has_input timeout @@ fst conn in
     if not ready then
-      if timeout = 0.0 then None
-      else raise Timeout
+      match timeout with
+      | No_timeout -> None
+      | Explicit_timeout timeout when timeout = 0. -> None
+      | _ -> raise Timeout
     else
       (* Use the timeout mechanism to limit maximum time to read payload (cap
        * data size) so we don't freeze if watchman sends an inordinate amount of
@@ -510,8 +522,8 @@ struct
     { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
 
     with_crash_record_opt "init" @@ fun () ->
-    Watchman_process.open_connection ~timeout:(float_of_int init_timeout) >>= fun conn ->
-    Watchman_process.request ~debug_logging ~conn
+    Watchman_process.open_connection ~timeout:init_timeout >>= fun conn ->
+    Watchman_process.request ~debug_logging ~conn ~timeout:Default_timeout
       (capability_check ~optional:[ flush_subscriptions_cmd ]
       ["relative_root"]) >>= fun capabilities ->
     let supports_flush = has_capability flush_subscriptions_cmd capabilities in
@@ -600,7 +612,8 @@ struct
     (match subscribe_mode with
     | None -> Watchman_process.return ()
     | Some mode ->
-      Watchman_process.request ~debug_logging ~conn (subscribe ~mode env) >|= ignore
+      Watchman_process.request ~debug_logging ~conn (subscribe ~mode env)
+      >|= ignore
     ) >|= fun () ->
     env
 
@@ -736,6 +749,7 @@ struct
         with_crash_record_exn "get_all_files" @@ fun () ->
           Watchman_process.request
             ~debug_logging:env.settings.debug_logging
+            ~timeout:Default_timeout
             (all_query env)
           >|= fun response ->
           env.clockspec <- J.get_string_val "clock" response;
@@ -796,11 +810,11 @@ struct
     end
 
   let get_changes ?deadline instance =
-    let timeout = Option.map deadline ~f:(fun deadline ->
-      let timeout = deadline -. (Unix.time ()) in
-      max timeout 0.0
-    ) in
     call_on_instance instance "get_changes" @@ fun env ->
+      let timeout = Option.map deadline (fun deadline ->
+        let timeout = deadline -. (Unix.time ()) in
+        Explicit_timeout (max timeout 0.0)
+      ) in
       let debug_logging = env.settings.debug_logging in
       if env.settings.subscribe_mode <> None
       then
@@ -860,8 +874,12 @@ struct
         Lazy.force is_synced || Lazy.force is_not_needed
       end
     in
-    let timeout = deadline -. Unix.time () in
-    if timeout < 0.0 then raise Timeout else ();
+    let timeout =
+      let timeout = deadline -. Unix.time () in
+      if timeout <= 0.0
+      then raise Timeout
+      else Explicit_timeout timeout
+    in
 
     let debug_logging = env.settings.debug_logging in
     Watchman_process.blocking_read ~debug_logging ~timeout ~conn:env.conn >>= fun json ->
@@ -885,7 +903,7 @@ struct
       @@ (fun env ->
         if env.settings.subscribe_mode = None
         then
-          let timeout = float_of_int timeout in
+          let timeout = Explicit_timeout (float timeout) in
           let query = since_query env in
           Watchman_process.request
             ~debug_logging:env.settings.debug_logging

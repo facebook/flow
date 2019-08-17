@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -332,35 +332,10 @@ let is_heap_overflow () = hh_check_heap_overflow ()
 (*****************************************************************************)
 (* Compute size of values in the garbage-collected heap *)
 (*****************************************************************************)
-module HeapSize = struct
 
-  let rec traverse ((visited:ISet.t), acc) r =
-    if Obj.is_block r then begin
-      let p:int = Obj.magic r in
-      if ISet.mem p visited
-      then (visited,acc)
-      else begin
-        let visited' = ISet.add p visited in
-        let n = Obj.size r in
-        let acc' = acc + 1 + n in
-        if Obj.tag r < Obj.no_scan_tag
-        then traverse_fields (visited', acc') r n
-        else (visited', acc')
-      end
-    end else (visited, acc)
-
-  and traverse_fields acc r i =
-    let i = i - 1 in
-    if i < 0 then acc
-    else traverse_fields (traverse acc (Obj.field r i)) r i
-
-  (* Return size in bytes that o occupies in GC heap *)
-  let size r =
-    let (_, w) = traverse (ISet.empty, 0) r in
-    w * (Sys.word_size / 8)
-end
-
-let value_size = HeapSize.size
+let value_size r =
+  let w = Obj.reachable_words r in
+  w * (Sys.word_size / 8)
 
 (*****************************************************************************)
 (* Module returning the MD5 of the key. It's because the code in C land

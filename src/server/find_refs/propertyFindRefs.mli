@@ -11,7 +11,7 @@ val find_refs:
   ServerEnv.env ref ->
   content: string ->
   File_key.t ->
-  (GetDefUtils.def_info option, string) Core_result.t ->
+  GetDefUtils.def_info option ->
   global: bool ->
   multi_hop: bool ->
   ((FindRefsTypes.find_refs_found * int option) option, string) result Lwt.t

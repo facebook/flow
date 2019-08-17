@@ -35,11 +35,12 @@ let depgraph_subcommand =
       |> connect_flags
       |> strip_root_flag
       |> flag "--out" (required string) ~doc:"Location to print the output file"
+      |> flag "--types" no_arg ~doc:"Only consider type dependencies"
       |> root_flag
     )
   } in
 
-  let main base_flags option_values strip_root outfile path_opt () =
+  let main base_flags option_values strip_root outfile types_only path_opt () =
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in
     let root = CommandUtils.guess_root flowconfig_name path_opt in
     (* Create the outfile if it doesn't already exist *)
@@ -49,6 +50,7 @@ let depgraph_subcommand =
       root = Path.to_string root;
       strip_root;
       outfile = outpath;
+      types_only;
     } in
     match connect_and_make_request flowconfig_name option_values root request with
     | ServerProt.Response.GRAPH_DEP_GRAPH (Error msg) ->

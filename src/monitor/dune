@@ -5,7 +5,9 @@
     dfind_lwt
     flow_common
     flow_common_lwt
+    flow_exit_status
     flow_logging_lwt
+    flow_logging_utils
     flow_monitor_connections
     flow_monitor_logger
     flow_monitor_utils

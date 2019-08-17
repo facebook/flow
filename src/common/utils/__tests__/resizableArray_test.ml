@@ -101,4 +101,34 @@ let tests = "resizable_array" >::: [
     assert_equal ~ctxt (ResizableArray.get arr 0) (Some "foo");
     assert_equal ~ctxt (ResizableArray.get arr 1) (Some "bar");
   end;
+  "to_hashtbl" >:: begin fun ctxt ->
+    let arr = ResizableArray.make 2 in
+
+    ResizableArray.push arr "foo";
+    ResizableArray.push arr "bar";
+
+    assert_equal ~ctxt (ResizableArray.underlying_array_size_do_not_use arr) 2;
+    assert_equal ~ctxt (ResizableArray.size arr) 2;
+
+    let tbl = ResizableArray.to_hashtbl arr in
+
+    assert_equal ~ctxt (Hashtbl.find tbl "foo") 0;
+    assert_equal ~ctxt (Hashtbl.find tbl "bar") 1;
+    assert_equal ~ctxt (Hashtbl.length tbl) 2;
+  end;
+  "to_hashtbl_bigger_array" >:: begin fun ctxt ->
+    let arr = ResizableArray.make 8 in
+
+    ResizableArray.push arr "foo";
+    ResizableArray.push arr "bar";
+
+    assert_equal ~ctxt (ResizableArray.underlying_array_size_do_not_use arr) 8;
+    assert_equal ~ctxt (ResizableArray.size arr) 2;
+
+    let tbl = ResizableArray.to_hashtbl arr in
+
+    assert_equal ~ctxt (Hashtbl.find tbl "foo") 0;
+    assert_equal ~ctxt (Hashtbl.find tbl "bar") 1;
+    assert_equal ~ctxt (Hashtbl.length tbl) 2;
+  end;
 ]

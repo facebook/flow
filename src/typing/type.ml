@@ -574,7 +574,7 @@ module rec TypeTerm : sig
     | DebugPrintT of reason
     | DebugSleepT of reason
 
-    | SentinelPropTestT of reason * t * string * bool * Enum.star * t_out
+    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * t_out
 
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
@@ -1004,8 +1004,12 @@ module rec TypeTerm : sig
     initialized_fields: SSet.t;
     initialized_static_fields: SSet.t;
     has_unknown_react_mixins: bool;
-    structural: bool;
+    inst_kind: instance_kind;
   }
+
+  and instance_kind =
+    | ClassKind
+    | InterfaceKind of { inline: bool }
 
   and opaquetype = {
     opaque_id: ALoc.t;
@@ -1074,7 +1078,7 @@ module rec TypeTerm : sig
   | ElementType of t
   | Bind of t
   | ReadOnlyType
-  | SpreadType of Object.Spread.target * t list
+  | SpreadType of Object.Spread.target * Object.Spread.operand list * Object.Spread.operand_slice option
   | RestType of Object.Rest.merge_mode * t
   | ValuesType
   | CallType of t list
@@ -1205,7 +1209,7 @@ module rec TypeTerm : sig
 
 end = TypeTerm
 
-and Enum : sig
+and UnionEnum : sig
   type t =
     | Str of string
     | Num of TypeTerm.number_literal
@@ -1215,7 +1219,7 @@ and Enum : sig
   val compare: t -> t -> int
   type star =
     | One of t
-    | Many of EnumSet.t
+    | Many of UnionEnumSet.t
 end = struct
   type t =
     | Str of string
@@ -1226,10 +1230,10 @@ end = struct
   let compare = Pervasives.compare
   type star =
     | One of t
-    | Many of EnumSet.t
+    | Many of UnionEnumSet.t
 end
 
-and EnumSet: Set.S with type elt = Enum.t = Set.Make(Enum)
+and UnionEnumSet: Set.S with type elt = UnionEnum.t = Set.Make(UnionEnum)
 
 and Property : sig
   type t = TypeTerm.property
@@ -1370,7 +1374,8 @@ end
 and Properties : sig
   type t = Property.t SMap.t
 
-  type id = private int
+  type id
+
   module Map : MyMap.S with type key = id
   module Set : Set.S with type elt = id
   type map = t Map.t
@@ -1380,7 +1385,11 @@ and Properties : sig
   val add_setter: string -> ALoc.t option -> TypeTerm.t -> t -> t
   val add_method: string -> ALoc.t option -> TypeTerm.t -> t -> t
 
-  val mk_id: unit -> id
+  val generate_id: unit -> id
+  val id_of_int: int -> id
+  val id_as_int: id -> int option
+  val id_of_aloc: ALoc.t -> id
+
   val fake_id: id
   val string_of_id: id -> string
   val extract_named_exports: t -> Exports.t
@@ -1395,14 +1404,29 @@ end = struct
 
   type t = Property.t SMap.t
 
-  type id = int
+  (* In order to minimize the frequency with which we unnecessarily compare
+     equivalent objects, we assign all objects created at the top level of a
+     source program an id of their location instead of an int. This way, if we
+     see the object twice between the merge and check phases, we still hit
+     the object to object fast path when checking *)
+  type id =
+    | Source of int
+    | Generated of int
+
+  let compare_id id1 id2 =
+    match id1, id2 with
+    | Source i1, Source i2 -> i1 - i2
+    | Generated i1, Generated i2 -> i1 - i2
+    | Source _, Generated _ -> -1
+    | Generated _, Source _ -> 1
+
   module Map : MyMap.S with type key = id = MyMap.Make(struct
     type t = id
-    let compare = Pervasives.compare
+    let compare = compare_id
   end)
   module Set : Set.S with type elt = id = Set.Make(struct
     type t = id
-    let compare = Pervasives.compare
+    let compare = compare_id
   end)
 
   type map = t Map.t
@@ -1427,9 +1451,21 @@ end = struct
   let add_method x loc t =
     SMap.add x (Method (loc, t))
 
-  let mk_id = Reason.mk_id
-  let fake_id = 0
-  let string_of_id = string_of_int
+  let id_of_int i = Generated i
+
+  let id_as_int = function
+  | Generated i -> Some i
+  | _ -> None
+
+  let generate_id = Reason.mk_id %> id_of_int
+
+  let id_of_aloc loc = Source (ALoc.hash loc)
+
+  let fake_id = Generated 0
+
+  let string_of_id = function
+  | Generated id -> string_of_int id
+  | Source id -> string_of_int id
 
   let extract_named_exports pmap =
     SMap.fold (fun x p tmap ->
@@ -1537,19 +1573,19 @@ and UnionRep : sig
     TypeTerm.t ->
     t -> quick_mem_result
 
-  val check_enum: t -> EnumSet.t option
+  val check_enum: t -> UnionEnumSet.t option
 end = struct
 
   (* canonicalize a type w.r.t. enum membership *)
   let canon = TypeTerm.(function
     | DefT (_, _, SingletonStrT lit)
-    | DefT (_, _, StrT (Literal (_, lit))) -> Some (Enum.Str lit)
+    | DefT (_, _, StrT (Literal (_, lit))) -> Some (UnionEnum.Str lit)
     | DefT (_, _, SingletonNumT lit)
-    | DefT (_, _, NumT (Literal (_, lit))) -> Some (Enum.Num lit)
+    | DefT (_, _, NumT (Literal (_, lit))) -> Some (UnionEnum.Num lit)
     | DefT (_, _, SingletonBoolT lit)
-    | DefT (_, _, BoolT (Some lit)) -> Some (Enum.Bool lit)
-    | DefT (_, _, VoidT) -> Some (Enum.Void)
-    | DefT (_, _, NullT) -> Some (Enum.Null)
+    | DefT (_, _, BoolT (Some lit)) -> Some (UnionEnum.Bool lit)
+    | DefT (_, _, VoidT) -> Some (UnionEnum.Void)
+    | DefT (_, _, NullT) -> Some (UnionEnum.Null)
     | _ -> None
   )
 
@@ -1564,13 +1600,13 @@ end = struct
   )
 
   (* disjoint unions are stored as singleton type maps *)
-  module EnumMap = MyMap.Make(Enum)
+  module UnionEnumMap = MyMap.Make(UnionEnum)
 
   type finally_optimized_rep =
-    | Enum of EnumSet.t
-    | PartiallyOptimizedEnum of EnumSet.t * TypeTerm.t Nel.t
-    | DisjointUnion of TypeTerm.t EnumMap.t SMap.t
-    | PartiallyOptimizedDisjointUnion of TypeTerm.t EnumMap.t SMap.t * TypeTerm.t Nel.t
+    | UnionEnum of UnionEnumSet.t
+    | PartiallyOptimizedUnionEnum of UnionEnumSet.t * TypeTerm.t Nel.t
+    | DisjointUnion of TypeTerm.t UnionEnumMap.t SMap.t
+    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t SMap.t * TypeTerm.t Nel.t
     | Empty
     | Singleton of TypeTerm.t
     | Unoptimized
@@ -1592,12 +1628,12 @@ end = struct
       | [] -> Some tset
       | t::ts ->
         begin match canon t with
-          | Some tcanon when is_base t -> mk_enum (EnumSet.add tcanon tset) ts
+          | Some tcanon when is_base t -> mk_enum (UnionEnumSet.add tcanon tset) ts
           | _ -> None
         end in
 
     fun t0 t1 ts ->
-      let enum = Option.(mk_enum EnumSet.empty (t0::t1::ts) >>| fun tset -> Enum tset) in
+      let enum = Option.(mk_enum UnionEnumSet.empty (t0::t1::ts) >>| fun tset -> UnionEnum tset) in
       t0, t1, ts, ref enum
 
   let members (t0, t1, ts, _) = t0::t1::ts
@@ -1623,7 +1659,7 @@ end = struct
     match !specialization with
     | Some Empty -> replace_reason_const REmpty r
     | Some (Singleton t) -> TypeUtil.reason_of_t t
-    | Some (Enum _) -> replace_reason_const REnum r
+    | Some (UnionEnum _) -> replace_reason_const RUnionEnum r
     | _ -> r
 
   (********** Optimizations **********)
@@ -1655,9 +1691,9 @@ end = struct
       List.fold_left (fun (tset, others) t ->
         match canon t with
         | Some tcanon when is_base t ->
-          EnumSet.add tcanon tset, others
+          UnionEnumSet.add tcanon tset, others
         | _ -> tset, t::others
-      ) (EnumSet.empty, []) in
+      ) (UnionEnumSet.empty, []) in
 
     function
       | [] -> Empty
@@ -1665,10 +1701,10 @@ end = struct
       | ts ->
         let tset, others = split_enum ts in
         match others with
-          | [] -> Enum tset
+          | [] -> UnionEnum tset
           | x::xs ->
-            if EnumSet.is_empty tset then Unoptimized
-            else PartiallyOptimizedEnum (tset, Nel.rev (x, xs))
+            if UnionEnumSet.is_empty tset then Unoptimized
+            else PartiallyOptimizedUnionEnum (tset, Nel.rev (x, xs))
 
   let canon_prop find_resolved p =
     Option.(Property.read_t p >>= find_resolved >>= canon)
@@ -1703,15 +1739,15 @@ end = struct
       let rec unique_values idx = function
       | [] -> Some idx
       | (enum, t)::values ->
-        begin match EnumMap.get enum idx with
-        | None -> unique_values (EnumMap.add enum t idx) values
+        begin match UnionEnumMap.get enum idx with
+        | None -> unique_values (UnionEnumMap.add enum t idx) values
         | Some t' ->
           if TypeUtil.reasonless_eq t t'
           then unique_values idx values
           else None
         end
       in fun values ->
-        unique_values EnumMap.empty values in
+        unique_values UnionEnumMap.empty values in
     let unique idx =
       SMap.fold (fun key values acc ->
         match unique_values values with
@@ -1787,12 +1823,12 @@ end = struct
           if Nel.exists (TypeUtil.quick_subtype trust_checked l) others
           then Yes
           else Unknown
-        | Some (Enum tset) ->
-          if EnumSet.mem tcanon tset
+        | Some (UnionEnum tset) ->
+          if UnionEnumSet.mem tcanon tset
           then Yes
           else No
-        | Some (PartiallyOptimizedEnum (tset, others)) ->
-          if EnumSet.mem tcanon tset
+        | Some (PartiallyOptimizedUnionEnum (tset, others)) ->
+          if UnionEnumSet.mem tcanon tset
           then Yes
           else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others
           then Yes
@@ -1807,7 +1843,7 @@ end = struct
         | Some p ->
           begin match canon_prop find_resolved p with
             | Some enum ->
-              begin match EnumMap.get enum idx with
+              begin match UnionEnumMap.get enum idx with
                 | Some t' -> Conditional t'
                 | None -> if partial then Unknown else No
               end
@@ -1834,8 +1870,8 @@ end = struct
             if result <> Unknown then result
             else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then Yes
             else Unknown
-          | Some (Enum _) -> No
-          | Some (PartiallyOptimizedEnum (_, others)) ->
+          | Some (UnionEnum _) -> No
+          | Some (PartiallyOptimizedUnionEnum (_, others)) ->
             if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then Yes
             else Unknown
         end
@@ -1843,7 +1879,7 @@ end = struct
 
   let check_enum (_, _, _, specialization) =
     match !specialization with
-      | Some Enum enums -> Some enums
+      | Some UnionEnum enums -> Some enums
       | _ -> None
 
 end
@@ -1955,7 +1991,7 @@ and Object : sig
   (* A union type resolves to a resolved spread with more than one element *)
   and resolved = slice Nel.t
 
-  and slice = reason * props * dict * TypeTerm.flags
+  and slice = {reason: reason; props: props; dict: dict; flags: TypeTerm.flags}
 
   and props = prop SMap.t
   and prop = TypeTerm.t * bool (* own *)
@@ -1963,9 +1999,17 @@ and Object : sig
   and dict = TypeTerm.dicttype option
 
   module Spread : sig
+    (* This is the type we feed into SpreadType to be processed by object_kit. It's different
+     * than slice because object_kit processes the properties in ways that do not need to
+     * be exposed to other files. *)
+    type operand_slice = {reason: reason; prop_map: Properties.t; dict: dict}
+    type operand = Slice of operand_slice | Type of TypeTerm.t
+
+    type acc_element = ResolvedSlice of resolved | InlineSlice of operand_slice
+
     type state = {
-      todo_rev: TypeTerm.t list;
-      acc: resolved list;
+      todo_rev: operand list;
+      acc: acc_element list;
     }
 
     and target =
@@ -2521,6 +2565,8 @@ end = struct
   | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
   | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
   | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
+  | MakeExactT (r, Lower (op, t)) -> util op (fun op -> MakeExactT (r, Lower (op, t)))
+  | MakeExactT (_, _)
   | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)
   | GetStaticsT (_, _)
@@ -2551,7 +2597,6 @@ end = struct
   | UnifyT (_, _)
   | BecomeT (_, _)
   | GetValuesT (_, _)
-  | MakeExactT (_, _)
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)
   | ImportDefaultT (_, _, _, _, _)

@@ -1,7 +1,7 @@
 array.js 3 15 --strategy=specialize
 // @flow
 
-function foo(): Array<number> {
+function foo(): Array<1 | 2> {
   return [1, 2];
 }
 No errors!
@@ -296,21 +296,6 @@ function tick() {
 
 setInterval(tick, 1000);
 No errors!
-spread.js 10 3
-// @flow
-
-declare opaque type O;
-class C { f: O; }
-class D { g: O; }
-
-() => { declare var x: {w: O, ...{ x: O, y: O }, z: O}; return x; };
-() => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
-() => { declare var x: {...C, o: O}; return x; };
-(): {f?: O, o: mixed} => { declare var x: {o: O, ...C}; return x; };
-() => { declare var x: {...C} & {...D}; return x; };
-<T: {}, S: { f: O}>() => { declare var x: {...T, ...S, o: O}; return x; };
-<T: {}>() => { declare var x: {...T, o: O}; return x; };
-No errors!
 string-literal.js 11 14
 // @flow
 
@@ -582,7 +567,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 6 --strategy=specialize
 // @flow
-var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {|m: (x: 0) => "", n: (y: 0) => ""|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -684,7 +669,7 @@ insert-type array.js 3:15
 cat array.js 3:15
 // @flow
 
-function foo(): Array<number> {
+function foo(): Array<1 | 2> {
   return [1, 2];
 }
 insert-type arrow-0.js 3:11-3:23

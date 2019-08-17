@@ -80,7 +80,8 @@ module Statement
     loc, Statement.Empty
 
   and break env =
-    let loc, label = with_loc (fun env ->
+    let leading = Peek.comments env in
+    let loc, (label, trailing) = with_loc (fun env ->
       Expect.token env T_BREAK;
       let label =
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
@@ -93,12 +94,14 @@ module Statement
           Some label
         end
       in
+      let trailingComments = Peek.comments env in
       Eat.semicolon env;
-      label
+      (label, trailingComments)
     ) env in
     if label = None && not (in_loop env || in_switch env)
     then error_at env (loc, Parse_error.IllegalBreak);
-    loc, Statement.Break { Statement.Break.label }
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    loc, Statement.Break { Statement.Break.label; comments; }
 
   and continue env =
     let leading = Peek.comments env in
@@ -122,7 +125,7 @@ module Statement
     if not (in_loop env) then error_at env (loc, Parse_error.IllegalContinue);
     let trailing = !trailingComments in
     loc, Statement.Continue { Statement.Continue.label;
-    comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }
+      comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }
 
   and debugger = with_loc (fun env ->
     Expect.token env T_DEBUGGER;
@@ -525,13 +528,13 @@ module Statement
         in
         Statement.Labeled { Statement.Labeled.label; body; }
     | expression, _ ->
-        Eat.semicolon env;
+        Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
         Statement.(Expression { Expression.expression; directive = None; })
   )
 
   and expression = with_loc (fun env ->
     let expression = Parse.expression env in
-    Eat.semicolon env;
+    Eat.semicolon ~expected:"the end of an expression statement (`;`)" env;
     let directive = if allow_directive env
       then match expression with
       | _, Ast.Expression.Literal { Ast.Literal.
@@ -899,7 +902,7 @@ module Statement
     | _ ->
         (* Just make up a string for the error case *)
         let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
-        error_unexpected env;
+        error_unexpected ~expected:"a string" env;
         ret
 
   and extract_pattern_binding_names =
@@ -1309,7 +1312,7 @@ module Statement
       | _ ->
           (* Just make up a string for the error case *)
           let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
-          error_unexpected env;
+          error_unexpected ~expected:"a string" env;
           ret
 
     in let is_type_import = function

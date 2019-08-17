@@ -48,6 +48,31 @@ let filter_duplicate_provider map file =
     FilenameMap.add file new_errset map
   | None -> map
 
+let with_memory_info callback =
+  let%lwt cgroup_stats = CGroup.get_stats () in
+  (* Reading hash_stats while workers are writing can cause assertion errors *)
+  let hash_stats = try Some (SharedMem_js.hash_stats ()) with _ -> None in
+  let heap_size = SharedMem_js.heap_size () in
+  callback ~cgroup_stats ~hash_stats ~heap_size;
+  Lwt.return_unit
+
+module MemorySamplingLoop = LwtLoop.Make (struct
+  type acc =
+    cgroup_stats:(CGroup.stats, string) result ->
+    hash_stats:SharedMem_js.table_stats option->
+    heap_size:int ->
+    unit
+  let main callback =
+    let%lwt () = with_memory_info callback in
+    let%lwt () = Lwt_unix.sleep 1.0 in
+    Lwt.return callback
+
+  let catch _ exn =
+    let exn = Exception.wrap exn in
+    Hh_logger.error "Exception in MemorySamplingLoop: %s" (Exception.to_string exn);
+    Lwt.return_unit
+end)
+
 let with_timer_lwt =
   let clear_worker_memory () =
     ["worker_rss_start"; "worker_rss_delta"; "worker_rss_hwm_delta";]
@@ -66,10 +91,84 @@ let with_timer_lwt =
       )
     )
   in
+
+  let sample_memory timer profiling ~cgroup_stats ~hash_stats ~heap_size =
+    Profiling_js.sample_memory profiling
+      ~group:timer
+      ~metric:"heap"
+      ~value:(float heap_size);
+
+    Option.iter hash_stats ~f:(fun {SharedMem_js.nonempty_slots; used_slots; slots;} ->
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"hash_nonempty_slots"
+        ~value:(float nonempty_slots);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"hash_used_slots"
+        ~value:(float used_slots);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"hash_slots"
+        ~value:(float slots)
+    );
+
+    match cgroup_stats with
+    | Error _ -> ()
+    | Ok { CGroup.total; total_swap; anon; file; shmem; } -> begin
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_total"
+        ~value:(float total);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_swap"
+        ~value:(float total_swap);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_anon"
+        ~value:(float anon);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_shmem"
+        ~value:(float shmem);
+
+      Profiling_js.sample_memory profiling
+        ~group:timer
+        ~metric:"cgroup_file"
+        ~value:(float file)
+    end
+  in
+
   fun ?options timer profiling f ->
     let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
+    let sample_memory = sample_memory timer profiling in
     clear_worker_memory ();
-    let%lwt ret = Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling in
+
+    (* Record the cgroup info at the start *)
+    let%lwt () = with_memory_info sample_memory in
+
+    (* Asynchronously run a thread that periodically grabs the cgroup stats *)
+    let sampling_loop = MemorySamplingLoop.run sample_memory in
+
+    let%lwt ret = try%lwt
+      let%lwt ret = Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling in
+      Lwt.cancel sampling_loop;
+      Lwt.return ret
+    with exn ->
+      let exn = Exception.wrap exn in
+      Lwt.cancel sampling_loop;
+      Exception.reraise exn
+    in
+
+    (* Record the cgroup info at the end *)
+    let%lwt () = with_memory_info sample_memory in
+
     profile_add_memory profiling Measure.get_mean timer "worker_rss_avg";
     profile_add_memory profiling Measure.get_max timer "worker_rss_max";
     clear_worker_memory ();
@@ -206,23 +305,124 @@ let commit_modules, commit_modules_from_saved_state =
   in
   commit_modules, commit_modules_from_saved_state
 
+module DirectDependentFilesCache: sig
+  val clear: unit -> unit
+  val with_cache:
+    root_files:FilenameSet.t ->
+    on_miss:(unit -> FilenameSet.t Lwt.t) ->
+    FilenameSet.t Lwt.t
+end = struct
+  type entry = {
+    direct_dependents: FilenameSet.t;
+    last_hit: float;
+  }
+
+  type cache = {
+    entries: entry FilenameMap.t;
+    size: int;
+  }
+
+  let empty_cache = {
+    entries = FilenameMap.empty;
+    size = 0;
+  }
+
+  let max_size = 100
+
+  let cache = ref empty_cache
+
+  let clear () =
+    cache := empty_cache
+
+  let remove_oldest () =
+    let { entries; size; } = !cache in
+    let oldest = FilenameMap.fold (fun key { last_hit; _; } acc ->
+      match acc with
+      | Some (_, oldest_hit) when oldest_hit <= last_hit -> acc
+      | _ -> Some (key, last_hit)
+    ) entries None in
+    Option.iter oldest ~f:(fun (oldest_key, _) ->
+      cache := {
+        entries = FilenameMap.remove oldest_key entries;
+        size = size - 1;
+      }
+    )
+
+
+  let add_after_miss ~root_file ~direct_dependents =
+    let entry = {
+      direct_dependents;
+      last_hit = Unix.gettimeofday ();
+    } in
+    let { entries; size; } = !cache in
+    cache := {
+      entries = FilenameMap.add root_file entry entries;
+      size = size + 1;
+    };
+    if size > max_size then remove_oldest ()
+
+  let get_from_cache ~root_file =
+    let { entries; size; } = !cache in
+    match FilenameMap.get root_file entries with
+    | None -> None
+    | Some entry ->
+      let entry = { entry with last_hit = Unix.gettimeofday (); } in
+      cache := {
+        entries = FilenameMap.add root_file entry entries;
+        size;
+      };
+      Some entry
+
+  let with_cache ~root_files ~on_miss =
+    match FilenameSet.elements root_files with
+    | [root_file] ->
+      begin match get_from_cache ~root_file with
+      | None ->
+        let%lwt direct_dependents = on_miss () in
+        add_after_miss ~root_file ~direct_dependents;
+        Lwt.return direct_dependents
+      | Some { direct_dependents; last_hit=_; } ->
+        Lwt.return direct_dependents
+      end
+    | _ ->
+      (* Cache is only for when there is a single root file *)
+      on_miss ()
+
+end
+
+let clear_cache_if_resolved_requires_changed resolved_requires_changed =
+  if resolved_requires_changed
+  then begin
+    Hh_logger.info "Resolved requires changed";
+    DirectDependentFilesCache.clear ()
+  end else
+    Hh_logger.info "Resolved requires are unchanged"
+
 let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
   let mutator = Module_heaps.Resolved_requires_mutator.create transaction parsed_set in
-  with_timer_lwt ~options "ResolveRequires" profiling (fun () ->
-    MultiWorkerLwt.call workers
-      ~job: (List.fold_left (fun errors_acc filename ->
-        let errors = Module_js.add_parsed_resolved_requires filename
-          ~mutator ~reader ~options ~node_modules_containers in
-        if Flow_error.ErrorSet.is_empty errors
-        then errors_acc
-        else FilenameMap.add filename errors errors_acc
-      )
-      )
-      ~neutral: FilenameMap.empty
-      ~merge: FilenameMap.union
-      ~next:(MultiWorkerLwt.next workers parsed)
-  )
+  let merge (changed1, errors1) (changed2, errors2) =
+    changed1 || changed2, FilenameMap.union errors1 errors2
+  in
+  let%lwt resolved_requires_changed, errors =
+    with_timer_lwt ~options "ResolveRequires" profiling (fun () ->
+      MultiWorkerLwt.call workers
+        ~job: (List.fold_left (fun (changed, errors_acc) filename ->
+          let resolved_requires_changed, errors = Module_js.add_parsed_resolved_requires filename
+            ~mutator ~reader ~options ~node_modules_containers in
+          let changed = changed || resolved_requires_changed in
+          if Flow_error.ErrorSet.is_empty errors
+          then changed, errors_acc
+          else changed, FilenameMap.add filename errors errors_acc
+        )
+        )
+        ~neutral: (false, FilenameMap.empty)
+        ~merge
+        ~next:(MultiWorkerLwt.next workers parsed)
+    )
+  in
+  clear_cache_if_resolved_requires_changed resolved_requires_changed;
+  Lwt.return errors
 
 let commit_modules_and_resolve_requires
   ~transaction
@@ -1389,31 +1589,41 @@ end = struct
        direct_dependent_files plus their dependents (transitive closure) *)
     let%lwt direct_dependent_files =
       with_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
-        Dep_service.calc_direct_dependents
-          ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-          workers
-          ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
-          ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
-          ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
+        let root_files = FilenameSet.union new_or_changed unchanged_files_with_dependents in
+        DirectDependentFilesCache.with_cache ~root_files ~on_miss:(fun () ->
+          Dep_service.calc_direct_dependents
+            ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+            workers
+            ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
+            ~root_files
+            ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
+        )
       ) in
 
     Hh_logger.info "Re-resolving directly dependent files";
 
     let node_modules_containers = !Files.node_modules_containers in
     (* requires in direct_dependent_files must be re-resolved before merging. *)
-    let mutator = Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files in
+    let mutator =
+      Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files
+    in
     let%lwt () = with_timer_lwt ~options "ReresolveDirectDependents" profiling (fun () ->
-      MultiWorkerLwt.call workers
-        ~job: (fun () files ->
-          List.iter (fun filename ->
-            let errors = Module_js.add_parsed_resolved_requires filename
-              ~mutator ~reader ~options ~node_modules_containers in
-            ignore errors (* TODO: why, FFS, why? *)
-          ) files
-        )
-        ~neutral: ()
-        ~merge: (fun () () -> ())
-        ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
+      let%lwt resolved_requires_changed =
+        MultiWorkerLwt.call workers
+          ~job: (fun anything_changed files ->
+            List.fold_left (fun anything_changed filename ->
+              let changed, errors = Module_js.add_parsed_resolved_requires filename
+                ~mutator ~reader ~options ~node_modules_containers in
+              ignore errors; (* TODO: why, FFS, why? *)
+              anything_changed || changed
+            ) anything_changed files
+          )
+          ~neutral:false
+          ~merge:(fun changed1 changed2 -> changed1 || changed2)
+          ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
+      in
+      clear_cache_if_resolved_requires_changed resolved_requires_changed;
+      Lwt.return_unit
     ) in
 
     Hh_logger.info "Recalculating dependency graph";
@@ -2092,9 +2302,10 @@ let query_watchman_for_changed_files ~options =
     let init_settings = {
       (* We're not setting up a subscription, we're just sending a single query *)
       Watchman_lwt.subscribe_mode = None;
-      (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
-       * use 10 seconds. *)
-      init_timeout = 10;
+      (* Hack makes this configurable in their local config. Apparently buck & hgwatchman
+       * use 10 seconds. But I've seen 10s timeout, so let's not set a timeout. Instead we'll
+       * manually timeout later *)
+      init_timeout = Watchman_lwt.No_timeout;
       expression_terms = Watchman_expression_terms.make ~options;
       subscription_prefix = "flow_server_watcher";
       roots = Files.watched_paths (Options.file_options options);
@@ -2105,9 +2316,9 @@ let query_watchman_for_changed_files ~options =
     | None ->
       failwith "Failed to set up Watchman in order to get the changes since the mergebase"
     | Some watchman_env ->
-      (* Huge timeout. We'll time this out ourselves after init if we need *)
+      (* No timeout. We'll time this out ourselves after init if we need *)
       let%lwt changed_files =
-        Watchman_lwt.get_changes_since_mergebase ~timeout:10000. watchman_env
+        Watchman_lwt.(get_changes_since_mergebase ~timeout:No_timeout watchman_env)
       in
       let%lwt () = Watchman_lwt.close watchman_env in
       Lwt.return (SSet.of_list changed_files)
@@ -2140,8 +2351,11 @@ let query_watchman_for_changed_files ~options =
 let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
 
-  let%lwt get_watchman_updates = query_watchman_for_changed_files ~options
-  and updates, env, libs_ok =
+  (* Don't wait for this thread yet. It will run in the background. Then, after init is done,
+   * we'll wait on it. We do this because we want to send the status update that we're waiting for
+   * Watchman if init is done but Watchman is not *)
+  let get_watchman_updates_thread = query_watchman_for_changed_files ~options in
+  let%lwt updates, env, libs_ok =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
@@ -2178,13 +2392,15 @@ let init ~profiling ~workers options =
 
   let%lwt updates, files_to_focus =
     let now = Unix.gettimeofday () in
-    (* If init took N seconds, let's give Watchman another max(15,N) seconds. *)
-    let timeout = max 15.0 (now -. start_time) in
+    (* Let's give Watchman another 15 seconds to finish. *)
+    let timeout = 15.0 in
     let deadline = now +. timeout in
     MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
     let%lwt watchman_updates, files_to_focus =
       try%lwt
-        Lwt_unix.with_timeout timeout @@ fun () -> get_watchman_updates ~libs:env.ServerEnv.libs
+        Lwt_unix.with_timeout timeout @@ fun () ->
+          let%lwt get_watchman_updates = get_watchman_updates_thread in
+          get_watchman_updates ~libs:env.ServerEnv.libs
       with Lwt_unix.Timeout ->
         let msg = Printf.sprintf "Timed out after %ds waiting for Watchman."
           (Unix.gettimeofday () -. start_time |> int_of_float)

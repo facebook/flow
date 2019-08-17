@@ -10,7 +10,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":3,"column":0}},
-      "message":"Unexpected string"
+      "message":"Unexpected string, expected the end of an expression statement (`;`)"
     }
   ],
   "type":"Program",

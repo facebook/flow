@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -16,8 +16,9 @@ type env
 type watch
 
 type event = {
-  path : string; (* The full path for the file/directory that changed *)
-  wpath : string; (* The watched path that triggered this event *)
+  path: string;
+  (* The full path for the file/directory that changed *)
+  wpath: string; (* The watched path that triggered this event *)
 }
 
 val init : string list -> env
@@ -27,6 +28,7 @@ val add_watch : env -> string -> watch option
 
 (* A file descriptor and what to do when it is selected *)
 type fd_select = Unix.file_descr * (unit -> unit)
+
 val select :
   (* The fsevents context *)
   env ->
@@ -39,3 +41,4 @@ val select :
   (* The callback for file system events *)
   (event list -> unit) ->
   unit
+[@@ocamlformat "disable=true"]

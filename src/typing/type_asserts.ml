@@ -25,18 +25,18 @@ let check_type_visitor wrap =
     | Fun _ -> wrap Reason.RFunctionType
     | Generic (_, _, Some _) -> wrap (Reason.RCustom "class with generics")
     | Mu _ -> wrap (Reason.RCustom "recursive type")
-    | Any Implicit -> Reason.RAnyImplicit |> wrap
-    | Any Explicit -> Reason.RAnyExplicit |> wrap
+    | Any Annotated -> Reason.RAnyExplicit |> wrap
+    | Any _ -> Reason.RAnyImplicit |> wrap
     | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
     | Top -> wrap Reason.RMixed
     | Bot _ -> wrap Reason.REmpty
-    | Module ({ Ty.name; _ }, _) -> wrap (Reason.RModule name)
+    | Module (Some { Ty.name; _ }, _) -> wrap (Reason.RModule name)
     | TypeAlias { ta_tparams = None; ta_type = Some t; _ } -> self#on_t env t
     | TypeAlias { ta_name = { Ty.name; _ }; _ } ->
       wrap (Reason.RCustom ("type alias " ^ name))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
     | (Void|Null|Num _|Str _|Bool _|NumLit _|StrLit _|BoolLit _|TypeOf _|
-      Generic _|ClassDecl _|InterfaceDecl _|Utility _) -> ()
+      Generic _|ClassDecl _|InterfaceDecl _|Utility _|Module _|InlineInterface _) -> ()
   end
 
 let detect_invalid_calls ~full_cx file_sigs cxs tasts =
@@ -50,7 +50,7 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
      preserve_inferred_literal_types = false;
      optimize_types = true;
      omit_targ_defaults = false;
-     simplify_empty = true;
+     merge_bot_and_any_kinds = true;
    } in
    let check_valid_call ~genv (call_loc: ALoc.t) (_, targ_loc) =
      let typed_ast = genv.Ty_normalizer_env.typed_ast in

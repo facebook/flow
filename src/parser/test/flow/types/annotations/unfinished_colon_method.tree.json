@@ -2,19 +2,23 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":23}},
-      "message":"Unexpected token 42"
+      "message":"Unexpected number, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
-      "message":"Unexpected token ;"
+      "message":"Unexpected token `;`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":27}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`, expected the token `{`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `}`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "message":"Unexpected end of input, expected the token `,`"
     }
   ],
   "type":"Program",
@@ -79,8 +83,8 @@
                     "type":"ObjectTypeAnnotation",
                     "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":26}},
                     "range":[12,26],
-                    "exact":false,
                     "inexact":false,
+                    "exact":false,
                     "properties":[
                       {
                         "type":"ObjectTypeProperty",

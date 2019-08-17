@@ -3,6 +3,7 @@
   (wrapped false)
   (modules :standard \ serverMonitorListenerState workloadStream)
   (libraries
+    flow_exit_status
     flow_server_command_handler
     flow_server_env
   )

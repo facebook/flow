@@ -21,6 +21,18 @@ let lsp_position_to_flow (position: Lsp.position): int * int =
   in
   (line, char)
 
+let lsp_position_to_flow_position p =
+  let (line, column) = lsp_position_to_flow p in
+  Loc.{line; column;}
+
+let lsp_range_to_flow_loc ?source (range: Lsp.range) =
+  let open Lsp in
+  {
+    Loc.source;
+    start= lsp_position_to_flow_position range.start;
+    _end= lsp_position_to_flow_position range.end_;
+  }
+
 let loc_to_lsp_range (loc: Loc.t): Lsp.range =
   let open Loc in
   let loc_start = loc.start in
@@ -112,17 +124,28 @@ let flow_edit_to_textedit (edit: Loc.t * string): Lsp.TextEdit.t =
   let loc, text = edit in
   { Lsp.TextEdit.range = loc_to_lsp_range loc; newText = text }
 
+let flow_loc_patch_to_lsp_edits (p : (Loc.t * string) list) : Lsp.TextEdit.t list =
+  let convert_edit (loc, text) =
+    {Lsp.TextEdit.
+      range=loc_to_lsp_range loc;
+      newText=text;
+    }
+  in
+  List.map convert_edit p
+
+(* ~, . and .. have no meaning in file urls so we don't canonicalize them *)
+(* but symlinks must be canonicalized before being used in flow: *)
+let lsp_DocumentIdentifier_to_flow_path textDocument =
+  let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
+  (Sys_utils.realpath fn)
+  |> Option.value ~default:fn
+
 let lsp_DocumentIdentifier_to_flow
     (textDocument: Lsp.TextDocumentIdentifier.t)
     ~(client: Persistent_connection.single_client)
   : File_input.t =
-  let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
-  (* ~, . and .. have no meaning in file urls so we don't canonicalize them *)
-  (* but symlinks must be canonicalized before being used in flow: *)
-  let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
-  let file = Persistent_connection.get_file client fn
-  in
-  file
+  lsp_DocumentIdentifier_to_flow_path textDocument
+  |> Persistent_connection.get_file client
 
 let lsp_DocumentPosition_to_flow
     (params: Lsp.TextDocumentPositionParams.t)
@@ -134,6 +157,13 @@ let lsp_DocumentPosition_to_flow
   in
   (file, line, char)
 
+let lsp_textDocument_and_range_to_flow
+  ?(file_key_of_path=fun p -> File_key.SourceFile p) td range client =
+  let path = lsp_DocumentIdentifier_to_flow_path td in
+  let file_key = file_key_of_path path in
+  let file = Persistent_connection.get_file client path in
+  let loc = lsp_range_to_flow_loc ~source:file_key range in
+  (file_key, file, loc)
 
 
 module DocumentSymbols = struct

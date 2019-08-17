@@ -44,7 +44,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
   (* Compute aggregate stats *)
   let trusted, untrusted, any, empty = Core_list.fold_left
     ~f:(fun (acc_trust, acc_untrust, acc_any, acc_empty)
-            (_, { Coverage.untainted; tainted; empty; uncovered }) ->
+            (_, { Coverage_response.untainted; tainted; empty; uncovered }) ->
       (acc_trust + untainted, acc_untrust + tainted, acc_any + uncovered, acc_empty + empty)
   ) stats ~init:(0, 0, 0, 0) in
 
@@ -54,7 +54,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
   let trusted_percentage = percent trusted total in
   let percentage = percent covered total in
 
-  let file_stats (file_key, { Coverage.untainted; tainted; empty; uncovered }) =
+  let file_stats (file_key, { Coverage_response.untainted; tainted; empty; uncovered }) =
     let covered = untainted + tainted in
     let total = covered + uncovered + empty in
     let percentage = percent covered total in

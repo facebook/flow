@@ -32,19 +32,15 @@ end = struct
     let heap = heap_size () in
     let { nonempty_slots; used_slots; slots } = hash_stats () in
     Profiling_js.sample_memory profiling
-      ~group:"GC"
       ~metric:"heap"
       ~value:(float_of_int heap);
     Profiling_js.sample_memory profiling
-      ~group:"GC"
       ~metric:"hash_nonempty_slots"
       ~value:(float_of_int nonempty_slots);
     Profiling_js.sample_memory profiling
-      ~group:"GC"
       ~metric:"hash_slots"
       ~value:(float_of_int slots);
     Profiling_js.sample_memory profiling
-      ~group:"GC"
       ~metric:"hash_used_slots"
       ~value:(float_of_int used_slots)
 

@@ -54,7 +54,7 @@ module Pattern
           | Property.Get { key = _; value = (loc, _) }
           | Property.Set { key = _; value = (loc, _) } ->
             (* these should never happen *)
-            error_at env (loc, Parse_error.UnexpectedIdentifier);
+            error_at env (loc, Parse_error.Unexpected "identifier");
             acc
           in
           properties env acc remaining
@@ -131,10 +131,11 @@ module Pattern
     )
     in
 
-    fun env (loc, { Ast.Expression.Array.elements = elems; comments = _ (* TODO *) }) ->
+    fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
       loc, Pattern.Array { Pattern.Array.
         elements = elements env [] elems;
         annot = missing_annot env;
+        comments;
       }
 
   and from_expr env (loc, expr) =
@@ -245,7 +246,7 @@ module Pattern
             }))
 
           | _ ->
-            error_unexpected env; (* invalid shorthand destructuring *)
+            error_unexpected ~expected:"an identifier" env; (* invalid shorthand destructuring *)
             None
           )
       end
@@ -339,6 +340,7 @@ module Pattern
         elements env ((Some element)::acc)
     in
     with_loc (fun env ->
+      let leading = Peek.comments env in
       Expect.token env T_LBRACKET;
       let elements = elements env [] in
       Expect.token env T_RBRACKET;
@@ -346,7 +348,9 @@ module Pattern
         if Peek.token env = T_COLON then Ast.Type.Available (Type.annotation env)
         else missing_annot env
       in
-      Pattern.Array { Pattern.Array.elements; annot; }
+      let trailing = Peek.comments env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Pattern.Array { Pattern.Array.elements; annot; comments; }
     )
 
   and pattern env restricted_error =

@@ -2,11 +2,15 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
-      "message":"Unexpected number"
+      "message":"Unexpected number, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},
-      "message":"Unexpected token :"
+      "message":"Unexpected token `:`, expected the end of an expression statement (`;`)"
+    },
+    {
+      "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},
+      "message":"Unexpected token `:`, expected the start of a statement"
     }
   ],
   "type":"Program",

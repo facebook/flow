@@ -127,6 +127,7 @@ module Func_stmt_config = struct
     | Array of {
         annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
         elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element option list;
+        comments: (ALoc.t, unit) Ast.Syntax.t option;
       }
 
   type param = Param of {
@@ -247,7 +248,7 @@ module Func_stmt_config = struct
         default;
       }
 
-    | Array { annot; elements } ->
+    | Array { annot; elements; comments } ->
       let default = eval_default cx ~expr default in
       let elements =
         let default = Option.map default (fun ((_, t), _) ->
@@ -265,6 +266,7 @@ module Func_stmt_config = struct
         argument = ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.
           elements;
           annot;
+          comments;
         });
         default;
       }
@@ -437,7 +439,10 @@ and statement_decl cx = Ast.Statement.(
         )
       )
 
-  | _, EnumDeclaration _ -> ()
+  | _, EnumDeclaration {EnumDeclaration.id = (name_loc, {Ast.Identifier.name; _}); _} ->
+      let r = DescFormat.type_reason name name_loc in
+      let tvar = Tvar.mk cx r in
+      Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name tvar name_loc
 
   | (loc, DeclareVariable { DeclareVariable.id = (id_loc, { Ast.Identifier.name; comments= _ }); _ }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
@@ -899,14 +904,14 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         ast
       )
 
-  | (loc, Break { Break.label }) ->
+  | (loc, Break { Break.label; comments }) ->
       (* save environment at unlabeled breaks, prior to activation clearing *)
       let label_opt, env, label_ast = match label with
         | None -> None, Env.(clone_env (peek_env ())), None
         | Some (_, { Ast.Identifier.name; comments= _ } as lab_ast) -> Some name, [], Some lab_ast
       in
       Env.reset_current_activation loc;
-      let ast = loc, Break { Break.label = label_ast } in
+      let ast = loc, Break { Break.label = label_ast; comments } in
       let abnormal = Abnormal.Break label_opt in
       Abnormal.save abnormal ~env;
       Abnormal.throw_stmt_control_flow_exception ast abnormal
@@ -1879,9 +1884,16 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     if not @@ Context.enable_enums cx then
       Flow.add_output cx (Error_message.EExperimentalEnums loc);
     let open EnumDeclaration in
-    let {id = id_loc, ident; body} = enum in
-    let t = AnyT.untyped @@ mk_reason REnumDeclaration loc in
-    let id' = (id_loc, t), ident in
+    let {id = name_loc, ident; body} = enum in
+    let {Ast.Identifier.name; _} = ident in
+    let t = AnyT.untyped @@ mk_reason REnum loc in
+    let id' = (name_loc, t), ident in
+    Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
+    let use_op = Op (AssignVar {
+      var = Some (mk_reason (RIdentifier name) name_loc);
+      init = reason_of_t t;
+    }) in
+    Env.init_implicit_const Scope.Entry.EnumNameBinding cx ~use_op name ~has_anno:false t name_loc;
     loc, EnumDeclaration {id = id'; body}
 
   | (loc, DeclareVariable { DeclareVariable.
@@ -4967,12 +4979,24 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     in
     (t, MemberExpression member', attributes')
 
-  | _ ->
-      (* TODO? covers namespaced names as element names *)
+  | MemberExpression member,  Options.(Jsx_csx | Jsx_pragma _), _->
     let t = Unsoundness.at InferenceHooks loc_element in
-    let name = Tast_utils.error_mapper#jsx_name name in
-    let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-    t, name, attributes
+    let name' = Tast_utils.error_mapper#jsx_name name in
+    let el_name = jsx_title_member_to_string member in
+    let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
+    let c = mod_reason_of_t (replace_reason_const (RIdentifier el_name)) t in
+    let _o, attributes' = jsx_mk_props cx reason c el_name attributes children in
+    t, name', attributes'
+
+  | NamespacedName namespace, _, _ ->
+    (* TODO? covers namespaced names as element names *)
+    let t = Unsoundness.at InferenceHooks loc_element in
+    let name' = Tast_utils.error_mapper#jsx_name name in
+    let el_name = jsx_title_namespaced_name_to_string namespace in
+    let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
+    let c = mod_reason_of_t (replace_reason_const (RIdentifier el_name)) t in
+    let _o, attributes' = jsx_mk_props cx reason c el_name attributes children in
+    t, name', attributes'
   in
 
   let closingElement =
@@ -5296,6 +5320,11 @@ and jsx_title_member_to_string (_, member) = Ast.JSX.MemberExpression.(
   | MemberExpression member -> (jsx_title_member_to_string member) ^ "." ^ name
   | Identifier (_, { Ast.JSX.Identifier.name = obj }) -> obj ^ "." ^ name
 )
+
+and jsx_title_namespaced_name_to_string namespaced_name =
+  let (_, {Ast.JSX.NamespacedName.namespace = (_, namespace); name = (_, name)}) = namespaced_name
+  in
+  namespace.Ast.JSX.Identifier.name ^ name.Ast.JSX.Identifier.name
 
 and jsx_title_member_to_expression member =
   let (mloc, member) = member in
@@ -5802,9 +5831,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let property = Member.PropertyIdentifier ((prop_loc, t), id) in
       let ast = (loc, t), Member { Member._object = _object_ast; property; } in
 
-      (* since we never called `expression cx e`, we have to add to the
-         type table ourselves *)
-
       let out = match Refinement.key e with
       | Some name -> result ast name t (ExistsP (Some loc)) true
       | None -> empty_result ast
@@ -6211,85 +6237,37 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   | None -> (class_loc, "<<anonymous class>>")
 )
 
-and check_properties_initialized_before_use cx class_ast: unit =
-  let open Ast.Class in
-  let class_body = (snd class_ast.body).Body.body in
-  let properties =
-    Core_list.filter_map ~f:(function
-      | Body.Property (_, {
-          Property.key = Ast.Expression.Object.Property.Identifier ((loc, _) as id);
-          value = None;
-          static = false;
-          annot = _;
-          variance = _;
-        }) -> Some (Property_assignment.public_property loc id)
-      | Body.PrivateField (_, {
-          PrivateField.key = (loc, _) as id;
-          value = None;
-          static = false;
-          annot = _;
-          variance = _;
-        }) -> Some (Property_assignment.private_property loc id)
-      | _ -> None
-    ) class_body
-  in
-  let ctor_body: (ALoc.t, ALoc.t) Ast.Statement.Block.t =
-    Core_list.find_map ~f:(function
-      | Body.Method (_, {
-          Method.kind = Method.Constructor;
-          value = (_, {
-            Ast.Function.body = Ast.Function.BodyBlock (_, block);
-            id = _; params = _; async = _; generator = _; predicate = _;
-            return = _; tparams = _; sig_loc = _;
-          });
-          key = _; static = _; decorators = _;
-        }) -> Some block
-      | _ -> None
-    ) class_body
-    |> Option.value ~default:{ Ast.Statement.Block.body = [] }
-  in
-
-  let uninitialized_properties, read_before_initialized, this_errors =
-    Property_assignment.eval_property_assignment properties ctor_body
-  in
-  List.iter (fun id ->
-    Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-      Flow_ast_utils.loc_of_ident id,
-      PropertyNotDefinitivelyInitialized
-    ))
-  ) uninitialized_properties;
-  List.iter (fun loc ->
-    Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-      loc,
-      ReadFromUninitializedProperty
-    ))
-  ) read_before_initialized;
-  List.iter (fun (loc, error, uninitialized_properties) ->
-    List.iter (fun _id ->
-      Flow.add_output cx Error_message.(EUninitializedInstanceProperty (
-        loc,
-        match error with
-        | Property_assignment.ThisInConstructor -> ThisBeforeEverythingInitialized
-        | Property_assignment.MethodCallInConstructor -> MethodCallBeforeEverythingInitialized
-      ))
-    ) uninitialized_properties
-  ) this_errors
-
 and mk_class cx class_loc ~name_loc reason c =
   let def_reason = repos_reason class_loc reason in
   let this_in_class = Class_stmt_sig.This.in_class c in
   let self = Tvar.mk cx reason in
   let class_sig, class_ast_f = mk_class_sig cx name_loc reason self c in
   class_sig |> Class_stmt_sig.generate_tests cx (fun class_sig ->
+    let public_property_map =
+      Class_stmt_sig.to_prop_map cx @@
+        Class_stmt_sig.public_fields_of_signature ~static:false class_sig
+    in
+    let private_property_map =
+      Class_stmt_sig.to_prop_map cx @@
+        Class_stmt_sig.private_fields_of_signature ~static:false class_sig
+    in
+
     Class_stmt_sig.check_super cx def_reason class_sig;
     Class_stmt_sig.check_implements cx def_reason class_sig;
     if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
       Class_stmt_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels
-      ~expr:expression;
+      ~expr:expression
+      ~private_property_map;
+
+    let class_body = Ast.Class.((snd c.body).Body.body) in
+    Context.add_voidable_check cx {
+      Context.public_property_map;
+      private_property_map;
+      errors = Property_assignment.eval_property_assignment class_body;
+    }
   );
-  check_properties_initialized_before_use cx c;
   let class_t = Class_stmt_sig.classtype cx class_sig in
   Flow.unify cx self class_t;
   class_t, class_ast_f class_t
@@ -6627,10 +6605,10 @@ and mk_func_sig =
       let reason = mk_reason RDestructuring ploc in
       let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
       t, Func_stmt_config.Object { annot; properties }
-    | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements } ->
+    | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
       let reason = mk_reason RDestructuring ploc in
       let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
-      t, Func_stmt_config.Array { annot; elements; }
+      t, Func_stmt_config.Array { annot; elements; comments }
     | Ast.Pattern.Expression _ ->
       failwith "unexpected expression pattern in param"
     in

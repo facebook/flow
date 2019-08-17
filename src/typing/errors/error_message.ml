@@ -157,7 +157,7 @@ and 'loc t' =
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
   | EExperimentalClassProperties of 'loc * bool
-  | EUninitializedInstanceProperty of 'loc * uninitialized_property_error
+  | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EExperimentalDecorators of 'loc
   | EExperimentalExportStarAs of 'loc
   | EExperimentalEnums of 'loc
@@ -234,6 +234,32 @@ and 'loc t' =
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
   | ENonArraySpread of 'loc virtual_reason
+  | ECannotSpreadInterface of {
+      spread_reason: 'loc virtual_reason;
+      interface_reason: 'loc virtual_reason
+    }
+  | ECannotSpreadIndexerOnRight of {
+      spread_reason: 'loc virtual_reason;
+      object_reason: 'loc virtual_reason;
+      key_reason: 'loc virtual_reason;
+    }
+  | EUnableToSpread of {
+      spread_reason: 'loc virtual_reason;
+      object1_reason: 'loc virtual_reason;
+      object2_reason: 'loc virtual_reason;
+      propname: string;
+      error_kind: spread_error_kind;
+    }
+  | EInexactMayOverwriteIndexer of {
+    spread_reason: 'loc virtual_reason;
+    key_reason: 'loc virtual_reason;
+    value_reason: 'loc virtual_reason;
+    object2_reason: 'loc virtual_reason;
+  }
+
+and spread_error_kind =
+  | Indexer
+  | Inexact
 
 and binding_error =
   | ENameAlreadyBound
@@ -243,6 +269,7 @@ and binding_error =
   | EConstReassigned
   | EConstParamReassigned
   | EImportReassigned
+  | EEnumReassigned
 
 and docblock_error =
   | MultipleFlowAttributes
@@ -345,13 +372,6 @@ and 'loc upper_kind =
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
   | IncompatibleUnclassified of string
-
-and uninitialized_property_error =
-  | PropertyNotDefinitivelyInitialized
-  | ReadFromUninitializedProperty
-  | MethodCallBeforeEverythingInitialized
-  | ThisBeforeEverythingInitialized
-
 let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
   let map_reason = Reason.map_reason_locs f in
@@ -610,6 +630,40 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification _ as e -> e
   | ENonArraySpread r -> ENonArraySpread (map_reason r)
+  | ECannotSpreadInterface {spread_reason; interface_reason} -> ECannotSpreadInterface {
+      spread_reason = map_reason spread_reason;
+      interface_reason = map_reason interface_reason
+    }
+  | ECannotSpreadIndexerOnRight {spread_reason; object_reason; key_reason} ->
+      ECannotSpreadIndexerOnRight {
+        spread_reason = map_reason spread_reason;
+        object_reason = map_reason object_reason;
+        key_reason = map_reason key_reason;
+      }
+  | EUnableToSpread {
+      spread_reason;
+      object1_reason;
+      object2_reason;
+      propname;
+      error_kind
+    } -> EUnableToSpread {
+      spread_reason = map_reason spread_reason;
+      object1_reason = map_reason object1_reason;
+      object2_reason = map_reason object2_reason;
+      propname;
+      error_kind;
+    }
+  | EInexactMayOverwriteIndexer {
+      spread_reason;
+      key_reason;
+      value_reason;
+      object2_reason;
+    } -> EInexactMayOverwriteIndexer {
+      spread_reason = map_reason spread_reason;
+      key_reason = map_reason key_reason;
+      value_reason = map_reason value_reason;
+      object2_reason = map_reason object2_reason;
+    }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -762,6 +816,10 @@ let util_use_op_of_msg nope util = function
 | EBigIntNotYetSupported _
 | ESignatureVerification _
 | ENonArraySpread _
+| ECannotSpreadInterface _
+| ECannotSpreadIndexerOnRight _
+| EUnableToSpread _
+| EInexactMayOverwriteIndexer _
   -> nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -806,6 +864,23 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EDebugPrint (reason, _)
   | ENonArraySpread reason ->
         Some (aloc_of_reason reason)
+
+  (* We position around the use of the object instead of the spread because the
+   * spread may be part of a polymorphic type signature. If we add a suppression there,
+   * the reduction in coverage is far more drastic. *)
+  | ECannotSpreadInterface {spread_reason=_; interface_reason = reason}
+  | ECannotSpreadIndexerOnRight {spread_reason=_; object_reason = reason; key_reason=_}
+  | EUnableToSpread {
+      spread_reason=_;
+      object1_reason=_;
+      object2_reason = reason;
+      propname=_;
+      error_kind=_;
+    }
+  | EInexactMayOverwriteIndexer {spread_reason=_; key_reason=_; value_reason=_; object2_reason = reason}
+    ->
+      Some (aloc_of_reason reason)
+
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
   | ENonstrictImport loc
@@ -1592,6 +1667,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         -> [text "Cannot reassign constant "; ref x; text "."]
       | EImportReassigned ->
         [text "Cannot reassign import "; ref x; text "."]
+      | EEnumReassigned ->
+        [text "Cannot reassign enum "; ref x; text "."]
       in
       Normal msg
 
@@ -1647,22 +1724,26 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
 
     | EUninitializedInstanceProperty (_loc, err) ->
-      (match err with
-      | PropertyNotDefinitivelyInitialized -> Normal [
-          text "Class property not definitively initialized in the constructor. ";
+      Lints.(match err with
+      | PropertyNotDefinitelyInitialized -> Normal [
+          text "Class property not definitely initialized in the constructor. ";
           text "Can you add an assignment to the property declaration?";
         ]
       | ReadFromUninitializedProperty -> Normal [
           text "It is unsafe to read from a class property before it is ";
-          text "definitively initialized.";
+          text "definitely initialized.";
         ]
       | MethodCallBeforeEverythingInitialized -> Normal [
           text "It is unsafe to call a method in the constructor before all ";
-          text "class properties are definitively initialized.";
+          text "class properties are definitely initialized.";
+        ]
+      | PropertyFunctionCallBeforeEverythingInitialized -> Normal [
+          text "It is unsafe to call a property function in the constructor ";
+          text "before all class properties are definitely initialized.";
         ]
       | ThisBeforeEverythingInitialized -> Normal [
           text "It is unsafe to use "; code "this"; text " in the constructor ";
-          text "before all class properties are definitively initialized.";
+          text "before all class properties are definitely initialized.";
         ]
       )
 
@@ -2056,6 +2137,44 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Cannot spread non-array iterable "; ref reason; text ". Use ";
         code "...Array.from(<iterable>)"; text " instead."
       ]
+  | ECannotSpreadInterface {spread_reason; interface_reason} ->
+    Normal [
+      text "Cannot determine a type for "; ref spread_reason; text ". ";
+      ref interface_reason; text " cannot be spread because interfaces do not ";
+      text "track the own-ness of their properties. Can you use an object type instead?";
+    ]
+  | ECannotSpreadIndexerOnRight {spread_reason; object_reason; key_reason} ->
+    Normal [
+      text "Cannot determine a type for "; ref spread_reason; text ". ";
+      ref object_reason; text " cannot be spread because the indexer "; ref key_reason;
+      text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
+      text "Can you spread "; ref object_reason; text " first or remove the indexer?";
+    ]
+
+  | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname; error_kind}) ->
+    let error_reason, fix_suggestion = match error_kind with
+      | Inexact -> "is inexact",
+        [text " Can you make "; ref object2_reason; text " exact?"]
+      | Indexer -> "has an indexer",
+        [
+          text " Can you remove the indexer in "; ref object2_reason;
+          text " or make "; code propname; text " a required property?";
+        ]
+    in
+    Normal ([
+      text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
+      text " "; text error_reason; text ", so it may contain ";
+      code propname; text " with a type that conflicts with "; code propname;
+      text "'s definition in "; ref object1_reason; text ".";
+    ] @ fix_suggestion)
+
+  | EInexactMayOverwriteIndexer ({spread_reason; key_reason; value_reason; object2_reason}) ->
+    Normal [
+      text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
+      text " is inexact and may "; text "have a property key that conflicts with "; ref key_reason;
+      text " or a property value that conflicts with "; ref value_reason;
+      text ". Can you make "; ref object2_reason; text " exact?";
+    ]
 )
 
 let is_lint_error = function
