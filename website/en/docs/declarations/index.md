@@ -21,7 +21,7 @@ For example, suppose we have the following code in a file `src/LookBeforeYouLeap
 ```js
 // @flow
 import { isLeapYear } from "./Misc";
-if (isLeapYear("2016")) console.log("Yay!");
+if (isLeapYear("2020")) console.log("Yay!");
 ```
 
 Next, suppose that `src/Misc.js` had an incompatible implementation of
