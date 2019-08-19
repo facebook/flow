@@ -35,6 +35,18 @@ let ident_name = Flow_ast_utils.name_of_ident
 
 let mk_ident ~comments name = { Ast.Identifier.name; comments }
 
+class loc_mapper (typ: Type.t) = object(_)
+  inherit [
+    ALoc.t,
+    ALoc.t,
+    ALoc.t,
+    ALoc.t * Type.t
+  ] Flow_polymorphic_ast_mapper.mapper
+
+  method on_loc_annot (x: ALoc.t) = x
+  method on_type_annot (x: ALoc.t) = x, typ
+end
+
 let snd_fst ((_, x), _) = x
 
 let translate_identifier_or_literal_key t = Ast.Expression.Object.(function
@@ -5428,7 +5440,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
     | true,
       (expr_loc, Member {
         Member._object;
-        property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name= prop_name; comments= _ } as id));
+        property = (
+          Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name= prop_name; comments= _ }))
+          | Member.PropertyExpression (prop_loc, Ast.Expression.Literal {
+            Ast.Literal.value = Ast.Literal.String prop_name;
+            _;
+          })
+        ) as property;
       }) ->
       (* use `expression` instead of `condition` because `_object` is the object
          in a member expression; if it itself is a member expression, it must
@@ -5460,7 +5478,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
       (* since we never called `expression cx expr`, we have to add to the
          type table ourselves *)
-      let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
+      let m = new loc_mapper prop_t in
+      let property = m#member_property property in
 
       ( (expr_loc, prop_t),
         Member { Member.
