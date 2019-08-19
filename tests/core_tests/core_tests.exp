@@ -163,11 +163,11 @@ References:
    weakset.js:19:24
     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^ [2]
-   <BUILTINS>/core.js:646:26
-   646| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:648:26
+   648| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
                                  ^^^^^ [3]
-   <BUILTINS>/core.js:646:34
-   646| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:648:34
+   648| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
                                          ^^^^^^^^^^^^^^^^^^^ [4]
    weakset.js:19:27
     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -194,11 +194,11 @@ References:
    weakset.js:29:31
     29| function* numbers(): Iterable<number> {
                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:646:26
-   646| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:648:26
+   648| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
                                  ^^^^^ [3]
-   <BUILTINS>/core.js:646:34
-   646| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:648:34
+   648| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
                                          ^^^^^^^^^^^^^^^^^^^ [4]
 
 
