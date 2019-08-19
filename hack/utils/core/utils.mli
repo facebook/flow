@@ -48,6 +48,7 @@ val strip_ns : string -> string
 val add_ns : string -> string
 val strip_all_ns : string -> string
 val split_ns_from_name : string -> string * string
+val split_class_from_method : string -> (string * string) option
 val iter2_shortest : ('a -> 'b -> 'c) -> 'a list -> 'b list -> unit
 val fold_fun_list : 'a -> ('a -> 'a) list -> 'a
 val compose : ('a -> 'b) -> ('c -> 'a) -> 'c -> 'b

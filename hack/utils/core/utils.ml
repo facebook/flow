@@ -172,6 +172,26 @@ let split_ns_from_name (s: string): (string * string) =
     (namespace_part, name_part)
   with Not_found -> ("\\", s)
 
+let double_colon = Str.regexp_string "::"
+
+(*
+ * "A::B" -> Some "A" * "B"
+ * "::B" "A::" "Abc" -> None
+ *)
+let split_class_from_method (s: string) : (string * string) option =
+  try
+    let i = Str.search_forward double_colon s 0 in
+    let len = String.length s in
+    let class_part = String.sub s 0 i in
+    Printf.printf "Class part is [%s]\n" class_part;
+    let meth_part = String.sub s (i+2) (len-i-2) in
+    Printf.printf "Meth part is [%s]\n" meth_part;
+    if class_part = "" || meth_part = "" then
+      None
+    else
+      Some (class_part, meth_part)
+  with _ -> None
+
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest
  * of both lists.
