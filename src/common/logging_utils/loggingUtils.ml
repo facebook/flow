@@ -31,22 +31,44 @@ let set_hh_logger_min_level ?(min_level=Hh_logger.Level.Info) options =
 let init_loggers ~options ?min_level () =
   set_hh_logger_min_level ?min_level options
 
-let set_server_options ~server_options =
-  let lazy_mode = match Options.lazy_mode server_options with
-  | Options.LAZY_MODE_FILESYSTEM -> "fs"
-  | Options.LAZY_MODE_IDE -> "ide"
-  | Options.LAZY_MODE_WATCHMAN -> "watchman"
-  | Options.NON_LAZY_MODE -> "off"
+let set_server_options, dump_server_options =
+  let format server_options =
+    let lazy_mode = match Options.lazy_mode server_options with
+    | Options.LAZY_MODE_FILESYSTEM -> "fs"
+    | Options.LAZY_MODE_IDE -> "ide"
+    | Options.LAZY_MODE_WATCHMAN -> "watchman"
+    | Options.NON_LAZY_MODE -> "off"
+    in
+    let arch = match Options.arch server_options with
+    | Options.Classic -> "classic"
+    | Options.TypesFirst -> "types_first"
+    in
+    let abstract_locations = if Options.abstract_locations server_options then "on" else "off" in
+    let max_workers = Options.max_workers server_options in
+    let enabled_rollouts = Options.enabled_rollouts server_options in
+    (lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts)
   in
-  let arch = match Options.arch server_options with
-  | Options.Classic -> "classic"
-  | Options.TypesFirst -> "types_first"
+
+  let set_server_options ~server_options =
+    let lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts =
+      format server_options
+    in
+    FlowEventLogger.set_server_options
+      ~lazy_mode ~arch ~abstract_locations ~max_workers ~enabled_rollouts
   in
-  let abstract_locations = if Options.abstract_locations server_options then "on" else "off" in
-  let max_workers = Options.max_workers server_options in
-  let enabled_rollouts = Options.enabled_rollouts server_options in
-  FlowEventLogger.set_server_options
-    ~lazy_mode ~arch ~abstract_locations ~max_workers ~enabled_rollouts
+
+  let dump_server_options ~server_options ~log =
+    let lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts =
+      format server_options
+    in
+    log (Printf.sprintf "lazy_mode=%s" lazy_mode);
+    log (Printf.sprintf "arch=%s" arch);
+    log (Printf.sprintf "abstract_locations=%s" abstract_locations);
+    log (Printf.sprintf "max_workers=%d" max_workers);
+    SMap.iter (fun r g -> log (Printf.sprintf "Rollout %S set to %S" r g)) enabled_rollouts
+  in
+
+  set_server_options, dump_server_options
 
 let disable_logging () =
   EventLogger.disable_logging ();

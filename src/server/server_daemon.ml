@@ -76,6 +76,7 @@ let register_entry_point
       } = args in
       LoggingUtils.set_hh_logger_min_level options;
       Hh_logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
+      LoggingUtils.dump_server_options ~server_options:options ~log:(Hh_logger.info "%s");
 
       FlowEventLogger.restore_context logging_context;
       (* It makes the logs easier if all server logs have the "command" column set to "server",
