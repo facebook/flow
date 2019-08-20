@@ -4320,29 +4320,36 @@ and literal ?(is_const=false) cx loc lit =
         then Literal (None, s), RString
         else AnyLiteral, RLongStringLit (max_literal_length)
       in
-      let lit_type, r_desc = match (lit, r_desc) with
-        | (Literal (_, s), _) when is_const -> SingletonStrT s, RStringLit s
-        | (_, r_desc) -> StrT lit, r_desc
-      in
-      DefT (annot_reason (mk_reason r_desc loc), make_trust (), lit_type)
+      match (lit, r_desc) with
+      | (Literal (_, s), _) when is_const ->
+        let reason = mk_reason (RStringLit s) loc in
+        Tvar.mk_where cx reason (fun tvar ->
+          Flow.flow_t cx (DefT (annot_reason reason, make_trust (), SingletonStrT s), tvar)
+        )
+      | (_, r_desc) ->
+        DefT (annot_reason (mk_reason r_desc loc), make_trust (), StrT lit)
   end
 
   | Boolean b ->
-      let lit_type, r_desc = if is_const
-        then SingletonBoolT b, RBooleanLit b
-        else BoolT (Some b), RBoolean
-      in
-      DefT (annot_reason (mk_reason r_desc loc), make_trust (), lit_type)
+      if is_const then
+        let reason = mk_reason (RBooleanLit b) loc in
+        Tvar.mk_where cx reason (fun tvar ->
+          Flow.flow_t cx (DefT (annot_reason reason, make_trust (), SingletonBoolT b), tvar)
+        )
+      else
+        DefT (annot_reason (mk_reason RBoolean loc), make_trust (), BoolT (Some b))
 
   | Null ->
       NullT.at loc |> with_trust make_trust
 
   | Number f ->
-      let lit_type, r_desc = if is_const
-        then SingletonNumT (f, lit.raw), RNumberLit lit.raw
-        else NumT (Literal (None, (f, lit.raw))), RNumber
-      in
-      DefT (annot_reason (mk_reason r_desc loc), make_trust (), lit_type)
+      if is_const then
+        let reason = mk_reason (RNumberLit lit.raw) loc in
+        Tvar.mk_where cx reason (fun tvar ->
+          Flow.flow_t cx (DefT (annot_reason reason, make_trust (), SingletonNumT (f, lit.raw)), tvar)
+        )
+      else
+        DefT (annot_reason (mk_reason RNumber loc), make_trust (), NumT (Literal (None, (f, lit.raw))))
 
   | BigInt _ ->
       let reason = annot_reason (mk_reason (RBigIntLit lit.raw) loc) in
