@@ -1886,3 +1886,5 @@ generic_alias.js = {
     }
   ]
 }
+object_literal.js:5:16 = {"result":[]}
+object_literal.js:7:17 = {"result":[]}
