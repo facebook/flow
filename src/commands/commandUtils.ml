@@ -1122,6 +1122,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
+    opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports = FlowConfig.enforce_well_formed_exports flowconfig;
     opt_enforce_well_formed_exports_whitelist = FlowConfig.enforce_well_formed_exports_whitelist flowconfig;

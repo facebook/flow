@@ -1,0 +1,5 @@
+[rollouts]
+verify_sig=100% on, 0% off
+
+[options]
+(verify_sig=on) experimental.well_formed_exports=true

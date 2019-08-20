@@ -63,6 +63,7 @@ type t = {
   opt_debug : bool;
   opt_max_literal_length: int;
   opt_enable_const_params: bool;
+  opt_enabled_rollouts: string SMap.t;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
   opt_enforce_well_formed_exports_whitelist: string list;
@@ -126,6 +127,7 @@ let all opts = opts.opt_all
 let arch opts = opts.opt_arch
 let max_literal_length opts = opts.opt_max_literal_length
 let enable_const_params opts = opts.opt_enable_const_params
+let enabled_rollouts opts = opts.opt_enabled_rollouts
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
 let enums opts = opts.opt_enums

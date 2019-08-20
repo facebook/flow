@@ -1,0 +1,8 @@
+[ignore]
+(ignore_everything=true).*\.js
+
+[rollouts]
+ignore_everything=0% true, 100% false
+
+[options]
+experimental.well_formed_exports=true
