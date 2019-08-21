@@ -37,7 +37,7 @@ export default suite(
         },
       }).verifyAllIDEMessagesInStep(
         [`textDocument/codeAction{[]}`],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/codeAction #1', [
@@ -113,7 +113,7 @@ export default suite(
             },
           ])}}`,
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/codeAction #2', [
@@ -166,7 +166,7 @@ export default suite(
             },
           ])}}`,
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],
