@@ -1367,7 +1367,7 @@ and convert_object =
       | Ast.Expression.Object.Property.Identifier (
           loc, { Ast.Identifier.name; comments = _ }
         ) ->
-          Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc;
+          Type_inference_hooks_js.dispatch_obj_type_prop_decl_hook cx name loc;
           let (_, t), _ as value_ast = convert cx tparams_map value in
           let prop_ast t = { prop with Object.Property.
             key = begin match key with

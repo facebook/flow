@@ -162,7 +162,7 @@ let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
   Type_inference_hooks_js.set_member_hook (use_hook false);
   Type_inference_hooks_js.set_call_hook (use_hook ());
   Type_inference_hooks_js.set_class_member_decl_hook class_def_hook;
-  Type_inference_hooks_js.set_obj_prop_decl_hook obj_def_hook;
+  Type_inference_hooks_js.set_obj_type_prop_decl_hook obj_def_hook;
   Type_inference_hooks_js.set_export_named_hook export_named_hook;
   Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
