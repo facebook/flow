@@ -16,6 +16,7 @@ let run ctxt expected name content =
     ~use_strict:true
     ~module_ref_prefix:None
     ~facebook_fbt:None
+    ~prevent_munge:false
     ()
   in
   let result = Parsing_service_js.do_parse ~parse_options ~info content file in

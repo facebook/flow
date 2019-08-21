@@ -74,7 +74,7 @@ val make_parse_options:
   ?fail: bool ->
   ?arch: Options.arch ->
   ?abstract_locations: bool ->
-  ?prevent_munge: bool ->
+  prevent_munge: bool ->
   types_mode: types_mode ->
   use_strict: bool ->
   module_ref_prefix: string option ->

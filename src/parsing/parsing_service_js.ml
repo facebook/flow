@@ -94,7 +94,7 @@ let make_parse_options
     ?(fail=true)
     ?(arch=Options.Classic)
     ?(abstract_locations=false)
-    ?(prevent_munge=false)
+    ~prevent_munge
     ~types_mode
     ~use_strict
     ~module_ref_prefix
@@ -406,10 +406,9 @@ let do_parse ~parse_options ~info content file =
          * The only files which are parsed but not inferred are .flow files with
          * no @flow pragma. *)
         if types_checked then
-          let prevent_munge = Option.map2
-            (Some prevent_munge)
-            (Docblock.preventMunge info)
-            (||)
+          let prevent_munge = match Docblock.preventMunge info with
+            | Some db_prevent_munge -> db_prevent_munge
+            | None -> prevent_munge
           in
           (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
              property named `propTypes` in any class. It should be killed with fire or replaced with
@@ -424,7 +423,7 @@ let do_parse ~parse_options ~info content file =
           | Ok signature ->
             let errors, sig_ast =
               Signature_builder.Signature.verify_and_generate
-                ?prevent_munge ~facebook_fbt
+                ~prevent_munge ~facebook_fbt
                 ~ignore_static_propTypes ~facebook_keyMirror
                 signature ast in
             let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
@@ -664,9 +663,10 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
   let abstract_locations = Options.abstract_locations options in
-  let parse_options  =
+  let prevent_munge = not (Options.should_munge_underscores options) in
+  let parse_options =
     make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
-        ~facebook_fbt ()
+        ~facebook_fbt ~prevent_munge ()
   in
 
   let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
@@ -686,9 +686,10 @@ let reparse_with_defaults
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
   let abstract_locations = Options.abstract_locations options in
+  let prevent_munge = not (Options.should_munge_underscores options) in
   let parse_options  =
     make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
-        ~facebook_fbt ()
+        ~facebook_fbt ~prevent_munge ()
   in
   reparse
     ~transaction ~reader ~parse_options ~profile ~max_header_tokens ~noflow
@@ -730,10 +731,11 @@ let ensure_parsed ~reader options workers files =
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
   let abstract_locations = Options.abstract_locations options in
+  let prevent_munge = not (Options.should_munge_underscores options) in
 
   let parse_options =
     make_parse_options ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch
-        ~abstract_locations ()
+        ~abstract_locations ~prevent_munge ()
   in
 
   let%lwt results = parse
