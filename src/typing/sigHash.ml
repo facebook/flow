@@ -31,8 +31,9 @@
 *)
 
 (* NOTE: it's critical that these are all constant constructors, which are
- * represented as ints, because we hash in C assuming they are ints. Any
- * non-constant constructors will be blocks, and fail to hash properly. *)
+ * represented as ints, because we hash in C assuming they are ints. (Any
+ * non-constant constructors will be blocks, and fail to hash properly.) This
+ * also means that there is effectively no limit on the number of cases. *)
 type hash =
   (* def types *)
   | NumH
@@ -79,7 +80,30 @@ type hash =
   | AnnotH
   | ModuleH
   | TvarDestructorH
-  | CustomFunH
+  | CustomFunObjectAssignH
+  | CustomFunObjectGetPrototypeOfH
+  | CustomFunObjectSetPrototypeOfH
+  | CustomFunComposeH
+  | CustomFunReverseComposeH
+  | CustomFunReactPropTypePrimitiveRequiredH
+  | CustomFunReactPropTypePrimitiveNotRequiredH
+  | CustomFunReactPropTypeComplexArrayOfH
+  | CustomFunReactPropTypeComplexInstanceOfH
+  | CustomFunReactPropTypeComplexObjectOfH
+  | CustomFunReactPropTypeComplexOneOfH
+  | CustomFunReactPropTypeComplexOneOfTypeH
+  | CustomFunReactPropTypeComplexShapeH
+  | CustomFunReactCreateClassH
+  | CustomFunReactCreateElementH
+  | CustomFunReactCloneElementH
+  | CustomFunReactElementFactoryH
+  | CustomFunIdxH
+  | CustomFunTypeAssertIsH
+  | CustomFunTypeAssertThrowsH
+  | CustomFunTypeAssertWrapsH
+  | CustomFunDebugPrintH
+  | CustomFunDebugThrowH
+  | CustomFunDebugSleepH
   | OpenPredH
   | CharSetH
   | ReposH
@@ -217,7 +241,34 @@ let hash_of_ctor = Type.(function
   | MergedT _ -> MergedH
   | BoundT _ -> BoundH
   | TypeDestructorTriggerT _ -> TvarDestructorH
-  | CustomFunT _ -> CustomFunH
+  | CustomFunT (_, ObjectAssign) -> CustomFunObjectAssignH
+  | CustomFunT (_, ObjectGetPrototypeOf) -> CustomFunObjectGetPrototypeOfH
+  | CustomFunT (_, ObjectSetPrototypeOf) -> CustomFunObjectSetPrototypeOfH
+  | CustomFunT (_, Compose true) -> CustomFunComposeH
+  | CustomFunT (_, Compose false) -> CustomFunReverseComposeH
+  | CustomFunT (_, ReactPropType rpt) ->
+    let open React.PropType in
+    begin match rpt with
+    | Primitive (true, _) -> CustomFunReactPropTypePrimitiveRequiredH
+    | Primitive (false, _) -> CustomFunReactPropTypePrimitiveNotRequiredH
+    | Complex ArrayOf -> CustomFunReactPropTypeComplexArrayOfH
+    | Complex InstanceOf -> CustomFunReactPropTypeComplexInstanceOfH
+    | Complex ObjectOf -> CustomFunReactPropTypeComplexObjectOfH
+    | Complex OneOf -> CustomFunReactPropTypeComplexOneOfH
+    | Complex OneOfType -> CustomFunReactPropTypeComplexOneOfTypeH
+    | Complex Shape -> CustomFunReactPropTypeComplexShapeH
+    end
+  | CustomFunT (_, ReactCreateClass) -> CustomFunReactCreateClassH
+  | CustomFunT (_, ReactCreateElement) -> CustomFunReactCreateElementH
+  | CustomFunT (_, ReactCloneElement) -> CustomFunReactCloneElementH
+  | CustomFunT (_, ReactElementFactory _) -> CustomFunReactElementFactoryH
+  | CustomFunT (_, Idx) -> CustomFunIdxH
+  | CustomFunT (_, TypeAssertIs) -> CustomFunTypeAssertIsH
+  | CustomFunT (_, TypeAssertThrows) -> CustomFunTypeAssertThrowsH
+  | CustomFunT (_, TypeAssertWraps) -> CustomFunTypeAssertWrapsH
+  | CustomFunT (_, DebugPrint) -> CustomFunDebugPrintH
+  | CustomFunT (_, DebugThrow) -> CustomFunDebugThrowH
+  | CustomFunT (_, DebugSleep) -> CustomFunDebugSleepH
   | DefT (_, _, t) -> hash_of_def_ctor t
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
