@@ -29,8 +29,9 @@ let compute_ast_result options file content =
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
+  let prevent_munge = not (Options.should_munge_underscores options) in
   let parse_options = make_parse_options
-      ~fail:false ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ()
+      ~fail:false ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ~prevent_munge ()
   in
   let result = do_parse ~parse_options ~info:docblock content file in
   match result with
