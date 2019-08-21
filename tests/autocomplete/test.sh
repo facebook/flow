@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2094
+
 printf "foo_parse_fail.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root foo_parse_fail.js 10 17 < foo_parse_fail.js
@@ -102,3 +104,11 @@ assert_ok \
 printf "generic_alias.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty generic_alias.js 7 5 < generic_alias.js
+
+printf "object_literal.js:5:16 = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object_literal.js 5 16 < object_literal.js
+
+printf "object_literal.js:7:17 = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty object_literal.js 7 17 < object_literal.js

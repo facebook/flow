@@ -2519,9 +2519,38 @@ and object_prop cx map prop = Ast.Expression.Object.(
   match prop with
   (* named prop *)
   | Property (prop_loc, Property.Init {
+      key = (Property.Identifier (loc, { Ast.Identifier.name; comments }) as key);
+      value = v;
+      shorthand;
+    }) ->
+    let map, key, value =
+      if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc
+      then begin
+        let t = Unsoundness.at InferenceHooks loc in
+        let key = translate_identifier_or_literal_key t key in
+        (* don't add `name` to `map` because `name` is the autocomplete token *)
+        if shorthand then
+          let value = (loc, t), Ast.Expression.Identifier ((loc, t), { Ast.Identifier.
+            name;
+            comments;
+          }) in
+          map, key, value
+        else
+          let (_, _t), _ as value = expression cx v in
+          map, key, value
+        end
+      else
+        let (_, t), _ as value = expression cx v in
+        let key = translate_identifier_or_literal_key t key in
+        let map = Properties.add_field name Polarity.Neutral (Some loc) t map in
+        map, key, value
+    in
+    map, Property (prop_loc, Property.Init { key; value; shorthand })
+
+  (* string literal prop *)
+  | Property (prop_loc, Property.Init {
       key =
-        (Property.Identifier (loc, { Ast.Identifier.name; comments= _ }) |
-        Property.Literal (loc, {
+        (Property.Literal (loc, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         })) as key;

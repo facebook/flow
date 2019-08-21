@@ -7,6 +7,8 @@
 
 type autocomplete_type =
 | Acid of Scope.Entry.t SMap.t
+| Ackey (* TODO: track which object, so we can complete the keys.
+           for now, just classifying the kind of autocomplete *)
 | Acmem of Type.t
 | Acjsx of Type.t
 
@@ -30,6 +32,18 @@ let autocomplete_id state _cx ac_name ac_loc =
       ac_name;
       ac_loc;
       ac_type = Acid (Env.all_entries ());
+    });
+    true
+  ) else
+    false
+
+let autocomplete_object_key state _cx ac_name ac_loc =
+  if is_autocomplete ac_name
+  then (
+    state := Some ({
+      ac_name;
+      ac_loc;
+      ac_type = Ackey;
     });
     true
   ) else
@@ -62,6 +76,7 @@ let autocomplete_jsx state _cx ac_name ac_loc class_t =
 let autocomplete_set_hooks () =
   let state = ref None in
   Type_inference_hooks_js.set_id_hook (autocomplete_id state);
+  Type_inference_hooks_js.set_obj_prop_decl_hook (autocomplete_object_key state);
   Type_inference_hooks_js.set_member_hook (autocomplete_member state);
   Type_inference_hooks_js.set_jsx_hook (autocomplete_jsx state);
   state

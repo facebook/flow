@@ -299,6 +299,14 @@ let autocomplete_get_results ~reader cx file_sig typed_ast state docblock =
       cx file_sig typed_ast this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
     autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock
+  | Some { ac_name = _; ac_loc = _; ac_type = Ackey } ->
+    let json_data_to_log =
+      let open Hh_json in
+      JSON_Object [
+        "ac_type", JSON_String "Ackey";
+      ]
+    in
+    Ok ([], Some json_data_to_log)
   | None ->
     let json_data_to_log =
       let open Hh_json in
