@@ -2125,5 +2125,11 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
     assert_edits_equal ctxt ~edits:[((11, 31), "bar | true")]
       ~source ~expected:"type foo = bar | true"
       ~mapper:(new remove_annotation_rest_mapper)
+  end;
+  "array_type" >:: begin fun ctxt ->
+    let source = "let x : rename[] = []" in
+    assert_edits_equal ctxt ~edits:[(8, 14), "gotRenamed"]
+      ~source ~expected:"let x : gotRenamed[] = []"
+      ~mapper:(new useless_mapper)
   end
 ]

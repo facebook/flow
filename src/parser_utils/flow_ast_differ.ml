@@ -1673,6 +1673,7 @@ let program (algo : diff_algorithm)
       | Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2 -> (string_literal loc1) s1 s2
       | Typeof (t1_loc, t1), Typeof (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | Tuple t1, Tuple t2 -> diff_if_changed_ret_opt tuple_type t1 t2
+      | Array t1, Array t2 -> Some (type_ t1 t2)
       | _ -> None in
     Option.value type_diff
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
