@@ -49,7 +49,14 @@ type hash =
   | FunProtoApplyH
   | FunProtoBindH
   | FunProtoCallH
-  | ObjH
+  | ObjFrozenSealedExactH
+  | ObjFrozenSealedNotExactH
+  | ObjFrozenNotSealedExactH
+  | ObjFrozenNotSealedNotExactH
+  | ObjNotFrozenSealedExactH
+  | ObjNotFrozenSealedNotExactH
+  | ObjNotFrozenNotSealedExactH
+  | ObjNotFrozenNotSealedNotExactH
   | ObjProtoH
   | MatchingPropH
   | NullProtoH
@@ -219,7 +226,17 @@ let hash_of_def_ctor = Type.(function
   | MixedT _ -> MixedH
   | NullT -> NullH
   | NumT _ -> NumH
-  | ObjT _ -> ObjH
+  | ObjT { flags = { frozen; sealed; exact }; _ } ->
+    begin match frozen, sealed, exact with
+    | true, Sealed, true -> ObjFrozenSealedExactH
+    | true, Sealed, false -> ObjFrozenSealedNotExactH
+    | true, UnsealedInFile _, true -> ObjFrozenNotSealedExactH
+    | true, UnsealedInFile _, false -> ObjFrozenNotSealedNotExactH
+    | false, Sealed, true -> ObjNotFrozenSealedExactH
+    | false, Sealed, false -> ObjNotFrozenSealedNotExactH
+    | false, UnsealedInFile _, true -> ObjNotFrozenNotSealedExactH
+    | false, UnsealedInFile _, false -> ObjNotFrozenNotSealedNotExactH
+    end
   | ReactAbstractComponentT _ -> ReactAbstractComponentH
   | SingletonBoolT _ -> SingletonBoolH
   | SingletonNumT _ -> SingletonNumH
