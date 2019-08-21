@@ -45,6 +45,7 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
+    cache_direct_dependents: bool;
     emoji: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
@@ -138,6 +139,7 @@ module Opts = struct
   let default_options = {
     abstract_locations = false;
     all = false;
+    cache_direct_dependents = false;
     emoji = false;
     enable_const_params = false;
     enforce_strict_call_arity = true;
@@ -626,6 +628,9 @@ module Opts = struct
 
     "experimental.abstract_locations",
       boolean (fun opts v -> Ok { opts with abstract_locations = v });
+
+    "experimental.cache_direct_dependents",
+      boolean (fun opts v -> Ok { opts with cache_direct_dependents = v });
 
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
@@ -1201,6 +1206,7 @@ let libs config = config.libs
 (* options *)
 let abstract_locations c = c.options.Opts.abstract_locations
 let all c = c.options.Opts.all
+let cache_direct_dependents c = c.options.Opts.cache_direct_dependents
 let emoji c = c.options.Opts.emoji
 let max_literal_length c = c.options.Opts.max_literal_length
 let enable_const_params c = c.options.Opts.enable_const_params
