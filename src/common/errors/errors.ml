@@ -2608,57 +2608,56 @@ module Cli_output = struct
       let total_count = err_count + warn_count in
       let hidden_branches = ref false in
 
-      fun _profiling ->
-        let () =
-          let iter_group ~severity group =
-            let styles =
-              get_pretty_printed_error
-                ~flags
-                ~stdin_file
-                ~strip_root
-                ~severity
-                ~show_all_branches:flags.show_all_branches
-                (* Feels like React... *)
-                ~on_hidden_branches:(fun () -> hidden_branches := true)
-                group
-            in
-            print_styles ~out_channel ~flags styles
+      let () =
+        let iter_group ~severity group =
+          let styles =
+            get_pretty_printed_error
+              ~flags
+              ~stdin_file
+              ~strip_root
+              ~severity
+              ~show_all_branches:flags.show_all_branches
+              (* Feels like React... *)
+              ~on_hidden_branches:(fun () -> hidden_branches := true)
+              group
           in
-          List.iter (iter_group ~severity:Err) (List.rev errors);
-          List.iter (iter_group ~severity:Warn) (List.rev warnings);
+          print_styles ~out_channel ~flags styles
         in
-        let hidden_branches = !hidden_branches in
-        if total_count > 0 then print_newline ();
-        if truncate && total_count > 50 then (
-          let remaining_errs, remaining_warns = if err_count - 50 < 0
-            then 0, warn_count - (50 - err_count)
-            else err_count - 50, warn_count
-          in
-          Printf.fprintf
-            out_channel
-            "... %s (only 50 out of %s displayed)\n"
-            (render_counts ~err_count:remaining_errs ~warn_count:remaining_warns " more ")
-            (render_counts ~err_count ~warn_count " ");
-          Printf.fprintf
-            out_channel
-            "To see all errors, re-run Flow with --show-all-errors\n";
-          flush out_channel
-        ) else (
-          Printf.fprintf out_channel "Found %s\n"
-            (render_counts ~err_count ~warn_count " ")
-        );
-        if hidden_branches then (
-          Printf.fprintf out_channel
-            "\nOnly showing the most relevant union/intersection branches.\n\
-            To see all branches, re-run Flow with --show-all-branches\n"
-        );
-        Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
-        ()
+        List.iter (iter_group ~severity:Err) (List.rev errors);
+        List.iter (iter_group ~severity:Warn) (List.rev warnings);
+      in
+      let hidden_branches = !hidden_branches in
+      if total_count > 0 then print_newline ();
+      if truncate && total_count > 50 then (
+        let remaining_errs, remaining_warns = if err_count - 50 < 0
+          then 0, warn_count - (50 - err_count)
+          else err_count - 50, warn_count
+        in
+        Printf.fprintf
+          out_channel
+          "... %s (only 50 out of %s displayed)\n"
+          (render_counts ~err_count:remaining_errs ~warn_count:remaining_warns " more ")
+          (render_counts ~err_count ~warn_count " ");
+        Printf.fprintf
+          out_channel
+          "To see all errors, re-run Flow with --show-all-errors\n";
+        flush out_channel
+      ) else (
+        Printf.fprintf out_channel "Found %s\n"
+          (render_counts ~err_count ~warn_count " ")
+      );
+      if hidden_branches then (
+        Printf.fprintf out_channel
+          "\nOnly showing the most relevant union/intersection branches.\n\
+          To see all branches, re-run Flow with --show-all-branches\n"
+      );
+      Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
+      ()
 
   let print_errors ~out_channel ~flags ?(stdin_file=None)
     ~strip_root ~errors ~warnings ~lazy_msg () =
       format_errors ~out_channel ~flags ~stdin_file
-        ~strip_root ~errors ~warnings ~lazy_msg () None
+        ~strip_root ~errors ~warnings ~lazy_msg ()
 end
 
 (* JSON output *)
@@ -2944,13 +2943,9 @@ module Json_output = struct
       "errors", json_of_errors_with_context
         ~strip_root ~stdin_file ~suppressed_errors ~version ~errors ~warnings ();
       "passed", JSON_Bool (ConcreteLocPrintableErrorSet.is_empty errors);
-    ]
-    in fun profiling ->
-      let props = match profiling with
-      | None -> props
-      | Some profiling -> props @ Profiling_js.to_legacy_json_properties profiling
-      in
-      JSON_Object props
+    ] in
+    fun ~profiling_props ->
+      JSON_Object (props @ profiling_props)
 
   let format_errors
       ~out_channel
@@ -2964,12 +2959,12 @@ module Json_output = struct
       () =
     let open Hh_json in
 
-    let get_json: (Profiling_js.finished option -> Hh_json.json) =
+    let get_json =
       full_status_json_of_errors ~strip_root ?version ~stdin_file
         ~suppressed_errors ~errors ~warnings () in
 
-    fun profiling ->
-      let res = get_json profiling in
+    fun ~profiling_props ->
+      let res = get_json ~profiling_props in
       if pretty then output_string out_channel (json_to_multiline res)
       else json_to_output out_channel res;
       flush out_channel
@@ -2977,7 +2972,7 @@ module Json_output = struct
   let print_errors ~out_channel ~strip_root ~suppressed_errors ~pretty ?version ?(stdin_file=None)
     ~errors ~warnings () =
     format_errors ~out_channel ~strip_root ~suppressed_errors ~pretty ?version ~stdin_file ~errors
-      ~warnings () None
+      ~warnings () ~profiling_props:[]
 end
 
 (* for vim and emacs plugins *)

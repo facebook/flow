@@ -126,7 +126,7 @@ module Cli_output : sig
     errors: ConcreteLocPrintableErrorSet.t ->
     warnings: ConcreteLocPrintableErrorSet.t ->
     lazy_msg: string option ->
-    unit -> (Profiling_js.finished option -> unit) (* print errors *)
+    unit -> unit (* print errors *)
 end
 
 module Json_output : sig
@@ -151,7 +151,8 @@ module Json_output : sig
     ?stdin_file:stdin_file ->
     errors: ConcreteLocPrintableErrorSet.t ->
     warnings: ConcreteLocPrintableErrorSet.t ->
-    unit -> (Profiling_js.finished option -> Hh_json.json)
+    unit ->
+    (profiling_props: (string * Hh_json.json) list -> Hh_json.json)
 
   val print_errors:
     out_channel:out_channel ->
@@ -173,7 +174,8 @@ module Json_output : sig
     ?stdin_file:stdin_file ->
     errors: ConcreteLocPrintableErrorSet.t ->
     warnings: ConcreteLocPrintableErrorSet.t ->
-    unit -> (Profiling_js.finished option -> unit) (* print errors *)
+    unit ->
+    (profiling_props: (string * Hh_json.json) list -> unit) (* print errors *)
 end
 
 module Vim_emacs_output : sig

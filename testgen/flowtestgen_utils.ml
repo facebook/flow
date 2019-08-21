@@ -689,7 +689,7 @@ let flow_check (code : string) : string option =
           let strip_root = None in
           let suppressed_errors = [] in
           let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~stdin_file
-              ~suppressed_errors ~errors ~warnings () None in
+              ~suppressed_errors ~errors ~warnings ~profiling_props:[] () in
         (*
         Printf.printf "%s\n" (Hh_json.json_to_string ~pretty:false res);
            *)

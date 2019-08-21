@@ -35,7 +35,7 @@ let format_errors ~printer ~client_include_warnings options
    * error functions are applied enough that this expensive work happens. *)
   let print_errors: (Profiling_js.finished option -> unit) = match printer with
   | Json { pretty; version } ->
-    Errors.Json_output.format_errors
+    let finish_formatting = Errors.Json_output.format_errors
       ~out_channel:stdout
       ~strip_root
       ~pretty
@@ -44,13 +44,20 @@ let format_errors ~printer ~client_include_warnings options
       ~errors
       ~warnings
       ()
+    in
+
+    fun profiling ->
+      let profiling_props =
+        Option.value_map profiling ~default:[] ~f:Profiling_js.to_legacy_json_properties
+      in
+      finish_formatting ~profiling_props
   | Cli flags ->
     let errors = List.fold_left
       (fun acc (error, _) -> Errors.ConcreteLocPrintableErrorSet.add error acc)
       errors
       suppressed_errors
     in
-    Errors.Cli_output.format_errors
+    let () = Errors.Cli_output.format_errors
       ~out_channel:stdout
       ~flags
       ~strip_root
@@ -58,6 +65,8 @@ let format_errors ~printer ~client_include_warnings options
       ~warnings
       ~lazy_msg:None
       ()
+    in
+    fun _profiling -> ()
   in
 
   fun profiling ->
