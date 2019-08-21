@@ -1634,17 +1634,18 @@ end = struct
         Dep_service.calc_partial_dependency_info ~options ~reader workers
         files_to_update_dependency_info ~parsed in
       let old_dependency_info = env.ServerEnv.dependency_info in
+      let to_remove = FilenameSet.union unparsed_set deleted in
       match old_dependency_info, updated_dependency_info with
         | Dependency_info.Classic old_map, Dependency_info.Classic updated_map ->
           Lwt.return (Dependency_info.Classic (
             old_map
-            |> FilenameSet.fold FilenameMap.remove deleted
+            |> FilenameSet.fold FilenameMap.remove to_remove
             |> FilenameMap.union updated_map
           ))
         | Dependency_info.TypesFirst old_map, Dependency_info.TypesFirst updated_map ->
           Lwt.return (Dependency_info.TypesFirst (
             old_map
-            |> FilenameSet.fold FilenameMap.remove deleted
+            |> FilenameSet.fold FilenameMap.remove to_remove
             |> FilenameMap.union updated_map
           ))
         | _ -> assert false
