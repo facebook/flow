@@ -60,6 +60,7 @@ type trust_mode =
 type t = {
   opt_abstract_locations : bool;
   opt_all : bool;
+  opt_cache_direct_dependents : bool;
   opt_debug : bool;
   opt_max_literal_length: int;
   opt_enable_const_params: bool;
@@ -124,6 +125,7 @@ type t = {
 let abstract_locations opts = opts.opt_abstract_locations
 let all opts = opts.opt_all
 let arch opts = opts.opt_arch
+let cache_direct_dependents opts = opts.opt_cache_direct_dependents
 let max_literal_length opts = opts.opt_max_literal_length
 let enable_const_params opts = opts.opt_enable_const_params
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity

@@ -40,6 +40,7 @@ val libs: config -> string list
 (* options *)
 val abstract_locations: config -> bool
 val all: config -> bool
+val cache_direct_dependents: config -> bool
 val emoji: config -> bool
 val enable_const_params: config -> bool
 val enforce_strict_call_arity: config -> bool
