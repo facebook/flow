@@ -324,6 +324,7 @@ and unsupported_syntax =
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
   | PredicateInvalidBody
+  | PredicateFunctionAbstractReturnType
   | PredicateVoidReturn
   | MultipleIndexers
   | MultipleProtos
@@ -1593,6 +1594,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | PredicateInvalidBody -> [
             text "Invalid body for predicate function. Expected a simple return ";
             text "statement as body."
+          ]
+        | PredicateFunctionAbstractReturnType -> [
+            text "The return type of a predicate function cannot contain a generic type. ";
+            text "The function predicate will be ignored here."
           ]
         | PredicateVoidReturn ->
           [text "Predicate functions need to return non-void."]

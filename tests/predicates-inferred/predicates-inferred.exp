@@ -80,5 +80,45 @@ Invalid body for predicate function. Expected a simple return statement as body.
        ^
 
 
+Error -------------------------------------------------------------------------------------------------- wf-eval.js:5:42
 
-Found 6 errors
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+
+   5| function f3<V>(x: V): $Call<<V>(V) => V, V> %checks { return x; } // error
+                                               ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:3:23
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+
+   3| function f1<X>(x: X): X %checks { return x; } // error: poly return in %checks
+                            ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:4:24
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+
+   4| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
+                             ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:4:27
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+
+   4| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
+                                ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:8:30
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+
+   8| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
+                                   ^
+
+
+
+Found 11 errors

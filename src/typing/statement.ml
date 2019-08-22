@@ -6695,6 +6695,27 @@ and mk_func_sig =
     fparams
   in
 
+  let free_bound_ts cx t =
+    let finder = object (_self)
+      inherit [Loc_collections.ALocSet.t] Type_visitor.t as super
+      val mutable tparams: string list = []
+      method! type_ cx pole acc t =
+        match t with
+        | DefT (_, _, PolyT (_, tps, _, _)) ->
+          let old_tparams = tparams in
+          Nel.iter (fun tp -> tparams <- tp.name::tparams) tps;
+          let acc = super#type_ cx pole acc t in
+          tparams <- old_tparams;
+          acc
+        | BoundT (_, name, _)
+          when not (List.exists (fun x -> x = name) tparams) ->
+          Loc_collections.ALocSet.add (TypeUtil.loc_of_t t) acc
+        | _ ->
+          super#type_ cx pole acc t
+    end in
+    finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
+  in
+
   fun cx tparams_map loc func ->
     let {Ast.Function.
       tparams;
@@ -6723,20 +6744,57 @@ and mk_func_sig =
       in
       Anno.mk_return_type_annotation cx tparams_map ret_reason ~definitely_returns_void return
     in
-    let return_t, predicate = Ast.Type.Predicate.(match predicate with
+    let return_t, predicate = Ast.Type.Predicate.(
+      match predicate with
       | None ->
-          return_t, None
-      | Some (loc, Ast.Type.Predicate.Inferred) ->
-          (* Restrict the fresh condition type by the declared return type *)
-          let fresh_t, _ = Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc) in
-          Flow.flow_t cx (fresh_t, return_t);
-          fresh_t, Some (loc, Ast.Type.Predicate.Inferred)
+        return_t, None
+      | Some ((loc, Ast.Type.Predicate.Inferred) as pred) ->
+        (* Predicate Functions
+         *
+         * function f(x: S): [T] %checks { return e; }
+         *
+         * The return type we assign to this function will be used for refining the
+         * input x. The type annotation T may not have this ability (if it's an
+         * annotation). Instead we introduce a fresh type T'. T' will receive lower
+         * bounds from the return expression e, but is also checked against the
+         * return type (annotation) T:
+         *
+         *   OpenPred(typeof e, preds) ~> T'
+         *   T' ~> T
+         *
+         * The function signature will be
+         *
+         *  (x: S) => T' (%checks)
+         *)
+        let bounds = free_bound_ts cx return_t in
+        if Loc_collections.ALocSet.is_empty bounds
+        then
+          let return_t' = Tvar.mk_where cx reason (fun t ->
+            Flow.flow_t cx (t, return_t)
+          ) in
+          return_t', Some (loc, Ast.Type.Predicate.Inferred)
+        else
+          (* If T is a polymorphic type P<X>, this approach can lead to some
+           * complications. The 2nd constraint from above would become
+           *
+           *   T' ~> P<X>
+           *
+           * which is potentially ill-formed since it appears outside a generate_tests
+           * call (leads to Not_expect_bounds exception). We disallow this case
+           * and instead propagate the original return type T.
+           *)
+          let () = Loc_collections.ALocSet.iter (fun loc ->
+            Flow_js.add_output cx Error_message.(
+              EUnsupportedSyntax (loc, PredicateFunctionAbstractReturnType)
+            )
+          ) bounds in
+          return_t, Some (Tast_utils.error_mapper#type_predicate pred)
       | Some ((loc, Declared _) as pred) ->
-          Flow_js.add_output cx Error_message.(
-            EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
-          );
-          fst (Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)),
-          Some (Tast_utils.error_mapper#type_predicate pred)
+        Flow_js.add_output cx Error_message.(
+          EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
+        );
+        fst (Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)),
+        Some (Tast_utils.error_mapper#type_predicate pred)
     ) in
     let knot = Tvar.mk cx reason in
     {Func_stmt_sig.reason; kind; tparams; tparams_map; fparams; body; return_t; knot},
