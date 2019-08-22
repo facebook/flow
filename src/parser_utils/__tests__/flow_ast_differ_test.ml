@@ -548,6 +548,12 @@ class remove_annotation_rest_mapper = object
     | _ -> annot
 end
 
+class double_sequence_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper
+  method! sequence _loc { Ast.Expression.Sequence.expressions } =
+    { Ast.Expression.Sequence.expressions = expressions @ expressions }
+end
+
 let edits_of_source algo source mapper =
   let ast, _ = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
@@ -2131,5 +2137,17 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
     assert_edits_equal ctxt ~edits:[(8, 14), "gotRenamed"]
       ~source ~expected:"let x : gotRenamed[] = []"
       ~mapper:(new useless_mapper)
-  end
+  end;
+  "sequence1" >:: begin fun ctxt ->
+    let source = "(a, b, c, rename, d)" in
+    assert_edits_equal ctxt ~edits:[(10, 16), "gotRenamed"]
+      ~source ~expected:"(a, b, c, gotRenamed, d)"
+      ~mapper:(new useless_mapper)
+  end;
+  "sequence2" >:: begin fun ctxt ->
+    let source = "(a, b, c, d)" in
+    assert_edits_equal ctxt ~edits:[(1, 11), "(a, b, c, d, a, b, c, d)"]
+      ~source ~expected:"((a, b, c, d, a, b, c, d))"
+      ~mapper:(new double_sequence_mapper)
+  end;
 ]

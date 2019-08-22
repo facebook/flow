@@ -920,6 +920,8 @@ let program (algo : diff_algorithm)
         Some (type_cast_added expr loc t2)
       | (_, Update update1), (_, Update update2) ->
         update update1 update2
+      | (_, Sequence seq1), (_, Sequence seq2) ->
+        sequence seq1 seq2
       | _, _ ->
         None
     in
@@ -1363,6 +1365,12 @@ let program (algo : diff_algorithm)
     let comments = syntax_opt loc comments1 comments2 in
     let elements = diff_and_recurse_no_trivial (diff_if_changed_opt expression_or_spread) elems1 elems2 in
     join_diff_list [ comments; elements ]
+
+  and sequence seq1 seq2 : node change list option =
+    let open Ast.Expression.Sequence in
+    let { expressions = exps1 } = seq1 in
+    let { expressions = exps2 } = seq2 in
+    diff_and_recurse_nonopt_no_trivial expression exps1 exps2
 
   and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
                     (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)
