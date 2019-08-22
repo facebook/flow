@@ -1,3 +1,22 @@
+### 0.106.0
+
+Likely to cause new Flow errors:
+* We're starting to make changes to how Flow models object spreads. For more [see this announcement](https://medium.com/flow-type/coming-soon-changes-to-object-spreads-73204aef84e1)
+* Updated parsing of the experimental nullish coalescing `??` operator. It now has a lower precedence than `||` and `&&`, and parentheses are required to nest it with them.
+* Flow wasn't typechecking the properties of certain obscure JSX usage (namespaced identifiers, member expression with @jsx / @csx), so would miss type errors in their expressions (e.g. `<a:b prop={"hello" * 10} />` now errors)
+
+Notable bug fixes:
+* Fixed a bug where merge or check jobs would crash when a parse error was added to a file in a cycle. The crash was silent but unintended.
+* Types-first no longer ignores the `munge_underscores` flowconfig option
+
+Misc:
+* Various libdef updates. Thanks for all the PRs!
+
+Parser:
+* Improved error messages for missing semicolon
+* Comments are now correctly attached to `break` statements and array patterns
+* `libflowparser` now supports `esproposal_nullish_coalescing` as an option
+
 ### 0.105.2
 
 v0.105.0 started running the Flow server in a cgroup on Linux distros that support [cgroup v2](https://www.kernel.org/doc/Documentation/cgroup-v2.txt). However, some versions of `systemd`, which manages cgroups, contain a bug that caused the Flow server to fail to start. This release avoids using `cgroup` on these systems. (#8012)
