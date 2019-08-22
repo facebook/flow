@@ -22,6 +22,7 @@ layout: guide
 * [`deprecated-utility`](#toc-deprecated-utility)
 * [`dynamic-export`](#toc-dynamic-export)
 * [`non-array-spread`](#toc-non-array-spread)
+* [`implicit-inexact-object`](#toc-implicit-inexact-object)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -235,4 +236,15 @@ For example:
 ```js
 const set = new Set();
 const values = [...set]; // Lint: non-array-spread
+```
+
+#### `implicit-inexact-object` <a class="toc" id="toc-implicit-inexact-object" href="#toc-implicit-inexact-object"></a>
+Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
+
+This lint setting is ignored when `exact_by_default` is set to `true`.
+
+```
+type A = {x: number}; // Error
+type B = {x: number, ...} // Ok
+type C = {| x: number |} // Ok
 ```
