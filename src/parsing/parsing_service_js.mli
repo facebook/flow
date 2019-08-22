@@ -72,14 +72,10 @@ type parse_options = {
 
 val make_parse_options:
   ?fail: bool ->
-  ?arch: Options.arch ->
-  ?abstract_locations: bool ->
-  prevent_munge: bool ->
-  types_mode: types_mode ->
-  use_strict: bool ->
-  module_ref_prefix: string option ->
-  facebook_fbt: string option ->
-  unit ->
+  ?types_mode: types_mode ->
+  ?use_strict: bool ->
+  Docblock.t ->
+  Options.t ->
   parse_options
 
 val docblock_max_tokens: int

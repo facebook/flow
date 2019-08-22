@@ -90,29 +90,6 @@ type parse_options = {
   parse_abstract_locations: bool;
 }
 
-let make_parse_options
-    ?(fail=true)
-    ?(arch=Options.Classic)
-    ?(abstract_locations=false)
-    ~prevent_munge
-    ~types_mode
-    ~use_strict
-    ~module_ref_prefix
-    ~facebook_fbt
-    (* We need at least one positional parameter here so that the optional parameters above are
-     * actually optional. *)
-    () =
-  {
-    parse_fail = fail;
-    parse_types_mode = types_mode;
-    parse_use_strict = use_strict;
-    parse_prevent_munge = prevent_munge;
-    parse_module_ref_prefix = module_ref_prefix;
-    parse_facebook_fbt = facebook_fbt;
-    parse_arch = arch;
-    parse_abstract_locations = abstract_locations;
-  }
-
 let parse_source_file ~fail ~types ~use_strict content file =
   let parse_options = Some Parser_env.({
     (**
@@ -655,18 +632,41 @@ let reparse
   Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;
   Lwt.return (modified, results)
 
-let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
-  let types_mode, use_strict, profile, max_header_tokens, noflow =
-    get_defaults ~types_mode ~use_strict options
+let make_parse_options_internal ?(fail=true) ?(types_mode=TypesAllowed) ?use_strict ~docblock options =
+  let use_strict = match use_strict with
+    | Some use_strict -> use_strict
+    | None -> Options.modules_are_use_strict options
   in
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
   let arch = Options.arch options in
   let abstract_locations = Options.abstract_locations options in
-  let prevent_munge = not (Options.should_munge_underscores options) in
+  let prevent_munge =
+    let default = not (Options.should_munge_underscores options) in
+    match docblock with
+    | Some docblock -> Option.value (Docblock.preventMunge docblock) ~default
+    | None -> default
+  in
+  {
+    parse_fail = fail;
+    parse_types_mode = types_mode;
+    parse_use_strict = use_strict;
+    parse_prevent_munge = prevent_munge;
+    parse_module_ref_prefix = module_ref_prefix;
+    parse_facebook_fbt = facebook_fbt;
+    parse_arch = arch;
+    parse_abstract_locations = abstract_locations;
+  }
+
+let make_parse_options ?fail ?types_mode ?use_strict docblock options =
+  make_parse_options_internal ?fail ?types_mode ?use_strict ~docblock:(Some docblock) options
+
+let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
+  let types_mode, use_strict, profile, max_header_tokens, noflow =
+    get_defaults ~types_mode ~use_strict options
+  in
   let parse_options =
-    make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
-        ~facebook_fbt ~prevent_munge ()
+    make_parse_options_internal ~fail:true ~use_strict ~types_mode ~docblock:None options
   in
 
   let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
@@ -681,16 +681,8 @@ let reparse_with_defaults
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
   in
-  let module_ref_prefix = Options.haste_module_ref_prefix options in
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
-  let facebook_fbt = Options.facebook_fbt options in
-  let arch = Options.arch options in
-  let abstract_locations = Options.abstract_locations options in
-  let prevent_munge = not (Options.should_munge_underscores options) in
-  let parse_options  =
-    make_parse_options ~arch ~abstract_locations ~types_mode ~use_strict ~module_ref_prefix
-        ~facebook_fbt ~prevent_munge ()
-  in
+  let parse_options  = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
   reparse
     ~transaction ~reader ~parse_options ~profile ~max_header_tokens ~noflow
     ~parse_unchanged ~with_progress ~workers ~modified ~deleted
@@ -702,7 +694,6 @@ let ensure_parsed ~reader options workers files =
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode:None ~use_strict:None options
   in
-  let module_ref_prefix = Options.haste_module_ref_prefix options in
   (* We want to parse unchanged files, since this is our first time parsing them *)
   let parse_unchanged = true in
   (* We're not replacing any info, so there's nothing to roll back. That means we can just use the
@@ -728,15 +719,8 @@ let ensure_parsed ~reader options workers files =
   let next =
     MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts)
   in
-  let facebook_fbt = Options.facebook_fbt options in
-  let arch = Options.arch options in
-  let abstract_locations = Options.abstract_locations options in
-  let prevent_munge = not (Options.should_munge_underscores options) in
 
-  let parse_options =
-    make_parse_options ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch
-        ~abstract_locations ~prevent_munge ()
-  in
+  let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
 
   let%lwt results = parse
     ~worker_mutator ~reader ~parse_options ~skip_hash_mismatch:true

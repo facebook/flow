@@ -10,15 +10,17 @@ open OUnit2
 let run ctxt expected name content =
   let file = File_key.SourceFile "/dummy.js" in
   let info = FindRefsUtils.compute_docblock file content in
-  let parse_options = Parsing_service_js.make_parse_options
-    ~fail:false
-    ~types_mode:Parsing_service_js.TypesAllowed
-    ~use_strict:true
-    ~module_ref_prefix:None
-    ~facebook_fbt:None
-    ~prevent_munge:false
-    ()
-  in
+  let open Parsing_service_js in
+  let parse_options = {
+    parse_fail = false;
+    parse_types_mode = TypesAllowed;
+    parse_use_strict = true;
+    parse_prevent_munge = false;
+    parse_module_ref_prefix = None;
+    parse_facebook_fbt = None;
+    parse_arch = Options.Classic;
+    parse_abstract_locations = false;
+  } in
   let result = Parsing_service_js.do_parse ~parse_options ~info content file in
   let ast = match result with
     | Parsing_service_js.Parse_ok parse_ok ->

@@ -24,17 +24,11 @@ let compute_docblock file content =
  * specifying a filename. For global find-refs, we assume that all dependent files are the same as
  * what's on disk, so we can grab the AST from the heap instead. *)
 let compute_ast_result options file content =
-  let module_ref_prefix = Options.haste_module_ref_prefix options in
-  let facebook_fbt = Options.facebook_fbt options in
-  let arch = Options.arch options in
   let docblock = compute_docblock file content in
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
-  let prevent_munge = not (Options.should_munge_underscores options) in
-  let parse_options = make_parse_options
-      ~fail:false ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ~prevent_munge ()
-  in
+  let parse_options = make_parse_options ~fail:false ~types_mode ~use_strict docblock options in
   let result = do_parse ~parse_options ~info:docblock content file in
   match result with
     | Parse_ok parse_ok ->
