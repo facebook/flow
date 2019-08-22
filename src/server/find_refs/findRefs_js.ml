@@ -43,7 +43,9 @@ let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~mult
         let%lwt def_info =
           GetDefUtils.get_def_info ~reader genv (!env) profiling file_key content start_loc
         in
-        def_info %>>= fun def_info ->
+        def_info %>>= function
+        | None -> Lwt.return (Ok None)
+        | Some def_info ->
           PropertyFindRefs.find_refs ~reader genv env ~content file_key def_info ~global ~multi_hop
       in
       (* Start by running local variable find references *)

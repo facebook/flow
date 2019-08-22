@@ -457,10 +457,7 @@ let find_refs_local ~reader genv file_key content def_info =
   Ok (Some ((display_name_of_def_info def_info, refs), None))
 
 let find_refs ~reader genv env ~content file_key def_info ~global ~multi_hop =
-  match def_info with
-  | None -> Lwt.return (Ok None)
-  | Some def_info ->
-      if global || multi_hop then
-        find_refs_global ~reader genv env multi_hop def_info
-      else
-        Lwt.return @@ find_refs_local ~reader genv file_key content def_info
+  if global || multi_hop then
+    find_refs_global ~reader genv env multi_hop def_info
+  else
+    Lwt.return @@ find_refs_local ~reader genv file_key content def_info
