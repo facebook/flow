@@ -38,17 +38,18 @@ let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~mult
   | Ok content ->
     let%lwt result =
       let options = genv.ServerEnv.options in
-      FindRefsUtils.compute_ast_result options file_key content %>>= fun (ast, _, _) ->
+      FindRefsUtils.compute_ast_result options file_key content %>>= fun ast_info ->
       let property_find_refs start_loc =
         let%lwt def_info =
-          GetDefUtils.get_def_info ~reader genv (!env) profiling file_key content start_loc
+          GetDefUtils.get_def_info ~reader genv (!env) profiling file_key ast_info start_loc
         in
         def_info %>>= function
         | None -> Lwt.return (Ok None)
         | Some def_info ->
-          PropertyFindRefs.find_refs ~reader genv env ~content file_key def_info ~global ~multi_hop
+          PropertyFindRefs.find_refs ~reader genv env file_key ast_info def_info ~global ~multi_hop
       in
       (* Start by running local variable find references *)
+      let (ast, _, _) = ast_info in
       match VariableFindRefs.local_find_refs ast loc with
       (* Got nothing from local variable find-refs, try object property find-refs *)
       | None -> property_find_refs loc

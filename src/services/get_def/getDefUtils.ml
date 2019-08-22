@@ -13,8 +13,6 @@ module Result = Core_result
 let (>>=) = Result.(>>=)
 let (>>|) = Result.(>>|)
 
-open FindRefsUtils
-
 (* The default visitor does not provide all of the context we need when visiting an object key. In
  * particular, we need the location of the enclosing object literal. *)
 class ['acc] object_key_visitor ~init = object(this)
@@ -426,10 +424,10 @@ let add_literal_properties literal_key_info def_info =
   Result.map def_info ~f:(Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
 let get_def_info
-    ~reader genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
+    ~reader genv env profiling file_key ast_info loc: (def_info option, string) result Lwt.t =
   let options = genv.options in
   let props_access_info = ref (Ok None) in
-  compute_ast_result options file_key content %>>= fun (ast, file_sig, info) ->
+  let (ast, file_sig, info) = ast_info in
   (* Check if it's an exported symbol *)
   let loc = Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
   let info = Docblock.set_flow_mode_for_ide_command info in

@@ -10,6 +10,8 @@ open Utils_js
 module Result = Core_result
 let (>>=) = Result.(>>=)
 
+type ast_info = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t
+
 let compute_docblock file content =
   let open Parsing_service_js in
   let max_tokens = docblock_max_tokens in

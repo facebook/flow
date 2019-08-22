@@ -5,18 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type ast_info = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t
+
 val compute_docblock: File_key.t -> string (* content *) -> Docblock.t
 
 val compute_ast_result:
   Options.t ->
   File_key.t ->
   string (* content *) ->
-  ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
+  (ast_info, string) result
 
 val get_ast_result:
   reader:State_reader.t ->
   File_key.t ->
-  ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
+  (ast_info, string) result
 
 val get_all_dependents:
   reader:State_reader.t ->
