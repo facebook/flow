@@ -451,12 +451,13 @@ let find_refs_global ~reader genv env multi_hop def_info =
   refs %>>| fun refs ->
   Lwt.return @@ Some ((display_name_of_def_info def_info, refs), Some dependent_file_count)
 
-let find_refs_local ~reader genv file_key ast_info def_info =
-  find_refs_in_file ~reader genv.options ast_info file_key def_info >>= fun refs ->
+let find_refs_local ~reader ~options file_key ast_info def_info =
+  find_refs_in_file ~reader options ast_info file_key def_info >>= fun refs ->
   Ok (Some ((display_name_of_def_info def_info, refs), None))
 
 let find_refs ~reader genv env file_key ast_info def_info ~global ~multi_hop =
   if global || multi_hop then
     find_refs_global ~reader genv env multi_hop def_info
   else
-    Lwt.return @@ find_refs_local ~reader genv file_key ast_info def_info
+    Lwt.return @@ find_refs_local
+      ~reader ~options:genv.ServerEnv.options file_key ast_info def_info

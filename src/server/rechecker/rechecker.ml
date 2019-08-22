@@ -58,9 +58,9 @@ let start_parallelizable_workloads env =
     (* Wait for the loop to finish *)
     loop_thread
 
-let get_lazy_stats genv env =
+let get_lazy_stats ~options env =
   { ServerProt.Response.
-    lazy_mode = Options.lazy_mode genv.options;
+    lazy_mode = Options.lazy_mode options;
     checked_files = CheckedSet.all env.checked_files |> FilenameSet.cardinal;
     total_files = FilenameSet.cardinal env.files;
   }
@@ -69,9 +69,9 @@ let get_lazy_stats genv env =
  * FilenameSet. Updates may be coming in from the root, or an include path.
  *
  * If any update can't be processed incrementally, the Flow server will exit *)
-let process_updates genv env updates =
+let process_updates ~options env updates =
   let open Recheck_updates in
-  match process_updates ~options:genv.ServerEnv.options ~libs:env.ServerEnv.libs updates with
+  match process_updates ~options ~libs:env.ServerEnv.libs updates with
   | Core_result.Ok updates -> updates
   | Core_result.Error { msg; exit_status } -> begin
     Hh_logger.fatal "Status: Error";
@@ -97,7 +97,7 @@ let recheck
       ~will_be_checked_files
   in
 
-  let lazy_stats = get_lazy_stats genv env in
+  let lazy_stats = get_lazy_stats ~options env in
   Persistent_connection.send_end_recheck ~lazy_stats env.connections;
   (* We must send "end_recheck" prior to sending errors+warnings so the client *)
   (* knows that this set of errors+warnings are final ones, not incremental.   *)
@@ -115,8 +115,8 @@ let recheck
 
 (* Runs a function which should be canceled if we are notified about any file changes. After the
  * thread is canceled, post_cancel is called and its result returned *)
-let run_but_cancel_on_file_changes genv env ~get_forced ~f ~pre_cancel ~post_cancel =
-  let process_updates = process_updates genv env in
+let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post_cancel =
+  let process_updates = process_updates ~options env in
   (* We don't want to start running f until we're in the try block *)
   let waiter, wakener = Lwt.task () in
   let run_thread = let%lwt () = waiter in f () in
@@ -149,7 +149,8 @@ let rec recheck_single
     genv env =
   let open ServerMonitorListenerState in
   let env = update_env env in
-  let process_updates = process_updates genv env in
+  let options = genv.ServerEnv.options in
+  let process_updates = process_updates ~options env in
 
   (* This ref is an estimate of the files which will be checked by the time the recheck is done.
    * As the recheck progresses, the estimate will get better. We use this estimate to prevent
@@ -205,7 +206,7 @@ let rec recheck_single
       Lwt.return (Ok (profiling, env))
     in
 
-    run_but_cancel_on_file_changes genv env
+    run_but_cancel_on_file_changes ~options env
       ~get_forced ~f ~pre_cancel:stop_parallelizable_workloads ~post_cancel
   end
 

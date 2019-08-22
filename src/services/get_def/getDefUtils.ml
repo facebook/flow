@@ -7,7 +7,6 @@
 
 open Utils_js
 open Parsing_heaps_utils
-open ServerEnv
 
 module Result = Core_result
 let (>>=) = Result.(>>=)
@@ -424,8 +423,7 @@ let add_literal_properties literal_key_info def_info =
   Result.map def_info ~f:(Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
 let get_def_info
-    ~reader genv env profiling file_key ast_info loc: (def_info option, string) result Lwt.t =
-  let options = genv.options in
+    ~reader ~options env profiling file_key ast_info loc: (def_info option, string) result Lwt.t =
   let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
   (* Check if it's an exported symbol *)

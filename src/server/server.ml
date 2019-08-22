@@ -111,11 +111,13 @@ let rec serve ~genv ~env =
 
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
-  let idle_logging_thread = log_on_idle ~options:(genv.ServerEnv.options) (Unix.gettimeofday ()) in
+  let options = genv.ServerEnv.options in
+
+  let idle_logging_thread = log_on_idle ~options (Unix.gettimeofday ()) in
 
   (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
   let%lwt () = ServerMonitorListenerState.wait_for_anything
-    ~process_updates:(Rechecker.process_updates genv env)
+    ~process_updates:(Rechecker.process_updates ~options env)
     ~get_forced:(fun () -> env.ServerEnv.checked_files) (* We're not in the middle of a recheck *)
   in
 

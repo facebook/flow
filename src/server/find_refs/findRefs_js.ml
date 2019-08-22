@@ -41,7 +41,7 @@ let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~mult
       FindRefsUtils.compute_ast_result options file_key content %>>= fun ast_info ->
       let property_find_refs start_loc =
         let%lwt def_info =
-          GetDefUtils.get_def_info ~reader genv (!env) profiling file_key ast_info start_loc
+          GetDefUtils.get_def_info ~reader ~options (!env) profiling file_key ast_info start_loc
         in
         def_info %>>= function
         | None -> Lwt.return (Ok None)

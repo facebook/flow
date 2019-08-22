@@ -7,7 +7,7 @@
 
 (* filter and relativize updated file paths *)
 val process_updates :
-  ServerEnv.genv ->
+  options:Options.t ->
   ServerEnv.env ->
   SSet.t ->
   Utils_js.FilenameSet.t
@@ -23,4 +23,4 @@ val recheck_loop:
   ServerEnv.env ->
   (Profiling_js.finished list * ServerEnv.env) Lwt.t
 
-val get_lazy_stats: ServerEnv.genv -> ServerEnv.env -> ServerProt.Response.lazy_stats
+val get_lazy_stats: options:Options.t -> ServerEnv.env -> ServerProt.Response.lazy_stats
