@@ -243,9 +243,7 @@ let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
     Error "Batch Coverage cannot be run in trust mode if the server is not in trust mode. \
       \n\nRestart the Flow server with --trust-mode=check' to enable this command." |> Lwt.return
-  else if
-    ServerProt.Response.((Rechecker.get_lazy_stats ~options env).lazy_mode) <> Options.NON_LAZY_MODE
-  then
+  else if Options.lazy_mode options <> Options.NON_LAZY_MODE then
     Error "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with \
       '--lazy-mode none' to enable this command." |> Lwt.return else
   let is_checked key = CheckedSet.mem key env.checked_files in
