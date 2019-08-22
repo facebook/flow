@@ -349,15 +349,19 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  ideStartAndConnect: (?number) => TestStepSecondStage = timeoutMsOpt => {
+  ideStartAndConnect: (?number, ?{}) => TestStepSecondStage = (
+    timeoutMsOpt,
+    initParamsOpt,
+  ) => {
     const assertLoc = searchStackForTestAssertion();
     const timeoutMs = timeoutMsOpt || 60000;
+    const initParams = initParamsOpt || this.lspInitializeParams;
 
     const expected = 'telemetry/connectionStatus{true}';
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.createIDEConnection('lsp');
       const promise = builder.sendIDERequestAndWaitForResponse('initialize', [
-        this.lspInitializeParams,
+        initParams,
       ]); // discarding the promise; instead we wait in the next statement...
       await builder.waitUntilIDEMessage(timeoutMs, expected);
     })._cloneWithAssertion((reason, env) => {

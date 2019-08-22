@@ -180,8 +180,7 @@ export default suite(
     ]),
     test('textDocument/completion', [
       addFile('params.js'),
-      ideStart({mode: 'lsp', needsFlowServer: true}),
-      ideRequest('initialize', {
+      ideStartAndConnect(6000, {
         ...lspInitializeParams,
         capabilities: {
           ...lspInitializeParams.capabilities,
@@ -195,7 +194,7 @@ export default suite(
             },
           },
         },
-      }).waitUntilIDEMessage(30000, 'initialize'),
+      }),
       ideRequestAndWaitUntilResponse('textDocument/completion', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>params.js'},
         position: {line: 9, character: 15},
