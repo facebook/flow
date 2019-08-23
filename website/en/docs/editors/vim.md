@@ -29,62 +29,21 @@ let g:ale_linters = {
 \}
 ```
 
-## coc.nvim-neovim <a class="toc" id="toc-coc-nvim-neovim" href="#toc-coc-nvim-neovim"></a>
+## coc.nvim <a class="toc" id="toc-coc-nvim" href="#toc-coc-nvim"></a>
 
 [Coc](https://github.com/neoclide/coc.nvim) is an intellisense engine for vim8 & neovim.
 
 ### Setup <a class="toc" id="toc-setup" href="#toc-setup"></a>
+Follow the [instructions](https://github.com/neoclide/coc.nvim/wiki/Install-coc.nvim) in the coc.nvim wiki.
 
-```vim
-set nocompatible
-filetype off
-
-" install coc.nvim using Plug or preffered plugin manager
-call plug#begin('~/.vim/plugged')
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
-call plug#end()
-
-filetype plugin indent on
-
-" ======= coc settings
-set updatetime=300
-set shortmess+=c
-
-" Use leader T to show documentation in preview window
-nnoremap &lt;leader&gt;t :call &lt;SID&gt;show_documentation()&lt;CR&gt;
-
-
-function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('&lt;cword&gt;')
-  else
-    call CocAction('doHover')
-  endif
-endfunction
-
-" instead of having ~/.vim/coc-settings.json
-let s:LSP_CONFIG = {
-\  'flow': {
-\    'command': exepath('flow'),
-\    'args': ['lsp'],
-\    'filetypes': ['javascript', 'javascriptreact'],
-\    'initializationOptions': {},
-\    'requireRootPattern': 1,
-\    'settings': {},
-\    'rootPatterns': ['.flowconfig']
-\  }
-\}
-
-let s:languageservers = {}
-for [lsp, config] in items(s:LSP_CONFIG)
-  let s:not_empty_cmd = !empty(get(config, 'command'))
-  if s:not_empty_cmd | let s:languageservers[lsp] = config | endif
-endfor
-
-if !empty(s:languageservers)
-  call coc#config('languageserver', s:languageservers)
-  endif
+For adding flow support you have two options, [coc-flow](https://github.com/amiralies/coc-flow) extension and coc.nvim's [custom language server](https://github.com/neoclide/coc.nvim/wiki/Language-servers) support.
+### coc-flow <a class="toc" id="toc-coc-flow" href="#toc-coc-flow"></a>
+Inside vim or neovim simply run this command:
+```sh
+:CocInstall coc-flow
 ```
+
+For using coc.nvim's custom language server support checkout [flow](https://github.com/neoclide/coc.nvim/wiki/Language-servers#flow) section in coc's wiki.
 
 ## LanguageClient-neovim <a class="toc" id="toc-languageclient-neovim" href="#toc-languageclient-neovim"></a>
 
