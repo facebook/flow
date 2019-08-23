@@ -32,23 +32,3 @@ val calc_partial_dependency_info:
   FilenameSet.t -> (* files *)
   parsed:FilenameSet.t ->
   Dependency_info.t Lwt.t
-
-val calc_direct_dependencies:
-  Dependency_info.t ->
-  FilenameSet.t ->
-  FilenameSet.t
-
-val calc_all_dependencies:
-  Dependency_info.t ->
-  FilenameSet.t ->
-  FilenameSet.t
-
-val calc_all_dependents:
-  Dependency_info.t ->
-  FilenameSet.t ->
-  FilenameSet.t
-
-val filter_dependency_graph:
-  dependency_graph ->
-  FilenameSet.t -> (* files *)
-  dependency_graph

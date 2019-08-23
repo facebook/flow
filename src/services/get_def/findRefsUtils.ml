@@ -70,4 +70,4 @@ let get_all_dependents ~reader options workers env file_key content =
     ~root_files:(FilenameSet.singleton file_key)
     ~root_modules:(Modulename.Set.singleton modulename)
   in
-  Lwt.return (Dep_service.calc_all_dependents !env.ServerEnv.dependency_info direct_deps)
+  Lwt.return (Pure_dep_graph_operations.calc_all_dependents !env.ServerEnv.dependency_info direct_deps)

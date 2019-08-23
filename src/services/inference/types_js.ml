@@ -461,7 +461,7 @@ let error_set_of_merge_error file =
 
 let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
   with_timer_lwt ~options "CalcDeps" profiling (fun () ->
-    let dependency_graph = Dep_service.filter_dependency_graph dependency_graph to_merge in
+    let dependency_graph = Pure_dep_graph_operations.filter_dependency_graph dependency_graph to_merge in
     let components = List.filter (Nel.exists (fun f -> FilenameSet.mem f to_merge)) components in
     if Options.should_profile options then Sort_js.log components;
     let component_map = List.fold_left (fun component_map component ->
@@ -491,7 +491,7 @@ let include_dependencies_and_dependents
   with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let preliminary_to_merge = Dep_service.calc_direct_dependencies dependency_info
+    let preliminary_to_merge = Pure_dep_graph_operations.calc_direct_dependencies dependency_info
       (CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files input)) in
     (* So we want to prune our dependencies to only the dependencies which changed. However, two
        dependencies A and B might be in a cycle. If A changed and B did not, we still need to check
@@ -1133,7 +1133,7 @@ let focused_files_and_dependents_to_infer ~reader ~dependency_info
   let focused = CheckedSet.focused input in
 
   (* Roots is the set of all focused files and all dependent files. *)
-  let roots = Dep_service.calc_all_dependents dependency_info focused in
+  let roots = Pure_dep_graph_operations.calc_all_dependents dependency_info focused in
   let dependents = FilenameSet.diff roots focused in
 
   let dependencies = CheckedSet.dependencies input in
@@ -1700,7 +1700,7 @@ end = struct
         if FilenameSet.is_empty direct_dependent_files
         (* as is the case for anything doing `check_contents` *)
         then Lwt.return FilenameSet.empty (* avoid O(dependency graph) calculations *)
-        else Lwt.return (Dep_service.calc_all_dependents dependency_info direct_dependent_files)
+        else Lwt.return (Pure_dep_graph_operations.calc_all_dependents dependency_info direct_dependent_files)
       ) in
 
     let acceptable_files_to_focus =
