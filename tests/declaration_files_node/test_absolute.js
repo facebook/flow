@@ -19,3 +19,10 @@ var E = require('package_with_no_package_json');
 
 var F = require('package_with_dir_main');
 (F.fun(): string); // Error number ~> string
+
+var G1 = require('.G');
+(G1.fun(): string); // Error number ~> string
+
+// This will require ./node_modules/B.js.flow
+var G2 = require('.G.js');
+(G2.fun(): string); // Error number ~> string
