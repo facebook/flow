@@ -486,12 +486,12 @@ let include_dependencies_and_dependents
     ~profiling
     ~unchanged_checked
     ~input
-    ~dependency_info
+    ~all_dependency_graph
+    ~dependency_graph
     ~all_dependent_files =
   with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
     let preliminary_to_merge = Pure_dep_graph_operations.calc_direct_dependencies all_dependency_graph
       (CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files input)) in
     (* So we want to prune our dependencies to only the dependencies which changed. However, two
@@ -501,7 +501,6 @@ let include_dependencies_and_dependents
        before we can prune. *)
     (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
        cycles *)
-    let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let components = Sort_js.topsort ~roots:preliminary_to_merge dependency_graph in
     let dependencies = List.fold_left (fun dependencies component ->
       let dependencies =
@@ -1772,9 +1771,11 @@ end = struct
       FilenameSet.mem fn acceptable_files_to_focus
     ) in
 
-    let%lwt to_merge, components, recheck_set =
-      include_dependencies_and_dependents
-        ~options ~profiling ~unchanged_checked ~input ~dependency_info ~all_dependent_files
+    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+    let dependency_graph = Dependency_info.dependency_graph dependency_info in
+    let%lwt to_merge, components, recheck_set = include_dependencies_and_dependents
+        ~options ~profiling ~unchanged_checked ~input ~all_dependency_graph ~dependency_graph
+        ~all_dependent_files
     in
 
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
@@ -2446,12 +2447,15 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
     let%lwt input, all_dependent_files = files_to_infer
       ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info in
 
+    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+    let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let%lwt to_merge, components, recheck_set =
       include_dependencies_and_dependents
         ~options ~profiling
         ~unchanged_checked:CheckedSet.empty
         ~input
-        ~dependency_info
+        ~all_dependency_graph
+        ~dependency_graph
         ~all_dependent_files
     in
     (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
