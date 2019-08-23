@@ -346,12 +346,12 @@ let convert_find_refs_result
  * `ServerEnv.env`. *)
 let find_refs ~reader ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
   let env = ref env in
-  let%lwt result, json =
+  let%lwt result, dep_count =
     FindRefs_js.find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
   in
   let env = !env in
   let result = Core_result.map result ~f:convert_find_refs_result in
-  Lwt.return (env, result, json)
+  Lwt.return (env, result, dep_count)
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
@@ -438,8 +438,15 @@ let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_
   Lwt.return (ServerProt.Response.FIND_MODULE response, None)
 
 let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~profiling ~env =
-  let%lwt env, result, json_data =
+  let%lwt env, result, dep_count =
     find_refs ~reader ~genv ~env ~profiling (filename, line, char, global, multi_hop) in
+  let json_data = Some (Hh_json.JSON_Object (
+    ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE")) ::
+    ("global", Hh_json.JSON_Bool global) ::
+    (match dep_count with
+    | Some count -> ["deps", Hh_json.JSON_Number (string_of_int count)]
+    | None -> [])
+  )) in
   Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
 
 let handle_force_recheck ~files ~focus ~profile ~profiling =
@@ -1159,9 +1166,13 @@ let handle_persistent_document_highlight
     ~reader ~genv ~id ~params ~metadata ~client ~profiling ~env =
   let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
   let global, multi_hop = false, false in (* multi_hop implies global *)
-  let%lwt env, result, extra_data =
+  let%lwt env, result, _dep_count =
     find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
   in
+  (* ignore _dep_count which is only relevant for global find_refs *)
+  let extra_data = Some (Hh_json.JSON_Object [
+    "result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE")
+  ]) in
   let metadata = with_data ~extra_data metadata in
   begin match result with
     | Ok (Some (_name, locs)) ->
@@ -1270,9 +1281,16 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
   (* TODO: respect includeDeclaration *)
   let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
   let global = true in
-  let%lwt env, result, extra_data =
+  let%lwt env, result, dep_count =
     find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
   in
+  let extra_data = Some (Hh_json.JSON_Object (
+    ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE")) ::
+    ("global", Hh_json.JSON_Bool true) ::
+    (match dep_count with
+      | Some count -> ["deps", Hh_json.JSON_Number (string_of_int count)]
+      | None -> [])
+  )) in
   let metadata = with_data ~extra_data metadata in
   begin match result with
     | Ok (Some (_name, locs)) ->

@@ -15,4 +15,4 @@ val find_refs:
   col: int ->
   global: bool ->
   multi_hop: bool ->
-  (FindRefsTypes.find_refs_result * Hh_json.json option) Lwt.t
+  (FindRefsTypes.find_refs_result * int option) Lwt.t

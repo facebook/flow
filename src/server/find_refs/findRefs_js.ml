@@ -15,19 +15,14 @@ let locmap_of_bindings =
     LocMap.add loc x map
   end LocMap.empty
 
-let sort_and_dedup =
-  Option.map ~f:begin fun (name, refs) ->
-    let refs =
-      (* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
-       * if we ever need to report multiple ref kinds for a single location. *)
-      refs
-      |> Core_list.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
-      |> locmap_of_bindings
-      |> LocMap.bindings
-      |> Core_list.map ~f:snd
-    in
-    name, refs
-  end
+(* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
+   if we ever need to report multiple ref kinds for a single location. *)
+let sort_and_dedup refs =
+  refs
+  |> Core_list.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
+  |> locmap_of_bindings
+  |> LocMap.bindings
+  |> Core_list.map ~f:snd
 
 let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   let filename = File_input.filename_of_file_input file_input in
@@ -61,21 +56,15 @@ let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~mult
         refs %>>| fun refs ->
         (* If property find-refs returned nothing (for example if we are importing from an untyped
          * module), then fall back on the local refs we computed earlier. *)
-        Lwt.return @@ Some (Option.value ~default:((name, local_refs), None) refs)
+        Lwt.return (Some (Option.value ~default:((name, local_refs), None) refs))
     in
-    let json_data = match result with
-      | Ok (Some (_, Some count)) -> ["deps", Hh_json.JSON_Number (string_of_int count)]
-      | _ -> []
+    let result, dep_count =
+      match result with
+      | Ok (Some ((name, refs), dep_count)) ->
+          Ok (Some (name, sort_and_dedup refs)), dep_count
+      | Ok None ->
+          Ok None, None
+      | Error err ->
+          Error err, None
     in
-    (* Drop the dependent file count  from the result *)
-    let result =
-      result
-      >>| Option.map ~f:(fun (result, _) -> result)
-      >>| sort_and_dedup
-    in
-    let json_data =
-      ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE"))
-      :: ("global", Hh_json.JSON_Bool global)
-      :: json_data
-    in
-    Lwt.return (result, Some (Hh_json.JSON_Object json_data))
+    Lwt.return (result, dep_count)
