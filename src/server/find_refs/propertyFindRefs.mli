@@ -14,4 +14,4 @@ val find_refs:
   GetDefUtils.def_info ->
   global: bool ->
   multi_hop: bool ->
-  ((FindRefsTypes.find_refs_found * int option) option, string) result Lwt.t
+  (FindRefsTypes.find_refs_found * int option, string) result Lwt.t

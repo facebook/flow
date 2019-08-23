@@ -46,7 +46,10 @@ let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~mult
         def_info %>>= function
         | None -> Lwt.return (Ok None)
         | Some def_info ->
-          PropertyFindRefs.find_refs ~reader genv env file_key ast_info def_info ~global ~multi_hop
+          let%lwt refs = PropertyFindRefs.find_refs
+            ~reader genv env file_key ast_info def_info ~global ~multi_hop
+          in
+          Lwt.return (refs >>| Option.some)
       in
       (* Start by running local variable find references *)
       let (ast, _, _) = ast_info in
