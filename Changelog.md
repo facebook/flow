@@ -1,3 +1,7 @@
+### 0.106.1
+
+Forgot to cherry-pick `[rollouts]` (an experimental new .flowconfig section) into v0.106.0
+
 ### 0.106.0
 
 Likely to cause new Flow errors:
