@@ -90,16 +90,12 @@ let is_valid_path =
         helper file_exts basename acc extension
   in
 
-  let is_dot_file basename =
-    basename <> "" && basename.[0] = '.'
-  in
-
   fun ~options ->
     let file_exts = get_all_watched_extensions options in
 
     fun path ->
       let basename = Filename.basename path in
-      not (is_dot_file basename) && (check_ext file_exts basename || basename = "package.json")
+      check_ext file_exts basename || basename = "package.json"
 
 let is_node_module options path =
   List.mem (Filename.basename path) options.node_resolver_dirnames
