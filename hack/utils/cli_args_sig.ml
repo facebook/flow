@@ -9,6 +9,7 @@
 module Types = struct
   type saved_state_target_info = {
     changes: Relative_path.t list;
+    naming_changes: Relative_path.t list;
     corresponding_base_revision: string;
     deptable_fn: string;
     prechecked_changes: Relative_path.t list;

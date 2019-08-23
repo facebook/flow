@@ -176,6 +176,10 @@ let parse_saved_state_json (json, _keytrace) =
     >>= fun (for_base_rev, _for_base_rev_keytrace) ->
   json >>= get_string "deptable" >>= fun (deptable, _deptable_keytrace) ->
   json >>= get_array "changes" >>= fun (changes, _) ->
+    let naming_changes = match json >>= get_val "naming_changes" with
+      | Ok (Hh_json.JSON_Array files, _) -> array_to_path_list files
+      | _ -> []
+    in
     let prechecked_changes = array_to_path_list prechecked_changes in
     let changes = array_to_path_list changes in
     return {
@@ -184,6 +188,7 @@ let parse_saved_state_json (json, _keytrace) =
       deptable_fn = deptable;
       prechecked_changes;
       changes;
+      naming_changes;
     }
 
 let get_saved_state_spec (v: string option) : (saved_state_target_info option, string) result =
