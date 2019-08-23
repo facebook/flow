@@ -1696,19 +1696,17 @@ end = struct
     ) = intermediate_values in
 
     let dependency_info = env.ServerEnv.dependency_info in
+    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+    let dependency_graph = Dependency_info.dependency_graph dependency_info in
 
     let%lwt all_dependent_files =
       with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
         if FilenameSet.is_empty direct_dependent_files
         (* as is the case for anything doing `check_contents` *)
         then Lwt.return FilenameSet.empty (* avoid O(dependency graph) calculations *)
-        else begin
-          let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-          let dependency_graph = Dependency_info.dependency_graph dependency_info in
-          Lwt.return (Pure_dep_graph_operations.calc_all_dependents
-              ~dependency_graph ~all_dependency_graph direct_dependent_files
-          )
-        end
+        else Lwt.return (Pure_dep_graph_operations.calc_all_dependents
+            ~dependency_graph ~all_dependency_graph direct_dependent_files
+        )
       ) in
 
     let acceptable_files_to_focus =
@@ -1771,8 +1769,6 @@ end = struct
       FilenameSet.mem fn acceptable_files_to_focus
     ) in
 
-    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-    let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let%lwt to_merge, components, recheck_set = include_dependencies_and_dependents
         ~options ~profiling ~unchanged_checked ~input ~all_dependency_graph ~dependency_graph
         ~all_dependent_files
@@ -1788,7 +1784,6 @@ end = struct
 
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
-    let dependency_graph = Dependency_info.dependency_graph dependency_info in
     (* recheck *)
     let%lwt
         updated_errors,
