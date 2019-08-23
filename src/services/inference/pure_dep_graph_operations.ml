@@ -35,10 +35,9 @@ let reverse graph =
 
 (* `calc_direct_dependencies graph files` will return the set of direct dependencies of
    `files`. This set includes `files`. *)
-let calc_direct_dependencies dependency_info files =
-  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+let calc_direct_dependencies dependency_graph files =
   FilenameSet.fold (fun file acc ->
-    match FilenameMap.get file all_dependency_graph with
+    match FilenameMap.get file dependency_graph with
       | Some files -> FilenameSet.union files acc
       | None -> acc
   ) files files
@@ -46,8 +45,7 @@ let calc_direct_dependencies dependency_info files =
 (* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
  * of `files`. This set does include `files`.
  *)
-let calc_all_dependencies dependency_info files =
-  let dependency_graph = Dependency_info.dependency_graph dependency_info in
+let calc_all_dependencies dependency_graph files =
   closure dependency_graph files
 
 (* `calc_all_dependents graph files` will return the set of direct and transitive dependents of
@@ -55,10 +53,9 @@ let calc_all_dependencies dependency_info files =
 
    A file is a dependent of `files` whenever its code depends on any file whose *signature*, in
    turn, directly or transitively depends on `files`.  *)
-let calc_all_dependents dependency_info files =
-  let rev_dependency_graph = reverse (Dependency_info.dependency_graph dependency_info) in
+let calc_all_dependents ~dependency_graph ~all_dependency_graph files =
+  let rev_dependency_graph = reverse dependency_graph in
   let all_type_dependents = closure rev_dependency_graph files in
-  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
   FilenameMap.fold (fun f code_dependencies acc ->
     if not (FilenameSet.mem f all_type_dependents)
        && FilenameSet.exists (fun f' -> FilenameSet.mem f' all_type_dependents) code_dependencies

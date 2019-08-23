@@ -10,17 +10,18 @@
 type dependency_graph = Utils_js.FilenameSet.t Utils_js.FilenameMap.t
 
 val calc_direct_dependencies:
-  Dependency_info.t ->
+  dependency_graph ->
   Utils_js.FilenameSet.t ->
   Utils_js.FilenameSet.t
 
 val calc_all_dependencies:
-  Dependency_info.t ->
+  dependency_graph ->
   Utils_js.FilenameSet.t ->
   Utils_js.FilenameSet.t
 
 val calc_all_dependents:
-  Dependency_info.t ->
+  dependency_graph:dependency_graph ->
+  all_dependency_graph:dependency_graph ->
   Utils_js.FilenameSet.t ->
   Utils_js.FilenameSet.t
 

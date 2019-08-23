@@ -491,7 +491,8 @@ let include_dependencies_and_dependents
   with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let preliminary_to_merge = Pure_dep_graph_operations.calc_direct_dependencies dependency_info
+    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+    let preliminary_to_merge = Pure_dep_graph_operations.calc_direct_dependencies all_dependency_graph
       (CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files input)) in
     (* So we want to prune our dependencies to only the dependencies which changed. However, two
        dependencies A and B might be in a cycle. If A changed and B did not, we still need to check
@@ -1133,7 +1134,9 @@ let focused_files_and_dependents_to_infer ~reader ~dependency_info
   let focused = CheckedSet.focused input in
 
   (* Roots is the set of all focused files and all dependent files. *)
-  let roots = Pure_dep_graph_operations.calc_all_dependents dependency_info focused in
+  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+  let dependency_graph = Dependency_info.dependency_graph dependency_info in
+  let roots = Pure_dep_graph_operations.calc_all_dependents ~dependency_graph ~all_dependency_graph focused in
   let dependents = FilenameSet.diff roots focused in
 
   let dependencies = CheckedSet.dependencies input in
@@ -1700,7 +1703,13 @@ end = struct
         if FilenameSet.is_empty direct_dependent_files
         (* as is the case for anything doing `check_contents` *)
         then Lwt.return FilenameSet.empty (* avoid O(dependency graph) calculations *)
-        else Lwt.return (Pure_dep_graph_operations.calc_all_dependents dependency_info direct_dependent_files)
+        else begin
+          let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+          let dependency_graph = Dependency_info.dependency_graph dependency_info in
+          Lwt.return (Pure_dep_graph_operations.calc_all_dependents
+              ~dependency_graph ~all_dependency_graph direct_dependent_files
+          )
+        end
       ) in
 
     let acceptable_files_to_focus =
