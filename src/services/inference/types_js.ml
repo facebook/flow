@@ -1644,13 +1644,6 @@ end = struct
         | _ -> assert false
     ) in
 
-    let%lwt all_dependent_files =
-      with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
-        if FilenameSet.is_empty direct_dependent_files (* as is the case for anything doing `check_contents` *)
-        then Lwt.return FilenameSet.empty (* avoid O(dependency graph) calculations *)
-        else Lwt.return (Dep_service.calc_all_dependents dependency_info direct_dependent_files)
-      ) in
-
     (* Here's how to update unparsed:
      * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
      * 2. Remove the deleted files. This removes any previously unparsed file which was deleted
@@ -1668,7 +1661,6 @@ end = struct
     } in
 
     let intermediate_values = (
-      all_dependent_files,
       deleted,
       direct_dependent_files,
       errors,
@@ -1690,7 +1682,6 @@ end = struct
       ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~recheck_reasons ~env =
 
     let (
-      all_dependent_files,
       deleted,
       direct_dependent_files,
       errors,
@@ -1703,6 +1694,14 @@ end = struct
     ) = intermediate_values in
 
     let dependency_info = env.ServerEnv.dependency_info in
+
+    let%lwt all_dependent_files =
+      with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
+        if FilenameSet.is_empty direct_dependent_files
+        (* as is the case for anything doing `check_contents` *)
+        then Lwt.return FilenameSet.empty (* avoid O(dependency graph) calculations *)
+        else Lwt.return (Dep_service.calc_all_dependents dependency_info direct_dependent_files)
+      ) in
 
     let acceptable_files_to_focus =
       FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
