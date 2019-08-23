@@ -44,7 +44,9 @@ let set_server_options ~server_options =
   in
   let abstract_locations = if Options.abstract_locations server_options then "on" else "off" in
   let max_workers = Options.max_workers server_options in
-  FlowEventLogger.set_server_options ~lazy_mode ~arch ~abstract_locations ~max_workers
+  let enabled_rollouts = Options.enabled_rollouts server_options in
+  FlowEventLogger.set_server_options
+    ~lazy_mode ~arch ~abstract_locations ~max_workers ~enabled_rollouts
 
 let disable_logging () =
   EventLogger.disable_logging ();

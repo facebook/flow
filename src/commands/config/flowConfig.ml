@@ -686,7 +686,13 @@ module Opts = struct
       warn_on_unknown_opts
 end
 
+type rollout = {
+  enabled_group: string;
+  disabled_groups: SSet.t;
+}
+
 type config = {
+  rollouts: rollout SMap.t;
   (* completely ignored files (both module resolving and typing) *)
   ignores: string list;
   (* files that should be treated as untyped *)
@@ -803,6 +809,7 @@ end = struct
 end
 
 let empty_config = {
+  rollouts = SMap.empty;
   ignores = [];
   untyped = [];
   declarations = [];
@@ -903,6 +910,120 @@ let parse_strict lines config =
   StrictModeSettings.of_lines lines >>= fun strict_mode ->
   Ok ({config with strict_mode}, [])
 
+(* Basically fold_left but with early exit when f returns an Error *)
+let rec fold_left_stop_on_error
+  (l: 'elem list)
+  ~(acc: 'acc)
+  ~(f: 'acc -> 'elem -> ('acc, 'error) result)
+  : ('acc, 'error) result  =
+  match l with
+  | [] -> Ok acc
+  | elem :: rest ->
+    f acc elem >>= fun acc -> fold_left_stop_on_error rest ~acc ~f
+
+(* Rollouts are based on randomness, but we want it to be stable from run to run. So we seed our
+ * pseudo random number generator with
+ *
+ * 1. The hostname
+ * 2. The user
+ * 3. The name of the rollout
+ *)
+let calculate_pct rollout_name =
+  let state = Xx.init () in
+  Xx.update state (Unix.gethostname ());
+  Xx.update_int state (Unix.getuid ());
+  Xx.update state rollout_name;
+  let hash = Xx.digest state in
+  Xx.modulo hash 100
+
+(* The optional rollout section has 0 or more lines. Each line defines a single rollout. For example
+ *
+ * [rollouts]
+ *
+ * testA=40% on, 60% off
+ * testB=50% blue, 20% yellow, 30% pink
+ *
+ * The first line defines a rollout named "testA" with two groups.
+ * The second line defines a rollout named "testB" with three groups.
+ *
+ * Each rollout's groups must sum to 100.
+ *)
+let parse_rollouts config lines =
+  Option.value_map lines ~default:(Ok config) ~f:(fun lines ->
+    let lines = trim_labeled_lines lines in
+    fold_left_stop_on_error lines
+      ~acc:(SMap.empty)
+      ~f:(fun rollouts (line_num, line) ->
+        (* A rollout's name is can only contain [a-zA-Z0-9._] *)
+        if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0
+        then
+          let rollout_name = Str.matched_group 1 line in
+          let rollout_values_raw = Str.matched_group 2 line in
+          let my_pct = calculate_pct rollout_name in
+          fold_left_stop_on_error
+            (* Groups are delimited with commas *)
+            Str.(split (regexp ",") rollout_values_raw)
+            ~acc:(None, SSet.empty, 0)
+            ~f:(fun (enabled_group, disabled_groups, pct_total) raw_group ->
+              let raw_group = String.trim raw_group in
+              (* A rollout group has the for "X% label", where label can only contain
+               * [a-zA-Z0-9._] *)
+              if Str.string_match (Str.regexp "^\\([0-9]+\\)% \\([a-zA-Z0-9._]+\\)$") raw_group 0
+              then
+                let group_pct = Str.matched_group 1 raw_group |> int_of_string in
+                let group_name = Str.matched_group 2 raw_group in
+
+                if enabled_group = Some group_name || SSet.mem group_name disabled_groups
+                then Error (
+                  line_num,
+                  spf "Groups must have unique names. There is more than one %S group" group_name
+                )
+                else begin
+                  let enabled_group, disabled_groups = match enabled_group with
+                  | None when my_pct < group_pct + pct_total ->
+                    (* This is the first group that passes my_pct, so we enable it *)
+                    Some group_name, disabled_groups
+                  | _ ->
+                    (* Either we've already chosen the enabled group or we haven't passed my_pct *)
+                    enabled_group, SSet.add group_name disabled_groups
+                  in
+                  Ok (enabled_group, disabled_groups, pct_total + group_pct)
+                end
+              else
+                Error (
+                  line_num,
+                  "Malformed rollout group. A group should be a percentage and an identifier, " ^
+                    "like `50% on`"
+                )
+            )
+          >>= fun (enabled_group, disabled_groups, pct_total) ->
+            if pct_total = 100
+            then
+              if SMap.mem rollout_name rollouts
+              then Error (
+                line_num,
+                spf "Rollouts must have unique names. There already is a %S rollout" rollout_name
+              )
+              else
+                match enabled_group with
+                | None ->
+                  Error ( line_num, "Invariant violation: failed to choose a group" )
+                | Some enabled_group ->
+                  Ok (SMap.add rollout_name { enabled_group; disabled_groups; } rollouts)
+            else Error (
+              line_num,
+              spf "Rollout groups must sum to 100%%. %S sums to %d%%" rollout_name pct_total
+            )
+        else
+          Error (
+            line_num,
+            "Malformed rollout. A rollout should be an identifier followed by a list of groups, " ^
+              "like `myRollout=10% on, 50% off`"
+          )
+      ) >>= fun rollouts ->
+        Ok { config with rollouts; }
+    )
+
 let parse_section config ((section_ln, section), lines) : (config * warning list, error) result =
   match section, lines with
   | "", [] when section_ln = 0 -> Ok (config, [])
@@ -920,6 +1041,56 @@ let parse_section config ((section_ln, section), lines) : (config * warning list
   | _ -> Ok (config, [section_ln, (spf "Unsupported config section: \"%s\"" section)])
 
 let parse =
+  (* Filter every section (except the rollouts section) for disabled rollouts. For example, if a
+   * line starts with (my_rollout=on) and the "on" group is not enabled for the "my_rollout"
+   * rollout, then drop the line completely.
+   *
+   * Lines with enabled rollouts just have the prefix stripped
+   *)
+  let filter_sections_by_rollout sections config =
+    (* The rollout prefix looks like `(rollout_name=group_name)` *)
+    let rollout_regex = Str.regexp "^(\\([a-zA-Z0-9._]+\\)=\\([a-zA-Z0-9._]+\\))\\(.*\\)$" in
+    fold_left_stop_on_error sections
+      ~acc:[]
+      ~f:(fun acc (section_name, lines) ->
+        fold_left_stop_on_error lines
+          ~acc:[]
+          ~f:(fun acc (line_num, line) ->
+            if Str.string_match rollout_regex line 0
+            then
+              let rollout_name = Str.matched_group 1 line in
+              let group_name = Str.matched_group 2 line in
+              let line = Str.matched_group 3 line in
+              match SMap.get rollout_name config.rollouts with
+              | None -> Error (line_num, spf "Unknown rollout %S" rollout_name)
+              | Some { enabled_group; disabled_groups; } ->
+                if enabled_group = group_name
+                then Ok ((line_num, line) :: acc)
+                else
+                  if SSet.mem group_name disabled_groups
+                  then Ok acc
+                  else Error (
+                    line_num,
+                    spf "Unknown group %S in rollout %S" group_name rollout_name
+                  )
+            else
+              Ok ((line_num, line) :: acc)
+        )
+        >>= fun lines -> Ok ((section_name, Core_list.rev lines) :: acc)
+      )
+    >>= fun sections -> Ok (config, Core_list.rev sections)
+  in
+
+  let process_rollouts config sections =
+    let rollout_section_lines = ref None in
+    let sections = Core_list.filter sections ~f:(function
+      | ((_, "rollouts"), lines) -> rollout_section_lines := Some lines; false
+      | _ -> true
+    ) in
+    parse_rollouts config !rollout_section_lines
+    >>= filter_sections_by_rollout sections
+  in
+
   let rec loop acc sections =
     acc >>= fun (config, warn_acc) ->
     match sections with
@@ -929,9 +1100,11 @@ let parse =
       let acc = Ok (config, Core_list.rev_append warnings warn_acc) in
       loop acc rest
   in
+
   fun config lines ->
     group_into_sections lines
-    >>= loop (Ok (config, []))
+    >>= process_rollouts config
+    >>= fun (config, sections) -> loop (Ok (config, [])) sections
 
 let is_not_comment =
   let comment_regexps = [
@@ -1016,6 +1189,8 @@ let get_hash ?allow_cache filename =
   hash
 
 (* Accessors *)
+
+let enabled_rollouts config = SMap.map (fun { enabled_group; _; } -> enabled_group) config.rollouts
 
 (* completely ignored files (both module resolving and typing) *)
 let ignores config = config.ignores
