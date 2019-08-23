@@ -9,15 +9,20 @@ open Utils_js
 
 type dependency_graph = FilenameSet.t FilenameMap.t
 
-let rec closure graph =
-  FilenameSet.fold (fun file acc ->
-    match FilenameMap.get file graph with
-      | Some files ->
-        let files = FilenameSet.diff files acc in
-        let acc = FilenameSet.union files acc in
-        closure graph files acc
-      | None -> acc
-  )
+(* `closure graph files` returns all files in `graph` which are reachable from `files`, directly or
+ * indirectly. *)
+let closure =
+  let rec helper graph =
+    FilenameSet.fold (fun file acc ->
+      match FilenameMap.get file graph with
+        | Some files ->
+          let files = FilenameSet.diff files acc in
+          let acc = FilenameSet.union files acc in
+          helper graph files acc
+        | None -> acc
+    )
+  in
+  fun graph files -> helper graph files files
 
 let reverse graph =
   let acc = Hashtbl.create 0 in
@@ -43,7 +48,7 @@ let calc_direct_dependencies dependency_info files =
  *)
 let calc_all_dependencies dependency_info files =
   let dependency_graph = Dependency_info.dependency_graph dependency_info in
-  closure dependency_graph files files
+  closure dependency_graph files
 
 (* `calc_all_dependents graph files` will return the set of direct and transitive dependents of
    `files`. This set include `files`.
@@ -52,7 +57,7 @@ let calc_all_dependencies dependency_info files =
    turn, directly or transitively depends on `files`.  *)
 let calc_all_dependents dependency_info files =
   let rev_dependency_graph = reverse (Dependency_info.dependency_graph dependency_info) in
-  let all_type_dependents = closure rev_dependency_graph files files in
+  let all_type_dependents = closure rev_dependency_graph files in
   let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
   FilenameMap.fold (fun f code_dependencies acc ->
     if not (FilenameSet.mem f all_type_dependents)
