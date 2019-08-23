@@ -4,6 +4,7 @@
   (libraries
     flow_common
     flow_logging_stubs
+    collections ; hack
     imported_core ; hack
     logging_common_stubs ; hack
     sys_utils ; hack

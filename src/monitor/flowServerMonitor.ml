@@ -130,6 +130,9 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
 
     Logger.init_logger log_fd;
     Logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
+    LoggingUtils.dump_server_options
+      ~server_options:monitor_options.FlowServerMonitorOptions.server_options
+      ~log:(Logger.info "%s");
 
     (* If there is a waiting fd, start up a thread that will message it *)
     let handle_waiting_start_command = match waiting_fd with
