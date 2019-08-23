@@ -230,11 +230,11 @@ class mapper ?(size_limit=30) ~ambiguity_strategy
   method private synth_type location =
     let scheme = ty_lookup location in
     let ty = normalize location scheme in
-    begin try
-      Utils.validate_type ~size_limit ty
-      with
-      | Utils.Fatal error -> raise @@ expected @@
-        FailedToValidateType{error; error_message=Utils.serialize_validation_error error}
+    begin match Utils.validate_type ~size_limit ty with
+      | _, error::_ -> (* TODO surface all errors *)
+        raise @@ expected @@
+          FailedToValidateType{error; error_message=Utils.serialize_validation_error error}
+      | _, [] -> ()
     end;
     let ty = remove_ambiguous_types ~ambiguity_strategy ty location in
     (location, serialize ~imports_react:true location ty)

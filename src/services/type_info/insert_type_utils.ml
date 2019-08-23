@@ -33,56 +33,61 @@ let warn_shadow_prop ?(strip_root=None) name loc =
 exception Fatal of validation_error
 (* Raise an validation_error if there isn't a user facing type that is equivalent to the Ty *)
 class type_validator_visitor = object(_)
-  inherit [_] Ty.iter_ty as super
-  method! on_t () t =
+  inherit [_] Ty.endo_ty as super
+  method! on_t env t =
     match t with
-    | Ty.Mu _ | Ty.TVar _ -> raise (Fatal Recursive)
+    (* Recursive types unsupported *)
+    | Ty.Mu _ | Ty.TVar _ ->
+      env := (Recursive)::!env;
+      Ty.explicit_any
 
-    (* We cannot serialize the following Bot-like types *)
     | Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper u)) ->
-      raise (Fatal (Empty_SomeUnknownUpper u))
-
+      env := (Empty_SomeUnknownUpper u)::!env;
+      Ty.explicit_any
     | Ty.Bot Ty.EmptyMatchingPropT ->
-      raise (Fatal Empty_MatchingPropT)
-
+      env := (Empty_MatchingPropT)::!env;
+      Ty.explicit_any
     | Ty.Bot (Ty.EmptyTypeDestructorTriggerT loc) ->
-      raise (Fatal (Empty_TypeDestructorTriggerT (ALoc.to_loc_exn loc)))
+      env := (Empty_TypeDestructorTriggerT (ALoc.to_loc_exn loc))::!env;
+      Ty.explicit_any
 
-    | _ -> super#on_t () t
+    | Ty.Any (
+        Ty.Unsound (
+        ( Ty.Constructor
+        | Ty.DummyStatic
+        | Ty.Existential
+        | Ty.Exports
+        | Ty.FunctionPrototype
+        | Ty.InferenceHooks
+        | Ty.InstanceOfRefinement
+        | Ty.Merged
+        | Ty.ResolveSpread
+        | Ty.Unchecked
+        | Ty.Unimplemented
+        | Ty.UnresolvedType
+        | Ty.WeakContext
+        ) as kind)
+      ) ->
+      env := (Any_Unsound kind)::!env;
+      Ty.explicit_any;
 
-  method! on_unsoundness_kind env kind =
-    match kind with
-    (* These are okay *)
-    | Ty.BoundFunctionThis
-    | Ty.ComputedNonLiteralKey
-      ->
-      super#on_unsoundness_kind env kind
-    (* Ban all the rest *)
-    | Ty.Constructor
-    | Ty.DummyStatic
-    | Ty.Existential
-    | Ty.Exports
-    | Ty.FunctionPrototype
-    | Ty.InferenceHooks
-    | Ty.InstanceOfRefinement
-    | Ty.Merged
-    | Ty.ResolveSpread
-    | Ty.Unchecked
-    | Ty.Unimplemented
-    | Ty.UnresolvedType
-    | Ty.WeakContext
-      ->
-      raise (Fatal (Any_Unsound kind))
+    | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
+      env := ReactElementConfigFunArg::!env;
+      Ty.explicit_any
 
-  method! on_ReactElementConfigType () targ =
-    match targ with
-    | Ty.Fun _ -> raise (Fatal ReactElementConfigFunArg)
-    | _ -> super#on_ReactElementConfigType () targ
+    | Ty.Generic (symbol, _, _)
+    | Ty.ClassDecl (symbol, _)
+    | Ty.InterfaceDecl (symbol, _)
+    | Ty.Module (Some symbol, _) ->
+      let { Ty.anonymous; def_loc; _ } = symbol in
+      if anonymous
+      then begin
+        env := (Anonymous (ALoc.to_loc_exn   def_loc))::!env;
+        Ty.explicit_any
+      end else
+        super#on_t env t
 
-  method! on_symbol env s =
-    let { Ty.anonymous; def_loc; _ } = s in
-    if anonymous then raise (Fatal (Anonymous (ALoc.to_loc_exn def_loc)));
-    super#on_symbol env s
+    | _ -> super#on_t env t
 end
 
 let validate_type_too_big_max=1000
@@ -91,8 +96,12 @@ let validate_type ~size_limit t =
   match Ty_utils.size_of_type ~max:size_limit t with
   | None ->
     let max = validate_type_too_big_max in
-    raise (Fatal (TooBig {size_limit; size=Ty_utils.size_of_type ~max t}))
-  | Some _ -> (new type_validator_visitor)#on_t () t
+    let error = TooBig { size_limit; size = Ty_utils.size_of_type ~max t } in
+    t, [error]
+  | Some _ ->
+    let env = ref [] in
+    let t = (new type_validator_visitor)#on_t env t in
+    t, !env
 
 (** Add named type parameter to ensure a Flow_ast.Type can be parsed after being
   * pretty printed.
