@@ -8,10 +8,9 @@
 type stats = {
   total: int;
   total_swap: int;
-
   anon: int;
   shmem: int;
   file: int;
 }
 
-val get_stats: unit -> (stats, string) result Lwt.t
+val get_stats : unit -> (stats, string) result Lwt.t

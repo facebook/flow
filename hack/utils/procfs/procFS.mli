@@ -13,6 +13,6 @@ type status = {
   rss_hwm: int;
 }
 
-val status_for_pid: int -> (status, string) result
+val status_for_pid : int -> (status, string) result
 
-val first_cgroup_for_pid: int -> (string, string) result
+val first_cgroup_for_pid : int -> (string, string) result

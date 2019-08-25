@@ -13,7 +13,9 @@ module Ocaml_stack = Stack
 
 module Stack = struct
   include Ocaml_stack
-  let merge_bytes : string Stack.t -> string = function stack ->
-    let strs = Stack.fold (fun acc x -> x :: acc) [] stack in
-    String.concat "" strs
+
+  let merge_bytes : string Stack.t -> string = function
+    | stack ->
+      let strs = Stack.fold (fun acc x -> x :: acc) [] stack in
+      String.concat "" strs
 end

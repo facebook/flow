@@ -5,7 +5,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the "hack" directory of this source tree.
  *
-*)
+ *)
 
 (**
  * This module is needed because Unix.select doesn't play well with
@@ -25,38 +25,45 @@
 
 module type S = sig
   type 'a result
+
   type fd
+
   type t
 
-  val create: fd -> t
+  val create : fd -> t
 
-  val get_null_reader: unit -> t result
+  val get_null_reader : unit -> t result
 
-  val has_buffered_content: t -> bool
+  val has_buffered_content : t -> bool
 
+  val is_readable : t -> bool
   (**
     * Returns true if and only if there is content to be read (does not know if
     * the incoming content is newline-terminated. So we can't actually know
     * if get_next_line will be non-blocking.
     *)
-  val is_readable : t -> bool
 
-  val get_fd: t -> fd
+  val get_fd : t -> fd
 
-  val get_next_line: t -> string result
+  val get_next_line : t -> string result
 
-  val get_next_bytes: t -> int -> string result
+  val get_next_bytes : t -> int -> string result
 end
 
 module type READER = sig
   type 'a result
+
   type fd
 
-  val return: 'a -> 'a result
-  val fail: exn -> 'a result
-  val (>>=): 'a result -> ('a -> 'b result) -> 'b result
+  val return : 'a -> 'a result
 
-  val read: fd -> buffer:bytes -> offset:int -> size:int -> int result
-  val is_readable: fd -> bool
-  val open_devnull: unit -> fd result
+  val fail : exn -> 'a result
+
+  val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
+
+  val read : fd -> buffer:bytes -> offset:int -> size:int -> int result
+
+  val is_readable : fd -> bool
+
+  val open_devnull : unit -> fd result
 end

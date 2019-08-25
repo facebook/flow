@@ -5,7 +5,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the "hack" directory of this source tree.
  *
- **)
+ * *)
 
 type raw_color =
   | Default
@@ -39,14 +39,24 @@ val apply_color : ?color_mode:color_mode -> style -> string -> string
  * Print a sequence of colorized strings to stdout/stderr, using ANSI color
  * escapes codes.
  *)
-val cprint : ?color_mode:color_mode -> ?out_channel:out_channel -> (style * string) list -> unit
-val cprintf : ?color_mode:color_mode -> ?out_channel:out_channel -> style ->
-  ('a, unit, string, unit) format4 -> 'a
+val cprint :
+  ?color_mode:color_mode ->
+  ?out_channel:out_channel ->
+  (style * string) list ->
+  unit
+
+val cprintf :
+  ?color_mode:color_mode ->
+  ?out_channel:out_channel ->
+  style ->
+  ('a, unit, string, unit) format4 ->
+  'a
 
 (* These two functions provide a four-state TTY-friendly spinner that
  * a client can output between sleeps if it happens to be waiting on
  * a busy server (e.g. one that's initializing) *)
 val spinner : ?angery_reaccs_only:bool -> unit -> string
+
 val spinner_used : unit -> bool
 
 (* Output a "clear current line" escape sequence to out_channel if it's
@@ -65,6 +75,7 @@ val eprintf : ('a, out_channel, unit) format -> 'a
 
 (* Whether the terminal supports color *)
 val supports_color : unit -> bool
+
 val should_color : color_mode -> bool
 
 (* Whether the terminal supports emoji *)

@@ -27,7 +27,7 @@ type 'a t
     parse ancestor classes only as necessary, and our implementation of [merge]
     provides the logic for member overriding. *)
 
-val make:
+val make :
   is_canonical:('a -> bool) ->
   merge:(earlier:'a -> later:'a -> 'a) ->
   (string * 'a) Sequence.t ->
@@ -52,7 +52,7 @@ val make:
     will always force the cache to traverse the entire sequence on the first
     lookup). *)
 
-val get: 'a t -> string -> 'a option
+val get : 'a t -> string -> 'a option
 (** Return the value associated with the given key. If the value is canonical
     and was already emitted by the input sequence, or if the input sequence has
     been exhausted, this function is guaranteed to complete in constant time.
@@ -63,7 +63,7 @@ val get: 'a t -> string -> 'a option
     Guaranteed not to advance the input sequence if the sequence has previously
     emitted a canonical value for the given key. *)
 
-val mem: 'a t -> string -> bool
+val mem : 'a t -> string -> bool
 (** Return [true] if a value associated with the given key exists. If a value
     associated with this key was already emitted by the input sequence, or if
     the input sequence has been exhausted, this function is guaranteed to
@@ -75,6 +75,6 @@ val mem: 'a t -> string -> bool
     Guaranteed not to advance the input sequence if the sequence has previously
     emitted any value for the given key. *)
 
-val to_seq: 'a t -> (string * 'a) Sequence.t
+val to_seq : 'a t -> (string * 'a) Sequence.t
 (** Eagerly exhaust the input sequence, then return a sequence iterating over
     all values stored in the cache, in undefined order. *)

@@ -5,7 +5,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the "hack" directory of this source tree.
  *
-*)
+ *)
 
 (* This `.mli` file was generated automatically. It may include extra
 definitions that should not actually be exposed to the caller. If you notice
@@ -14,7 +14,7 @@ clean it up manually, and then delete this comment once the interface is in
 shape. *)
 
 type t =
-    No_error
+  | No_error
   | Build_error
   | Build_terminated
   | Checkpoint_error
@@ -77,8 +77,13 @@ type t =
   | Big_rebase_detected
   | Failed_to_load_should_retry
   | Failed_to_load_should_abort
+
 exception Exit_with of t
+
 val exit_code : t -> int
+
 val exit : t -> 'a
+
 val to_string : t -> string
+
 val unpack : Unix.process_status -> string * int

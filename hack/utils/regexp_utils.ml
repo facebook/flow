@@ -12,6 +12,7 @@
  * JS regexp library differs. *)
 
 let nonempty_ws_regexp = Str.regexp "[ \n\t\r\012]+"
+
 (* Squash the whitespace in a string down the way that xhp expects it.
  * In particular, replace all whitespace with spaces and replace all
  * strings of multiple spaces with a single space. *)

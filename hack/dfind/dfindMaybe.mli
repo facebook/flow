@@ -7,7 +7,6 @@
  *
  *)
 
-
 (*****************************************************************************)
 (* A modified maybe monad
  * Most of the time, I prefer to use exceptions, I like things to blow up
@@ -16,7 +15,7 @@
  * to blow-up, we want to carry-on whatever happens.
  * So this monad never fails, it logs very nasty errors, for example, it will
  * log the fact that a watch couldn't be created, when the file still exists.
-*)
+ *)
 (*****************************************************************************)
 
 type 'a t
@@ -24,9 +23,11 @@ type 'a t
 (* Called at the initialization of the server (cf server.ml) *)
 val set_log : out_channel -> unit
 
-val (>>=)   : 'a t -> ('a -> 'b t) -> 'b t
-val return  : 'a -> 'a t
+val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
+
+val return : 'a -> 'a t
 
 (* Calls (f path), never fails, logs the nasty exceptions *)
-val call    : (string -> 'a t) -> string -> 'a t
-val wrap    : ('a -> 'b) -> ('a -> 'b t)
+val call : (string -> 'a t) -> string -> 'a t
+
+val wrap : ('a -> 'b) -> 'a -> 'b t

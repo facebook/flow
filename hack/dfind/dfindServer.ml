@@ -7,7 +7,6 @@
  *
  *)
 
-
 (*****************************************************************************)
 (* Code relative to the client/server communication *)
 (*****************************************************************************)
@@ -23,31 +22,30 @@ type msg =
 (* Processing an fsnotify event *)
 (*****************************************************************************)
 
-let (process_fsnotify_event:
-       DfindEnv.t -> SSet.t -> Fsnotify.event
-         -> SSet.t) = fun env dirty event ->
-  let { Fsnotify.path; wpath; } = event in
-
+let (process_fsnotify_event : DfindEnv.t -> SSet.t -> Fsnotify.event -> SSet.t)
+    =
+ fun env dirty event ->
+  let { Fsnotify.path; wpath } = event in
   (* Tell everybody that this file has changed *)
   let dirty = SSet.add path dirty in
   (* Is it a directory? Be conservative, everything we know about this
    * directory is now "dirty"
    *)
   let dirty =
-    if SMap.mem path env.dirs
-    then SSet.union dirty (SMap.find_unsafe path env.dirs)
-    else begin
+    if SMap.mem path env.dirs then
+      SSet.union dirty (SMap.find_unsafe path env.dirs)
+    else
       let dir_content =
-        try SMap.find_unsafe wpath env.dirs
-        with Not_found -> SSet.empty
+        (try SMap.find_unsafe wpath env.dirs with Not_found -> SSet.empty)
       in
       env.dirs <- SMap.add wpath (SSet.add path dir_content) env.dirs;
       dirty
-    end
   in
   env.new_files <- SSet.empty;
+
   (* Add the file, plus all of the sub elements if it is a directory *)
   DfindAddFile.path env path;
+
   (* Add everything new we found in this directory
     * (empty when it's a regular file)
     *)
@@ -73,8 +71,7 @@ let run_daemon (scuba_table, roots) (ic, oc) =
   let message_in_callback () =
     let () = Marshal_tools.from_fd_with_preamble infd in
     let count = SSet.cardinal !acc in
-    if count > 0
-    then Hh_logger.log "Sending %d file updates\n%!" count;
+    if count > 0 then Hh_logger.log "Sending %d file updates\n%!" count;
     Marshal_tools.to_fd_with_preamble outfd (Updates !acc) |> ignore;
     acc := SSet.empty
   in
@@ -84,5 +81,4 @@ let run_daemon (scuba_table, roots) (ic, oc) =
     Fsnotify.select env.fsnotify ~read_fdl ~timeout fsnotify_callback
   done
 
-let entry_point =
-  Daemon.register_entry_point "dfind" run_daemon
+let entry_point = Daemon.register_entry_point "dfind" run_daemon

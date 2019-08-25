@@ -20,18 +20,28 @@ module Ocaml_Sys = Sys
 
 module Unix = struct
   include Ocaml_unix
+
   let getcwd () = Disk.getcwd ()
+
   let chdir = Disk.chdir
+
   let mkdir = Disk.mkdir
+
   let rename = Disk.rename
 end
 
 module Sys = struct
   include Ocaml_Sys
+
   let getcwd () = Disk.getcwd ()
+
   let chdir = Disk.chdir
+
   let is_directory = Disk.is_directory
+
   let rename = Disk.rename
+
   let file_exists = Disk.file_exists
+
   let readdir = Disk.readdir
 end

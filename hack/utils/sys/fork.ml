@@ -31,21 +31,20 @@ let post_fork_child f =
 (* You should always use this instead of Unix.fork, so that the callbacks get
  * invoked *)
 let fork () =
-  List.iter !pre_fork_callbacks (fun f -> f());
+  List.iter !pre_fork_callbacks (fun f -> f ());
   match Unix.fork () with
   | 0 ->
-    List.iter !post_fork_child_callbacks (fun f -> f());
+    List.iter !post_fork_child_callbacks (fun f -> f ());
     0
-  | i ->
-    i
+  | i -> i
 
 (* should only be called from hh_server, which initializes the PidLog *)
 let fork_and_log ?reason () =
-  let result = fork() in
+  let result = fork () in
   (match result with
-   | -1  -> ()
-   | 0   -> PidLog.close ();
-   | pid -> PidLog.log ?reason pid);
+  | -1 -> ()
+  | 0 -> PidLog.close ()
+  | pid -> PidLog.log ?reason pid);
   result
 
 let fork_and_may_log ?reason () =

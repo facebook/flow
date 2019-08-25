@@ -15,18 +15,17 @@ let alphanumeric_alphabet =
 
 let short_string_with_alphabet alphabet =
   (* If we haven't seeded random then do it now *)
-  if not !initialized then begin
+  if not !initialized then (
     initialized := true;
     Random.self_init ()
-  end;
+  );
   let r = ref ((Random.bits () lsl 30) lor Random.bits ()) in
   let cs = ref [] in
   while !r > 0 do
-    let c = alphabet.[!r mod (String.length alphabet)] in
+    let c = alphabet.[!r mod String.length alphabet] in
     cs := String.make 1 c :: !cs;
     r := !r lsr 6
   done;
   String.concat "" !cs
 
-let short_string () =
-  short_string_with_alphabet alphanumeric_alphabet
+let short_string () = short_string_with_alphabet alphanumeric_alphabet

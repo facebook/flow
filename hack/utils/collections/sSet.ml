@@ -12,16 +12,20 @@ include Set.Make (StringKey)
 let pp fmt sset =
   Format.fprintf fmt "@[<2>{";
   let elements = elements sset in
-  (match elements with [] -> () | _ -> Format.fprintf fmt " ");
+  (match elements with
+  | [] -> ()
+  | _ -> Format.fprintf fmt " ");
   ignore
     (List.fold_left
-      (fun sep s ->
-        if sep then Format.fprintf fmt ";@ ";
-        Format.fprintf fmt "%S" s;
-        true)
-      false
-      elements);
-  (match elements with [] -> () | _ -> Format.fprintf fmt " ");
+       (fun sep s ->
+         if sep then Format.fprintf fmt ";@ ";
+         Format.fprintf fmt "%S" s;
+         true)
+       false
+       elements);
+  (match elements with
+  | [] -> ()
+  | _ -> Format.fprintf fmt " ");
   Format.fprintf fmt "@,}@]"
 
 let show sset = Format.asprintf "%a" pp sset

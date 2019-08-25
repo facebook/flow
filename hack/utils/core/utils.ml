@@ -13,77 +13,88 @@ open Hh_core
 type callstack = Callstack of string
 
 let () = Random.self_init ()
+
 let debug = ref false
+
 let profile = ref false
 
-let log = ref (fun (_ : string)  -> ())
+let log = ref (fun (_ : string) -> ())
 
 let d s =
-  if !debug
-  then begin
+  if !debug then (
     print_string s;
-    flush stdout;
-  end
+    flush stdout
+  )
 
 let dn s =
-  if !debug
-  then begin
+  if !debug then (
     print_string s;
-    print_newline();
-    flush stdout;
-  end
+    print_newline ();
+    flush stdout
+  )
 
 module Map = struct end
 
 let spf = Printf.sprintf
+
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
+
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let opt f env = function
-  | None -> env, None
-  | Some x -> let env, x = f env x in env, Some x
+  | None -> (env, None)
+  | Some x ->
+    let (env, x) = f env x in
+    (env, Some x)
 
 let opt_fold f env = function
   | None -> env
   | Some x -> f env x
 
-let singleton_if cond x = if cond then [x] else []
+let singleton_if cond x =
+  if cond then
+    [x]
+  else
+    []
 
 let smap_inter m1 m2 =
-  SMap.fold (
-  fun x y acc ->
-    if SMap.mem x m2
-    then SMap.add x y acc
-    else acc
- ) m1 SMap.empty
+  SMap.fold
+    (fun x y acc ->
+      if SMap.mem x m2 then
+        SMap.add x y acc
+      else
+        acc)
+    m1
+    SMap.empty
 
 let imap_inter m1 m2 =
-  IMap.fold (
-  fun x y acc ->
-    if IMap.mem x m2
-    then IMap.add x y acc
-    else acc
- ) m1 IMap.empty
+  IMap.fold
+    (fun x y acc ->
+      if IMap.mem x m2 then
+        IMap.add x y acc
+      else
+        acc)
+    m1
+    IMap.empty
 
 let smap_inter_list = function
   | [] -> SMap.empty
-  | x :: rl ->
-      List.fold_left rl ~f:smap_inter ~init:x
+  | x :: rl -> List.fold_left rl ~f:smap_inter ~init:x
 
 let imap_inter_list = function
   | [] -> IMap.empty
-  | x :: rl ->
-      List.fold_left rl ~f:imap_inter ~init:x
+  | x :: rl -> List.fold_left rl ~f:imap_inter ~init:x
 
 let rec wfold_left2 f env l1 l2 =
-  match l1, l2 with
-  | [], _ | _, [] -> env
-  | x1 :: rl1, x2 :: rl2 ->
-      let env = f env x1 x2 in
-      wfold_left2 f env rl1 rl2
+  match (l1, l2) with
+  | ([], _)
+  | (_, []) ->
+    env
+  | (x1 :: rl1, x2 :: rl2) ->
+    let env = f env x1 x2 in
+    wfold_left2 f env rl1 rl2
 
-let sl l =
-  List.fold_right l ~f:(^) ~init:""
+let sl l = List.fold_right l ~f:( ^ ) ~init:""
 
 let maybe f env = function
   | None -> ()
@@ -99,21 +110,22 @@ let unsafe_opt x = unsafe_opt_note "unsafe_opt got None" x
 
 let inter_list = function
   | [] -> SSet.empty
-  | x :: rl ->
-      List.fold_left rl ~f:SSet.inter ~init:x
+  | x :: rl -> List.fold_left rl ~f:SSet.inter ~init:x
 
-let rec list_last f1 f2 =
-  function
-    | [] -> ()
-    | [x] -> f2 x
-    | x :: rl -> f1 x; list_last f1 f2 rl
+let rec list_last f1 f2 = function
+  | [] -> ()
+  | [x] -> f2 x
+  | x :: rl ->
+    f1 x;
+    list_last f1 f2 rl
 
 let is_prefix_dir dir fn =
   let prefix = dir ^ Filename.dir_sep in
-  String.length fn > String.length prefix &&
-  String.sub fn 0 (String.length prefix) = prefix
+  String.length fn > String.length prefix
+  && String.sub fn 0 (String.length prefix) = prefix
 
-let try_with_channel (oc: out_channel) (f1: out_channel -> 'a) (f2: exn -> 'a) : 'a =
+let try_with_channel
+    (oc : out_channel) (f1 : out_channel -> 'a) (f2 : exn -> 'a) : 'a =
   try
     let result = f1 oc in
     close_out oc;
@@ -122,17 +134,15 @@ let try_with_channel (oc: out_channel) (f1: out_channel -> 'a) (f2: exn -> 'a) :
     close_out oc;
     f2 e
 
-let try_with_stack (f: unit -> 'a) : ('a, exn * callstack) result =
-  try
-    Ok (f ())
+let try_with_stack (f : unit -> 'a) : ('a, exn * callstack) result =
+  try Ok (f ())
   with exn ->
     let stack = Callstack (Printexc.get_backtrace ()) in
     Error (exn, stack)
 
-
 let iter_n_acc n f acc =
   let acc = ref acc in
-  for i = 1 to n-1 do
+  for i = 1 to n - 1 do
     acc := fst (f !acc)
   done;
   f !acc
@@ -140,34 +150,36 @@ let iter_n_acc n f acc =
 let map_of_list list =
   List.fold_left ~f:(fun m (k, v) -> SMap.add k v m) ~init:SMap.empty list
 
-let set_of_list l =
-  List.fold_right l ~f:SSet.add ~init:SSet.empty
+let set_of_list l = List.fold_right l ~f:SSet.add ~init:SSet.empty
 
 (* \A\B\C -> A\B\C *)
 let strip_ns s =
-  if String.length s == 0 || s.[0] <> '\\' then s
-  else String.sub s 1 ((String.length s) - 1)
+  if String.length s == 0 || s.[0] <> '\\' then
+    s
+  else
+    String.sub s 1 (String.length s - 1)
 
 (* A\B\C -> \A\B\C *)
 let add_ns s =
-  if String.length s = 0 || s.[0] <> '\\'
-  then "\\" ^ s
-  else s
+  if String.length s = 0 || s.[0] <> '\\' then
+    "\\" ^ s
+  else
+    s
 
 (* \A\B\C -> C *)
 let strip_all_ns s =
   try
     let base_name_start = String.rindex s '\\' + 1 in
-    String.sub s base_name_start ((String.length s) - base_name_start)
+    String.sub s base_name_start (String.length s - base_name_start)
   with Not_found -> s
 
 (* "\\A\\B\\C" -> ("\\A\\B\\" * "C") *)
-let split_ns_from_name (s: string): (string * string) =
+let split_ns_from_name (s : string) : string * string =
   try
-    let base_name_start = (String.rindex s '\\') + 1 in
-    let name_part = String.sub s
-      (base_name_start)
-      ((String.length s) - base_name_start) in
+    let base_name_start = String.rindex s '\\' + 1 in
+    let name_part =
+      String.sub s base_name_start (String.length s - base_name_start)
+    in
     let namespace_part = String.sub s 0 base_name_start in
     (namespace_part, name_part)
   with Not_found -> ("\\", s)
@@ -178,13 +190,13 @@ let double_colon = Str.regexp_string "::"
  * "A::B" -> Some "A" * "B"
  * "::B" "A::" "Abc" -> None
  *)
-let split_class_from_method (s: string) : (string * string) option =
+let split_class_from_method (s : string) : (string * string) option =
   try
     let i = Str.search_forward double_colon s 0 in
     let len = String.length s in
     let class_part = String.sub s 0 i in
     Printf.printf "Class part is [%s]\n" class_part;
-    let meth_part = String.sub s (i+2) (len-i-2) in
+    let meth_part = String.sub s (i + 2) (len - i - 2) in
     Printf.printf "Meth part is [%s]\n" meth_part;
     if class_part = "" || meth_part = "" then
       None
@@ -199,33 +211,44 @@ let split_class_from_method (s: string) : (string * string) option =
 (*****************************************************************************)
 
 let rec iter2_shortest f l1 l2 =
-  match l1, l2 with
-  | [], _ | _, [] -> ()
-  | x1 :: rl1, x2 :: rl2 -> f x1 x2; iter2_shortest f rl1 rl2
+  match (l1, l2) with
+  | ([], _)
+  | (_, []) ->
+    ()
+  | (x1 :: rl1, x2 :: rl2) ->
+    f x1 x2;
+    iter2_shortest f rl1 rl2
 
-let fold_fun_list acc fl =
-  List.fold_left fl ~f:(|>) ~init:acc
+let fold_fun_list acc fl = List.fold_left fl ~f:( |> ) ~init:acc
 
 let compose f g x = f (g x)
 
 module With_complete_flag = struct
   type 'a t = {
-    is_complete : bool;
-    value : 'a;
+    is_complete: bool;
+    value: 'a;
   }
 end
 
-let try_finally ~f ~(finally: unit -> unit) =
-  let res = try f () with e -> finally (); raise e in
+let try_finally ~f ~(finally : unit -> unit) =
+  let res =
+    try f ()
+    with e ->
+      finally ();
+      raise e
+  in
   finally ();
   res
 
 let with_context ~enter ~exit ~do_ =
   enter ();
-  let result = try do_ () with e ->
-    let stack = Printexc.get_raw_backtrace () in
-    exit ();
-    Printexc.raise_with_backtrace e stack in
+  let result =
+    try do_ ()
+    with e ->
+      let stack = Printexc.get_raw_backtrace () in
+      exit ();
+      Printexc.raise_with_backtrace e stack
+  in
   exit ();
   result
 
@@ -237,29 +260,28 @@ let with_context ~enter ~exit ~do_ =
 let assert_false_log_backtrace msg =
   Printf.eprintf "assert false with backtrace:\n";
   Option.iter msg ~f:(Printf.eprintf "%s\n");
-  Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
-    (Printexc.get_callstack 100));
+  Printf.eprintf
+    "%s"
+    (Printexc.raw_backtrace_to_string (Printexc.get_callstack 100));
   assert false
 
 (* Returns the largest element in arr strictly less than `bound` *)
-let infimum (arr : 'a array)
-            (bound : 'b)
-            (compare : 'a -> 'b -> int) : int option =
-  let rec binary_search low high = begin
+let infimum (arr : 'a array) (bound : 'b) (compare : 'a -> 'b -> int) :
+    int option =
+  let rec binary_search low high =
     if low = high then
       Some low
     else if low > high then
       None
-    else begin
+    else
       let mid = (low + high + 1) / 2 in
-      let test = Array.get arr mid in
+      let test = arr.(mid) in
       if compare test bound < 0 then
         binary_search mid high
       else
         binary_search low (mid - 1)
-    end
-  end in
-  binary_search 0 ((Array.length arr) - 1)
+  in
+  binary_search 0 (Array.length arr - 1)
 
 let unwrap_snd (a, b_opt) =
   match b_opt with

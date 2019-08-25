@@ -7,14 +7,16 @@
 
 type t
 
-val wrap: exn -> t
+val wrap : exn -> t
 
-val reraise: t -> 'a
+val reraise : t -> 'a
 
-val to_string: t -> string
-val get_ctor_string: t -> string
-val get_backtrace_string: t -> string
+val to_string : t -> string
 
-val get_current_callstack_string: int -> string
+val get_ctor_string : t -> string
 
-val record_backtrace: bool -> unit
+val get_backtrace_string : t -> string
+
+val get_current_callstack_string : int -> string
+
+val record_backtrace : bool -> unit

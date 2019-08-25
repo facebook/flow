@@ -11,6 +11,7 @@
 
 module S : sig
   type t
+
   val compare : t -> t -> int
 end
 
@@ -26,16 +27,17 @@ val to_int : t -> int
 
 val get_name : t -> string
 
+val make_scoped : string -> t
 (** Make an id for a scoped variable. Return a fresh id every time.
 This is used to enforce that two locals with the same name but with
 different scopes have different ids. *)
-val make_scoped : string -> t
 
+val make_unscoped : string -> t
 (** Make an id for an unscoped variable. Two calls with the same input
  * string will return the same id. *)
-val make_unscoped : string -> t
 
 val tmp : unit -> t
 
-module Set : module type of Set.Make(S)
-module Map : module type of MyMap.Make(S)
+module Set : module type of Set.Make (S)
+
+module Map : module type of MyMap.Make (S)

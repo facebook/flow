@@ -8,21 +8,23 @@
  *)
 
 type position = {
-  line : int; (* 1-based *)
-  column : int; (* 1-based *)
+  line: int;
+  (* 1-based *)
+  column: int; (* 1-based *)
 }
 
 type range = {
-  st : position;
-  ed : position;
+  st: position;
+  ed: position;
 }
 
 type text_edit = {
-  range : range option;
-  text : string;
+  range: range option;
+  text: string;
 }
 
-val edit_file : string -> text_edit list -> (string, string * Utils.callstack) result
+val edit_file :
+  string -> text_edit list -> (string, string * Utils.callstack) result
 
 val edit_file_unsafe : string -> text_edit list -> string
 

@@ -5,7 +5,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the "hack" directory of this source tree.
  *
-*)
+ *)
 
 (* This `.mli` file was generated automatically. It may include extra
 definitions that should not actually be exposed to the caller. If you notice
@@ -14,4 +14,5 @@ clean it up manually, and then delete this comment once the interface is in
 shape. *)
 
 val nonempty_ws_regexp : Str.regexp
+
 val squash_whitespace : string -> string

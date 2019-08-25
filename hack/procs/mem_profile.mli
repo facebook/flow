@@ -7,5 +7,6 @@
  *
  *)
 
-val start: unit -> unit
-val stop: unit -> unit
+val start : unit -> unit
+
+val stop : unit -> unit

@@ -7,7 +7,7 @@
 
 type t = {
   exn: exn;
-  backtrace: Printexc.raw_backtrace
+  backtrace: Printexc.raw_backtrace;
 }
 
 (* In ocaml, backtraces (the path that the exception bubbled up after being thrown) are stored as
@@ -27,19 +27,20 @@ let wrap exn =
   let backtrace = Printexc.get_raw_backtrace () in
   { exn; backtrace }
 
-let reraise { exn; backtrace } =
-  Printexc.raise_with_backtrace exn backtrace
+let reraise { exn; backtrace } = Printexc.raise_with_backtrace exn backtrace
 
-let get_ctor_string { exn; backtrace=_; } =
-  Printexc.to_string exn
+let get_ctor_string { exn; backtrace = _ } = Printexc.to_string exn
 
-let get_backtrace_string { exn=_; backtrace;} =
+let get_backtrace_string { exn = _; backtrace } =
   Printexc.raw_backtrace_to_string backtrace
 
 let to_string t =
   let ctor = get_ctor_string t in
   let bt = get_backtrace_string t in
-  if bt = "" then ctor else (ctor ^ "\n" ^ bt)
+  if bt = "" then
+    ctor
+  else
+    ctor ^ "\n" ^ bt
 
 let get_current_callstack_string n =
   Printexc.get_callstack n |> Printexc.raw_backtrace_to_string

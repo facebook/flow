@@ -8,5 +8,7 @@
  *)
 
 type t = string
-let compare (x: t) (y: t) = String.compare x y
+
+let compare (x : t) (y : t) = String.compare x y
+
 let to_string x = x

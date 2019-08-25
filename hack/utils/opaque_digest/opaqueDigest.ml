@@ -7,5 +7,6 @@ let to_raw_contents x = x
    to_hex'd *)
 let from_raw_contents x =
   try
-    let _ : string = to_hex x in Some x
+    let (_ : string) = to_hex x in
+    Some x
   with Invalid_argument _ -> None

@@ -14,9 +14,11 @@
  *)
 
 type comment =
-  | CmtLine   of string
-  | CmtBlock  of string
-  | CmtMarkup of string [@@deriving show]
+  | CmtLine of string
+  | CmtBlock of string
+  | CmtMarkup of string
+[@@deriving show]
 
 val is_line_comment : comment -> bool
-val string_of_comment :comment -> string
+
+val string_of_comment : comment -> string

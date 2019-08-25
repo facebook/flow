@@ -9,6 +9,7 @@
 
 module S = struct
   type t = int * string
+
   let compare = Pervasives.compare
 end
 
@@ -34,7 +35,7 @@ let make_unscoped x = (0, x)
 
 let tmp () =
   let res = next () in
-  (res, ("__tmp"^string_of_int res))
+  (res, "__tmp" ^ string_of_int res)
 
-module Set = Set.Make(S)
-module Map = MyMap.Make(S)
+module Set = Set.Make (S)
+module Map = MyMap.Make (S)

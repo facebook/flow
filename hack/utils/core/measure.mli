@@ -8,31 +8,42 @@
  *)
 
 type record
+
 type record_data
 
-val create: unit -> record
+val create : unit -> record
 
-val push_global: unit -> unit
-val pop_global: unit -> record
+val push_global : unit -> unit
 
-val serialize: record -> record_data
-val deserialize: record_data -> record
+val pop_global : unit -> record
 
-val track_distribution: ?record:record -> string -> bucket_size:float -> unit
+val serialize : record -> record_data
 
-val sample: ?record:record -> ?weight:float -> string -> float -> unit
-val time: ?record:record -> string -> (unit -> 'a) -> 'a
+val deserialize : record_data -> record
 
-val delete: ?record:record -> string -> unit
+val track_distribution : ?record:record -> string -> bucket_size:float -> unit
 
-val merge: ?record:record -> from:record -> unit
+val sample : ?record:record -> ?weight:float -> string -> float -> unit
 
-val get_sum: ?record:record -> string -> float option
-val get_mean: ?record:record -> string -> float option
-val get_count: ?record:record -> string -> float option
-val get_max: ?record:record -> string -> float option
+val time : ?record:record -> string -> (unit -> 'a) -> 'a
 
-val print_entry_stats: ?record:record -> ?print_raw:(string -> unit) -> string -> unit
-val print_stats: ?record:record -> ?print_raw:(string -> unit) -> unit -> unit
-val print_entry_distribution: ?record:record -> string -> unit
-val print_distributions: ?record:record -> unit -> unit
+val delete : ?record:record -> string -> unit
+
+val merge : ?record:record -> from:record -> unit
+
+val get_sum : ?record:record -> string -> float option
+
+val get_mean : ?record:record -> string -> float option
+
+val get_count : ?record:record -> string -> float option
+
+val get_max : ?record:record -> string -> float option
+
+val print_entry_stats :
+  ?record:record -> ?print_raw:(string -> unit) -> string -> unit
+
+val print_stats : ?record:record -> ?print_raw:(string -> unit) -> unit -> unit
+
+val print_entry_distribution : ?record:record -> string -> unit
+
+val print_distributions : ?record:record -> unit -> unit

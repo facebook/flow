@@ -19,7 +19,7 @@ val reset_global_state : unit -> unit
 (* Creates a line break map from/for the given string. *)
 val make : string -> t
 
-val offset_to_file_pos_triple: t -> int -> int * int * int
+val offset_to_file_pos_triple : t -> int -> int * int * int
 
 (* Take a zero-based offset, produce a one-based (line, column) pair.
  *
@@ -28,7 +28,7 @@ val offset_to_file_pos_triple: t -> int -> int * int * int
  * an offset x where x < -l defaults to offset 0, i.e. offsets only wrap around\
  * once.
  *)
-val offset_to_position: t -> int -> int * int
+val offset_to_position : t -> int -> int * int
 
 (* Take a one-based (line, column) pair, produce a zero-based offset.
  *

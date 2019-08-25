@@ -8,4 +8,5 @@
  *)
 
 type t = int
-let compare = (-)
+
+let compare = ( - )

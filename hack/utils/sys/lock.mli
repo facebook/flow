@@ -8,7 +8,11 @@
  *)
 
 val grab : string -> bool
+
 val release : string -> bool
+
 val blocking_grab_then_release : string -> unit
+
 val fd_of : string -> int
+
 val check : string -> bool

@@ -11,18 +11,15 @@ let rec mkdtemp ~skip_mocking ~retries =
     try
       let () = Sys_utils.mkdir_p (Path.to_string tmp_dir) ~skip_mocking in
       tmp_dir
-    with
-    | Unix.Unix_error _ ->
-      mkdtemp ~skip_mocking ~retries:(retries - 1)
+    with Unix.Unix_error _ -> mkdtemp ~skip_mocking ~retries:(retries - 1)
 
-let mkdtemp ~skip_mocking =
-  mkdtemp ~skip_mocking ~retries:30
+let mkdtemp ~skip_mocking = mkdtemp ~skip_mocking ~retries:30
 
 let with_tempdir ~skip_mocking g =
   let dir = mkdtemp skip_mocking in
-  let f = (fun () -> g dir) in
+  let f () = g dir in
   Utils.try_finally ~f ~finally:(fun () ->
-    Sys_utils.rm_dir_tree (Path.to_string dir) ~skip_mocking)
+      Sys_utils.rm_dir_tree (Path.to_string dir) ~skip_mocking)
 
 let with_real_tempdir g =
   Random.self_init ();

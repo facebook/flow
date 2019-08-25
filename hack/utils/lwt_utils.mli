@@ -1,4 +1,4 @@
-val select:
+val select :
   Unix.file_descr list ->
   Unix.file_descr list ->
   Unix.file_descr list ->
@@ -14,7 +14,7 @@ function does not use [Unix.select] at all, but Lwt primitives that accomplish
 the same thing.
 *)
 
-module Process_success: sig
+module Process_success : sig
   type t = {
     command_line: string;
     stdout: string;
@@ -22,7 +22,7 @@ module Process_success: sig
   }
 end
 
-module Process_failure: sig
+module Process_failure : sig
   type t = {
     command_line: string;
     process_status: Unix.process_status;
@@ -31,15 +31,15 @@ module Process_failure: sig
     exn: exn option;
   }
 
-  val to_string: t -> string
+  val to_string : t -> string
 end
 
-val exec_checked:
-    ?input:string ->
-    ?env:string array ->
-    string ->
-    string array ->
-    (Process_success.t, Process_failure.t) Lwt_result.t
+val exec_checked :
+  ?input:string ->
+  ?env:string array ->
+  string ->
+  string array ->
+  (Process_success.t, Process_failure.t) Lwt_result.t
 (** Run a command with a given input and return the output. If the command exits
 with an exit status other than zero, raises [Process_failure] instead.
 
@@ -49,16 +49,14 @@ tried to implement it, but after killing the process, both [Lwt_io.close] and
 stdin/stdout/stderr.)
 *)
 
-val try_finally:
-  f:(unit -> 'a Lwt.t) ->
-  finally:(unit -> unit Lwt.t) ->
-  'a Lwt.t
+val try_finally :
+  f:(unit -> 'a Lwt.t) -> finally:(unit -> unit Lwt.t) -> 'a Lwt.t
 (** Asynchronous version of [Utils.try_finally]. Run and wait for [f] to
 complete, and be sure to invoke [finally] asynchronously afterward, even if [f]
 raises an exception. *)
 
-val read_all: string -> (string, string) Lwt_result.t
+val read_all : string -> (string, string) Lwt_result.t
 (** Reads all the contents from the given file on disk, or returns an error
 message if unable to do so. *)
 
-module Promise: Promise.S with type 'a t = 'a Lwt.t
+module Promise : Promise.S with type 'a t = 'a Lwt.t

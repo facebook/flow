@@ -14,10 +14,17 @@
  *)
 
 type comment =
-  | CmtLine   of string
-  | CmtBlock  of string
+  | CmtLine of string
+  | CmtBlock of string
   | CmtMarkup of string
 [@@deriving show]
 
-let is_line_comment = function | CmtLine _ -> true | _ -> false
-let string_of_comment = function | CmtLine s | CmtBlock s | CmtMarkup s -> s
+let is_line_comment = function
+  | CmtLine _ -> true
+  | _ -> false
+
+let string_of_comment = function
+  | CmtLine s
+  | CmtBlock s
+  | CmtMarkup s ->
+    s

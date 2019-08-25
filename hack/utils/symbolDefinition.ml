@@ -42,35 +42,39 @@ and reactivity_attributes =
   | AtMostRxAsArgs
 
 and 'a t = {
-  kind : kind;
-  name : string;
-  full_name : string;
-  id : string option;
-  pos : 'a Pos.pos; (* covers the span of just the identifier *)
-  span : 'a Pos.pos; (* covers the span of the entire construct, including children *)
-  modifiers : modifier list;
-  children : 'a t list option;
-  params : 'a t list option;
-  docblock : string option;
-  reactivity_attributes : reactivity_attributes list
+  kind: kind;
+  name: string;
+  full_name: string;
+  id: string option;
+  pos: 'a Pos.pos;
+  (* covers the span of just the identifier *)
+  span: 'a Pos.pos;
+  (* covers the span of the entire construct, including children *)
+  modifiers: modifier list;
+  children: 'a t list option;
+  params: 'a t list option;
+  docblock: string option;
+  reactivity_attributes: reactivity_attributes list;
 }
 
-let rec to_absolute x = {
-  x with
-  pos = Pos.to_absolute x.pos;
-  span = Pos.to_absolute x.span;
-  children = Option.map x.children (fun x -> List.map x to_absolute);
-  params = Option.map x.params (fun x -> List.map x to_absolute);
-  docblock = x.docblock;
-}
+let rec to_absolute x =
+  {
+    x with
+    pos = Pos.to_absolute x.pos;
+    span = Pos.to_absolute x.span;
+    children = Option.map x.children (fun x -> List.map x to_absolute);
+    params = Option.map x.params (fun x -> List.map x to_absolute);
+    docblock = x.docblock;
+  }
 
-let rec to_relative x = {
-  x with
-  pos = Pos.to_relative x.pos;
-  span = Pos.to_relative x.span;
-  children = Option.map x.children (fun x -> List.map x to_relative);
-  params = Option.map x.params (fun x -> List.map x to_relative);
-}
+let rec to_relative x =
+  {
+    x with
+    pos = Pos.to_relative x.pos;
+    span = Pos.to_relative x.span;
+    children = Option.map x.children (fun x -> List.map x to_relative);
+    params = Option.map x.params (fun x -> List.map x to_relative);
+  }
 
 let string_of_kind = function
   | Function -> "function"
@@ -105,23 +109,36 @@ let string_of_reactivity_attribute = function
   | AtMostRxAsArgs -> "at_most_rx_as_args"
 
 let function_kind_name = "function"
+
 let type_id_kind_name = "type_id"
+
 let method_kind_name = "method"
+
 let property_kind_name = "property"
+
 let class_const_kind_name = "class_const"
 
 let get_symbol_id kind parent_class name =
-  let prefix = match kind with
+  let prefix =
+    match kind with
     | Function -> Some function_kind_name
-    | Class | Typedef | Enum | Interface | Trait -> Some type_id_kind_name
+    | Class
+    | Typedef
+    | Enum
+    | Interface
+    | Trait ->
+      Some type_id_kind_name
     | Method -> Some method_kind_name
     | Property -> Some property_kind_name
-    | Typeconst | Const -> Some class_const_kind_name
-    | LocalVar | Param -> None
+    | Typeconst
+    | Const ->
+      Some class_const_kind_name
+    | LocalVar
+    | Param ->
+      None
   in
-  match prefix, parent_class with
-  | Some prefix, Some parent_class ->
-      Some (Printf.sprintf "%s::%s::%s" prefix parent_class name)
-  | Some prefix, None ->
-      Some (Printf.sprintf "%s::%s" prefix name)
-  | None, _ -> None
+  match (prefix, parent_class) with
+  | (Some prefix, Some parent_class) ->
+    Some (Printf.sprintf "%s::%s::%s" prefix parent_class name)
+  | (Some prefix, None) -> Some (Printf.sprintf "%s::%s" prefix name)
+  | (None, _) -> None

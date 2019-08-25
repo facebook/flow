@@ -7,5 +7,6 @@
  *
  *)
 
-val parse: string -> string
-val create: string -> string
+val parse : string -> string
+
+val create : string -> string

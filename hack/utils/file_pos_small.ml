@@ -7,6 +7,7 @@
  *
  *)
 
+type t = int
 (**
  * Three values packed into one 64-bit integer:
  *
@@ -25,51 +26,63 @@
  *
  *
  *)
-type t = int
 
 let column_bits = 9
+
 let line_bits = 24
+
 let bol_bits = 30
 
-let mask bits = 1 lsl bits - 1
-let mask_by bits x = x land (mask bits)
+let mask bits = (1 lsl bits) - 1
+
+let mask_by bits x = x land mask bits
 
 let max_column = mask column_bits
+
 let max_line = mask line_bits
+
 let max_bol = mask bol_bits
 
 let dummy = -1
 
-let is_dummy t = (t = dummy)
+let is_dummy t = t = dummy
 
-let beg_of_line (pos:t) =
-  if is_dummy pos then 0 else mask_by bol_bits (pos lsr (line_bits + column_bits))
+let beg_of_line (pos : t) =
+  if is_dummy pos then
+    0
+  else
+    mask_by bol_bits (pos lsr (line_bits + column_bits))
 
-let line (pos:t) =
-  if is_dummy pos then 0 else mask_by line_bits (pos lsr column_bits)
+let line (pos : t) =
+  if is_dummy pos then
+    0
+  else
+    mask_by line_bits (pos lsr column_bits)
 
-let column (pos:t) =
-  if is_dummy pos then -1 else mask_by column_bits pos
+let column (pos : t) =
+  if is_dummy pos then
+    -1
+  else
+    mask_by column_bits pos
 
 let bol_line_col_unchecked bol line col =
-  if col < 0
-  then dummy
+  if col < 0 then
+    dummy
   else
-  bol lsl (column_bits + line_bits) + (line lsl column_bits) + col
+    (bol lsl (column_bits + line_bits)) + (line lsl column_bits) + col
 
 let bol_line_col bol line col =
-  if col > max_column || line > max_line || bol > max_bol
-  then None
-  else Some (bol_line_col_unchecked bol line col)
+  if col > max_column || line > max_line || bol > max_bol then
+    None
+  else
+    Some (bol_line_col_unchecked bol line col)
 
-let pp fmt pos = begin
+let pp fmt pos =
   Format.pp_print_int fmt (line pos);
   Format.pp_print_string fmt ":";
-  Format.pp_print_int fmt (column pos + 1);
-end
+  Format.pp_print_int fmt (column pos + 1)
 
 let compare = Pervasives.compare
-
 
 let beg_of_file = bol_line_col_unchecked 0 1 0
 
@@ -79,7 +92,9 @@ let of_line_column_offset ~line ~column ~offset =
   bol_line_col (offset - column) line column
 
 let of_lexing_pos lp =
-  bol_line_col lp.Lexing.pos_bol lp.Lexing.pos_lnum
+  bol_line_col
+    lp.Lexing.pos_bol
+    lp.Lexing.pos_lnum
     (lp.Lexing.pos_cnum - lp.Lexing.pos_bol)
 
 let of_lnum_bol_cnum ~pos_lnum ~pos_bol ~pos_cnum =
@@ -87,25 +102,24 @@ let of_lnum_bol_cnum ~pos_lnum ~pos_bol ~pos_cnum =
 
 (* accessors *)
 
-let offset t =
-  beg_of_line t + column t
+let offset t = beg_of_line t + column t
 
-let line_beg t = line t, beg_of_line t
+let line_beg t = (line t, beg_of_line t)
 
-let line_column t = line t, column t
+let line_column t = (line t, column t)
 
-let line_column_beg t = line t, column t, beg_of_line t
+let line_column_beg t = (line t, column t, beg_of_line t)
 
-let line_column_offset t = line t, column t, offset t
+let line_column_offset t = (line t, column t, offset t)
 
-let line_beg_offset t = line t, beg_of_line t, offset t
+let line_beg_offset t = (line t, beg_of_line t, offset t)
 
-let set_column c p =
-  bol_line_col_unchecked (beg_of_line p) (line p) c
+let set_column c p = bol_line_col_unchecked (beg_of_line p) (line p) c
 
-let to_lexing_pos pos_fname t = {
-  Lexing.pos_fname;
-  Lexing.pos_lnum = line t;
-  Lexing.pos_bol = beg_of_line t;
-  Lexing.pos_cnum = offset t;
-}
+let to_lexing_pos pos_fname t =
+  {
+    Lexing.pos_fname;
+    Lexing.pos_lnum = line t;
+    Lexing.pos_bol = beg_of_line t;
+    Lexing.pos_cnum = offset t;
+  }

@@ -9,11 +9,8 @@
 
 type 'a t = 'a list ref
 
-let create () =
-  ref []
+let create () = ref []
 
-let add t s =
-  t := s :: !t
+let add t s = t := s :: !t
 
-let segments t =
-  List.rev !t
+let segments t = List.rev !t

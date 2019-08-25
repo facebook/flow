@@ -7,10 +7,14 @@
  *
  *)
 
-val stop_workers: unit -> unit
-val resume_workers: unit -> unit
-val check_should_exit: unit -> unit
+val stop_workers : unit -> unit
 
-val set_on_worker_cancelled: (unit -> unit) -> unit
-val with_no_cancellations: (unit -> 'a) -> 'a
-val with_worker_exit: (unit -> 'a) -> 'a
+val resume_workers : unit -> unit
+
+val check_should_exit : unit -> unit
+
+val set_on_worker_cancelled : (unit -> unit) -> unit
+
+val with_no_cancellations : (unit -> 'a) -> 'a
+
+val with_worker_exit : (unit -> 'a) -> 'a
