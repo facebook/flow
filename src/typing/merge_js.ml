@@ -245,24 +245,26 @@ let detect_non_voidable_properties cx =
    * Even though this is happening post-merge, it is possible to encounter an
    * unresolved tvar, in which case it conservatively returns false.
    *)
-  let rec is_voidable = Type.(function
+  let rec is_voidable seen_ids = Type.(function
     | OpenT (_, id) ->
+      (* tvar is recursive: conservatively assume it is non-voidable *)
+      if (ISet.mem id seen_ids) then false else
       (match Flow_js.possible_types cx id with
       (* tvar has no lower bounds: we conservatively assume it's non-voidable
        * except in the special case when it also has no upper bounds
        *)
       | [] -> Flow_js.possible_uses cx id = []
       (* tvar is resolved: look at voidability of the resolved type *)
-      | [t] -> is_voidable t
+      | [t] -> is_voidable (ISet.add id seen_ids) t
       (* tvar is unresolved: conservatively assume it is non-voidable *)
       | _ -> false
       )
 
     (* a union is voidable if any of its members are voidable *)
-    | UnionT (_, rep) -> UnionRep.members rep |> List.exists is_voidable
+    | UnionT (_, rep) -> UnionRep.members rep |> List.exists (is_voidable seen_ids)
 
     (* an intersection is voidable if all of its members are voidable *)
-    | IntersectionT (_, rep) -> InterRep.members rep |> List.for_all is_voidable
+    | IntersectionT (_, rep) -> InterRep.members rep |> List.for_all (is_voidable seen_ids)
 
     (* trivially voidable *)
     | MaybeT _
@@ -283,7 +285,7 @@ let detect_non_voidable_properties cx =
     SMap.iter (fun name errors ->
       let should_error =
         (match SMap.get name pmap with
-        | Some (Type.Field (_, t, _)) -> not @@ is_voidable t
+        | Some (Type.Field (_, t, _)) -> not @@ (is_voidable ISet.empty t)
         | _ -> true
         )
       in

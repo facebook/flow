@@ -1277,3 +1277,9 @@ class P64 {
   }
   p = 0;
 }
+
+// https://github.com/facebook/flow/issues/8037
+declare function P65_a<F>(b: F): F & {};
+class P65 {
+  b = P65_a(this.b);
+}
