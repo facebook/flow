@@ -1057,5 +1057,13 @@ It is unsafe to call a method in the constructor before all class properties are
              ^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------------- test.js:1284:13
 
-Found 119 errors
+It is unsafe to read from a class property before it is definitely initialized. (`uninitialized-instance-property`)
+
+   1284|   b = P65_a(this.b);
+                     ^^^^^^
+
+
+
+Found 120 errors
