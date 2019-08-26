@@ -1,3 +1,7 @@
+### 0.106.2
+
+Fixed the stack overflow reported by [#8037](https://github.com/facebook/flow/issues/8037). Thanks [@lukeapage](https://github.com/lukeapage) for isolating the repro!
+
 ### 0.106.1
 
 Forgot to cherry-pick `[rollouts]` (an experimental new .flowconfig section) into v0.106.0
