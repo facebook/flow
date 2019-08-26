@@ -25,46 +25,44 @@ let sort_and_dedup refs =
   |> Core_list.map ~f:snd
 
 let find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
+  let options = genv.ServerEnv.options in
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
-  match File_input.content_of_file_input file_input with
-  | Error err -> Lwt.return (Error err, None)
-  | Ok content ->
-    let%lwt result =
-      let options = genv.ServerEnv.options in
-      FindRefsUtils.compute_ast_result options file_key content %>>= fun ast_info ->
-      let property_find_refs start_loc =
-        let%lwt def_info =
-          GetDefUtils.get_def_info ~reader ~options (!env) profiling file_key ast_info start_loc
-        in
-        def_info %>>= function
-        | None -> Lwt.return (Ok None)
-        | Some def_info ->
-          let%lwt refs = PropertyFindRefs.find_refs
-            ~reader genv env file_key ast_info def_info ~global ~multi_hop
-          in
-          Lwt.return (refs >>| Option.some)
+  let%lwt result =
+    File_input.content_of_file_input file_input %>>= fun content ->
+    FindRefsUtils.compute_ast_result options file_key content %>>= fun ast_info ->
+    let property_find_refs start_loc =
+      let%lwt def_info =
+        GetDefUtils.get_def_info ~reader ~options (!env) profiling file_key ast_info start_loc
       in
-      (* Start by running local variable find references *)
-      let (ast, _, _) = ast_info in
-      match VariableFindRefs.local_find_refs ast loc with
-      (* Got nothing from local variable find-refs, try object property find-refs *)
-      | None -> property_find_refs loc
-      | Some ((name, local_refs), local_def_loc) ->
-        let%lwt refs = property_find_refs local_def_loc in
-        refs %>>| fun refs ->
-        (* If property find-refs returned nothing (for example if we are importing from an untyped
-         * module), then fall back on the local refs we computed earlier. *)
-        Lwt.return (Some (Option.value ~default:((name, local_refs), None) refs))
+      def_info %>>= function
+      | None -> Lwt.return (Ok None)
+      | Some def_info ->
+        let%lwt refs = PropertyFindRefs.find_refs
+          ~reader genv env file_key ast_info def_info ~global ~multi_hop
+        in
+        Lwt.return (refs >>| Option.some)
     in
-    let result, dep_count =
-      match result with
-      | Ok (Some ((name, refs), dep_count)) ->
-          Ok (Some (name, sort_and_dedup refs)), dep_count
-      | Ok None ->
-          Ok None, None
-      | Error err ->
-          Error err, None
-    in
-    Lwt.return (result, dep_count)
+    (* Start by running local variable find references *)
+    let (ast, _, _) = ast_info in
+    match VariableFindRefs.local_find_refs ast loc with
+    (* Got nothing from local variable find-refs, try object property find-refs *)
+    | None -> property_find_refs loc
+    | Some ((name, local_refs), local_def_loc) ->
+      let%lwt refs = property_find_refs local_def_loc in
+      refs %>>| fun refs ->
+      (* If property find-refs returned nothing (for example if we are importing from an untyped
+        * module), then fall back on the local refs we computed earlier. *)
+      Lwt.return (Some (Option.value ~default:((name, local_refs), None) refs))
+  in
+  let result, dep_count =
+    match result with
+    | Ok (Some ((name, refs), dep_count)) ->
+        Ok (Some (name, sort_and_dedup refs)), dep_count
+    | Ok None ->
+        Ok None, None
+    | Error err ->
+        Error err, None
+  in
+  Lwt.return (result, dep_count)
