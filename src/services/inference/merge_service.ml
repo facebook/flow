@@ -9,7 +9,7 @@ open Utils_js
 open Loc_collections
 module Reqs = Merge_js.Reqs
 
-type 'a unit_result = ('a, Error_message.t) result
+type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 type 'a file_keyed_result = File_key.t * 'a unit_result
 type acc =
   (Flow_error.ErrorSet.t *
@@ -382,9 +382,9 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
            back to the master process, so we pattern match on it here to create
            an error result. *)
         let result = Error Error_message.(match unwrapped_exc with
-        | EDebugThrow loc -> EInternal (loc, DebugThrow)
-        | EMergeTimeout s -> EInternal (file_loc, MergeTimeout s)
-        | _ -> EInternal (file_loc, MergeJobException exc)
+        | EDebugThrow loc -> (loc, DebugThrow)
+        | EMergeTimeout s -> (file_loc, MergeTimeout s)
+        | _ -> (file_loc, MergeJobException exc)
         ) in
         (file, result) :: merged
   ) merged elements
@@ -470,8 +470,8 @@ let check options ~reader file =
          back to the master process, so we pattern match on it here to create
          an error result. *)
       Error Error_message.(match unwrapped_exc with
-      | EDebugThrow loc -> EInternal (loc, DebugThrow)
-      | ECheckTimeout s -> EInternal (file_loc, CheckTimeout s)
-      | _ -> EInternal (file_loc, CheckJobException exc))
+      | EDebugThrow loc -> (loc, DebugThrow)
+      | ECheckTimeout s -> (file_loc, CheckTimeout s)
+      | _ -> (file_loc, CheckJobException exc))
   in
   (file, result)

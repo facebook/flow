@@ -46,9 +46,9 @@ let init ~profiling ?focus_targets genv =
    *
    * Furthermore, if we're in lazy mode, we forego typechecking until later,
    * when it proceeds on an as-needed basis. *)
-  let%lwt env =
+  let%lwt env, first_internal_error =
     if not libs_ok || Options.is_lazy_mode options
-    then Lwt.return env
+    then Lwt.return (env, None)
     else Types_js.full_check ~profiling ~workers ?focus_targets ~options env
   in
 
@@ -59,7 +59,7 @@ let init ~profiling ?focus_targets genv =
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
      `errors` contains the current set of errors. *)
-  Lwt.return (env, last_estimates)
+  Lwt.return (env, last_estimates, first_internal_error)
 
 (* A thread that samples memory stats every second and then logs an idle heartbeat event even
  * `idle_period_in_seconds` seconds. *)
@@ -151,9 +151,9 @@ let create_program_init ~shared_mem_config ?focus_targets options =
   let genv = ServerEnvBuild.make_genv options handle in
 
   let program_init = fun profiling ->
-    let%lwt env = init ~profiling ?focus_targets genv in
+    let%lwt ret = init ~profiling ?focus_targets genv in
     if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
-    Lwt.return env
+    Lwt.return ret
   in
   genv, program_init
 
@@ -172,8 +172,8 @@ let run ~monitor_channels ~shared_mem_config options =
       Hh_logger.info "Initializing Server (This might take some time)";
 
       let should_print_summary = Options.should_profile options in
-      let%lwt profiling, (env, last_estimates) = Profiling_js.with_profiling_lwt program_init
-        ~label:"Init" ~should_print_summary
+      let%lwt profiling, (env, last_estimates, first_internal_error) =
+        Profiling_js.with_profiling_lwt program_init ~label:"Init" ~should_print_summary
       in
 
       let event = ServerStatus.(Finishing_up {
@@ -183,7 +183,7 @@ let run ~monitor_channels ~shared_mem_config options =
 
       begin match last_estimates with
       | None ->
-        FlowEventLogger.init_done profiling
+        FlowEventLogger.init_done ?first_internal_error profiling
       | Some { Recheck_stats.
           estimated_time_to_recheck;
           estimated_time_to_restart;
@@ -199,6 +199,7 @@ let run ~monitor_channels ~shared_mem_config options =
             ~estimated_time_per_file
             ~estimated_files_to_recheck
             ~estimated_files_to_init
+            ?first_internal_error
             profiling
       end;
 
@@ -242,9 +243,9 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
       create_program_init ~shared_mem_config ?focus_targets options in
 
     let should_print_summary = Options.should_profile options in
-    let%lwt profiling, (print_errors, errors, warnings) =
+    let%lwt profiling, (print_errors, errors, warnings, first_internal_error) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
-        let%lwt env, _ = program_init profiling in
+        let%lwt env, _, first_internal_error = program_init profiling in
         let reader = State_reader.create () in
         let%lwt (errors, warnings, suppressed_errors) =
           Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling
@@ -255,7 +256,7 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
           Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling
             ~f:(fun () -> Lwt.return (format_errors collated_errors))
         in
-        Lwt.return (print_errors, errors, warnings)
+        Lwt.return (print_errors, errors, warnings, first_internal_error)
       )
     in
 
@@ -266,7 +267,7 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
       info = InitSummary}) in
     MonitorRPC.status_update ~event;
 
-    FlowEventLogger.init_done profiling;
+    FlowEventLogger.init_done ?first_internal_error profiling;
 
     Lwt.return (errors, warnings)
   in

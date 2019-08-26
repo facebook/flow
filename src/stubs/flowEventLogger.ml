@@ -59,6 +59,7 @@ let init_done
   ?estimated_time_per_file:_
   ?estimated_files_to_recheck:_
   ?estimated_files_to_init:_
+  ?first_internal_error:_
   _profiling = ()
 let init_flow_command ~version:_ = ()
 let killed _ = ()
@@ -81,6 +82,7 @@ let recheck
     ~estimated_time_per_file:_
     ~estimated_files_to_recheck:_
     ~estimated_files_to_init:_
+    ~first_internal_error:_
     ~scm_update_distance:_
     ~scm_changed_mergebase:_ = ()
 let murdered_by_oom_killer _ = ()

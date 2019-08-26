@@ -1039,6 +1039,56 @@ let mk_prop_message = Errors.Friendly.(function
   | Some prop -> [text "property "; code prop]
 )
 
+let string_of_internal_error = function
+| PackageHeapNotFound pkg ->
+    spf "package %S was not found in the PackageHeap!" pkg
+| AbnormalControlFlow ->
+    "abnormal control flow"
+| MethodNotAFunction ->
+    "expected function type"
+| OptionalMethod ->
+    "optional methods are not supported"
+| OpenPredWithoutSubst ->
+    "OpenPredT ~> OpenPredT without substitution"
+| PredFunWithoutParamNames ->
+    "FunT -> FunT no params"
+| UnsupportedGuardPredicate pred ->
+    spf "unsupported guard predicate (%s)" pred
+| BreakEnvMissingForCase ->
+    "break env missing for case"
+| PropertyDescriptorPropertyCannotBeRead ->
+    "unexpected property in properties object"
+| ForInLHS ->
+    "unexpected LHS in for...in"
+| ForOfLHS ->
+    "unexpected LHS in for...of"
+| InstanceLookupComputed ->
+    "unexpected computed property lookup on InstanceT"
+| PropRefComputedOpen ->
+    "unexpected open computed property element type"
+| PropRefComputedLiteral ->
+    "unexpected literal computed property element type"
+| ShadowReadComputed ->
+    "unexpected shadow read on computed property"
+| ShadowWriteComputed ->
+    "unexpected shadow write on computed property"
+| RestParameterNotIdentifierPattern ->
+    "unexpected rest parameter, expected an identifier pattern"
+| InterfaceTypeSpread ->
+    "unexpected spread property in interface"
+| DebugThrow ->
+    "debug throw"
+| MergeTimeout s ->
+    spf "merge job timed out after %0.2f seconds" s
+| MergeJobException exc ->
+    "uncaught exception: "^(Exception.to_string exc)
+| CheckTimeout s ->
+    spf "check job timed out after %0.2f seconds" s
+| CheckJobException exc ->
+    "uncaught exception: "^(Exception.to_string exc)
+| UnexpectedTypeapp s ->
+    "unexpected typeapp: "^s
+
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
 type 'loc friendly_message_recipe =
@@ -1492,56 +1542,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ], use_op)
 
     | EInternal (_, internal_error) ->
-      let msg = match internal_error with
-      | PackageHeapNotFound pkg ->
-          spf "package %S was not found in the PackageHeap!" pkg
-      | AbnormalControlFlow ->
-          "abnormal control flow"
-      | MethodNotAFunction ->
-          "expected function type"
-      | OptionalMethod ->
-          "optional methods are not supported"
-      | OpenPredWithoutSubst ->
-          "OpenPredT ~> OpenPredT without substitution"
-      | PredFunWithoutParamNames ->
-          "FunT -> FunT no params"
-      | UnsupportedGuardPredicate pred ->
-          spf "unsupported guard predicate (%s)" pred
-      | BreakEnvMissingForCase ->
-          "break env missing for case"
-      | PropertyDescriptorPropertyCannotBeRead ->
-          "unexpected property in properties object"
-      | ForInLHS ->
-          "unexpected LHS in for...in"
-      | ForOfLHS ->
-          "unexpected LHS in for...of"
-      | InstanceLookupComputed ->
-          "unexpected computed property lookup on InstanceT"
-      | PropRefComputedOpen ->
-          "unexpected open computed property element type"
-      | PropRefComputedLiteral ->
-          "unexpected literal computed property element type"
-      | ShadowReadComputed ->
-          "unexpected shadow read on computed property"
-      | ShadowWriteComputed ->
-          "unexpected shadow write on computed property"
-      | RestParameterNotIdentifierPattern ->
-          "unexpected rest parameter, expected an identifier pattern"
-      | InterfaceTypeSpread ->
-          "unexpected spread property in interface"
-      | DebugThrow ->
-          "debug throw"
-      | MergeTimeout s ->
-          spf "merge job timed out after %0.2f seconds" s
-      | MergeJobException exc ->
-          "uncaught exception: "^(Exception.to_string exc)
-      | CheckTimeout s ->
-          spf "check job timed out after %0.2f seconds" s
-      | CheckJobException exc ->
-          "uncaught exception: "^(Exception.to_string exc)
-      | UnexpectedTypeapp s ->
-          "unexpected typeapp: "^s
-      in
+      let msg = string_of_internal_error internal_error in
       Normal [text (spf "Internal error: %s" msg)]
 
     | EUnsupportedSyntax (_, unsupported_syntax) ->

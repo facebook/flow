@@ -40,7 +40,7 @@ val full_check:
   workers:MultiWorkerLwt.worker list option ->
   ?focus_targets:FilenameSet.t ->
   ServerEnv.env ->
-  ServerEnv.env Lwt.t
+  (ServerEnv.env * string option) Lwt.t
 
 val basic_check_contents:
   options: Options.t ->

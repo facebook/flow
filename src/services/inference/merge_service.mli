@@ -7,7 +7,7 @@
 
 open Utils_js
 
-type 'a unit_result = ('a, Error_message.t) result
+type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 type 'a file_keyed_result = File_key.t * 'a unit_result
 type acc =
   (Flow_error.ErrorSet.t *
