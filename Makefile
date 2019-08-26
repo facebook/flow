@@ -268,10 +268,10 @@ all-homebrew:
 	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
 	export OPAMYES="1"; \
 	export FLOW_RELEASE="1"; \
-	opam init --no-setup --disable-sandboxing && \
-	opam pin add -n flowtype . && \
-	opam config exec -- opam install flowtype --deps-only && \
-	opam config exec -- make
+	opam init --bare --no-setup --disable-sandboxing && \
+	rm -rf _opam && \
+	opam switch create . --deps-only && \
+	opam exec -- make
 
 clean:
 	ocamlbuild -clean
@@ -434,6 +434,9 @@ dist/npm-%.tgz: FORCE
 FORCE:
 
 .PHONY: all js build-flow build-flow-debug FORCE
+
+# Don't run in parallel because of https://github.com/ocaml/ocamlbuild/issues/300
+.NOTPARALLEL:
 
 # This rule runs if any .ml or .mli file has been touched. It recursively calls
 # ocamldep to figure out all the modules that we use to build src/flow.ml
