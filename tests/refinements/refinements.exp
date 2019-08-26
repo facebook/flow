@@ -3350,28 +3350,16 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because undefined [1] is not a number.
 
-   undef.js:74:13
    74|   if (100 * undefined) {
-                   ^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+                   ^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:77:7
 
 Cannot perform arithmetic operation because undefined [1] is not a number.
 
-   undef.js:77:7
    77|   if (undefined * 100) {
-             ^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+             ^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:7:5

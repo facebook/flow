@@ -1684,9 +1684,9 @@ Cannot create `Legacy_OptionalProps` element because undefined [1] is incompatib
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-    13| declare var undefined: void;
-                               ^^^^ [1]
+   test.js:782:28
+   782| <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
+                                   ^^^^^^^^^ [1]
    <BUILTINS>/react.js:470:36
    470|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]

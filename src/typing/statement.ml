@@ -2986,7 +2986,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
    * `void` in `core.js`. While possible to re-declare `undefined`, it is
    * unlikely. The tradeoff is worth it. *)
   | Identifier (id_loc, ({ Ast.Identifier.name= "undefined"; comments= _ } as name)) ->
-      let t = mod_reason_of_t annot_reason (identifier cx name loc) in
+      let t = Flow.reposition cx loc ~annot_loc:loc (identifier cx name loc) in
       (loc, t), Identifier ((id_loc, t), name)
 
   | Identifier (id_loc, name) ->

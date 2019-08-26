@@ -45,9 +45,9 @@ Cannot cast `bar[x]` to boolean because:
             ^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   undefined2.js:10:7
+   10|       undefined,
+             ^^^^^^^^^ [1]
    undefined2.js:13:14
    13|     (bar[x]: boolean); // error, string or void
                     ^^^^^^^ [2]
@@ -81,9 +81,9 @@ Cannot cast `bar[x]` to boolean because:
             ^^^^^^
 
 References:
-   undefined2.js:17:21
-   17|     var undefined = 'foo';
-                           ^^^^^ [1]
+   undefined2.js:26:7
+   26|       undefined,
+             ^^^^^^^^^ [1]
    undefined2.js:29:14
    29|     (bar[x]: boolean); // error, string only
                     ^^^^^^^ [2]

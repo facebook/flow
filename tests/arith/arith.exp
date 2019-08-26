@@ -120,9 +120,9 @@ Cannot add `"foo"` and `undefined` because undefined [1] is incompatible with st
            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   Arith.js:60:13
+   60| str("foo" + undefined); // error
+                   ^^^^^^^^^ [1]
    Arith.js:60:5
    60| str("foo" + undefined); // error
            ^^^^^ [2]
@@ -137,9 +137,9 @@ Cannot add `undefined` and `"foo"` because undefined [1] is incompatible with st
            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   Arith.js:61:5
+   61| str(undefined + "foo"); // error
+           ^^^^^^^^^ [1]
    Arith.js:61:17
    61| str(undefined + "foo"); // error
                        ^^^^^ [2]
@@ -678,12 +678,9 @@ Cannot compare undefined [1] to null [2].
 
    relational.js:18:2
    18| (undefined < null); // error
-        ^^^^^^^^^
+        ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
    relational.js:18:14
    18| (undefined < null); // error
                     ^^^^ [2]
@@ -698,23 +695,23 @@ Cannot compare null [1] to undefined [2].
         ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [2]
+   relational.js:19:9
+   19| (null < undefined); // error
+               ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- relational.js:20:2
 
-Cannot compare undefined [1] to undefined [1].
+Cannot compare undefined [1] to undefined [2].
 
    relational.js:20:2
    20| (undefined < undefined); // error
-        ^^^^^^^^^
+        ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   relational.js:20:14
+   20| (undefined < undefined); // error
+                    ^^^^^^^^^ [2]
 
 
 

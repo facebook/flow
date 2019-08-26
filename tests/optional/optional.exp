@@ -280,13 +280,13 @@ Error --------------------------------------------------------------------------
 Cannot get `x.duck` because property `duck` is missing in undefined [1].
 
    undefined.js:8:12
-    8|     return x.duck;
-                  ^^^^^^
+   8|     return x.duck;
+                 ^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   undefined.js:3:21
+   3| function foo(bar? = undefined) {
+                          ^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:8:12

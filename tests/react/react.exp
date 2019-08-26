@@ -3136,16 +3136,16 @@ Error --------------------------------------------------------------------------
 Cannot create `MyComponent` element because undefined [1] is incompatible with string [2] in property `title`.
 
    undefined_prop.js:7:1
-    7| <MyComponent title={undefined} />;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   7| <MyComponent title={undefined} />;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   undefined_prop.js:7:21
+   7| <MyComponent title={undefined} />;
+                          ^^^^^^^^^ [1]
    undefined_prop.js:5:51
-    5| class MyComponent extends React.Component<{title: string}> {}
-                                                         ^^^^^^ [2]
+   5| class MyComponent extends React.Component<{title: string}> {}
+                                                        ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ useCallback_hook.js:6:3
