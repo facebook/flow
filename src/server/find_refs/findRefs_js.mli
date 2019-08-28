@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val find_refs:
+val find_global_refs:
   reader: State_reader.t ->
   genv: ServerEnv.genv ->
   env: ServerEnv.env ref ->
@@ -13,6 +13,15 @@ val find_refs:
   file_input: File_input.t ->
   line: int ->
   col: int ->
-  global: bool ->
   multi_hop: bool ->
   (FindRefsTypes.find_refs_result * int option) Lwt.t
+
+val find_local_refs:
+  reader: State_reader.t ->
+  options: Options.t ->
+  env: ServerEnv.env ->
+  profiling: Profiling_js.running ->
+  file_input: File_input.t ->
+  line: int ->
+  col: int ->
+  FindRefsTypes.find_refs_result Lwt.t

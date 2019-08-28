@@ -144,7 +144,7 @@ let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
   (* TODO verify that new name is a valid identifier *)
   (* TODO maybe do something with the json? *)
   (* TODO support rename based on multi-hop find-refs *)
-  let%lwt find_refs_response, _ = FindRefs_js.find_refs
+  let%lwt find_refs_response, _ = FindRefs_js.find_global_refs
     ~reader
     ~genv
     ~env
@@ -152,7 +152,6 @@ let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
     ~file_input
     ~line
     ~col
-    ~global:true
     ~multi_hop:false
   in
   find_refs_response %>>= begin function

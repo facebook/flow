@@ -417,7 +417,7 @@ let find_related_defs
   in
   loop def_info FilenameSet.empty
 
-let find_refs_global ~reader genv env multi_hop def_info =
+let find_global_refs ~reader genv env ~multi_hop def_info =
   let%lwt def_info =
     if multi_hop then
       match def_info with
@@ -451,13 +451,6 @@ let find_refs_global ~reader genv env multi_hop def_info =
   refs %>>| fun refs ->
   Lwt.return ((display_name_of_def_info def_info, refs), Some dependent_file_count)
 
-let find_refs_local ~reader ~options file_key ast_info def_info =
+let find_local_refs ~reader ~options file_key ast_info def_info =
   find_refs_in_file ~reader options ast_info file_key def_info >>= fun refs ->
-  Ok ((display_name_of_def_info def_info, refs), None)
-
-let find_refs ~reader genv env file_key ast_info def_info ~global ~multi_hop =
-  if global || multi_hop then
-    find_refs_global ~reader genv env multi_hop def_info
-  else
-    Lwt.return @@ find_refs_local
-      ~reader ~options:genv.ServerEnv.options file_key ast_info def_info
+  Ok (display_name_of_def_info def_info, refs)

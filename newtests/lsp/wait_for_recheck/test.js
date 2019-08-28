@@ -161,7 +161,7 @@ export default suite(
     ]).waitForRecheck(false),
 
     test(
-      'textDocument/documentHighlight will time out with wait_for_recheck=false',
+      'textDocument/documentHighlight will return with wait_for_recheck=false',
       [
         addFiles('references.js', 'references2.js'),
         ideStartAndConnect(),
@@ -173,7 +173,10 @@ export default suite(
           textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
           position: {line: 9, character: 17}, // on an identifier
         })
-          .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+          .verifyAllIDEMessagesInStep(
+            ['textDocument/documentHighlight'],
+            [...lspIgnoreStatusAndCancellation],
+          )
           .timeout(2000),
       ],
     ).waitForRecheck(false),

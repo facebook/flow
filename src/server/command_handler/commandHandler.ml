@@ -344,14 +344,18 @@ let convert_find_refs_result
  * the env. Furthermore, it is written using a lot of `result`'s, which make it really hard to
  * properly pass through the env. Therefore, it uses an `ServerEnv.env ref` instead of an
  * `ServerEnv.env`. *)
-let find_refs ~reader ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
+let find_global_refs ~reader ~genv ~env ~profiling (file_input, line, col, multi_hop) =
   let env = ref env in
   let%lwt result, dep_count =
-    FindRefs_js.find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
+    FindRefs_js.find_global_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~multi_hop
   in
   let env = !env in
   let result = Core_result.map result ~f:convert_find_refs_result in
   Lwt.return (env, result, dep_count)
+
+let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
+  FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
+  |> Lwt_result.map convert_find_refs_result
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
@@ -439,7 +443,13 @@ let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_
 
 let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~profiling ~env =
   let%lwt env, result, dep_count =
-    find_refs ~reader ~genv ~env ~profiling (filename, line, char, global, multi_hop) in
+    if global || multi_hop then
+      find_global_refs ~reader ~genv ~env ~profiling (filename, line, char, multi_hop)
+    else
+      let options = genv.ServerEnv.options in
+      let%lwt result = find_local_refs ~reader ~options ~env ~profiling (filename, line, char) in
+      Lwt.return (env, result, None)
+  in
   let json_data = Some (Hh_json.JSON_Object (
     ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE")) ::
     ("global", Hh_json.JSON_Bool global) ::
@@ -1163,34 +1173,30 @@ let handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metada
   end
 
 let handle_persistent_document_highlight
-    ~reader ~genv ~id ~params ~metadata ~client ~profiling ~env =
+    ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
-  let global, multi_hop = false, false in (* multi_hop implies global *)
-  let%lwt env, result, _dep_count =
-    find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
-  in
-  (* ignore _dep_count which is only relevant for global find_refs *)
+  let%lwt result = find_local_refs ~reader ~options ~env ~profiling (file, line, char) in
   let extra_data = Some (Hh_json.JSON_Object [
     "result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE")
   ]) in
   let metadata = with_data ~extra_data metadata in
   begin match result with
     | Ok (Some (_name, locs)) ->
-      (* All the locs are implicitly in the same file, because global=false. *)
+      (* All the locs are implicitly in the same file *)
       let loc_to_highlight loc = { DocumentHighlight.
         range = Flow_lsp_conversions.loc_to_lsp_range loc;
         kind = Some DocumentHighlight.Text;
       } in
       let r = DocumentHighlightResult (Core_list.map ~f:loc_to_highlight locs) in
       let response = ResponseMessage (id, r) in
-      Lwt.return (LspResponse (Ok (env, Some response, metadata)))
+      Lwt.return (LspResponse (Ok ((), Some response, metadata)))
     | Ok (None) ->
       (* e.g. if it was requested on a place that's not even an identifier *)
       let r = DocumentHighlightResult [] in
       let response = ResponseMessage (id, r) in
-      Lwt.return (LspResponse (Ok (env, Some response, metadata)))
+      Lwt.return (LspResponse (Ok ((), Some response, metadata)))
     | Error reason ->
-      Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
+      Lwt.return (LspResponse (Error ((), with_error metadata ~reason)))
   end
 
 let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~profiling ~env =
@@ -1280,9 +1286,8 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
   let { loc; context = { includeDeclaration=_; includeIndirectReferences=multi_hop } } = params in
   (* TODO: respect includeDeclaration *)
   let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
-  let global = true in
   let%lwt env, result, dep_count =
-    find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
+    find_global_refs ~reader ~genv ~env ~profiling (file, line, char, multi_hop)
   in
   let extra_data = Some (Hh_json.JSON_Object (
     ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE")) ::
@@ -1564,9 +1569,8 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     )
 
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params), metadata) ->
-    (* Like `flow find-refs`, this is kind of slow and mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (
-      handle_persistent_document_highlight ~reader ~genv ~id ~params ~metadata
+    mk_parallelizable_persistent ~options (
+      handle_persistent_document_highlight ~reader ~options ~id ~params ~metadata
     )
 
   | LspToServer (RequestMessage (id, TypeCoverageRequest params), metadata) ->
