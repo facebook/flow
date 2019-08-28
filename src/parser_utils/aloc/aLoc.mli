@@ -13,8 +13,6 @@ type key
 
 type t
 
-val hash: t -> int
-
 (* Creates an ALoc.t with a concrete underlying representation *)
 val of_loc: Loc.t -> t
 
@@ -57,6 +55,14 @@ val source: t -> File_key.t option
 val update_source: (File_key.t option -> File_key.t option) -> t -> t
 
 val compare: t -> t -> int
+(* Only does the expensive source compare if positional comparisons tie.
+ * This is useful for data structures that do not need equal files to be
+ * sorted closely to each other.
+ *
+ * This comparison also does not throw an error when concrete and abstract
+ * locations are compared.
+ *)
+val quick_compare: t -> t -> int
 val equal: t -> t -> bool
 
 (* If one of the provided locations has an abstract underlying representation, and the other is
