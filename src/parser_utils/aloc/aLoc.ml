@@ -32,8 +32,6 @@ module Repr: sig
     | Abstract
     | Concrete
 
-  val hash: t -> int
-
   val of_loc: Loc.t -> t
   val of_key: File_key.t option -> key -> t
 
@@ -69,11 +67,6 @@ end = struct
     | Concrete
 
   type t = Loc.t
-
-  (* The number of nodes of t is expected to remain small, so to hash t we can use Hashtbl.hash with
-     maximum settings for meaningful and total nodes to minimize collisions *)
-  let hash (loc: t) =
-    Hashtbl.hash_param 256 256 loc
 
   type abstract_t = {
     (* This field has the same type in Loc.t *)
@@ -135,8 +128,6 @@ end = struct
 end
 
 type t = Repr.t
-
-let hash = Repr.hash
 
 let of_loc = Repr.of_loc
 
@@ -239,6 +230,32 @@ let compare loc1 loc2 =
           (debug_to_string ~include_source:true loc2)
       )
   else source_compare
+
+let quick_compare loc1 loc2 =
+  (* String comparisons are expensive, so we should only evaluate this lambda if
+   * the other information we have ties *)
+  let source_compare () = File_key.compare_opt (Repr.source loc1) (Repr.source loc2) in
+  match Repr.kind loc1, Repr.kind loc2 with
+  | Repr.Abstract, Repr.Abstract ->
+    let k1 = Repr.get_key_exn loc1 in
+    let k2 = Repr.get_key_exn loc2 in
+    let key_compare = compare_key k1 k2 in
+    if key_compare = 0 then source_compare ()
+    else key_compare
+  | Repr.Concrete, Repr.Concrete ->
+    let l1 = Repr.to_loc_exn loc1 in
+    let l2 = Repr.to_loc_exn loc2 in
+    let start_compare = Loc.pos_cmp l1.Loc.start l2.Loc.start in
+    if start_compare = 0 then (
+      let end_compare = Loc.pos_cmp l1.Loc._end l2.Loc._end in
+      if end_compare = 0 then source_compare ()
+      else end_compare
+    ) else start_compare
+  | Repr.ALocNone, Repr.ALocNone -> 0
+  | Repr.ALocNone, (Repr.Abstract | Repr.Concrete) -> -1
+  | (Repr.Abstract | Repr.Concrete), Repr.ALocNone -> 1
+  | Repr.Abstract, Repr.Concrete -> 1
+  | Repr.Concrete, Repr.Abstract -> -1
 
 let equal loc1 loc2 = compare loc1 loc2 = 0
 

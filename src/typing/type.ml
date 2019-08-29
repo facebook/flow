@@ -1410,12 +1410,12 @@ end = struct
      see the object twice between the merge and check phases, we still hit
      the object to object fast path when checking *)
   type id =
-    | Source of int
+    | Source of ALoc.t
     | Generated of int
 
   let compare_id id1 id2 =
     match id1, id2 with
-    | Source i1, Source i2 -> i1 - i2
+    | Source loc1, Source loc2 -> ALoc.quick_compare loc1 loc2
     | Generated i1, Generated i2 -> i1 - i2
     | Source _, Generated _ -> -1
     | Generated _, Source _ -> 1
@@ -1459,13 +1459,13 @@ end = struct
 
   let generate_id = Reason.mk_id %> id_of_int
 
-  let id_of_aloc loc = Source (ALoc.hash loc)
+  let id_of_aloc loc = Source loc
 
   let fake_id = Generated 0
 
   let string_of_id = function
   | Generated id -> string_of_int id
-  | Source id -> string_of_int id
+  | Source id -> string_of_aloc id
 
   let extract_named_exports pmap =
     SMap.fold (fun x p tmap ->
