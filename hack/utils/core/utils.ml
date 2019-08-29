@@ -186,6 +186,27 @@ let split_ns_from_name (s : string) : string * string =
 
 let double_colon = Str.regexp_string "::"
 
+(* Expands a namespace using the namespace map, a list of (string, string) tuples
+ * Ensures the beginning backslash is present
+ * 
+ * "Str\\join" -> "\\HH\\Lib\\Str\\join" (when "Str", "HH\\Lib\\Str" is present in map)
+ * "HH\\Lib\\Str\\Join" -> "\\HH\\Lib\\Str\\join"
+ * "\\HH\\Lib\\Str\\Join" -> "\\HH\\Lib\\Str\\join"
+ * "just_plain_func" -> "\\just_plain_func"
+ *)
+let expand_namespace (ns_map : (string * string) list) (s : string) : string =
+  let (raw_ns, name) = split_ns_from_name s in
+  (* Might need left backslash *)
+  let ns = add_ns raw_ns in
+  let matching_alias =
+    List.find ns_map (fun (alias, _) ->
+        let fixup = add_ns alias ^ "\\" in
+        fixup = ns)
+  in
+  match matching_alias with
+  | None -> add_ns s
+  | Some (_, expanded) -> add_ns (expanded ^ "\\" ^ name)
+
 (*
  * "A::B" -> Some "A" * "B"
  * "::B" "A::" "Abc" -> None

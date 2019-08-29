@@ -81,6 +81,8 @@ val strip_all_ns : string -> string
 
 val split_ns_from_name : string -> string * string
 
+val expand_namespace : (string * string) list -> string -> string
+
 val split_class_from_method : string -> (string * string) option
 
 val iter2_shortest : ('a -> 'b -> 'c) -> 'a list -> 'b list -> unit
