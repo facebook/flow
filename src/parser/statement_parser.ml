@@ -987,6 +987,9 @@ module Statement
             (* export default class foo { ... } *)
             let _class = Object.class_declaration env decorators in
             Declaration _class
+          else if Peek.token env = T_ENUM then
+            (* export default enum foo { ... } *)
+            Declaration (Declaration.enum_declaration env)
           else
             (* export default [assignment expression]; *)
             let expr = Parse.assignment env in
@@ -1068,7 +1071,8 @@ module Statement
     (* not using Peek.is_function here because it would guard all of the
       * cases *)
     | T_ASYNC
-    | T_FUNCTION ->
+    | T_FUNCTION
+    | T_ENUM ->
         let open Statement.ExportNamedDeclaration in
         let stmt = Parse.statement_list_item env ~decorators:decorators in
         let names = Statement.(
@@ -1080,6 +1084,7 @@ module Statement
             ) [] declarations
           | (loc, ClassDeclaration { Class.id = Some id; _; })
           | (loc, FunctionDeclaration { Function.id = Some id; _; })
+          | (loc, EnumDeclaration {EnumDeclaration.id; _})
             -> [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
           | (loc, ClassDeclaration { Class.id = None; _; }) ->
             error_at env (loc, Parse_error.ExportNamelessClass);

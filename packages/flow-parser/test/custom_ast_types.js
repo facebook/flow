@@ -96,6 +96,7 @@ def("ExportDefaultDeclaration")
       def("FunctionDeclaration"), // TODO: should be NullableFunctionDeclaration
       def("VariableDeclaration"),
       def("InterfaceDeclaration"),
+      def("EnumDeclaration"),
       def("TypeAlias"),
       def("OpaqueType"),
       def("Expression")))
