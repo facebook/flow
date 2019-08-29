@@ -1,3 +1,7 @@
+### 0.106.3
+
+We found and fixed a bug introduced in 0.105.0. Some internal code was using a hashing function and assumed collisions were far less likely than they proved to be. This could lead to random nonsensical errors which would then disappear, usually involving missing object properties. This likely only affected extremely large projects.
+
 ### 0.106.2
 
 Fixed the stack overflow reported by [#8037](https://github.com/facebook/flow/issues/8037). Thanks [@lukeapage](https://github.com/lukeapage) for isolating the repro!
