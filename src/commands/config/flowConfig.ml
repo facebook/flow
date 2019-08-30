@@ -1234,6 +1234,7 @@ let haste_name_reducers c = c.options.Opts.haste_name_reducers
 let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist
 let haste_paths_whitelist c = c.options.Opts.haste_paths_whitelist
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
+let ignore_dotfiles c = c.options.Opts.ignore_dotfiles
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 let include_warnings c = c.options.Opts.include_warnings
 let lazy_mode c = c.options.Opts.lazy_mode

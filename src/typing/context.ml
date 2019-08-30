@@ -200,7 +200,6 @@ let metadata_of_options options = {
   facebook_fbs = Options.facebook_fbs options;
   facebook_fbt = Options.facebook_fbt options;
   haste_module_ref_prefix = Options.haste_module_ref_prefix options;
-  ignore_dot_files = Options.ignore_dot_files options;
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
   max_workers = Options.max_workers options;
@@ -369,7 +368,6 @@ let should_strip_root cx = cx.metadata.strip_root
 let suppress_comments cx = cx.metadata.suppress_comments
 let suppress_types cx = cx.metadata.suppress_types
 let default_lib_dir cx = cx.metadata.default_lib_dir
-
 let type_asserts_map cx = cx.sig_cx.type_asserts_map
 let type_graph cx = cx.sig_cx.type_graph
 let trust_mode cx = cx.metadata.trust_mode

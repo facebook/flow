@@ -599,6 +599,7 @@ let file_options =
       declarations;
       includes;
       lib_paths;
+      ignore_dotfiles = FlowConfig.ignore_dotfiles flowconfig;
       module_file_exts = FlowConfig.module_file_exts flowconfig;
       module_resource_exts = FlowConfig.module_resource_exts flowconfig;
       node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
@@ -1132,6 +1133,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
+    opt_ignore_dotfiles = FlowConfig.ignore_dotfiles flowconfig;
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
     opt_include_warnings =
       options_flags.include_warnings

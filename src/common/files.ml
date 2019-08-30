@@ -12,6 +12,7 @@ type options = {
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
+  ignore_dotfiles: bool;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
   module_file_exts: SSet.t;
@@ -20,6 +21,7 @@ type options = {
 }
 
 let default_lib_dir options = options.default_lib_dir
+let ignore_dotfiles options = options.ignore_dotfiles
 let ignores options = options.ignores
 let untyped options = options.untyped
 let declarations options = options.declarations
@@ -97,10 +99,11 @@ let is_valid_path =
   fun ~options ->
     let file_exts = get_all_watched_extensions options in
 
-    fun path ->
+    fun path  ->
       let basename = Filename.basename path in
-      not (is_dot_file basename && options.ignore_dotfiles) && (check_ext file_exts basename || basename = "package.json")
-      check_ext file_exts basename || basename = "package.json"
+      if ignore_dotfiles options
+      then not (is_dot_file basename) && (check_ext file_exts basename || basename = "package.json")
+      else check_ext file_exts basename || basename = "package.json"
 
 let is_node_module options path =
   List.mem (Filename.basename path) options.node_resolver_dirnames
