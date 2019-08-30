@@ -3513,20 +3513,20 @@ References:
 
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:34:40
 
-Cannot call `React.useImperativeHandle` with function bound to `create` because inexact `Interface` [1] is incompatible
-with exact object literal [2] in the return value.
+Cannot call `React.useImperativeHandle` with function bound to `create` because inexact object literal [1] is
+incompatible with exact `Interface` [2] in the return value.
 
    useImperativeHandle_hook.js:34:40
    34|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
                                               ^^^^^^^^^^
 
 References:
-   useImperativeHandle_hook.js:33:39
-   33|   const refSetter = (instance: null | Interface) => {};
-                                             ^^^^^^^^^ [1]
    useImperativeHandle_hook.js:34:47
    34|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
-                                                     ^^ [2]
+                                                     ^^ [1]
+   useImperativeHandle_hook.js:33:39
+   33|   const refSetter = (instance: null | Interface) => {};
+                                             ^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:6:3

@@ -10442,13 +10442,7 @@ and multiflow_partial =
     | ([], _) -> [], arglist, parlist
 
     | (tin::tins, (name, tout)::touts) ->
-      (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
-         through a `ReposLowerT` to make sure that the concrete type points at
-         the arg's location. however, if `tin` is an implicit type argument
-         (e.g. the `x` in `function foo<T>(x: T)`), then don't reposition it
-         because implicit type args have no explicit location to point at.
-         instead, let it flow through transparently, so that we point at the
-         place that constrained the type arg. this is pretty hacky. *)
+      (* flow `tin` (argument) to `tout` (param). *)
       let tout =
         let use_op = Frame (FunParam {
           n;
@@ -10456,10 +10450,7 @@ and multiflow_partial =
           lower=(reason_of_t tin);
           upper=(reason_of_t tout);
         }, use_op) in
-        let u = UseT (use_op, tout) in
-        match desc_of_t tin with
-        | RTypeParam _ -> u
-        | _ -> ReposLowerT (reason_of_t tin, false, u)
+        UseT (use_op, tout)
       in
       let used_pairs, unused_arglist, unused_parlist =
         multiflow_non_spreads cx ~use_op (n + 1) (tins, touts) in

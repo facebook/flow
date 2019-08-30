@@ -485,6 +485,48 @@ References:
                               ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- call_error_generic.js:23:5
+
+Cannot call `bar` with `foo` bound to `x` because null or undefined [1] is incompatible with string [2] in type argument
+`T` [3].
+
+   call_error_generic.js:23:5
+   23| bar(foo);
+           ^^^
+
+References:
+   call_error_generic.js:3:19
+                         v-
+    3| declare var some: ?{
+    4|   x: string;
+    5| }
+       ^ [1]
+   call_error_generic.js:21:25
+   21| function bar(x: ROArray<string>) { }
+                               ^^^^^^ [2]
+   call_error_generic.js:10:24
+   10| declare class ROArray<+T> { }
+                              ^ [3]
+
+
+Error -------------------------------------------------------------------------------------- call_error_generic2.js:11:8
+
+Cannot call `bar2` with `userRef` bound to `fragmentRef` because property `$data` is missing in object type [1] but
+exists in object type [2].
+
+   call_error_generic2.js:11:8
+   11|   bar2(userRef);
+              ^^^^^^^
+
+References:
+   call_error_generic2.js:9:33
+    9| function foo(props: { userRef?: {} }) {
+                                       ^^ [1]
+   call_error_generic2.js:3:30
+    3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
+                                    ^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- function.js:21:3
 
 Cannot resolve name `React`.
@@ -760,4 +802,4 @@ References:
 
 
 
-Found 54 errors
+Found 56 errors
