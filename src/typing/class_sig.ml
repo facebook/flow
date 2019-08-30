@@ -409,7 +409,7 @@ let statictype cx tparams_with_this x =
       let this = SMap.find_unsafe "this" tparams_with_this in
       (* Eagerly specialize when there are no targs *)
       let c = if targs = None then specialize cx targs c else c in
-      Type.(class_type (this_typeapp ~annot_loc c this targs))
+      Type.(class_type ~annot_loc (this_typeapp ~annot_loc c this targs))
     (* class A {}; A.__proto__ === Function.prototype *)
     | Implicit _ -> Type.FunProtoT s.reason
   in
@@ -697,7 +697,7 @@ let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
              expects a PolyT here. *)
           let c = if targs = None then specialize cx targs c else c in
           let t = Type.this_typeapp ~annot_loc c this targs in
-          t, Type.class_type t
+          t, Type.class_type ~annot_loc t
         | Implicit {null} ->
           let open Type in
           (if null then NullProtoT super_reason else ObjProtoT super_reason),

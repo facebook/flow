@@ -3440,8 +3440,12 @@ and elemt_of_arrtype = function
 | ROArrayAT (elemt)
 | TupleAT (elemt, _) -> elemt
 
-let optional t =
+let optional ?annot_loc t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
+  let reason = match annot_loc with
+  | Some loc -> annot_reason (repos_reason loc reason)
+  | None -> reason
+  in
   OptionalT (reason, t)
 
 let maybe t =
@@ -3451,10 +3455,14 @@ let maybe t =
 let exact t =
   ExactT (reason_of_t t, t)
 
-let class_type ?(structural=false) t =
+let class_type ?(structural=false) ?annot_loc t =
   let reason =
     if structural then reason_of_t t
     else update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t)
+  in
+  let reason = match annot_loc with
+  | Some loc -> annot_reason (repos_reason loc reason)
+  | None -> reason
   in
   DefT (reason, bogus_trust (), ClassT t)
 

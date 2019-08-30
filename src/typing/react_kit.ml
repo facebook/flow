@@ -755,7 +755,9 @@ module Kit (Flow: Flow_common.S): REACT = struct
           next todo (add_dict dict shape)
         | ResolveProp (k, todo, shape) ->
           let t = match coerce_prop_type l with
-          | Ok (required, t) -> if required then t else Type.optional t
+          | Ok (required, t) ->
+            if required then t
+            else Type.optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
           | Error _ -> AnyT.make AnyError reason_op |> Type.optional
           in
           next todo (add_prop k t shape))
@@ -1207,7 +1209,9 @@ module Kit (Flow: Flow_common.S): REACT = struct
           next todo (add_dict dict prop_types)
         | ResolveProp (k, todo, prop_types) ->
           let t = match coerce_prop_type l with
-          | Ok (required, t) -> if required then t else Type.optional t
+          | Ok (required, t) ->
+            if required then t
+            else Type.optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
           | Error reason -> AnyT.make AnyError reason |> Type.optional
           in
           next todo (add_prop k t prop_types))

@@ -935,7 +935,7 @@ let update_desc_new_reason f r =
     (f (desc_of_reason ~unwrap:false r))
     (poly_loc_of_reason r)
     None
-    (annot_poly_loc_of_reason r)
+    None
 
 let replace_desc_reason desc r =
   mk_reason_with_test_id r.test_id desc r.loc r.def_loc_opt r.annot_loc_opt

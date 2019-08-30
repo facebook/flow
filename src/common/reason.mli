@@ -248,8 +248,7 @@ val annot_loc_of_reason: concrete_reason -> Loc.t option
 (* replace desc, but keep loc, def_loc, annot_loc *)
 val update_desc_reason: ('loc virtual_reason_desc  -> 'loc virtual_reason_desc) ->
   'loc virtual_reason -> 'loc virtual_reason
-(* replace desc, keep loc, but clobber def_loc. TODO: Don't clobber annot_loc (why?), otherwise this
-   is just as in new reason *)
+(* replace desc, keep loc, but clobber def_loc, annot_loc as in new reason *)
 val update_desc_new_reason: ('loc virtual_reason_desc  -> 'loc virtual_reason_desc) ->
   'loc virtual_reason -> 'loc virtual_reason
 (* replace desc, but keep loc, def_loc, annot_loc *)

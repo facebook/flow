@@ -4879,8 +4879,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | DefT (_, _, InstanceT _) as instance, GetPropT (_, _, Named (_, "constructor"), t) ->
-      rec_flow_t cx trace (class_type instance, t)
+    | DefT (r, _, InstanceT _) as instance, GetPropT (_, _, Named (_, "constructor"), t) ->
+      rec_flow_t cx trace (class_type ?annot_loc:(annot_aloc_of_reason r) instance, t)
 
     | DefT (reason_c, _, InstanceT (_, super, _, instance)),
       GetPropT (use_op, reason_op, Named (reason_prop, x), tout) ->
@@ -10940,7 +10940,7 @@ and lookup_builtin cx ?trace x reason strict builtin =
   }))
 
 and get_builtin_typeapp cx ?trace reason x ts =
-  typeapp (get_builtin cx ?trace x reason) ts
+  typeapp ?annot_loc:(annot_aloc_of_reason reason) (get_builtin cx ?trace x reason) ts
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
