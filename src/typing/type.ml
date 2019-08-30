@@ -3441,11 +3441,11 @@ and elemt_of_arrtype = function
 | TupleAT (elemt, _) -> elemt
 
 let optional t =
-  let reason = replace_reason ~keep_def_loc:false (fun desc -> ROptional desc) (reason_of_t t) in
+  let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
   OptionalT (reason, t)
 
 let maybe t =
-  let reason = replace_reason ~keep_def_loc:false (fun desc -> RMaybe desc) (reason_of_t t) in
+  let reason = update_desc_new_reason (fun desc -> RMaybe desc) (reason_of_t t) in
   MaybeT (reason, t)
 
 let exact t =
@@ -3454,24 +3454,24 @@ let exact t =
 let class_type ?(structural=false) t =
   let reason =
     if structural then reason_of_t t
-    else replace_reason ~keep_def_loc:false (fun desc -> RClass desc) (reason_of_t t)
+    else update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t)
   in
   DefT (reason, bogus_trust (), ClassT t)
 
 let this_class_type t =
-  let reason = replace_reason ~keep_def_loc:false (fun desc -> RClass desc) (reason_of_t t) in
+  let reason = update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t) in
   ThisClassT (reason, t)
 
 let extends_type r l u =
-  let reason = replace_reason ~keep_def_loc:true (fun desc -> RExtends desc) r in
+  let reason = update_desc_reason (fun desc -> RExtends desc) r in
   InternalT (ExtendsT (reason, l, u))
 
 let extends_use_type use_op l u =
-  let reason = replace_reason ~keep_def_loc:false (fun desc -> RExtends desc) (reason_of_t u) in
+  let reason = update_desc_new_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsUseT (use_op, reason, [], l, u)
 
 let poly_type id tparams_loc (tparams: typeparam Nel.t) t =
-  let reason = replace_reason ~keep_def_loc:false (fun desc -> RPolyType desc) (reason_of_t t) in
+  let reason = update_desc_new_reason (fun desc -> RPolyType desc) (reason_of_t t) in
   DefT (reason, bogus_trust (), PolyT (tparams_loc, tparams, t, id))
 
 let poly_type_of_tparam_list id tparams_loc tparams t =
@@ -3490,7 +3490,7 @@ let poly_type_of_tparams id (tparams: typeparams) t =
  * source level type application, but merely a tool for some other functionality,
  * e.g. canonicalize_imported_type in flow_js.ml. *)
 let typeapp ?(implicit=false) ?annot_loc t targs =
-  let reason = replace_reason ~keep_def_loc:false (fun desc ->
+  let reason = update_desc_new_reason (fun desc ->
     if implicit then RTypeAppImplicit desc else RTypeApp desc) (reason_of_t t) in
   let reason = match annot_loc with
   | Some loc -> annot_reason (repos_reason loc reason)
@@ -3501,7 +3501,7 @@ let typeapp ?(implicit=false) ?annot_loc t targs =
 
 let this_typeapp ?annot_loc t this targs =
   let reason = match targs with
-  | Some _ -> replace_reason ~keep_def_loc:false (fun desc -> RTypeApp desc) (reason_of_t t)
+  | Some _ -> update_desc_new_reason (fun desc -> RTypeApp desc) (reason_of_t t)
   | None -> reason_of_t t
   in
   let reason = match annot_loc with
@@ -3525,7 +3525,7 @@ let unknown_use = Op UnknownUse
    want to encourage this pattern, but we also don't want to block uses of this
    pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static =
-  replace_reason ~keep_def_loc:true (fun desc -> RStatics desc) %> Unsoundness.dummy_static_any
+  update_desc_reason (fun desc -> RStatics desc) %> Unsoundness.dummy_static_any
 
 let dummy_prototype =
   ObjProtoT (locationless_reason RDummyPrototype)
@@ -3613,7 +3613,7 @@ let mk_objecttype ?(flags=default_flags) ~dict ~call pmap proto = {
 }
 
 let mk_object_def_type ~reason ?(flags=default_flags) ~dict ~call pmap proto =
-  let reason = replace_reason ~keep_def_loc:true invalidate_rtype_alias reason in
+  let reason = update_desc_reason invalidate_rtype_alias reason in
   DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
 
 let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {

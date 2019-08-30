@@ -124,7 +124,7 @@ let max_depth_of_trace limit trace =
      "desc" becomes "prefix[desc]suffix"
   *)
 let pretty_r r prefix suffix =
-  replace_reason ~keep_def_loc:false (fun desc ->
+  update_desc_new_reason (fun desc ->
     let desc_str = string_of_desc desc in
     let custom =
       if prefix = "" && suffix = ""

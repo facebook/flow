@@ -245,9 +245,13 @@ val annot_loc_of_reason: concrete_reason -> Loc.t option
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
-val replace_reason: ?keep_def_loc:bool ->
-  ('loc virtual_reason_desc  -> 'loc virtual_reason_desc )
-  -> 'loc virtual_reason -> 'loc virtual_reason
+(* replace desc, but keep loc, def_loc, annot_loc *)
+val update_desc_reason: ('loc virtual_reason_desc  -> 'loc virtual_reason_desc) ->
+  'loc virtual_reason -> 'loc virtual_reason
+(* replace desc, keep loc, but clobber def_loc. TODO: Don't clobber annot_loc (why?), otherwise this
+   is just as in new reason *)
+val update_desc_new_reason: ('loc virtual_reason_desc  -> 'loc virtual_reason_desc) ->
+  'loc virtual_reason -> 'loc virtual_reason
 (* replace desc, but keep loc, def_loc, annot_loc *)
 val replace_desc_reason: 'loc virtual_reason_desc ->
   'loc virtual_reason -> 'loc virtual_reason

@@ -921,13 +921,20 @@ let is_blamable_reason r =
 (* reason transformers: *)
 
 (* returns reason with new description and position of original *)
-let replace_reason ?(keep_def_loc=false) f r =
-  let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
+let update_desc_reason f r =
   mk_reason_with_test_id
     (TestID.current ())
     (f (desc_of_reason ~unwrap:false r))
     (poly_loc_of_reason r)
-    def_loc_opt
+    r.def_loc_opt
+    (annot_poly_loc_of_reason r)
+
+let update_desc_new_reason f r =
+  mk_reason_with_test_id
+    (TestID.current ())
+    (f (desc_of_reason ~unwrap:false r))
+    (poly_loc_of_reason r)
+    None
     (annot_poly_loc_of_reason r)
 
 let replace_desc_reason desc r =

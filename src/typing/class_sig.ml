@@ -89,7 +89,7 @@ let empty id reason tparams tparams_map super =
   } in
   let constructor = [] in
   let static =
-    let reason = replace_reason ~keep_def_loc:true (fun desc -> RStatics desc) reason in
+    let reason = update_desc_reason (fun desc -> RStatics desc) reason in
     empty_sig reason
   in
   let instance = empty_sig reason in
@@ -153,7 +153,7 @@ let add_indexer ~static polarity ~key ~value x =
     |> add_field' ~static "$value" (None, polarity, Annot value)
 
 let add_name_field x =
-  let r = replace_reason ~keep_def_loc:true (fun desc -> RNameProperty desc) x.instance.reason in
+  let r = update_desc_reason (fun desc -> RNameProperty desc) x.instance.reason in
   let t = Type.StrT.why r |> Type.with_trust Trust.bogus_trust in
   add_field' ~static:true "name" (None, Polarity.Neutral, Annot t) x
 
@@ -514,7 +514,7 @@ let remove_this x =
     }
 
 let supertype cx tparams_with_this x =
-  let super_reason = replace_reason ~keep_def_loc:true (fun d -> RSuperOf d) x.instance.reason in
+  let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
   let open Type in
   match x.super with
   | Interface {inline = _; extends; callable} ->
@@ -685,7 +685,7 @@ let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
     let static = Type.class_type this in
 
     let super, static_super =
-      let super_reason = replace_reason ~keep_def_loc:true (fun d -> RSuperOf d) x.instance.reason in
+      let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
       match x.super with
       | Interface _ -> failwith "tried to evaluate toplevel of interface"
       | Class {extends; _} ->

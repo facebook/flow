@@ -388,7 +388,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * children, React may pass in a single child, or React may pass in an array
        * of children. We need to model all of these possibilities. *)
       | [], Some spread ->
-        let r = replace_reason ~keep_def_loc:true
+        let r = update_desc_reason
           (fun desc -> RReactChildrenOrUndefinedOrType desc)
           (reason_of_t spread)
         in
@@ -1037,7 +1037,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         let reason_component = replace_desc_reason RReactComponent reason_op in
 
         let super =
-          let reason = replace_reason ~keep_def_loc:true (fun x -> RSuperOf x) reason_component in
+          let reason = update_desc_reason (fun x -> RSuperOf x) reason_component in
           let c = get_builtin cx "LegacyReactComponent" reason in
           this_typeapp c knot.this (Some [props_t; knot.state_t])
         in

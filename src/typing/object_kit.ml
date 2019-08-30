@@ -249,7 +249,7 @@ let run =
     in
 
     fun options state cx trace use_op reason tout x ->
-      let reason = replace_reason ~keep_def_loc:true invalidate_rtype_alias reason in
+      let reason = update_desc_reason invalidate_rtype_alias reason in
       let {todo_rev; acc} = state in
       Nel.iter (fun {Object.reason = r; props= _; dict=_; flags = {exact; _}} ->
         match options with
