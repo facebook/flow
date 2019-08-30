@@ -657,7 +657,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
     | Frame (FunMissingArg { def; op; _ }, use_op) ->
       let message = match use_op with
       | Op (FunCall _ | FunCallMethod _) ->
-        let def = replace_reason (function
+        let def = replace_reason ~keep_def_loc:true (function
         | RFunctionType -> RFunction RNormal
         | desc -> desc
         ) def in
