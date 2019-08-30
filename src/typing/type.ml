@@ -1657,9 +1657,9 @@ end = struct
 
   let specialized_reason r (_, _, _, specialization) =
     match !specialization with
-    | Some Empty -> replace_reason_const REmpty r
+    | Some Empty -> replace_reason_const ~keep_def_loc:true REmpty r
     | Some (Singleton t) -> TypeUtil.reason_of_t t
-    | Some (UnionEnum _) -> replace_reason_const RUnionEnum r
+    | Some (UnionEnum _) -> replace_reason_const ~keep_def_loc:true RUnionEnum r
     | _ -> r
 
   (********** Optimizations **********)
@@ -3537,7 +3537,7 @@ let dummy_this =
   locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
 
 let global_this reason =
-  let reason = replace_reason_const (RCustom "global object") reason in
+  let reason = replace_reason_const ~keep_def_loc:true (RCustom "global object") reason in
   ObjProtoT reason
 
 let default_obj_assign_kind =
