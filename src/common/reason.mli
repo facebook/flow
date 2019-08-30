@@ -248,8 +248,12 @@ val annot_loc_of_reason: concrete_reason -> Loc.t option
 val replace_reason: ?keep_def_loc:bool ->
   ('loc virtual_reason_desc  -> 'loc virtual_reason_desc )
   -> 'loc virtual_reason -> 'loc virtual_reason
-val replace_reason_const: ?keep_def_loc:bool ->
-  'loc virtual_reason_desc  -> 'loc virtual_reason -> 'loc virtual_reason
+(* replace desc, but keep loc, def_loc, annot_loc *)
+val replace_desc_reason: 'loc virtual_reason_desc ->
+  'loc virtual_reason -> 'loc virtual_reason
+(* replace desc, keep loc, but clobber def_loc, annot_loc as in new reason *)
+val replace_desc_new_reason: 'loc virtual_reason_desc ->
+  'loc virtual_reason -> 'loc virtual_reason
 
 val repos_reason: 'loc -> ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
 val annot_reason: 'loc virtual_reason -> 'loc virtual_reason

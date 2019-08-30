@@ -468,7 +468,7 @@ let add_this self cx reason tparams tparams_map =
       ) (Type.TypeParams.to_list tparams) in
       Type.typeapp self targs
   in
-  let this_reason = replace_reason_const ~keep_def_loc:true RThisType reason in
+  let this_reason = replace_desc_reason RThisType reason in
   let this_tp = { Type.
     name = "this";
     reason = this_reason;

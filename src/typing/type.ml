@@ -1657,9 +1657,9 @@ end = struct
 
   let specialized_reason r (_, _, _, specialization) =
     match !specialization with
-    | Some Empty -> replace_reason_const ~keep_def_loc:true REmpty r
+    | Some Empty -> replace_desc_reason REmpty r
     | Some (Singleton t) -> TypeUtil.reason_of_t t
-    | Some (UnionEnum _) -> replace_reason_const ~keep_def_loc:true RUnionEnum r
+    | Some (UnionEnum _) -> replace_desc_reason RUnionEnum r
     | _ -> r
 
   (********** Optimizations **********)
@@ -2863,7 +2863,7 @@ end
 module Primitive (P: PrimitiveType) = struct
   let desc = P.desc
   let at tok = P.make (annot_reason (mk_reason desc tok))
-  let why reason = P.make (replace_reason_const ~keep_def_loc:true desc reason)
+  let why reason = P.make (replace_desc_reason desc reason)
   let make = P.make
 end
 
@@ -2896,7 +2896,7 @@ module AnyT = struct
   let desc = function Annotated -> RAnyExplicit | _ -> RAnyImplicit
   let make source r = AnyT (r, source)
   let at   source   = mk_reason (desc source) %> annot_reason %> make source
-  let why  source   = replace_reason_const ~keep_def_loc:true (desc source) %> make source
+  let why  source   = replace_desc_reason (desc source) %> make source
   let annot      = why Annotated
   let error      = why AnyError
   let untyped    = why Untyped
@@ -3537,7 +3537,7 @@ let dummy_this =
   locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
 
 let global_this reason =
-  let reason = replace_reason_const ~keep_def_loc:true (RCustom "global object") reason in
+  let reason = replace_desc_reason (RCustom "global object") reason in
   ObjProtoT reason
 
 let default_obj_assign_kind =

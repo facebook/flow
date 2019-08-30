@@ -460,7 +460,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match List.hd elemts with
         | DefT (r, trust, SingletonNumT num_lit) ->
           reconstruct_ast
-            (DefT (replace_reason_const ~keep_def_loc:true RNumber r, trust, NumT (Literal (None, num_lit))))
+            (DefT (replace_desc_reason RNumber r, trust, NumT (Literal (None, num_lit))))
             targs
         | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
     )
@@ -471,7 +471,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match List.hd elemts with
         | DefT (r, trust, SingletonStrT str_lit) ->
           reconstruct_ast
-            (DefT (replace_reason_const ~keep_def_loc:true RString r, trust, StrT (Literal (None, str_lit))))
+            (DefT (replace_desc_reason RString r, trust, StrT (Literal (None, str_lit))))
             targs
         | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
     )
@@ -482,7 +482,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match List.hd elemts with
         | DefT (r, trust, SingletonBoolT bool) ->
           reconstruct_ast
-            (DefT (replace_reason_const ~keep_def_loc:true RBoolean r, trust, BoolT (Some bool)))
+            (DefT (replace_desc_reason RBoolean r, trust, BoolT (Some bool)))
             targs
         | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
     )
@@ -2067,7 +2067,7 @@ let mk_declare_class_sig =
       if mem_constructor iface_sig || extends <> None || mixins <> [] then
         iface_sig
       else
-        let reason = replace_reason_const ~keep_def_loc:true RDefaultConstructor reason in
+        let reason = replace_desc_reason RDefaultConstructor reason in
         add_default_constructor reason iface_sig
     in
     iface_sig, self,

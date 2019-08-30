@@ -55,7 +55,7 @@ let get_intrinsic cx trace component ~reason_op artifact literal prop ~rec_flow
   (* Create a use_op for the upcoming operations. *)
   let use_op = Op (ReactGetIntrinsic {
     literal = (match literal with
-      | Literal (_, name) -> replace_reason_const ~keep_def_loc:true (RIdentifier name) reason
+      | Literal (_, name) -> replace_desc_reason (RIdentifier name) reason
       | _ -> reason);
   }) in
   (* GetPropT with a non-literal when there is not a dictionary will propagate
@@ -70,7 +70,7 @@ let get_intrinsic cx trace component ~reason_op artifact literal prop ~rec_flow
   (* Get the intrinsic from the map. *)
   rec_flow cx trace (intrinsics, GetPropT (use_op, reason, (match literal with
     | Literal (_, name) ->
-      Named (replace_reason_const ~keep_def_loc:true (RReactElement (Some name)) reason, name)
+      Named (replace_desc_reason (RReactElement (Some name)) reason, name)
     | _ -> Computed component
   ), intrinsic));
   (* Get the artifact from the intrinsic. *)
@@ -79,7 +79,7 @@ let get_intrinsic cx trace component ~reason_op artifact literal prop ~rec_flow
     | `Props -> "props"
     | `Instance -> "instance"
     in
-    Named (replace_reason_const ~keep_def_loc:true (RCustom name) reason_op, name)
+    Named (replace_desc_reason (RCustom name) reason_op, name)
   in
   (* TODO: if intrinsic is null, we will treat it like prototype termination,
    * but we should error like a GetPropT would instead. *)
@@ -97,9 +97,9 @@ let get_intrinsic cx trace component ~reason_op artifact literal prop ~rec_flow
 let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
   let name = "defaultProps" in
   let reason_missing =
-    replace_reason_const ~keep_def_loc:true (RReactDefaultProps) (reason_of_t component) in
+    replace_desc_reason (RReactDefaultProps) (reason_of_t component) in
   let reason_prop =
-    replace_reason_const ~keep_def_loc:true (RProperty (Some name)) reason_op in
+    replace_desc_reason (RProperty (Some name)) reason_op in
   (* NOTE: This is intentionally unsound. Function statics are modeled
    * as an unsealed object and so a `GetPropT` would perform a shadow
    * lookup since a write to an unsealed property may happen at any
@@ -219,7 +219,7 @@ let get_config
       end
   | _ ->
     let reason_component = (reason_of_t component) in
-    let props = Tvar.mk_where cx (replace_reason_const ~keep_def_loc:true RReactProps reason_component) (props_to_tout
+    let props = Tvar.mk_where cx (replace_desc_reason RReactProps reason_component) (props_to_tout
       cx
       trace
       component
@@ -304,15 +304,15 @@ module Kit (Flow: Flow_common.S): REACT = struct
        have a singleton type representation. *)
     let coerce_singleton = function
       | DefT (reason, trust, StrT (Literal (_, x))) ->
-        let reason = replace_reason_const ~keep_def_loc:true (RStringLit x) reason in
+        let reason = replace_desc_reason (RStringLit x) reason in
         Ok (DefT (reason, trust, SingletonStrT x))
 
       | DefT (reason, trust, NumT (Literal (_, x))) ->
-        let reason = replace_reason_const ~keep_def_loc:true (RNumberLit (snd x)) reason in
+        let reason = replace_desc_reason (RNumberLit (snd x)) reason in
         Ok (DefT (reason, trust, SingletonNumT x))
 
       | DefT (reason, trust, BoolT (Some x)) ->
-        let reason = replace_reason_const ~keep_def_loc:true (RBooleanLit x) reason in
+        let reason = replace_desc_reason (RBooleanLit x) reason in
         Ok (DefT (reason, trust, SingletonBoolT x))
       | DefT (_, _, NullT) | DefT (_, _, VoidT) as t ->
         Ok t
@@ -470,7 +470,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
       let open Object.ReactConfig in
       (* We need to treat config input as a literal here so we ensure it has the
        * RReactProps reason description. *)
-      let reason = replace_reason_const ~keep_def_loc:false RReactProps (reason_of_t config) in
+      let reason = replace_desc_new_reason RReactProps (reason_of_t config) in
       (* Create the final config object using the ReactConfig object kit tool
        * and flow it to our type for props.
        *
@@ -509,7 +509,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * in existing React code. *)
       let () =
         let reason_key =
-          (replace_reason_const ~keep_def_loc:true (RCustom "React key") (reason_of_t normalized_config)) in
+          (replace_desc_reason (RCustom "React key") (reason_of_t normalized_config)) in
         (* Create the key type. *)
         let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
         (* Flow the config input key type to the key type. *)
@@ -533,7 +533,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * in existing React code. *)
       let () =
         let reason_ref =
-          (replace_reason_const ~keep_def_loc:true (RCustom "React ref") (reason_of_t normalized_config)) in
+          (replace_desc_reason (RCustom "React ref") (reason_of_t normalized_config)) in
         (* Create the ref type. *)
         let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
         (* Flow the config input ref type to the ref type. *)
@@ -549,7 +549,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           LookupT (reason_ref, kind, [], propref, action))
       in
 
-      let elem_reason = annot_reason (replace_reason_const ~keep_def_loc:true (RType "React$Element") reason_op) in
+      let elem_reason = annot_reason (replace_desc_reason (RType "React$Element") reason_op) in
       rec_flow_t cx trace (
         get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
         tout
@@ -584,11 +584,11 @@ module Kit (Flow: Flow_common.S): REACT = struct
 
       (* Stateless functional components. *)
       | DefT (r, trust, FunT _) ->
-        rec_flow_t cx trace (VoidT.make (replace_reason_const ~keep_def_loc:true RVoid r) trust, tout)
+        rec_flow_t cx trace (VoidT.make (replace_desc_reason RVoid r) trust, tout)
 
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
       | DefT (r, trust, ObjT { call_t = Some _; _ }) ->
-        rec_flow_t cx trace (VoidT.make (replace_reason_const ~keep_def_loc:true RVoid r) trust, tout)
+        rec_flow_t cx trace (VoidT.make (replace_desc_reason RVoid r) trust, tout)
 
       (* Abstract components. *)
       | DefT (_, _, ReactAbstractComponentT {instance; _}) ->
@@ -616,10 +616,10 @@ module Kit (Flow: Flow_common.S): REACT = struct
       ) in
 
       let mk_union reason = function
-        | [] -> DefT (replace_reason_const ~keep_def_loc:true REmpty reason, bogus_trust (), EmptyT Bottom)
+        | [] -> DefT (replace_desc_reason REmpty reason, bogus_trust (), EmptyT Bottom)
         | [t] -> t
         | t0::t1::ts ->
-          let reason = replace_reason_const ~keep_def_loc:true RUnionType reason in
+          let reason = replace_desc_reason RUnionType reason in
           UnionT (reason, UnionRep.make t0 t1 ts)
       in
 
@@ -631,7 +631,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           | Ok (_required, t) -> t
           | Error reason -> AnyT.make AnyError reason
         in
-        let reason = replace_reason_const ~keep_def_loc:true RArrayType reason_op in
+        let reason = replace_desc_reason RArrayType reason_op in
         let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, None))) in
         resolve t
 
@@ -653,7 +653,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           dict_polarity = Polarity.Neutral;
         } in
         let proto = ObjProtoT (locationless_reason RObjectClassName) in
-        let reason = replace_reason_const ~keep_def_loc:true RObjectType reason_op in
+        let reason = replace_desc_reason RObjectType reason_op in
         let t = Obj_type.mk_with_proto cx reason ~props proto
           ~dict ~sealed:true ~exact:false in
         resolve t
@@ -714,7 +714,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         let rec next todo shape =
           match SMap.choose todo with
           | None ->
-            let reason = replace_reason_const ~keep_def_loc:true RObjectType reason_op in
+            let reason = replace_desc_reason RObjectType reason_op in
             let proto = ObjProtoT (locationless_reason RObjectClassName) in
             let _, props, dict, _ = shape in
             let t = Obj_type.mk_with_proto cx reason ~props proto
@@ -885,7 +885,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         | [] ->
           let t = match acc with
           | None ->
-            let reason = replace_reason_const ~keep_def_loc:true RReactDefaultProps reason_op in
+            let reason = replace_desc_reason RReactDefaultProps reason_op in
             VoidT.make reason (bogus_trust ())
           | Some (Unknown reason) -> AnyT.make Untyped reason
           | Some (Known (reason, props, dict, _)) ->
@@ -901,7 +901,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         | [] ->
           let t = match acc with
           | None ->
-            let reason = replace_reason_const ~keep_def_loc:true RReactState reason_op in
+            let reason = replace_desc_reason RReactState reason_op in
             Obj_type.mk cx reason
           | Some (Unknown reason) -> AnyT.make Untyped reason
           | Some (Known (Null reason)) -> DefT (reason, bogus_trust (), NullT)
@@ -957,7 +957,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
             ?dict ~sealed:true ~exact:false
         in
         let props_t =
-          mod_reason_of_t (replace_reason_const ~keep_def_loc:true RReactPropTypes) props_t
+          mod_reason_of_t (replace_desc_reason RReactPropTypes) props_t
         in
 
         let props =
@@ -1034,7 +1034,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           |> SMap.add "defaultProps" (Field (None, knot.default_t, Polarity.Neutral))
         in
 
-        let reason_component = replace_reason_const ~keep_def_loc:true RReactComponent reason_op in
+        let reason_component = replace_desc_reason RReactComponent reason_op in
 
         let super =
           let reason = replace_reason (fun x -> RSuperOf x) reason_component in
@@ -1059,7 +1059,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
             let sealed = not (exact && sealed_in_op reason_op sealed) in
             reason, static_props, dict, exact, sealed
           in
-          let reason = replace_reason_const ~keep_def_loc:true RReactStatics reason in
+          let reason = replace_desc_reason RReactStatics reason in
           Obj_type.mk_with_proto cx reason ~props (class_type super)
             ?dict ~exact ~sealed
         in

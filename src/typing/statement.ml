@@ -3043,7 +3043,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         (* empty array, analogous to object with implicit properties *)
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Tvar.mk cx element_reason in
-        let reason = replace_reason_const ~keep_def_loc:true REmptyArrayLit reason in
+        let reason = replace_desc_reason REmptyArrayLit reason in
         (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
         Array { Array.elements = []; comments }
     | elems ->
@@ -3053,7 +3053,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           Tvar.mk_where cx reason (fun tout ->
             let reason_op = reason in
             let element_reason =
-              replace_reason_const ~keep_def_loc:true Reason.inferred_union_elem_array_desc reason_op in
+              replace_desc_reason Reason.inferred_union_elem_array_desc reason_op in
             let elem_t = Tvar.mk cx element_reason in
             let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)) in
 
@@ -3137,14 +3137,14 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       | Ok (targ_t, arg_t, arg) ->
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason =
-          replace_reason_const ~keep_def_loc:true (RCustom "array length") reason in
+          replace_desc_reason (RCustom "array length") reason in
         Flow.flow_t cx (arg_t, DefT (length_reason, bogus_trust (), NumT AnyLiteral));
         let t, targs = match targ_t with
         | Some (loc, ast, ExplicitArg t) -> t, Some (loc, [ast])
         | Some (_, _, ImplicitArg _)
         | None ->
           let element_reason =
-            replace_reason_const ~keep_def_loc:true (RCustom "array element") reason in
+            replace_desc_reason (RCustom "array element") reason in
           Tvar.mk cx element_reason, None
         in
         let id_t = identifier cx name callee_loc in
@@ -3305,7 +3305,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let expressions = Core_list.map ~f:(expression cx) expressions in
       let (_, t), _ as tag_ast = expression cx tag in
       let reason = mk_reason (RCustom "encaps tag") loc in
-      let reason_array = replace_reason_const ~keep_def_loc:true RArray reason in
+      let reason_array = replace_desc_reason RArray reason in
       let ret = Tvar.mk cx reason in
 
       (* tag`a${b}c${d}` -> tag(['a', 'c'], b, d) *)
@@ -3973,7 +3973,7 @@ and subscript =
           let step = ref (loc, opt_use, tout) in
           let lhs, lhs_t, chain, ((_, f), _ as callee) =
             build_chain ~is_cond cx callee (step :: acc) in
-          let reason = replace_reason_const ~keep_def_loc:true (RFunctionCall (desc_of_t f)) reason in
+          let reason = replace_desc_reason (RFunctionCall (desc_of_t f)) reason in
           let tout = mod_reason_of_t (Fn.const reason) tout in
           let opt_use = mod_reason_of_opt_use_t (Fn.const reason) opt_use in
           step := (loc, opt_use, tout);
@@ -4325,7 +4325,7 @@ and identifier_ cx name loc =
     | _ ->
       (match t with
       (* If this is an `OpenT` we can change its reason description directly. *)
-      | OpenT _ -> mod_reason_of_t (replace_reason_const ~keep_def_loc:false (RIdentifier name)) t
+      | OpenT _ -> mod_reason_of_t (replace_desc_new_reason (RIdentifier name)) t
       (* If this is not an `OpenT` then create a new type variable with our
        * desired reason and unify it with our type. This adds a level of
        * indirection so that we don't modify the underlying reason of our type. *)
@@ -5011,7 +5011,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     let reason = mk_reason el loc_element in
     let m_expr = jsx_title_member_to_expression member in
     let (m_loc, t), m_expr' = expression cx m_expr in
-    let c = mod_reason_of_t (replace_reason_const ~keep_def_loc:true (RIdentifier name)) t in
+    let c = mod_reason_of_t (replace_desc_reason (RIdentifier name)) t in
     let o, attributes' = jsx_mk_props cx reason c name attributes children in
     let t = jsx_desugar cx name c o attributes children locs in
     let member' = match expression_to_jsx_title_member m_loc m_expr' with
@@ -5025,7 +5025,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     let name' = Tast_utils.error_mapper#jsx_name name in
     let el_name = jsx_title_member_to_string member in
     let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-    let c = mod_reason_of_t (replace_reason_const ~keep_def_loc:true (RIdentifier el_name)) t in
+    let c = mod_reason_of_t (replace_desc_reason (RIdentifier el_name)) t in
     let _o, attributes' = jsx_mk_props cx reason c el_name attributes children in
     t, name', attributes'
 
@@ -5035,7 +5035,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     let name' = Tast_utils.error_mapper#jsx_name name in
     let el_name = jsx_title_namespaced_name_to_string namespace in
     let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-    let c = mod_reason_of_t (replace_reason_const ~keep_def_loc:true (RIdentifier el_name)) t in
+    let c = mod_reason_of_t (replace_desc_reason (RIdentifier el_name)) t in
     let _o, attributes' = jsx_mk_props cx reason c el_name attributes children in
     t, name', attributes'
   in
@@ -5095,7 +5095,7 @@ and jsx_match_closing_element =
 
 and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let is_react = Context.jsx cx = Options.Jsx_react in
-  let reason_props = replace_reason_const ~keep_def_loc:true
+  let reason_props = replace_desc_reason
     (if is_react then RReactProps else RJSXElementProps name)
     reason in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
@@ -5202,7 +5202,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         let arr = Tvar.mk_where cx reason (fun tout ->
           let reason_op = reason in
           let element_reason =
-            replace_reason_const ~keep_def_loc:true Reason.inferred_union_elem_array_desc reason_op in
+            replace_desc_reason Reason.inferred_union_elem_array_desc reason_op in
           let elem_t = Tvar.mk cx element_reason in
           Flow.resolve_spread_list
             cx
@@ -6440,7 +6440,7 @@ and mk_class_sig =
       (* TODO: Does this distinction matter for the type checker? *)
       class_sig
     else
-      let reason = replace_reason_const ~keep_def_loc:true RDefaultConstructor reason in
+      let reason = replace_desc_reason RDefaultConstructor reason in
       add_default_constructor reason class_sig
   in
 

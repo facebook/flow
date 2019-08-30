@@ -24,7 +24,7 @@ module Kit (Flow: Flow_common.S) = struct
       (* Call the tail functions in our array first and call our head function
        * last after that. *)
       | false, fn::fns, _ ->
-        let reason = replace_reason_const ~keep_def_loc:true (RCustom "compose intermediate value")
+        let reason = replace_desc_reason (RCustom "compose intermediate value")
           (reason_of_t fn) in
         let tvar = Tvar.mk_where cx reason (fun tvar ->
           run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar) in
@@ -34,7 +34,7 @@ module Kit (Flow: Flow_common.S) = struct
       (* If the compose function is reversed then we want to call the tail
        * functions in our array after we call the head function. *)
       | true, fn::fns, _ ->
-        let reason = replace_reason_const ~keep_def_loc:true (RCustom "compose intermediate value")
+        let reason = replace_desc_reason (RCustom "compose intermediate value")
           (reason_of_t fn) in
         let tvar = Tvar.mk_where cx reason (fun tvar ->
           rec_flow cx trace (fn,
@@ -125,7 +125,7 @@ module Kit (Flow: Flow_common.S) = struct
     (* React.createElement(component) *)
     | component::[] ->
       let config =
-        let r = replace_reason_const ~keep_def_loc:true RReactProps reason_op in
+        let r = replace_desc_reason RReactProps reason_op in
         Obj_type.mk_with_proto
           cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
       in
@@ -175,7 +175,7 @@ module Kit (Flow: Flow_common.S) = struct
     (* React.createFactory(component)() *)
     | [] ->
       let config =
-        let r = replace_reason_const ~keep_def_loc:true RReactProps reason_op in
+        let r = replace_desc_reason RReactProps reason_op in
         Obj_type.mk_with_proto
           cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
       in

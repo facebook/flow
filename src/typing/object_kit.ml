@@ -29,7 +29,7 @@ let run =
     let t = match Property.read_t p with
     | Some t -> t
     | None ->
-      let reason = replace_reason_const ~keep_def_loc:true (RUnknownProperty (Some x)) r in
+      let reason = replace_desc_reason (RUnknownProperty (Some x)) r in
       let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
       t
     in
@@ -40,7 +40,7 @@ let run =
     if Polarity.compat (dict_polarity, Polarity.Positive)
     then value
     else
-      let reason = replace_reason_const ~keep_def_loc:true (RUnknownProperty None) r in
+      let reason = replace_desc_reason (RUnknownProperty None) r in
       DefT (reason, bogus_trust (), MixedT Mixed_everything)
   in
 
@@ -343,7 +343,7 @@ let run =
          * source object. *)
         | (Sound | IgnoreExactAndOwn),
           None, Some (t2, _), _ ->
-          let reason = replace_reason_const ~keep_def_loc:true (RUndefinedProperty k) r1 in
+          let reason = replace_desc_reason (RUndefinedProperty k) r1 in
           rec_flow cx trace (VoidT.make reason |> with_trust bogus_trust, UseT (use_op, t2));
           None
         | (Sound | IgnoreExactAndOwn),
@@ -423,7 +423,7 @@ let run =
               lower = r2;
               upper = r1;
             }, unknown_use) in
-            let r2 = replace_reason_const ~keep_def_loc:true (RProperty (Some k)) r2 in
+            let r2 = replace_desc_reason (RProperty (Some k)) r2 in
             let err = Error_message.EPropNotFound (Some k, (r2, r1), use_op) in
             add_output cx ~trace err
           );

@@ -930,12 +930,11 @@ let replace_reason ?(keep_def_loc=false) f r =
     def_loc_opt
     (annot_poly_loc_of_reason r)
 
-let replace_reason_const ?(keep_def_loc=false) desc r =
-  let (def_aloc_opt, annot_aloc_opt) = if keep_def_loc
-    then (r.def_loc_opt, r.annot_loc_opt)
-    else (None, None)
-  in
-  mk_reason_with_test_id r.test_id desc r.loc def_aloc_opt annot_aloc_opt
+let replace_desc_reason desc r =
+  mk_reason_with_test_id r.test_id desc r.loc r.def_loc_opt r.annot_loc_opt
+
+let replace_desc_new_reason desc r =
+  mk_reason_with_test_id r.test_id desc r.loc None None
 
 (* returns reason with new location and description of original *)
 let repos_reason loc ?(annot_loc: 'loc option) reason =

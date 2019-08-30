@@ -1222,19 +1222,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         else
           spf "%d-%d" min_arity max_arity, "arguments"
       in
-      let reason_arity = replace_reason_const ~keep_def_loc:true (desc_of_reason reason_tapp) reason_arity in
+      let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
       Normal
         [text "Cannot use "; ref reason_arity; text (spf " without %s type %s." arity args)]
 
     | ETooManyTypeArgs (reason_tapp, reason_arity, n) ->
-      let reason_arity = replace_reason_const ~keep_def_loc:true (desc_of_reason reason_tapp) reason_arity in
+      let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
       Normal [
         text "Cannot use "; ref reason_arity; text " with more than ";
         text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"))
       ]
 
     | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
-      let reason_arity = replace_reason_const ~keep_def_loc:true (desc_of_reason reason_tapp) reason_arity in
+      let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
       Normal [
         text "Cannot use "; ref reason_arity; text " with fewer than ";
         text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"))

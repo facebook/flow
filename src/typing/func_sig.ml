@@ -87,7 +87,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; knot; _} =
     Obj_type.mk_with_proto cx reason proto
   in
   let prototype =
-    let reason = replace_reason_const ~keep_def_loc:true RPrototype reason in
+    let reason = replace_desc_reason RPrototype reason in
     Obj_type.mk cx reason
   in
   let funtype = { Type.
@@ -185,11 +185,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   let yield_t, next_t =
     if kind = Generator || kind = AsyncGenerator then
-      Tvar.mk cx (replace_reason_const ~keep_def_loc:true (RCustom "yield") reason),
-      Tvar.mk cx (replace_reason_const ~keep_def_loc:true (RCustom "next") reason)
+      Tvar.mk cx (replace_desc_reason (RCustom "yield") reason),
+      Tvar.mk cx (replace_desc_reason (RCustom "next") reason)
     else
-      DefT (replace_reason_const ~keep_def_loc:true (RCustom "no yield") reason, bogus_trust (), MixedT Mixed_everything),
-      DefT (replace_reason_const ~keep_def_loc:true (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
+      DefT (replace_desc_reason (RCustom "no yield") reason, bogus_trust (), MixedT Mixed_everything),
+      DefT (replace_desc_reason (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
   in
 
   let yield, next, return = Scope.(

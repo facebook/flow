@@ -144,7 +144,7 @@ let substituter = object(self)
     match Reason.desc_of_reason ~unwrap:false (reason_of_t t_out) with
     | Reason.RTypeAlias (name, true, d) ->
       let desc = Reason.RTypeAlias (name, false, d) in
-      mod_reason_of_t (Reason.replace_reason_const ~keep_def_loc:true desc) t_out
+      mod_reason_of_t (Reason.replace_desc_reason desc) t_out
     | _ -> t_out
 
   method! predicate cx (map, force, use_op) p = match p with
