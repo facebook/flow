@@ -418,9 +418,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
       (Entry.new_var
         ~loc:(Reason.aloc_of_reason reason_exports_module)
         ~specific:(Type.DefT (
-          Reason.replace_reason_const
-            (Reason.RCustom "undefined exports")
-            reason_exports_module,
+          reason_exports_module,
           Type.bogus_trust (),
           Type.EmptyT Type.Bottom))
         (Type.Unsoundness.exports_any reason_exports_module))
