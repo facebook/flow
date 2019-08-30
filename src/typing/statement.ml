@@ -1218,7 +1218,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         | Some expr ->
           if Env.in_predicate_scope () then
             let ((_, t), _ as ast, p_map, n_map, _) = predicates_of_condition cx expr in
-            let pred_reason = replace_reason (fun desc ->
+            let pred_reason = replace_reason ~keep_def_loc:true (fun desc ->
               RPredicateOf desc
             ) reason in
             OpenPredT (pred_reason, t, p_map, n_map), Some ast
@@ -3417,7 +3417,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         t, Some expr
       | None -> assert_false "delegate yield without argument" in
 
-      let ret_reason = replace_reason (fun desc -> RCustom (
+      let ret_reason = replace_reason ~keep_def_loc:true (fun desc -> RCustom (
         spf "return of child generator in %s" (string_of_desc desc)
       )) reason in
       let ret = Tvar.mk cx ret_reason in
@@ -6144,7 +6144,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         );
         acc
       | Some spec ->
-        let reason = replace_reason (fun desc ->
+        let reason = replace_reason ~keep_def_loc:true (fun desc ->
           RCustom (spf ".%s of %s" x (string_of_desc desc))
         ) reason in
         let t = Tvar.mk_where cx reason (fun tvar ->
@@ -6167,7 +6167,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     DefT (arr_reason, bogus_trust (), ArrT (
       ArrayAT (
         Tvar.mk_where cx arr_reason (fun tvar ->
-          let keys_reason = replace_reason (fun desc ->
+          let keys_reason = replace_reason ~keep_def_loc:true (fun desc ->
             RCustom (spf "element of %s" (string_of_desc desc))
           ) reason in
           Flow.flow cx (o, GetKeysT (keys_reason, UseT (unknown_use, tvar)));
@@ -6211,7 +6211,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
           EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
         );
       | Some spec ->
-        let reason = replace_reason (fun desc ->
+        let reason = replace_reason ~keep_def_loc:true (fun desc ->
           RCustom (spf ".%s of %s" x (string_of_desc desc))
         ) reason in
         let tvar = Tvar.mk cx reason in
