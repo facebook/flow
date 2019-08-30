@@ -545,7 +545,7 @@ let bind_declare_fun =
   | IntersectionT (reason, rep) ->
     IntersectionT (reason, InterRep.append [new_t] rep)
   | _ ->
-    let reason = replace_reason_const RIntersectionType (reason_of_t seen_t) in
+    let reason = replace_reason_const ~keep_def_loc:true RIntersectionType (reason_of_t seen_t) in
     IntersectionT (reason, InterRep.make seen_t new_t [])
   in
 
