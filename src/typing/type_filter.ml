@@ -191,7 +191,7 @@ let rec not_undefined = function
 
 let string_literal expected_loc sense expected t =
   let expected_desc = RStringLit expected in
-  let lit_reason = replace_reason_const expected_desc in
+  let lit_reason = replace_reason_const ~keep_def_loc:false expected_desc in
   match t with
   | DefT (_, trust, StrT (Literal (_, actual))) ->
     if actual = expected then t
@@ -213,7 +213,7 @@ let not_string_literal expected = function
 let number_literal expected_loc sense expected t =
   let _, expected_raw = expected in
   let expected_desc = RNumberLit expected_raw in
-  let lit_reason = replace_reason_const expected_desc in
+  let lit_reason = replace_reason_const ~keep_def_loc:false expected_desc in
   match t with
   | DefT (_, trust, NumT (Literal (_, (_, actual_raw)))) ->
     if actual_raw = expected_raw then t
@@ -232,7 +232,7 @@ let not_number_literal expected = function
   | t -> t
 
 let true_ t =
-  let lit_reason = replace_reason_const (RBooleanLit true) in
+  let lit_reason = replace_reason_const ~keep_def_loc:false (RBooleanLit true) in
   match t with
   | DefT (r, trust, BoolT (Some true)) -> DefT (lit_reason r, trust, BoolT (Some true))
   | DefT (r, trust, BoolT None) -> DefT (lit_reason r, trust, BoolT (Some true))
@@ -241,14 +241,14 @@ let true_ t =
   | t -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_true t =
-  let lit_reason = replace_reason_const (RBooleanLit false) in
+  let lit_reason = replace_reason_const ~keep_def_loc:false (RBooleanLit false) in
   match t with
   | DefT (r, trust, BoolT (Some true)) -> DefT (r, trust, EmptyT Bottom)
   | DefT (r, trust, BoolT None) -> DefT (lit_reason r, trust, BoolT (Some false))
   | t -> t
 
 let false_ t =
-  let lit_reason = replace_reason_const (RBooleanLit false) in
+  let lit_reason = replace_reason_const ~keep_def_loc:false (RBooleanLit false) in
   match t with
   | DefT (r, trust, BoolT (Some false)) -> DefT (lit_reason r, trust, BoolT (Some false))
   | DefT (r, trust, BoolT None) -> DefT (lit_reason r, trust, BoolT (Some false))
@@ -257,7 +257,7 @@ let false_ t =
   | t -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_false t =
-  let lit_reason = replace_reason_const (RBooleanLit true) in
+  let lit_reason = replace_reason_const ~keep_def_loc:false (RBooleanLit true) in
   match t with
   | DefT (r, trust, BoolT (Some false)) -> DefT (r, trust, EmptyT Bottom)
   | DefT (r, trust, BoolT None) -> DefT (lit_reason r, trust, BoolT (Some true))
@@ -265,7 +265,7 @@ let not_false t =
 
 let boolean t =
   match t with
-  | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const BoolT.desc r, trust, BoolT (Some true))
+  | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const ~keep_def_loc:false BoolT.desc r, trust, BoolT (Some true))
   | DefT (r, trust, MixedT _) -> BoolT.why r trust
   | DefT (_, _, (BoolT _))
   | AnyT _ -> t
@@ -281,7 +281,7 @@ let not_boolean t =
 
 let string t =
   match t with
-  | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const StrT.desc r, trust, StrT Truthy)
+  | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const ~keep_def_loc:false StrT.desc r, trust, StrT Truthy)
   | DefT (r, trust, MixedT _) -> StrT.why r trust
   | DefT (_, _, (StrT _))
   | AnyT _ -> t
@@ -298,11 +298,11 @@ let not_string t =
 let symbol t =
   match t with
   | DefT (r, trust, MixedT _) ->
-      DefT (replace_reason_const RSymbol r, trust, MixedT Mixed_symbol)
+      DefT (replace_reason_const ~keep_def_loc:false RSymbol r, trust, MixedT Mixed_symbol)
   | _ ->
     (* TODO: since symbols aren't supported, `t` is never a symbol so always empty *)
     let reason = reason_of_t t in
-    DefT (replace_reason_const RSymbol reason, bogus_trust (), EmptyT Bottom)
+    DefT (replace_reason_const ~keep_def_loc:false RSymbol reason, bogus_trust (), EmptyT Bottom)
 
 let not_symbol t =
   (* TODO: since symbols aren't supported, `t` is never a symbol so always pass it through *)
@@ -310,7 +310,7 @@ let not_symbol t =
 
 let number t =
   match t with
-  | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const NumT.desc r, trust, NumT Truthy)
+  | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const ~keep_def_loc:false NumT.desc r, trust, NumT Truthy)
   | DefT (r, trust, MixedT _) -> NumT.why r trust
   | DefT (_, _, (NumT _)) | AnyT _ -> t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
@@ -326,10 +326,10 @@ let not_number t =
 let object_ cx t =
   match t with
   | DefT (r, trust, MixedT flavor) ->
-    let reason = replace_reason_const RObject r in
+    let reason = replace_reason_const ~keep_def_loc:false RObject r in
     let dict = Some {
       key = StrT.why r |> with_trust bogus_trust;
-      value = DefT (replace_reason_const MixedT.desc r, bogus_trust (), MixedT Mixed_everything);
+      value = DefT (replace_reason_const ~keep_def_loc:false MixedT.desc r, bogus_trust (), MixedT Mixed_everything);
       dict_name = None;
       dict_polarity = Polarity.Positive;
     } in
@@ -343,7 +343,7 @@ let object_ cx t =
     | Mixed_function
     | Mixed_everything
     | Mixed_non_void ->
-        let reason = replace_reason_const RUnion (reason_of_t t) in
+        let reason = replace_reason_const ~keep_def_loc:false RUnion (reason_of_t t) in
         UnionT (reason, UnionRep.make (NullT.why r trust) obj [])
     | Empty_intersection -> DefT (r, trust, EmptyT Bottom)
     end
@@ -360,7 +360,7 @@ let not_object t =
 
 let function_ = function
   | DefT (r, trust, MixedT _) ->
-      DefT (replace_reason_const (RFunction RUnknown) r, trust, MixedT Mixed_function)
+      DefT (replace_reason_const ~keep_def_loc:false (RFunction RUnknown) r, trust, MixedT Mixed_function)
   | DefT (_, _, (FunT _ | ClassT _)) | AnyT _ as t -> t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
   | t -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
@@ -374,7 +374,7 @@ let not_function t =
 let array t =
   match t with
   | DefT (r, trust, MixedT _) ->
-    DefT (replace_reason_const RROArrayType r, trust,
+    DefT (replace_reason_const ~keep_def_loc:false RROArrayType r, trust,
       ArrT (ROArrayAT (DefT (r, trust, MixedT Mixed_everything)))
     )
   | DefT (_, _, (ArrT _)) | AnyT _ ->
