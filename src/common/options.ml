@@ -85,6 +85,7 @@ type t = {
   opt_haste_paths_blacklist: string list;
   opt_haste_paths_whitelist: string list;
   opt_haste_use_name_reducers: bool;
+  opt_ignore_dotfiles: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_warnings: bool;
   opt_max_files_checked_per_worker: int;

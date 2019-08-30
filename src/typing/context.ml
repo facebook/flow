@@ -200,6 +200,7 @@ let metadata_of_options options = {
   facebook_fbs = Options.facebook_fbs options;
   facebook_fbt = Options.facebook_fbt options;
   haste_module_ref_prefix = Options.haste_module_ref_prefix options;
+  ignore_dot_files = Options.ignore_dot_files options;
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
   max_workers = Options.max_workers options;

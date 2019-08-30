@@ -64,6 +64,7 @@ val haste_name_reducers: config -> (Str.regexp * string) list
 val haste_paths_blacklist: config -> string list
 val haste_paths_whitelist: config -> string list
 val haste_use_name_reducers: config -> bool
+val ignore_dotfiles: config -> bool
 val ignore_non_literal_requires: config -> bool
 val include_warnings: config -> bool
 val lazy_mode: config -> Options.lazy_mode option
