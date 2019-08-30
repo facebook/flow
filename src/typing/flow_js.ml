@@ -1151,12 +1151,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (_, MergedT (_, uses)) ->
       List.iter (fun u -> rec_flow cx trace (l, u)) uses
 
-    | MergedT _, ReposUseT (reason, use_desc, use_op, l) ->
-      let loc = aloc_of_reason reason in
-      let desc = if use_desc then Some (desc_of_reason reason) else None in
-      let u = reposition cx ~trace loc ?desc l in
-      rec_flow cx trace (l, UseT (use_op, u))
-
     | MergedT (reason, _), _ ->
       rec_flow cx trace (Unsoundness.why Merged reason, u)
 
