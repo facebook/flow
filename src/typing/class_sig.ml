@@ -520,7 +520,7 @@ let supertype cx tparams_with_this x =
   | Interface {inline = _; extends; callable} ->
     let extends = Core_list.map ~f:(function
     | loc, c, None ->
-      let reason = annot_reason (repos_reason loc (reason_of_t c)) in
+      let reason = repos_reason loc ~annot_loc:loc (reason_of_t c) in
       Flow.mk_instance cx reason c
     | annot_loc, c, Some targs -> typeapp ~annot_loc c targs
     ) extends in
@@ -573,7 +573,7 @@ let thistype cx x =
   | Class {implements; _} ->
     Core_list.map ~f:(function
       | loc, c, None ->
-        let reason = annot_reason (repos_reason loc (Type.reason_of_t c)) in
+        let reason = repos_reason loc ~annot_loc:loc (Type.reason_of_t c) in
         Flow.mk_instance cx reason c
       | annot_loc, c, Some targs -> Type.typeapp ~annot_loc c targs
     ) implements
@@ -594,7 +594,7 @@ let check_implements cx def_reason x =
     List.iter (fun (loc, c, targs_opt) ->
       let i = match targs_opt with
       | None ->
-        let reason = annot_reason (repos_reason loc (reason_of_t c)) in
+        let reason = repos_reason loc ~annot_loc:loc (reason_of_t c) in
         Flow.mk_instance cx reason c
       | Some targs -> typeapp ~annot_loc:loc c targs
       in

@@ -3443,7 +3443,7 @@ and elemt_of_arrtype = function
 let optional ?annot_loc t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
   let reason = match annot_loc with
-  | Some loc -> annot_reason (repos_reason loc reason)
+  | Some loc -> repos_reason loc ~annot_loc:loc reason
   | None -> reason
   in
   OptionalT (reason, t)
@@ -3461,7 +3461,7 @@ let class_type ?(structural=false) ?annot_loc t =
     else update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t)
   in
   let reason = match annot_loc with
-  | Some loc -> annot_reason (repos_reason loc reason)
+  | Some loc -> repos_reason loc ~annot_loc:loc reason
   | None -> reason
   in
   DefT (reason, bogus_trust (), ClassT t)
@@ -3501,7 +3501,7 @@ let typeapp ?(implicit=false) ?annot_loc t targs =
   let reason = update_desc_new_reason (fun desc ->
     if implicit then RTypeAppImplicit desc else RTypeApp desc) (reason_of_t t) in
   let reason = match annot_loc with
-  | Some loc -> annot_reason (repos_reason loc reason)
+  | Some loc -> repos_reason loc ~annot_loc:loc reason
   | None -> reason
   in
   let use_op = Op (TypeApplication { type' = reason }) in
@@ -3513,7 +3513,7 @@ let this_typeapp ?annot_loc t this targs =
   | None -> reason_of_t t
   in
   let reason = match annot_loc with
-  | Some loc -> annot_reason (repos_reason loc reason)
+  | Some loc -> repos_reason loc ~annot_loc:loc reason
   | None -> reason
   in
   ThisTypeAppT (reason, t, this, targs)
