@@ -923,7 +923,7 @@ let is_blamable_reason r =
 (* returns reason with new description and position of original *)
 let update_desc_reason f r =
   mk_reason_with_test_id
-    (TestID.current ())
+    r.test_id
     (f (desc_of_reason ~unwrap:false r))
     (poly_loc_of_reason r)
     r.def_loc_opt
@@ -931,7 +931,7 @@ let update_desc_reason f r =
 
 let update_desc_new_reason f r =
   mk_reason_with_test_id
-    (TestID.current ())
+    r.test_id
     (f (desc_of_reason ~unwrap:false r))
     (poly_loc_of_reason r)
     None
