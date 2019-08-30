@@ -1142,7 +1142,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   let (_, return_t), _ as return_ast = convert cx tparams_map return in
   let statics_t =
-    let reason = replace_reason (fun d -> RStatics d) reason in
+    let reason = replace_reason ~keep_def_loc:true (fun d -> RStatics d) reason in
     Obj_type.mk_with_proto cx reason (FunProtoT reason)
       ~sealed:true ~exact:false ?call:None
   in
