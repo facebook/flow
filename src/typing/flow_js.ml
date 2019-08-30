@@ -7649,7 +7649,8 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     [Cache.Eval.id t destructor]
   in
   rec_flow_t cx trace (UnionT (r, rep), tout)
-| AnnotT (_, t, _) ->
+| AnnotT (r, t, use_desc) ->
+  let t = reposition_reason ~trace cx r ~use_desc t in
   let destructor = TypeDestructorT (use_op, reason, d) in
   rec_flow_t cx trace (Cache.Eval.id t destructor, tout)
 | _ ->
