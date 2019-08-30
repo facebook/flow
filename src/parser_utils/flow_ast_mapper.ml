@@ -386,9 +386,30 @@ class ['loc] mapper = object(this)
     if specifiers == specifiers' && declaration == declaration' then decl
     else { default; source; specifiers = specifiers'; declaration = declaration' }
 
-  (* TODO(T22777134): Implement this when the mapper supports OpaqueType. *)
   method declare_export_declaration_decl (decl: ('loc, 'loc) Ast.Statement.DeclareExportDeclaration.declaration) =
-    decl
+    let open Ast.Statement.DeclareExportDeclaration in
+    match decl with
+    | Variable (loc, dv) ->
+      let dv' = this#declare_variable loc dv in
+      if dv' == dv then decl else Variable (loc, dv')
+    | Function (loc, df) ->
+      let df' = this#declare_function loc df in
+      if df' == df then decl else Function (loc, df')
+    | Class (loc, dc) ->
+      let dc' = this#declare_class loc dc in
+      if dc' == dc then decl else Class (loc, dc')
+    | DefaultType t ->
+      let t' = this#type_ t in
+      if t' == t then decl else DefaultType t'
+    | NamedType (loc, ta) ->
+      let ta' = this#type_alias loc ta in
+      if ta' == ta then decl else NamedType (loc, ta')
+    | NamedOpaqueType (loc, ot) ->
+      let ot' = this#opaque_type loc ot in
+      if ot' == ot then decl else NamedOpaqueType (loc, ot')
+    | Interface (loc, i) ->
+      let i' = this#interface loc i in
+      if i' == i then decl else Interface (loc, i')
 
   method declare_function _loc (decl: ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
     let open Ast.Statement.DeclareFunction in

@@ -1335,3 +1335,79 @@ CJS default imports bound to a local:
     }
   ]
 }
+declare var:
+{
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":13,"offset":22},
+      "end":{"line":3,"column":15,"offset":25}
+    },
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":1,"offset":35},
+      "end":{"line":4,"column":3,"offset":38}
+    }
+  ]
+}
+declare export var:
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":20,"offset":60},
+      "end":{"line":6,"column":22,"offset":63}
+    },
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":1,"offset":65},
+      "end":{"line":7,"column":3,"offset":68}
+    }
+  ]
+}
+declare function:
+{
+  "kind":"symbol-found",
+  "name":"baz",
+  "locs":[
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":18,"offset":88},
+      "end":{"line":9,"column":20,"offset":91}
+    },
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":1,"offset":101},
+      "end":{"line":10,"column":3,"offset":104}
+    }
+  ]
+}
+declare class:
+{
+  "kind":"symbol-found",
+  "name":"Foo",
+  "locs":[
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":15,"offset":123},
+      "end":{"line":12,"column":17,"offset":126}
+    },
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":13,"column":5,"offset":135},
+      "end":{"line":13,"column":7,"offset":138}
+    }
+  ]
+}
