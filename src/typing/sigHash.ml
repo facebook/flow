@@ -86,6 +86,7 @@ type hash =
   | TypeH
   | AnnotH
   | ModuleH
+  | ModuleStrictH
   | TvarDestructorH
   | CustomFunObjectAssignH
   | CustomFunObjectGetPrototypeOfH
@@ -297,7 +298,8 @@ let hash_of_ctor = Type.(function
   | IntersectionT _ -> IntersectionH
   | KeysT _ -> KeysH
   | MaybeT _ -> MaybeH
-  | ModuleT _ -> ModuleH
+  | ModuleT (_, _, false) -> ModuleH
+  | ModuleT (_, _, true) -> ModuleStrictH
   | NullProtoT _ -> NullProtoH
   | ObjProtoT _ -> ObjProtoH
   | OptionalT _ -> OptionalH

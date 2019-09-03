@@ -1,0 +1,12 @@
+[ignore]
+<PROJECT_ROOT>/commit_a
+<PROJECT_ROOT>/commit_b
+
+[strict]
+nonstrict-import
+
+[options]
+no_flowlib=true
+experimental.well_formed_exports=true
+experimental.types_first=true
+experimental.abstract_locations=true
