@@ -112,3 +112,7 @@ assert_ok \
 printf "object_literal.js:7:17 = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty object_literal.js 7 17 < object_literal.js
+
+printf "optional_object.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty optional_object.js 3 5 < optional_object.js

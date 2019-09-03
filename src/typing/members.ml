@@ -343,6 +343,7 @@ let resolve_builtin_class cx ?trace = function
   | t -> t
 
 let rec extract_type cx this_t = match this_t with
+  | OptionalT (_, ty)
   | MaybeT (_, ty) ->
       extract_type cx ty
   | DefT (_, _, (NullT | VoidT))
@@ -438,7 +439,6 @@ let rec extract_type cx this_t = match this_t with
   | OpaqueT _
   | OpenPredT (_, _, _, _)
   | OpenT _
-  | OptionalT _
   | ShapeT _
   | ThisClassT _
   | DefT (_, _, TypeT _)
