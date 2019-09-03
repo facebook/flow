@@ -47,22 +47,34 @@ end = struct
     seen_names = SSet.empty;
   }
 
+  let end_of_member_init env =
+    match Peek.token env with
+    | T_COMMA | T_RCURLY -> true
+    | _ -> false
+
   let member_init env =
-    match Peek.token env, Peek.ith_token ~i:1 env with
-    | T_NUMBER {kind; raw}, (T_COMMA | T_RCURLY) ->
-      let loc = Peek.loc env in
+    let loc = Peek.loc env in
+    match Peek.token env with
+    | T_NUMBER {kind; raw} ->
       let value = Parse.number env kind raw in
-      NumberInit (loc, {NumberLiteral.value; raw})
-    | T_STRING (loc, value, raw, octal), (T_COMMA | T_RCURLY) ->
+      if end_of_member_init env then
+        NumberInit (loc, {NumberLiteral.value; raw})
+      else
+        InvalidInit loc
+    | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
-      StringInit (loc, {StringLiteral.value; raw})
-    | (T_TRUE | T_FALSE) as token, (T_COMMA | T_RCURLY) ->
-      let loc = Peek.loc env in
+      if end_of_member_init env then
+        StringInit (loc, {StringLiteral.value; raw})
+      else
+        InvalidInit loc
+    | (T_TRUE | T_FALSE) as token ->
       Eat.token env;
-      BooleanInit (loc, token = T_TRUE)
+      if end_of_member_init env then
+        BooleanInit (loc, token = T_TRUE)
+      else
+        InvalidInit loc
     | _ ->
-      let loc = Peek.loc env in
       Eat.token env;
       InvalidInit loc
 
