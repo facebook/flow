@@ -3040,3 +3040,161 @@ eval_destructor.js = {
     }
   ]
 }
+poly.js = {
+  "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    },
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"poly.js",
+      "line":4,
+      "endline":4,
+      "start":18,
+      "end":23
+    },
+    {
+      "name":"y",
+      "type":"number",
+      "func_details":null,
+      "path":"poly.js",
+      "line":4,
+      "endline":4,
+      "start":18,
+      "end":23
+    }
+  ]
+}
+poly_no_args.js = {
+  "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    },
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"poly_no_args.js",
+      "line":3,
+      "endline":3,
+      "start":10,
+      "end":15
+    }
+  ]
+}
