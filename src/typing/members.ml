@@ -220,26 +220,43 @@ let rec merge_type cx =
   | (t1, t2) ->
       create_union (UnionRep.make t1 t2 [])
 
-let instantiate_poly_t cx t = function
-  | None -> (* nothing to do *) t
-  | Some types -> match t with
-      | DefT (_, _, PolyT (_, type_params, t_, _)) -> (
-        try
-          let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
-            SMap.add name type_ acc
-          ) SMap.empty (Nel.to_list type_params) types in
-          subst cx subst_map t_
-        with _ ->
-          prerr_endline "Instantiating poly type failed";
-          t
-      )
-      | DefT (_, _, EmptyT _)
-      | DefT (_, _, MixedT _)
-      | AnyT _
-      | DefT (_, _, (TypeT (_, AnyT _))) ->
-          t
-      | _ ->
-        assert_false ("unexpected args passed to instantiate_poly_t: " ^ (string_of_ctor t))
+let instantiate_poly_t cx t args =
+  match t with
+  | DefT (_, _, PolyT (_, type_params, t_, _)) ->
+    let args = Option.value ~default:[] args in
+    let maximum_arity = Nel.length type_params in
+    if List.length args > maximum_arity then begin
+      Hh_logger.error "Instantiating poly type failed";
+      t
+    end else
+      let map, _, too_few_args = Nel.fold_left
+        (fun (map, ts, too_few_args) typeparam ->
+          let t, ts, too_few_args = match typeparam, ts with
+          | {default=Some default; _;}, [] ->
+              (* fewer arguments than params and we have a default *)
+              subst cx map default, [], too_few_args
+          | {default=None; _;}, [] ->
+              AnyT.error (reason_of_t t), [], true
+          | _, t::ts ->
+              t, ts, too_few_args in
+          SMap.add typeparam.name t map, ts, too_few_args
+        )
+        (SMap.empty, args, false)
+        type_params in
+      if too_few_args then begin
+        Hh_logger.error "Instantiating poly type failed";
+        t
+      end else subst cx map t_
+  | DefT (_, _, EmptyT _)
+  | DefT (_, _, MixedT _)
+  | AnyT _
+  | DefT (_, _, (TypeT (_, AnyT _))) ->
+      t
+  | _ ->
+    match args with
+    | None -> t
+    | Some _ ->
+      assert_false ("unexpected args passed to instantiate_poly_t: " ^ (string_of_ctor t))
 
 let intersect_members cx members =
   match members with

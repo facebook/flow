@@ -140,3 +140,11 @@ assert_ok \
 printf "eval_destructor.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty eval_destructor.js 5 3 < eval_destructor.js
+
+printf "poly.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty poly.js 5 3 < poly.js
+
+printf "poly_no_args.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty poly_no_args.js 5 3 < poly_no_args.js
