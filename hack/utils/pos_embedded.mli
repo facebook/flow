@@ -142,3 +142,5 @@ module AbsolutePosMap : MyMap.S with type key = absolute
 val print_verbose_absolute : absolute -> string
 
 val print_verbose_relative : t -> string
+
+val pessimize_enabled : t -> float -> bool
