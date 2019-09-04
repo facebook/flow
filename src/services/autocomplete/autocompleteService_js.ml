@@ -152,11 +152,7 @@ let autocomplete_member
     ~reader ~exclude_proto_members ~ac_type
     cx file_sig typed_ast this ac_name ac_loc docblock =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let this_t = Members.resolve_type cx this in
-  (* Resolve primitive types to their internal class type. We do this to allow
-     autocompletion on these too. *)
-  let this_t = Members.resolve_builtin_class cx this_t in
-  let result = Members.extract ~exclude_proto_members cx this_t in
+  let result = Members.extract ~exclude_proto_members cx this in
 
   let open Hh_json in
 
@@ -165,7 +161,8 @@ let autocomplete_member
     | SuccessModule _ -> "SUCCESS", this
     | FailureNullishType -> "FAILURE_NULLABLE", this
     | FailureAnyType -> "FAILURE_NO_COVERAGE", this
-    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
+    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t
+    | FailureUnhandledMembers t -> "FAILURE_UNHANDLED_MEMBERS", t) in
 
   let json_data_to_log = JSON_Object [
     "ac_type", JSON_String ac_type;

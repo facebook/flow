@@ -116,3 +116,15 @@ assert_ok \
 printf "optional_object.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty optional_object.js 3 5 < optional_object.js
+  
+printf "indirect_array.js:5:3 = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty indirect_array.js 5 3 < indirect_array.js
+
+printf "indirect_array.js:10:3 = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty indirect_array.js 10 3 < indirect_array.js
+
+printf "infer.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty infer.js 4 5 < infer.js

@@ -331,7 +331,8 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
         end
     | Success _
     | FailureNullishType
-    | FailureUnhandledType _ ->
+    | FailureUnhandledType _
+    | FailureUnhandledMembers _ ->
         Ok UnsupportedType
     | FailureAnyType ->
         Ok AnyType

@@ -11,6 +11,7 @@
     | FailureNullishType
     | FailureAnyType
     | FailureUnhandledType of Type.t
+    | FailureUnhandledMembers of Type.t
 
   type t = (
     (* Success *) (ALoc.t option * Type.t) SMap.t,
@@ -26,4 +27,3 @@
   val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
   val extract_members: ?exclude_proto_members: bool -> Context.t -> (Type.t, Type.t) generic_t -> t
   val resolve_type: Context.t -> Type.t -> Type.t
-  val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
