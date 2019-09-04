@@ -1888,3 +1888,77 @@ generic_alias.js = {
 }
 object_literal.js:5:16 = {"result":[]}
 object_literal.js:7:17 = {"result":[]}
+optional_object.js = {
+  "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    },
+    {
+      "name":"z",
+      "type":"number",
+      "func_details":null,
+      "path":"optional_object.js",
+      "line":2,
+      "endline":2,
+      "start":25,
+      "end":30
+    }
+  ]
+}
