@@ -73,15 +73,15 @@ let getdef_require_pattern ~reader state loc =
   state.getdef_require_patterns <- loc::state.getdef_require_patterns
 
 let extract_member_def ~reader cx this name =
-  let this_t = Members.resolve_type cx this in
-  let member_result = Members.extract cx this_t in
+  let member_result = Members.extract cx this in
 
   let result_str, t = Members.(match member_result with
     | Success _ -> "SUCCESS", this
     | SuccessModule _ -> "SUCCESS", this
     | FailureNullishType -> "FAILURE_NULLABLE", this
     | FailureAnyType -> "FAILURE_NO_COVERAGE", this
-    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
+    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t
+    | FailureUnhandledMembers t -> "FAILURE_UNHANDLED_MEMBERS", t) in
 
   let json_data_to_log = Hh_json.(JSON_Object [
     "type", Debug_js.json_of_t ~depth:3 cx t;
