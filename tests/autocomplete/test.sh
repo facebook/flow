@@ -69,6 +69,10 @@ printf "jsx2.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty jsx2.js 8 11 < jsx2.js
 
+printf "jsx3.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx3.js 10 4 < jsx3.js
+
 printf "customfun.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty customfun.js 6 1 < customfun.js
@@ -128,3 +132,11 @@ assert_ok \
 printf "infer.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty infer.js 4 5 < infer.js
+
+printf "eval_predicate.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty eval_predicate.js 5 3 < eval_predicate.js
+
+printf "eval_destructor.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty eval_destructor.js 5 3 < eval_destructor.js
