@@ -7568,6 +7568,14 @@ and eval_latent_pred cx ?trace reason curr_t p i =
   | Some it ->
     it
 
+and eval_evalt cx ?trace t evaluator id =
+  match evaluator with
+  | LatentPredT (reason, pred) -> eval_latent_pred cx ?trace reason t pred id
+  | TypeDestructorT (use_op, reason, d) ->
+    let _, result = mk_type_destructor cx ~trace:(Option.value ~default:Trace.dummy_trace trace)
+      use_op reason t d id in
+    result
+
 and eval_selector cx ?trace reason curr_t s tvar =
   flow_opt cx ?trace (curr_t, match s with
     | Prop x -> GetPropT (unknown_use, reason, Named (reason, x), tvar)

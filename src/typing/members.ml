@@ -413,6 +413,10 @@ let rec extract_type cx this_t = match this_t with
     let array_t = resolve_type cx builtin in
     Some [elemt] |> instantiate_poly_t cx array_t |> instantiate_type |> extract_type cx
 
+  | EvalT (t, defer, id) ->
+    eval_evalt cx t defer id |>
+    extract_type cx
+
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
   | BoundT _
@@ -422,7 +426,6 @@ let rec extract_type cx this_t = match this_t with
   | CustomFunT (_, _)
   | MatchingPropT (_, _, _)
   | DefT (_, _, EmptyT _)
-  | EvalT (_, _, _)
   | ExistsT _
   | InternalT (ExtendsT _)
   | FunProtoApplyT _
