@@ -32,12 +32,17 @@ class ['a] t = object(self)
     acc
 
   | FunProtoT _
-  | FunProtoApplyT _
+  | FunProtoApplyT (_, None, _)
   | FunProtoBindT _
   | FunProtoCallT _
   | ObjProtoT _
   | NullProtoT _
     -> acc
+
+  | FunProtoApplyT (_, Some t, call_args_tlist) ->
+    let acc = self#type_ cx pole acc t in
+    let acc = self#list (self#call_arg cx) acc call_args_tlist in
+    acc
 
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
 

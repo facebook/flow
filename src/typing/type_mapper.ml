@@ -105,9 +105,14 @@ class virtual ['a] t = object(self)
       | FunProtoT _
       | ObjProtoT _
       | NullProtoT _
-      | FunProtoApplyT _
+      | FunProtoApplyT (_, None, _)
       | FunProtoBindT _
       | FunProtoCallT _ -> t
+      | FunProtoApplyT (r, Some t', call_args_tlist) ->
+          let t'' = self#type_ cx map_cx t' in
+          let call_args_tlist' = ListUtils.ident_map (self#call_arg cx map_cx) call_args_tlist in
+          if t'' == t' && call_args_tlist' == call_args_tlist' then t
+          else FunProtoApplyT (r, Some t'', call_args_tlist')
       | AnyWithLowerBoundT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -210,6 +215,17 @@ class virtual ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ExplicitArg t''
+
+  method call_arg cx map_cx t =
+    match t with
+    | Arg t' ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then t
+        else Arg t''
+    | SpreadArg t' ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then t
+        else SpreadArg t''
 
   method def_type cx map_cx t =
     match t with
@@ -1175,17 +1191,6 @@ class virtual ['a] t_with_uses = object(self)
       call_closure_t;
       call_strict_arity;
     }
-
-  method call_arg cx map_cx t =
-    match t with
-    | Arg t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then t
-        else Arg t''
-    | SpreadArg t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then t
-        else SpreadArg t''
 
   method lookup_kind cx map_cx t =
     match t with

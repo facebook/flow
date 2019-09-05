@@ -6,6 +6,8 @@
  *)
 class virtual ['a] t :
   object
+    method call_arg :
+      Context.t -> 'a -> Type.call_arg -> Type.call_arg
     method arr_type :
       Context.t -> 'a -> Type.arrtype -> Type.arrtype
     method bounds :
@@ -53,8 +55,6 @@ end
 class virtual ['a] t_with_uses :
   object
     inherit ['a] t
-    method call_arg :
-      Context.t -> 'a -> Type.call_arg -> Type.call_arg
     method choice_use_tool :
       Context.t ->
       'a -> Type.choice_use_tool -> Type.choice_use_tool

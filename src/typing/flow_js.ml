@@ -5675,8 +5675,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*******************************************)
 
     (* resolves the arguments... *)
-    | FunProtoApplyT lreason,
-        CallT (use_op, reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+    | FunProtoApplyT (lreason, arg, arg_tlist),
+        CallT (use_op, reason_op, ({call_this_t; call_args_tlist; _} as funtype)) ->
+      let func = match arg with
+        | Some t -> t
+        | None -> call_this_t
+      in
       (* Drop the specific AST derived argument reasons. Our new arguments come
        * from arbitrary positions in the array. *)
       let use_op = match use_op with
@@ -5685,6 +5689,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           Op (FunCallMethod {op; fn; prop; args = []; local})
       | _ -> use_op
       in
+
+      let call_args_tlist = arg_tlist @ call_args_tlist in
 
       begin match call_args_tlist with
       (* func.apply() *)
@@ -5798,6 +5804,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (AnyT.untyped reason, UseT (use_op, param_t))
       ) call_args_tlist;
       rec_flow_t cx trace (l, call_tout)
+
+    | FunProtoApplyT (lreason, Some this_t, _), BindT (_, _, { call_this_t; call_args_tlist; call_tout; _ }, _) ->
+      rec_flow_t cx trace (call_this_t, this_t);
+      rec_flow_t cx trace (FunProtoApplyT (lreason, Some this_t, call_args_tlist), call_tout)
+
+    | FunProtoApplyT (lreason, _, _), BindT (_, _, { call_this_t; call_args_tlist; call_tout; _ }, _) ->
+      rec_flow_t cx trace (FunProtoApplyT (lreason, Some call_this_t, call_args_tlist), call_tout)
 
     | _, BindT (_, _, { call_tout; _ }, true) ->
       rec_flow_t cx trace (l, call_tout)
@@ -6603,7 +6616,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (AnyT.make AnyError lreason, u);
 
     (* Special cases of FunT *)
-    | FunProtoApplyT reason, _
+    | FunProtoApplyT (reason, _, _), _
     | FunProtoBindT reason, _
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
@@ -7387,9 +7400,13 @@ and any_propagated_use cx trace use_op any l =
       covariant_flow ~use_op instance;
       true
 
+  | FunProtoApplyT (_, Some t, _ (* TODO *)) ->
+      contravariant_flow ~use_op t;
+      true
+
   (* These types have no negative positions in their lower bounds *)
   | ExistsT _
-  | FunProtoApplyT _
+  | FunProtoApplyT (_, None, _)
   | FunProtoBindT _
   | FunProtoCallT _
   | FunProtoT _
