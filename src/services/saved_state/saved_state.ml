@@ -96,13 +96,7 @@ end = struct
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
   let normalize_error ~root =
-    let f loc =
-      let loc = ALoc.to_loc_exn loc in
-      { loc with
-        Loc.source = Option.map ~f:(normalize_file_key ~root) loc.Loc.source;
-      }
-      |> ALoc.of_loc in
-    Flow_error.map_loc_of_error f
+    Flow_error.map_loc_of_error (ALoc.update_source (Option.map ~f:(normalize_file_key ~root)))
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
@@ -355,13 +349,7 @@ end = struct
   end
 
   let denormalize_error ~root =
-    let f loc =
-      let loc = ALoc.to_loc_exn loc in
-      { loc with
-        Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source;
-      }
-      |> ALoc.of_loc in
-    Flow_error.map_loc_of_error f
+    Flow_error.map_loc_of_error (ALoc.update_source (Option.map ~f:(denormalize_file_key ~root)))
 
   let verify_version =
     let version_length = 16 in (* Flow_build_id should always be 16 bytes *)
