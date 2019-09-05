@@ -1,3 +1,54 @@
+Error ------------------------------------------------------------------------------- conditional_break_continue.js:61:8
+
+Cannot cast `a` to number because possibly uninitialized variable [1] is incompatible with number [2].
+
+   conditional_break_continue.js:61:8
+   61|     ; (a: number) // error
+              ^
+
+References:
+   conditional_break_continue.js:55:9
+   55|     let a
+               ^ [1]
+   conditional_break_continue.js:61:11
+   61|     ; (a: number) // error
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- conditional_break_continue.js:73:8
+
+Cannot cast `a` to number because possibly uninitialized variable [1] is incompatible with number [2].
+
+   conditional_break_continue.js:73:8
+   73|     ; (a: number) // error
+              ^
+
+References:
+   conditional_break_continue.js:67:9
+   67|     let a
+               ^ [1]
+   conditional_break_continue.js:73:11
+   73|     ; (a: number) // error
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- conditional_break_continue.js:85:8
+
+Cannot cast `a` to number because possibly uninitialized variable [1] is incompatible with number [2].
+
+   conditional_break_continue.js:85:8
+   85|     ; (a: number) // error
+              ^
+
+References:
+   conditional_break_continue.js:79:9
+   79|     let a
+               ^ [1]
+   conditional_break_continue.js:85:11
+   85|     ; (a: number) // error
+                 ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- toplevel_break.js:3:1
 
 Illegal break statement
@@ -23,4 +74,4 @@ Illegal return statement
 
 
 
-Found 3 errors
+Found 6 errors
