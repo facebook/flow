@@ -1,3 +1,5 @@
+// @flow
+
 type Malformed = $PropertyType<any, number>;
 
 type Obj = { x: string };

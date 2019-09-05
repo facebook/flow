@@ -1,3 +1,5 @@
+// @flow
+
 type BadArity = $ElementType<number, number, number>;
 
 type Arr = Array<number>;
@@ -21,3 +23,7 @@ function bar(o: Obj): $ElementType<Obj, string> {
   if (false) return o['buz'];
   else return 0;
 }
+
+declare var x: $ElementType<{a: ''}, 'a' | 'b'>;
+
+const y: string = x
