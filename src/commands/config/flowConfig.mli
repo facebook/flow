@@ -6,12 +6,17 @@
  *)
 
 type config
+
+type line = int * string
 type warning = int * string
 type error = int * string
 
 val get: ?allow_cache:bool -> string -> (config * warning list, error) result
 val get_hash: ?allow_cache:bool -> string -> Xx.hash
 val empty_config: config
+
+val is_not_comment: line -> bool
+val parse: config -> line list -> (config * warning list, error) result
 
 val init:
   ignores: string list ->

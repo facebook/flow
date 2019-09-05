@@ -12,6 +12,7 @@ type t = LintSet.t
 let empty = LintSet.empty
 let fold = LintSet.fold
 let iter = LintSet.iter
+let elements = LintSet.elements
 
 let of_lines =
   let parse_line (label, line) =

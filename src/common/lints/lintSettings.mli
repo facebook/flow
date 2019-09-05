@@ -17,6 +17,7 @@ val set_value: lint_kind -> ('a * Loc.t option) -> 'a t -> 'a t
 val set_all: (lint_kind * ('a * Loc.t option)) list -> 'a t -> 'a t
 
 val get_default: 'a t -> 'a
+val get_explicit_values: 'a t -> ('a * Loc.t option) LintMap.t
 (* Get the state of a lint kind in the provided settings *)
 val get_value: lint_kind -> 'a t -> 'a
 (* True iff the severity for the provided lint has been explicitly set *)
