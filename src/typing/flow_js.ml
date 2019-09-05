@@ -5522,6 +5522,60 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _, MapTypeT (_, reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
+
+    | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleReduce (funt, Some init), tout) ->
+      let mk_index index =
+        let raw = Pervasives.string_of_int index in
+        let index = Pervasives.float_of_int index in
+        let t_reason = replace_reason_const (RNumberLit raw) reason_op in
+        DefT (t_reason, trust, SingletonNumT (index, raw))
+      in
+      let f key acc value =
+        let index = mk_index key in
+        EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [acc; value; index]), mk_id ())
+      in
+      let mk_fold ts init =
+        Core_list.foldi ts ~f:f ~init:init
+      in
+      let t_type = match arrtype with
+        | ArrayAT (_, Some ts) -> mk_fold ts init
+        | TupleAT (_, ts) -> mk_fold ts init
+        | ROArrayAT _ -> EmptyT.why reason_op trust
+        | _ -> EmptyT.why reason_op trust
+      in
+      rec_flow_t cx trace (t_type, tout)
+
+    | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleReduce (funt, None), tout) ->
+      let mk_index index =
+        let raw = Pervasives.string_of_int index in
+        let index = Pervasives.float_of_int index in
+        let t_reason = replace_reason_const (RNumberLit raw) reason_op in
+        DefT (t_reason, trust, SingletonNumT (index, raw))
+      in
+      let f key acc value =
+        let index = mk_index key in
+        EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [acc; value; index]), mk_id ())
+      in
+      let reducei l ~f = match l with
+        | [] -> None
+        | hd :: tl -> Some (snd (Core_list.fold ~init:(0, hd) ~f:(fun (i, acc) v -> (i + 1, f i acc v)) tl))
+      in
+      let mk_fold ts =
+        reducei ts ~f:f
+      in
+      let t = match arrtype with
+        | ArrayAT (_, opt) ->
+          (match opt with
+            | Some ts -> mk_fold ts
+            | None -> None)
+        | TupleAT (_, ts) -> mk_fold ts
+        | ROArrayAT (_) -> None
+      in
+      let t_type = match t with
+        | Some t -> t
+        | None -> EmptyT.why reason_op trust in
+      rec_flow_t cx trace (t_type, tout)
+
     | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout) ->
       let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
       let arrtype = match arrtype with

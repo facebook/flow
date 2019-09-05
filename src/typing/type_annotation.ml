@@ -770,6 +770,25 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
 
+  | "$TupleReduce" ->
+    (match convert_type_params () with
+      | ([t1; t2; t3], targs) ->
+        let reason = mk_reason RTupleReduce loc in
+        reconstruct_ast
+          (EvalT (
+            t1,
+            TypeDestructorT (use_op reason, reason, TypeMap (TupleReduce (t2, Some t3))),
+            mk_id ()
+          ))
+          targs
+      | ([t1; t2], targs) ->
+        let reason = mk_reason RTupleReduce loc in
+        reconstruct_ast
+          (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (TupleReduce (t2, None))), mk_id ()))
+          targs
+      | _ -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 2)) t_ast
+    )
+
   | "$ObjMap" ->
     check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       let t1, t2, targs = match convert_type_params () with

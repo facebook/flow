@@ -301,8 +301,13 @@ and collect_of_object_kit_spread_operands ?log_unresolved cx acc operands =
     acc operands
 
 and collect_of_type_map ?log_unresolved cx acc = function
-  | TupleMap t | ObjectMap t | ObjectMapi t ->
+  | TupleMap t
+  | ObjectMap t
+  | TupleReduce (t, None)
+  | ObjectMapi t ->
     collect_of_type ?log_unresolved cx acc t
+  | TupleReduce (t, Some t2) ->
+    collect_of_types ?log_unresolved cx acc [t; t2]
 
 (* In some positions, like annots, we trust that tvars are 0->1. *)
 and collect_of_binding ?log_unresolved cx acc = function
