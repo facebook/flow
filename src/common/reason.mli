@@ -82,6 +82,7 @@ type 'loc virtual_reason_desc =
   | RNoSuper
   | RDummyPrototype
   | RDummyThis
+  | RObjectReduce
   | RTupleMap
   | RObjectMap
   | RObjectMapi
