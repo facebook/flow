@@ -1,3 +1,29 @@
+### 0.107.0
+New Features:
+
+* Implement type refinements for property accesses through brackets (#7597, thanks @goodmind).
+
+Notable bug fixes:
+
+* Fix several issues with autocomplete that prevented optional properties, type aliases to utility types, types with default type arguments, and several other edge cases from being autocompleted.
+* Fix Not_expects_bounds crash with `%checks` (#7863).
+
+Misc:
+
+* Make the LSP `textDocument/documentHighlight` request serviceable while Flow is in the middle of a recheck.
+* Fix minor off-by-one error which caused some parts of traces to be pruned when using the `--traces` flag.
+* A minor improvement in error messages when `undefined` is involved.
+* Reduce memory usage slightly when abstract locations are enabled.
+* Prevent log spew when `flow lsp` is started while the server is initializing.
+* Improve completeness of sighashing. We recently observed an incremental bug caused by incomplete sighashing. This speculatively addresses similar potentially problematic cases.
+
+Library Definitions:
+
+* Add webkitGetAsEntry to DataTransferItem.
+* Switch several properties to optional in Notification and NotificationOptions (#8032, thanks @pauldijou).
+* Map/Set fix symbols (#7560, thanks @goodmind).
+* Fix Array#reduce and Array#reduceRight (#7902, thanks @goodmind).
+
 ### 0.106.3
 
 We found and fixed a bug introduced in 0.105.0. Some internal code was using a hashing function and assumed collisions were far less likely than they proved to be. This could lead to random nonsensical errors which would then disappear, usually involving missing object properties. This likely only affected extremely large projects.
