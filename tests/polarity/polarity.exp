@@ -54,6 +54,118 @@ References:
                         ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- fun.js:14:24
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   fun.js:14:24
+   14| function argPos<+T>(x: T): void {} // Error: +T in negative position
+                              ^
+
+References:
+   fun.js:14:18
+   14| function argPos<+T>(x: T): void {} // Error: +T in negative position
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:15:28
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   fun.js:15:28
+   15| function flipArgNeg<-T>(x: T => void): void {} // Error: -T in positive position
+                                  ^
+
+References:
+   fun.js:15:22
+   15| function flipArgNeg<-T>(x: T => void): void {} // Error: -T in positive position
+                            ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:18:28
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   fun.js:18:28
+   18| function retNeg<-T>(x: T): T { return x } // Error: -T in positive position
+                                  ^
+
+References:
+   fun.js:18:18
+   18| function retNeg<-T>(x: T): T { return x } // Error: -T in positive position
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:21:34
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   fun.js:21:34
+   21| function flipRetPos<+T>(x: () => T): void {} // Error: +T in negative position
+                                        ^
+
+References:
+   fun.js:21:22
+   21| function flipRetPos<+T>(x: () => T): void {} // Error: +T in negative position
+                            ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:25:25
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   fun.js:25:25
+   25| const argPos1 = <+T>(x: T): void => {} // Error: +T in negative position
+                               ^
+
+References:
+   fun.js:25:19
+   25| const argPos1 = <+T>(x: T): void => {} // Error: +T in negative position
+                         ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:26:29
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   fun.js:26:29
+   26| const flipArgNeg1 = <-T>(x: T => void): void => {} // Error: -T in positive position
+                                   ^
+
+References:
+   fun.js:26:23
+   26| const flipArgNeg1 = <-T>(x: T => void): void => {} // Error: -T in positive position
+                             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:29:29
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   fun.js:29:29
+   29| const retNeg1 = <-T>(x: T): T => x // Error: -T in positive position
+                                   ^
+
+References:
+   fun.js:29:19
+   29| const retNeg1 = <-T>(x: T): T => x // Error: -T in positive position
+                         ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:32:35
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   fun.js:32:35
+   32| const flipRetPos1 = <+T>(x: () => T): void => {} // Error: +T in negative position
+                                         ^
+
+References:
+   fun.js:32:23
+   32| const flipRetPos1 = <+T>(x: () => T): void => {} // Error: +T in negative position
+                             ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ obj.js:2:25
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
@@ -167,4 +279,4 @@ References:
 
 
 
-Found 12 errors
+Found 20 errors
