@@ -8,9 +8,7 @@ import 'codemirror/mode/jsx/jsx';
 import * as LZString from 'lz-string';
 import {load as initFlowLocally} from 'flow-loader';
 
-CodeMirror.defineOption('flow', null, function(editor) {
-  editor.performLint();
-});
+CodeMirror.defineOption('flow', null);
 
 function appendMsg(container, msg, editor) {
   const clickHandler = (msg) => {
@@ -105,13 +103,42 @@ function removeChildren(node) {
   while (node.lastChild) node.removeChild(node.lastChild);
 }
 
-function getAnnotations(text, callback, options, editor) {
-  Promise.resolve(editor.getOption('flow'))
-  .then(flowProxy => flowProxy.checkContent('-', text))
-  .then(errors => {
-    CodeMirror.signal(editor, 'flowErrors', errors);
+function coverage(text, flow, isCoverageEnabled, editor) {
+  const isCoverageEnabled = editor.getOption('coverageEnabled');
+  if (isCoverageEnabled) {
+    return flow
+      .then(flowProxy => flowProxy.coverage('-', text))
+      .then(coverage => {
+        CodeMirror.signal(editor, 'flowCoverage', coverage);
+        return coverage.expressions.uncovered_locs
+      })
+      .catch(err => {
+        console.error(err)
+        return []
+      })
+  }
+  return Promise.resolve([])
+}
 
-    var lint = errors.map(function(err) {
+function checkContent(text, flow, editor) {
+  return flow
+    .then(flowProxy => flowProxy.checkContent('-', text))
+    .then(errors => {
+      CodeMirror.signal(editor, 'flowErrors', errors);
+      return errors
+    })
+}
+
+function getAnnotations(text, callback, options, editor) {
+  const flow = Promise.resolve(editor.getOption('flow'));
+
+  const sources = Promise.all([
+    coverage(text, flow, editor),
+    checkContent(text, flow, editor),
+  ]);
+
+  sources.then(([coverage, errors]) => {
+    const errorsLint = errors.map(function(err) {
       var messages = err.message;
       var firstLoc = messages[0].loc;
       var message = messages.map(function(msg) {
@@ -127,7 +154,21 @@ function getAnnotations(text, callback, options, editor) {
         message: message
       };
     });
-    callback(lint);
+    const coverageLint = coverage.map(function (loc) {
+      return {
+        from: CodeMirror.Pos(
+          loc.start.line - 1,
+          loc.start.column - 1,
+        ),
+        to: CodeMirror.Pos(loc.end.line - 1, loc.end.column),
+        severity: 'info',
+        message: 'Not covered by flow'
+      }
+    });
+    callback([
+      ...errorsLint,
+      ...coverageLint,
+    ]);
   });
 }
 getAnnotations.async = true;
@@ -217,6 +258,17 @@ class AsyncLocalFlow {
     return Promise.resolve(this._flow.checkContent(filename, body));
   }
 
+  coverage(filename, body) {
+    if (this._flow.coverage) {
+      return Promise.resolve(this._flow.coverage(filename, body))
+    }
+    return Promise.reject(Error('coverage method is missing'))
+  }
+
+  dumpTypes(filename, body) {
+    return Promise.resolve(this._flow.dumpTypes(filename, body))
+  }
+
   typeAtPos(filename, body, line, col) {
     return Promise.resolve(this._flow.typeAtPos(filename, body, line, col));
   }
@@ -237,6 +289,14 @@ class AsyncWorkerFlow {
 
   checkContent(filename, body) {
     return this._worker.send({ type: 'checkContent', filename, body });
+  }
+
+  coverage(filename, body) {
+    return this._worker.send({ type: 'coverage', filename, body })
+  }
+
+  dumpTypes(filename, body) {
+    return this._worker.send({ type: 'dumpTypes', filename, body })
   }
 
   typeAtPos(filename, body, line, col) {
@@ -263,6 +323,7 @@ function initFlow(version) {
 
 function createEditor(
   flowVersion,
+  optionsNode,
   domNode,
   resultsNode,
   flowVersions
@@ -348,6 +409,14 @@ function createEditor(
 
     resultsNode.className += " show-errors";
 
+    const coverageOption = document.createElement('label');
+    const coverageCheckbox = document.createElement('input');
+    coverageCheckbox.type = 'checkbox';
+    coverageOption.appendChild(coverageCheckbox);
+    coverageOption.appendChild(document.createTextNode(' coverage'));
+
+    optionsNode.appendChild(coverageOption);
+
     const cursorPositionNode = document.querySelector('footer .cursor-position');
     const typeAtPosNode = document.querySelector('footer .type-at-pos');
 
@@ -383,7 +452,8 @@ function createEditor(
         typeAtPosNode.title = typeAtPos ? typeAtPos.c : '';
         typeAtPosNode.textContent = typeAtPos ? typeAtPos.c : '';
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         typeAtPosNode.title = '';
         typeAtPosNode.textContent = '';
       });
@@ -450,6 +520,12 @@ function createEditor(
         removeClass(resultsNode, 'show-loading');
       });
       editor.setOption('flow', flowProxy);
+    });
+
+    coverageCheckbox.addEventListener('change', function(evt) {
+      const checked = evt.target.checked;
+      editor.setOption('coverageEnabled', checked);
+      editor.performLint();
     });
   });
 }
