@@ -4897,11 +4897,8 @@ and jsx cx expr_loc e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.
   let locs =
     let open_, _ = openingElement in
     match closingElement with
-    | Some _ ->
-      expr_loc,
-      open_,
-      children_loc
-    | _ -> open_, open_, open_
+    | Some _ -> (expr_loc, open_, children_loc)
+    | _ -> (open_, open_, open_)
   in
   let unresolved_params, children = collapse_children cx children in
   let t, openingElement, closingElement =
@@ -4913,13 +4910,7 @@ and jsx_fragment cx expr_loc fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JS
   let open Ast.JSX in
   let { frag_openingElement; frag_children; frag_closingElement } = fragment in
   let (children_loc, _) = frag_children in
-  let locs =
-    let open_ = frag_openingElement in
-    expr_loc,
-    open_,
-    children_loc
-  in
-  let _, loc_opening, _ = locs in
+  let loc_opening = frag_openingElement in
   let unresolved_params, frag_children = collapse_children cx frag_children in
   let fragment_t =
     let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
@@ -4927,6 +4918,7 @@ and jsx_fragment cx expr_loc fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JS
     let use_op = Op (GetProperty reason) in
     get_prop ~is_cond:false cx reason ~use_op react (reason, "Fragment")
   in
+  let locs = (expr_loc, frag_openingElement, children_loc) in
   let t = jsx_desugar cx "React.Fragment" fragment_t (NullT.at loc_opening |> with_trust bogus_trust) []
     unresolved_params locs in
   t, { frag_openingElement; frag_children; frag_closingElement }
