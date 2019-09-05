@@ -933,6 +933,7 @@ module rec TypeTerm : sig
   and lookup_action =
   | ReadProp of {
       use_op: use_op;
+      suggestion: string option;
       obj_t: t;
       tout: t;
     }

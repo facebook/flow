@@ -1518,7 +1518,7 @@ and json_of_lookup_action json_cx =
 and json_of_lookup_action_impl json_cx action = Hh_json.(
   JSON_Object (
     match action with
-    | ReadProp { use_op = _; obj_t = _; tout }  -> [
+    | ReadProp { use_op = _; obj_t = _; suggestion = _; tout }  -> [
         "kind", JSON_String "ReadProp";
         "t", _json_of_t json_cx tout
       ]
@@ -2634,14 +2634,17 @@ let dump_error_message =
           name
           (Polarity.string expected_polarity)
           (Polarity.string actual_polarity)
-    | EStrictLookupFailed ((reason1, reason2), reason, x, use_op) ->
-        spf "EStrictLookupFailed ((%s, %s), %s, %s, %s)"
+    | EStrictLookupFailed ((reason1, reason2), reason, x, use_op, suggestion) ->
+        spf "EStrictLookupFailed ((%s, %s), %s, %s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (dump_reason cx reason)
           (match x with Some x -> spf "Some(%S)" x | None -> "None")
           (match use_op with
           | Some use_op -> spf "Some(%s)" (string_of_use_op use_op)
+          | None -> "None")
+          (match suggestion with
+          | Some suggestion -> spf "Some(%s)" suggestion
           | None -> "None")
     | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
         spf "EPrivateLookupFailed ((%s, %s), %s, %s)"

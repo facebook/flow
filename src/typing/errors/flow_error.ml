@@ -165,7 +165,7 @@ let score_of_msg msg =
    * the right types. *)
   | EIncompatibleProp {use_op=Some (Frame (PropertyCompatibility _, _)); _}
   | EPropNotFound (_, _, Frame (PropertyCompatibility _, _))
-  | EStrictLookupFailed (_, _, _, Some (Frame (PropertyCompatibility _, _)))
+  | EStrictLookupFailed (_, _, _, Some (Frame (PropertyCompatibility _, _)), _)
     -> -frame_score
   | _
     -> 0
@@ -741,7 +741,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
    * If the use_op is a PropertyCompatibility frame then we encountered this
    * error while subtyping two objects. In this case we add a bit more
    * information to the error message. *)
-  let mk_prop_missing_error prop_loc prop lower use_op =
+  let mk_prop_missing_error prop_loc prop lower use_op suggestion =
     let (loc, lower, upper, use_op) = match use_op with
     (* If we are missing a property while performing property compatibility
      * then we are subtyping. Record the upper reason. *)
@@ -760,6 +760,11 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       [ref upper]
     | None ->
       prop_message @ [text " is missing in "; ref lower]
+    in
+    let message = message @
+      match suggestion with
+      | None -> []
+      | Some suggestion -> [text "."; text " Did you mean "; code suggestion; text "?"]
     in
     (* Finally, create our error message. *)
     mk_use_op_error loc use_op message
@@ -817,11 +822,11 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
     | IncompatibleMatchPropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
     | IncompatibleMethodT (prop_loc, prop)
-      -> mk_prop_missing_error prop_loc prop lower use_op
+      -> mk_prop_missing_error prop_loc prop lower use_op None
     | IncompatibleGetElemT prop_loc
     | IncompatibleSetElemT prop_loc
     | IncompatibleCallElemT prop_loc
-      -> mk_prop_missing_error prop_loc None lower use_op
+      -> mk_prop_missing_error prop_loc None lower use_op None
     | IncompatibleGetStaticsT
       -> nope "is not an instance type"
     (* unreachable or unclassified use-types. until we have a mechanical way
@@ -875,8 +880,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       mk_error ~trace_infos ~kind loc msg
   | None, UseOp (loc, text, use_op) ->
       mk_use_op_error loc use_op text
-  | None, PropMissing (prop_loc, prop, lower, use_op) ->
-      mk_prop_missing_error prop_loc prop lower use_op
+  | None, PropMissing (prop_loc, prop, lower, use_op, suggestion) ->
+      mk_prop_missing_error prop_loc prop lower use_op suggestion
   | None, PropPolarityMismatch (x, p1, p2, use_op) ->
       mk_prop_polarity_mismatch_error x p1 p2 use_op
   | None, IncompatibleUse (loc, use_kind, lower, upper, use_op) ->
