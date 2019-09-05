@@ -404,9 +404,33 @@ module Node = struct
       ])
     )
 
+  let flow_typed_node_module import_str =
+    let scoped_module_regex = Str.regexp "^@\\([a-zA-Z0-9$_.-]+\\)/\\(.*\\)$" in
+    if Str.string_match scoped_module_regex import_str 0 then
+      let scope = Str.matched_group 1 import_str in
+      let name = Str.matched_group 2 import_str in
+      scope ^ "__" ^ name
+    else
+      import_str
+
   let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
     let file_options = Options.file_options options in
     lazy_seq [
+      lazy (
+        let flow_typed_r = spf
+          "%s%s%s"
+          "@flowtyped"
+          Filename.dir_sep
+          (flow_typed_node_module r)
+        in
+        if String_utils.string_starts_with r "@flowtyped" then
+          None
+        else
+          node_module
+            ~options ~reader node_modules_containers
+            file loc resolution_acc dir flow_typed_r
+      );
+
       lazy (
         if SSet.mem dir node_modules_containers then
           lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
