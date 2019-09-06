@@ -33,5 +33,9 @@ val focused: t -> Utils_js.FilenameSet.t
 val dependents: t -> Utils_js.FilenameSet.t
 val dependencies: t -> Utils_js.FilenameSet.t
 
+(* This is O(n) in the size of the checked set. Because checked sets are typically very large, this
+* operation should be avoided in production code. *)
+val debug_equal: t -> t -> bool
+
 val debug_to_string: ?limit:int -> t -> string
 val debug_counts_to_string: t -> string
