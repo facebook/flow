@@ -906,8 +906,8 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
       if prefix then fuse [s_operator; expression ~ctxt argument]
       else fuse [expression ~ctxt argument; s_operator]
     | E.Class class_ -> class_base class_
-    | E.Yield { E.Yield.argument; delegate } ->
-      fuse [
+    | E.Yield { E.Yield.argument; delegate; comments } ->
+      layout_node_with_simple_comments_opt loc comments @@ fuse [
         Atom "yield";
         if delegate then Atom "*" else Empty;
         match argument with

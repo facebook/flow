@@ -3390,7 +3390,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           (class_loc, class_t), Class c
       )
 
-  | Yield { Yield.argument; delegate = false } ->
+  | Yield { Yield.argument; delegate = false; comments } ->
       let yield = Env.get_internal_var cx "yield" loc in
       let t, argument_ast = match argument with
       | Some expr ->
@@ -3405,9 +3405,9 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       }) in
       Flow.flow cx (t, UseT (use_op, yield));
       (loc, Env.get_internal_var cx "next" loc),
-      Yield { Yield.argument = argument_ast; delegate = false }
+      Yield { Yield.argument = argument_ast; delegate = false; comments }
 
-  | Yield { Yield.argument; delegate = true } ->
+  | Yield { Yield.argument; delegate = true; comments } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
       let next = Env.get_internal_var cx "next" loc in
       let yield = Env.get_internal_var cx "yield" loc in
@@ -3444,7 +3444,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       Flow.flow cx (t, UseT (use_op, iterable));
 
       (loc, ret),
-      Yield { Yield.argument = argument_ast; delegate = true }
+      Yield { Yield.argument = argument_ast; delegate = true; comments }
 
   (* TODO *)
   | Comprehension _ ->

@@ -1098,12 +1098,12 @@ Ast.Expression.(match x with
   | Decrement -> "--"
   ) in
   do_wrap (if prefix then op ^ x else x ^ op)
-| Yield { Yield.argument = Some x; delegate = false } ->
+| Yield { Yield.argument = Some x; delegate = false; _ } ->
   do_wrap ("yield " ^ code_desc_of_expression ~wrap:false x)
-| Yield { Yield.argument = Some x; delegate = true } ->
+| Yield { Yield.argument = Some x; delegate = true; _ } ->
   do_wrap ("yield* " ^ code_desc_of_expression ~wrap:false x)
-| Yield { Yield.argument = None; delegate = false } -> "yield"
-| Yield { Yield.argument = None; delegate = true } -> "yield*"
+| Yield { Yield.argument = None; delegate = false; _ } -> "yield"
+| Yield { Yield.argument = None; delegate = true; _ } -> "yield*"
 
 (* TODO *)
 | Comprehension _

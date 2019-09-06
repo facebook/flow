@@ -1586,8 +1586,9 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method yield (expr: ('M, 'T) Ast.Expression.Yield.t) : ('N, 'U) Ast.Expression.Yield.t =
     let open Ast.Expression.Yield in
-    let { argument; delegate } = expr in
+    let { argument; delegate; comments } = expr in
     let argument' = Option.map ~f:this#expression argument in
-    { argument = argument'; delegate }
+    let comments' = Option.map ~f:this#syntax comments in
+    { argument = argument'; delegate; comments = comments' }
 
 end

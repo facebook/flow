@@ -979,6 +979,7 @@ and Expression : sig
   module Yield : sig
     type ('M, 'T) t = {
       argument: ('M, 'T) Expression.t option;
+      comments: ('M, unit) Syntax.t option;
       delegate: bool;
     }
     [@@deriving show]

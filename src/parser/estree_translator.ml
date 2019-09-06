@@ -494,8 +494,8 @@ end with type t = Impl.t) = struct
           node "OptionalMemberExpression" loc (member_node_properties member @ [
             "optional", bool optional;
           ])
-      | loc, Yield { Yield.argument; delegate } ->
-          node "YieldExpression" loc [
+      | loc, Yield { Yield.argument; delegate; comments } ->
+          node ?comments "YieldExpression" loc [
             "argument", option expression argument;
             "delegate", bool delegate;
           ]

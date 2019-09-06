@@ -1555,9 +1555,10 @@ class ['loc] mapper = object(this)
 
   method yield _loc (expr: ('loc, 'loc) Ast.Expression.Yield.t) =
     let open Ast.Expression.Yield in
-    let { argument; delegate } = expr in
+    let { argument; delegate; comments } = expr in
     let argument' = map_opt this#expression argument in
-    if argument == argument' then expr else { argument = argument'; delegate }
+    let comments' = this#syntax_opt comments in
+    if comments = comments' && argument == argument' then expr else { argument = argument'; delegate; comments = comments' }
 
 end
 

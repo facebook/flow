@@ -164,6 +164,7 @@ module Expression
 
   and yield env = with_loc (fun env ->
     if in_formal_parameters env then error env Parse_error.YieldInFormalParameters;
+    let leading = Peek.comments env in
     Expect.token env T_YIELD;
     let argument, delegate =
       if Peek.is_implicit_semicolon env then None, false
@@ -184,9 +185,15 @@ module Expression
           else None in
         argument, delegate
     in
+    let trailing =
+        match argument with
+        | None -> Peek.comments env
+        | Some _ -> []
+    in
     Expression.(Yield Yield.({
       argument;
       delegate;
+      comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());
     }))
   ) env
 
