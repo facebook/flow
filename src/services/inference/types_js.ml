@@ -1727,29 +1727,21 @@ end = struct
 
     Lwt.return (env, intermediate_values)
 
-  (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
-   * of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
-   * merge. Then it merges them. *)
-  let recheck_merge
-      ~profiling ~transaction ~reader ~options ~workers
-      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~recheck_reasons ~env =
-
-    let (
-      deleted,
-      direct_dependent_files,
-      errors,
-      files_to_force,
-      freshparsed,
-      new_or_changed,
-      unchanged_checked,
-      unchanged_files_to_force,
-      unparsed_set
-    ) = intermediate_values in
-
-    let dependency_info = env.ServerEnv.dependency_info in
-    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-    let dependency_graph = Dependency_info.dependency_graph dependency_info in
-
+  let determine_what_to_recheck
+      ~profiling
+      ~options
+      ~reader
+      ~env
+      ~dependency_graph
+      ~all_dependency_graph
+      ~freshparsed
+      ~unparsed_set
+      ~deleted
+      ~unchanged_checked
+      ~files_to_force
+      ~unchanged_files_to_force
+      ~direct_dependent_files
+    =
     let%lwt all_dependent_files =
       with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
         if FilenameSet.is_empty direct_dependent_files
@@ -1823,6 +1815,46 @@ end = struct
     let%lwt to_merge, components, recheck_set = include_dependencies_and_dependents
         ~options ~profiling ~unchanged_checked ~input ~all_dependency_graph ~dependency_graph
         ~all_dependent_files
+    in
+    Lwt.return (to_merge, components, recheck_set, all_dependent_files)
+
+  (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
+   * of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
+   * merge. Then it merges them. *)
+  let recheck_merge
+      ~profiling ~transaction ~reader ~options ~workers
+      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~recheck_reasons ~env =
+
+    let (
+      deleted,
+      direct_dependent_files,
+      errors,
+      files_to_force,
+      freshparsed,
+      new_or_changed,
+      unchanged_checked,
+      unchanged_files_to_force,
+      unparsed_set
+    ) = intermediate_values in
+
+    let dependency_info = env.ServerEnv.dependency_info in
+    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+    let dependency_graph = Dependency_info.dependency_graph dependency_info in
+
+    let%lwt (to_merge, components, recheck_set, all_dependent_files) = determine_what_to_recheck
+        ~profiling
+        ~options
+        ~reader
+        ~env
+        ~dependency_graph
+        ~all_dependency_graph
+        ~freshparsed
+        ~unparsed_set
+        ~deleted
+        ~unchanged_checked
+        ~files_to_force
+        ~unchanged_files_to_force
+        ~direct_dependent_files
     in
 
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
