@@ -1740,7 +1740,7 @@ end = struct
   let determine_what_to_recheck
       ~profiling
       ~options
-      ~reader
+      ~is_file_checked
       ~ide_open_files
       ~dependency_graph
       ~all_dependency_graph
@@ -1812,9 +1812,6 @@ end = struct
               |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
           in
           let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
-          let is_file_checked =
-            is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-          in
           focused_files_and_dependents_to_infer ~is_file_checked ~all_dependency_graph ~dependency_graph
             ~input_focused ~input_dependencies ~all_dependent_files
       )
@@ -1855,10 +1852,13 @@ end = struct
     let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
 
+    let is_file_checked =
+      is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+    in
     let%lwt (to_merge, components, recheck_set, all_dependent_files) = determine_what_to_recheck
         ~profiling
         ~options
-        ~reader
+        ~is_file_checked
         ~ide_open_files:(lazy (Persistent_connection.get_opened_files env.ServerEnv.connections))
         ~dependency_graph
         ~all_dependency_graph
