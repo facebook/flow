@@ -100,40 +100,6 @@ References:
                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_absolute.js:25:2
-
-Cannot cast `G1.fun()` to string because number [1] is incompatible with string [2].
-
-   test_absolute.js:25:2
-   25| (G1.fun(): string); // Error number ~> string
-        ^^^^^^^^
-
-References:
-   .H.js.flow:3:32
-    3| declare export function fun(): number;
-                                      ^^^^^^ [1]
-   test_absolute.js:25:12
-   25| (G1.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- test_absolute.js:29:2
-
-Cannot cast `G2.fun()` to string because number [1] is incompatible with string [2].
-
-   test_absolute.js:29:2
-   29| (G2.fun(): string); // Error number ~> string
-        ^^^^^^^^
-
-References:
-   .H.js.flow:3:32
-    3| declare export function fun(): number;
-                                      ^^^^^^ [1]
-   test_absolute.js:29:12
-   29| (G2.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------- test_relative.js:5:2
 
 Cannot cast `A1.fun()` to string because number [1] is incompatible with string [2].
@@ -185,39 +151,5 @@ References:
              ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_relative.js:17:2
 
-Cannot cast `A1.fun()` to string because number [1] is incompatible with string [2].
-
-   test_relative.js:17:2
-   17| (A1.fun(): string); // Error number ~> string
-        ^^^^^^^^
-
-References:
-   A.js.flow:3:32
-    3| declare export function fun(): number;
-                                      ^^^^^^ [1]
-   test_relative.js:17:12
-   17| (A1.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- test_relative.js:21:2
-
-Cannot cast `A2.fun()` to string because number [1] is incompatible with string [2].
-
-   test_relative.js:21:2
-   21| (A2.fun(): string); // Error number ~> string
-        ^^^^^^^^
-
-References:
-   A.js.flow:3:32
-    3| declare export function fun(): number;
-                                      ^^^^^^ [1]
-   test_relative.js:21:12
-   21| (A2.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]
-
-
-
-Found 13 errors
+Found 9 errors

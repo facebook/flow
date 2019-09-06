@@ -5,4 +5,3 @@
 [libs]
 
 [options]
-module.ignore_dotfiles=false
