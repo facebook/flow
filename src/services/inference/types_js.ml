@@ -1154,6 +1154,13 @@ let init_libs
     ) (true, local_errors, warnings, suppressions) lib_files
   )
 
+let is_file_tracked_and_checked ~reader filename =
+  Module_heaps.Reader_dispatcher.is_tracked_file ~reader filename (* otherwise, f is probably a directory *)
+  && Module_js.checked_file
+    ~reader
+    ~audit:Expensive.warn
+    filename
+
 (* Given a CheckedSet of focused files and a dependency graph, calculate all the dependents and
  * dependencies and return them as a CheckedSet
  *
@@ -1165,21 +1172,21 @@ let init_libs
  *
  * There are no expected invariants for the input sets. The returned set has the following invariants
  * 1. Every recursive dependent of a focused file will be in the focused set or the dependent set
+ *
+ * `is_file_checked` should return a boolean indicating whether the file has @flow or is otherwise
+ * considered to be a file that Flow should check. Unfortunately the term "checked" is overloaded in
+ * this codebase. In some contexts it means the set of files that we are *currently* checking due to
+ * lazy mode. In other contexts, it means the set of files which are eligible to be checked. In this
+ * case, it has the latter meaning.
  **)
-let focused_files_and_dependents_to_infer ~reader ~all_dependency_graph ~dependency_graph
+let focused_files_and_dependents_to_infer ~is_file_checked ~all_dependency_graph ~dependency_graph
   ~input_focused ~input_dependencies ~all_dependent_files =
   let input = CheckedSet.add
     ~focused:input_focused
     ~dependencies:(Option.value ~default:FilenameSet.empty input_dependencies)
     CheckedSet.empty in
   (* Filter unchecked files out of the input *)
-  let input = CheckedSet.filter input ~f:(fun f ->
-    Module_heaps.Mutator_reader.is_tracked_file ~reader f (* otherwise, f is probably a directory *)
-    && Module_js.checked_file
-      ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-      ~audit:Expensive.warn
-      f
-  ) in
+  let input = CheckedSet.filter input ~f:is_file_checked  in
 
   let focused = CheckedSet.focused input in
 
@@ -1241,7 +1248,10 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~
     | Some input_focused ->
       let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
       let dependency_graph = Dependency_info.dependency_graph dependency_info in
-      focused_files_and_dependents_to_infer ~reader ~all_dependency_graph ~dependency_graph
+      let is_file_checked =
+        is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+      in
+      focused_files_and_dependents_to_infer ~is_file_checked ~all_dependency_graph ~dependency_graph
         ~input_focused ~input_dependencies:None ~all_dependent_files:FilenameSet.empty
   )
 
@@ -1802,7 +1812,10 @@ end = struct
               |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
           in
           let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
-          focused_files_and_dependents_to_infer ~reader ~all_dependency_graph ~dependency_graph
+          let is_file_checked =
+            is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+          in
+          focused_files_and_dependents_to_infer ~is_file_checked ~all_dependency_graph ~dependency_graph
             ~input_focused ~input_dependencies ~all_dependent_files
       )
     in
