@@ -1166,7 +1166,7 @@ let init_libs
  * There are no expected invariants for the input sets. The returned set has the following invariants
  * 1. Every recursive dependent of a focused file will be in the focused set or the dependent set
  **)
-let focused_files_and_dependents_to_infer ~reader ~dependency_info
+let focused_files_and_dependents_to_infer ~reader ~all_dependency_graph ~dependency_graph
   ~input_focused ~input_dependencies ~all_dependent_files =
   let input = CheckedSet.add
     ~focused:input_focused
@@ -1184,8 +1184,6 @@ let focused_files_and_dependents_to_infer ~reader ~dependency_info
   let focused = CheckedSet.focused input in
 
   (* Roots is the set of all focused files and all dependent files. *)
-  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-  let dependency_graph = Dependency_info.dependency_graph dependency_info in
   let roots = Pure_dep_graph_operations.calc_all_dependents ~dependency_graph ~all_dependency_graph focused in
   let dependents = FilenameSet.diff roots focused in
 
@@ -1241,7 +1239,9 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~
       unfocused_files_and_dependents_to_infer ~options
         ~input_focused:parsed ~input_dependencies:None ~all_dependent_files:FilenameSet.empty
     | Some input_focused ->
-      focused_files_and_dependents_to_infer ~reader ~dependency_info
+      let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+      let dependency_graph = Dependency_info.dependency_graph dependency_info in
+      focused_files_and_dependents_to_infer ~reader ~all_dependency_graph ~dependency_graph
         ~input_focused ~input_dependencies:None ~all_dependent_files:FilenameSet.empty
   )
 
@@ -1809,7 +1809,7 @@ end = struct
               |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
           in
           let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
-          focused_files_and_dependents_to_infer ~reader ~dependency_info
+          focused_files_and_dependents_to_infer ~reader ~all_dependency_graph ~dependency_graph
             ~input_focused ~input_dependencies ~all_dependent_files
       )
     in
