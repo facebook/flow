@@ -1,0 +1,53 @@
+Error --------------------------------------------------------------------------------------------- test_relative.js:5:2
+
+Cannot cast `A1.fun()` to string because number [1] is incompatible with string [2].
+
+   test_relative.js:5:2
+   5| (A1.fun(): string); // Error number ~> string
+       ^^^^^^^^
+
+References:
+   .A.js.flow:3:32
+   3| declare export function fun(): number;
+                                     ^^^^^^ [1]
+   test_relative.js:5:12
+   5| (A1.fun(): string); // Error number ~> string
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- test_relative.js:9:2
+
+Cannot cast `A2.fun()` to string because number [1] is incompatible with string [2].
+
+   test_relative.js:9:2
+   9| (A2.fun(): string); // Error number ~> string
+       ^^^^^^^^
+
+References:
+   .A.js.flow:3:32
+   3| declare export function fun(): number;
+                                     ^^^^^^ [1]
+   test_relative.js:9:12
+   9| (A2.fun(): string); // Error number ~> string
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_relative.js:13:2
+
+Cannot cast `CJS` to number because string [1] is incompatible with number [2].
+
+   test_relative.js:13:2
+   13| (CJS: number); //
+        ^^^
+
+References:
+   .CJS.js.flow:1:25
+    1| declare module.exports: string;
+                               ^^^^^^ [1]
+   test_relative.js:13:7
+   13| (CJS: number); //
+             ^^^^^^ [2]
+
+
+
+Found 3 errors
