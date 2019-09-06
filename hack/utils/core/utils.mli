@@ -73,11 +73,19 @@ val map_of_list : (SMap.key * 'a) list -> 'a SMap.t
 
 val set_of_list : SSet.elt list -> SSet.t
 
+(* Strip NS removes only the leading backslash *)
 val strip_ns : string -> string
 
-val add_ns : string -> string
+(* Strip XHP removes only the leading colon *)
+val strip_xhp_ns : string -> string
 
+(* Strip Both removes either leading backslash and colon, or both *)
+val strip_both_ns : string -> string
+
+(* Strip All removes all backslash-based namespaces, but does nothing to XHP *)
 val strip_all_ns : string -> string
+
+val add_ns : string -> string
 
 val split_ns_from_name : string -> string * string
 

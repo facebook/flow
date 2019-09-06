@@ -159,6 +159,14 @@ let strip_ns s =
   else
     String.sub s 1 (String.length s - 1)
 
+let strip_xhp_ns s =
+  if String.length s == 0 || s.[0] <> ':' then
+    s
+  else
+    String.sub s 1 (String.length s - 1)
+
+let strip_both_ns s = s |> strip_ns |> strip_xhp_ns
+
 (* A\B\C -> \A\B\C *)
 let add_ns s =
   if String.length s = 0 || s.[0] <> '\\' then
@@ -188,7 +196,7 @@ let double_colon = Str.regexp_string "::"
 
 (* Expands a namespace using the namespace map, a list of (string, string) tuples
  * Ensures the beginning backslash is present
- * 
+ *
  * "Str\\join" -> "\\HH\\Lib\\Str\\join" (when "Str", "HH\\Lib\\Str" is present in map)
  * "HH\\Lib\\Str\\Join" -> "\\HH\\Lib\\Str\\join"
  * "\\HH\\Lib\\Str\\Join" -> "\\HH\\Lib\\Str\\join"
