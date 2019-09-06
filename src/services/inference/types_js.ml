@@ -1731,9 +1731,10 @@ end = struct
       ~profiling
       ~options
       ~reader
-      ~env
+      ~ide_open_files
       ~dependency_graph
       ~all_dependency_graph
+      ~checked_files
       ~freshparsed
       ~unparsed_set
       ~deleted
@@ -1762,7 +1763,7 @@ end = struct
         | Options.NON_LAZY_MODE (* Non lazy mode treats every file as focused. *)
         | Options.LAZY_MODE_WATCHMAN (* Watchman mode treats every modified file as focused *)
         | Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
-          let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
+          let old_focus_targets = CheckedSet.focused checked_files in
           let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
           let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
           let focused = FilenameSet.union old_focus_targets freshparsed in
@@ -1786,7 +1787,7 @@ end = struct
            * it.
            **)
           let open_in_ide =
-            let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
+            let lazy opened_files = ide_open_files in
             FilenameSet.filter (function
               | File_key.SourceFile fn
               | File_key.LibFile fn
@@ -1797,7 +1798,7 @@ end = struct
           in
           let input_focused = CheckedSet.focused files_to_force (* Files to force to be focused *)
               |> filter_out_node_modules ~options (* Never focus node modules *)
-              |> FilenameSet.union (CheckedSet.focused env.ServerEnv.checked_files) (* old focused *)
+              |> FilenameSet.union (CheckedSet.focused checked_files) (* old focused *)
               |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
           in
           let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
@@ -1845,9 +1846,10 @@ end = struct
         ~profiling
         ~options
         ~reader
-        ~env
+        ~ide_open_files:(lazy (Persistent_connection.get_opened_files env.ServerEnv.connections))
         ~dependency_graph
         ~all_dependency_graph
+        ~checked_files:env.ServerEnv.checked_files
         ~freshparsed
         ~unparsed_set
         ~deleted
