@@ -4,17 +4,17 @@ function veryOptimistic(isThisAwesome: true): boolean {
   return isThisAwesome;
 }
 
-var x : boolean = veryOptimistic(true);
-var y : boolean = veryOptimistic(false); // error
+var x: boolean = veryOptimistic(true);
+var y: boolean = veryOptimistic(false); // error
 
 function veryPessimistic(isThisAwesome: true): boolean {
   return !isThisAwesome; // test bool conversion
 }
 
-var x : boolean = veryPessimistic(true);
-var y : boolean = veryPessimistic(false); // error
+var x: boolean = veryPessimistic(true);
+var y: boolean = veryPessimistic(false); // error
 
-type MyOwnBooleanLOL = true | false
+type MyOwnBooleanLOL = true | false;
 
 function bar(x: MyOwnBooleanLOL): false {
   if (x) {
@@ -34,4 +34,16 @@ function alwaysFalsy(x: boolean): false {
   } else {
     return x;
   }
+}
+
+function constLiteral() {
+  const foo = true;
+  const foo_check: typeof foo = false;
+  const mutable_foo = {
+    foo,
+    method() {
+      mutable_foo.foo = 1;
+    }
+  };
+  (mutable_foo.foo: boolean); // error
 }

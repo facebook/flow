@@ -269,7 +269,7 @@ jsx.js:18:24 = {
   "end":24
 }
 literals.js:6:7 = {
-  "type":"string",
+  "type":"\"A\"",
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -284,7 +284,7 @@ literals.js:6:7 = {
   "end":7
 }
 literals.js:7:7 = {
-  "type":"number",
+  "type":"1",
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -299,7 +299,7 @@ literals.js:7:7 = {
   "end":7
 }
 literals.js:8:7 = {
-  "type":"number",
+  "type":"1.01",
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -314,7 +314,7 @@ literals.js:8:7 = {
   "end":7
 }
 literals.js:9:7 = {
-  "type":"boolean",
+  "type":"true",
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -329,7 +329,7 @@ literals.js:9:7 = {
   "end":7
 }
 literals.js:10:7 = {
-  "type":"number | string | boolean",
+  "type":"1 | 1.01 | \"A\" | true",
   "reasons":[],
   "loc":{
     "source":"literals.js",
