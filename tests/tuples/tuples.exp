@@ -237,5 +237,39 @@ References:
                      ^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- tuples.js:40:44
 
-Found 16 errors
+Cannot return `x.length` because tuple length of 2 [1] is incompatible with string [2].
+
+   tuples.js:40:44
+   40|     function a(x: [1, 2]): string { return x.length; }
+                                                  ^^^^^^^^
+
+References:
+   tuples.js:40:19
+   40|     function a(x: [1, 2]): string { return x.length; }
+                         ^^^^^^ [1]
+   tuples.js:40:28
+   40|     function a(x: [1, 2]): string { return x.length; }
+                                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- tuples.js:46:6
+
+Cannot cast `a_len` to number literal `2` because tuple length of 1 [1] is incompatible with number literal `2` [2].
+
+   tuples.js:46:6
+   46|     (a_len: 2);
+            ^^^^^
+
+References:
+   tuples.js:43:16
+   43|   function (a: [number]) {
+                      ^^^^^^^^ [1]
+   tuples.js:46:13
+   46|     (a_len: 2);
+                   ^ [2]
+
+
+
+Found 18 errors

@@ -3131,6 +3131,20 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- tuple.js:32:6
+
+Cannot get `a[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds.
+
+   tuple.js:32:6
+   32|     (a[2]: number); // Error: one of the variants has only 2 elements.
+            ^^^^
+
+References:
+   tuple.js:25:17
+   25|   a: [string] | [number, number] | [number, number, number]
+                       ^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- typeof.js:5:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
@@ -3533,4 +3547,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 256 errors
+Found 257 errors

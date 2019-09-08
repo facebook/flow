@@ -91,6 +91,7 @@ type 'loc virtual_reason_desc =
   | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleLength of int
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
@@ -240,8 +241,8 @@ let rec map_desc_locs f = function
     | RVoid | RNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
     | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RROArrayType | RTupleType | RTupleElement | RTupleOutOfBoundsAccess | RFunction _
-    | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
+    | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
       ) as r ->
     r
@@ -539,6 +540,7 @@ let rec string_of_desc = function
   | RTupleType -> "tuple type"
   | RTupleElement -> "tuple element"
   | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
+  | RTupleLength i -> spf "tuple length of %d" i
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
@@ -1295,6 +1297,7 @@ let classification_of_reason r =
   | RObjectClassName
   | RInterfaceType
   | RTupleElement
+  | RTupleLength _
   | RTupleOutOfBoundsAccess
   | RFunction _
   | RFunctionType

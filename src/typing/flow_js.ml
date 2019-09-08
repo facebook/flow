@@ -6334,6 +6334,14 @@ struct
         | ( DefT (reason, _, ArrT (ArrayAT (t, _))),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
           rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
+        (*************************)
+        (* Tuple "length" access *)
+        (*************************)
+        | (DefT (reason, trust, ArrT (TupleAT (_, ts))), GetPropT (_, _, Named (_, "length"), tout))
+          ->
+          (* Use definition as the reason for the length, as this is
+           * the actual location where the length is in fact set. *)
+          rec_flow_t cx trace (tuple_length reason trust ts, tout)
         | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
           let t = elemt_of_arrtype arrtype in
@@ -9389,6 +9397,15 @@ struct
     sentinel_prop_test_generic key cx trace result obj (sense, obj, t)
 
   and sentinel_prop_test_generic key cx trace result orig_obj =
+    let desc_of_sentinel sentinel =
+      match sentinel with
+      | UnionEnum.(One (Str s)) -> RStringLit s
+      | UnionEnum.(One (Num (_, n))) -> RNumberLit n
+      | UnionEnum.(One (Bool b)) -> RBooleanLit b
+      | UnionEnum.(One Null) -> RNull
+      | UnionEnum.(One Void) -> RVoid
+      | UnionEnum.(Many _enums) -> RUnionEnum
+    in
     (* Evaluate a refinement predicate of the form
 
       obj.key eq value
@@ -9424,18 +9441,10 @@ struct
       | Some p ->
         (match Property.read_t p with
         | Some t ->
-          let desc =
-            RMatchingProp
-              ( key,
-                match sentinel with
-                | UnionEnum.(One (Str s)) -> RStringLit s
-                | UnionEnum.(One (Num (_, n))) -> RNumberLit n
-                | UnionEnum.(One (Bool b)) -> RBooleanLit b
-                | UnionEnum.(One Null) -> RNull
-                | UnionEnum.(One Void) -> RVoid
-                | UnionEnum.(Many _enums) -> RUnionEnum )
+          let reason =
+            let desc = RMatchingProp (key, desc_of_sentinel sentinel) in
+            replace_desc_reason desc (reason_of_t result)
           in
-          let reason = replace_desc_reason desc (reason_of_t result) in
           let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
           rec_flow cx trace (t, test)
         | None ->
@@ -9486,6 +9495,14 @@ struct
           | DefT (_, _, InstanceT (_, _, _, { own_props; _ })) ->
             (* TODO: add test for sentinel test on implements *)
             flow_sentinel sense own_props obj s
+          (* tuple.length ===/!== literal value *)
+          | DefT (reason, trust, ArrT (TupleAT (_, ts))) when key = "length" ->
+            let test =
+              let desc = RMatchingProp (key, desc_of_sentinel s) in
+              let r = replace_desc_reason desc (reason_of_t result) in
+              SentinelPropTestT (r, orig_obj, key, sense, s, result)
+            in
+            rec_flow cx trace (tuple_length reason trust ts, test)
           | IntersectionT (_, rep) ->
             (* For an intersection of object types, try the test for each object
            type in turn, while recording the original intersection so that we

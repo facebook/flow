@@ -75,10 +75,10 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:3
            3: function foo(x: [1,2]): string { return x.length; }
-                                                      ^^^^^^^^ Cannot return \`x.length\` because number [1] is incompatible with string [2].
+                                                      ^ Cannot return \`x.length\` because tuple length of 2 [1] is incompatible with string [2].
            References:
-           255:     +length: number;
-                             ^^^^^^ [1]. See lib: [LIB] core.js:255
+             3: function foo(x: [1,2]): string { return x.length; }
+                                ^^^^^ [1]
              3: function foo(x: [1,2]): string { return x.length; }
                                         ^^^^^^ [2]
        `,
