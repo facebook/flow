@@ -1,3 +1,75 @@
+Error ------------------------------------------------------------------------------------- destructuring-catch.js:11:25
+
+Cannot assign `1` to `foo` because number [1] is incompatible with string [2].
+
+   destructuring-catch.js:11:25
+   11|     const foo: string = 1; // it typechecks
+                               ^ [1]
+
+References:
+   destructuring-catch.js:11:16
+   11|     const foo: string = 1; // it typechecks
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- destructuring-catch.js:22:25
+
+Cannot assign `1` to `foo` because number [1] is incompatible with string [2].
+
+   destructuring-catch.js:22:25
+   22|     const foo: string = 1; // it typechecks
+                               ^ [1]
+
+References:
+   destructuring-catch.js:22:16
+   22|     const foo: string = 1; // it typechecks
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- destructuring-catch.js:30:23
+
+Type annotations for catch parameters are not yet supported.
+
+   30|   } catch ({message}: any) {
+                             ^^^
+
+
+Error ------------------------------------------------------------------------------------- destructuring-catch.js:32:25
+
+Cannot assign `1` to `foo` because number [1] is incompatible with string [2].
+
+   destructuring-catch.js:32:25
+   32|     const foo: string = 1; // it typechecks
+                               ^ [1]
+
+References:
+   destructuring-catch.js:32:16
+   32|     const foo: string = 1; // it typechecks
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- destructuring-catch.js:40:23
+
+Type annotations for catch parameters are not yet supported.
+
+   40|   } catch ({message}: {message: string}) { // error
+                             ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- destructuring-catch.js:42:25
+
+Cannot assign `1` to `foo` because number [1] is incompatible with string [2].
+
+   destructuring-catch.js:42:25
+   42|     const foo: string = 1; // it typechecks
+                               ^ [1]
+
+References:
+   destructuring-catch.js:42:16
+   42|     const foo: string = 1; // it typechecks
+                      ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- init.js:34:20
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
@@ -337,5 +409,27 @@ References:
                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:78:15
 
-Found 22 errors
+Type annotations for catch parameters are not yet supported.
+
+   78|   } catch (e: string) { // error
+                     ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:80:21
+
+Cannot assign `1` to `c` because number [1] is incompatible with string [2].
+
+   test.js:80:21
+   80|     var c: string = 1; // it typechecks
+                           ^ [1]
+
+References:
+   test.js:80:12
+   80|     var c: string = 1; // it typechecks
+                  ^^^^^^ [2]
+
+
+
+Found 30 errors

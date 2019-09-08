@@ -71,3 +71,12 @@ function maz() {
   }
   var c: string = x[0]; // reachable
 }
+
+// type annotation is banned
+function maz() {
+  try {
+  } catch (e: string) { // error
+    (e: number); // ok
+    var c: string = 1; // it typechecks
+  }
+}
