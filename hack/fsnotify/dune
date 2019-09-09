@@ -1,13 +1,19 @@
 (* -*- tuareg -*- *)
 
 let () =
+  (* https://github.com/ocaml/ocaml/blob/36c163248d77e7df0803c1e9893ad01948846081/asmcomp/x86_proc.ml#L40-L59 *)
   let system = List.assoc "system" Jbuild_plugin.V1.ocamlc_config in
-  let fsnotify_impl= match system with
-  | "macosx" -> "fsnotify_Darwin"
-  | "linux" -> "fsnotify_Linux"
-  | x -> "fsnotify_"^x
+  let fsnotify_impl = match system with
+  | "macosx" -> Some "fsnotify_Darwin"
+  | "linux" -> Some "fsnotify_Linux"
+  | "cygwin"
+  | "mingw64"
+  | "win64" -> Some "fsnotify_Windows"
+  | _ -> None
   in
-  Printf.ksprintf Jbuild_plugin.V1.send "\
+  match fsnotify_impl with
+  | None -> Jbuild_plugin.V1.send ""
+  | Some fsnotify_impl -> Printf.ksprintf Jbuild_plugin.V1.send "\
 
 (library
   (name fsnotify)
