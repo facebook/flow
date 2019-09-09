@@ -2,7 +2,6 @@ true: package(core_kernel), package(ppx_deriving), package(ppx_deriving.eq), pac
 <scripts/ppx_gen_flowlibs/**>: package(ocaml-migrate-parsetree)
 <**/*.ml*>: ocaml, warn_A, warn(-4-6-29-35-44-48-50), warn_error_A, safe_string
 <**/__tests__/**>: package(oUnit)
-<hack/fsnotify_win/fsnotify.ml>: unsafe_string
 <hack/heap/*.ml*>: warn(-27-34)
 <hack/third-party/core/result.ml>: warn(-41)
 <hack/utils/*.ml*>: warn(-3-27)

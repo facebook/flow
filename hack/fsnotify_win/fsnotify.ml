@@ -101,7 +101,8 @@ let invoke_callback fdmap fd =
 
 let read_events env =
   (* read pop only one char from pipe, in order never to block. *)
-  ignore (Unix.read env.fd " " 0 1 : int);
+  let buf = Bytes.create 1 in
+  ignore (Unix.read env.fd buf 0 1 : int);
 
   (* prefix the root path *)
   List.map (raw_read_events env.fsenv) ~f:(fun ev ->
