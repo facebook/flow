@@ -2,4 +2,4 @@
   (targets build-timestamp-opt)
   (action
     (with-stdout-to build-timestamp-opt
-      (system "echo -DHH_BUILD_TIMESTAMP=$(date +%s)ul"))))
+      (bash "echo -DHH_BUILD_TIMESTAMP=$(date +%s)ul"))))
