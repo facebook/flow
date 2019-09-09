@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
 open Loc_collections
 module Scope_api = Scope_api.With_Loc
 
