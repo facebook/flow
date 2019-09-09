@@ -834,7 +834,7 @@ module WorkspaceSymbol = struct
   and workspaceSymbolParams = { query: string (* a non-empty query string *) }
 end
 
-(* Document Symbols request, method="textDocument/documentSymbols" *)
+(* Document Symbols request, method="textDocument/documentSymbol" *)
 module DocumentSymbol = struct
   type params = documentSymbolParams
 
