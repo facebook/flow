@@ -456,11 +456,12 @@ let bind_entry cx name entry loc =
       (* if no entry already exists, this might be our scope *)
       | None -> Entry.(
         match scope.Scope.kind, entry with
-        (* lex scopes can only hold let/const/class bindings *)
+        (* lex scopes can only hold let/const/class/type bindings *)
         (* var scope can hold all binding types *)
         | LexScope, Value { Entry.kind = Let _; _ }
         | LexScope, Value { Entry.kind = Const _; _ }
         | LexScope, Class _
+        | LexScope, Type _
         | VarScope _, _ ->
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)

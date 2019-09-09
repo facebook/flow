@@ -609,20 +609,6 @@ References:
                 ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- rebinding.js:186:12
-
-Cannot declare `x` [1] because the name is already bound.
-
-   rebinding.js:186:12
-   186|       type x = string; // error: name already bound
-                   ^
-
-References:
-   rebinding.js:184:9
-   184|     let x = 0;
-                ^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------- rebinding.js:193:34
 
 Cannot declare `x` [1] because the name is already bound.
@@ -1005,6 +991,23 @@ References:
    tdz.js:94:15
    94| function f(n: number) { return n; }
                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- type.js:26:5
+
+Cannot cast `a` to number because string [1] is incompatible with number [2].
+
+   type.js:26:5
+   26|   ;(a: number);
+           ^
+
+References:
+   type.js:21:11
+   21|   let a = "str";
+                 ^^^^^ [1]
+   type.js:26:8
+   26|   ;(a: number);
+              ^^^^^^ [2]
 
 
 
