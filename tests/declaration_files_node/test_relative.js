@@ -10,4 +10,4 @@ var A2 = require('./A.js');
 
 var CJS = require('./CJS.js');
 (CJS: string);
-(CJS: number); // Error: string ~> number
+(CJS: number); //

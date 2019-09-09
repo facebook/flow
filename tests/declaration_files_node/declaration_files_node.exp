@@ -139,7 +139,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `CJS` to number because string [1] is incompatible with number [2].
 
    test_relative.js:13:2
-   13| (CJS: number); // Error: string ~> number
+   13| (CJS: number); //
         ^^^
 
 References:
@@ -147,7 +147,7 @@ References:
     1| declare module.exports: string;
                                ^^^^^^ [1]
    test_relative.js:13:7
-   13| (CJS: number); // Error: string ~> number
+   13| (CJS: number); //
              ^^^^^^ [2]
 
 

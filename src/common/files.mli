@@ -12,6 +12,7 @@ type options = {
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
+  ignore_dotfiles: bool;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
   module_file_exts: SSet.t;
@@ -23,6 +24,7 @@ val default_lib_dir: options -> Path.t option
 val ignores: options -> (string * Str.regexp) list
 val untyped: options -> (string * Str.regexp) list
 val declarations: options -> (string * Str.regexp) list
+val ignore_dotfiles: options -> bool  
 val includes: options -> Path_matcher.t
 val lib_paths: options -> Path.t list
 val module_file_exts: options -> SSet.t

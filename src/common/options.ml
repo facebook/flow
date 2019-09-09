@@ -85,6 +85,7 @@ type t = {
   opt_haste_paths_blacklist: string list;
   opt_haste_paths_whitelist: string list;
   opt_haste_use_name_reducers: bool;
+  opt_ignore_dotfiles: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_warnings: bool;
   opt_max_files_checked_per_worker: int;
@@ -171,6 +172,7 @@ let facebook_fbt opts = opts.opt_facebook_fbt
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
 let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
+let should_ignore_dotfiles opts = opts.opt_ignore_dotfiles
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
 let should_include_warnings opts = opts.opt_include_warnings

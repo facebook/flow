@@ -67,6 +67,7 @@ module Opts = struct
     haste_paths_blacklist: string list;
     haste_paths_whitelist: string list;
     haste_use_name_reducers: bool;
+    ignore_dotfiles: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
     lazy_mode: Options.lazy_mode option;
@@ -161,6 +162,7 @@ module Opts = struct
     haste_paths_blacklist = ["\\(.*\\)?/node_modules/.*"];
     haste_paths_whitelist = ["<PROJECT_ROOT>/.*"];
     haste_use_name_reducers = false;
+    ignore_dotfiles = true;
     ignore_non_literal_requires = false;
     include_warnings = false;
     lazy_mode = None;
@@ -448,6 +450,9 @@ module Opts = struct
 
     "max_header_tokens",
       uint (fun opts v -> Ok { opts with max_header_tokens = v });
+
+    "module.ignore_dotfiles",
+      boolean (fun opts v -> Ok {opts with ignore_dotfiles = v });
 
     "module.ignore_non_literal_requires",
       boolean (fun opts v -> Ok { opts with ignore_non_literal_requires = v });
@@ -1229,6 +1234,7 @@ let haste_name_reducers c = c.options.Opts.haste_name_reducers
 let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist
 let haste_paths_whitelist c = c.options.Opts.haste_paths_whitelist
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
+let ignore_dotfiles c = c.options.Opts.ignore_dotfiles
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 let include_warnings c = c.options.Opts.include_warnings
 let lazy_mode c = c.options.Opts.lazy_mode
