@@ -6,8 +6,11 @@
  *)
 
 type audit
-val ok: audit
-val warn: audit
+
+val ok : audit
+
+val warn : audit
 
 type 'a t = audit:audit -> 'a
-val wrap: 'a -> 'a t
+
+val wrap : 'a -> 'a t

@@ -40,11 +40,16 @@ type t =
 
 exception Exit_with of t
 
-val exit: ?msg:string -> t -> 'a
-val error_code: t -> int
-val error_type: int -> t
-val to_string: t -> string
-val set_json_mode: pretty:bool -> unit
-val unset_json_mode: unit -> unit
+val exit : ?msg:string -> t -> 'a
 
-val json_props_of_t: ?msg:string -> t -> (string * Hh_json.json) list
+val error_code : t -> int
+
+val error_type : int -> t
+
+val to_string : t -> string
+
+val set_json_mode : pretty:bool -> unit
+
+val unset_json_mode : unit -> unit
+
+val json_props_of_t : ?msg:string -> t -> (string * Hh_json.json) list

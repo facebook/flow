@@ -6,8 +6,10 @@
  *)
 
 type t =
-| FileName of string
-| FileContent of string option * string (* filename, content *)
+  | FileName of string
+  | FileContent of string option * string
+
+(* filename, content *)
 
 let path_of_file_input = function
   | FileName f -> Some f

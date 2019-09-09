@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val preprocess_name: string -> string
+val preprocess_name : string -> string

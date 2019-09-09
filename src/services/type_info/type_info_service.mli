@@ -15,8 +15,7 @@ val type_at_pos :
   string ->
   int ->
   int ->
-  ((Loc.t * Ty.t option) * Hh_json.json option,
-    string * Hh_json.json option) Core_result.t Lwt.t
+  ((Loc.t * Ty.t option) * Hh_json.json option, string * Hh_json.json option) Core_result.t Lwt.t
 
 val dump_types :
   options:Options.t ->
@@ -40,13 +39,19 @@ val suggest :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  string -> string ->
-  ((Errors.ConcreteLocPrintableErrorSet.t *   (* Typechecking errors *)
-    Errors.ConcreteLocPrintableErrorSet.t *   (* Typechecking warnings *)
-    Errors.ConcreteLocPrintableErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
-    Replacement_printer.patch),   (* Annotated program *)
-    Errors.ConcreteLocPrintableErrorSet.t     (* Parsing errors *)
-  ) Core_result.t Lwt.t
+  string ->
+  string ->
+  ( Errors.ConcreteLocPrintableErrorSet.t
+    * (* Typechecking errors *)
+      Errors.ConcreteLocPrintableErrorSet.t
+    * (* Typechecking warnings *)
+      Errors.ConcreteLocPrintableErrorSet.t
+    * (* Suggest-related warnings (normalization etc.) *)
+      Replacement_printer.patch,
+    (* Annotated program *)
+    Errors.ConcreteLocPrintableErrorSet.t (* Parsing errors *) )
+  Core_result.t
+  Lwt.t
 
 val insert_type :
   options:Options.t ->
@@ -61,7 +66,7 @@ val insert_type :
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   (Replacement_printer.patch, string) Core_result.t Lwt.t
 
-val autofix_exports:
+val autofix_exports :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
@@ -70,11 +75,11 @@ val autofix_exports:
   (Replacement_printer.patch * string list, string) Core_result.t Lwt.t
 
 val code_actions_at_loc :
-options:Options.t ->
-env:ServerEnv.env ->
-profiling:Profiling_js.running ->
-params:Lsp.CodeActionRequest.params ->
-file_key:File_key.t ->
-file_contents:string ->
-loc:Loc.t ->
-(Lsp.CodeAction.command_or_action list, string) Core_result.t Lwt.t
+  options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
+  params:Lsp.CodeActionRequest.params ->
+  file_key:File_key.t ->
+  file_contents:string ->
+  loc:Loc.t ->
+  (Lsp.CodeAction.command_or_action list, string) Core_result.t Lwt.t

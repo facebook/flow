@@ -5,5 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module With_Loc: Scope_api_sig.S with module L = Loc_sig.LocS
-module With_ALoc: Scope_api_sig.S with module L = Loc_sig.ALocS
+module With_Loc : Scope_api_sig.S with module L = Loc_sig.LocS
+
+module With_ALoc : Scope_api_sig.S with module L = Loc_sig.ALocS

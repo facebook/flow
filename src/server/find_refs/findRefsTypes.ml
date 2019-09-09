@@ -18,6 +18,9 @@ let string_of_ref_kind = function
   | Other -> "Other"
 
 type single_ref = ref_kind * Loc.t
-type find_refs_found = (string * single_ref list)
+
+type find_refs_found = string * single_ref list
+
 type find_refs_ok = find_refs_found option
+
 type find_refs_result = (find_refs_ok, string) result

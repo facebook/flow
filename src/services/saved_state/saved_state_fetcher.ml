@@ -6,12 +6,12 @@
  *)
 
 type result =
-| Saved_state of {
-  saved_state_filename: Path.t;
-  changed_files: SSet.t;
-}
-| No_saved_state
+  | Saved_state of {
+      saved_state_filename: Path.t;
+      changed_files: SSet.t;
+    }
+  | No_saved_state
 
 module type FETCHER = sig
-  val fetch: options:Options.t -> (Profiling_js.finished * result) Lwt.t
+  val fetch : options:Options.t -> (Profiling_js.finished * result) Lwt.t
 end

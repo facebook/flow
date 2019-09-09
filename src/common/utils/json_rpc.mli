@@ -10,18 +10,13 @@ type t =
   | Obj of (string * Hh_json.json list * int option)
   | Malformed of string
 
-val parse_json_rpc_response: string -> t
+val parse_json_rpc_response : string -> t
 
-val jsonrpcize_notification:
+val jsonrpcize_notification :
   (* method name *)
-  string ->
-  (* value to send *)
-  Hh_json.json list ->
-  Hh_json.json
+  string -> (* value to send *)
+            Hh_json.json list -> Hh_json.json
 
-val jsonrpcize_response:
-  (* request id *)
-  int ->
-  (* return value *)
-  Hh_json.json ->
-  Hh_json.json
+val jsonrpcize_response : (* request id *)
+                          int -> (* return value *)
+                                 Hh_json.json -> Hh_json.json

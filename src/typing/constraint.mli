@@ -10,8 +10,8 @@ type ident = int
 (***************************************)
 
 type node =
-| Goto of ident
-| Root of root
+  | Goto of ident
+  | Root of root
 
 and root = {
   rank: int;
@@ -19,9 +19,9 @@ and root = {
 }
 
 and constraints =
-| Resolved of Type.use_op * Type.t
-| FullyResolved of Type.use_op * Type.t
-| Unresolved of bounds
+  | Resolved of Type.use_op * Type.t
+  | FullyResolved of Type.use_op * Type.t
+  | Unresolved of bounds
 
 and bounds = {
   mutable lower: (Trace.t * Type.use_op) Type.TypeMap.t;
@@ -30,4 +30,4 @@ and bounds = {
   mutable uppertvars: Trace.t IMap.t;
 }
 
-val new_unresolved_root: unit -> node
+val new_unresolved_root : unit -> node

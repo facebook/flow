@@ -9,218 +9,178 @@ open Scope
 
 type t = Scope.t list
 
-val peek_scope: unit -> Scope.t
+val peek_scope : unit -> Scope.t
 
-val peek_env: unit -> t
+val peek_env : unit -> t
 
-val clone_env: t -> t
+val clone_env : t -> t
 
-val string_of_env: Context.t -> t -> string
+val string_of_env : Context.t -> t -> string
 
-val var_scope_kind: unit -> Scope.var_scope_kind
+val var_scope_kind : unit -> Scope.var_scope_kind
 
-val in_async_scope: unit -> bool
-val in_generator_scope: unit -> bool
-val in_predicate_scope: unit -> bool
+val in_async_scope : unit -> bool
 
-val all_entries: unit -> Entry.t SMap.t
+val in_generator_scope : unit -> bool
 
-val find_entry:
-  Context.t ->
-  string ->
-  ?desc:Reason.reason_desc ->
-  ALoc.t ->
-  Scope.t * Entry.t
+val in_predicate_scope : unit -> bool
 
-val peek_frame: unit -> int
+val all_entries : unit -> Entry.t SMap.t
 
-val push_var_scope: Context.t -> Scope.t -> unit
-val pop_var_scope: unit -> unit
+val find_entry : Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
 
-val retrieve_closure_changeset: unit -> Changeset.t
+val peek_frame : unit -> int
 
-val in_lex_scope: Context.t -> (unit -> 'a) -> 'a
+val push_var_scope : Context.t -> Scope.t -> unit
 
-val env_depth: unit -> int
-val trunc_env: int -> unit
+val pop_var_scope : unit -> unit
 
-val init_env:
-  ?exclude_syms:SSet.t ->
-  Context.t ->
-  Scope.t ->
-  unit
+val retrieve_closure_changeset : unit -> Changeset.t
 
-val update_env: Context.t -> ALoc.t -> t -> unit
+val in_lex_scope : Context.t -> (unit -> 'a) -> 'a
+
+val env_depth : unit -> int
+
+val trunc_env : int -> unit
+
+val init_env : ?exclude_syms:SSet.t -> Context.t -> Scope.t -> unit
+
+val update_env : Context.t -> ALoc.t -> t -> unit
 
 (***)
 
-val promote_to_const_like: Context.t -> ALoc.t -> bool
+val promote_to_const_like : Context.t -> ALoc.t -> bool
 
-val bind_class: Context.t -> ALoc.t -> Type.Properties.id -> Type.Properties.id -> unit
+val bind_class : Context.t -> ALoc.t -> Type.Properties.id -> Type.Properties.id -> unit
 
-val bind_var: ?state:State.t -> Context.t -> string -> Type.t ->
-  ALoc.t -> unit
+val bind_var : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_let: ?state:State.t -> Context.t -> string -> Type.t ->
-  ALoc.t -> unit
+val bind_let : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_implicit_let: ?state:State.t -> Entry.let_binding_kind ->
-  Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_implicit_let :
+  ?state:State.t -> Entry.let_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_fun: ?state:State.t -> Context.t -> string -> Type.t ->
-  ALoc.t -> unit
+val bind_fun : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_implicit_const: ?state:State.t -> Entry.const_binding_kind ->
-  Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_implicit_const :
+  ?state:State.t -> Entry.const_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_const: ?state:State.t -> Context.t -> string -> Type.t ->
-  ALoc.t -> unit
+val bind_const : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_import: Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_import : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
-  ALoc.t -> unit
+val bind_type : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_import_type: Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_import_type : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_declare_var: Context.t -> string -> Type.t -> ALoc.t -> unit
-val bind_declare_fun: Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_declare_var : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val declare_let: Context.t -> string -> ALoc.t -> unit
-val declare_implicit_let: Entry.let_binding_kind -> Context.t -> string -> ALoc.t -> unit
+val bind_declare_fun : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val declare_const: Context.t -> string -> ALoc.t -> unit
-val declare_implicit_const: Entry.const_binding_kind -> Context.t -> string -> ALoc.t -> unit
+val declare_let : Context.t -> string -> ALoc.t -> unit
 
-val init_var: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
-val init_let: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
-val init_implicit_let:
-  Entry.let_binding_kind
-    -> Context.t
-    -> use_op:Type.use_op
-    -> string
-    -> has_anno:bool
-    -> Type.t
-    -> ALoc.t
-    -> unit
-val init_fun: Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
-val init_const: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
-val init_implicit_const:
-  Entry.const_binding_kind
-    -> Context.t
-    -> use_op:Type.use_op
-    -> string
-    -> has_anno:bool
-    -> Type.t
-    -> ALoc.t
-    -> unit
-val init_type: Context.t -> string -> Type.t -> ALoc.t -> unit
+val declare_implicit_let : Entry.let_binding_kind -> Context.t -> string -> ALoc.t -> unit
 
-val pseudo_init_declared_type: Context.t -> string -> ALoc.t -> unit
+val declare_const : Context.t -> string -> ALoc.t -> unit
 
-module LookupMode: sig
-  type t = ForValue | ForType | ForTypeof
+val declare_implicit_const : Entry.const_binding_kind -> Context.t -> string -> ALoc.t -> unit
+
+val init_var :
+  Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
+
+val init_let :
+  Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
+
+val init_implicit_let :
+  Entry.let_binding_kind ->
+  Context.t ->
+  use_op:Type.use_op ->
+  string ->
+  has_anno:bool ->
+  Type.t ->
+  ALoc.t ->
+  unit
+
+val init_fun : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
+
+val init_const :
+  Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
+
+val init_implicit_const :
+  Entry.const_binding_kind ->
+  Context.t ->
+  use_op:Type.use_op ->
+  string ->
+  has_anno:bool ->
+  Type.t ->
+  ALoc.t ->
+  unit
+
+val init_type : Context.t -> string -> Type.t -> ALoc.t -> unit
+
+val pseudo_init_declared_type : Context.t -> string -> ALoc.t -> unit
+
+module LookupMode : sig
+  type t =
+    | ForValue
+    | ForType
+    | ForTypeof
 end
 
-val local_scope_entry_exists: string -> bool
+val local_scope_entry_exists : string -> bool
 
-val get_env_entry: string -> t -> Scope.Entry.t option
-val get_current_env_entry: string -> Scope.Entry.t option
-val get_env_refi: Key.t -> t -> Scope.refi_binding option
-val get_current_env_refi: Key.t -> Scope.refi_binding option
-val get_class_entries: unit -> Type.class_binding list
+val get_env_entry : string -> t -> Scope.Entry.t option
 
-val get_var:
-  ?lookup_mode:LookupMode.t ->
-  Context.t ->
-  string ->
-  ALoc.t ->
-  Type.t
+val get_current_env_entry : string -> Scope.Entry.t option
 
-val get_internal_var:
-  Context.t ->
-  string ->
-  ALoc.t ->
-  Type.t
+val get_env_refi : Key.t -> t -> Scope.refi_binding option
 
-val get_var_declared_type:
-  ?lookup_mode:LookupMode.t ->
-  Context.t ->
-  string ->
-  ALoc.t ->
-  Type.t
+val get_current_env_refi : Key.t -> Scope.refi_binding option
 
-val unify_declared_type:
-  ?lookup_mode:LookupMode.t ->
-  Context.t ->
-  string ->
-  Type.t ->
-  unit
+val get_class_entries : unit -> Type.class_binding list
 
-val unify_declared_fun_type:
-  Context.t ->
-  string ->
-  ALoc.t ->
-  Type.t ->
-  unit
+val get_var : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 
-val var_ref:
-  ?lookup_mode:LookupMode.t ->
-  Context.t ->
-  string ->
-  ?desc:Reason.reason_desc ->
-  ALoc.t ->
-  Type.t
+val get_internal_var : Context.t -> string -> ALoc.t -> Type.t
 
-val set_var: Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t ->
-  Changeset.EntryRef.t option
+val get_var_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 
-val set_internal_var: Context.t -> string -> Type.t -> ALoc.t ->
-  Changeset.EntryRef.t option
+val unify_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> Type.t -> unit
 
-val set_expr: Key.t -> ALoc.t -> Type.t -> Type.t ->
-  Changeset.RefiRef.t
+val unify_declared_fun_type : Context.t -> string -> ALoc.t -> Type.t -> unit
 
-val refine_with_preds:
-  Context.t ->
-  ALoc.t ->
-  Type.predicate Key_map.t ->
-  Type.t Key_map.t ->
-  Changeset.t
+val var_ref :
+  ?lookup_mode:LookupMode.t -> Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Type.t
 
-val in_refined_env:
-  Context.t ->
-  ALoc.t ->
-  Type.predicate Key_map.t ->
-  Type.t Key_map.t ->
-  (unit -> 'a) ->
-  'a
+val set_var :
+  Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> Changeset.EntryRef.t option
 
-val merge_env:
-  Context.t ->
-  ALoc.t ->
-  t * t * t ->
-  Changeset.t ->
-  unit
+val set_internal_var : Context.t -> string -> Type.t -> ALoc.t -> Changeset.EntryRef.t option
 
-val widen_env: Context.t -> ALoc.t -> unit
+val set_expr : Key.t -> ALoc.t -> Type.t -> Type.t -> Changeset.RefiRef.t
 
-val copy_env:
-  Context.t ->
-  ALoc.t ->
-  t * t ->
-  Changeset.t ->
-  unit
+val refine_with_preds :
+  Context.t -> ALoc.t -> Type.predicate Key_map.t -> Type.t Key_map.t -> Changeset.t
 
-val havoc_all: unit -> unit
+val in_refined_env :
+  Context.t -> ALoc.t -> Type.predicate Key_map.t -> Type.t Key_map.t -> (unit -> 'a) -> 'a
 
-val reset_current_activation: ALoc.t -> unit
+val merge_env : Context.t -> ALoc.t -> t * t * t -> Changeset.t -> unit
 
-val havoc_vars: Changeset.t -> unit
+val widen_env : Context.t -> ALoc.t -> unit
 
-val havoc_heap_refinements: unit -> unit
-val havoc_heap_refinements_with_propname: private_:bool -> string -> unit
+val copy_env : Context.t -> ALoc.t -> t * t -> Changeset.t -> unit
 
-val get_refinement: Context.t -> Key.t -> ALoc.t -> Type.t option
+val havoc_all : unit -> unit
 
-val is_global_var: Context.t -> string -> bool
+val reset_current_activation : ALoc.t -> unit
+
+val havoc_vars : Changeset.t -> unit
+
+val havoc_heap_refinements : unit -> unit
+
+val havoc_heap_refinements_with_propname : private_:bool -> string -> unit
+
+val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
+
+val is_global_var : Context.t -> string -> bool

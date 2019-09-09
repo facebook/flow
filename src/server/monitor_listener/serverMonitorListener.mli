@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val listen_for_messages: ServerEnv.genv -> unit Lwt.t
+val listen_for_messages : ServerEnv.genv -> unit Lwt.t

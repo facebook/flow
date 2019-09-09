@@ -7,11 +7,15 @@
 
 module type S = sig
   type 'T ast
+
   type 'T param_ast
+
   type 'T rest_ast
 
   type t
+
   type param
+
   type rest
 
   type reconstruct =
@@ -19,32 +23,41 @@ module type S = sig
     (ALoc.t * Type.t) rest_ast option ->
     (ALoc.t * Type.t) ast option
 
-  val empty: reconstruct -> t
-  val add_param: param -> t -> t
-  val add_rest: rest -> t -> t
+  val empty : reconstruct -> t
 
-  val value: t -> Type.fun_param list
-  val rest: t -> Type.fun_rest_param option
+  val add_param : param -> t -> t
 
-  val subst: Context.t -> Type.t SMap.t -> t -> t
+  val add_rest : rest -> t -> t
 
-  val eval: Context.t -> t -> (ALoc.t * Type.t) ast option
+  val value : t -> Type.fun_param list
+
+  val rest : t -> Type.fun_rest_param option
+
+  val subst : Context.t -> Type.t SMap.t -> t -> t
+
+  val eval : Context.t -> t -> (ALoc.t * Type.t) ast option
 end
 
 module type Config = sig
   type 'T ast
+
   type 'T param_ast
+
   type 'T rest_ast
 
   type param
+
   type rest
 
-  val param_type: param -> Type.fun_param
-  val rest_type: rest -> Type.fun_rest_param
+  val param_type : param -> Type.fun_param
 
-  val subst_param: Context.t -> Type.t SMap.t -> param -> param
-  val subst_rest: Context.t -> Type.t SMap.t -> rest -> rest
+  val rest_type : rest -> Type.fun_rest_param
 
-  val eval_param: Context.t -> param -> (ALoc.t * Type.t) param_ast
-  val eval_rest: Context.t -> rest -> (ALoc.t * Type.t) rest_ast
+  val subst_param : Context.t -> Type.t SMap.t -> param -> param
+
+  val subst_rest : Context.t -> Type.t SMap.t -> rest -> rest
+
+  val eval_param : Context.t -> param -> (ALoc.t * Type.t) param_ast
+
+  val eval_rest : Context.t -> rest -> (ALoc.t * Type.t) rest_ast
 end

@@ -6,4 +6,4 @@
  *)
 
 (* Call in a sub-process *)
-val call: WorkerController.worker -> ('a -> 'b) -> 'a -> 'b Lwt.t
+val call : WorkerController.worker -> ('a -> 'b) -> 'a -> 'b Lwt.t

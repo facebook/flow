@@ -16,12 +16,15 @@
 
 include Func_params_intf
 
-module Make (C: Config) = struct
+module Make (C : Config) = struct
   type 'T ast = 'T C.ast
+
   type 'T param_ast = 'T C.param_ast
+
   type 'T rest_ast = 'T C.rest_ast
 
   type param = C.param
+
   type rest = C.rest
 
   type reconstruct =
@@ -35,32 +38,28 @@ module Make (C: Config) = struct
     reconstruct: reconstruct;
   }
 
-  let empty reconstruct = {
-    params_rev = [];
-    rest = None;
-    reconstruct;
-  }
+  let empty reconstruct = { params_rev = []; rest = None; reconstruct }
 
-  let add_param p x =
-    { x with params_rev = p::x.params_rev }
+  let add_param p x = { x with params_rev = p :: x.params_rev }
 
-  let add_rest r x =
-    { x with rest = Some r }
+  let add_rest r x = { x with rest = Some r }
 
-  let value {params_rev; _} =
-    List.fold_left (fun acc p ->
-      let t = C.param_type p in
-      t::acc
-    ) [] params_rev
+  let value { params_rev; _ } =
+    List.fold_left
+      (fun acc p ->
+        let t = C.param_type p in
+        t :: acc)
+      []
+      params_rev
 
-  let rest {rest; _} =
-    Option.map ~f:C.rest_type rest
+  let rest { rest; _ } = Option.map ~f:C.rest_type rest
 
-  let subst cx map { params_rev; rest; reconstruct } = {
-    params_rev = Core_list.map ~f:(C.subst_param cx map) params_rev;
-    rest = Option.map ~f:(C.subst_rest cx map) rest;
-    reconstruct;
-  }
+  let subst cx map { params_rev; rest; reconstruct } =
+    {
+      params_rev = Core_list.map ~f:(C.subst_param cx map) params_rev;
+      rest = Option.map ~f:(C.subst_rest cx map) rest;
+      reconstruct;
+    }
 
   let eval cx { params_rev; rest; reconstruct } =
     let params = List.rev params_rev in

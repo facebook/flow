@@ -7,20 +7,24 @@
 
 val check_once :
   shared_mem_config:SharedMem_js.config ->
-  format_errors: (
-    (Errors.ConcreteLocPrintableErrorSet.t * (* errors *)
-     Errors.ConcreteLocPrintableErrorSet.t * (* warnings *)
-     (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list) (* suppressed errors *) ->
-    (Profiling_js.finished -> unit) (* print errors *)
-  ) ->
+  format_errors:
+    (Errors.ConcreteLocPrintableErrorSet.t
+     * (* errors *)
+       Errors.ConcreteLocPrintableErrorSet.t
+     * (* warnings *)
+     (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list ->
+    (* suppressed errors *) Profiling_js.finished ->
+    unit (* print errors *)) ->
   ?focus_targets:Utils_js.FilenameSet.t ->
   Options.t ->
-  (Errors.ConcreteLocPrintableErrorSet.t * (* errors *) Errors.ConcreteLocPrintableErrorSet.t (* warnings *))
+  Errors.ConcreteLocPrintableErrorSet.t * (* errors *) Errors.ConcreteLocPrintableErrorSet.t
+
+(* warnings *)
 
 val daemonize :
   log_file:string ->
   shared_mem_config:SharedMem_js.config ->
   argv:string array ->
-  file_watcher_pid: int option ->
+  file_watcher_pid:int option ->
   Options.t ->
   (MonitorProt.server_to_monitor_message, MonitorProt.monitor_to_server_message) Daemon.handle

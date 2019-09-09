@@ -7,23 +7,24 @@
 
 open OUnit2
 
-let tests = "typing" >::: [
-  Typed_ast_test.tests;
-  Signature_verifier_test.tests;
-  Signature_generator_test.tests;
-]
+let tests =
+  "typing"
+  >::: [Typed_ast_test.tests; Signature_verifier_test.tests; Signature_generator_test.tests]
 
 let _handle =
   let one_gig = 1024 * 1024 * 1024 in
-  SharedMem_js.(init ~num_workers:0 {
-    global_size = 0;
-    heap_size = 5 * one_gig;
-    dep_table_pow = 0;
-    hash_table_pow = 19;
-    shm_dirs = [];
-    shm_min_avail = one_gig / 2;
-    log_level = 0;
-    sample_rate = 0.0;
-  })
+  SharedMem_js.(
+    init
+      ~num_workers:0
+      {
+        global_size = 0;
+        heap_size = 5 * one_gig;
+        dep_table_pow = 0;
+        hash_table_pow = 19;
+        shm_dirs = [];
+        shm_min_avail = one_gig / 2;
+        log_level = 0;
+        sample_rate = 0.0;
+      })
 
 let () = run_test_tt_main tests

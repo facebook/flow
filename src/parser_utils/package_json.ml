@@ -14,10 +14,12 @@ type t = {
 
 type 'a t_or_error = (t, 'a * string) result
 
-let (>>=) = Core_result.(>>=)
+let ( >>= ) = Core_result.( >>= )
 
-let empty = { name = None; main = None; }
+let empty = { name = None; main = None }
+
 let name package = package.name
+
 let main package = package.main
 
 let statement_of_program = function
@@ -25,20 +27,22 @@ let statement_of_program = function
   | (loc, _, _) -> Error (loc, "Expected a single statement.")
 
 let object_of_statement statement =
-  let open Ast in
-  match statement with
-  | _, Statement.Expression { Statement.Expression.
-      expression = _, Expression.Assignment { Expression.Assignment.
-        operator = None;
-        left = _;
-        right = obj;
-      };
-      directive = _;
-    } -> Ok obj
-  | (loc, _) -> Error (loc, "Expected an assignment")
+  Ast.(
+    match statement with
+    | ( _,
+        Statement.Expression
+          {
+            Statement.Expression.expression =
+              ( _,
+                Expression.Assignment
+                  { Expression.Assignment.operator = None; left = _; right = obj } );
+            directive = _;
+          } ) ->
+      Ok obj
+    | (loc, _) -> Error (loc, "Expected an assignment"))
 
 let properties_of_object = function
-  | (_, Ast.Expression.Object {Ast.Expression.Object.properties; comments=_}) -> Ok properties
+  | (_, Ast.Expression.Object { Ast.Expression.Object.properties; comments = _ }) -> Ok properties
   | (loc, _) -> Error (loc, "Expected an object literal")
 
 let parse ast : 'a t_or_error =
@@ -46,22 +50,23 @@ let parse ast : 'a t_or_error =
   >>= object_of_statement
   >>= properties_of_object
   >>= fun properties ->
-    let open Ast in
-    let open Expression.Object in
-    let extract_property package = function
-      | Property (_, Property.Init {
-          key = Property.Literal(_, { Literal.value = Literal.String key; _ });
-          value = (_, Expression.Literal { Literal.
-            value = Literal.String value;
-            _
-          });
-          _;
-        }) ->
-          begin match key with
-          | "name" -> { package with name = Some value }
-          | "main" -> { package with main = Some value }
-          | _ -> package
+  Ast.(
+    Expression.Object.(
+      let extract_property package = function
+        | Property
+            ( _,
+              Property.Init
+                {
+                  key = Property.Literal (_, { Literal.value = Literal.String key; _ });
+                  value = (_, Expression.Literal { Literal.value = Literal.String value; _ });
+                  _;
+                } ) ->
+          begin
+            match key with
+            | "name" -> { package with name = Some value }
+            | "main" -> { package with main = Some value }
+            | _ -> package
           end
-      | _ -> package
-    in
-    Ok (List.fold_left extract_property empty properties)
+        | _ -> package
+      in
+      Ok (List.fold_left extract_property empty properties)))

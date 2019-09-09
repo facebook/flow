@@ -7,15 +7,15 @@
 
 (* Main type for code *)
 type t = {
-  stmt : (Loc.t, Loc.t) Flow_ast.Statement.t;
-  stmt_deps : t list
-};;
+  stmt: (Loc.t, Loc.t) Flow_ast.Statement.t;
+  stmt_deps: t list;
+}
 
 (* This is mainly used for expressions. Eventually this will be turned
  * into Code.t. The purpose for this type is to carry dependecies for
  * expressions.
-*)
+ *)
 type t' = {
-  expr : (Loc.t, Loc.t) Flow_ast.Expression.t';
-  expr_deps : t list
-};;
+  expr: (Loc.t, Loc.t) Flow_ast.Expression.t';
+  expr_deps: t list;
+}

@@ -5,15 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = Negative | Neutral | Positive
+type t =
+  | Negative
+  | Neutral
+  | Positive
 
 (* Subtype relation for polarities, interpreting neutral as positive &
    negative: whenever compat(p1,p2) holds, things that have polarity p1 can
    appear in positions that have polarity p2. *)
 let compat = function
-  | Positive, Positive
-  | Negative, Negative
-  | Neutral, _ -> true
+  | (Positive, Positive)
+  | (Negative, Negative)
+  | (Neutral, _) ->
+    true
   | _ -> false
 
 let inv = function
@@ -22,9 +26,11 @@ let inv = function
   | Neutral -> Neutral
 
 let mult = function
-  | Positive, Positive -> Positive
-  | Negative, Negative -> Positive
-  | Neutral, _ | _, Neutral -> Neutral
+  | (Positive, Positive) -> Positive
+  | (Negative, Negative) -> Positive
+  | (Neutral, _)
+  | (_, Neutral) ->
+    Neutral
   | _ -> Negative
 
 (* printer *)

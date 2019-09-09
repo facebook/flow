@@ -6,5 +6,4 @@
  *)
 
 open Utils_js
-
 include Tarjan.Make (File_key) (FilenameMap) (FilenameSet)

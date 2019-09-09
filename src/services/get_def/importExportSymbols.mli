@@ -17,7 +17,7 @@
  * Given the code: `import {foo} from 'bar'`
  * - If given the location for `foo`, will return that same location.
  *)
-val find_related_symbols: File_sig.With_Loc.t -> Loc.t list -> Loc.t list
+val find_related_symbols : File_sig.With_Loc.t -> Loc.t list -> Loc.t list
 
 (* As above but operates only on a single location *)
-val find_related_symbol: File_sig.With_Loc.t -> Loc.t -> Loc.t option
+val find_related_symbol : File_sig.With_Loc.t -> Loc.t -> Loc.t option

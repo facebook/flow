@@ -11,11 +11,8 @@
    to Types_js, where error management stuff lives.
  *)
 val init :
-  options: Options.t ->
-  reader: Mutator_state_reader.t ->
+  options:Options.t ->
+  reader:Mutator_state_reader.t ->
   string list ->
-  (File_key.t *
-    bool *
-    Flow_error.ErrorSet.t *
-    Flow_error.ErrorSet.t *
-    Error_suppressions.t) list Lwt.t
+  (File_key.t * bool * Flow_error.ErrorSet.t * Flow_error.ErrorSet.t * Error_suppressions.t) list
+  Lwt.t

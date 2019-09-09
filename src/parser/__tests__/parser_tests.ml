@@ -7,8 +7,6 @@
 
 open OUnit2
 
-let tests = "parser_utils" >::: [
-  Offset_utils_test.tests;
-]
+let tests = "parser_utils" >::: [Offset_utils_test.tests]
 
 let () = run_test_tt_main tests

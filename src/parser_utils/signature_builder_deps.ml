@@ -11,7 +11,7 @@ let spf = Printf.sprintf
 
 module Sort = Signature_builder_kind.Sort
 
-module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = struct
+module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = struct
   module L = L
 
   module ExpectedAnnotationSort = struct
@@ -23,31 +23,27 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
       | VariableDefinition of (L.t, L.t) Flow_ast.Identifier.t
 
     let property_key_to_string =
-      let open Flow_ast.Expression.Object.Property in
-      function
-      | Literal (_, lit) ->
-        let lit = Reason.code_desc_of_literal lit in
-        spf "literal property %s" lit
-      | Identifier (_, { Flow_ast.Identifier.name; _ }) ->
-        spf "property `%s`" name
-      | PrivateName (_, (_, { Flow_ast.Identifier.name; _ })) ->
-        spf "property `%s`" name
-      | Computed e ->
-        let e = Reason.code_desc_of_expression ~wrap:false e in
-        spf "computed property `[%s]`" e
+      Flow_ast.Expression.Object.Property.(
+        function
+        | Literal (_, lit) ->
+          let lit = Reason.code_desc_of_literal lit in
+          spf "literal property %s" lit
+        | Identifier (_, { Flow_ast.Identifier.name; _ }) -> spf "property `%s`" name
+        | PrivateName (_, (_, { Flow_ast.Identifier.name; _ })) -> spf "property `%s`" name
+        | Computed e ->
+          let e = Reason.code_desc_of_expression ~wrap:false e in
+          spf "computed property `[%s]`" e)
 
     let to_string = function
       | ArrayPattern -> "array pattern"
       | FunctionReturn -> "function return"
       | Property key -> property_key_to_string key
-      | PrivateField (_, (_, { Flow_ast.Identifier.name; _ })) ->
-        spf "private field `#%s`" name
+      | PrivateField (_, (_, { Flow_ast.Identifier.name; _ })) -> spf "private field `#%s`" name
       | VariableDefinition (_, { Flow_ast.Identifier.name; _ }) ->
         spf "declaration of variable `%s`" name
   end
 
   module Error = struct
-
     type t =
       | ExpectedSort of Sort.t * string * L.t
       | ExpectedAnnotation of L.t * ExpectedAnnotationSort.t
@@ -67,10 +63,12 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
 
     let debug_to_string = function
       | ExpectedSort (sort, x, loc) ->
-        spf "%s @ %s is not a %s"
-          x (L.debug_to_string loc) (Sort.to_string sort)
-      | ExpectedAnnotation (loc, sort) -> spf "Expected annotation at %s @ %s"
-          (ExpectedAnnotationSort.to_string sort) (L.debug_to_string loc)
+        spf "%s @ %s is not a %s" x (L.debug_to_string loc) (Sort.to_string sort)
+      | ExpectedAnnotation (loc, sort) ->
+        spf
+          "Expected annotation at %s @ %s"
+          (ExpectedAnnotationSort.to_string sort)
+          (L.debug_to_string loc)
       | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (L.debug_to_string loc)
       | UnexpectedObjectKey (_loc, key_loc) ->
         spf "Expected simple object key @ %s" (L.debug_to_string key_loc)
@@ -82,18 +80,21 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
       | EmptyArray loc ->
         spf "Cannot determine the element type of an empty array @ %s" (L.debug_to_string loc)
       | EmptyObject loc ->
-        spf "Cannot determine types of initialized properties of an empty object @ %s"
+        spf
+          "Cannot determine types of initialized properties of an empty object @ %s"
           (L.debug_to_string loc)
       | UnexpectedExpression (loc, esort) ->
-        spf "Cannot determine the type of this %s @ %s"
-          (Ast_utils.ExpressionSort.to_string esort) (L.debug_to_string loc)
+        spf
+          "Cannot determine the type of this %s @ %s"
+          (Ast_utils.ExpressionSort.to_string esort)
+          (L.debug_to_string loc)
       | SketchyToplevelDef loc ->
         spf "Unexpected toplevel definition that needs hoisting @ %s" (L.debug_to_string loc)
       | UnsupportedPredicateExpression loc ->
         spf "Unsupported predicate expression @ %s" (L.debug_to_string loc)
       | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (L.debug_to_string loc)
-
   end
+
   module PrintableErrorSet = Set.Make (Error)
 
   module Dep = struct
@@ -131,38 +132,45 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
 
     let remote = function
       | Remote _ -> true
-      | Local _ | Dynamic _ -> false
+      | Local _
+      | Dynamic _ ->
+        false
 
-    let local_uses dep acc = match dep with
+    let local_uses dep acc =
+      match dep with
       | Local (_, n) -> SSet.add n acc
-      | Remote _ | Dynamic _ -> acc
+      | Remote _
+      | Dynamic _ ->
+        acc
 
     let to_string =
       let string_of_import_sort = function
         | Sort.Value -> "import"
-        | Sort.Type -> "import type" in
-      let string_of_local (sort, x) =
-        spf "%s: %s" (Sort.to_string sort) x in
+        | Sort.Type -> "import type"
+      in
+      let string_of_local (sort, x) = spf "%s: %s" (Sort.to_string sort) x in
       let string_of_dynamic = function
         | Class (loc, x) -> spf "class %s @ %s" x (L.debug_to_string loc)
         | DynamicImport loc -> spf "import @ %s" (L.debug_to_string loc)
-        | DynamicRequire loc -> spf "require @ %s" (L.debug_to_string loc) in
+        | DynamicRequire loc -> spf "require @ %s" (L.debug_to_string loc)
+      in
       let string_of_remote = function
         | ImportNamed { sort; name = (_, n); source = (_, m) } ->
           spf "%s { %s } from '%s'" (string_of_import_sort sort) n m
         | ImportStar { sort; source = (_, m) } ->
           spf "%s * from '%s'" (string_of_import_sort sort) m
         | Require { source = (_, m); name } ->
-          begin match name with
+          begin
+            match name with
             | None -> spf "require('%s')" m
-            | Some ns ->
-              spf "require('%s').%s" m (ListUtils.to_string "." snd @@ Nel.to_list ns)
+            | Some ns -> spf "require('%s').%s" m (ListUtils.to_string "." snd @@ Nel.to_list ns)
           end
         | Global local -> spf "global %s" (string_of_local local)
-      in function
-        | Local local -> string_of_local local
-        | Dynamic dynamic -> string_of_dynamic dynamic
-        | Remote remote -> string_of_remote remote
+      in
+      function
+      | Local local -> string_of_local local
+      | Dynamic dynamic -> string_of_dynamic dynamic
+      | Remote remote -> string_of_remote remote
   end
 
   module DepSet = Set.Make (Dep)
@@ -170,44 +178,54 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
   type t = DepSet.t * PrintableErrorSet.t
 
   let join ((deps1, msgs1), (deps2, msgs2)) =
-    DepSet.union deps1 deps2, PrintableErrorSet.union msgs1 msgs2
+    (DepSet.union deps1 deps2, PrintableErrorSet.union msgs1 msgs2)
 
-  let bot = DepSet.empty, PrintableErrorSet.empty
-  let top msg = DepSet.empty, PrintableErrorSet.singleton msg
+  let bot = (DepSet.empty, PrintableErrorSet.empty)
+
+  let top msg = (DepSet.empty, PrintableErrorSet.singleton msg)
 
   let unreachable = bot
+
   let todo loc msg = top (Error.TODO (msg, loc))
 
-  let unit dep = DepSet.singleton dep, PrintableErrorSet.empty
+  let unit dep = (DepSet.singleton dep, PrintableErrorSet.empty)
 
   let type_ atom = unit Dep.(Local (Sort.Type, atom))
+
   let value atom = unit Dep.(Local (Sort.Value, atom))
 
   let dynamic_import loc = unit Dep.(Dynamic (DynamicImport loc))
+
   let dynamic_require loc = unit Dep.(Dynamic (DynamicRequire loc))
 
   let import_named sort source name = unit Dep.(Remote (ImportNamed { sort; source; name }))
+
   let import_star sort source = unit Dep.(Remote (ImportStar { sort; source }))
+
   let require ?name source = unit Dep.(Remote (Require { source; name }))
+
   let global local = unit Dep.(Remote (Global local))
 
-  let reduce_join f deps x =
-    join (deps, f x)
+  let reduce_join f deps x = join (deps, f x)
 
   let recurse f (deps, msgs) =
     DepSet.fold (fun dep msgs -> PrintableErrorSet.union (f dep) msgs) deps msgs
 
   let replace_local_with_dynamic_class (loc, x) (deps, msgs) =
-    let acc = DepSet.fold (fun dep acc -> match dep with
-      | Dep.Local (_, y) when x = y -> acc
-      | _ -> join (acc, unit dep)
-    ) deps (DepSet.empty, msgs) in
+    let acc =
+      DepSet.fold
+        (fun dep acc ->
+          match dep with
+          | Dep.Local (_, y) when x = y -> acc
+          | _ -> join (acc, unit dep))
+        deps
+        (DepSet.empty, msgs)
+    in
     join (acc, unit (Dep.Dynamic (Dep.Class (loc, x))))
 end
 
 module With_Loc = Make (Loc_sig.LocS)
 module With_ALoc = Make (Loc_sig.ALocS)
-
 include With_Loc
 
 let abstractify_expected_annotation_sort =
@@ -218,7 +236,8 @@ let abstractify_expected_annotation_sort =
   | WL.FunctionReturn -> WA.FunctionReturn
   | WL.Property key -> WA.Property (Ast_loc_utils.loc_to_aloc_mapper#object_key key)
   | WL.PrivateField key -> WA.PrivateField (Ast_loc_utils.loc_to_aloc_mapper#private_name key)
-  | WL.VariableDefinition id -> WA.VariableDefinition (Ast_loc_utils.loc_to_aloc_mapper#identifier id)
+  | WL.VariableDefinition id ->
+    WA.VariableDefinition (Ast_loc_utils.loc_to_aloc_mapper#identifier id)
 
 let abstractify_error =
   let module WL = With_Loc.Error in
@@ -239,6 +258,5 @@ let abstractify_error =
   | WL.EmptyObject loc -> WA.EmptyObject (ALoc.of_loc loc)
   | WL.UnexpectedExpression (loc, sort) -> WA.UnexpectedExpression (ALoc.of_loc loc, sort)
   | WL.SketchyToplevelDef loc -> WA.SketchyToplevelDef (ALoc.of_loc loc)
-  | WL.UnsupportedPredicateExpression loc ->
-    WA.UnsupportedPredicateExpression (ALoc.of_loc loc)
+  | WL.UnsupportedPredicateExpression loc -> WA.UnsupportedPredicateExpression (ALoc.of_loc loc)
   | WL.TODO (str, loc) -> WA.TODO (str, ALoc.of_loc loc)

@@ -5,11 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = Negative | Neutral | Positive
+type t =
+  | Negative
+  | Neutral
+  | Positive
 
-val compat: t * t -> bool
-val inv: t -> t
-val mult: t * t -> t
+val compat : t * t -> bool
 
-val string: t -> string
-val sigil: t -> string
+val inv : t -> t
+
+val mult : t * t -> t
+
+val string : t -> string
+
+val sigil : t -> string

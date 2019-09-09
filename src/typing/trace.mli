@@ -7,15 +7,16 @@
 
 type t
 
-val compare: t -> t -> int
+val compare : t -> t -> int
 
-val trace_depth: t -> int
-val unit_trace: Type.t -> Type.use_t -> t
-val rec_trace: max: int -> Type.t -> Type.use_t -> t -> t
-val concat_trace: t list -> t
-val dummy_trace: t
+val trace_depth : t -> int
 
-val reasons_of_trace:
-  ?level:int ->
-  t ->
-  Reason.reason list
+val unit_trace : Type.t -> Type.use_t -> t
+
+val rec_trace : max:int -> Type.t -> Type.use_t -> t -> t
+
+val concat_trace : t list -> t
+
+val dummy_trace : t
+
+val reasons_of_trace : ?level:int -> t -> Reason.reason list

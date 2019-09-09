@@ -7,8 +7,6 @@
 
 open OUnit2
 
-let tests = "printers" >::: [
-  Pretty_printer_test.tests;
-]
+let tests = "printers" >::: [Pretty_printer_test.tests]
 
 let () = run_test_tt_main tests

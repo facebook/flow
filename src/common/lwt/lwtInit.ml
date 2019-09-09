@@ -24,31 +24,38 @@ let spf = Printf.sprintf
  * OCaml bug report: https://caml.inria.fr/mantis/view.php?id=7665
  * lwt issue: https://github.com/ocsigen/lwt/issues/496
  *)
-class windows_select = object
-  inherit Lwt_engine.select_based
+class windows_select =
+  object
+    inherit Lwt_engine.select_based
 
-  method private select fds_r fds_w timeout =
-    (* Figure out which fds are already ready to be read *)
-    let ready_r = List.fold_left (fun ready_r fd_r ->
-      match Unix.select [fd_r] [] [] 0.0 with
-      | [], _, _ -> ready_r
-      | _ -> fd_r::ready_r
-    ) [] fds_r in
-
-    (* Figure out which fds are already ready to be written *)
-    let ready_w = List.fold_left (fun ready_w fd_w ->
-      match Unix.select [] [fd_w] [] 0.0 with
-      | _, [], _ -> ready_w
-      | _ -> fd_w::ready_w
-    ) [] fds_w in
-
-    (* If nothing is ready, then do a multi-fd select with the timeout *)
-    if ready_r = [] && ready_w = []
-    then
-      let fds_r, fds_w, _ = Unix.select fds_r fds_w [] timeout in
-      (fds_r, fds_w)
-    else (ready_r, ready_w)
-end
+    method private select fds_r fds_w timeout =
+      (* Figure out which fds are already ready to be read *)
+      let ready_r =
+        List.fold_left
+          (fun ready_r fd_r ->
+            match Unix.select [fd_r] [] [] 0.0 with
+            | ([], _, _) -> ready_r
+            | _ -> fd_r :: ready_r)
+          []
+          fds_r
+      in
+      (* Figure out which fds are already ready to be written *)
+      let ready_w =
+        List.fold_left
+          (fun ready_w fd_w ->
+            match Unix.select [] [fd_w] [] 0.0 with
+            | (_, [], _) -> ready_w
+            | _ -> fd_w :: ready_w)
+          []
+          fds_w
+      in
+      (* If nothing is ready, then do a multi-fd select with the timeout *)
+      if ready_r = [] && ready_w = [] then
+        let (fds_r, fds_w, _) = Unix.select fds_r fds_w [] timeout in
+        (fds_r, fds_w)
+      else
+        (ready_r, ready_w)
+  end
 
 (*
  * So there's a bug in Unix.select on unix (Linux and OSX). Basically, select is supposed to raise
@@ -72,43 +79,47 @@ end
  * OCaml bug report: https://caml.inria.fr/mantis/view.php?id=7700
  * lwt issue: https://github.com/ocsigen/lwt/issues/529
  *)
-class unix_select = object
-  inherit Lwt_engine.select_based
+class unix_select =
+  object
+    inherit Lwt_engine.select_based
 
-  method private select fds_r fds_w timeout =
-    let fds_r, fds_w, _ =
-      try Unix.select fds_r fds_w [] timeout
-      with
-      | Unix.Unix_error (Unix.EINVAL, fn, params) -> begin
-        (* Ok, so either one of the fds is an invalid fd, or maybe it's a valid fd but too large
+    method private select fds_r fds_w timeout =
+      let (fds_r, fds_w, _) =
+        try Unix.select fds_r fds_w [] timeout
+        with Unix.Unix_error (Unix.EINVAL, fn, params) ->
+          (* Ok, so either one of the fds is an invalid fd, or maybe it's a valid fd but too large
         * for select *)
-        begin try
-          let explode_if_bad fd = Unix.fstat fd |> ignore in
-          List.iter explode_if_bad fds_r;
-          List.iter explode_if_bad fds_w
-        with Unix.Unix_error (_, _, _) ->
-          raise (Unix.Unix_error (Unix.EBADF, fn, params))
-        end;
-        (* Oh boy. So it looks like all the fds are valid. This likely means that one fd is larger
-         * than FD_SETSIZE (which is probably 1024). select() stops working for large fds like this
-         *)
-        let string_of_fd fd = string_of_int ((Obj.magic fd): int) in
-        let string_of_fds fds = String.concat ";" (Core_list.map ~f:string_of_fd fds) in
-        let params = spf "[%s] [%s] []" (string_of_fds fds_r) (string_of_fds fds_w) in
-        raise (Unix.Unix_error (Unix.EINVAL, "select", params))
-      end
-    in
-    (fds_r, fds_w)
-end
+          begin
+            try
+              let explode_if_bad fd = Unix.fstat fd |> ignore in
+              List.iter explode_if_bad fds_r;
+              List.iter explode_if_bad fds_w
+            with Unix.Unix_error (_, _, _) -> raise (Unix.Unix_error (Unix.EBADF, fn, params))
+          end;
+
+          (* Oh boy. So it looks like all the fds are valid. This likely means that one fd is larger
+           * than FD_SETSIZE (which is probably 1024). select() stops working for large fds like this
+           *)
+          let string_of_fd fd = string_of_int (Obj.magic fd : int) in
+          let string_of_fds fds = String.concat ";" (Core_list.map ~f:string_of_fd fds) in
+          let params = spf "[%s] [%s] []" (string_of_fds fds_r) (string_of_fds fds_w) in
+          raise (Unix.Unix_error (Unix.EINVAL, "select", params))
+      in
+      (fds_r, fds_w)
+  end
 
 let set_engine () =
   (* In theory, we could allow Flow built on machines with libev to use libev instead of select.
    * However, it seems like lwt_config.h on my OSX opam and my CentOS opam both comment out
    * HAVE_LIBEV. And I suppose if we can't rely on libev everywhere then we should rely on it
    * nowhere *)
-  if Sys.win32
-  then Lwt_engine.set (new windows_select) (* See comment on windows_select *)
-  else Lwt_engine.set (new unix_select) (* See comment on unix_select *)
+  if Sys.win32 then
+    Lwt_engine.set (new windows_select)
+  (* See comment on windows_select *)
+  else
+    Lwt_engine.set (new unix_select)
+
+(* See comment on unix_select *)
 
 let run_lwt f =
   set_engine ();

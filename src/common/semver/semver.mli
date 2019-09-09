@@ -27,8 +27,11 @@
 exception Parse_error of string
 
 val version_of_string : string -> Semver_version.t
+
 val range_of_string : string -> Semver_range.t
 
 val is_valid_range : string -> bool
+
 val satisfies : ?include_prereleases:bool -> string -> string -> bool
+
 val compare : string -> string -> int

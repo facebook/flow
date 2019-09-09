@@ -12,11 +12,12 @@ type 'a t = {
 
 exception Out_of_bounds_set of string
 
-let make size = {
-  arr = Array.make size None;
-  (* 0, not the given `size`. See the comment for this function in the `.mli` file. *)
-  size = 0;
-}
+let make size =
+  {
+    arr = Array.make size None;
+    (* 0, not the given `size`. See the comment for this function in the `.mli` file. *)
+    size = 0;
+  }
 
 let get arr i =
   if i < 0 || i >= arr.size then
@@ -31,10 +32,9 @@ let change_capacity arr new_capacity =
 
 let expand_if_needed arr =
   let old_capacity = Array.length arr.arr in
-  if arr.size = old_capacity then begin
+  if arr.size = old_capacity then
     let new_capacity = max (old_capacity * 2) 1 in
     change_capacity arr new_capacity
-  end
 
 let set arr i x =
   if i >= arr.size || i < 0 then
@@ -46,9 +46,7 @@ let push arr elt =
   arr.arr.(arr.size) <- Some elt;
   arr.size <- arr.size + 1
 
-let shrink arr =
-  if arr.size <> Array.length arr.arr then
-    change_capacity arr arr.size
+let shrink arr = if arr.size <> Array.length arr.arr then change_capacity arr arr.size
 
 let size arr = arr.size
 

@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val run_lwt: (unit -> 'a Lwt.t) -> 'a
+val run_lwt : (unit -> 'a Lwt.t) -> 'a

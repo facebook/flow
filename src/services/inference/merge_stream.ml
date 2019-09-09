@@ -83,112 +83,123 @@ let max_bucket_size = 500
 let bucket_size stream =
   (* NB: num_workers can be zero *)
   let max_bucket_size =
-    if stream.ready_files < stream.num_workers * max_bucket_size
-    then 1 + (stream.ready_files / stream.num_workers)
-    else max_bucket_size
+    if stream.ready_files < stream.num_workers * max_bucket_size then
+      1 + (stream.ready_files / stream.num_workers)
+    else
+      max_bucket_size
   in
   min max_bucket_size stream.ready_files
 
-let is_done stream =
-  stream.blocked_components = 0
+let is_done stream = stream.blocked_components = 0
 
 let create
-  ~num_workers
-  ~arch
-  ~dependency_graph
-  ~leader_map
-  ~component_map
-  ~recheck_leader_set
-  ~intermediate_result_callback =
-
+    ~num_workers
+    ~arch
+    ~dependency_graph
+    ~leader_map
+    ~component_map
+    ~recheck_leader_set
+    ~intermediate_result_callback =
   (* create node for each component *)
-  let graph = FilenameMap.mapi (fun leader component -> {
-    component;
-    dependents = FilenameMap.empty; (* computed later *)
-    blocking = 0; (* computed later *)
-    recheck = FilenameSet.mem leader recheck_leader_set;
-    size = Nel.length component;
-  }) component_map in
-
-  let total_components, total_files = FilenameMap.fold (fun _ node (c, f) ->
-    c + 1, f + node.size
-  ) graph (0, 0) in
-
+  let graph =
+    FilenameMap.mapi
+      (fun leader component ->
+        {
+          component;
+          dependents = FilenameMap.empty;
+          (* computed later *)
+          blocking = 0;
+          (* computed later *)
+          recheck = FilenameSet.mem leader recheck_leader_set;
+          size = Nel.length component;
+        })
+      component_map
+  in
+  let (total_components, total_files) =
+    FilenameMap.fold (fun _ node (c, f) -> (c + 1, f + node.size)) graph (0, 0)
+  in
   (* calculate dependents, blocking for each node *)
   let () =
     let leader f = FilenameMap.find_unsafe f leader_map in
-    FilenameMap.iter (fun f dep_fs ->
-      let leader_f = leader f in
-      let node = FilenameMap.find_unsafe leader_f graph in
-      FilenameSet.iter (fun dep_f ->
-        let dep_leader_f = leader dep_f in
-        if dep_leader_f = leader_f then () else
-        let dep_node = FilenameMap.find_unsafe dep_leader_f graph in
-        let dependents = FilenameMap.add leader_f node dep_node.dependents in
-        if dependents != dep_node.dependents then begin
-          dep_node.dependents <- dependents;
-          node.blocking <- node.blocking + 1;
-        end
-      ) dep_fs
-    ) dependency_graph
+    FilenameMap.iter
+      (fun f dep_fs ->
+        let leader_f = leader f in
+        let node = FilenameMap.find_unsafe leader_f graph in
+        FilenameSet.iter
+          (fun dep_f ->
+            let dep_leader_f = leader dep_f in
+            if dep_leader_f = leader_f then
+              ()
+            else
+              let dep_node = FilenameMap.find_unsafe dep_leader_f graph in
+              let dependents = FilenameMap.add leader_f node dep_node.dependents in
+              if dependents != dep_node.dependents then (
+                dep_node.dependents <- dependents;
+                node.blocking <- node.blocking + 1
+              ))
+          dep_fs)
+      dependency_graph
   in
-
-  let stream = {
-    graph;
-    ready = Queue.create ();
-    num_workers;
-    total_components;
-    total_files;
-    arch;
-    ready_components = 0;
-    ready_files = 0;
-    blocked_components = 0;
-    blocked_files = 0;
-    merged_components = 0;
-    merged_files = 0;
-    skipped_components = 0;
-    skipped_files = 0;
-    intermediate_result_callback;
-  } in
-
+  let stream =
+    {
+      graph;
+      ready = Queue.create ();
+      num_workers;
+      total_components;
+      total_files;
+      arch;
+      ready_components = 0;
+      ready_files = 0;
+      blocked_components = 0;
+      blocked_files = 0;
+      merged_components = 0;
+      merged_files = 0;
+      skipped_components = 0;
+      skipped_files = 0;
+      intermediate_result_callback;
+    }
+  in
   (* calculate the components ready to schedule and blocked counts *)
-  FilenameMap.iter (fun _ node ->
-    if node.blocking = 0
-    then add_ready node stream
-    else begin
-      stream.blocked_components <- stream.blocked_components + 1;
-      stream.blocked_files <- stream.blocked_files + node.size;
-    end
-  ) graph;
+  FilenameMap.iter
+    (fun _ node ->
+      if node.blocking = 0 then
+        add_ready node stream
+      else (
+        stream.blocked_components <- stream.blocked_components + 1;
+        stream.blocked_files <- stream.blocked_files + node.size
+      ))
+    graph;
 
   stream
 
 let update_server_status stream =
-  let status = match stream.arch with
-    | Options.Classic -> ServerStatus.(Merging_progress {
-        finished = stream.merged_files;
-        total = Some stream.total_files;
-      })
-    | Options.TypesFirst -> ServerStatus.(Merging_types_progress {
-        finished = stream.merged_files;
-        total = Some stream.total_files;
-      })
+  let status =
+    match stream.arch with
+    | Options.Classic ->
+      ServerStatus.(
+        Merging_progress { finished = stream.merged_files; total = Some stream.total_files })
+    | Options.TypesFirst ->
+      ServerStatus.(
+        Merging_types_progress { finished = stream.merged_files; total = Some stream.total_files })
   in
   MonitorRPC.status_update status
 
 let next stream =
   let rec take acc n =
-    if n <= 0 then acc
-    else begin
+    if n <= 0 then
+      acc
+    else
       let node = pop_ready stream in
-      take ((Component node.component)::acc) (n-node.size)
-    end
+      take (Component node.component :: acc) (n - node.size)
   in
-
   fun () ->
     let n = bucket_size stream in
     match take [] n with
-    | [] -> if is_done stream then Bucket.Done else Bucket.Wait
+    | [] ->
+      if is_done stream then
+        Bucket.Done
+      else
+        Bucket.Wait
     | components -> Bucket.Job components
 
 let merge ~master_mutator ~reader stream =
@@ -202,7 +213,6 @@ let merge ~master_mutator ~reader stream =
     |> FilenameSet.of_list
     |> Context_heaps.Merge_context_mutator.revive_files master_mutator
   in
-
   (* Record that a component was merged (or skipped) and recursively unblock its
    * dependents. If a dependent has no more unmerged dependencies, make it
    * available for scheduling. *)
@@ -211,40 +221,43 @@ let merge ~master_mutator ~reader stream =
     stream.merged_files <- stream.merged_files + node.size;
     if not diff then revive node;
     FilenameMap.iter (fun _ node -> unblock diff node) node.dependents
-
   and unblock diff node =
     (* dependent blocked on one less *)
     node.blocking <- node.blocking - 1;
+
     (* dependent should be rechecked if diff *)
     node.recheck <- diff || node.recheck;
+
     (* no more waiting, yay! *)
-    if node.blocking = 0 then begin
+    if node.blocking = 0 then (
       stream.blocked_components <- stream.blocked_components - 1;
       stream.blocked_files <- stream.blocked_files - node.size;
-      if node.recheck
-      then add_ready node stream
-      else skip node
-    end
-
+      if node.recheck then
+        add_ready node stream
+      else
+        skip node
+    )
   and skip node =
     stream.skipped_components <- stream.skipped_components + 1;
     stream.skipped_files <- stream.skipped_files + node.size;
     push false node
   in
-
   fun merged acc ->
     stream.intermediate_result_callback (lazy merged);
-    List.iter (fun (leader_f, _) ->
-      let node = FilenameMap.find_unsafe leader_f stream.graph in
-      let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
-      push diff node
-    ) merged;
+    List.iter
+      (fun (leader_f, _) ->
+        let node = FilenameMap.find_unsafe leader_f stream.graph in
+        let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
+        push diff node)
+      merged;
     update_server_status stream;
     List.rev_append merged acc
 
 (* NOTE: call these functions only at the end of merge, not during. *)
 let total_files stream = stream.total_files
+
 let skipped_count stream = stream.skipped_files
+
 (* See explanation in Context_heaps for why calling this function at the end of merge returns files
    whose signatures are new or have changed. *)
 let sig_new_or_changed = Context_heaps.Merge_context_mutator.unrevived_files

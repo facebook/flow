@@ -6,14 +6,20 @@
  *)
 module type S = sig
   type t
+
   type key
-  val empty: t
-  val add: key -> Polarity.t -> t -> (Polarity.t * t) option
-  val get: key -> t -> Polarity.t option
-  val mem: key -> Polarity.t -> t -> bool
-  val exclude: key -> t -> t
+
+  val empty : t
+
+  val add : key -> Polarity.t -> t -> (Polarity.t * t) option
+
+  val get : key -> t -> Polarity.t option
+
+  val mem : key -> Polarity.t -> t -> bool
+
+  val exclude : key -> t -> t
 end
 
-module Make(Key: Map.OrderedType): S with type key = Key.t
+module Make (Key : Map.OrderedType) : S with type key = Key.t
 
-module IdMarked: S with type key = int
+module IdMarked : S with type key = int

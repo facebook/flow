@@ -6,9 +6,6 @@
  *)
 
 module LocSet = Loc_sig.LocS.LSet
-
 module LocMap = Loc_sig.LocS.LMap
-
 module ALocSet = Loc_sig.ALocS.LSet
-
 module ALocMap = Loc_sig.ALocS.LMap

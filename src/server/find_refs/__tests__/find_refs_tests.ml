@@ -7,8 +7,6 @@
 
 open OUnit2
 
-let tests = "utils" >::: [
-  PropertyAccessSearcher_test.tests;
-]
+let tests = "utils" >::: [PropertyAccessSearcher_test.tests]
 
 let () = run_test_tt_main tests

@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val find_exact_match_annotation :
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> ALoc.t -> Type.TypeScheme.t option
 (**
  * Return the first typed AST entry that exactly matches the (abstract) location
  * passed as input.
  *
  *)
-val find_exact_match_annotation :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
-  ALoc.t ->
-  Type.TypeScheme.t option
 
+val find_type_at_pos_annotation :
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> Loc.t -> (Loc.t * Type.TypeScheme.t) option
 (**
  * Find the first typed AST entry for "type-at-pos" related queries. A query
  * succeeds if the location is within the range of a symbol in the AST. The kinds
@@ -29,24 +29,18 @@ val find_exact_match_annotation :
  * It's convenient to use Loc.t as the input query, since this is usually called
  * in direct response to a client query, which are typically concrete locations.
  *)
-val find_type_at_pos_annotation :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
-  Loc.t ->
-  (Loc.t * Type.TypeScheme.t) option
 
 type get_def_object_source =
   | GetDefType of Type.t
   | GetDefRequireLoc of ALoc.t
 
 type get_def_member_info = {
-  get_def_prop_name : string;
-  get_def_object_source : get_def_object_source;
+  get_def_prop_name: string;
+  get_def_object_source: get_def_object_source;
 }
 
 val find_get_def_info :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
-  Loc.t ->
-  get_def_member_info option
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> Loc.t -> get_def_member_info option
 
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
@@ -56,11 +50,18 @@ val typed_ast_to_list :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   (ALoc.t * Type.TypeScheme.t) list
 
-val coverage_fold_tast:
+val coverage_fold_tast :
   f:('l -> 't -> 'acc -> 'acc) ->
-  init:'acc -> ('l, 'l * 't) Flow_polymorphic_ast_mapper.Ast.program -> 'acc
+  init:'acc ->
+  ('l, 'l * 't) Flow_polymorphic_ast_mapper.Ast.program ->
+  'acc
 
-val error_mapper: (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
-val unimplemented_mapper: (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
-val unchecked_mapper: (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
-val unreachable_mapper: (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
+val error_mapper : (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
+
+val unimplemented_mapper :
+  (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
+
+val unchecked_mapper : (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
+
+val unreachable_mapper :
+  (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper

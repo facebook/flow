@@ -7,6 +7,7 @@
 
 module SpanMap = MyMap.Make (struct
   type t = Loc.t
+
   let compare l0 l1 = Loc.span_compare l1 l0
 end)
 

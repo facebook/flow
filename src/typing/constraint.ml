@@ -23,8 +23,8 @@ type ident = int
     root structure (see below).
 **)
 type node =
-| Goto of ident
-| Root of root
+  | Goto of ident
+  | Root of root
 
 (** A root structure carries the actual non-trivial state of a tvar, and
     consists of:
@@ -57,10 +57,16 @@ and root = {
 **)
 
 and constraints =
-| Resolved of Type.use_op * Type.t
-| FullyResolved of Type.use_op * Type.t
-| Unresolved of bounds
+  | Resolved of Type.use_op * Type.t
+  | FullyResolved of Type.use_op * Type.t
+  | Unresolved of bounds
 
+and bounds = {
+  mutable lower: (Trace.t * Type.use_op) TypeMap.t;
+  mutable upper: Trace.t UseTypeMap.t;
+  mutable lowertvars: Trace.t IMap.t;
+  mutable uppertvars: Trace.t IMap.t;
+}
 (** The bounds structure carries the evolving constraints on the solution of an
     unresolved tvar.
 
@@ -78,19 +84,13 @@ and constraints =
     The use_op in the lower TypeMap represents the use_op when a lower bound
     was added.
 **)
-and bounds = {
-  mutable lower: (Trace.t * Type.use_op) TypeMap.t;
-  mutable upper: Trace.t UseTypeMap.t;
-  mutable lowertvars: Trace.t IMap.t;
-  mutable uppertvars: Trace.t IMap.t;
-}
 
-let new_bounds () = {
-  lower = TypeMap.empty;
-  upper = UseTypeMap.empty;
-  lowertvars = IMap.empty;
-  uppertvars = IMap.empty;
-}
+let new_bounds () =
+  {
+    lower = TypeMap.empty;
+    upper = UseTypeMap.empty;
+    lowertvars = IMap.empty;
+    uppertvars = IMap.empty;
+  }
 
-let new_unresolved_root () =
-  Root { rank = 0; constraints = Unresolved (new_bounds ()) }
+let new_unresolved_root () = Root { rank = 0; constraints = Unresolved (new_bounds ()) }

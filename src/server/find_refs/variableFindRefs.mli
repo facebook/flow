@@ -8,7 +8,7 @@
 (* This variant is limited strictly to local variables, and does not attempt to find anything to do
  * with exports (the above will find some additional locations related to imports/exports even with
 * global:false). *)
-val local_find_refs:
+val local_find_refs :
   (Loc.t, Loc.t) Flow_ast.program ->
   Loc.t ->
-  (FindRefsTypes.find_refs_found * Loc.t (* definition location *)) option
+  (FindRefsTypes.find_refs_found * Loc.t) (* definition location *) option

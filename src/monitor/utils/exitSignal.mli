@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val signal: (FlowExitStatus.t * string) Lwt_condition.t
+val signal : (FlowExitStatus.t * string) Lwt_condition.t

@@ -6,18 +6,20 @@
  *)
 
 module LocMap = Loc_collections.LocMap
+
 type t = (Loc.t * Signature_builder_kind.t) LocMap.t SMap.t
 
 let empty = SMap.empty
 
-let singleton ((loc, { Flow_ast.Identifier.name= x; comments= _ }), kind) =
+let singleton ((loc, { Flow_ast.Identifier.name = x; comments = _ }), kind) =
   SMap.singleton x (LocMap.singleton loc kind)
 
-let add ((loc, { Flow_ast.Identifier.name= x; comments= _ }), kind) t =
-  SMap.add x (match SMap.get x t with
+let add ((loc, { Flow_ast.Identifier.name = x; comments = _ }), kind) t =
+  SMap.add
+    x
+    (match SMap.get x t with
     | Some u -> LocMap.add loc kind u
-    | None -> LocMap.singleton loc kind
-  ) t
+    | None -> LocMap.singleton loc kind)
+    t
 
-let push entries t =
-  List.fold_left (fun t entry -> add entry t) t entries
+let push entries t = List.fold_left (fun t entry -> add entry t) t entries

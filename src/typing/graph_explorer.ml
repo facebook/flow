@@ -44,28 +44,25 @@ open Utils_js
    the node to other nodes.
 *)
 
-type unexplored = {
-  mutable rev_deps: ISet.t;
-}
+type unexplored = { mutable rev_deps: ISet.t }
 
-type explored = {
-  mutable deps: ISet.t;
-}
+type explored = { mutable deps: ISet.t }
 
 type node =
-| Unexplored of unexplored
-| Explored of explored
+  | Unexplored of unexplored
+  | Explored of explored
 
-module Tbl = Hashtbl.Make(struct
+module Tbl = Hashtbl.Make (struct
   type t = int
+
   let equal a b = a = b
+
   let hash = Hashtbl.hash
 end)
 
 type graph = node Tbl.t
 
-let new_graph () =
-  Tbl.create (1 lsl 12)
+let new_graph () = Tbl.create (1 lsl 12)
 
 let find_unexplored id graph =
   match Tbl.find graph id with
@@ -77,14 +74,13 @@ let find_explored id graph =
   | Unexplored _ -> raise Not_found
   | Explored explored -> explored
 
-let is_finished explored =
-  ISet.is_empty explored.deps
+let is_finished explored = ISet.is_empty explored.deps
 
 (* status of a node *)
 type stat =
-| Found of node
-| Finished
-| Node_not_found
+  | Found of node
+  | Finished
+  | Node_not_found
 
 (* look up status of a node in a graph *)
 let stat_graph id graph =
@@ -92,8 +88,10 @@ let stat_graph id graph =
   | exception Not_found -> Node_not_found
   | Unexplored _ as node -> Found node
   | Explored explored as node ->
-    if is_finished explored then Finished
-    else Found node
+    if is_finished explored then
+      Finished
+    else
+      Found node
 
 let find_graph id graph =
   match stat_graph id graph with
@@ -110,62 +108,59 @@ let is_unexplored_node = function
 
 (* Adding edges from node id1 to nodes in ids2. We assume that id1 is
    unexplored, whereas ids2 may be explored or unexplored (but not finished). *)
+
 (** NOTE: This process has a lot of similarities with how constraints on usual
     tvars are handled in the context graph. In the future, we might move this
     processing back into that framework, by introducing new kinds of tvars on
     which this processing can apply. **)
 let edges graph (id1, ids2) =
-  let {rev_deps = unexplored1_rev_deps} = find_unexplored id1 graph in
+  let { rev_deps = unexplored1_rev_deps } = find_unexplored id1 graph in
   let explored1 = { deps = ISet.empty } in
   Tbl.replace graph id1 (Explored explored1);
 
   let finished_ids = ref ISet.empty in
+  let ids2 =
+    List.fold_left
+      (fun ids2 id2 ->
+        if id2 = id1 then
+          ids2
+        else
+          match find_graph id2 graph with
+          | Unexplored unexplored2 ->
+            explored1.deps <- ISet.add id2 explored1.deps;
+            unexplored1_rev_deps
+            |> ISet.iter (fun id0 ->
+                   let explored0 = find_explored id0 graph in
+                   explored0.deps <- ISet.add id2 explored0.deps);
 
-  let ids2 = List.fold_left (fun ids2 id2 ->
-    if id2 = id1 then ids2 else
-    match find_graph id2 graph with
-    | Unexplored unexplored2 ->
-        explored1.deps <- ISet.add id2 explored1.deps;
-        unexplored1_rev_deps |> ISet.iter (fun id0 ->
-          let explored0 = find_explored id0 graph in
-          explored0.deps <- ISet.add id2 explored0.deps;
-        );
+            unexplored2.rev_deps <- ISet.add id1 unexplored2.rev_deps;
+            unexplored2.rev_deps <- ISet.union unexplored1_rev_deps unexplored2.rev_deps;
 
-        unexplored2.rev_deps <- ISet.add id1 unexplored2.rev_deps;
-        unexplored2.rev_deps <-
-          ISet.union unexplored1_rev_deps unexplored2.rev_deps;
-
-        ids2
-
-    | Explored explored2 ->
-        ISet.union explored2.deps ids2
-
-  ) ISet.empty ids2 in
-
+            ids2
+          | Explored explored2 -> ISet.union explored2.deps ids2)
+      ISet.empty
+      ids2
+  in
   let ids2 = ISet.remove id1 ids2 in
-
   explored1.deps <- ISet.union ids2 explored1.deps;
-  unexplored1_rev_deps |> ISet.iter (fun id0 ->
-    let explored0 = find_explored id0 graph in
-    explored0.deps <- ISet.union ids2 explored0.deps;
-  );
+  unexplored1_rev_deps
+  |> ISet.iter (fun id0 ->
+         let explored0 = find_explored id0 graph in
+         explored0.deps <- ISet.union ids2 explored0.deps);
 
-  ids2 |> ISet.iter (fun id2 ->
-    let unexplored2 = find_unexplored id2 graph in
-    unexplored2.rev_deps <- ISet.add id1 unexplored2.rev_deps;
-    unexplored2.rev_deps <-
-      ISet.union unexplored1_rev_deps unexplored2.rev_deps;
-  );
+  ids2
+  |> ISet.iter (fun id2 ->
+         let unexplored2 = find_unexplored id2 graph in
+         unexplored2.rev_deps <- ISet.add id1 unexplored2.rev_deps;
+         unexplored2.rev_deps <- ISet.union unexplored1_rev_deps unexplored2.rev_deps);
 
   explored1.deps <- ISet.remove id1 explored1.deps;
-  if is_finished explored1
-  then finished_ids := ISet.add id1 !finished_ids;
-  unexplored1_rev_deps |> ISet.iter (fun id0 ->
-    let explored0 = find_explored id0 graph in
-    explored0.deps <- ISet.remove id1 explored0.deps;
-    if is_finished explored0
-    then finished_ids := ISet.add id0 !finished_ids;
-  );
+  if is_finished explored1 then finished_ids := ISet.add id1 !finished_ids;
+  unexplored1_rev_deps
+  |> ISet.iter (fun id0 ->
+         let explored0 = find_explored id0 graph in
+         explored0.deps <- ISet.remove id1 explored0.deps;
+         if is_finished explored0 then finished_ids := ISet.add id0 !finished_ids);
 
   !finished_ids
 

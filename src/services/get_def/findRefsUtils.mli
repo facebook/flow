@@ -7,20 +7,14 @@
 
 type ast_info = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t
 
-val compute_docblock: File_key.t -> string (* content *) -> Docblock.t
+val compute_docblock : File_key.t -> string (* content *) -> Docblock.t
 
-val compute_ast_result:
-  Options.t ->
-  File_key.t ->
-  string (* content *) ->
-  (ast_info, string) result
+val compute_ast_result :
+  Options.t -> File_key.t -> string (* content *) -> (ast_info, string) result
 
-val get_ast_result:
-  reader:State_reader.t ->
-  File_key.t ->
-  (ast_info, string) result
+val get_ast_result : reader:State_reader.t -> File_key.t -> (ast_info, string) result
 
-val get_all_dependents:
+val get_all_dependents :
   reader:State_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->

@@ -7,13 +7,13 @@
 
 open Utils_js
 
-val init:
+val init :
   profiling:Profiling_js.running ->
   workers:MultiWorkerLwt.worker list option ->
   Options.t ->
   (bool (* libs_ok *) * ServerEnv.env * Recheck_stats.estimates option) Lwt.t
 
-val calc_deps:
+val calc_deps :
   options:Options.t ->
   profiling:Profiling_js.running ->
   dependency_graph:FilenameSet.t FilenameMap.t ->
@@ -22,7 +22,7 @@ val calc_deps:
   (FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t) Lwt.t
 
 (* incremental typecheck entry point *)
-val recheck:
+val recheck :
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   updates:FilenameSet.t ->
@@ -34,7 +34,7 @@ val recheck:
   (Profiling_js.finished * ServerStatus.summary * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)
-val full_check:
+val full_check :
   profiling:Profiling_js.running ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
@@ -42,35 +42,43 @@ val full_check:
   ServerEnv.env ->
   (ServerEnv.env * string option) Lwt.t
 
-val basic_check_contents:
-  options: Options.t ->
-  env: ServerEnv.env ->
-  profiling: Profiling_js.running ->
-  string ->               (* contents *)
-  File_key.t ->           (* fake file-/module name *)
-  (Context.t *
-   Docblock.t *
-   File_sig.With_Loc.t *
-   (ALoc.t, ALoc.t * Type.t) Flow_ast.program,
-   string) result Lwt.t
+val basic_check_contents :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
+  string ->
+  (* contents *)
+  File_key.t ->
+  (* fake file-/module name *)
+  ( Context.t * Docblock.t * File_sig.With_Loc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program,
+    string )
+  result
+  Lwt.t
 
-val typecheck_contents:
-  options: Options.t ->
-  env: ServerEnv.env ->
-  profiling: Profiling_js.running ->
-  string ->                                 (* contents *)
-  File_key.t ->                             (* fake file-/module name *)
-  ((Context.t *
-    (Loc.t, Loc.t) Flow_ast.program *
-    File_sig.With_Loc.t *
-    (ALoc.t, ALoc.t * Type.t) Flow_ast.program) option *
-   Errors.ConcreteLocPrintableErrorSet.t *                      (* errors *)
-   Errors.ConcreteLocPrintableErrorSet.t) Lwt.t                 (* warnings *)
+val typecheck_contents :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
+  string ->
+  (* contents *)
+  File_key.t ->
+  (* fake file-/module name *)
+  ( ( Context.t
+    * (Loc.t, Loc.t) Flow_ast.program
+    * File_sig.With_Loc.t
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.program )
+    option
+  * Errors.ConcreteLocPrintableErrorSet.t
+  * (* errors *)
+    Errors.ConcreteLocPrintableErrorSet.t )
+  Lwt.t
 
-val ensure_checked_dependencies:
-  options: Options.t ->
-  reader: State_reader.t ->
-  env: ServerEnv.env ->
+(* warnings *)
+
+val ensure_checked_dependencies :
+  options:Options.t ->
+  reader:State_reader.t ->
+  env:ServerEnv.env ->
   File_key.t ->
   File_sig.With_Loc.t ->
   unit Lwt.t

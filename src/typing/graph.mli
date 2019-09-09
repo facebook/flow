@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val format: Context.t -> string list
+val format : Context.t -> string list

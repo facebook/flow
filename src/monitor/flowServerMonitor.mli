@@ -5,12 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val start :
-  FlowServerMonitorOptions.t ->
-  unit
+val start : FlowServerMonitorOptions.t -> unit
 
-val daemonize:
-  wait:bool ->
-  on_spawn:(int -> unit) ->
-  FlowServerMonitorOptions.t ->
-  unit
+val daemonize : wait:bool -> on_spawn:(int -> unit) -> FlowServerMonitorOptions.t -> unit

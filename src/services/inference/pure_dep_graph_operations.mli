@@ -9,23 +9,16 @@
 
 type dependency_graph = Utils_js.FilenameSet.t Utils_js.FilenameMap.t
 
-val calc_direct_dependencies:
-  dependency_graph ->
-  Utils_js.FilenameSet.t ->
-  Utils_js.FilenameSet.t
+val calc_direct_dependencies : dependency_graph -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
 
-val calc_all_dependencies:
-  dependency_graph ->
-  Utils_js.FilenameSet.t ->
-  Utils_js.FilenameSet.t
+val calc_all_dependencies : dependency_graph -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
 
-val calc_all_dependents:
+val calc_all_dependents :
   dependency_graph:dependency_graph ->
   all_dependency_graph:dependency_graph ->
   Utils_js.FilenameSet.t ->
   Utils_js.FilenameSet.t
 
-val filter_dependency_graph:
-  dependency_graph ->
-  Utils_js.FilenameSet.t -> (* files *)
-  dependency_graph
+val filter_dependency_graph :
+  dependency_graph -> Utils_js.FilenameSet.t -> (* files *)
+                                                dependency_graph

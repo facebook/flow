@@ -7,4 +7,4 @@
 
 type t
 
-val create: unit -> t
+val create : unit -> t

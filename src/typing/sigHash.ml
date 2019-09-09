@@ -211,265 +211,270 @@ type hash =
   | DestructuringH
   | ModuleExportsAssignH
 
-let hash_of_def_ctor = Type.(function
-  | InstanceT _ -> failwith "undefined hash of InstanceT"
-  | PolyT _ -> failwith "undefined hash of PolyT"
-  | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
+let hash_of_def_ctor =
+  Type.(
+    function
+    | InstanceT _ -> failwith "undefined hash of InstanceT"
+    | PolyT _ -> failwith "undefined hash of PolyT"
+    | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
+    | ArrT (ArrayAT _) -> ArrATH
+    | ArrT (TupleAT _) -> ArrTupleATH
+    | ArrT (ROArrayAT _) -> ArrROArrayATH
+    | BoolT _ -> BoolH
+    | CharSetT _ -> CharSetH
+    | ClassT _ -> ClassH
+    | EmptyT _ -> EmptyH
+    | FunT _ -> FunH
+    | MixedT _ -> MixedH
+    | NullT -> NullH
+    | NumT _ -> NumH
+    | ObjT { flags = { frozen; sealed; exact }; _ } ->
+      begin
+        match (frozen, sealed, exact) with
+        | (true, Sealed, true) -> ObjFrozenSealedExactH
+        | (true, Sealed, false) -> ObjFrozenSealedNotExactH
+        | (true, UnsealedInFile _, true) -> ObjFrozenNotSealedExactH
+        | (true, UnsealedInFile _, false) -> ObjFrozenNotSealedNotExactH
+        | (false, Sealed, true) -> ObjNotFrozenSealedExactH
+        | (false, Sealed, false) -> ObjNotFrozenSealedNotExactH
+        | (false, UnsealedInFile _, true) -> ObjNotFrozenNotSealedExactH
+        | (false, UnsealedInFile _, false) -> ObjNotFrozenNotSealedNotExactH
+      end
+    | ReactAbstractComponentT _ -> ReactAbstractComponentH
+    | SingletonBoolT _ -> SingletonBoolH
+    | SingletonNumT _ -> SingletonNumH
+    | SingletonStrT _ -> SingletonStrH
+    | StrT _ -> StrH
+    | TypeT _ -> TypeH
+    | VoidT -> VoidH)
 
-  | ArrT (ArrayAT _) -> ArrATH
-  | ArrT (TupleAT _) -> ArrTupleATH
-  | ArrT (ROArrayAT _) -> ArrROArrayATH
-  | BoolT _ -> BoolH
-  | CharSetT _ -> CharSetH
-  | ClassT _ -> ClassH
-  | EmptyT _ -> EmptyH
-  | FunT _ -> FunH
-  | MixedT _ -> MixedH
-  | NullT -> NullH
-  | NumT _ -> NumH
-  | ObjT { flags = { frozen; sealed; exact }; _ } ->
-    begin match frozen, sealed, exact with
-    | true, Sealed, true -> ObjFrozenSealedExactH
-    | true, Sealed, false -> ObjFrozenSealedNotExactH
-    | true, UnsealedInFile _, true -> ObjFrozenNotSealedExactH
-    | true, UnsealedInFile _, false -> ObjFrozenNotSealedNotExactH
-    | false, Sealed, true -> ObjNotFrozenSealedExactH
-    | false, Sealed, false -> ObjNotFrozenSealedNotExactH
-    | false, UnsealedInFile _, true -> ObjNotFrozenNotSealedExactH
-    | false, UnsealedInFile _, false -> ObjNotFrozenNotSealedNotExactH
-    end
-  | ReactAbstractComponentT _ -> ReactAbstractComponentH
-  | SingletonBoolT _ -> SingletonBoolH
-  | SingletonNumT _ -> SingletonNumH
-  | SingletonStrT _ -> SingletonStrH
-  | StrT _ -> StrH
-  | TypeT _ -> TypeH
-  | VoidT -> VoidH
-)
+let hash_of_ctor =
+  Type.(
+    function
+    | OpenT _ -> failwith "undefined hash of OpenT"
+    | InternalT _ -> failwith "undefined hash of InternalT"
+    | OpaqueT _ -> failwith "undefined hash of OpaqueT"
+    | AnyT _ -> AnyH
+    | AnnotT _ -> AnnotH
+    | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
+    | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
+    | MergedT _ -> MergedH
+    | BoundT _ -> BoundH
+    | TypeDestructorTriggerT _ -> TvarDestructorH
+    | CustomFunT (_, ObjectAssign) -> CustomFunObjectAssignH
+    | CustomFunT (_, ObjectGetPrototypeOf) -> CustomFunObjectGetPrototypeOfH
+    | CustomFunT (_, ObjectSetPrototypeOf) -> CustomFunObjectSetPrototypeOfH
+    | CustomFunT (_, Compose true) -> CustomFunComposeH
+    | CustomFunT (_, Compose false) -> CustomFunReverseComposeH
+    | CustomFunT (_, ReactPropType rpt) ->
+      React.PropType.(
+        begin
+          match rpt with
+          | Primitive (true, _) -> CustomFunReactPropTypePrimitiveRequiredH
+          | Primitive (false, _) -> CustomFunReactPropTypePrimitiveNotRequiredH
+          | Complex ArrayOf -> CustomFunReactPropTypeComplexArrayOfH
+          | Complex InstanceOf -> CustomFunReactPropTypeComplexInstanceOfH
+          | Complex ObjectOf -> CustomFunReactPropTypeComplexObjectOfH
+          | Complex OneOf -> CustomFunReactPropTypeComplexOneOfH
+          | Complex OneOfType -> CustomFunReactPropTypeComplexOneOfTypeH
+          | Complex Shape -> CustomFunReactPropTypeComplexShapeH
+        end)
+    | CustomFunT (_, ReactCreateClass) -> CustomFunReactCreateClassH
+    | CustomFunT (_, ReactCreateElement) -> CustomFunReactCreateElementH
+    | CustomFunT (_, ReactCloneElement) -> CustomFunReactCloneElementH
+    | CustomFunT (_, ReactElementFactory _) -> CustomFunReactElementFactoryH
+    | CustomFunT (_, Idx) -> CustomFunIdxH
+    | CustomFunT (_, TypeAssertIs) -> CustomFunTypeAssertIsH
+    | CustomFunT (_, TypeAssertThrows) -> CustomFunTypeAssertThrowsH
+    | CustomFunT (_, TypeAssertWraps) -> CustomFunTypeAssertWrapsH
+    | CustomFunT (_, DebugPrint) -> CustomFunDebugPrintH
+    | CustomFunT (_, DebugThrow) -> CustomFunDebugThrowH
+    | CustomFunT (_, DebugSleep) -> CustomFunDebugSleepH
+    | DefT (_, _, t) -> hash_of_def_ctor t
+    | EvalT _ -> EvalH
+    | ExactT _ -> ExactH
+    | ExistsT _ -> ExistsH
+    | FunProtoT _ -> FunProtoH
+    | FunProtoApplyT _ -> FunProtoApplyH
+    | FunProtoBindT _ -> FunProtoBindH
+    | FunProtoCallT _ -> FunProtoCallH
+    | IntersectionT _ -> IntersectionH
+    | KeysT _ -> KeysH
+    | MaybeT _ -> MaybeH
+    | ModuleT (_, _, false) -> ModuleH
+    | ModuleT (_, _, true) -> ModuleStrictH
+    | NullProtoT _ -> NullProtoH
+    | ObjProtoT _ -> ObjProtoH
+    | OptionalT _ -> OptionalH
+    | MatchingPropT _ -> MatchingPropH
+    | OpenPredT _ -> OpenPredH
+    | ReposT _ -> ReposH
+    | ShapeT _ -> ShapeH
+    | ThisClassT _ -> ThisClassH
+    | ThisTypeAppT _ -> ThisTypeAppH
+    | TypeAppT _ -> TypeAppH
+    | UnionT _ -> UnionH)
 
-let hash_of_ctor = Type.(function
-  | OpenT _ -> failwith "undefined hash of OpenT"
-  | InternalT _ -> failwith "undefined hash of InternalT"
-  | OpaqueT _ -> failwith "undefined hash of OpaqueT"
-
-  | AnyT _ -> AnyH
-  | AnnotT _ -> AnnotH
-  | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
-  | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
-  | MergedT _ -> MergedH
-  | BoundT _ -> BoundH
-  | TypeDestructorTriggerT _ -> TvarDestructorH
-  | CustomFunT (_, ObjectAssign) -> CustomFunObjectAssignH
-  | CustomFunT (_, ObjectGetPrototypeOf) -> CustomFunObjectGetPrototypeOfH
-  | CustomFunT (_, ObjectSetPrototypeOf) -> CustomFunObjectSetPrototypeOfH
-  | CustomFunT (_, Compose true) -> CustomFunComposeH
-  | CustomFunT (_, Compose false) -> CustomFunReverseComposeH
-  | CustomFunT (_, ReactPropType rpt) ->
-    let open React.PropType in
-    begin match rpt with
-    | Primitive (true, _) -> CustomFunReactPropTypePrimitiveRequiredH
-    | Primitive (false, _) -> CustomFunReactPropTypePrimitiveNotRequiredH
-    | Complex ArrayOf -> CustomFunReactPropTypeComplexArrayOfH
-    | Complex InstanceOf -> CustomFunReactPropTypeComplexInstanceOfH
-    | Complex ObjectOf -> CustomFunReactPropTypeComplexObjectOfH
-    | Complex OneOf -> CustomFunReactPropTypeComplexOneOfH
-    | Complex OneOfType -> CustomFunReactPropTypeComplexOneOfTypeH
-    | Complex Shape -> CustomFunReactPropTypeComplexShapeH
-    end
-  | CustomFunT (_, ReactCreateClass) -> CustomFunReactCreateClassH
-  | CustomFunT (_, ReactCreateElement) -> CustomFunReactCreateElementH
-  | CustomFunT (_, ReactCloneElement) -> CustomFunReactCloneElementH
-  | CustomFunT (_, ReactElementFactory _) -> CustomFunReactElementFactoryH
-  | CustomFunT (_, Idx) -> CustomFunIdxH
-  | CustomFunT (_, TypeAssertIs) -> CustomFunTypeAssertIsH
-  | CustomFunT (_, TypeAssertThrows) -> CustomFunTypeAssertThrowsH
-  | CustomFunT (_, TypeAssertWraps) -> CustomFunTypeAssertWrapsH
-  | CustomFunT (_, DebugPrint) -> CustomFunDebugPrintH
-  | CustomFunT (_, DebugThrow) -> CustomFunDebugThrowH
-  | CustomFunT (_, DebugSleep) -> CustomFunDebugSleepH
-  | DefT (_, _, t) -> hash_of_def_ctor t
-  | EvalT _ -> EvalH
-  | ExactT _ -> ExactH
-  | ExistsT _ -> ExistsH
-  | FunProtoT _ -> FunProtoH
-  | FunProtoApplyT _ -> FunProtoApplyH
-  | FunProtoBindT _ -> FunProtoBindH
-  | FunProtoCallT _ -> FunProtoCallH
-  | IntersectionT _ -> IntersectionH
-  | KeysT _ -> KeysH
-  | MaybeT _ -> MaybeH
-  | ModuleT (_, _, false) -> ModuleH
-  | ModuleT (_, _, true) -> ModuleStrictH
-  | NullProtoT _ -> NullProtoH
-  | ObjProtoT _ -> ObjProtoH
-  | OptionalT _ -> OptionalH
-  | MatchingPropT _ -> MatchingPropH
-  | OpenPredT _ -> OpenPredH
-  | ReposT _ -> ReposH
-  | ShapeT _ -> ShapeH
-  | ThisClassT _ -> ThisClassH
-  | ThisTypeAppT _ -> ThisTypeAppH
-  | TypeAppT _ -> TypeAppH
-  | UnionT _ -> UnionH
-)
-
-let hash_of_use_ctor = Type.(function
-  | UseT _ -> failwith "undefined hash of UseT"
-
-  | BindT _ -> BindH
-  | CallT _ -> CallH
-  | MethodT _ -> MethodH
-  | SetPropT _ -> SetPropH
-  | SetPrivatePropT _ -> SetPrivatePropH
-  | GetPropT _ -> GetPropH
-  | MatchPropT _ -> MatchPropH
-  | GetPrivatePropT _ -> GetPrivatePropH
-  | TestPropT _ -> TestPropH
-  | SetElemT _ -> SetElemH
-  | GetElemT _ -> GetElemH
-  | CallElemT _ -> CallElemH
-  | GetStaticsT _ -> GetStaticsH
-  | GetProtoT _ -> GetProtoH
-  | SetProtoT _ -> SetProtoH
-  | ReposLowerT _ -> ReposLowerH
-  | ReposUseT _ -> ReposUseH
-  | ConstructorT _ -> ConstructorH
-  | SuperT _ -> SuperH
-  | ImplementsT _ -> ImplementsH
-  | MixinT _ -> MixinH
-  | AdderT _ -> AdderH
-  | ComparatorT _ -> ComparatorH
-  | UnaryMinusT _ -> UnaryMinusH
-  | AssertArithmeticOperandT _ -> AssertArithmeticOperandH
-  | AssertBinaryInLHST _ -> AssertBinaryInLHSH
-  | AssertBinaryInRHST _ -> AssertBinaryInRHSH
-  | AssertForInRHST _ -> AssertForInRHSH
-  | PredicateT _ -> PredicateH
-  | GuardT _ -> GuardH
-  | EqT _ -> EqH
-  | AndT _ -> AndH
-  | OrT _ -> OrH
-  | NullishCoalesceT _ -> NullishCoalesceH
-  | NotT _ -> NotH
-  | SpecializeT _ -> SpecializeH
-  | ThisSpecializeT _ -> ThisSpecializeH
-  | VarianceCheckT _ -> VarianceCheckH
-  | TypeAppVarianceCheckT _ -> TypeAppVarianceCheckH
-  | ConcretizeTypeAppsT _ -> ConcretizeTypeAppsH
-  | LookupT _ -> LookupH
-  | ObjAssignToT _ -> ObjAssignToH
-  | ObjAssignFromT _ -> ObjAssignFromH
-  | ObjFreezeT _ -> ObjFreezeH
-  | ObjRestT _ -> ObjRestH
-  | ObjSealT _ -> ObjSealH
-  | ObjTestT _ -> ObjTestH
-  | ObjTestProtoT _ -> ObjTestProtoH
-  | ArrRestT _ -> ArrRestH
-  | UnifyT _ -> UnifyH
-  | BecomeT _ -> BecomeH
-  | GetKeysT _ -> GetKeysH
-  | HasOwnPropT _ -> HasOwnPropH
-  | GetValuesT _ -> GetValuesH
-  | ElemT _ -> ElemH
-  | MakeExactT _ -> MakeExactH
-  | CJSRequireT _ -> CJSRequireH
-  | ImportModuleNsT _ -> ImportModuleNsH
-  | ImportDefaultT _ -> ImportDefaultH
-  | ImportNamedT _ -> ImportNamedH
-  | ImportTypeT _ -> ImportTypeH
-  | ImportTypeofT _ -> ImportTypeofH
-  | AssertImportIsValueT _ -> AssertImportIsValueH
-  | CJSExtractNamedExportsT _ -> CJSExtractNamedExportsH
-  | CopyNamedExportsT _ -> CopyNamedExportsH
-  | CopyTypeExportsT _ -> CopyTypeExportsH
-  | ExportNamedT _ -> ExportNamedH
-  | ExportTypeT _ -> ExportTypeH
-  | AssertExportIsTypeT _ -> TypeExportifyH
-  | MapTypeT _ -> MapTypeH
-  | ReactKitT _ -> ReactKitH
-  | ObjKitT _ -> ObjKitH
-  | ChoiceKitUseT _ -> ChoiceKitUseH
-  | IntersectionPreprocessKitT _ -> IntersectionPreprocessKitH
-  | DebugPrintT _ -> DebugPrintH
-  | DebugSleepT _ -> DebugSleepH
-  | SentinelPropTestT _ -> SentinelPropTestH
-  | IdxUnwrap _ -> IdxUnwrapH
-  | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
-  | OptionalChainT _ -> OptionalChainH
-  | CallLatentPredT _ -> CallLatentPredH
-  | CallOpenPredT _ -> CallOpenPredH
-  | SubstOnPredT _ -> SubstOnPredH
-  | RefineT _ -> RefineH
-  | ResolveSpreadT _ -> ResolveSpreadH
-  | CondT _ -> CondH
-  | ExtendsUseT _ -> ExtendsUseH
-  | ToStringT _ -> ToStringH
-  | InvariantT _ -> InvariantH
-  | ReactPropsToOut _ -> ReactPropsToOutH
-  | ReactInToProps _ -> ReactInToPropsH
-  | DestructuringT _ -> DestructuringH
-  | ModuleExportsAssignT _ -> ModuleExportsAssignH
-)
+let hash_of_use_ctor =
+  Type.(
+    function
+    | UseT _ -> failwith "undefined hash of UseT"
+    | BindT _ -> BindH
+    | CallT _ -> CallH
+    | MethodT _ -> MethodH
+    | SetPropT _ -> SetPropH
+    | SetPrivatePropT _ -> SetPrivatePropH
+    | GetPropT _ -> GetPropH
+    | MatchPropT _ -> MatchPropH
+    | GetPrivatePropT _ -> GetPrivatePropH
+    | TestPropT _ -> TestPropH
+    | SetElemT _ -> SetElemH
+    | GetElemT _ -> GetElemH
+    | CallElemT _ -> CallElemH
+    | GetStaticsT _ -> GetStaticsH
+    | GetProtoT _ -> GetProtoH
+    | SetProtoT _ -> SetProtoH
+    | ReposLowerT _ -> ReposLowerH
+    | ReposUseT _ -> ReposUseH
+    | ConstructorT _ -> ConstructorH
+    | SuperT _ -> SuperH
+    | ImplementsT _ -> ImplementsH
+    | MixinT _ -> MixinH
+    | AdderT _ -> AdderH
+    | ComparatorT _ -> ComparatorH
+    | UnaryMinusT _ -> UnaryMinusH
+    | AssertArithmeticOperandT _ -> AssertArithmeticOperandH
+    | AssertBinaryInLHST _ -> AssertBinaryInLHSH
+    | AssertBinaryInRHST _ -> AssertBinaryInRHSH
+    | AssertForInRHST _ -> AssertForInRHSH
+    | PredicateT _ -> PredicateH
+    | GuardT _ -> GuardH
+    | EqT _ -> EqH
+    | AndT _ -> AndH
+    | OrT _ -> OrH
+    | NullishCoalesceT _ -> NullishCoalesceH
+    | NotT _ -> NotH
+    | SpecializeT _ -> SpecializeH
+    | ThisSpecializeT _ -> ThisSpecializeH
+    | VarianceCheckT _ -> VarianceCheckH
+    | TypeAppVarianceCheckT _ -> TypeAppVarianceCheckH
+    | ConcretizeTypeAppsT _ -> ConcretizeTypeAppsH
+    | LookupT _ -> LookupH
+    | ObjAssignToT _ -> ObjAssignToH
+    | ObjAssignFromT _ -> ObjAssignFromH
+    | ObjFreezeT _ -> ObjFreezeH
+    | ObjRestT _ -> ObjRestH
+    | ObjSealT _ -> ObjSealH
+    | ObjTestT _ -> ObjTestH
+    | ObjTestProtoT _ -> ObjTestProtoH
+    | ArrRestT _ -> ArrRestH
+    | UnifyT _ -> UnifyH
+    | BecomeT _ -> BecomeH
+    | GetKeysT _ -> GetKeysH
+    | HasOwnPropT _ -> HasOwnPropH
+    | GetValuesT _ -> GetValuesH
+    | ElemT _ -> ElemH
+    | MakeExactT _ -> MakeExactH
+    | CJSRequireT _ -> CJSRequireH
+    | ImportModuleNsT _ -> ImportModuleNsH
+    | ImportDefaultT _ -> ImportDefaultH
+    | ImportNamedT _ -> ImportNamedH
+    | ImportTypeT _ -> ImportTypeH
+    | ImportTypeofT _ -> ImportTypeofH
+    | AssertImportIsValueT _ -> AssertImportIsValueH
+    | CJSExtractNamedExportsT _ -> CJSExtractNamedExportsH
+    | CopyNamedExportsT _ -> CopyNamedExportsH
+    | CopyTypeExportsT _ -> CopyTypeExportsH
+    | ExportNamedT _ -> ExportNamedH
+    | ExportTypeT _ -> ExportTypeH
+    | AssertExportIsTypeT _ -> TypeExportifyH
+    | MapTypeT _ -> MapTypeH
+    | ReactKitT _ -> ReactKitH
+    | ObjKitT _ -> ObjKitH
+    | ChoiceKitUseT _ -> ChoiceKitUseH
+    | IntersectionPreprocessKitT _ -> IntersectionPreprocessKitH
+    | DebugPrintT _ -> DebugPrintH
+    | DebugSleepT _ -> DebugSleepH
+    | SentinelPropTestT _ -> SentinelPropTestH
+    | IdxUnwrap _ -> IdxUnwrapH
+    | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
+    | OptionalChainT _ -> OptionalChainH
+    | CallLatentPredT _ -> CallLatentPredH
+    | CallOpenPredT _ -> CallOpenPredH
+    | SubstOnPredT _ -> SubstOnPredH
+    | RefineT _ -> RefineH
+    | ResolveSpreadT _ -> ResolveSpreadH
+    | CondT _ -> CondH
+    | ExtendsUseT _ -> ExtendsUseH
+    | ToStringT _ -> ToStringH
+    | InvariantT _ -> InvariantH
+    | ReactPropsToOut _ -> ReactPropsToOutH
+    | ReactInToProps _ -> ReactInToPropsH
+    | DestructuringT _ -> DestructuringH
+    | ModuleExportsAssignT _ -> ModuleExportsAssignH)
 
 let add = Xx.update
+
 let add_int = Xx.update_int
+
 let add_bool = Xx.update_int (* bools are ints *)
 
 let add_option state f = function
   | None -> add_int state 0
-  | Some x -> add_int state 1; f state x
+  | Some x ->
+    add_int state 1;
+    f state x
 
-let add_literal state f = Type.(function
-  | Literal (_, x) -> add_int state 0; f state x
-  | Truthy -> add_int state 1
-  | AnyLiteral -> add_int state 2
-)
+let add_literal state f =
+  Type.(
+    function
+    | Literal (_, x) ->
+      add_int state 0;
+      f state x
+    | Truthy -> add_int state 1
+    | AnyLiteral -> add_int state 2)
 
 let add_number_literal state (_, x) = add state x
 
 let add_type state t =
   add_int state (hash_of_ctor t);
-  let open Type in
-  match t with
-  | DefT (_, _, BoolT b) ->
-    add_option state add_bool b
-  | DefT (_, _, MixedT m) ->
-    add_int state m
-  | DefT (_, _, NumT n) ->
-    add_literal state add_number_literal n
-  | DefT (_, _, SingletonBoolT b) ->
-    add_bool state b
-  | DefT (_, _, SingletonNumT n) ->
-    add_number_literal state n
-  | DefT (_, _, SingletonStrT s) ->
-    add state s
-  | DefT (_, _, StrT s) ->
-    add_literal state add s
-  | _ -> ()
+  Type.(
+    match t with
+    | DefT (_, _, BoolT b) -> add_option state add_bool b
+    | DefT (_, _, MixedT m) -> add_int state m
+    | DefT (_, _, NumT n) -> add_literal state add_number_literal n
+    | DefT (_, _, SingletonBoolT b) -> add_bool state b
+    | DefT (_, _, SingletonNumT n) -> add_number_literal state n
+    | DefT (_, _, SingletonStrT s) -> add state s
+    | DefT (_, _, StrT s) -> add_literal state add s
+    | _ -> ())
 
-let add_use state use =
-  add_int state (hash_of_use_ctor use)
+let add_use state use = add_int state (hash_of_use_ctor use)
 
-let add_file_key state = File_key.(function
-  | LibFile f ->
-    add_int state 0; add state f
-  | SourceFile f ->
-    add_int state 1; add state f
-  | JsonFile f ->
-    add_int state 2; add state f
-  | ResourceFile f ->
-    add_int state 3; add state f
-  | Builtins ->
-    add_int state 4
-)
+let add_file_key state =
+  File_key.(
+    function
+    | LibFile f ->
+      add_int state 0;
+      add state f
+    | SourceFile f ->
+      add_int state 1;
+      add state f
+    | JsonFile f ->
+      add_int state 2;
+      add state f
+    | ResourceFile f ->
+      add_int state 3;
+      add state f
+    | Builtins -> add_int state 4)
 
 let add_loc state loc =
-  let open Loc in
-  add_option state add_file_key loc.source;
-  add_int state loc.start.line;
-  add_int state loc.start.column;
-  add_int state loc._end.line;
-  add_int state loc._end.column
+  Loc.(
+    add_option state add_file_key loc.source;
+    add_int state loc.start.line;
+    add_int state loc.start.column;
+    add_int state loc._end.line;
+    add_int state loc._end.column)
 
 let add_aloc state aloc =
   (* When abstract locations (and types-first) are enabled, this should always be true. This is
@@ -480,33 +485,35 @@ let add_aloc state aloc =
    *
    * TODO assert this based on config flags rather than checking it.
    *)
-  if ALoc.ALocRepresentationDoNotUse.is_abstract aloc then
+  if ALoc.ALocRepresentationDoNotUse.is_abstract aloc then (
     let source = ALoc.source aloc in
     let key = ALoc.ALocRepresentationDoNotUse.get_key_exn aloc in
     add_option state add_file_key source;
     add_int state key
-  else
+  ) else
     add_loc state (ALoc.to_loc_exn aloc)
 
 let add_reason state r =
-  let open Reason in
-  add_aloc state (aloc_of_reason r);
-  add_aloc state (def_aloc_of_reason r)
+  Reason.(
+    add_aloc state (aloc_of_reason r);
+    add_aloc state (def_aloc_of_reason r))
 
 let add_polarity = add_int
 
-let add_prop state = Type.(function
-  | Field (_, _, polarity) ->
-    add_int state 0;
-    add_int state polarity
-  | Get _ -> add_int state 1
-  | Set _ -> add_int state 2
-  | GetSet _ -> add_int state 3
-  | Method _ -> add_int state 4
-)
+let add_prop state =
+  Type.(
+    function
+    | Field (_, _, polarity) ->
+      add_int state 0;
+      add_int state polarity
+    | Get _ -> add_int state 1
+    | Set _ -> add_int state 2
+    | GetSet _ -> add_int state 3
+    | Method _ -> add_int state 4)
 
 let add_props_map state =
-  SMap.iter (fun k p -> add state k; add_prop state p)
+  SMap.iter (fun k p ->
+      add state k;
+      add_prop state p)
 
-let add_exports_map state =
-  SMap.iter (fun k _ -> add state k)
+let add_exports_map state = SMap.iter (fun k _ -> add state k)

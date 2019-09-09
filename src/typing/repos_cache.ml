@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
 (** Reposition cache to prevent repositioning loops
 
   Repositioning improves error messages by changing reasons to positions close
@@ -155,19 +156,18 @@ type ident = Constraint.ident
 
 module ReposMap = MyMap.Make (struct
   type key = ident * Reason.t
+
   type t = key
+
   let compare = Pervasives.compare
 end)
 
 type t = {
   cache: Type.t ReposMap.t;
-  back: ident list IMap.t
+  back: ident list IMap.t;
 }
 
-let empty = {
-  cache = ReposMap.empty;
-  back = IMap.empty;
-}
+let empty = { cache = ReposMap.empty; back = IMap.empty }
 
 let breadcrumb id x =
   match IMap.get id x.back with
@@ -178,13 +178,16 @@ let find id reason x =
   let rec loop hd tl =
     match ReposMap.get (hd, reason) x.cache with
     | Some _ as found -> found
-    | None -> match tl with [] -> None | hd::tl -> loop hd tl
+    | None ->
+      (match tl with
+      | [] -> None
+      | hd :: tl -> loop hd tl)
   in
   loop id (breadcrumb id x)
 
 let add reason t t' x =
-  let _, id = Type.open_tvar t in
-  let _, id' = Type.open_tvar t' in
+  let (_, id) = Type.open_tvar t in
+  let (_, id') = Type.open_tvar t' in
   {
     cache = ReposMap.add (id, reason) t' x.cache;
     back = IMap.add id' (id :: breadcrumb id x) x.back;

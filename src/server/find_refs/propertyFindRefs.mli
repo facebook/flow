@@ -5,18 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val find_local_refs:
-  reader: State_reader.t ->
-  options: Options.t ->
+val find_local_refs :
+  reader:State_reader.t ->
+  options:Options.t ->
   File_key.t ->
   FindRefsUtils.ast_info ->
   GetDefUtils.def_info ->
   (FindRefsTypes.find_refs_found, string) result
 
-val find_global_refs:
-  reader: State_reader.t ->
+val find_global_refs :
+  reader:State_reader.t ->
   ServerEnv.genv ->
   ServerEnv.env ref ->
-  multi_hop: bool ->
+  multi_hop:bool ->
   GetDefUtils.def_info ->
   (FindRefsTypes.find_refs_found * int option, string) result Lwt.t

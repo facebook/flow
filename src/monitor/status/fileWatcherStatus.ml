@@ -6,8 +6,9 @@
  *)
 
 type status' =
-| Initializing
-| Ready
+  | Initializing
+  | Ready
+
 type status = Options.file_watcher * status'
 
 let string_of_file_watcher = function
@@ -17,10 +18,11 @@ let string_of_file_watcher = function
 
 let string_of_status =
   let string_of_status = function
-  | Initializing -> "still initializing"
-  | Ready -> "ready"
+    | Initializing -> "still initializing"
+    | Ready -> "ready"
   in
-
   fun (watcher, status) ->
     Printf.sprintf
-      "%s file watcher is %s" (string_of_file_watcher watcher) (string_of_status status)
+      "%s file watcher is %s"
+      (string_of_file_watcher watcher)
+      (string_of_status status)

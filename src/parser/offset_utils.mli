@@ -34,7 +34,7 @@ type t
 
 (* Create a table for offsets in the given file. Takes O(n) time and returns an object that takes
  * O(n) space, where `n` is the size of the given program text. *)
-val make: string (* program text *) -> t
+val make : string (* program text *) -> t
 
 exception Offset_lookup_failed of Loc.position * string
 
@@ -42,6 +42,6 @@ exception Offset_lookup_failed of Loc.position * string
  * file where the given position can be found. Constant time operation. Raises
  * `Offset_lookup_failed` if the given position does not exist in the file contents which were used
  * to construct the table. *)
-val offset: t -> Loc.position -> int
+val offset : t -> Loc.position -> int
 
-val debug_string: t -> string
+val debug_string : t -> string

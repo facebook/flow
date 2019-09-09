@@ -6,21 +6,25 @@
  *)
 
 type patch = (int * int * string) list
+
 type loc_patch = (Loc.t * string) list
 
-val show_patch: patch -> string
+val show_patch : patch -> string
 
 val mk_loc_patch_ast_differ :
+  Flow_ast_differ.node Flow_ast_differ.change list -> (Loc.t, Loc.t) Flow_ast.program -> loc_patch
+
+val mk_patch_ast_differ :
   Flow_ast_differ.node Flow_ast_differ.change list ->
   (Loc.t, Loc.t) Flow_ast.program ->
-  loc_patch
-
-val mk_patch_ast_differ : Flow_ast_differ.node Flow_ast_differ.change list ->
-  (Loc.t, Loc.t) Flow_ast.program -> string -> patch
+  string ->
+  patch
 
 val mk_patch_ast_differ_unsafe :
   Flow_ast_differ.node Flow_ast_differ.change list ->
-  (Loc.t, Loc.t) Flow_ast.program -> File_input.t -> patch
+  (Loc.t, Loc.t) Flow_ast.program ->
+  File_input.t ->
+  patch
 
 val print : patch -> string -> string
 

@@ -5,23 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val add:
-  client_id:Persistent_connection_prot.client_id ->
-  client:PersistentConnection.t ->
-  unit
+val add : client_id:Persistent_connection_prot.client_id -> client:PersistentConnection.t -> unit
 
-val get:
-  client_id:Persistent_connection_prot.client_id ->
-  PersistentConnection.t option
+val get : client_id:Persistent_connection_prot.client_id -> PersistentConnection.t option
 
-val remove:
-  client_id:Persistent_connection_prot.client_id ->
-  unit
+val remove : client_id:Persistent_connection_prot.client_id -> unit
 
-val cardinal:
-  unit ->
-  int
+val cardinal : unit -> int
 
-val get_all_clients:
-  unit ->
-  PersistentConnection.t list
+val get_all_clients : unit -> PersistentConnection.t list

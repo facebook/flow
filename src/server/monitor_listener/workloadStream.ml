@@ -27,12 +27,13 @@ type t = {
   signal: unit Lwt_condition.t;
 }
 
-let create () = {
-  parallelizable = ImmQueue.empty;
-  requeued_parallelizable = [];
-  nonparallelizable = ImmQueue.empty;
-  signal = Lwt_condition.create ();
-}
+let create () =
+  {
+    parallelizable = ImmQueue.empty;
+    requeued_parallelizable = [];
+    nonparallelizable = ImmQueue.empty;
+    signal = Lwt_condition.create ();
+  }
 
 (* Add a non-parallelizable workload to the stream and wake up anyone waiting *)
 let push workload stream =
@@ -59,35 +60,33 @@ let workload_of_parallelizable_workload parallelizable_workload env =
 (* Pop the oldest workload *)
 let pop stream =
   match stream.requeued_parallelizable with
-  | workload::rest ->
+  | workload :: rest ->
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
     Some (workload_of_parallelizable_workload workload)
   | [] ->
     let (entry_p, parallelizable) = ImmQueue.peek stream.parallelizable in
     let (entry_n, nonparallelizable) = ImmQueue.peek stream.nonparallelizable in
-
     (* Pop from the parallelizable queue unless the nonparallelizable queue has an older entry *)
-    let use_parallelizable = match entry_p, entry_n with
-    | None, None
-    | Some _, None -> true
-    | Some (timestamp_p, _), Some (timestamp_n, _) -> timestamp_p <= timestamp_n
-    | None, Some _ -> false
+    let use_parallelizable =
+      match (entry_p, entry_n) with
+      | (None, None)
+      | (Some _, None) ->
+        true
+      | (Some (timestamp_p, _), Some (timestamp_n, _)) -> timestamp_p <= timestamp_n
+      | (None, Some _) -> false
     in
-
-    let workload_opt, parallelizable, nonparallelizable =
-      if use_parallelizable
-      then
+    let (workload_opt, parallelizable, nonparallelizable) =
+      if use_parallelizable then
         let (_, parallelizable) = ImmQueue.pop parallelizable in
         let workload =
           Option.map entry_p ~f:(fun (_, workload) -> workload_of_parallelizable_workload workload)
         in
-        workload, parallelizable, nonparallelizable
+        (workload, parallelizable, nonparallelizable)
       else
         let (_, nonparallelizable) = ImmQueue.pop nonparallelizable in
-        (Option.map entry_n ~f:snd), parallelizable, nonparallelizable
+        (Option.map entry_n ~f:snd, parallelizable, nonparallelizable)
     in
-
     stream.parallelizable <- parallelizable;
     stream.nonparallelizable <- nonparallelizable;
     workload_opt
@@ -95,29 +94,31 @@ let pop stream =
 (* Pop the oldest parallelizable workload *)
 let pop_parallelizable stream =
   match stream.requeued_parallelizable with
-  | workload::rest ->
+  | workload :: rest ->
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
     Some workload
   | [] ->
-    let entry_opt, parallelizable = ImmQueue.pop stream.parallelizable in
+    let (entry_opt, parallelizable) = ImmQueue.pop stream.parallelizable in
     stream.parallelizable <- parallelizable;
     Option.map entry_opt ~f:snd
 
 (* Wait until there's a workload in the stream *)
 let rec wait_for_workload stream =
-  if stream.requeued_parallelizable = [] &&
-    ImmQueue.is_empty stream.parallelizable &&
-    ImmQueue.is_empty stream.nonparallelizable
+  if
+    stream.requeued_parallelizable = []
+    && ImmQueue.is_empty stream.parallelizable
+    && ImmQueue.is_empty stream.nonparallelizable
   then
     let%lwt () = Lwt_condition.wait stream.signal in
     wait_for_workload stream
-  else Lwt.return_unit
+  else
+    Lwt.return_unit
 
 (* Wait until there's a parallelizable workload in the stream *)
 let rec wait_for_parallelizable_workload stream =
-  if stream.requeued_parallelizable = [] && ImmQueue.is_empty stream.parallelizable
-  then
+  if stream.requeued_parallelizable = [] && ImmQueue.is_empty stream.parallelizable then
     let%lwt () = Lwt_condition.wait stream.signal in
     wait_for_parallelizable_workload stream
-  else Lwt.return_unit
+  else
+    Lwt.return_unit

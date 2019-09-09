@@ -6,7 +6,6 @@
  *)
 
 module Ast_utils = Flow_ast_utils
-
 module Ast = Flow_ast
 
 module Annot_path = struct
@@ -16,12 +15,12 @@ module Annot_path = struct
 
   let mk_annot ?annot_path = function
     | Ast.Type.Missing _ -> annot_path
-    | Ast.Type.Available annot -> Some (Annot (annot))
+    | Ast.Type.Available annot -> Some (Annot annot)
 
   let mk_object prop_loc ?annot_path (loc, x) =
     match annot_path with
-      | None -> None
-      | Some annot_path -> Some (Object (prop_loc, (annot_path, (loc, x))))
+    | None -> None
+    | Some annot_path -> Some (Object (prop_loc, (annot_path, (loc, x))))
 end
 
 module Init_path = struct
@@ -35,33 +34,44 @@ module Init_path = struct
 
   let mk_object prop_loc ?init_path (loc, x) =
     match init_path with
-      | None -> None
-      | Some init_path -> Some (Object (prop_loc, (init_path, (loc, x))))
+    | None -> None
+    | Some init_path -> Some (Object (prop_loc, (init_path, (loc, x))))
 end
 
 module Sort = struct
-  type t = Type | Value
+  type t =
+    | Type
+    | Value
+
   let to_string = function
     | Type -> "type"
     | Value -> "value"
 
   let is_import_type =
-    let open Ast.Statement.ImportDeclaration in
-    function
-    | ImportType | ImportTypeof -> true
-    | ImportValue -> true (* conditional *)
+    Ast.Statement.ImportDeclaration.(
+      function
+      | ImportType
+      | ImportTypeof ->
+        true
+      | ImportValue -> true)
+
+  (* conditional *)
 
   let is_import_value =
-    let open Ast.Statement.ImportDeclaration in
-    function
-    | ImportType | ImportTypeof -> false
-    | ImportValue -> true
+    Ast.Statement.ImportDeclaration.(
+      function
+      | ImportType
+      | ImportTypeof ->
+        false
+      | ImportValue -> true)
 
   let of_import_kind =
-    let open Ast.Statement.ImportDeclaration in
-    function
-    | ImportValue | ImportTypeof -> Value
-    | ImportType -> Type
+    Ast.Statement.ImportDeclaration.(
+      function
+      | ImportValue
+      | ImportTypeof ->
+        Value
+      | ImportType -> Type)
 end
 
 type t =
@@ -134,9 +144,9 @@ let rec to_string = function
   | WithPropertiesDef { base; _ } -> Printf.sprintf "WithPropertiesDef(%s)" (to_string base)
   | VariableDef _ -> "VariableDef"
   | FunctionDef _ -> "FunctionDef"
-  | DeclareFunctionDef _  -> "DeclareFunctionDef"
-  | ClassDef _  -> "ClassDef"
-  | DeclareClassDef _  -> "DeclareClassDef"
+  | DeclareFunctionDef _ -> "DeclareFunctionDef"
+  | ClassDef _ -> "ClassDef"
+  | DeclareClassDef _ -> "DeclareClassDef"
   | TypeDef _ -> "TypeDef"
   | OpaqueTypeDef _ -> "OpaqueTypeDef"
   | InterfaceDef _ -> "InterfaceDef"
@@ -149,23 +159,25 @@ let rec is_type = function
   | WithPropertiesDef { base; _ } -> is_type base
   | VariableDef _ -> true (* conditional *)
   | FunctionDef _ -> false
-  | DeclareFunctionDef _  -> true
-  | ClassDef _  -> true
-  | DeclareClassDef _  -> true
+  | DeclareFunctionDef _ -> true
+  | ClassDef _ -> true
+  | DeclareClassDef _ -> true
   | TypeDef _ -> true
   | OpaqueTypeDef _ -> true
   | InterfaceDef _ -> true
   | ImportNamedDef { kind; _ } -> Sort.is_import_type kind
   | ImportStarDef { kind; _ } -> Sort.is_import_type kind
   | RequireDef _ -> true (* conditional *)
-  | SketchyToplevelDef -> true (* don't care *)
+  | SketchyToplevelDef -> true
+
+(* don't care *)
 
 let rec is_value = function
   | WithPropertiesDef { base; _ } -> is_value base
   | VariableDef _ -> true
   | FunctionDef _ -> true
   | DeclareFunctionDef _ -> true
-  | ClassDef _  -> true
+  | ClassDef _ -> true
   | DeclareClassDef _ -> true
   | TypeDef _ -> false
   | OpaqueTypeDef _ -> false
@@ -173,7 +185,9 @@ let rec is_value = function
   | ImportNamedDef { kind; _ } -> Sort.is_import_value kind
   | ImportStarDef { kind; _ } -> Sort.is_import_value kind
   | RequireDef _ -> true
-  | SketchyToplevelDef -> true (* don't care *)
+  | SketchyToplevelDef -> true
+
+(* don't care *)
 
 let validator = function
   | Sort.Type -> is_type
@@ -182,12 +196,13 @@ let validator = function
 let get_function_kind_info = function
   | FunctionDef { generator; async; tparams; params; return; body; predicate = _ } ->
     Some (generator, async, tparams, params, return, body)
-  | VariableDef {
-      id = _;
-      annot = None;
-      init = Some (Init_path.Init (_, Ast.Expression.(Function stuff | ArrowFunction stuff)))
-    } ->
-    let open Ast.Function in
-    let { id = _; generator; async; tparams; params; return; body; _ } = stuff in
-    Some (generator, async, tparams, params, return, body)
+  | VariableDef
+      {
+        id = _;
+        annot = None;
+        init = Some (Init_path.Init (_, Ast.Expression.(Function stuff | ArrowFunction stuff)));
+      } ->
+    Ast.Function.(
+      let { id = _; generator; async; tparams; params; return; body; _ } = stuff in
+      Some (generator, async, tparams, params, return, body))
   | _ -> None

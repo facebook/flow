@@ -7,9 +7,6 @@
 
 open OUnit2
 
-let tests = "ty" >::: [
-  Insert_type_utils_tests.tests;
-  Validation_tests.tests;
-]
+let tests = "ty" >::: [Insert_type_utils_tests.tests; Validation_tests.tests]
 
 let () = run_test_tt_main tests

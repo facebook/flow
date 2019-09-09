@@ -61,31 +61,28 @@ type t =
   | Invalid_saved_state
   (* The server would like to restart, likely since re-init'ing is faster than a recheck *)
   | Restart
-
   (* The hack code might throw this *)
   | Socket_error
   (* The hack code might throw this *)
   | Dfind_died
   (* The hack code might throw this *)
   | Dfind_unresponsive
-
   (* A fatal error with Watchman *)
   | Watchman_error
-
   (* A generic something-else-went-wrong *)
   | Unknown_error
 
- (* Exit codes are part of Flow's API and thus changing exit codes is a
-  * breaking change to Flow's API. Tools that call Flow may be watching for
-  * certain exit codes.
-  *
-  * In reality, probably no one cares about many of these exit codes. The ones
-  * I know are definitely being watched for are:
-  *
-  * No_error
-  * Type_error
-  * Out_of_time
-  *)
+(* Exit codes are part of Flow's API and thus changing exit codes is a
+ * breaking change to Flow's API. Tools that call Flow may be watching for
+ * certain exit codes.
+ *
+ * In reality, probably no one cares about many of these exit codes. The ones
+ * I know are definitely being watched for are:
+ *
+ * No_error
+ * Type_error
+ * Out_of_time
+ *)
 let error_code = function
   | Interrupted -> -6
   | No_error -> 0
@@ -120,7 +117,6 @@ let error_code = function
   | Dfind_unresponsive -> 100
   | Watchman_error -> 101
   | Unknown_error -> 110
-
 
 (* Return an error type given an error code *)
 let error_type = function
@@ -159,11 +155,10 @@ let error_type = function
   | 110 -> Unknown_error
   | _ -> raise Not_found
 
-
 let unpack_process_status = function
-  | Unix.WEXITED n -> "exit", n
-  | Unix.WSIGNALED n -> "signaled", n
-  | Unix.WSTOPPED n -> "stopped", n
+  | Unix.WEXITED n -> ("exit", n)
+  | Unix.WSIGNALED n -> ("signaled", n)
+  | Unix.WSTOPPED n -> ("stopped", n)
 
 let to_string = function
   | Interrupted -> "Interrupted"
@@ -182,8 +177,8 @@ let to_string = function
   | Path_is_not_a_file -> "Path_is_not_a_file"
   | Windows_killed_by_task_manager -> "Windows_killed_by_task_manager"
   | Server_start_failed status ->
-      let reason, code = unpack_process_status status in
-      Utils_js.spf "Server_start_failed (%s, %d)" reason code
+    let (reason, code) = unpack_process_status status in
+    Utils_js.spf "Server_start_failed (%s, %d)" reason code
   | Type_error -> "Type_error"
   | Build_id_mismatch -> "Build_id_mismatch"
   | Lock_stolen -> "Lock_stolen"
@@ -204,38 +199,35 @@ let to_string = function
 exception Exit_with of t
 
 type json_mode = { pretty: bool }
+
 let json_mode = ref None
 
-let set_json_mode ~pretty =
-  json_mode := Some { pretty }
+let set_json_mode ~pretty = json_mode := Some { pretty }
 
-let unset_json_mode () =
-  json_mode := None
+let unset_json_mode () = json_mode := None
 
 let json_props_of_t ?msg t =
-  let open Hh_json in
-
-  let exit_props = [
-    "code", JSON_Number (error_code t |> string_of_int);
-    "reason", JSON_String (to_string t);
-  ] @ Option.value_map msg ~default:[] ~f:(fun msg -> [ "msg", JSON_String msg ]) in
-
-  [
-    "flowVersion", JSON_String Flow_version.version;
-    "exit", JSON_Object exit_props;
-  ]
+  Hh_json.(
+    let exit_props =
+      [("code", JSON_Number (error_code t |> string_of_int)); ("reason", JSON_String (to_string t))]
+      @ Option.value_map msg ~default:[] ~f:(fun msg -> [("msg", JSON_String msg)])
+    in
+    [("flowVersion", JSON_String Flow_version.version); ("exit", JSON_Object exit_props)])
 
 let print_json ?msg t =
   match t with
   (* Commands that exit with these exit codes handle json output themselves *)
-  | No_error | Type_error -> ()
-  | _ -> begin
-    match !json_mode with
-    | None -> ()
-    | Some { pretty } ->
-      let json = Hh_json.JSON_Object (json_props_of_t ?msg t) in
-      Hh_json.print_json_endline ~pretty json
-  end
+  | No_error
+  | Type_error ->
+    ()
+  | _ ->
+    begin
+      match !json_mode with
+      | None -> ()
+      | Some { pretty } ->
+        let json = Hh_json.JSON_Object (json_props_of_t ?msg t) in
+        Hh_json.print_json_endline ~pretty json
+    end
 
 let exit ?msg t =
   (match msg with

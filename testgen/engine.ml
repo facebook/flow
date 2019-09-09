@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Utils = Flowtestgen_utils;;
-module Logging = Flowtestgen_logging;;
-module Config = Flowtestgen_config;;
+module Utils = Flowtestgen_utils
+module Logging = Flowtestgen_logging
+module Config = Flowtestgen_config
 
 (* A virtual class that defines the framework for ocaml-stype rules.
 
@@ -98,10 +98,9 @@ exception Fail
 (* 'a - type of environment element
    'b - type of the environment
    'c - type of the syntax *)
-class virtual ['a, 'b, 'c] engine = object(self)
-
-
-  (* The backtracking is implemented using a hash table
+class virtual ['a, 'b, 'c] engine =
+  object (self)
+    (* The backtracking is implemented using a hash table
      with a "size" integer which simulates a stack. Whenever
      a user writes a require function or any other functions
      that returns multiple values and backtracking is desired,
@@ -122,41 +121,44 @@ class virtual ['a, 'b, 'c] engine = object(self)
      to access the values other than the top. The "size" value keeps
      track of the size of the stack.
   *)
-  val stack = Array.init 100 (fun _ -> [])
-  val mutable size = 0
+    val stack = Array.init 100 (fun _ -> [])
 
-  (* This is used to keep track of the most recent used stack
+    val mutable size = 0
+
+    (* This is used to keep track of the most recent used stack
      level in order to do the correct forward at the right level *)
-  val mutable last_stack_lvl = -1
+    val mutable last_stack_lvl = -1
 
+    (* Main methods for getting all the rules for generating programs *)
+    method virtual get_all_rules : unit -> ('b -> 'c * 'b) array
 
-  (* Main methods for getting all the rules for generating programs *)
-  method virtual get_all_rules : unit -> ('b -> ('c * 'b)) array
-
-  (* The assert function that provides backtracking. A strong
+    (* The assert function that provides backtracking. A strong
      assertion is guaranteed to be satisfied using backtracking. *)
-  method backtrack_on_false (b : bool) : unit =
-    if not b then raise Backtrack
+    method backtrack_on_false (b : bool) : unit = if not b then raise Backtrack
 
-  (* The assert function that will abort a rule *)
-  method virtual weak_assert : bool -> unit
+    (* The assert function that will abort a rule *)
+    method virtual weak_assert : bool -> unit
 
-  (* Shuffle a list. This is from
+    (* Shuffle a list. This is from
      https://stackoverflow.com/questions/15095541/how-to-shuffle-list-in-on-in-ocaml *)
-  method shuffle (d : 'a list) : 'a list =
-    let nd = Core_list.map ~f:(fun c -> (Random.bits (), c)) d in
-    let sond = List.sort compare nd in
-    Core_list.map ~f:snd sond
+    method shuffle (d : 'a list) : 'a list =
+      let nd = Core_list.map ~f:(fun c -> (Random.bits (), c)) d in
+      let sond = List.sort compare nd in
+      Core_list.map ~f:snd sond
 
-  (* A method for printing the stack *)
-  method virtual print_stack : unit -> unit
-  method virtual print_env : 'b -> unit
-  method virtual print_syntax : 'c -> unit
-  method virtual combine_syntax : 'c list -> string
-  (* A mehod for getting the name of an engine *)
-  method virtual get_name : unit -> string
+    (* A method for printing the stack *)
+    method virtual print_stack : unit -> unit
 
-  (* Choose a element from a list using combinatorial search.
+    method virtual print_env : 'b -> unit
+
+    method virtual print_syntax : 'c -> unit
+
+    method virtual combine_syntax : 'c list -> string
+
+    (* A mehod for getting the name of an engine *)
+    method virtual get_name : unit -> string
+
+    (* Choose a element from a list using combinatorial search.
 
      id : This is index in the stack
      func : This is the function that produces the data
@@ -173,146 +175,135 @@ class virtual ['a, 'b, 'c] engine = object(self)
      param ensures that we don't return the same value for
      these identical require functions.
   *)
-
-  method choose
-      (id : int)
-      (func : unit -> 'a list) : 'a =
-    (* The depth is larger than the stack right now. We need to
+    method choose (id : int) (func : unit -> 'a list) : 'a =
+      (* The depth is larger than the stack right now. We need to
        push the candidate values onto the stack
     *)
-    if id >= size then begin
-      (* push the data onto the stack *)
-      stack.(id) <- (func ());
-      size <- size + 1;
-    end;
+      if id >= size then (
+        (* push the data onto the stack *)
+        stack.(id) <- func ();
+        size <- size + 1
+      );
 
-    (* Get the current value from the stack *)
-    match stack.(id) with
-    | [] -> raise Fail
-    | hd :: _ -> last_stack_lvl <- id; hd
+      (* Get the current value from the stack *)
+      match stack.(id) with
+      | [] -> raise Fail
+      | hd :: _ ->
+        last_stack_lvl <- id;
+        hd
 
-  (* We move the pointer forward so that next time "choose" is
+    (* We move the pointer forward so that next time "choose" is
      called, we give a different result *)
-  method forward () =
-    (* The stack is empty. Abort the rule *)
-    if size = 0 || last_stack_lvl = -1 then
-      raise Fail
-    else begin
-      size <- min (last_stack_lvl + 1) size;
+    method forward () =
+      (* The stack is empty. Abort the rule *)
+      if size = 0 || last_stack_lvl = -1 then
+        raise Fail
+      else (
+        size <- min (last_stack_lvl + 1) size;
 
-      (* remove the old value *)
-      let all_vals = stack.(size - 1) in
-      stack.(size - 1) <- (List.tl all_vals);
+        (* remove the old value *)
+        let all_vals = stack.(size - 1) in
+        stack.(size - 1) <- List.tl all_vals;
 
-      (* If there's no more new candidate value,
+        (* If there's no more new candidate value,
          we pop the function and move the pointer for
          the next level *)
-      if stack.(size - 1) = [] then begin
+        if stack.(size - 1) = [] then (
+          (* pop the empty candidate value list *)
+          size <- size - 1;
 
-        (* pop the empty candidate value list *)
-        size <- size - 1;
+          (* Move the pointer for the next candidate value list *)
+          self#forward ()
+        )
+      )
 
-        (* Move the pointer for the next candidate value list *)
-        self#forward ()
-      end;
-    end
+    (* Clear the stack *)
+    method clear () =
+      size <- 0;
+      last_stack_lvl <- -1
 
-  (* Clear the stack *)
-  method clear () =
-    size <- 0;
-    last_stack_lvl <- -1
-
-  (* method for running a single rule *)
-  method run
-      (rule : 'b -> ('c * 'b))
-      (env : 'b) : ('c * 'b) =
-
-    (* run the rule *)
-    try rule env with
-    | Backtrack ->
-      self#forward ();
-      self#run rule env
-    | Fail -> raise Fail
+    (* method for running a single rule *)
+    method run (rule : 'b -> 'c * 'b) (env : 'b) : 'c * 'b =
+      (* run the rule *)
+      try rule env with
+      | Backtrack ->
+        self#forward ();
+        self#run rule env
+      | Fail -> raise Fail
 
     (* Run the rule until we run out of choices *)
-  method run_exhaustive
-      (rule : 'b -> ('c * 'b))
-      (env : 'b) : ('c * 'b) list =
-    self#clear ();
-    let rec helper all_result =
-      let r = try Some (self#run rule env) with
-        | Fail -> None in
-      match r with
-      | None -> all_result
-      | Some r ->
-        if size > 0 then begin
-          try
-            self#forward ();
-            helper (r :: all_result)
-          with
-          | Fail -> r :: all_result
-        end
-        else r :: all_result in
+    method run_exhaustive (rule : 'b -> 'c * 'b) (env : 'b) : ('c * 'b) list =
+      self#clear ();
+      let rec helper all_result =
+        let r = (try Some (self#run rule env) with Fail -> None) in
+        match r with
+        | None -> all_result
+        | Some r ->
+          if size > 0 then
+            try
+              self#forward ();
+              helper (r :: all_result)
+            with Fail -> r :: all_result
+          else
+            r :: all_result
+      in
+      helper []
 
-    helper []
-
-  (* Main function for generating programs exhaustively.
+    (* Main function for generating programs exhaustively.
      Limit is an integer used to limit the number of programs at the end.
   *)
-  method gen_prog (limit : int) : ('c list * 'b) list =
-    let rules = self#get_all_rules () in
-    (* This is the main queue for storying environments and corresponding syntax *)
-    let queue = Queue.create () in
+    method gen_prog (limit : int) : ('c list * 'b) list =
+      let rules = self#get_all_rules () in
+      (* This is the main queue for storying environments and corresponding syntax *)
+      let queue = Queue.create () in
+      (* This is used to store temporary results *)
+      let tmp_queue = Queue.create () in
+      (* We start with empty syntax and empty environment *)
+      Queue.push ([], []) queue;
 
-    (* This is used to store temporary results *)
-    let tmp_queue = Queue.create () in
-
-    (* We start with empty syntax and empty environment *)
-    Queue.push ([], []) queue;
-
-    (* Run a rule through all the results in the queue *)
-    let helper (rule : 'b -> ('c * 'b)) : unit =
-      (*
+      (* Run a rule through all the results in the queue *)
+      let helper (rule : 'b -> 'c * 'b) : unit =
+        (*
       Printf.printf "Queue size : %d\n" (Queue.length queue);
       Queue.iter (fun (slist, env) ->
           self#print_env env;
           Printf.printf "Syntax:\n";
           List.iter (fun s -> self#print_syntax s) slist) queue;
        *)
+        Queue.iter
+          (fun (slist, env) ->
+            (* type check the program *)
+            let prog = self#combine_syntax slist in
+            let type_check_result =
+              if Utils.is_typecheck (self#get_name ()) || Config.(config.random) then
+                Utils.type_check prog
+              else
+                None
+            in
+            match type_check_result with
+            | Some msg -> Logging.log_early_type_error prog msg
+            | None ->
+              let result = self#run_exhaustive rule env in
+              if result = [] then
+                (* We failed. Put the old syntax and env back into the queue *)
+                Queue.push (slist, env) tmp_queue
+              else
+                List.iter (fun (s, e) -> Queue.push (s :: slist, e) tmp_queue) result)
+          queue;
 
-      Queue.iter (fun (slist, env) ->
-          (* type check the program *)
-          let prog = self#combine_syntax slist in
-          let type_check_result =
-            if Utils.is_typecheck (self#get_name ()) || Config.(config.random) then
-              Utils.type_check prog
-            else
-              None in
-          match type_check_result with
-          | Some msg -> Logging.log_early_type_error prog msg
-          | None ->
-            let result = self#run_exhaustive rule env in
-            if result = [] then
-              (* We failed. Put the old syntax and env back into the queue *)
-              Queue.push (slist, env) tmp_queue
-            else
-              List.iter (fun (s, e) -> Queue.push (s :: slist, e) tmp_queue) result)
-        queue;
+        (* transfer the run results into the queue *)
+        Queue.clear queue;
+        Queue.transfer tmp_queue queue
+      in
+      let rec limit_result count acc all_result =
+        match all_result with
+        | [] -> acc
+        | _ when count >= limit -> acc
+        | hd :: tl -> limit_result (count + 1) (hd :: acc) tl
+      in
+      (* Run all the rules *)
+      Array.iter (fun rule -> helper rule) rules;
 
-      (* transfer the run results into the queue *)
-      Queue.clear queue;
-      Queue.transfer tmp_queue queue in
-
-    let rec limit_result count acc all_result = match all_result with
-      | [] -> acc
-      | _ when count >= limit -> acc
-      | hd :: tl -> limit_result (count + 1) (hd :: acc) tl in
-
-    (* Run all the rules *)
-    Array.iter (fun rule -> helper rule) rules;
-
-    (* We limit the number of results at the end *)
-    Queue.fold (fun acc elt -> elt :: acc) [] queue
-    |> limit_result 0 []
-
-end;;
+      (* We limit the number of results at the end *)
+      Queue.fold (fun acc elt -> elt :: acc) [] queue |> limit_result 0 []
+  end

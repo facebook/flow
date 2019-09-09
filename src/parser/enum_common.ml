@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type explicit_type = Boolean | Number | String | Symbol
+type explicit_type =
+  | Boolean
+  | Number
+  | String
+  | Symbol
 
 let string_of_explicit_type = function
   | Boolean -> "boolean"

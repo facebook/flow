@@ -14,39 +14,35 @@ type dependency_graph = FilenameSet.t FilenameMap.t
 let closure =
   let rec helper graph =
     FilenameSet.fold (fun file acc ->
-      match FilenameMap.get file graph with
+        match FilenameMap.get file graph with
         | Some files ->
           let files = FilenameSet.diff files acc in
           let acc = FilenameSet.union files acc in
           helper graph files acc
-        | None -> acc
-    )
+        | None -> acc)
   in
-  fun graph files -> helper graph files files
+  (fun graph files -> helper graph files files)
 
 let reverse graph =
   let acc = Hashtbl.create 0 in
-  FilenameMap.iter (fun f -> FilenameSet.iter (fun f' ->
-    Hashtbl.add acc f' f
-  )) graph;
-  FilenameMap.mapi (fun f _ ->
-    FilenameSet.of_list @@ Hashtbl.find_all acc f
-  ) graph
+  FilenameMap.iter (fun f -> FilenameSet.iter (fun f' -> Hashtbl.add acc f' f)) graph;
+  FilenameMap.mapi (fun f _ -> FilenameSet.of_list @@ Hashtbl.find_all acc f) graph
 
 (* `calc_direct_dependencies graph files` will return the set of direct dependencies of
    `files`. This set includes `files`. *)
 let calc_direct_dependencies dependency_graph files =
-  FilenameSet.fold (fun file acc ->
-    match FilenameMap.get file dependency_graph with
+  FilenameSet.fold
+    (fun file acc ->
+      match FilenameMap.get file dependency_graph with
       | Some files -> FilenameSet.union files acc
-      | None -> acc
-  ) files files
+      | None -> acc)
+    files
+    files
 
 (* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
  * of `files`. This set does include `files`.
  *)
-let calc_all_dependencies dependency_graph files =
-  closure dependency_graph files
+let calc_all_dependencies dependency_graph files = closure dependency_graph files
 
 (* `calc_all_dependents graph files` will return the set of direct and transitive dependents of
    `files`. This set include `files`.
@@ -56,17 +52,24 @@ let calc_all_dependencies dependency_graph files =
 let calc_all_dependents ~dependency_graph ~all_dependency_graph files =
   let rev_dependency_graph = reverse dependency_graph in
   let all_type_dependents = closure rev_dependency_graph files in
-  FilenameMap.fold (fun f code_dependencies acc ->
-    if not (FilenameSet.mem f all_type_dependents)
-       && FilenameSet.exists (fun f' -> FilenameSet.mem f' all_type_dependents) code_dependencies
-    then FilenameSet.add f acc
-    else acc
-  ) all_dependency_graph all_type_dependents
+  FilenameMap.fold
+    (fun f code_dependencies acc ->
+      if
+        (not (FilenameSet.mem f all_type_dependents))
+        && FilenameSet.exists (fun f' -> FilenameSet.mem f' all_type_dependents) code_dependencies
+      then
+        FilenameSet.add f acc
+      else
+        acc)
+    all_dependency_graph
+    all_type_dependents
 
 (* Returns a copy of the dependency graph with only those file -> dependency edges where file and
    dependency are in files *)
 let filter_dependency_graph dependency_graph files =
-  FilenameSet.fold (fun f ->
-    let fs = FilenameMap.find_unsafe f dependency_graph |> FilenameSet.inter files in
-    FilenameMap.add f fs
-  ) files FilenameMap.empty
+  FilenameSet.fold
+    (fun f ->
+      let fs = FilenameMap.find_unsafe f dependency_graph |> FilenameSet.inter files in
+      FilenameMap.add f fs)
+    files
+    FilenameMap.empty

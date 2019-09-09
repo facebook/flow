@@ -8,7 +8,9 @@
 type t
 
 val empty : t
+
 val stems : t -> Path.t list
 
 val add : t -> Path.t -> t
+
 val matches : t -> string -> bool

@@ -11,8 +11,7 @@ type sketchy_null_kind =
   | SketchyNullNumber
   | SketchyNullMixed
 
-type sketchy_number_kind =
-  | SketchyNumberAnd
+type sketchy_number_kind = SketchyNumberAnd
 
 type property_assignment_kind =
   | PropertyNotDefinitelyInitialized
@@ -69,19 +68,17 @@ let string_of_kind = function
   | NonArraySpread -> "non-array-spread"
 
 let kinds_of_string = function
-  | "sketchy-null" -> Some [
-      SketchyNull SketchyNullBool;
-      SketchyNull SketchyNullString;
-      SketchyNull SketchyNullNumber;
-      SketchyNull SketchyNullMixed;
-    ]
+  | "sketchy-null" ->
+    Some
+      [ SketchyNull SketchyNullBool;
+        SketchyNull SketchyNullString;
+        SketchyNull SketchyNullNumber;
+        SketchyNull SketchyNullMixed ]
   | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
   | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
   | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
-  | "sketchy-number" -> Some [
-      SketchyNumber SketchyNumberAnd;
-    ]
+  | "sketchy-number" -> Some [SketchyNumber SketchyNumberAnd]
   | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]
   | "untyped-type-import" -> Some [UntypedTypeImport]
   | "nonstrict-import" -> Some [NonstrictImport]
@@ -102,8 +99,9 @@ let kinds_of_string = function
 
 module LintKind = struct
   type t = lint_kind
+
   let compare = compare
 end
 
-module LintMap = MyMap.Make(LintKind)
-module LintSet = Set.Make(LintKind)
+module LintMap = MyMap.Make (LintKind)
+module LintSet = Set.Make (LintKind)

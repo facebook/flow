@@ -11,16 +11,12 @@
 
 let map = ref IMap.empty
 
-let add ~client_id ~client =
-  map := IMap.add client_id client !map
+let add ~client_id ~client = map := IMap.add client_id client !map
 
-let get ~client_id =
-  IMap.get client_id !map
+let get ~client_id = IMap.get client_id !map
 
-let remove ~client_id =
-  map := IMap.remove client_id !map
+let remove ~client_id = map := IMap.remove client_id !map
 
-let cardinal () =
-  IMap.cardinal !map
+let cardinal () = IMap.cardinal !map
 
 let get_all_clients () = IMap.bindings !map |> Core_list.map ~f:snd
