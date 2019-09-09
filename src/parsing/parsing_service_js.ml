@@ -92,7 +92,7 @@ type parse_options = {
 
 let parse_source_file ~fail ~types ~use_strict content file =
   let parse_options = Some Parser_env.({
-    (**
+    (*
      * Always parse ES proposal syntax. The user-facing config option to
      * ignore/warn/enable them is handled during inference so that a clean error
      * can be surfaced (rather than a more cryptic parse error).
@@ -304,7 +304,7 @@ let extract_docblock =
         let env, lexer_result = Flow_lexer.token env in
         match Lex_result.comments lexer_result with
         | [] -> Token.(
-            (**
+            (*
              * Stop looking for docblocks if we see any tokens other than a
              * string or a semicolon (`"use babel";` or `"use strict";`).
              *)

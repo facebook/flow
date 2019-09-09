@@ -563,7 +563,7 @@ module Haste: MODULE_SYSTEM = struct
       ~options ~reader node_modules_containers file loc ?resolution_acc imported_name =
     let candidates = module_name_candidates ~options imported_name in
 
-    (**
+    (*
      * In Haste, we don't have an autoritative list of all valid module names
      * until after all modules have been sweeped (because the module name is
      * specified in the contents of the file). So, unlike the node module

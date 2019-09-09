@@ -155,7 +155,7 @@ let getdef_get_result_from_hooks ~options ~reader cx state =
         | None -> Loc.none)
       in
       Done Type.(match module_t with
-      (**
+      (*
        * TODO: Specialized `import` hooks so that get-defs on named
        *       imports point to their actual remote def location.
        *)

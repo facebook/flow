@@ -27,7 +27,7 @@ let error_of_file_sig_error source_file e =
 let parse_content file content =
   let parse_options = Some Parser_env.({
     enums = true;
-    (**
+    (*
      * Always parse ES proposal syntax. The user-facing config option to
      * ignore/warn/enable them is handled during inference so that a clean error
      * can be surfaced (rather than a more cryptic parse error).

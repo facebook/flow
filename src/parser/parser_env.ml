@@ -745,7 +745,7 @@ module Eat = struct
           token_sink {
             token_loc = Peek.loc env;
             token = Peek.token env;
-            (**
+            (*
              * The lex mode is useful because it gives context to some
              * context-sensitive tokens.
              *

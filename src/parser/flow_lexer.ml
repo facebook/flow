@@ -1577,7 +1577,7 @@ let type_token env lexbuf =
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_STRING (loc, Buffer.contents buf, Buffer.contents raw, octal))
 
-  (**
+  (*
    * Number literals
    *)
 

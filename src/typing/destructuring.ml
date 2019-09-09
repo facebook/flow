@@ -132,7 +132,7 @@ let object_named_property cx acc loc x comments =
   let () = match parent with
   | None -> () (* TODO: get-def when object property is refined *)
   | Some t ->
-    (**
+    (*
      * We are within a destructuring pattern and a `get-def` on this identifier should
      * point at the "def" of the original property. To accompish this, we emit the type
      * of the parent pattern so that get-def can dive in to that type and extract the
@@ -204,7 +204,7 @@ let identifier cx ~f acc loc name =
   let () = match parent with
   (* If there was a parent pattern, we already dispatched the hook if relevant. *)
   | Some _ -> ()
-  (**
+  (*
    * If there was no parent_pattern, we must not be within a destructuring
    * pattern and a `get-def` on this identifier should point at the
    * location where the binding is introduced.

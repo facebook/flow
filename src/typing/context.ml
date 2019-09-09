@@ -99,7 +99,7 @@ type sig_t = {
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
 
-  (** We track nominal ids in the context to help decide when the types exported by a module have
+  (* We track nominal ids in the context to help decide when the types exported by a module have
      meaningfully changed: see Merge_js.ContextOptimizer. **)
   mutable nominal_ids: ISet.t;
 

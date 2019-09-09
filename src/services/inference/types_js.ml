@@ -1389,7 +1389,7 @@ end = struct
     let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
 
     (* split updates into deleted files and modified files *)
-    (** NOTE: We use the term "modified" in the same sense as the underlying file
+    (* NOTE: We use the term "modified" in the same sense as the underlying file
         system: a modified file exists, and in relation to an old file system
         state, a modified file could be any of "new," "changed," or "unchanged."
     **)
@@ -1472,7 +1472,7 @@ end = struct
       (FilenameSet.cardinal freshparsed)
       (FilenameSet.cardinal unchanged);
 
-    (** Here's where the interesting part of rechecking begins. Before diving into
+    (* Here's where the interesting part of rechecking begins. Before diving into
         code, let's think through the problem independently.
 
         Note that changing a file can be conceptually thought of as deleting the
@@ -2052,7 +2052,7 @@ let recheck
       Some estimated_files_to_init
     )
   ) in
-  (** TODO: update log to reflect current terminology **)
+  (* TODO: update log to reflect current terminology **)
   FlowEventLogger.recheck
     ~recheck_reasons:(
       List.map Persistent_connection_prot.verbose_string_of_recheck_reason recheck_reasons

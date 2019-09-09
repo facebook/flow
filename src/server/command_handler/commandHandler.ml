@@ -947,7 +947,7 @@ let with_data
   { metadata with extra_data }
 
 type 'a persistent_handling_result =
-  (** IdeResponse means that handle_persistent_unsafe is responsible for sending
+  (* IdeResponse means that handle_persistent_unsafe is responsible for sending
      the message to the client, and handle_persistent is responsible for logging. *)
   | IdeResponse of (
       'a * Hh_json.json option,

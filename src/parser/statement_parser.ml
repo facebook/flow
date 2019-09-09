@@ -287,7 +287,7 @@ module Statement
     )
 
   and if_ =
-    (**
+    (*
      * Either the consequent or alternate of an if statement
      *)
     let if_branch env =
@@ -752,7 +752,7 @@ module Statement
         let module_kind = Statement.(
           let (loc, stmt) = stmt in
           match (module_kind, stmt) with
-          (**
+          (*
            * The first time we see either a `declare export` or a
            * `declare module.exports`, we lock in the kind of the module.
            *
@@ -772,14 +772,14 @@ module Statement
               | _ -> Some (DeclareModule.ES loc)
             )
 
-          (**
+          (*
            * There should never be more than one `declare module.exports`
            * statement *)
           | Some (DeclareModule.CommonJS _), DeclareModuleExports _ ->
             error env Parse_error.DuplicateDeclareModuleExports;
             module_kind
 
-          (**
+          (*
            * It's never ok to mix and match `declare export` and
            * `declare module.exports` in the same module because it leaves the
            * kind of the module (CommonJS vs ES) ambiguous.

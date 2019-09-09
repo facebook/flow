@@ -1414,7 +1414,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* guarded unification *)
     (***********************)
 
-    (** Utility to unify a pair of types based on a trigger. Triggers are
+    (* Utility to unify a pair of types based on a trigger. Triggers are
         commonly type variables that are set up to record when certain
         operations have been processed: until then, they remain latent. For
         example, we can respond to events such as "a property is added," "a
@@ -1429,7 +1429,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* remote type -- but only for particular, valid remote types.       *)
     (*********************************************************************)
 
-    (** TODO: This rule allows interpreting an object as a type!
+    (* TODO: This rule allows interpreting an object as a type!
 
         It is currently used to work with modules that export named types,
         e.g. 'react' or 'immutable'. For example, one can do
@@ -1582,7 +1582,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (AnyT.error reason, t_out)
       end
 
-    (** Copy the named exports from a source module into a target module. Used
+    (* Copy the named exports from a source module into a target module. Used
         to implement `export * from 'SomeModule'`, with the current module as
         the target and the imported module as the source. *)
     | (ModuleT(_, source_exports, _),
@@ -1593,7 +1593,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ExportNamedT(reason, (*skip_dupes*)true, source_tmap, ReExport, t_out)
       )
 
-    (**
+    (*
      * Copy only the type exports from a source module into a target module.
      * Used to implement `export type * from ...`.
      *)
@@ -1612,7 +1612,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (target_module_t, t_out)
 
-    (**
+    (*
      * Export a type from a given ModuleT, but only if the type is compatible
      * with `import type`/`export type`. When it is not compatible, it is simply
      * not added to the exports map.
@@ -1653,7 +1653,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (target_module, t)
 
-    (**
+    (*
      * ObjT CommonJS export values have their properties turned into named
      * exports
      *)
@@ -1679,7 +1679,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         t_out
       ))
 
-    (**
+    (*
      * InstanceT CommonJS export values have their properties turned into named
      * exports
      *)
@@ -1729,7 +1729,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       rec_flow_t cx trace (module_t, t_out)
 
-    (**
+    (*
      * All other CommonJS export value types do not get merged into the named
      * exports tmap in any special way.
      *)
@@ -1812,7 +1812,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             match SMap.get "default" exports_tmap with
               | Some (_, t) -> t
               | None ->
-                (**
+                (*
                  * A common error while using `import` syntax is to forget or
                  * misunderstand the difference between `import foo from ...`
                  * and `import {foo} from ...`. The former means to import the
@@ -1852,7 +1852,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ModuleT(_, exports, imported_is_strict),
       ImportNamedT(reason, import_kind, export_name, module_name, t, is_strict) ->
         check_nonstrict_import cx trace is_strict imported_is_strict reason;
-        (**
+        (*
          * When importing from a CommonJS module, we shadow any potential named
          * exports called "default" with a pointer to the raw `module.exports`
          * object
@@ -1980,7 +1980,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, UseT (_, AnyT _)) when object_like l -> ()
     | (AnyT _, UseT (_, u)) when object_like u -> ()
 
-    (**
+    (*
      * Handling for the idx() custom function.
      *
      * idx(a, a => a.b.c) is a 2-arg function with semantics meant to simlify
@@ -2273,7 +2273,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* maybe types *)
     (***************)
 
-    (** The type maybe(T) is the same as null | undefined | UseT *)
+    (* The type maybe(T) is the same as null | undefined | UseT *)
 
     | DefT (r, trust, (NullT | VoidT)), UseT (use_op, MaybeT (_, tout)) ->
       rec_flow cx trace (EmptyT.why r trust, UseT (use_op, tout))
@@ -2316,7 +2316,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* optional types *)
     (******************)
 
-    (** The type optional(T) is the same as undefined | UseT *)
+    (* The type optional(T) is the same as undefined | UseT *)
 
     | DefT (r, trust, VoidT), UseT (use_op, OptionalT (_, tout)) ->
       rec_flow cx trace (EmptyT.why r trust, UseT (use_op, tout))
@@ -2434,7 +2434,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* upper and lower any types *)
     (*****************************)
 
-    (** AnyWithLowerBoundT and AnyWithUpperBoundT are mildly useful types that
+    (* AnyWithLowerBoundT and AnyWithUpperBoundT are mildly useful types that
         model subtyping constraints without introducing potentially unwanted
         effects: they can appear on both sides of a type, but only constrain one
         of those sides. In some sense, they are liked bounded AnyT: indeed, AnyT
@@ -2646,7 +2646,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Singletons and keys *)
     (***********************)
 
-    (** Finite keysets over arbitrary objects can be represented by KeysT. While
+    (* Finite keysets over arbitrary objects can be represented by KeysT. While
         it is possible to also represent singleton string types using KeysT (by
         taking the keyset of an object with a single property whose key is that
         string and whose value is ignored), we can model them more directly
@@ -2784,13 +2784,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _, GetKeysT (reason_op, keys) ->
       rec_flow cx trace (StrT.why reason_op |> with_trust literal_trust, keys)
 
-    (** In general, typechecking is monotonic in the sense that more constraints
+    (* In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
         out constraints, backtracking if they produce errors (and removing the
         errors produced). This is useful to typecheck union types and
         intersection types: see below. **)
 
-    (** NOTE: It is important that any def type that simplifies to a union or
+    (* NOTE: It is important that any def type that simplifies to a union or
         intersection of other def types be processed before we process unions
         and intersections: otherwise we may get spurious errors. **)
 
@@ -3046,13 +3046,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | t1, UseT (use_op, OptionalT (_, t2)) ->
       rec_flow cx trace (t1, UseT (use_op, t2))
 
-    (** special treatment for some operations on intersections: these
+    (* special treatment for some operations on intersections: these
         rules fire for particular UBs whose constraints can (or must)
         be resolved against intersection LBs as a whole, instead of
         by decomposing the intersection into its parts.
       *)
 
-    (** lookup of properties **)
+    (* lookup of properties **)
     | IntersectionT (_, rep),
       LookupT (reason, strict, try_ts_on_failure, s, t) ->
       let ts = InterRep.members rep in
@@ -3067,7 +3067,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT _, TestPropT (reason, _, prop, tout) ->
       rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
 
-    (** extends **)
+    (* extends **)
     | IntersectionT (_, rep),
       ExtendsUseT (use_op, reason, try_ts_on_failure, l, u) ->
       let t, ts = InterRep.members_nel rep in
@@ -3077,7 +3077,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          try_ts_on_failure (see below). *)
       rec_flow cx trace (t, ExtendsUseT (use_op, reason, try_ts_on_failure, l, u))
 
-    (** consistent override of properties **)
+    (* consistent override of properties **)
     | IntersectionT (_, rep), SuperT (use_op, reason, derived) ->
       InterRep.members rep |> List.iter (fun t ->
         let u = match use_op with
@@ -3089,7 +3089,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         rec_flow cx trace (t, u))
 
-    (** structural subtype multiple inheritance **)
+    (* structural subtype multiple inheritance **)
     | IntersectionT (_, rep), ImplementsT (use_op, this) ->
       InterRep.members rep |> List.iter (fun t ->
         let u = match use_op with
@@ -3101,7 +3101,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         rec_flow cx trace (t, u))
 
-    (** object types: an intersection may satisfy an object UB without
+    (* object types: an intersection may satisfy an object UB without
         any particular member of the intersection doing so completely.
         Here we trap object UBs with more than one property, and
         decompose them into singletons.
@@ -3119,7 +3119,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
 
-    (** predicates: prevent a predicate upper bound from prematurely decomposing
+    (* predicates: prevent a predicate upper bound from prematurely decomposing
         an intersection lower bound *)
     | IntersectionT _, PredicateT (pred, tout) ->
       predicate cx trace tout l pred
@@ -3128,7 +3128,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT _, GuardT (pred, result, tout) ->
       guard cx trace l pred result tout
 
-    (** ObjAssignFromT copies multiple properties from its incoming LB.
+    (* ObjAssignFromT copies multiple properties from its incoming LB.
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
     | IntersectionT (_, rep),
@@ -3147,7 +3147,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) (Tvar.mk cx reason_op) (InterRep.members rep) in
       rec_flow_t cx ~use_op trace (tvar, tout)
 
-    (** This duplicates the (_, ReposLowerT u) near the end of this pattern
+    (* This duplicates the (_, ReposLowerT u) near the end of this pattern
         match but has to appear here to preempt the (IntersectionT, _) in
         between so that we reposition the entire intersection. *)
     | IntersectionT _, ReposLowerT (reason, use_desc, u) ->
@@ -3163,7 +3163,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT (r, rep), CallT (_, reason, _) when is_calltype_reason reason ->
       try_intersection cx trace u r rep
 
-    (** All other pairs with an intersection lower bound come here. Before
+    (* All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
         prep_try_intersection for details. **)
 
@@ -3473,7 +3473,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Refinement based on function predicates *)
     (*******************************************)
 
-    (** Call to predicated (latent) functions *)
+    (* Call to predicated (latent) functions *)
 
     (* Calls to functions appearing in predicate refinement contexts dispatch
        to this case. Here, the return type of the function holds the predicate
@@ -3547,7 +3547,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, CallLatentPredT (_,_,_,unrefined_t, fresh_t) ->
       rec_flow_t cx trace (unrefined_t, fresh_t)
 
-    (** Trap the return type of a predicated function *)
+    (* Trap the return type of a predicated function *)
 
     | OpenPredT (_, _, p_pos, p_neg),
       CallOpenPredT (_, sense, key, unrefined_t, fresh_t) ->
@@ -3748,7 +3748,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        overridden with a generic method, as long as the non-generic signature
        can be derived as a specialization of the generic signature. *)
 
-    (** some shortcuts **)
+    (* some shortcuts **)
     | DefT (_, _, PolyT (_, _, _, id1)), UseT (_, DefT (_, _, PolyT (_, _, _, id2)))
       when id1 = id2 -> ()
 
@@ -3760,7 +3760,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       else if n2 < n1 then
         add_output cx ~trace (Error_message.ETooFewTypeArgs (r2, r1, n1))
       else
-        (** for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
+        (* for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
             by these *)
         let args1 = instantiate_poly_param_upper_bounds cx params1 in
         let args2 = instantiate_poly_param_upper_bounds cx params2 in
@@ -3775,7 +3775,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ~use_op ~reason_op:r ~reason_tapp:r id2 tparams_loc2 params2 t2 args2 in
         rec_flow_t cx trace (inst1, inst2)
 
-    (** general case **)
+    (* general case **)
     | _, UseT (use_op, DefT (_, _, PolyT (_, ids, t, _))) ->
         generate_tests cx (Nel.to_list ids) (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx ~use_op map_ t))
@@ -3788,7 +3788,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i)))
 
-    (** This rule is hit when a polymorphic type appears outside a
+    (* This rule is hit when a polymorphic type appears outside a
         type application expression - i.e. not followed by a type argument list
         delimited by angle brackets.
         We want to require full expressions in type positions like annotations,
@@ -4468,7 +4468,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* matching shapes of objects *)
     (******************************)
 
-    (** When something of type ShapeT(o) is used, it behaves like it had type o.
+    (* When something of type ShapeT(o) is used, it behaves like it had type o.
 
         On the other hand, things that can be passed to something of type
         ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
@@ -4690,7 +4690,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         _ } as ft))),
       ConstructorT (use_op, reason_op, targs, args, t) ->
       (* TODO: closure *)
-      (** create new object **)
+      (* create new object **)
       let reason_c = replace_desc_reason RNewObject reason_op in
       let objtype =
         let sealed = UnsealedInFile (ALoc.source (loc_of_t proto)) in
@@ -4701,7 +4701,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         mk_objecttype ~flags ~dict ~call pmap proto
       in
       let new_obj = DefT (reason_c, bogus_trust (), ObjT objtype) in
-      (** error if type arguments are provided to non-polymorphic constructor **)
+      (* error if type arguments are provided to non-polymorphic constructor **)
       Option.iter targs ~f:(fun _ ->
         add_output cx ~trace Error_message.(ECallTypeArity {
           call_loc = aloc_of_reason reason_op;
@@ -4709,10 +4709,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           reason_arity = lreason;
           expected_arity = 0;
         }));
-      (** call function with this = new_obj, params = args **)
+      (* call function with this = new_obj, params = args **)
       rec_flow_t cx trace (new_obj, this);
       multiflow_call cx trace ~use_op reason_op args ft;
-      (** if ret is object-like, return ret; otherwise return new_obj **)
+      (* if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_desc_reason RConstructorReturn reason_op in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
@@ -4954,7 +4954,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let loc = aloc_of_reason reason_call in
       add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
 
-    (** In traditional type systems, object types are not extensible.  E.g., an
+    (* In traditional type systems, object types are not extensible.  E.g., an
         object {x: 0, y: ""} has type {x: number; y: string}. While it is
         possible to narrow the object's type to hide some of its properties (aka
         width subtyping), extending its type to model new properties is
@@ -5020,7 +5020,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | to_obj, ObjAssignToT (use_op, reason, from_obj, t, kind) ->
       rec_flow cx trace (from_obj, ObjAssignFromT (use_op, reason, to_obj, t, kind))
 
-    (** When some object-like type O1 flows to
+    (* When some object-like type O1 flows to
         ObjAssignFromT(_,O2,X,ObjAssign), the properties of O1 are copied to
         O2, and O2 is linked to X to signal that the copying is done; the
         intention is that when those properties are read through X, they should
@@ -5277,7 +5277,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           use_op;
         })
 
-    (** o.x = ... has the additional effect of o[_] = ... **)
+    (* o.x = ... has the additional effect of o[_] = ... **)
 
     | DefT (_, _, ObjT { flags; _ }), SetPropT (use_op, _, prop, _, _, _)
       when flags.frozen ->
@@ -5340,7 +5340,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (index, UseT (use_op, NumT.why reason_s |> with_trust bogus_trust));
       rec_flow_t cx trace (StrT.why reason_op trust, tout)
 
-    (** Expressions may be used as keys to access objects and arrays. In
+    (* Expressions may be used as keys to access objects and arrays. In
         general, we cannot evaluate such expressions at compile time. However,
         in some idiomatic special cases, we can; in such cases, we know exactly
         which strings/numbers the keys may be, and thus, we can use precise
@@ -5920,7 +5920,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* have the same signatures                                          *)
     (*********************************************************************)
 
-    (** The purpose of SuperT is to establish consistency between overriding
+    (* The purpose of SuperT is to establish consistency between overriding
         properties with overridden properties. As such, the lookups performed
         for the inherited properties are non-strict: they are not required to
         exist. **)
@@ -6293,7 +6293,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* unsupported *)
     (***************)
 
-    (** Lookups can be strict or non-strict, as denoted by the presence or
+    (* Lookups can be strict or non-strict, as denoted by the presence or
         absence of strict_reason in the following two pattern matches.
         Strictness derives from whether the object is sealed and was
         created in the same scope in which the lookup occurs - see
@@ -6331,7 +6331,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ObjProtoT _, LookupT (reason_op, _, [], Named (_, x), _)
       when is_object_prototype_method x ->
-      (** TODO: These properties should go in Object.prototype. Currently we
+      (* TODO: These properties should go in Object.prototype. Currently we
           model Object.prototype as a ObjProtoT, as an optimization against a
           possible deluge of shadow properties on Object.prototype, since it
           is shared by every object. **)
@@ -6339,7 +6339,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | FunProtoT _, LookupT (reason_op, _, _, Named (_, x), _)
       when is_function_prototype x ->
-      (** TODO: Ditto above comment for Function.prototype *)
+      (* TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
     | (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
@@ -6471,7 +6471,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjProtoT _, SuperT _)
     | (FunProtoT _, SuperT _) -> ()
 
-    (** ExtendsT searches for a nominal superclass. The search terminates with
+    (* ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
     | AnyT _, ExtendsUseT _ -> ()
@@ -9432,7 +9432,7 @@ and binary_predicate cx trace sense test left right result =
   handler cx trace result (sense, left, right)
 
 and instanceof_test cx trace result = function
-  (** instanceof on an ArrT is a special case since we treat ArrT as its own
+  (* instanceof on an ArrT is a special case since we treat ArrT as its own
       type, rather than an InstanceT of the Array builtin class. So, we resolve
       the ArrT to an InstanceT of Array, and redo the instanceof check. We do
       it at this stage instead of simply converting (ArrT, InstanceofP c)
@@ -9459,7 +9459,7 @@ and instanceof_test cx trace result = function
     let pred = NotP(LeftP(InstanceofTest, right)) in
     rec_flow cx trace (arrt, PredicateT (pred, result))
 
-  (** An object is considered `instanceof` a function F when it is constructed
+  (* An object is considered `instanceof` a function F when it is constructed
       by F. Note that this is incomplete with respect to the runtime semantics,
       where instanceof is transitive: if F.prototype `instanceof` G, then the
       object is `instanceof` G. There is nothing fundamentally difficult in
@@ -9471,7 +9471,7 @@ and instanceof_test cx trace result = function
 
     rec_flow_t cx trace (obj, result)
 
-  (** Suppose that we have an instance x of class C, and we check whether x is
+  (* Suppose that we have an instance x of class C, and we check whether x is
       `instanceof` class A. To decide what the appropriate refinement for x
       should be, we need to decide whether C extends A, choosing either C or A
       based on the result. Thus, we generate a constraint to decide whether C
@@ -9487,7 +9487,7 @@ and instanceof_test cx trace result = function
       (extends_type r c a)
       (RightP (InstanceofTest, c))
 
-  (** If C is a subclass of A, then don't refine the type of x. Otherwise,
+  (* If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
   | true,
@@ -9498,12 +9498,12 @@ and instanceof_test cx trace result = function
     if ALoc.concretize_equal (Context.aloc_tables cx) instance_a.class_id instance_c.class_id
     then rec_flow_t cx trace (c, result)
     else
-      (** Recursively check whether super(C) extends A, with enough context. **)
+      (* Recursively check whether super(C) extends A, with enough context. **)
       let pred = LeftP(InstanceofTest, right) in
       let u = PredicateT(pred, result) in
       rec_flow cx trace (super_c, ReposLowerT (reason, false, u))
 
-  (** If we are checking `instanceof Object` or `instanceof Function`, objects
+  (* If we are checking `instanceof Object` or `instanceof Function`, objects
       with `ObjProtoT` or `FunProtoT` should pass. *)
   | true, ObjProtoT reason, (InternalT (ExtendsT _) as right) ->
     let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true "Object" in
@@ -9515,11 +9515,11 @@ and instanceof_test cx trace result = function
     rec_flow cx trace (fun_proto,
       PredicateT (LeftP (InstanceofTest, right), result))
 
-  (** We hit the root class, so C is not a subclass of A **)
+  (* We hit the root class, so C is not a subclass of A **)
   | true, DefT (_, _, NullT), InternalT (ExtendsT (r, _, a)) ->
     rec_flow_t cx trace (reposition cx ~trace (aloc_of_reason r) a, result)
 
-  (** If we're refining mixed with instanceof A, then flow A to the result *)
+  (* If we're refining mixed with instanceof A, then flow A to the result *)
   | true,
     DefT (_, _, MixedT _),
     DefT (class_reason, _, ClassT (DefT (instance_reason, _, (InstanceT _)) as a)) ->
@@ -9527,7 +9527,7 @@ and instanceof_test cx trace result = function
     let loc = aloc_of_reason class_reason in
     rec_flow_t cx trace (reposition cx ~trace ~desc loc a, result)
 
-  (** Prune the type when any other `instanceof` check succeeds (since this is
+  (* Prune the type when any other `instanceof` check succeeds (since this is
       impossible). *)
   | true, _, _ ->
     ()
@@ -9538,7 +9538,7 @@ and instanceof_test cx trace result = function
       when proto1 = proto2 ->
     ()
 
-  (** Like above, now suppose that we have an instance x of class C, and we
+  (* Like above, now suppose that we have an instance x of class C, and we
       check whether x is _not_ `instanceof` class A. To decide what the
       appropriate refinement for x should be, we need to decide whether C
       extends A, choosing either nothing or C based on the result. **)
@@ -9549,7 +9549,7 @@ and instanceof_test cx trace result = function
       (extends_type r c a)
       (NotP(RightP(InstanceofTest, c)))
 
-  (** If C is a subclass of A, then do nothing, since this check cannot
+  (* If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
   | false,
     DefT (reason, _, InstanceT (_, super_c, _, instance_c)),
@@ -9566,10 +9566,10 @@ and instanceof_test cx trace result = function
     ObjProtoT _,
     InternalT (ExtendsT(r, c, _))
     ->
-    (** We hit the root class, so C is not a subclass of A **)
+    (* We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (reposition cx ~trace (aloc_of_reason r) c, result)
 
-  (** Don't refine the type when any other `instanceof` check fails. **)
+  (* Don't refine the type when any other `instanceof` check fails. **)
   | false, left, _ ->
     rec_flow_t cx trace (left, result)
 
@@ -9577,7 +9577,7 @@ and sentinel_prop_test key cx trace result (sense, obj, t) =
   sentinel_prop_test_generic key cx trace result obj (sense, obj, t)
 
 and sentinel_prop_test_generic key cx trace result orig_obj =
-  (** Evaluate a refinement predicate of the form
+  (* Evaluate a refinement predicate of the form
 
       obj.key eq value
 
@@ -9834,7 +9834,7 @@ and iter_with_filter cx bindings skip_id each =
 (* for each id in id1 + bounds1.lowertvars:
    id.bounds.upper += t2
 *)
-(** When going through bounds1.lowertvars, filter out id1. **)
+(* When going through bounds1.lowertvars, filter out id1. **)
 (** As an optimization, skip id1 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
 and edges_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
@@ -9846,7 +9846,7 @@ and edges_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
 (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lower += t1
 *)
-(** When going through bounds2.uppertvars, filter out id2. **)
+(* When going through bounds2.uppertvars, filter out id2. **)
 (** As an optimization, skip id2 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
 and edges_from_t cx trace ~use_op ?(opt=false) t1 (id2, bounds2) =
@@ -9906,7 +9906,7 @@ and add_lowertvar id trace bounds =
 (* for each id in id1 + bounds1.lowertvars:
    id.bounds.uppertvars += id2
 *)
-(** When going through bounds1.lowertvars, filter out id1. **)
+(* When going through bounds1.lowertvars, filter out id1. **)
 (** As an optimization, skip id1 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
 and edges_to_tvar cx trace ?(opt=false) (id1, bounds1) id2 =
@@ -9918,7 +9918,7 @@ and edges_to_tvar cx trace ?(opt=false) (id1, bounds1) id2 =
 (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lowertvars += id1
 *)
-(** When going through bounds2.uppertvars, filter out id2. **)
+(* When going through bounds2.uppertvars, filter out id2. **)
 (** As an optimization, skip id2 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
 and edges_from_tvar cx trace ?(opt=false) id1 (id2, bounds2) =
@@ -10108,7 +10108,7 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
     else if n2 < n1 then
       add_output cx ~trace (Error_message.ETooFewTypeArgs (r2, r1, n1))
     else
-      (** for equal-arity polymorphic types, unify param upper bounds
+      (* for equal-arity polymorphic types, unify param upper bounds
           with each other, then instances parameterized by these *)
       let args1 = instantiate_poly_param_upper_bounds cx params1 in
       let args2 = instantiate_poly_param_upper_bounds cx params2 in

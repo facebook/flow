@@ -552,7 +552,7 @@ let file_options =
     let config_libs =
       Core_list.fold_right ~f:(fun lib abs_libs ->
         let abs_lib = Files.make_path_absolute root lib in
-        (**
+        (*
          * "flow-typed" is always included in the libs list for convenience,
          * but there's no guarantee that it exists on the filesystem.
          *)

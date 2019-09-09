@@ -1029,7 +1029,7 @@ let merge_env =
 
   (* merge_entry helper - calculate new specific type *)
   let merge_specific cx loc name (specific0, general0) specific1 specific2 =
-    (** if both children are unchanged, or 1 child is unchanged and the other
+    (* if both children are unchanged, or 1 child is unchanged and the other
         is bottom (EmptyT), then we can avoid creating a merged specific *)
     if (specific0 = specific1 && (specific0 = specific2 || is_bot specific2))
     || (specific0 = specific2 && is_bot specific1)

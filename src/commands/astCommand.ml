@@ -83,7 +83,7 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
       end
   in
 
-  (**
+  (*
    * Record token stream into a list when the --tokens flag is passed.
    * Note that tokens stream in in order, so the list is constructed in reverse
    * order.

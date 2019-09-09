@@ -35,7 +35,7 @@ let export_named_nop _ _ = ()
 
 (* This type represents the possible definition-points for an lvalue. *)
 type def =
-  (**
+  (*
    * Given a variable declaration such as:
    *
    *   var a = 42; // <-- this
@@ -60,7 +60,7 @@ type def =
    *)
   | Parent of Type.t
 
-  (**
+  (*
    * For assignments, we consider lvalues to have the same "definition" as
    * corresponding rvalues: both kinds of references point to the declaration site.
    *)

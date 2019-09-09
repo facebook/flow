@@ -1045,7 +1045,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         toplevel_decls cx consequent
       );
 
-      (** each case starts with this env - begins as clone of incoming_env
+      (* each case starts with this env - begins as clone of incoming_env
           plus bindings, also accumulates negative refis from case tests *)
       let case_start_env = Env.clone_env incoming_env in
 
@@ -1104,7 +1104,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           Env.merge_env cx loc (case_env, case_env, env) changes
         );
 
-        (** process statements, track control flow exits: exit will be an
+        (* process statements, track control flow exits: exit will be an
             unconditional exit, break_opt will be any break *)
         let save_break = Abnormal.clear_saved (Abnormal.Break None) in
         let consequent_ast, exit = Abnormal.catch_stmts_control_flow_exception (
@@ -1159,7 +1159,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     (* if last case fell out, update terminal switch state with it *)
     Option.iter !fallthrough_case ~f:update_switch_state;
 
-    (** env in switch_state has accumulated switch effects. now merge in
+    (* env in switch_state has accumulated switch effects. now merge in
         original types for partially written values, and swap env in *)
     Option.iter !switch_state ~f:(fun (env, partial_writes, _) ->
       Env.merge_env cx switch_loc (env, env, incoming_env) partial_writes;
@@ -1168,7 +1168,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     (* merge original changeset back in *)
     let _ = Changeset.Global.merge incoming_changes in
 
-    (** abnormal exit: if every case exits abnormally the same way (or falls
+    (* abnormal exit: if every case exits abnormally the same way (or falls
         through to a case that does), then the switch as a whole exits that way.
        (as with if/else, we merge `throw` into `return` when both appear) *)
     let uniform_switch_exit case_exits =
@@ -2422,7 +2422,7 @@ and export_statement cx loc
             (loc, reason, local, exported)
         in
 
-        (**
+        (*
           * Determine if we're dealing with the `export {} from` form
           * (and if so, retrieve the ModuleNamespaceObject tvar for the
           *  source module)
@@ -2520,7 +2520,7 @@ and export_statement cx loc
 
     (* [declare] export [type] [default] <<declaration>>; *)
     | (export_info, None) ->
-      (**
+      (*
         * Export each declared binding. Some declarations export multiple
         * bindings, like a multi-declarator variable declaration.
         *)
@@ -3625,7 +3625,7 @@ and subscript =
             Expression(_, Array({Array.elements; comments = _ }) as elems_exp);
             Expression(callback_expr);
           ] ->
-          (**
+          (*
            * From a static perspective (and as long as side-effects aren't
            * considered in Flow), a requireLazy call can be viewed as an immediate
            * call to require() for each of the modules, and then an immediate call
@@ -4429,7 +4429,7 @@ and unary cx loc = Ast.Expression.Unary.(function
       BoolT.at loc |> with_trust literal_trust, { operator = Delete; argument; comments }
 
   | { operator = Await; argument; comments } ->
-    (** TODO: await should look up Promise in the environment instead of going
+    (* TODO: await should look up Promise in the environment instead of going
         directly to the core definition. Otherwise, the following won't work
         with a polyfilled Promise! **)
     (* see declaration of $await in core.js:
@@ -4979,7 +4979,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
       t, name, attributes'
 
   | Identifier (loc, { Identifier.name }), Options.Jsx_csx, _ ->
-    (**
+    (*
      * It's a bummer to duplicate this case, but CSX does not want the
      * "if name = String.capitalize name" restriction.
      *)

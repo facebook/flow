@@ -383,7 +383,7 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
   let is_valid_path = is_valid_path ~options in
   let realpath_filter path = is_valid_path path && filter path in
   let path_filter =
-    (**
+    (*
      * This function is very hot on large codebases, so specialize it up front
      * to minimize work.
      *)

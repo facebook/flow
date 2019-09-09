@@ -726,7 +726,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   (* $Exports<'M'> is the type of the exports of module 'M' *)
-  (** TODO: use `import typeof` instead when that lands **)
+  (* TODO: use `import typeof` instead when that lands **)
   | "$Exports" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match targs with

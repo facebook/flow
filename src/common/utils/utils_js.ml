@@ -83,7 +83,7 @@ let lazy_seq (lst: 'a option Lazy.t list): 'a option =
  * set of possible intended strings is known (i.e. variable names).
  *)
 let typo_suggestions =
-  (**
+  (*
    * Calculates the Levenshtein distance between the two strings, but with a
    * limit. See here for documentation on this algorithm:
    *
@@ -157,7 +157,7 @@ let typo_suggestion possible_names name =
 
 (* util to limit the number of calls to a (usually recursive) function *)
 let count_calls ~counter ~default f =
-  (** Count number of calls to a function f, decrementing at each call and
+  (* Count number of calls to a function f, decrementing at each call and
       returning default when count reaches 0. **)
   if !counter = 0 then default
   else begin

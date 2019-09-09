@@ -29,14 +29,14 @@ type jsx_mode =
   (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
   | Jsx_react
 
-  (**
+  (*
    * Specifies a function that should be invoked instead of React.createElement
    * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
    * followed: children are varargs after a props argument.
    *)
   | Jsx_pragma of (string * (ALoc.t, ALoc.t) Flow_ast.Expression.t)
 
-  (**
+  (*
    * Alternate mode for interpreting JSX syntax. The element name is treated
    * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
    * Children are part of props instead of a separate argument.
