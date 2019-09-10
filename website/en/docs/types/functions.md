@@ -239,7 +239,7 @@ However, Flow will flag an error in the code below:
 
 ```js
 function truthy(a, b): boolean {
-  return a && b;
+  return !!a && !!b;
 }
 
 function concat(a: ?string, b: ?string): string {
@@ -251,8 +251,9 @@ function concat(a: ?string, b: ?string): string {
 }
 ```
 
-You can fix this by making `truthy` a *predicate function*, by using
-the `%checks` annotation like so:
+This is because the refinement information of `a` and `b` as `string` instead of `?string` is lost when returning from the `truthy` function.
+
+In order to keep the refinement, you can make `truthy` a *predicate function*, by using the `%checks` annotation like so:
 
 ```js
 function truthy(a, b): boolean %checks {
