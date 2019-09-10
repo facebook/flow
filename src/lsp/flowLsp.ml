@@ -82,10 +82,6 @@ type open_file_info = {
   o_open_doc: Lsp.TextDocumentItem.t;
   (* o_ast, if present, is guaranteed to be up-to-date. It gets computed lazily. *)
   o_ast: (Loc.t, Loc.t) Flow_ast.program option;
-  (* o_live_diagnostics, if present, is guaranteed to be up-to-date, and to only contain
-   * parse errors, and to be a better source of truth about the parse errors
-   * in this file than what the flow server has told us. It also gets computed lazily. *)
-  o_live_diagnostics: PublishDiagnostics.diagnostic list option;
   (* o_unsaved if true means that this open file has unsaved changes to the buffer. *)
   o_unsaved: bool;
 }
@@ -104,7 +100,7 @@ type initialized_env = {
   (* what we've told the client about our connection status *)
   i_status: show_status_t;
   i_open_files: open_file_info SMap.t;
-  i_outstanding_diagnostics: SSet.t;
+  i_errors: LspErrors.t;
 }
 
 and disconnected_env = {
@@ -123,10 +119,8 @@ and connected_env = {
   (* stateful handling of Errors+status from server... *)
   c_is_rechecking: bool;
   c_lazy_stats: ServerProt.Response.lazy_stats option;
-  c_diagnostics: PublishDiagnostics.diagnostic list SMap.t;
   (* if server gets disconnected, we will tidy up these things... *)
   c_outstanding_requests_to_server: Lsp.IdSet.t;
-  c_outstanding_diagnostics: SSet.t; (* we'll send publishDiagnostics([]) *)
 }
 
 and state =
@@ -209,6 +203,16 @@ let update_open_file (uri : string) (open_file_info : open_file_info option) (st
   | Connected cenv -> Connected { cenv with c_ienv = update_ienv cenv.c_ienv }
   | Disconnected denv -> Disconnected { denv with d_ienv = update_ienv denv.d_ienv }
   | _ -> failwith ("client shouldn't be updating files in state " ^ string_of_state state)
+
+let update_errors f state =
+  match state with
+  | Connected cenv ->
+    Connected { cenv with c_ienv = { cenv.c_ienv with i_errors = f cenv.c_ienv.i_errors } }
+  | Disconnected denv ->
+    Disconnected { denv with d_ienv = { denv.d_ienv with i_errors = f denv.d_ienv.i_errors } }
+  | Pre_init _
+  | Post_shutdown ->
+    state
 
 let new_metadata (state : state) (message : Jsonrpc.message) : Persistent_connection_prot.metadata
     =
@@ -679,9 +683,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
         c_about_to_exit_code = None;
         c_is_rechecking = false;
         c_lazy_stats = None;
-        c_diagnostics = SMap.empty;
         c_outstanding_requests_to_server = Lsp.IdSet.empty;
-        c_outstanding_diagnostics = SSet.empty;
         c_recent_summaries = [];
       }
     in
@@ -829,13 +831,6 @@ let close_conn (env : connected_env) : unit =
 (*   comes back from the client, we ignore ones that are destined for   *)
 (*   now-defunct servers, and only forward on the ones for the current  *)
 (*   server.                                                            *)
-(* OUTSTANDING_DIAGNOSTICS - for all server->lsp publishDiagnostics     *)
-(*   notifications which are being displayed in the client. Added to    *)
-(*   this list when we track_from_server(publishDiagnostics) a file     *)
-(*   with non-empty error list; removed when we                         *)
-(*   track_from_server(publishDiagnostics) a file with empty error list.*)
-(*   When a server dies, we synthesize publishDiagnostics notifications *)
-(*   to the client so it can erase all diagnostics.                     *)
 (* OUTSTANDING_PROGRESS - for all server->lsp progress notifications    *)
 (*   which are being displayed in the client. Added to this list when   *)
 (*   we track_from_server(progress) a non-empty progress; removed       *)
@@ -847,15 +842,21 @@ let close_conn (env : connected_env) : unit =
 type track_effect = { changed_live_uri: string option }
 
 let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect =
-  let changed_open_file =
+  let (state, changed_live_uri) =
     match (get_open_files state, c) with
     | (_, NotificationMessage (DidOpenNotification params)) ->
       let o_open_doc = params.DidOpen.textDocument in
       let uri = params.DidOpen.textDocument.TextDocumentItem.uri in
-      Some (uri, Some { o_open_doc; o_ast = None; o_live_diagnostics = None; o_unsaved = false })
+      let state =
+        update_open_file uri (Some { o_open_doc; o_ast = None; o_unsaved = false }) state
+      in
+      (state, Some uri)
     | (_, NotificationMessage (DidCloseNotification params)) ->
       let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
-      Some (uri, None)
+      let state =
+        state |> update_errors (LspErrors.clear_all_live_errors_and_send to_stdout uri)
+      in
+      (state, None)
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
       let { o_open_doc; _ } = SMap.find uri open_files in
@@ -869,42 +870,32 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
           text;
         }
       in
-      Some (uri, Some { o_open_doc; o_ast = None; o_live_diagnostics = None; o_unsaved = true })
+      let state =
+        update_open_file uri (Some { o_open_doc; o_ast = None; o_unsaved = true }) state
+      in
+      (* update errors... we don't need to send updated squiggle locations *)
+      (* right now ourselves, since all editors take care of that; but if ever we *)
+      (* re-send the server's existing diagnostics for this file then that should take *)
+      (* into account any user edits since then. This isn't perfect - e.g. if the user *)
+      (* modifies a file we'll update squiggles, but if the user subsquently closes the *)
+      (* file unsaved and then re-opens it then we'll be left with wrong squiggles. *)
+      (* It also doesn't compensate if the flow server starts a typecheck, then receives *)
+      (* a DidChange, then sends error spans from as it was at the start of the typecheck. *)
+      (* Still, at least we're doing better on the common case -- where the server has sent *)
+      (* diagnostics, then the user types, then we re-send live syntax errors. *)
+      let state =
+        match state with
+        | Connected _ ->
+          state |> update_errors (LspErrors.update_errors_due_to_change_and_send to_stdout params)
+        | _ -> state
+      in
+      (state, Some uri)
     | (Some open_files, NotificationMessage (DidSaveNotification params)) ->
       let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri in
       let open_file = SMap.find uri open_files in
-      Some (uri, Some { open_file with o_unsaved = false })
-    | (_, _) -> None
-  in
-  (* update ienv.i_open_files... *)
-  let (state, changed_live_uri) =
-    match changed_open_file with
-    | Some (uri, open_file_info) -> (update_open_file uri open_file_info state, Some uri)
-    | None -> (state, None)
-  in
-  (* update cenv.c_diagnostics... we don't need to send updated squiggle locations *)
-  (* right now ourselves, since all editors take care of that; but if ever we *)
-  (* re-send the server's existing diagnostics for this file then that should take *)
-  (* into account any user edits since then. This isn't perfect - e.g. if the user *)
-  (* modifies a file we'll update squiggles, but if the user subsquently closes the *)
-  (* file unsaved and then re-opens it then we'll be left with wrong squiggles. *)
-  (* It also doesn't compensate if the flow server starts a typecheck, then receives *)
-  (* a DidChange, then sends error spans from as it was at the start of the typecheck. *)
-  (* Still, at least we're doing better on the common case -- where the server has sent *)
-  (* diagnostics, then the user types, then we re-send live syntax errors. *)
-  let state =
-    match (state, c) with
-    | (Connected cenv, NotificationMessage (DidChangeNotification params)) ->
-      let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-      (match SMap.find_opt uri cenv.c_diagnostics with
-      | Some diagnostics_for_uri ->
-        let diagnostics_for_uri =
-          Lsp_helpers.update_diagnostics_due_to_change diagnostics_for_uri params
-        in
-        let c_diagnostics = SMap.add uri diagnostics_for_uri cenv.c_diagnostics in
-        Connected { cenv with c_diagnostics }
-      | _ -> state)
-    | _ -> state
+      let state = update_open_file uri (Some { open_file with o_unsaved = false }) state in
+      (state, Some uri)
+    | (_, _) -> (state, None)
   in
   (* update cenv.c_outstanding_requests*... *)
   let state =
@@ -951,16 +942,6 @@ let track_from_server (state : state) (c : Lsp.lsp_message) : state =
       }
     in
     Connected { env with c_ienv }
-  (* server->client publishDiagnostics: save up all URIs with non-empty diagnostics *)
-  | (Connected env, NotificationMessage (PublishDiagnosticsNotification params)) ->
-    let uri = params.PublishDiagnostics.uri in
-    let published = params.PublishDiagnostics.diagnostics in
-    let c_outstanding_diagnostics =
-      match published with
-      | [] -> SSet.remove uri env.c_outstanding_diagnostics
-      | _ -> SSet.add uri env.c_outstanding_diagnostics
-    in
-    Connected { env with c_outstanding_diagnostics }
   | (_, _) -> state
 
 let dismiss_tracks (state : state) : state =
@@ -980,26 +961,14 @@ let dismiss_tracks (state : state) : state =
     else
       ()
   in
-  let clear_diagnostics (uri : string) : unit =
-    let notification =
-      PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics = [] }
-    in
-    let json = Lsp_fmt.print_lsp_notification notification in
-    to_stdout json
-  in
   match state with
   | Connected env ->
     WrappedMap.iter
       (cancel_request_from_server env.c_ienv.i_server_id)
       env.c_ienv.i_outstanding_requests_from_server;
     IdSet.iter decline_request_to_server env.c_outstanding_requests_to_server;
-    SSet.iter clear_diagnostics env.c_outstanding_diagnostics;
-    Connected
-      {
-        env with
-        c_outstanding_requests_to_server = IdSet.empty;
-        c_outstanding_diagnostics = SSet.empty;
-      }
+    Connected { env with c_outstanding_requests_to_server = IdSet.empty }
+    |> update_errors (LspErrors.clear_all_errors_and_send to_stdout)
   | _ -> state
 
 let lsp_DocumentItem_to_flow (open_doc : Lsp.TextDocumentItem.t) : File_input.t =
@@ -1049,7 +1018,7 @@ let error_to_lsp
  * or it's an unopened file in which case we'll retrieve parse results but
  * won't store them. *)
 let parse_and_cache flowconfig_name (state : state) (uri : string) :
-    state * (Loc.t, Loc.t) Flow_ast.program * PublishDiagnostics.diagnostic list option =
+    state * (Loc.t, Loc.t) Flow_ast.program =
   (* part of parsing is producing parse errors, if so desired *)
   let liveSyntaxErrors =
     Initialize.(
@@ -1113,160 +1082,34 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
   let open_files = get_open_files state in
   let existing_open_file_info = Option.bind open_files (SMap.get uri) in
   match existing_open_file_info with
-  | Some { o_ast = Some o_ast; o_live_diagnostics; _ } -> (state, o_ast, o_live_diagnostics)
+  | Some { o_ast = Some o_ast; _ } ->
+    (* We've already parsed this file since it last changed. No need to parse again *)
+    (state, o_ast)
   | Some { o_open_doc; o_unsaved; _ } ->
+    (* We have not parsed this file yet. We need to parse it now and save the updated ast *)
     let file = lsp_DocumentItem_to_flow o_open_doc in
-    let (o_ast, o_live_diagnostics) = parse file in
-    let open_file_info = Some { o_open_doc; o_ast = Some o_ast; o_live_diagnostics; o_unsaved } in
-    let state = update_open_file uri open_file_info state in
-    (state, o_ast, o_live_diagnostics)
+    let (o_ast, live_parse_errors) = parse file in
+    let open_file_info = Some { o_open_doc; o_ast = Some o_ast; o_unsaved } in
+    let state = state |> update_open_file uri open_file_info in
+    let state =
+      match live_parse_errors with
+      | None -> state
+      | Some live_parse_errors ->
+        state
+        |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
+    in
+    (state, o_ast)
   | None ->
+    (* This is an unopened file, so we won't cache the results *)
     let fn = Lsp_helpers.lsp_uri_to_path uri in
     let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
     let file = File_input.FileName fn in
-    let (open_ast, open_diagnostics) = parse file in
-    (state, open_ast, open_diagnostics)
-
-(* print_diagnostics: just pushes the set of diagnostics for this uri to the client
- * taking into account whether there are superceding local parse errors as well.
- * We actually only send the first 200 errors per file to the client, since
- * more than that wouldn't add value to the user, and makes clients sluggish. *)
-let print_diagnostics
-    (uri : string) (diagnostics : PublishDiagnostics.diagnostic list) (state : state) : state =
-  PublishDiagnostics.(
-    let (prev_server_reported, prev_open_reported) =
-      match state with
-      | Connected cenv ->
-        ( SSet.mem uri cenv.c_outstanding_diagnostics,
-          SSet.mem uri cenv.c_ienv.i_outstanding_diagnostics )
-      | Disconnected denv -> (false, SSet.mem uri denv.d_ienv.i_outstanding_diagnostics)
-      | _ -> (false, false)
-    in
-    (* First we'll look at server tracks, update then appropriately. *)
-    (* This is to maintain the list of all URIs for which the server has sent *)
-    (* diagnostics, so all those URIs can be cleared should the server disconnect. *)
-    let msg =
-      NotificationMessage (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics })
-    in
-    let state = track_from_server state msg in
-    (* Next look at open-file tracks, update them appropriately. *)
-    let open_file_info = Option.bind (get_open_files state) (SMap.get uri) in
-    let (state, use_live, o_live_diagnostics) =
-      match open_file_info with
-      | None
-      | Some { o_live_diagnostics = None; _ } ->
-        (state, false, [])
-      | Some { o_live_diagnostics = Some o_live_diagnostics; _ } ->
-        let update_ienv ienv =
-          let i_outstanding_diagnostics =
-            match o_live_diagnostics with
-            | [] -> SSet.remove uri ienv.i_outstanding_diagnostics
-            | _ -> SSet.add uri ienv.i_outstanding_diagnostics
-          in
-          { ienv with i_outstanding_diagnostics }
-        in
-        let state =
-          match state with
-          | Connected cenv -> Connected { cenv with c_ienv = update_ienv cenv.c_ienv }
-          | Disconnected denv -> Disconnected { denv with d_ienv = update_ienv denv.d_ienv }
-          | _ -> state
-        in
-        (state, true, o_live_diagnostics)
-    in
-    (* If using live-diagnostics, then strip out parse errors from the server diagnostics *)
-    (* and instead include the local ones. *)
-    let diagnostics =
-      if use_live then
-        let parse_code = Errors.string_of_kind Errors.ParseError in
-        let diagnostics = List.filter diagnostics ~f:(fun d -> d.code <> StringCode parse_code) in
-        o_live_diagnostics @ diagnostics
-      else
-        diagnostics
-    in
-    (* Send only the first 'cap' diagnostics per file to the client *)
-    let cap = 200 in
-    let is_below_cap = List.nth diagnostics cap = None in
-    let diagnostics =
-      if is_below_cap then
-        (* avoid O(nlogn) sort in this case *)
-        diagnostics
-      else
-        let cmp d1 d2 = Lsp_helpers.pos_compare d1.range.start d2.range.start in
-        let diagnostics = List.sort cmp diagnostics in
-        let (retain, discard) = List.split_n diagnostics cap in
-        match discard with
-        | [] -> retain
-        | discard ->
-          let discard_count = List.length discard in
-          let message =
-            Printf.sprintf "[Only showing %i/%i diagnostics]" cap (cap + discard_count)
-          in
-          let diagnostic =
-            {
-              PublishDiagnostics.range
-              (* the following range displays fine in all editors, regardless of contents *) =
-                { start = { line = 0; character = 0 }; end_ = { line = 0; character = 0 } };
-              severity = Some PublishDiagnostics.Information;
-              code = NoCode;
-              source = Some "Flow";
-              message;
-              relatedInformation = [];
-              relatedLocations = [];
-            }
-          in
-          diagnostic :: retain
-    in
-    (* Avoid sending the message if it was empty before and is empty now. *)
-    (* This isn't needed for correct client behavior, but it makes the transcripts *)
-    (* easier to write unit-tests for! *)
-    let msg =
-      NotificationMessage (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics })
-    in
-    let new_reported =
-      match diagnostics with
-      | [] -> false
-      | _ -> true
-    in
-    if prev_open_reported || prev_server_reported || new_reported then
-      to_stdout (Lsp_fmt.print_lsp msg);
-    state)
-
-let do_additional_diagnostics
-    (cenv : connected_env) (diagnostics : PublishDiagnostics.diagnostic list SMap.t) : state =
-  (* Merge the additional diagnostics into cenv *)
-  let uris = SMap.bindings diagnostics |> List.map ~f:fst |> SSet.of_list in
-  let combine _uri existing additions = Some (existing @ additions) in
-  let c_diagnostics = SMap.union ~combine cenv.c_diagnostics diagnostics in
-  let state = Connected { cenv with c_diagnostics } in
-  (* Send publishDiagnostics for all files touched by the additions. *)
-  let to_send = SMap.filter (fun uri _ -> SSet.mem uri uris) c_diagnostics in
-  let state = SMap.fold print_diagnostics to_send state in
-  state
-
-let do_replacement_diagnostics
-    (cenv : connected_env) (c_diagnostics : PublishDiagnostics.diagnostic list SMap.t) : state =
-  let state = Connected { cenv with c_diagnostics } in
-  (* Send publishDiagnostics for all files that no longer have diagnostics *)
-  let old_uris = SMap.bindings cenv.c_diagnostics |> List.map ~f:fst |> SSet.of_list in
-  let new_uris = SMap.bindings c_diagnostics |> List.map ~f:fst |> SSet.of_list in
-  let now_empty_uris = SSet.diff old_uris new_uris in
-  let print_empty uri state = print_diagnostics uri [] state in
-  let state = SSet.fold print_empty now_empty_uris state in
-  (* Send publishDiagnostics for all files that have diagnostics *)
-  let state = SMap.fold print_diagnostics c_diagnostics state in
-  state
+    let (open_ast, _) = parse file in
+    (state, open_ast)
 
 let do_live_diagnostics flowconfig_name (state : state) (uri : string) : state =
   (* reparse the file and write it into the state's editor_open_files as needed *)
-  let (state, _, _) = parse_and_cache flowconfig_name state uri in
-  (* republish the diagnostics for this file based on a mix of server-generated ones *)
-  (* if present, and client-generated ones if the file is open *)
-  let server_diagnostics =
-    match state with
-    | Connected cenv -> Option.value (SMap.get uri cenv.c_diagnostics) ~default:[]
-    | _ -> []
-  in
-  let state = print_diagnostics uri server_diagnostics state in
+  let (state, _) = parse_and_cache flowconfig_name state uri in
   state
 
 let show_recheck_progress (cenv : connected_env) : state =
@@ -1297,7 +1140,7 @@ let show_recheck_progress (cenv : connected_env) : state =
 let do_documentSymbol
     flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params) : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
-  let (state, ast, _) = parse_and_cache flowconfig_name state uri in
+  let (state, ast) = parse_and_cache flowconfig_name state uri in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json = Lsp_fmt.print_lsp (ResponseMessage (id, DocumentSymbolResult result)) in
   to_stdout json;
@@ -1332,15 +1175,13 @@ module RagePrint = struct
         (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
         (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string))
 
-  let string_of_open_file { o_open_doc; o_ast; o_live_diagnostics; o_unsaved } : string =
+  let string_of_open_file { o_open_doc; o_ast; o_unsaved } : string =
     Printf.sprintf
-      "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s] unsaved=%b)"
+      "(uri=%s version=%d text=[%d bytes] ast=[%s] unsaved=%b)"
       o_open_doc.TextDocumentItem.uri
       o_open_doc.TextDocumentItem.version
       (String.length o_open_doc.TextDocumentItem.text)
       (Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
-      (Option.value_map o_live_diagnostics ~default:"absent" ~f:(fun d ->
-           List.length d |> string_of_int))
       o_unsaved
 
   let string_of_open_files (files : open_file_info SMap.t) : string =
@@ -1396,10 +1237,6 @@ module RagePrint = struct
     addline b "i_isConnected=" (ienv.i_isConnected |> string_of_bool);
     addline b "i_status=" (ienv.i_status |> string_of_show_status);
     addline b "i_open_files=" (ienv.i_open_files |> string_of_open_files);
-    addline
-      b
-      "i_outstanding_diagnostics="
-      (ienv.i_outstanding_diagnostics |> SSet.elements |> String.concat ", ");
     ()
 
   let add_denv (b : Buffer.t) (denv : disconnected_env) : unit =
@@ -1435,13 +1272,6 @@ module RagePrint = struct
     addline b "c_is_rechecking=" (cenv.c_is_rechecking |> string_of_bool);
     addline
       b
-      "c_diagnostics="
-      ( cenv.c_diagnostics
-      |> SMap.bindings
-      |> List.map ~f:(fun (uri, d) -> Printf.sprintf "%s:%d" uri (List.length d))
-      |> String.concat ", " );
-    addline
-      b
       "c_lazy_stats="
       (cenv.c_lazy_stats |> Option.value_map ~default:"None" ~f:string_of_lazy_stats);
     addline
@@ -1451,10 +1281,6 @@ module RagePrint = struct
       |> IdSet.elements
       |> List.map ~f:Lsp_fmt.id_to_string
       |> String.concat "," );
-    addline
-      b
-      "c_outstanding_diagnostics="
-      (cenv.c_outstanding_diagnostics |> SSet.elements |> String.concat ", ");
     ()
 
   let string_of_state (state : state) : string =
@@ -1767,7 +1593,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         i_isConnected = false;
         i_status = Never_shown;
         i_open_files = SMap.empty;
-        i_outstanding_diagnostics = SSet.empty;
+        i_errors = LspErrors.empty;
       }
     in
     FlowInteractionLogger.set_server_config
@@ -2009,23 +1835,23 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (* First construct an SMap from uri to diagnostic list, which gathers together *)
     (* all the errors and warnings per uri *)
     let all =
-      Errors.ConcreteLocPrintableErrorSet.fold
-        (add (Some PublishDiagnostics.Error))
-        errors
-        SMap.empty
-    in
-    let all =
-      Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
+      SMap.empty
+      |> Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Error)) errors
+      |> Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings
     in
     let () =
       let end_state = collect_interaction_state state in
       LspInteraction.log_pushed_errors ~end_state ~errors_reason
     in
-    (* TODO (glevi) Log when errors are displayed to the user as part of the UX logging *)
-    if cenv.c_is_rechecking then
-      Ok (do_additional_diagnostics cenv all, LogNotNeeded)
-    else
-      Ok (do_replacement_diagnostics cenv all, LogNotNeeded)
+    let state =
+      Connected cenv
+      |> update_errors
+           ( if cenv.c_is_rechecking then
+             LspErrors.add_streamed_server_errors_and_send to_stdout all
+           else
+             LspErrors.set_finalized_server_errors_and_send to_stdout all )
+    in
+    Ok (state, LogNotNeeded)
   | (Connected cenv, Server_message Persistent_connection_prot.StartRecheck) ->
     let start_state = collect_interaction_state state in
     LspInteraction.recheck_start ~start_state;
