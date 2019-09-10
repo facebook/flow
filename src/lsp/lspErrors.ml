@@ -20,6 +20,8 @@ module List = Core_list
  *        (e.g. from after the last recheck)
  * 2. If we have live parse errors for a file (e.g. from running the parser locally on an open file)
  *    then we replace the server's parse errors for that file with the live parse errors
+ * 3. If we have live non-parse errors for a file (e.g. from check-contents for an open file)
+ *    then we replace the server's non-parse errors for that file with the live non-parse errors.
  *)
 type errors = PublishDiagnostics.diagnostic list
 
@@ -43,6 +45,10 @@ type per_file_errors = {
    * we haven't run the parser on this file. `Some []` means we have run the parser but it said
    * there were 0 errors *)
   live_parse_errors: parse_errors option;
+  (* Live non-parse errors come from us running check-contents on open files. `None` means we
+   * haven't run check-contents on this file. `Some []` means we have run check-contents and it
+   * found that there were 0 errors *)
+  live_non_parse_errors: non_parse_errors option;
   (* Server errors come from the server. Duh. *)
   server_errors: server_errors;
 }
@@ -54,12 +60,17 @@ type t = {
 }
 
 let empty_per_file_errors =
-  { live_parse_errors = None; server_errors = Finalized (ParseErrors [], NonParseErrors []) }
+  {
+    live_parse_errors = None;
+    live_non_parse_errors = None;
+    server_errors = Finalized (ParseErrors [], NonParseErrors []);
+  }
 
 (* Returns true if we don't know about any errors for this file *)
 let file_has_no_errors = function
   | {
       live_parse_errors = None | Some (ParseErrors []);
+      live_non_parse_errors = None | Some (NonParseErrors []);
       server_errors =
         Streamed (ParseErrors [], NonParseErrors []) | Finalized (ParseErrors [], NonParseErrors []);
     } ->
@@ -110,23 +121,31 @@ let is_parse_error =
   let parse_code = Errors.string_of_kind Errors.ParseError in
   (fun d -> d.PublishDiagnostics.code = PublishDiagnostics.StringCode parse_code)
 
+let is_not_parse_error d = not (is_parse_error d)
+
 let split errors =
   let (parse_errors, non_parse_errors) = List.partition_tf errors is_parse_error in
   (ParseErrors parse_errors, NonParseErrors non_parse_errors)
 
-let choose_errors per_file_errors_opt =
-  match per_file_errors_opt with
-  | { live_parse_errors; server_errors = Streamed server_errors }
-  | { live_parse_errors; server_errors = Finalized server_errors } ->
-    let (ParseErrors server_parse_errors, NonParseErrors server_non_parse_errors) =
-      server_errors
-    in
-    (* Prefer live parse errors over server parse errors *)
-    begin
-      match live_parse_errors with
-      | None -> (server_parse_errors, server_non_parse_errors)
-      | Some (ParseErrors live_parse_errors) -> (live_parse_errors, server_non_parse_errors)
-    end
+let choose_errors
+    {
+      live_parse_errors;
+      live_non_parse_errors;
+      server_errors = Streamed server_errors | Finalized server_errors;
+    } =
+  let (ParseErrors server_parse_errors, NonParseErrors server_non_parse_errors) = server_errors in
+  (* Prefer live parse errors over server parse errors *)
+  let parse_errors =
+    match live_parse_errors with
+    | None -> server_parse_errors
+    | Some (ParseErrors live_parse_errors) -> live_parse_errors
+  in
+  let non_parse_errors =
+    match live_non_parse_errors with
+    | None -> server_non_parse_errors
+    | Some (NonParseErrors live_non_parse_errors) -> live_non_parse_errors
+  in
+  (parse_errors, non_parse_errors)
 
 let have_errors_changed before after =
   let (before_parse_errors, before_non_parse_errors) = choose_errors before in
@@ -196,11 +215,27 @@ let set_live_parse_errors_and_send send_json uri live_parse_errors state =
       { per_file_errors with live_parse_errors = Some (ParseErrors live_parse_errors) })
   |> send_all_errors send_json
 
-(* When we close a file we clear all the live parse errors for that file, but we keep
- * around the server errors *)
+(* We've run check-contents on a modified open file and now want to record the errors reported by
+ * check-contents *)
+let set_live_non_parse_errors_and_send send_json uri_to_live_error_map state =
+  SMap.fold
+    (fun uri live_non_parse_errors state ->
+      (* If the caller passes in some parse errors then we'll just ignore them *)
+      let live_non_parse_errors = List.filter live_non_parse_errors ~f:is_not_parse_error in
+      modify_per_file_errors uri state (fun per_file_errors ->
+          {
+            per_file_errors with
+            live_non_parse_errors = Some (NonParseErrors live_non_parse_errors);
+          }))
+    uri_to_live_error_map
+    state
+  |> send_all_errors send_json
+
+(* When we close a file we clear all the live parse errors or non-parse errors for that file, but we
+ * keep around the server errors *)
 let clear_all_live_errors_and_send send_json uri state =
   modify_per_file_errors uri state (fun per_file_errors ->
-      { per_file_errors with live_parse_errors = None })
+      { per_file_errors with live_parse_errors = None; live_non_parse_errors = None })
   |> send_all_errors send_json
 
 (* my_list @ [] returns a list which is no longer physically identical to my_list. This is a
@@ -279,7 +314,8 @@ let clear_all_errors_and_send send_json state =
 (* Basically a best-effort attempt to update the locations of errors after a didChange *)
 let update_errors_due_to_change_and_send send_json params state =
   let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-  modify_per_file_errors uri state (fun { live_parse_errors; server_errors } ->
+  modify_per_file_errors uri state (fun per_file_errors ->
+      let { live_parse_errors; live_non_parse_errors; server_errors } = per_file_errors in
       let live_parse_errors =
         match live_parse_errors with
         | None
@@ -288,6 +324,16 @@ let update_errors_due_to_change_and_send send_json params state =
         | Some (ParseErrors live_parse_errors) ->
           Some
             (ParseErrors (Lsp_helpers.update_diagnostics_due_to_change live_parse_errors params))
+      in
+      let live_non_parse_errors =
+        match live_non_parse_errors with
+        | None
+        | Some (NonParseErrors []) ->
+          live_non_parse_errors
+        | Some (NonParseErrors live_non_parse_errors) ->
+          Some
+            (NonParseErrors
+               (Lsp_helpers.update_diagnostics_due_to_change live_non_parse_errors params))
       in
       let server_errors =
         match server_errors with
@@ -307,5 +353,5 @@ let update_errors_due_to_change_and_send send_json params state =
           in
           Finalized (ParseErrors parse_errors, NonParseErrors non_parse_errors)
       in
-      { live_parse_errors; server_errors })
+      { live_parse_errors; live_non_parse_errors; server_errors })
   |> send_all_errors send_json
