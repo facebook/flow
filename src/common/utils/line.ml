@@ -5,33 +5,60 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let breaks = "\r\n"
+(* Line Separator (0xE2 0x80 0xA8) or Paragraph Separator (0xE2 0x80 0xA9) *)
+let is_ls_or_ps =
+  let c1 = Char.chr 0xE2 in
+  let c2 = Char.chr 0x80 in
+  let c3ls = Char.chr 0xA8 in
+  let c3ps = Char.chr 0xA9 in
+  fun str len i ->
+    str.[i] = c1 && i + 2 < len && str.[i + 1] = c2 && (str.[i + 2] = c3ls || str.[i + 2] = c3ps)
 
-let rec eol s x i =
-  if i >= x then
-    x
-  else if String.contains breaks s.[i] then
-    i
-  else
-    eol s x (i + 1)
-
-let rec line s x n i =
-  if n <= 0 then
-    (i, eol s x (i + 1))
-  else
-    let i = eol s x i in
-    if i >= x then
-      (x, x)
+let length_of_line_terminator str len i =
+  if str.[i] = '\n' then
+    1
+  else if str.[i] = '\r' then
+    if i + 1 < len && str.[i + 1] = '\n' then
+      2
     else
-      line s x (n - 1) (i + 1)
+      1
+  else if is_ls_or_ps str len i then
+    3
+  else
+    0
+
+(* Finds the index of the first character of the nth line (0-based).
+
+   Assumes a UTF-8 encoding, and treats \n, \r, U+2028 (line separator) and
+   U+2029 (paragraph separator) as line terminators, per the ECMAscript spec:
+   https://tc39.es/ecma262/#sec-line-terminators
+
+   If the line doesn't exist, including if the string ends with a line terminator
+   for the (n-1)th line, then returns [None] (e.g. "foo\n" for n=1, i=0 returns `None`
+   because the index is the end of the string. *)
+let rec nth_line_opt n str len i =
+  if i >= len then
+    None
+  else if n = 0 then
+    Some i
+  else
+    let x = length_of_line_terminator str len i in
+    if x > 0 then
+      nth_line_opt (n - 1) str len (i + x)
+    else
+      nth_line_opt n str len (i + 1)
 
 let split_nth s n =
-  let x = String.length s in
-  let (i, j) = line s x n 0 in
-  if i = x then
-    None
-  else
-    Some String.(sub s 0 i, sub s i (j - i), sub s j (x - j))
+  let len = String.length s in
+  match nth_line_opt n s len 0 with
+  | Some i ->
+    let j =
+      match nth_line_opt 1 s len i with
+      | Some j -> j
+      | None -> len - 1
+    in
+    Some String.(sub s 0 i, sub s i (j - i), sub s j (len - j))
+  | None -> None
 
 let transform_nth s n f =
   match split_nth s n with
