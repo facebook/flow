@@ -282,8 +282,9 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       | TupleElementCompatibility c ->
         TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
       | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
-      | ( ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _
-        | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip ) as use_op ->
+      | ( TupleMapFunCompatibility _ | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _
+        | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip )
+        as use_op ->
         use_op
     in
     (* Unification produces two errors. One for both sides. For example,
@@ -541,6 +542,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
             | Frame (ReactConfigCheck, use_op)
             | Frame (ReactGetConfig _, use_op)
             | Frame (UnifyFlip, use_op)
+            | Frame (TupleMapFunCompatibility _, use_op)
             | Frame (ObjMapFunCompatibility _, use_op)
             | Frame (ObjMapiFunCompatibility _, use_op) ->
               `Next use_op
@@ -675,6 +677,15 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
                 def
             in
             [ref def; text " requires another argument"]
+          | Frame (TupleMapFunCompatibility { value }, _) ->
+            [ ref op;
+              text " expects the provided function type to take only one argument, the value type ";
+              ref value;
+              text ", but ";
+              ref def;
+              text " takes more than one argument. See ";
+              text Friendly.(docs.tuplemap);
+              text " for documentation" ]
           | Frame (ObjMapFunCompatibility { value }, _) ->
             [ ref op;
               text " expects the provided function type to take only one argument, the value type ";

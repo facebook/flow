@@ -272,6 +272,104 @@ References:
        --------^ [4]
 
 
+Error --------------------------------------------------------------------------------------------------- arity3.js:3:46
+
+Cannot instantiate `$TupleMap` because `$TupleMap` [1] expects the provided function type to take only one argument, the
+value type number [2], but function type [3] takes more than one argument. See
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+
+   arity3.js:3:46
+    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   arity3.js:3:30
+    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                    ^^^^^^ [2]
+   arity3.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- arity3.js:8:10
+
+Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
+number [2], but function type [3] takes more than one argument. See
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+
+   arity3.js:8:10
+    8|   return g(o);
+                ^^^^
+
+References:
+   arity3.js:3:46
+    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity3.js:3:30
+    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                    ^^^^^^ [2]
+   arity3.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- arity3.js:12:10
+
+Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
+number [2], but function type [3] takes more than one argument. See
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+
+   arity3.js:12:10
+   12|   return g<Columns>(o);
+                ^^^^^^^^^^^^^
+
+References:
+   arity3.js:3:46
+    3| function g<T: $ReadOnlyArray<number>>(o: T): $TupleMap<T, typeof makeEditedColumn> {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity3.js:19:22
+   19| type Columns = Array<number>;
+                            ^^^^^^ [2]
+   arity3.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- arity3.js:15:25
+
+Cannot instantiate `$TupleMap` because `$TupleMap` [1] expects the provided function type to take only one argument, the
+value type number [2], but function type [3] takes more than one argument. See
+https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+
+   arity3.js:15:25
+   15| function h(o: Columns): $TupleMap<Columns, typeof makeEditedColumn> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   arity3.js:19:22
+   19| type Columns = Array<number>;
+                            ^^^^^^ [2]
+   arity3.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------- identity.js:19:2
 
 Cannot cast object literal to `Foo` because:
@@ -644,4 +742,4 @@ References:
 
 
 
-Found 34 errors
+Found 38 errors

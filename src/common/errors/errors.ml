@@ -124,12 +124,14 @@ module Friendly = struct
   type t = ALoc.t t'
 
   type docs = {
+    tuplemap: string;
     objmap: string;
     objmapi: string;
   }
 
   let docs =
     {
+      tuplemap = "https://flow.org/en/docs/types/utilities/#toc-tuplemap";
       objmap = "https://flow.org/en/docs/types/utilities/#toc-objmap";
       objmapi = "https://flow.org/en/docs/types/utilities/#toc-objmapi";
     }

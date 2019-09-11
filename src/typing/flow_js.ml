@@ -5616,7 +5616,10 @@ struct
         | (AnyT _, MapTypeT (_, reason_op, _, tout)) ->
           rec_flow_t cx trace (AnyT.untyped reason_op, tout)
         | (DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout)) ->
-          let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
+          let f x =
+            let use_op = Frame (TupleMapFunCompatibility { value = reason_of_t x }, use_op) in
+            EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ())
+          in
           let arrtype =
             match arrtype with
             | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(Core_list.map ~f) ts)
