@@ -5675,6 +5675,10 @@ struct
               | OptionalT (_, t) -> (t, true)
               | _ -> (t, false)
             in
+            let use_op =
+              Frame
+                (ObjMapiFunCompatibility { key = reason_of_t key; value = reason_of_t t }, use_op)
+            in
             let t =
               EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [key; t]), mk_id ())
             in

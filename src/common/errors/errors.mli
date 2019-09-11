@@ -46,7 +46,10 @@ module Friendly : sig
     | Text of string
     | Code of string
 
-  type docs = { objmap: string }
+  type docs = {
+    objmap: string;
+    objmapi: string;
+  }
 
   val docs : docs
 

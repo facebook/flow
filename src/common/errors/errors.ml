@@ -123,9 +123,16 @@ module Friendly = struct
 
   type t = ALoc.t t'
 
-  type docs = { objmap: string }
+  type docs = {
+    objmap: string;
+    objmapi: string;
+  }
 
-  let docs = { objmap = "https://flow.org/en/docs/types/utilities/#toc-objmap" }
+  let docs =
+    {
+      objmap = "https://flow.org/en/docs/types/utilities/#toc-objmap";
+      objmapi = "https://flow.org/en/docs/types/utilities/#toc-objmapi";
+    }
 
   (* This function was introduced into the OCaml standard library in 4.04.0. Not
    * all of our tooling supports 4.04.0 yet, so we have a small

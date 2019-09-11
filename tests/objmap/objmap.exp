@@ -125,6 +125,153 @@ References:
        --------^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- arity2.js:8:10
+
+Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
+string [2] and the value type number [3], but function type [4] takes more than two arguments. See
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+
+   arity2.js:8:10
+    8|   return g(o);
+                ^^^^
+
+References:
+   arity2.js:3:26
+    3| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:27:18
+   27| type Columns = {[string]: number};
+                        ^^^^^^ [2]
+   arity2.js:27:27
+   27| type Columns = {[string]: number};
+                                 ^^^^^^ [3]
+   arity2.js:29:34
+                                        v
+   29| declare function makeEditedColumn(
+   30|   a: string,
+   31|   b: number,
+   32|   c: boolean,
+   33| ): number;
+       --------^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- arity2.js:12:10
+
+Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
+string [2] and the value type number [3], but function type [4] takes more than two arguments. See
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+
+   arity2.js:12:10
+   12|   return g<Columns>(o);
+                ^^^^^^^^^^^^^
+
+References:
+   arity2.js:3:26
+    3| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:27:18
+   27| type Columns = {[string]: number};
+                        ^^^^^^ [2]
+   arity2.js:27:27
+   27| type Columns = {[string]: number};
+                                 ^^^^^^ [3]
+   arity2.js:29:34
+                                        v
+   29| declare function makeEditedColumn(
+   30|   a: string,
+   31|   b: number,
+   32|   c: boolean,
+   33| ): number;
+       --------^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- arity2.js:16:10
+
+Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
+string [2] and the value type number [3], but function type [4] takes more than two arguments. See
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+
+   arity2.js:16:10
+   16|   return g(o);
+                ^^^^
+
+References:
+   arity2.js:3:26
+    3| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:27:18
+   27| type Columns = {[string]: number};
+                        ^^^^^^ [2]
+   arity2.js:27:27
+   27| type Columns = {[string]: number};
+                                 ^^^^^^ [3]
+   arity2.js:29:34
+                                        v
+   29| declare function makeEditedColumn(
+   30|   a: string,
+   31|   b: number,
+   32|   c: boolean,
+   33| ): number;
+       --------^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- arity2.js:20:10
+
+Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
+string [2] and the value type number [3], but function type [4] takes more than two arguments. See
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+
+   arity2.js:20:10
+   20|   return g<T>(o);
+                ^^^^^^^
+
+References:
+   arity2.js:3:26
+    3| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:27:18
+   27| type Columns = {[string]: number};
+                        ^^^^^^ [2]
+   arity2.js:27:27
+   27| type Columns = {[string]: number};
+                                 ^^^^^^ [3]
+   arity2.js:29:34
+                                        v
+   29| declare function makeEditedColumn(
+   30|   a: string,
+   31|   b: number,
+   32|   c: boolean,
+   33| ): number;
+       --------^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- arity2.js:23:25
+
+Cannot instantiate `$ObjMapi` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the
+key type string [2] and the value type number [3], but function type [4] takes more than two arguments. See
+https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation.
+
+   arity2.js:23:25
+   23| function h(o: Columns): $ObjMapi<Columns, typeof makeEditedColumn> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   arity2.js:27:18
+   27| type Columns = {[string]: number};
+                        ^^^^^^ [2]
+   arity2.js:27:27
+   27| type Columns = {[string]: number};
+                                 ^^^^^^ [3]
+   arity2.js:29:34
+                                        v
+   29| declare function makeEditedColumn(
+   30|   a: string,
+   31|   b: number,
+   32|   c: boolean,
+   33| ): number;
+       --------^ [4]
+
+
 Error ------------------------------------------------------------------------------------------------- identity.js:19:2
 
 Cannot cast object literal to `Foo` because:
@@ -497,4 +644,4 @@ References:
 
 
 
-Found 29 errors
+Found 34 errors

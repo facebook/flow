@@ -282,8 +282,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       | TupleElementCompatibility c ->
         TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
       | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
-      | ( ObjMapFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
-        | ReactGetConfig _ | UnifyFlip ) as use_op ->
+      | ( ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _
+        | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip ) as use_op ->
         use_op
     in
     (* Unification produces two errors. One for both sides. For example,
@@ -541,7 +541,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
             | Frame (ReactConfigCheck, use_op)
             | Frame (ReactGetConfig _, use_op)
             | Frame (UnifyFlip, use_op)
-            | Frame (ObjMapFunCompatibility _, use_op) ->
+            | Frame (ObjMapFunCompatibility _, use_op)
+            | Frame (ObjMapiFunCompatibility _, use_op) ->
               `Next use_op
           in
           match action with
@@ -682,6 +683,17 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
               ref def;
               text " takes more than one argument. See ";
               text Friendly.(docs.objmap);
+              text " for documentation" ]
+          | Frame (ObjMapiFunCompatibility { key; value }, _) ->
+            [ ref op;
+              text " expects the provided function type to take only two arguments, the key type ";
+              ref key;
+              text " and the value type ";
+              ref value;
+              text ", but ";
+              ref def;
+              text " takes more than two arguments. See ";
+              text Friendly.(docs.objmapi);
               text " for documentation" ]
           | _ -> [ref def; text " requires another argument from "; ref op]
         in
