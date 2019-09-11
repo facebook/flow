@@ -96,7 +96,10 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
   (* These functions work exactly as above, except for upper trust bounds
       propagating to lower variable bounds, and with publicity instead of taint. *)
   let set_new_upper_bound cx trace id ltrust utrust new_trust lbounds =
-    print_if_verbose cx trace [Printf.sprintf "Publicizing %d to %s" id (string_of_trust new_trust)];
+    print_if_verbose
+      cx
+      trace
+      [Printf.sprintf "Publicizing %d to %s" id (string_of_trust new_trust)];
     if subtype_trust ltrust utrust then (
       set_trust lbounds new_trust;
       true
@@ -195,11 +198,13 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
         print_if_verbose
           cx
           Trace.dummy_trace
-          [ Printf.sprintf
+          [
+            Printf.sprintf
               "Strengthening %d from %s to %s"
               id
               (string_of_trust trust)
-              (string_of_trust new_trust) ];
+              (string_of_trust new_trust);
+          ];
         set_trust bound new_trust;
         if
           not

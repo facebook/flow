@@ -63,9 +63,11 @@ with type t = Impl.t = struct
       | None -> null
     in
     obj
-      [ ("source", source);
+      [
+        ("source", source);
         ("start", position location.Loc.start);
-        ("end", position location.Loc._end) ]
+        ("end", position location.Loc._end);
+      ]
 
   let errors l =
     let error (location, e) =
@@ -80,8 +82,10 @@ with type t = Impl.t = struct
     let range offset_table location =
       Loc.(
         array
-          [ int (Offset_utils.offset offset_table location.start);
-            int (Offset_utils.offset offset_table location._end) ])
+          [
+            int (Offset_utils.offset offset_table location.start);
+            int (Offset_utils.offset offset_table location._end);
+          ])
     in
     let rec node _type location ?comments props =
       let locs =
@@ -135,9 +139,11 @@ with type t = Impl.t = struct
             ?comments
             "IfStatement"
             loc
-            [ ("test", expression test);
+            [
+              ("test", expression test);
               ("consequent", statement consequent);
-              ("alternate", option statement alternate) ]
+              ("alternate", option statement alternate);
+            ]
         | (loc, Labeled { Labeled.label; body }) ->
           node "LabeledStatement" loc [("label", identifier label); ("body", statement body)]
         | (loc, Break { Break.label; comments }) ->
@@ -161,9 +167,11 @@ with type t = Impl.t = struct
           node
             "TryStatement"
             loc
-            [ ("block", block block_);
+            [
+              ("block", block block_);
               ("handler", option catch handler);
-              ("finalizer", option block finalizer) ]
+              ("finalizer", option block finalizer);
+            ]
         | (loc, While { While.test; body }) ->
           node "WhileStatement" loc [("test", expression test); ("body", statement body)]
         | (loc, DoWhile { DoWhile.body; test; comments }) ->
@@ -180,10 +188,12 @@ with type t = Impl.t = struct
           node
             "ForStatement"
             loc
-            [ ("init", option init init_);
+            [
+              ("init", option init init_);
               ("test", option expression test);
               ("update", option expression update);
-              ("body", statement body) ]
+              ("body", statement body);
+            ]
         | (loc, ForIn { ForIn.left; right; body; each }) ->
           let left =
             match left with
@@ -193,10 +203,12 @@ with type t = Impl.t = struct
           node
             "ForInStatement"
             loc
-            [ ("left", left);
+            [
+              ("left", left);
               ("right", expression right);
               ("body", statement body);
-              ("each", bool each) ]
+              ("each", bool each);
+            ]
         | (loc, ForOf { ForOf.async; left; right; body }) ->
           let type_ =
             if async then
@@ -231,12 +243,14 @@ with type t = Impl.t = struct
           node
             "DeclareModule"
             loc
-            [ ("id", id);
+            [
+              ("id", id);
               ("body", block body);
               ( "kind",
                 match kind with
                 | DeclareModule.CommonJS _ -> string "CommonJS"
-                | DeclareModule.ES _ -> string "ES" ) ]
+                | DeclareModule.ES _ -> string "ES" );
+            ]
         | ( loc,
             DeclareExportDeclaration
               { DeclareExportDeclaration.specifiers; declaration; default; source } ) ->
@@ -259,14 +273,16 @@ with type t = Impl.t = struct
               node
                 "DeclareExportDeclaration"
                 loc
-                [ ( "default",
+                [
+                  ( "default",
                     bool
                       (match default with
                       | Some _ -> true
                       | None -> false) );
                   ("declaration", declaration);
                   ("specifiers", export_specifiers specifiers);
-                  ("source", option string_literal source) ]
+                  ("source", option string_literal source);
+                ]
           end
         | (loc, DeclareModuleExports annot) ->
           node "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
@@ -279,16 +295,20 @@ with type t = Impl.t = struct
               node
                 "ExportAllDeclaration"
                 loc
-                [ ("source", option string_literal source);
-                  ("exportKind", string (export_kind exportKind)) ]
+                [
+                  ("source", option string_literal source);
+                  ("exportKind", string (export_kind exportKind));
+                ]
             | _ ->
               node
                 "ExportNamedDeclaration"
                 loc
-                [ ("declaration", option statement declaration);
+                [
+                  ("declaration", option statement declaration);
                   ("specifiers", export_specifiers specifiers);
                   ("source", option string_literal source);
-                  ("exportKind", string (export_kind exportKind)) ]
+                  ("exportKind", string (export_kind exportKind));
+                ]
           end
         | ( loc,
             ExportDefaultDeclaration
@@ -304,8 +324,10 @@ with type t = Impl.t = struct
           node
             "ExportDefaultDeclaration"
             loc
-            [ ("declaration", declaration);
-              ("exportKind", string (export_kind Statement.ExportValue)) ]
+            [
+              ("declaration", declaration);
+              ("exportKind", string (export_kind Statement.ExportValue));
+            ]
         | (loc, ImportDeclaration { ImportDeclaration.specifiers; default; importKind; source }) ->
           let specifiers =
             match specifiers with
@@ -332,9 +354,11 @@ with type t = Impl.t = struct
           node
             "ImportDeclaration"
             loc
-            [ ("specifiers", array specifiers);
+            [
+              ("specifiers", array specifiers);
               ("source", string_literal source);
-              ("importKind", string import_kind) ])
+              ("importKind", string import_kind);
+            ])
     and expression =
       Expression.(
         function
@@ -380,7 +404,8 @@ with type t = Impl.t = struct
           node
             "ArrowFunctionExpression"
             loc
-            [ ("id", null);
+            [
+              ("id", null);
               ("params", function_params params);
               ("body", body);
               ("async", bool async);
@@ -388,7 +413,8 @@ with type t = Impl.t = struct
               ("predicate", option predicate predicate_);
               ("expression", bool expression);
               ("returnType", option type_annotation return);
-              ("typeParameters", option type_parameter_declaration tparams) ]
+              ("typeParameters", option type_parameter_declaration tparams);
+            ]
         | (loc, Sequence { Sequence.expressions }) ->
           node "SequenceExpression" loc [("expressions", array_of_list expression expressions)]
         | (loc, Unary { Unary.operator; argument; comments }) ->
@@ -421,16 +447,20 @@ with type t = Impl.t = struct
                 ?comments
                 "UnaryExpression"
                 loc
-                [ ("operator", string operator);
+                [
+                  ("operator", string operator);
                   ("prefix", bool true);
-                  ("argument", expression argument) ]))
+                  ("argument", expression argument);
+                ]))
         | (loc, Binary { Binary.left; operator; right }) ->
           node
             "BinaryExpression"
             loc
-            [ ("operator", string (Flow_ast_utils.string_of_binary_operator operator));
+            [
+              ("operator", string (Flow_ast_utils.string_of_binary_operator operator));
               ("left", expression left);
-              ("right", expression right) ]
+              ("right", expression right);
+            ]
         | (loc, TypeCast { TypeCast.expression = expr; annot }) ->
           node
             "TypeCastExpression"
@@ -455,9 +485,11 @@ with type t = Impl.t = struct
           node
             "UpdateExpression"
             loc
-            [ ("operator", string operator);
+            [
+              ("operator", string operator);
               ("argument", expression argument);
-              ("prefix", bool prefix) ]
+              ("prefix", bool prefix);
+            ]
         | (loc, Logical { Logical.left; operator; right }) ->
           let operator =
             match operator with
@@ -473,16 +505,20 @@ with type t = Impl.t = struct
           node
             "ConditionalExpression"
             loc
-            [ ("test", expression test);
+            [
+              ("test", expression test);
               ("consequent", expression consequent);
-              ("alternate", expression alternate) ]
+              ("alternate", expression alternate);
+            ]
         | (loc, New { New.callee; targs; arguments }) ->
           node
             "NewExpression"
             loc
-            [ ("callee", expression callee);
+            [
+              ("callee", expression callee);
               ("typeArguments", option type_parameter_instantiation_with_implicit targs);
-              ("arguments", array_of_list expression_or_spread arguments) ]
+              ("arguments", array_of_list expression_or_spread arguments);
+            ]
         | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
         | (loc, OptionalCall { OptionalCall.call; optional }) ->
           node
@@ -505,14 +541,18 @@ with type t = Impl.t = struct
           node
             "ComprehensionExpression"
             loc
-            [ ("blocks", array_of_list comprehension_block blocks);
-              ("filter", option expression filter) ]
+            [
+              ("blocks", array_of_list comprehension_block blocks);
+              ("filter", option expression filter);
+            ]
         | (loc, Generator { Generator.blocks; filter }) ->
           node
             "GeneratorExpression"
             loc
-            [ ("blocks", array_of_list comprehension_block blocks);
-              ("filter", option expression filter) ]
+            [
+              ("blocks", array_of_list comprehension_block blocks);
+              ("filter", option expression filter);
+            ]
         | (_loc, Identifier id) -> identifier id
         | (loc, Literal ({ Literal.value = Ast.Literal.BigInt _; _ } as lit)) ->
           bigint_literal (loc, lit)
@@ -528,8 +568,10 @@ with type t = Impl.t = struct
           node
             "CallExpression"
             loc
-            [ ("callee", node "Import" (Loc.btwn loc (fst arg)) []);
-              ("arguments", array_of_list expression [arg]) ])
+            [
+              ("callee", node "Import" (Loc.btwn loc (fst arg)) []);
+              ("arguments", array_of_list expression [arg]);
+            ])
     and function_declaration
         ( loc,
           {
@@ -557,10 +599,11 @@ with type t = Impl.t = struct
       node
         "FunctionDeclaration"
         loc
-        [ (* estree hasn't come around to the idea that function decls can have
+        [
+          (* estree hasn't come around to the idea that function decls can have
            optional ids, but acorn, babel, espree and esprima all have, so let's
            do it too. see https://github.com/estree/estree/issues/98 *)
-          ("id", option identifier id);
+            ("id", option identifier id);
           ("params", function_params params);
           ("body", block body);
           ("async", bool async);
@@ -568,7 +611,8 @@ with type t = Impl.t = struct
           ("predicate", option predicate predicate_);
           ("expression", bool false);
           ("returnType", option type_annotation return);
-          ("typeParameters", option type_parameter_declaration tparams) ]
+          ("typeParameters", option type_parameter_declaration tparams);
+        ]
     and function_expression
         ( loc,
           {
@@ -595,7 +639,8 @@ with type t = Impl.t = struct
       node
         "FunctionExpression"
         loc
-        [ ("id", option identifier id);
+        [
+          ("id", option identifier id);
           ("params", function_params params);
           ("body", block body);
           ("async", bool async);
@@ -603,7 +648,8 @@ with type t = Impl.t = struct
           ("predicate", option predicate predicate_);
           ("expression", bool false);
           ("returnType", option type_annotation return);
-          ("typeParameters", option type_parameter_declaration tparams) ]
+          ("typeParameters", option type_parameter_declaration tparams);
+        ]
     and identifier (loc, { Identifier.name; comments }) =
       node
         "Identifier"
@@ -616,9 +662,11 @@ with type t = Impl.t = struct
       node
         "Identifier"
         loc
-        [ ("name", string name);
+        [
+          ("name", string name);
           ("typeAnnotation", hint type_annotation annot);
-          ("optional", bool optional) ]
+          ("optional", bool optional);
+        ]
     and case (loc, { Statement.Switch.Case.test; consequent }) =
       node
         "SwitchCase"
@@ -639,20 +687,23 @@ with type t = Impl.t = struct
       node
         "DeclareVariable"
         loc
-        [ ( "id",
-            pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false } )
+        [
+          ( "id",
+            pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false } );
         ]
     and declare_function (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_ }) =
       let id_loc = Loc.btwn (fst id) (fst annot) in
       node
         "DeclareFunction"
         loc
-        [ ( "id",
+        [
+          ( "id",
             pattern_identifier
               id_loc
               { Pattern.Identifier.name = id; annot = Ast.Type.Available annot; optional = false }
           );
-          ("predicate", option predicate predicate_) ]
+          ("predicate", option predicate predicate_);
+        ]
     and declare_class
         (loc, { Statement.DeclareClass.id; tparams; body; extends; implements; mixins }) =
       (* TODO: extends shouldn't return an array *)
@@ -664,20 +715,24 @@ with type t = Impl.t = struct
       node
         "DeclareClass"
         loc
-        [ ("id", identifier id);
+        [
+          ("id", identifier id);
           ("typeParameters", option type_parameter_declaration tparams);
           ("body", object_type ~include_inexact:false body);
           ("extends", extends);
           ("implements", array_of_list class_implements implements);
-          ("mixins", array_of_list interface_extends mixins) ]
+          ("mixins", array_of_list interface_extends mixins);
+        ]
     and declare_interface (loc, { Statement.Interface.id; tparams; body; extends }) =
       node
         "DeclareInterface"
         loc
-        [ ("id", identifier id);
+        [
+          ("id", identifier id);
           ("typeParameters", option type_parameter_declaration tparams);
           ("body", object_type ~include_inexact:false body);
-          ("extends", array_of_list interface_extends extends) ]
+          ("extends", array_of_list interface_extends extends);
+        ]
     and export_kind = function
       | Statement.ExportType -> "type"
       | Statement.ExportValue -> "value"
@@ -696,16 +751,20 @@ with type t = Impl.t = struct
       node
         "DeclareTypeAlias"
         loc
-        [ ("id", identifier id);
+        [
+          ("id", identifier id);
           ("typeParameters", option type_parameter_declaration tparams);
-          ("right", _type right) ]
+          ("right", _type right);
+        ]
     and type_alias (loc, { Statement.TypeAlias.id; tparams; right }) =
       node
         "TypeAlias"
         loc
-        [ ("id", identifier id);
+        [
+          ("id", identifier id);
           ("typeParameters", option type_parameter_declaration tparams);
-          ("right", _type right) ]
+          ("right", _type right);
+        ]
     and opaque_type ~declare (loc, { Statement.OpaqueType.id; tparams; impltype; supertype }) =
       let name =
         if declare then
@@ -716,10 +775,12 @@ with type t = Impl.t = struct
       node
         name
         loc
-        [ ("id", identifier id);
+        [
+          ("id", identifier id);
           ("typeParameters", option type_parameter_declaration tparams);
           ("impltype", option _type impltype);
-          ("supertype", option _type supertype) ]
+          ("supertype", option _type supertype);
+        ]
     and class_declaration ast = class_helper "ClassDeclaration" ast
     and class_expression ast = class_helper "ClassExpression" ast
     and class_helper
@@ -732,16 +793,18 @@ with type t = Impl.t = struct
       node
         node_type
         loc
-        [ (* estree hasn't come around to the idea that class decls can have
+        [
+          (* estree hasn't come around to the idea that class decls can have
            optional ids, but acorn, babel, espree and esprima all have, so let's
            do it too. see https://github.com/estree/estree/issues/98 *)
-          ("id", option identifier id);
+            ("id", option identifier id);
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
           ("superClass", option expression super);
           ("superTypeParameters", option type_parameter_instantiation super_targs);
           ("implements", array_of_list class_implements implements);
-          ("decorators", array_of_list class_decorator classDecorators) ]
+          ("decorators", array_of_list class_decorator classDecorators);
+        ]
     and class_decorator (loc, { Class.Decorator.expression = expr }) =
       node "Decorator" loc [("expression", expression expr)]
     and class_implements (loc, { Class.Implements.id; targs }) =
@@ -777,22 +840,26 @@ with type t = Impl.t = struct
       node
         "MethodDefinition"
         loc
-        [ ("key", key);
+        [
+          ("key", key);
           ("value", function_expression value);
           ("kind", string kind);
           ("static", bool static);
           ("computed", bool computed);
-          ("decorators", array_of_list class_decorator decorators) ]
+          ("decorators", array_of_list class_decorator decorators);
+        ]
     and class_private_field
         (loc, { Class.PrivateField.key = (_, key); value; annot; static; variance = variance_ }) =
       node
         "ClassPrivateProperty"
         loc
-        [ ("key", identifier key);
+        [
+          ("key", identifier key);
           ("value", option expression value);
           ("typeAnnotation", hint type_annotation annot);
           ("static", bool static);
-          ("variance", option variance variance_) ]
+          ("variance", option variance variance_);
+        ]
     and class_property (loc, { Class.Property.key; value; annot; static; variance = variance_ }) =
       let (key, computed) =
         match key with
@@ -805,12 +872,14 @@ with type t = Impl.t = struct
       node
         "ClassProperty"
         loc
-        [ ("key", key);
+        [
+          ("key", key);
           ("value", option expression value);
           ("typeAnnotation", hint type_annotation annot);
           ("computed", bool computed);
           ("static", bool static);
-          ("variance", option variance variance_) ]
+          ("variance", option variance variance_);
+        ]
     and enum_declaration (loc, { Statement.EnumDeclaration.id; body }) =
       Statement.EnumDeclaration.(
         let enum_body =
@@ -819,17 +888,20 @@ with type t = Impl.t = struct
             node
               "EnumBooleanBody"
               loc
-              [ ( "members",
+              [
+                ( "members",
                   array_of_list
                     (fun (loc, { InitializedMember.id; init = (_, bool_val) }) ->
                       node "EnumBooleanMember" loc [("id", identifier id); ("init", bool bool_val)])
                     members );
-                ("explicitType", bool explicitType) ]
+                ("explicitType", bool explicitType);
+              ]
           | NumberBody { NumberBody.members; explicitType } ->
             node
               "EnumNumberBody"
               loc
-              [ ( "members",
+              [
+                ( "members",
                   array_of_list
                     (fun (loc, { InitializedMember.id; init }) ->
                       node
@@ -837,7 +909,8 @@ with type t = Impl.t = struct
                         loc
                         [("id", identifier id); ("init", number_literal init)])
                     members );
-                ("explicitType", bool explicitType) ]
+                ("explicitType", bool explicitType);
+              ]
           | StringBody { StringBody.members; explicitType } ->
             let members =
               match members with
@@ -863,21 +936,25 @@ with type t = Impl.t = struct
             node
               "EnumSymbolBody"
               loc
-              [ ( "members",
+              [
+                ( "members",
                   array_of_list
                     (fun (loc, { DefaultedMember.id }) ->
                       node "EnumDefaultedMember" loc [("id", identifier id)])
-                    members ) ]
+                    members );
+              ]
         in
         node "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)])
     and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends }) =
       node
         "InterfaceDeclaration"
         loc
-        [ ("id", identifier id);
+        [
+          ("id", identifier id);
           ("typeParameters", option type_parameter_declaration tparams);
           ("body", object_type ~include_inexact:false body);
-          ("extends", array_of_list interface_extends extends) ]
+          ("extends", array_of_list interface_extends extends);
+        ]
     and interface_extends (loc, { Type.Generic.id; targs }) =
       let id =
         match id with
@@ -895,15 +972,19 @@ with type t = Impl.t = struct
           node
             "ObjectPattern"
             loc
-            [ ("properties", array_of_list object_pattern_property properties);
-              ("typeAnnotation", hint type_annotation annot) ]
+            [
+              ("properties", array_of_list object_pattern_property properties);
+              ("typeAnnotation", hint type_annotation annot);
+            ]
         | (loc, Array { Array.elements; annot; comments }) ->
           node
             ?comments
             "ArrayPattern"
             loc
-            [ ("elements", array_of_list (option array_pattern_element) elements);
-              ("typeAnnotation", hint type_annotation annot) ]
+            [
+              ("elements", array_of_list (option array_pattern_element) elements);
+              ("typeAnnotation", hint type_annotation annot);
+            ]
         | (loc, Identifier pattern_id) -> pattern_identifier loc pattern_id
         | (_loc, Expression expr) -> expression expr)
     and function_param (loc, { Ast.Function.Param.argument; default }) =
@@ -953,12 +1034,14 @@ with type t = Impl.t = struct
             node
               "Property"
               loc
-              [ ("key", key);
+              [
+                ("key", key);
                 ("value", value);
                 ("kind", string kind);
                 ("method", bool method_);
                 ("shorthand", bool shorthand);
-                ("computed", bool computed) ])
+                ("computed", bool computed);
+              ])
         | SpreadProperty (loc, prop) ->
           SpreadProperty.(node "SpreadProperty" loc [("argument", expression prop.argument)]))
     and object_pattern_property =
@@ -981,12 +1064,14 @@ with type t = Impl.t = struct
           node
             "Property"
             loc
-            [ ("key", key);
+            [
+              ("key", key);
               ("value", value);
               ("kind", string "init");
               ("method", bool false);
               ("shorthand", bool shorthand);
-              ("computed", bool computed) ]
+              ("computed", bool computed);
+            ]
         | RestProperty (loc, { RestProperty.argument }) ->
           node "RestProperty" loc [("argument", pattern argument)])
     and expression_or_spread =
@@ -1028,8 +1113,10 @@ with type t = Impl.t = struct
       node
         "TemplateLiteral"
         loc
-        [ ("quasis", array_of_list template_element quasis);
-          ("expressions", array_of_list expression expressions) ]
+        [
+          ("quasis", array_of_list template_element quasis);
+          ("expressions", array_of_list expression expressions);
+        ]
     and template_element
         ( loc,
           {
@@ -1121,17 +1208,21 @@ with type t = Impl.t = struct
       node
         "FunctionTypeAnnotation"
         loc
-        [ ("params", array_of_list function_type_param params);
+        [
+          ("params", array_of_list function_type_param params);
           ("returnType", _type return);
           ("rest", option function_type_rest rest);
-          ("typeParameters", option type_parameter_declaration tparams) ]
+          ("typeParameters", option type_parameter_declaration tparams);
+        ]
     and function_type_param (loc, { Type.Function.Param.name; annot; optional }) =
       node
         "FunctionTypeParam"
         loc
-        [ ("name", option identifier name);
+        [
+          ("name", option identifier name);
           ("typeAnnotation", _type annot);
-          ("optional", bool optional) ]
+          ("optional", bool optional);
+        ]
     and function_type_rest (_loc, { Type.Function.RestParam.argument }) =
       (* TODO: add a node for the rest param itself, including the `...`,
          like we do with RestElement on normal functions. This should be
@@ -1165,11 +1256,13 @@ with type t = Impl.t = struct
             properties
         in
         let fields =
-          [ ("exact", bool exact);
+          [
+            ("exact", bool exact);
             ("properties", array (List.rev props));
             ("indexers", array (List.rev ixs));
             ("callProperties", array (List.rev calls));
-            ("internalSlots", array (List.rev slots)) ]
+            ("internalSlots", array (List.rev slots));
+          ]
         in
         let fields =
           if include_inexact then
@@ -1207,14 +1300,16 @@ with type t = Impl.t = struct
       node
         "ObjectTypeProperty"
         loc
-        [ ("key", key);
+        [
+          ("key", key);
           ("value", value);
           ("method", bool _method);
           ("optional", bool optional);
           ("static", bool static);
           ("proto", bool proto);
           ("variance", option variance variance_);
-          ("kind", string kind) ]
+          ("kind", string kind);
+        ]
     and object_type_spread_property (loc, { Type.Object.SpreadProperty.argument }) =
       node "ObjectTypeSpreadProperty" loc [("argument", _type argument)]
     and object_type_indexer
@@ -1222,11 +1317,13 @@ with type t = Impl.t = struct
       node
         "ObjectTypeIndexer"
         loc
-        [ ("id", option identifier id);
+        [
+          ("id", option identifier id);
           ("key", _type key);
           ("value", _type value);
           ("static", bool static);
-          ("variance", option variance variance_) ]
+          ("variance", option variance variance_);
+        ]
     and object_type_call_property (loc, { Type.Object.CallProperty.value; static }) =
       node "ObjectTypeCallProperty" loc [("value", function_type value); ("static", bool static)]
     and object_type_internal_slot
@@ -1234,17 +1331,21 @@ with type t = Impl.t = struct
       node
         "ObjectTypeInternalSlot"
         loc
-        [ ("id", identifier id);
+        [
+          ("id", identifier id);
           ("optional", bool optional);
           ("static", bool static);
           ("method", bool _method);
-          ("value", _type value) ]
+          ("value", _type value);
+        ]
     and interface_type (loc, { Type.Interface.extends; body }) =
       node
         "InterfaceTypeAnnotation"
         loc
-        [ ("extends", array_of_list interface_extends extends);
-          ("body", object_type ~include_inexact:false body) ]
+        [
+          ("extends", array_of_list interface_extends extends);
+          ("body", object_type ~include_inexact:false body);
+        ]
     and array_type loc t = node "ArrayTypeAnnotation" loc [("elementType", _type t)]
     and generic_type_qualified_identifier (loc, { Type.Generic.Identifier.id; qualification }) =
       let qualification =
@@ -1279,13 +1380,15 @@ with type t = Impl.t = struct
       node
         "BooleanLiteralTypeAnnotation"
         loc
-        [ ("value", bool value);
+        [
+          ("value", bool value);
           ( "raw",
             string
               ( if value then
                 "true"
               else
-                "false" ) ) ]
+                "false" ) );
+        ]
     and exists_type loc = node "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]
     and type_parameter_declaration (loc, params) =
@@ -1301,12 +1404,14 @@ with type t = Impl.t = struct
       node
         "TypeParameter"
         loc
-        [ (* we track the location of the name, but don't expose it here for
+        [
+          (* we track the location of the name, but don't expose it here for
            backwards-compatibility. TODO: change this? *)
-          ("name", string name);
+            ("name", string name);
           ("bound", hint type_annotation bound);
           ("variance", option variance tp_var);
-          ("default", option _type default) ]
+          ("default", option _type default);
+        ]
     and type_parameter_instantiation (loc, targs) =
       node "TypeParameterInstantiation" loc [("params", array_of_list _type targs)]
     and type_parameter_instantiation_with_implicit (loc, targs) =
@@ -1318,9 +1423,11 @@ with type t = Impl.t = struct
       node
         "JSXElement"
         loc
-        [ ("openingElement", jsx_opening openingElement);
+        [
+          ("openingElement", jsx_opening openingElement);
           ("closingElement", option jsx_closing closingElement);
-          ("children", array_of_list jsx_child children) ]
+          ("children", array_of_list jsx_child children);
+        ]
     and jsx_fragment
         ( loc,
           { JSX.frag_openingElement; frag_closingElement; frag_children = (_loc, frag_children) }
@@ -1328,16 +1435,20 @@ with type t = Impl.t = struct
       node
         "JSXFragment"
         loc
-        [ ("openingFragment", jsx_opening_fragment frag_openingElement);
+        [
+          ("openingFragment", jsx_opening_fragment frag_openingElement);
           ("children", array_of_list jsx_child frag_children);
-          ("closingFragment", jsx_closing_fragment frag_closingElement) ]
+          ("closingFragment", jsx_closing_fragment frag_closingElement);
+        ]
     and jsx_opening (loc, { JSX.Opening.name; attributes; selfClosing }) =
       node
         "JSXOpeningElement"
         loc
-        [ ("name", jsx_name name);
+        [
+          ("name", jsx_name name);
           ("attributes", array_of_list jsx_opening_attribute attributes);
-          ("selfClosing", bool selfClosing) ]
+          ("selfClosing", bool selfClosing);
+        ]
     and jsx_opening_fragment loc = node "JSXOpeningFragment" loc []
     and jsx_opening_attribute =
       JSX.Opening.(
@@ -1433,7 +1544,8 @@ with type t = Impl.t = struct
       node
         "ImportSpecifier"
         span_loc
-        [ ("imported", identifier remote_id);
+        [
+          ("imported", identifier remote_id);
           ("local", identifier local_id);
           ( "importKind",
             match kind with
@@ -1441,7 +1553,8 @@ with type t = Impl.t = struct
             | Some Statement.ImportDeclaration.ImportTypeof -> string "typeof"
             | Some Statement.ImportDeclaration.ImportValue
             | None ->
-              null ) ]
+              null );
+        ]
     and comment_list comments = array_of_list comment comments
     and comment (loc, c) =
       Comment.(
@@ -1460,9 +1573,11 @@ with type t = Impl.t = struct
         in
         node _type loc value)
     and call_node_properties { Expression.Call.callee; targs; arguments } =
-      [ ("callee", expression callee);
+      [
+        ("callee", expression callee);
         ("typeArguments", option type_parameter_instantiation_with_implicit targs);
-        ("arguments", array_of_list expression_or_spread arguments) ]
+        ("arguments", array_of_list expression_or_spread arguments);
+      ]
     and member_node_properties { Expression.Member._object; property } =
       let (property, computed) =
         match property with

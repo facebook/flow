@@ -61,8 +61,10 @@ let print_json result ~stdin_file ~pretty ~strip_root =
     ServerProt.Response.(
       let json_of_edit (loc, text) =
         JSON_Object
-          [ ("oldRange", json_of_loc_with_offset ~stdin_file ~strip_root loc);
-            ("newText", JSON_String text) ]
+          [
+            ("oldRange", json_of_loc_with_offset ~stdin_file ~strip_root loc);
+            ("newText", JSON_String text);
+          ]
       in
       let json =
         match result with
@@ -70,8 +72,10 @@ let print_json result ~stdin_file ~pretty ~strip_root =
         | None -> JSON_Object [("kind", JSON_String "no-refactor-performed")]
         | Some { refactor_edits } ->
           JSON_Object
-            [ ("kind", JSON_String "refactor-performed");
-              ("edits", JSON_Array (Core_list.map ~f:json_of_edit refactor_edits)) ]
+            [
+              ("kind", JSON_String "refactor-performed");
+              ("edits", JSON_Array (Core_list.map ~f:json_of_edit refactor_edits));
+            ]
       in
       print_json_endline ~pretty json))
 

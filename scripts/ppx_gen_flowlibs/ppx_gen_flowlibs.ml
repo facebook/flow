@@ -50,8 +50,10 @@ let () =
   let flowlib_dir_ref = ref "" in
   let prelude_dir_ref = ref "" in
   let args =
-    [ ("-flowlib", Arg.Set_string flowlib_dir_ref, "Path to flowlib directory");
-      ("-prelude", Arg.Set_string prelude_dir_ref, "Path to prelude directory") ]
+    [
+      ("-flowlib", Arg.Set_string flowlib_dir_ref, "Path to flowlib directory");
+      ("-prelude", Arg.Set_string prelude_dir_ref, "Path to prelude directory");
+    ]
   in
   Driver.register ~name:"ppx_gen_flowlibs" ~args ocaml_version (fun _config _cookies ->
       let (flowlib_contents, prelude_contents) =

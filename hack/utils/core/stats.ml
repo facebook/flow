@@ -35,9 +35,10 @@ let update_max_heap_size x = stats.max_heap_size <- max stats.max_heap_size x
 
 let to_json stats =
   Hh_json.JSON_Object
-    [ ("init_parsing_heap_size", Hh_json.int_ stats.init_parsing_heap_size);
+    [
+      ("init_parsing_heap_size", Hh_json.int_ stats.init_parsing_heap_size);
       ("init_shared_heap_size", Hh_json.int_ stats.init_heap_size);
       ("max_shared_heap_size", Hh_json.int_ stats.max_heap_size);
       ("master_heap_words", Hh_json.int_ stats.gc_stat.Gc.heap_words);
-      ("master_top_heap_words", Hh_json.int_ stats.gc_stat.Gc.top_heap_words)
+      ("master_top_heap_words", Hh_json.int_ stats.gc_stat.Gc.top_heap_words);
     ]

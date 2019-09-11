@@ -1297,11 +1297,13 @@ let handle_persistent_document_highlight
   let extra_data =
     Some
       (Hh_json.JSON_Object
-         [ ( "result",
+         [
+           ( "result",
              Hh_json.JSON_String
                (match result with
                | Ok _ -> "SUCCESS"
-               | _ -> "FAILURE") ) ])
+               | _ -> "FAILURE") );
+         ])
   in
   let metadata = with_data ~extra_data metadata in
   match result with

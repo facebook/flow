@@ -33,9 +33,11 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
      * wait_and_pop_parallelizable_workload thread throw Lwt.Canceled *)
     let%lwt workload =
       Lwt.pick
-        [ ServerMonitorListenerState.wait_and_pop_parallelizable_workload ();
+        [
+          ServerMonitorListenerState.wait_and_pop_parallelizable_workload ();
           (let%lwt () = wait_for_cancel in
-           raise Lwt.Canceled) ]
+           raise Lwt.Canceled);
+        ]
     in
     (* We have a workload! Let's run it! *)
     Hh_logger.info "Running a parallel workload";

@@ -381,11 +381,15 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       in
       assert (expressions <> []);
       let directives =
-        [ JSON_Object
+        [
+          JSON_Object
             ( extra_kv
-            @ [ ("fields", J.strlist ["name"]);
+            @ [
+                ("fields", J.strlist ["name"]);
                 (* Watchman doesn't allow an empty allof expression. But expressions is never empty *)
-                ("expression", J.pred "allof" expressions) ] ) ]
+                  ("expression", J.pred "allof" expressions);
+              ] );
+        ]
       in
       let request = JSON_Array (header @ directives) in
       request)
@@ -395,19 +399,25 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
 
   let get_changes_since_mergebase_query env =
     let extra_kv =
-      [ ( "since",
+      [
+        ( "since",
           Hh_json.JSON_Object
-            [ ( "scm",
+            [
+              ( "scm",
                 Hh_json.JSON_Object
-                  [("mergebase-with", Hh_json.JSON_String "master")] ) ] ) ]
+                  [("mergebase-with", Hh_json.JSON_String "master")] );
+            ] );
+      ]
     in
     request_json ~extra_kv Query env
 
   let since_query env =
     request_json
       ~extra_kv:
-        [ ("since", Hh_json.JSON_String env.clockspec);
-          ("empty_on_fresh_instance", Hh_json.JSON_Bool true) ]
+        [
+          ("since", Hh_json.JSON_String env.clockspec);
+          ("empty_on_fresh_instance", Hh_json.JSON_Bool true);
+        ]
       Query
       env
 
@@ -423,7 +433,8 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
       | Scm_aware ->
         Hh_logger.log "Making Scm_aware subscription";
         let scm =
-          Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")]
+          Hh_json.JSON_Object
+            [("mergebase-with", Hh_json.JSON_String "master")]
         in
         let since =
           Hh_json.JSON_Object [("scm", scm); ("drop", J.strlist ["hg.update"])]
@@ -444,9 +455,13 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     Hh_json.(
       JSON_Array
         ( [JSON_String "version"]
-        @ [ JSON_Object
-              [ ("optional", J.strlist optional);
-                ("required", J.strlist required) ] ] ))
+        @ [
+            JSON_Object
+              [
+                ("optional", J.strlist optional);
+                ("required", J.strlist required);
+              ];
+          ] ))
 
   (** We filter all responses from get_changes through this. This is to detect
    * Watchman server crashes.
@@ -516,14 +531,18 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     let query =
       Hh_json.(
         JSON_Array
-          [ JSON_String "query";
+          [
+            JSON_String "query";
             JSON_String watch_root;
             JSON_Object
-              [ ("since", JSON_String clockspec);
+              [
+                ("since", JSON_String clockspec);
                 ("empty_on_fresh_instance", JSON_Bool true);
                 ( "expression",
                   JSON_Array
-                    [JSON_String "name"; JSON_String hard_to_match_name] ) ] ])
+                    [JSON_String "name"; JSON_String hard_to_match_name] );
+              ];
+          ])
     in
     Watchman_process.request ~debug_logging ~conn query
     >>= fun response ->
@@ -952,8 +971,9 @@ module Functor (Watchman_process : Watchman_sig.WATCHMAN_PROCESS) :
     Hh_json.(
       let directive =
         JSON_Object
-          [ (* Watchman expects timeout milliseconds. *)
-            ("sync_timeout", JSON_Number (string_of_int @@ (timeout * 1000)))
+          [
+            (* Watchman expects timeout milliseconds. *)
+              ("sync_timeout", JSON_Number (string_of_int @@ (timeout * 1000)));
           ]
       in
       JSON_Array

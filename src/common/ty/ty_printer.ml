@@ -126,11 +126,13 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       Option.value_map ~f:(fun cjs -> (cjs_name, cjs) :: exports) ~default:exports cjs_export
     in
     fuse
-      [ Atom "module";
+      [
+        Atom "module";
         name;
         Atom ":";
         space;
-        list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ",") (counted_map (export ~depth) exports) ]
+        list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ",") (counted_map (export ~depth) exports);
+      ]
   and type_var (RVar i) = Atom (varname i)
   and type_generic ~depth g =
     let ({ name; _ }, _, params) = g in
@@ -149,11 +151,13 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       | _ -> "implicit"
     in
     fuse
-      [ Atom "any";
+      [
+        Atom "any";
         ( if depth = 1 && with_comments then
           fuse [pretty_space; Atom kind |> wrap_in_parens]
         else
-          Empty ) ]
+          Empty );
+      ]
   and type_alias { ta_name = { name; _ }; ta_tparams; ta_type } =
     fuse
       ( [Atom "type"; space; identifier name; option (type_parameter ~depth:0) ta_tparams]
@@ -174,31 +178,38 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     let params =
       match fun_rest_param with
       | Some (name, t) ->
-        params @ [fuse [Atom "..."; type_function_param ~depth (name, t, { prm_optional = false })]]
+        params
+        @ [fuse [Atom "..."; type_function_param ~depth (name, t, { prm_optional = false })]]
       | None -> params
     in
     fuse
-      [ option (type_parameter ~depth) fun_type_params;
+      [
+        option (type_parameter ~depth) fun_type_params;
         list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params;
         sep;
         pretty_space;
-        type_ ~depth fun_return ]
+        type_ ~depth fun_return;
+      ]
   and type_function_param ~depth (name, annot, { prm_optional }) =
     fuse
-      [ begin
+      [
+        begin
           match name with
           | Some id ->
             fuse
-              [ identifier id;
+              [
+                identifier id;
                 ( if prm_optional then
                   Atom "?"
                 else
                   Empty );
                 Atom ":";
-                pretty_space ]
+                pretty_space;
+              ]
           | None -> Empty
         end;
-        type_ ~depth annot ]
+        type_ ~depth annot;
+      ]
   and type_object_property =
     let to_key x =
       if property_key_quotes_needed x then
@@ -215,7 +226,8 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
             match named_prop with
             | Field (t, { fld_polarity; fld_optional }) ->
               fuse
-                [ variance_ fld_polarity;
+                [
+                  variance_ fld_polarity;
                   to_key key;
                   ( if fld_optional then
                     Atom "?"
@@ -223,11 +235,13 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
                     Empty );
                   Atom ":";
                   pretty_space;
-                  type_ ~depth t ]
+                  type_ ~depth t;
+                ]
             | Method func -> fuse [to_key key; type_function ~depth ~sep:(Atom ":") func]
             | Get t ->
               group
-                [ Atom "get";
+                [
+                  Atom "get";
                   space;
                   to_key key;
                   Atom "(";
@@ -235,20 +249,24 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
                   Atom ")";
                   Atom ":";
                   pretty_space;
-                  type_ ~depth t ]
+                  type_ ~depth t;
+                ]
             | Set t ->
               group
-                [ Atom "set";
+                [
+                  Atom "set";
                   space;
                   to_key key;
                   wrap_and_indent (Atom "(", Atom ")") [type_ ~depth t];
                   Atom ":";
                   pretty_space;
-                  type_ ~depth Void ]
+                  type_ ~depth Void;
+                ]
           end
         | IndexProp { dict_polarity; dict_name; dict_key; dict_value } ->
           fuse
-            [ variance_ dict_polarity;
+            [
+              variance_ dict_polarity;
               Atom "[";
               begin
                 match dict_name with
@@ -259,19 +277,22 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
               Atom "]";
               Atom ":";
               pretty_space;
-              type_ ~depth dict_value ]
+              type_ ~depth dict_value;
+            ]
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
         | SpreadProp t -> fuse [Atom "..."; type_ ~depth t])
   and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
     fuse
-      [ Atom
+      [
+        Atom
           ( if arr_readonly then
             "$ReadOnlyArray"
           else
             "Array" );
         Atom "<";
         type_ ~depth arr_elt_t;
-        Atom ">" ]
+        Atom ">";
+      ]
   and type_object ~depth ?(sep = Atom ",") { obj_exact; obj_props; _ } =
     let s_exact =
       if obj_exact then
@@ -337,14 +358,16 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       (counted_map (type_param ~depth) params)
   and type_param ~depth { tp_name; tp_bound; tp_polarity; tp_default } =
     fuse
-      [ variance_ tp_polarity;
+      [
+        variance_ tp_polarity;
         Atom tp_name;
         option (type_annotation ~depth) tp_bound;
         begin
           match tp_default with
           | Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~depth t]
           | None -> Empty
-        end ]
+        end;
+      ]
   and type_annotation ~depth t = fuse [Atom ":"; pretty_space; type_ ~depth t]
   and variance_ = function
     | Positive -> Atom "+"

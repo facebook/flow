@@ -37,12 +37,18 @@ let make ~options =
   in
   (* Include any file with this basename *)
   let basenames = "package.json" :: List.map Filename.basename absolute_paths in
-  [ J.strlist ["type"; "f"];
+  [
+    J.strlist ["type"; "f"];
     (* Watch for files *)
-    J.pred "anyof" @@ [J.assoc_strlist "suffix" suffixes; J.assoc_strlist "name" basenames];
+      J.pred "anyof" @@ [J.assoc_strlist "suffix" suffixes; J.assoc_strlist "name" basenames];
     J.pred "not"
-    @@ [ (* Ignore changes in source control dirs *)
-         J.pred "anyof"
-         @@ [ J.strlist ["dirname"; ".hg"];
-              J.strlist ["dirname"; ".git"];
-              J.strlist ["dirname"; ".svn"] ] ] ]
+    @@ [
+         (* Ignore changes in source control dirs *)
+           J.pred "anyof"
+           @@ [
+                J.strlist ["dirname"; ".hg"];
+                J.strlist ["dirname"; ".git"];
+                J.strlist ["dirname"; ".svn"];
+              ];
+       ];
+  ]

@@ -62,11 +62,13 @@ let print_json result ~stdin_file ~pretty ~strip_root =
       | None -> JSON_Object [("kind", JSON_String "no-symbol-found")]
       | Some (name, locs) ->
         JSON_Object
-          [ ("kind", JSON_String "symbol-found");
+          [
+            ("kind", JSON_String "symbol-found");
             ("name", JSON_String name);
             ( "locs",
               JSON_Array (Core_list.map ~f:(json_of_loc_with_offset ~stdin_file ~strip_root) locs)
-            ) ]
+            );
+          ]
     in
     print_json_endline ~pretty json)
 

@@ -219,10 +219,12 @@ let lazy_flags prev =
     |> flag
          "--lazy-mode"
          (enum
-            [ ("fs", Options.LAZY_MODE_FILESYSTEM);
+            [
+              ("fs", Options.LAZY_MODE_FILESYSTEM);
               ("ide", Options.LAZY_MODE_IDE);
               ("watchman", Options.LAZY_MODE_WATCHMAN);
-              ("none", Options.NON_LAZY_MODE) ])
+              ("none", Options.NON_LAZY_MODE);
+            ])
          ~doc:
            ( "Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to "
            ^ "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)"
@@ -422,10 +424,12 @@ let on_mismatch_flag prev =
          (required
             ~default:Choose_newest
             (enum
-               [ ("choose-newest", Choose_newest);
+               [
+                 ("choose-newest", Choose_newest);
                  ("stop-server", Stop_server);
                  ("restart-client", Restart_client);
-                 ("error-client", Error_client) ]))
+                 ("error-client", Error_client);
+               ]))
          ~doc:
            "What to do when the client and server are different versions (choose-newest, stop-server, restart-client, error-client) (default: choose-newest)")
 
@@ -971,9 +975,11 @@ let options_flags =
       |> flag
            "--saved-state-fetcher"
            (enum
-              [ ("none", Options.Dummy_fetcher);
+              [
+                ("none", Options.Dummy_fetcher);
                 ("local", Options.Local_fetcher);
-                ("fb", Options.Fb_fetcher) ])
+                ("fb", Options.Fb_fetcher);
+              ])
            ~doc:"Which saved state fetcher Flow should use (none, local) (default: none)"
       |> flag
            "--saved-state-force-recheck"
@@ -1002,9 +1008,11 @@ let options_flags =
            "--trust-mode"
            (optional
               (enum
-                 [ ("check", Options.CheckTrust);
+                 [
+                   ("check", Options.CheckTrust);
                    ("silent", Options.SilentTrust);
-                   ("none", Options.NoTrust) ]))
+                   ("none", Options.NoTrust);
+                 ]))
            ~doc:"")
 
 let flowconfig_name_flag prev =
@@ -1028,9 +1036,11 @@ let file_watcher_flag prev =
     |> flag
          "--file-watcher"
          (enum
-            [ ("none", Options.NoFileWatcher);
+            [
+              ("none", Options.NoFileWatcher);
               ("dfind", Options.DFind);
-              ("watchman", Options.Watchman) ])
+              ("watchman", Options.Watchman);
+            ])
          ~doc:
            ( "Which file watcher Flow should use (none, dfind, watchman). "
            ^ "Flow will ignore file system events if this is set to none. (default: dfind)" )

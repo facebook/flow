@@ -27,7 +27,9 @@ let run_mapper source =
 
 let tests =
   "polymorphic ast mapper"
-  >::: [ ( "simple"
+  >::: [
+         ( "simple"
          >:: fun _ ->
          let source = "function foo() { (5 * 3); 4; (6 + 4); }" in
-         run_mapper source ) ]
+         run_mapper source );
+       ]

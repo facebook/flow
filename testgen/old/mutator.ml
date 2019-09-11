@@ -288,9 +288,11 @@ let mk_obj_mutation_funcdecl_code (fname : Ast.Identifier.t) (prop_name : string
   let param_name = Utils.mk_var () in
   let param =
     P.Identifier.
-      [ ( Loc.none,
+      [
+        ( Loc.none,
           P.Identifier
-            { name = (Loc.none, param_name); typeAnnotation = type_annot; optional = false } ) ]
+            { name = (Loc.none, param_name); typeAnnotation = type_annot; optional = false } );
+      ]
   in
   let prop_read =
     if FRandom.rbool () then

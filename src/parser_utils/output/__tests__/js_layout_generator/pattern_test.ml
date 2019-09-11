@@ -14,7 +14,8 @@ module P = Ast_builder.Patterns
 module L = Layout_builder
 
 let tests =
-  [ ( "let_simple_assign"
+  [
+    ( "let_simple_assign"
     >:: fun ctxt ->
     let mk_layout a =
       Js_layout_generator.statement
@@ -26,14 +27,17 @@ let tests =
       L.(
         loc
           (fused
-             [ loc
+             [
+               loc
                  (fused
-                    [ atom "let";
+                    [
+                      atom "let";
                       space;
                       loc
-                        (fused [loc (id "a"); pretty_space; atom "="; pretty_space; loc (id "a")])
+                        (fused [loc (id "a"); pretty_space; atom "="; pretty_space; loc (id "a")]);
                     ]);
-               atom ";" ]))
+               atom ";";
+             ]))
       layout;
     assert_output ~ctxt "let a=a;" layout;
     assert_output ~ctxt ~pretty:true "let a = a;" layout;
@@ -54,23 +58,31 @@ let tests =
       L.(
         loc
           (fused
-             [ loc
+             [
+               loc
                  (fused
-                    [ atom "let";
+                    [
+                      atom "let";
                       pretty_space;
                       loc
                         (fused
-                           [ loc
+                           [
+                             loc
                                (group
-                                  [ atom "{";
+                                  [
+                                    atom "{";
                                     indent (fused [softline; loc (id "a")]);
                                     softline;
-                                    atom "}" ]);
+                                    atom "}";
+                                  ]);
                              pretty_space;
                              atom "=";
                              pretty_space;
-                             loc (id "a") ]) ]);
-               atom ";" ]))
+                             loc (id "a");
+                           ]);
+                    ]);
+               atom ";";
+             ]))
       layout;
     assert_output ~ctxt "let{a}=a;" layout;
     assert_output ~ctxt ~pretty:true "let {a} = a;" layout;
@@ -125,9 +137,11 @@ let tests =
     let mk_layout a =
       Js_layout_generator.statement
         (S.let_declaration
-           [ S.variable_declarator_generic
+           [
+             S.variable_declarator_generic
                (P.array [Some (P.identifier a)])
-               (Some (E.identifier "a")) ])
+               (Some (E.identifier "a"));
+           ])
     in
     let layout = mk_layout "a" in
     assert_layout
@@ -135,23 +149,31 @@ let tests =
       L.(
         loc
           (fused
-             [ loc
+             [
+               loc
                  (fused
-                    [ atom "let";
+                    [
+                      atom "let";
                       pretty_space;
                       loc
                         (fused
-                           [ loc
+                           [
+                             loc
                                (group
-                                  [ atom "[";
+                                  [
+                                    atom "[";
                                     indent (fused [softline; loc (loc (id "a"))]);
                                     softline;
-                                    atom "]" ]);
+                                    atom "]";
+                                  ]);
                              pretty_space;
                              atom "=";
                              pretty_space;
-                             loc (id "a") ]) ]);
-               atom ";" ]))
+                             loc (id "a");
+                           ]);
+                    ]);
+               atom ";";
+             ]))
       layout;
     assert_output ~ctxt "let[a]=a;" layout;
     assert_output ~ctxt ~pretty:true "let [a] = a;" layout;
@@ -186,4 +208,5 @@ let tests =
     assert_statement_string
       ~ctxt
       ~pretty:true
-      ("let [\n  a,\n  ...b" ^ String.make 80 'c' ^ "\n] = a;") ) ]
+      ("let [\n  a,\n  ...b" ^ String.make 80 'c' ^ "\n] = a;") );
+  ]

@@ -62,18 +62,21 @@ let assert_satisfies ~ctxt ?include_prereleases range version expected =
 
 let tests =
   "range"
-  >::: [ ( "comparators_of_range"
+  >::: [
+         ( "comparators_of_range"
          >:: fun ctxt ->
          Semver_range.(
            let cases =
-             [ ([Caret v1], [ge v1; lt v2]);
+             [
+               ([Caret v1], [ge v1; lt v2]);
                ([Caret v1_2_0], [ge v1_2_0; lt v2]);
                ([Caret v1_2_3], [ge v1_2_3; lt v2]);
                (* when major = 0, minor acts like the major version *)
-               ([Caret v0_1_0], [ge v0_1_0; lt v0_2_0]);
+                 ([Caret v0_1_0], [ge v0_1_0; lt v0_2_0]);
                ([Caret v0_1_2], [ge v0_1_2; lt v0_2_0]);
                (* when major = 0 and minor = 0, patch acts like the major version *)
-               ([Caret v0_0_1], [ge v0_0_1; lt v0_0_2]) ]
+                 ([Caret v0_0_1], [ge v0_0_1; lt v0_0_2]);
+             ]
            in
            List.iter
              (fun (input, expected) ->
@@ -89,14 +92,15 @@ let tests =
          >:: fun ctxt ->
          Semver_range.(
            let cases =
-             [ ([Caret v1], v1, true);
+             [
+               ([Caret v1], v1, true);
                ([Caret v1], v2, false);
                ([Comparator (ge v1_2_3_alpha_3)], v1_2_3_alpha_7, true);
                ([Comparator (ge v1_2_3_alpha_3)], v1_2_4, true);
                (* only range has prerelease *)
-               ([Comparator (ge v1_2_3_alpha_3)], v3_4_5_alpha_9, false);
+                 ([Comparator (ge v1_2_3_alpha_3)], v3_4_5_alpha_9, false);
                (* prereleases from diff versions *)
-               ([Caret v1_2_3_alpha_7], v1_2_3_alpha_3, false);
+                 ([Caret v1_2_3_alpha_7], v1_2_3_alpha_3, false);
                ([Caret v1_2_3_alpha_7], v1_2_3_alpha_7, true);
                ([Caret v1_2_3_alpha_7], v1_2_3, true);
                ([Caret v1_2_3_alpha_7], v1_2_4, true);
@@ -104,7 +108,8 @@ let tests =
                ([Caret v0_1_0], v0_1_0, true);
                ([Caret v0_1_0], v0_1_2, true);
                ([Caret v0_1_0], v0_2_0_alpha_2, false);
-               ([Caret v0_1_0], v0_2_0, false) ]
+               ([Caret v0_1_0], v0_2_0, false);
+             ]
            in
            List.iter
              (fun (range, version, expected) -> assert_satisfies ~ctxt range version expected)
@@ -115,18 +120,22 @@ let tests =
          >:: fun ctxt ->
          Semver_range.(
            let cases =
-             [ ([Comparator (ge v1_2_3)], v3_4_5_alpha_9, true);
+             [
+               ([Comparator (ge v1_2_3)], v3_4_5_alpha_9, true);
                (* only version has prerelease *)
-               ([Comparator (ge v1_2_3_alpha_3)], v1_2_4, true);
+                 ([Comparator (ge v1_2_3_alpha_3)], v1_2_4, true);
                (* only range has prerelease *)
-               ([Comparator (ge v1_2_3_alpha_3)], v3_4_5_alpha_9, true)
-               (* prereleases from diff versions *)
-              ]
+                 ([Comparator (ge v1_2_3_alpha_3)], v3_4_5_alpha_9, true);
+                 (* prereleases from diff versions *)
+               
+             ]
            in
            let include_prereleases = true in
            List.iter
              (fun (range, version, expected) ->
                assert_satisfies ~ctxt ~include_prereleases range version expected)
              cases;
-           assert_bool "done" true) )
-         (* fixes ounit error reporting *) ]
+           assert_bool "done" true) );
+           (* fixes ounit error reporting *)
+         
+       ]

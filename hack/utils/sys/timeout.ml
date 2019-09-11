@@ -332,7 +332,7 @@ module Select_timeout = struct
         | _ ->
           let len = len + n - 1 in
           build_result (Bytes.create len) len (result :: accu)
-      (* New line not found in the buffer *)
+        (* New line not found in the buffer *)
       ) else
         let ofs = Bytes.create (-n) in
         ignore (unsafe_input tic ofs 0 (-n));

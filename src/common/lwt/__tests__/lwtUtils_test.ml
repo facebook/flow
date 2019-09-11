@@ -12,7 +12,8 @@ let ( %>:: ) name f = name >:: (fun ctxt -> LwtInit.run_lwt (fun () -> f ctxt))
 
 let tests =
   "LwtUtils.all"
-  >::: [ ( "includes_all_results"
+  >::: [
+         ( "includes_all_results"
          %>:: fun ctxt ->
          let (p1, r1) = Lwt.wait () in
          let (p2, r2) = Lwt.wait () in
@@ -37,4 +38,5 @@ let tests =
            with Failure s -> Lwt.return_some s
          in
          assert_equal ~ctxt exn (Some "did not work");
-         Lwt.return_unit ) ]
+         Lwt.return_unit );
+       ]

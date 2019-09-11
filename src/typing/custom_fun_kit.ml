@@ -167,7 +167,12 @@ module Kit (Flow : Flow_common.S) = struct
         (* Create the expected type for our element with a fresh tvar in the
          * component position. *)
         let expected_element =
-          get_builtin_typeapp cx ~trace (reason_of_t element) "React$Element" [Tvar.mk cx reason_op]
+          get_builtin_typeapp
+            cx
+            ~trace
+            (reason_of_t element)
+            "React$Element"
+            [Tvar.mk cx reason_op]
         in
         (* Flow the element arg to our expected element. *)
         rec_flow_t cx trace (element, expected_element);

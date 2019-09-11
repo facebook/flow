@@ -153,11 +153,13 @@ let new_list
     if items = [] then
       items
     else
-      [ join (fuse [sep; pretty_line]) items;
+      [
+        join (fuse [sep; pretty_line]) items;
         ( if trailing_sep then
           if_break (Atom ",") Empty
         else
-          Empty ) ]
+          Empty );
+      ]
   in
   let break =
     if wrap_spaces then
@@ -178,7 +180,8 @@ let list
     items =
   let add_seperator is_last item =
     fuse
-      [ item;
+      [
+        item;
         if_break
           ( if is_last && trailing then
             if_pretty sep Empty
@@ -189,16 +192,19 @@ let list
           ( if is_last then
             Empty
           else
-            fuse [sep; pretty_space] ) ]
+            fuse [sep; pretty_space] );
+      ]
   in
   let items_count = List.length items - 1 in
   let layout_items =
     fuse
-      [ fst wrap;
+      [
+        fst wrap;
         Sequence
           ( { break; inline; indent },
             List.mapi (fun i item -> add_seperator (i = items_count) item) items );
-        snd wrap ]
+        snd wrap;
+      ]
   in
   (* Wrap items in additional sequence so `IfBreak`s within wrap are
      not triggered by adjacent lists. *)
@@ -342,32 +348,38 @@ end = struct
   let rec layout_of_layout = function
     | SourceLocation (loc, child) ->
       Concat
-        [ Atom "SourceLocation";
+        [
+          Atom "SourceLocation";
           pretty_space;
           list
             ~wrap:(Atom "(", Atom ")")
             ~sep:(Atom ",")
-            [Atom (debug_string_of_loc loc); layout_of_layout child] ]
+            [Atom (debug_string_of_loc loc); layout_of_layout child];
+        ]
     | Concat items ->
       Concat
-        [ Atom "Concat";
+        [
+          Atom "Concat";
           pretty_space;
-          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Core_list.map ~f:layout_of_layout items)
+          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Core_list.map ~f:layout_of_layout items);
         ]
     | Group items ->
       Concat
-        [ Atom "Group";
+        [
+          Atom "Group";
           pretty_space;
-          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Core_list.map ~f:layout_of_layout items)
+          list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";") (Core_list.map ~f:layout_of_layout items);
         ]
     | Sequence ({ break; inline = (inline_before, inline_after); indent }, node_list) ->
       let config =
         list
           ~wrap:(Atom "{", Atom "}")
           ~sep:(Atom ";")
-          [ Atom (spf "break=%s" (debug_string_of_when_to_break break));
+          [
+            Atom (spf "break=%s" (debug_string_of_when_to_break break));
             Atom (spf "inline=(%b, %b)" inline_before inline_after);
-            Atom (spf "indent=%d" indent) ]
+            Atom (spf "indent=%d" indent);
+          ]
       in
       let nodes =
         list
@@ -376,32 +388,40 @@ end = struct
           (Core_list.map ~f:layout_of_layout node_list)
       in
       Concat
-        [ Atom "Sequence";
+        [
+          Atom "Sequence";
           pretty_space;
-          list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [config; nodes] ]
+          list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [config; nodes];
+        ]
     | Atom str -> Atom (spf "Atom %S" str)
     | Identifier (loc, str) -> Atom (spf "Identifier (%s, %S)" (debug_string_of_loc loc) str)
     | IfPretty (left, right) ->
       Concat
-        [ Atom "IfPretty";
+        [
+          Atom "IfPretty";
           pretty_space;
           list
             ~wrap:(Atom "(", Atom ")")
             ~sep:(Atom ",")
-            [layout_of_layout left; layout_of_layout right] ]
+            [layout_of_layout left; layout_of_layout right];
+        ]
     | IfBreak (left, right) ->
       Concat
-        [ Atom "IfBreak";
+        [
+          Atom "IfBreak";
           pretty_space;
           list
             ~wrap:(Atom "(", Atom ")")
             ~sep:(Atom ",")
-            [layout_of_layout left; layout_of_layout right] ]
+            [layout_of_layout left; layout_of_layout right];
+        ]
     | Indent child ->
       Concat
-        [ Atom "Indent";
+        [
+          Atom "Indent";
           pretty_space;
-          list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [layout_of_layout child] ]
+          list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [layout_of_layout child];
+        ]
     | Newline -> Atom "Newline"
     | Empty -> Atom "Empty"
 end

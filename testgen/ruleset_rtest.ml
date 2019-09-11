@@ -52,10 +52,12 @@ class ruleset_rtest =
       (var_decl, new_env)
 
     method! get_all_rules () =
-      [| self#rule_num_lit;
-         self#rule_str_lit;
-         self#rule_obj_lit 2 0;
-         self#rule_vardecl_with_type;
-         self#rule_vardecl_with_type;
-         self#rule_runtime_check |]
+      [|
+        self#rule_num_lit;
+        self#rule_str_lit;
+        self#rule_obj_lit 2 0;
+        self#rule_vardecl_with_type;
+        self#rule_vardecl_with_type;
+        self#rule_runtime_check;
+      |]
   end

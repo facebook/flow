@@ -354,11 +354,13 @@ class insert_import_mapper =
                     specifiers =
                       Some
                         (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
-                           [ {
+                           [
+                             {
                                kind = None;
                                local = None;
                                remote = Flow_ast_utils.ident_of_source (loc, "baz");
-                             } ]);
+                             };
+                           ]);
                   } )
             in
             imp :: stmts))
@@ -386,11 +388,13 @@ class insert_second_import_mapper =
                     specifiers =
                       Some
                         (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
-                           [ {
+                           [
+                             {
                                kind = None;
                                local = None;
                                remote = Flow_ast_utils.ident_of_source (loc, "baz");
-                             } ]);
+                             };
+                           ]);
                   } )
             in
             List.hd stmts :: imp :: List.tl stmts))
@@ -423,14 +427,16 @@ class insert_second_cjsimport_mapper =
                                     (Flow_ast_utils.ident_of_source (loc, "require")) );
                               targs = None;
                               arguments =
-                                [ Ast.Expression.Expression
+                                [
+                                  Ast.Expression.Expression
                                     ( loc,
                                       Ast.Expression.Literal
                                         {
                                           value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
                                           comments = Flow_ast_utils.mk_comments_opt ();
-                                        } ) ];
+                                        } );
+                                ];
                             } );
                       directive = None;
                     } )
@@ -465,14 +471,16 @@ class add_body_mapper =
                                     (Flow_ast_utils.ident_of_source (loc, "foo")) );
                               targs = None;
                               arguments =
-                                [ Ast.Expression.Expression
+                                [
+                                  Ast.Expression.Expression
                                     ( loc,
                                       Ast.Expression.Literal
                                         {
                                           value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
                                           comments = Flow_ast_utils.mk_comments_opt ();
-                                        } ) ];
+                                        } );
+                                ];
                             } );
                       directive = None;
                     } )
@@ -587,11 +595,13 @@ class insert_import_and_annot_mapper =
                   Some
                     ImportDeclaration.(
                       ImportNamedSpecifiers
-                        [ {
+                        [
+                          {
                             kind = None;
                             local = Some (Flow_ast_utils.ident_of_source (Loc.none, "here"));
                             remote = Flow_ast_utils.ident_of_source (Loc.none, "there");
-                          } ]);
+                          };
+                        ]);
               } )
       in
       (loc, List.hd stmts :: import 1 :: import 2 :: List.tl stmts, comments)
@@ -753,7 +763,8 @@ let assert_edits_equal_standard_only ctxt ~edits ~source ~expected ~mapper =
 
 let tests =
   "ast_differ"
-  >::: [ ( "literal_number"
+  >::: [
+         ( "literal_number"
          >:: fun ctxt ->
          let source = "4" in
          assert_edits_equal
@@ -1274,11 +1285,13 @@ let tests =
            ctxt
            ~source
            ~edits:
-             [ ((10, 16), "gotRenamed");
+             [
+               ((10, 16), "gotRenamed");
                ((17, 23), "GOT_RENAMED");
                ((25, 31), "gotRenamed");
                ((34, 40), "GotRenamed");
-               ((50, 51), "5") ]
+               ((50, 51), "5");
+             ]
            ~expected:"(function gotRenamed<GOT_RENAMED>(gotRenamed): GotRenamed { return 5; })"
            ~mapper:(new useless_mapper) );
          ( "arrow_function"
@@ -1820,11 +1833,13 @@ let tests =
          let old_list = [a; b; c; a; b; b; a] in
          let new_list = [c; b; a; b; a; c] in
          let edits =
-           [ (0, Delete a);
+           [
+             (0, Delete a);
              (1, Delete b);
              (3, Delete a);
              (4, Insert (None, [a]));
-             (6, Insert (None, [c])) ]
+             (6, Insert (None, [c]));
+           ]
          in
          let script = list_diff Standard old_list new_list in
          assert_equal ~ctxt (Some edits) script );
@@ -1850,7 +1865,8 @@ let tests =
          in
          (*"This is the second sentence"*)
          let new_list =
-           [ t';
+           [
+             t';
              h;
              i;
              s;
@@ -1877,17 +1893,20 @@ let tests =
              n;
              c;
              e;
-             pd ]
+             pd;
+           ]
          in
          let edits =
-           [ (7, Insert (None, [t; h; e; space]));
+           [
+             (7, Insert (None, [t; h; e; space]));
              (9, Insert (None, [c; o]));
              (11, Replace (t, d));
              (11, Insert (None, [space; s]));
              (14, Replace (c, t));
              (16, Delete space);
              (17, Delete o);
-             (18, Insert (None, [c])) ]
+             (18, Insert (None, [c]));
+           ]
          in
          let script = list_diff Standard old_list new_list in
          debug_print_string_script script;
@@ -2267,10 +2286,12 @@ let tests =
          assert_edits_equal
            ctxt
            ~edits:
-             [ ((1, 7), "GotRenamed");
+             [
+               ((1, 7), "GotRenamed");
                ((19, 25), "gotRenamed");
                ((28, 34), "GotRenamed");
-               ((46, 52), "gotRenamed") ]
+               ((46, 52), "gotRenamed");
+             ]
            ~source
            ~expected:"<GotRenamed.DontRename.gotRenamed></GotRenamed.DontRename.gotRenamed>"
            ~mapper:(new useless_mapper) );
@@ -2586,10 +2607,12 @@ let tests =
          assert_edits_equal
            ctxt
            ~edits:
-             [ ((11, 12), "+");
+             [
+               ((11, 12), "+");
                ((12, 18), "GOT_RENAMED");
                ((20, 26), "string");
-               ((29, 35), "string") ]
+               ((29, 35), "string");
+             ]
            ~source
            ~expected:"type alias<+GOT_RENAMED: string = string> = string"
            ~mapper:(new useless_mapper) );
@@ -2599,10 +2622,12 @@ let tests =
          assert_edits_equal
            ctxt
            ~edits:
-             [ ((11, 12), "+");
+             [
+               ((11, 12), "+");
                ((12, 18), "GOT_RENAMED");
                ((20, 26), "GOT_RENAMED");
-               ((28, 34), "string") ]
+               ((28, 34), "string");
+             ]
            ~source
            ~expected:"type alias<+GOT_RENAMED, GOT_RENAMED: string> = string"
            ~mapper:(new useless_mapper) );
@@ -2730,10 +2755,12 @@ let tests =
          assert_edits_equal
            ctxt
            ~edits:
-             [ ((12, 18), "GotRenamed");
+             [
+               ((12, 18), "GotRenamed");
                ((19, 25), "GOT_RENAMED");
                ((28, 34), "string");
-               ((37, 43), "string") ]
+               ((37, 43), "string");
+             ]
            ~source
            ~expected:"opaque type GotRenamed<GOT_RENAMED>: string = string"
            ~mapper:(new useless_mapper) );
@@ -2797,9 +2824,11 @@ let tests =
          assert_edits_equal
            ctxt
            ~edits:
-             [ ((7, 7), ": (() => number)");
+             [
+               ((7, 7), ": (() => number)");
                ((10, 13), "(bla: () => number)");
-               ((13, 13), ": (() => number)") ]
+               ((13, 13), ": (() => number)");
+             ]
            ~source
            ~expected:
              "const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
@@ -2810,13 +2839,15 @@ let tests =
          assert_edits_equal_standard_only
            ctxt
            ~edits:
-             [ ( (13, 13),
+             [
+               ( (13, 13),
                  "import type {there as here} from \"new_import1\";
 import type {there as here} from \"new_import2\";"
                );
                ((20, 20), ": (() => number)");
                ((23, 26), "(bla: () => number)");
-               ((26, 26), ": (() => number)") ]
+               ((26, 26), ": (() => number)");
+             ]
            ~source
            ~expected:
              "'use strict';import type {there as here} from \"new_import1\";
@@ -3064,12 +3095,14 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
            ~source
            ~mapper:(new add_comment_mapper)
            ~edits:
-             [ ((6, 6), "/*hello*/");
+             [
+               ((6, 6), "/*hello*/");
                ((7, 7), "/*bye*/");
                ((9, 9), "/*hello*/");
                ((12, 12), "/*bye*/");
                ((13, 13), "/*hello*/");
-               ((16, 16), "/*bye*/") ]
+               ((16, 16), "/*bye*/");
+             ]
            ~expected:"const /*hello*/a/*bye*/: /*hello*/Box/*bye*/</*hello*/Bla/*bye*/> = {}" );
          ( "let_union_first"
          >:: fun ctxt ->
@@ -3133,4 +3166,5 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
            ~edits:[((1, 11), "(a, b, c, d, a, b, c, d)")]
            ~source
            ~expected:"((a, b, c, d, a, b, c, d))"
-           ~mapper:(new double_sequence_mapper) ) ]
+           ~mapper:(new double_sequence_mapper) );
+       ]

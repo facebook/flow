@@ -11,7 +11,8 @@ open Layout_generator_test_utils
 module L = Layout_builder
 
 let tests =
-  [ ( "block"
+  [
+    ( "block"
     >:: fun ctxt ->
     let comment = Ast_builder.Comments.block "test" in
     let layout = Js_layout_generator.comment comment in
@@ -24,4 +25,5 @@ let tests =
     let layout = Js_layout_generator.comment comment in
     assert_layout ~ctxt L.(loc (fused [atom "//"; atom "test"; Layout.Newline])) layout;
     assert_output ~ctxt "//test\n" layout;
-    assert_output ~ctxt ~pretty:true "//test\n" layout ) ]
+    assert_output ~ctxt ~pretty:true "//test\n" layout );
+  ]

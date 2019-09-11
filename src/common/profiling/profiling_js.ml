@@ -312,8 +312,10 @@ end = struct
   let json_of_time_measurement { start_age; duration } =
     Hh_json.(
       JSON_Object
-        [ ("start_age", JSON_Number (Dtoa.ecma_string_of_float start_age));
-          ("duration", JSON_Number (Dtoa.ecma_string_of_float duration)) ])
+        [
+          ("start_age", JSON_Number (Dtoa.ecma_string_of_float start_age));
+          ("duration", JSON_Number (Dtoa.ecma_string_of_float duration));
+        ])
 
   let total_cpu_time info = info.cpu_user +. info.cpu_nice_user +. info.cpu_system +. info.cpu_idle
 
@@ -325,15 +327,19 @@ end = struct
          * busy = total * usage
          * idle = total - busy *)
         JSON_Object
-          [ ("total", JSON_Number (Dtoa.ecma_string_of_float total));
-            ("usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage)) ]
+          [
+            ("total", JSON_Number (Dtoa.ecma_string_of_float total));
+            ("usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage));
+          ]
       else
         JSON_Object
-          [ ("user", JSON_Number (Dtoa.ecma_string_of_float info.cpu_user));
+          [
+            ("user", JSON_Number (Dtoa.ecma_string_of_float info.cpu_user));
             ("nice", JSON_Number (Dtoa.ecma_string_of_float info.cpu_nice_user));
             ("system", JSON_Number (Dtoa.ecma_string_of_float info.cpu_system));
             ("idle", JSON_Number (Dtoa.ecma_string_of_float info.cpu_idle));
-            ("usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage)) ])
+            ("usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage));
+          ])
 
   (* This function solves the problem of having multiple sibling timers (timers with the same
    * parent) with the same name. Our JSON representation is an object keyed by the name of the
@@ -392,8 +398,10 @@ end = struct
             processor_totals = merge_processor_totals result.processor_totals dupe.processor_totals;
             flow_cpu_usage =
               weighted_average
-                [ (total_cpu_time result.processor_totals, result.flow_cpu_usage);
-                  (total_cpu_time dupe.processor_totals, dupe.flow_cpu_usage) ];
+                [
+                  (total_cpu_time result.processor_totals, result.flow_cpu_usage);
+                  (total_cpu_time dupe.processor_totals, dupe.flow_cpu_usage);
+                ];
             sub_results = result.sub_results @ dupe.sub_results;
             sample_count = result.sample_count + 1;
           })
@@ -419,10 +427,12 @@ end = struct
     Hh_json.(
       let cpu = [user; system; worker_user; worker_system] in
       let common_fields =
-        [ ("wall", json_of_time_measurement wall);
+        [
+          ("wall", json_of_time_measurement wall);
           ("cpu", json_of_time_measurement (combine_time_measurements cpu));
           ("flow_cpu_usage", JSON_Number (Dtoa.ecma_string_of_float flow_cpu_usage));
-          ("processor_totals", json_of_processor_info ~abridged processor_totals) ]
+          ("processor_totals", json_of_processor_info ~abridged processor_totals);
+        ]
       in
       let fields =
         if abridged then
@@ -438,22 +448,26 @@ end = struct
               JSON_Object []
           in
           common_fields
-          @ [ ("wall", json_of_time_measurement wall);
+          @ [
+              ("wall", json_of_time_measurement wall);
               ("user", json_of_time_measurement user);
               ("system", json_of_time_measurement system);
               ("worker_user", json_of_time_measurement worker_user);
               ("worker_system", json_of_time_measurement worker_system);
               ( "worker_wall_times",
                 JSON_Object
-                  [ ("run", json_of_time_measurement worker_wall_times.worker_run);
+                  [
+                    ("run", json_of_time_measurement worker_wall_times.worker_run);
                     ("read", json_of_time_measurement worker_wall_times.worker_read_request);
                     ("send", json_of_time_measurement worker_wall_times.worker_send_response);
                     ("idle", json_of_time_measurement worker_wall_times.worker_idle);
                     ("done", json_of_time_measurement worker_wall_times.worker_done);
                     ("gc_minor", json_of_time_measurement worker_wall_times.worker_gc_minor);
-                    ("gc_major", json_of_time_measurement worker_wall_times.worker_gc_major) ] );
+                    ("gc_major", json_of_time_measurement worker_wall_times.worker_gc_major);
+                  ] );
               ("sub_results", sub_results);
-              ("samples", JSON_Number (string_of_int sample_count)) ]
+              ("samples", JSON_Number (string_of_int sample_count));
+            ]
       in
       (timer_name, JSON_Object fields))
 
@@ -945,10 +959,12 @@ end = struct
                   (fun k v props ->
                     ( k,
                       JSON_Object
-                        [ ("start", JSON_Number (Dtoa.ecma_string_of_float v.start));
+                        [
+                          ("start", JSON_Number (Dtoa.ecma_string_of_float v.start));
                           ("delta", JSON_Number (Dtoa.ecma_string_of_float v.delta));
                           ( "hwm_delta",
-                            JSON_Number (Dtoa.ecma_string_of_float v.high_water_mark_delta) ) ] )
+                            JSON_Number (Dtoa.ecma_string_of_float v.high_water_mark_delta) );
+                        ] )
                     :: props)
                   group
                   []
@@ -1113,12 +1129,16 @@ let add_memory ?group ~metric ~start ~delta ~hwm_delta profile =
       Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory)
 
 let to_json_properties profile =
-  [ ("timing", Timing.to_json ~abridged:false profile.finished_timing);
-    ("memory", Memory.to_json ~abridged:false profile.finished_memory) ]
+  [
+    ("timing", Timing.to_json ~abridged:false profile.finished_timing);
+    ("memory", Memory.to_json ~abridged:false profile.finished_memory);
+  ]
 
 let to_legacy_json_properties profile =
-  [ ("timing", Timing.to_json_legacy ~abridged:false profile.finished_timing);
-    ("memory", Memory.to_json ~abridged:false profile.finished_memory) ]
+  [
+    ("timing", Timing.to_json_legacy ~abridged:false profile.finished_timing);
+    ("memory", Memory.to_json ~abridged:false profile.finished_memory);
+  ]
 
 let get_timing_json_string profile =
   Timing.to_json ~abridged:false profile.finished_timing |> Hh_json.json_to_string

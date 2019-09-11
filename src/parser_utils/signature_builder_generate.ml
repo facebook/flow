@@ -617,7 +617,8 @@ module T = struct
           Ast.Pattern.Object
             {
               Ast.Pattern.Object.properties =
-                [ Ast.Pattern.Object.Property
+                [
+                  Ast.Pattern.Object.Property
                     ( fst name,
                       {
                         Ast.Pattern.Object.Property.key =
@@ -626,7 +627,8 @@ module T = struct
                         pattern = id_pattern;
                         shorthand = id_name = snd name;
                         default = None;
-                      } ) ];
+                      } );
+                ];
               annot = Ast.Type.Missing (fst name);
             } )
       in
@@ -640,7 +642,8 @@ module T = struct
           Ast.Pattern.Object
             {
               Ast.Pattern.Object.properties =
-                [ Ast.Pattern.Object.Property
+                [
+                  Ast.Pattern.Object.Property
                     ( fst name,
                       {
                         Ast.Pattern.Object.Property.key =
@@ -649,7 +652,8 @@ module T = struct
                         pattern;
                         shorthand = false;
                         default = None;
-                      } ) ];
+                      } );
+                ];
               annot = Ast.Type.Missing (fst name);
             } )
       in
@@ -758,7 +762,8 @@ module T = struct
         else
           Some
             (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
-               [ {
+               [
+                 {
                    Ast.Statement.ImportDeclaration.kind = None;
                    local =
                      ( if id_name = snd name then
@@ -766,7 +771,8 @@ module T = struct
                      else
                        Some id );
                    remote = Flow_ast_utils.ident_of_source name;
-                 } ])
+                 };
+               ])
       in
       ( decl_loc,
         Ast.Statement.ImportDeclaration
@@ -795,14 +801,16 @@ module T = struct
                     (Flow_ast_utils.ident_of_source (approx_loc decl_loc, "require")) );
               targs = None;
               arguments =
-                [ Ast.Expression.Expression
+                [
+                  Ast.Expression.Expression
                     ( loc,
                       Ast.Expression.Literal
                         {
                           Ast.Literal.value = Ast.Literal.String x;
                           raw = x;
                           comments = Flow_ast_utils.mk_comments_opt ();
-                        } ) ];
+                        } );
+                ];
             } )
       in
       let declaration =
@@ -1058,12 +1066,14 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
               | TemplateLiteral
                   {
                     TemplateLiteral.quasis =
-                      [ ( _,
+                      [
+                        ( _,
                           {
                             TemplateLiteral.Element.value =
                               { TemplateLiteral.Element.cooked = value; raw };
                             _;
-                          } ) ];
+                          } );
+                      ];
                     _;
                   } ) ) ) ->
         (loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw })))
@@ -1739,12 +1749,14 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           specifiers =
             Some
               (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers
-                 [ ( approx_loc export_loc,
+                 [
+                   ( approx_loc export_loc,
                      {
                        Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local =
                          Flow_ast_utils.ident_of_source local;
                        exported = Option.map ~f:Flow_ast_utils.ident_of_source exported;
-                     } ) ]);
+                     } );
+                 ]);
           source;
           exportKind;
         } )

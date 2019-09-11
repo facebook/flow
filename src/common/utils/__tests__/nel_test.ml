@@ -25,7 +25,8 @@ let lst2 = Nel.one 5 |> Nel.cons 3
 
 let tests =
   "nel"
-  >::: [ ("to_list" >:: (fun ctxt -> assert_equal ~ctxt (Nel.to_list lst) [6; 4; 2]));
+  >::: [
+         ("to_list" >:: (fun ctxt -> assert_equal ~ctxt (Nel.to_list lst) [6; 4; 2]));
          ( "mem"
          >:: fun ctxt ->
          assert_equal ~ctxt (Nel.mem 4 lst) true;
@@ -78,4 +79,5 @@ let tests =
          assert_equal
            ~ctxt
            (Nel.cat_maybes (of_list [Some 0; None; Some 1]))
-           (Some (of_list [0; 1])) ) ]
+           (Some (of_list [0; 1])) );
+       ]

@@ -190,17 +190,19 @@ class ruleset_optional =
       (write, new_env)
 
     method! get_all_rules () =
-      [| self#rule_num_lit;
-         self#rule_str_lit;
-         self#rule_obj_lit 1 0;
-         self#rule_vardecl;
-         self#rule_obj_type 1 1;
-         self#rule_vardecl_with_type;
-         self#rule_prop_update;
-         self#rule_obj_type 1 1;
-         self#rule_vardecl_with_type;
-         self#rule_prop_update;
-         self#rule_check_optional_prop |]
+      [|
+        self#rule_num_lit;
+        self#rule_str_lit;
+        self#rule_obj_lit 1 0;
+        self#rule_vardecl;
+        self#rule_obj_type 1 1;
+        self#rule_vardecl_with_type;
+        self#rule_prop_update;
+        self#rule_obj_type 1 1;
+        self#rule_vardecl_with_type;
+        self#rule_prop_update;
+        self#rule_check_optional_prop;
+      |]
   end
 
 class ruleset_random_optional =

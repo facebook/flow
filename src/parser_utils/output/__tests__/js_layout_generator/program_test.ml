@@ -13,7 +13,8 @@ module E = Ast_builder.Expressions
 module L = Layout_builder
 
 let tests =
-  [ ( "blank_lines_if_in_original"
+  [
+    ( "blank_lines_if_in_original"
     >:: fun ctxt ->
     let ast = Ast_builder.program_of_string "var x = 1;\n\n\nvar y = 2;" in
     let layout = Js_layout_generator.program ~checksum:None ~preserve_docblock:false ast in
@@ -22,7 +23,8 @@ let tests =
       L.(
         program
           (group
-             [ loc
+             [
+               loc
                  ~loc:
                    {
                      Loc.none with
@@ -30,7 +32,8 @@ let tests =
                      _end = { Loc.line = 1; column = 10 };
                    }
                  (fused
-                    [ loc
+                    [
+                      loc
                         ~loc:
                           {
                             Loc.none with
@@ -38,7 +41,8 @@ let tests =
                             _end = { Loc.line = 1; column = 10 };
                           }
                         (fused
-                           [ atom "var";
+                           [
+                             atom "var";
                              space;
                              loc
                                ~loc:
@@ -48,7 +52,8 @@ let tests =
                                    _end = { Loc.line = 1; column = 9 };
                                  }
                                (fused
-                                  [ loc
+                                  [
+                                    loc
                                       ~loc:
                                         {
                                           Loc.none with
@@ -73,8 +78,11 @@ let tests =
                                           Loc.start = { Loc.line = 1; column = 8 };
                                           _end = { Loc.line = 1; column = 9 };
                                         }
-                                      (atom "1") ]) ]);
-                      atom ";" ]);
+                                      (atom "1");
+                                  ]);
+                           ]);
+                      atom ";";
+                    ]);
                pretty_hardline;
                pretty_hardline;
                loc
@@ -85,7 +93,8 @@ let tests =
                      _end = { Loc.line = 4; column = 10 };
                    }
                  (fused
-                    [ loc
+                    [
+                      loc
                         ~loc:
                           {
                             Loc.none with
@@ -93,7 +102,8 @@ let tests =
                             _end = { Loc.line = 4; column = 10 };
                           }
                         (fused
-                           [ atom "var";
+                           [
+                             atom "var";
                              space;
                              loc
                                ~loc:
@@ -103,7 +113,8 @@ let tests =
                                    _end = { Loc.line = 4; column = 9 };
                                  }
                                (fused
-                                  [ loc
+                                  [
+                                    loc
                                       ~loc:
                                         {
                                           Loc.none with
@@ -128,8 +139,12 @@ let tests =
                                           Loc.start = { Loc.line = 4; column = 8 };
                                           _end = { Loc.line = 4; column = 9 };
                                         }
-                                      (atom "2") ]) ]);
-                      atom ";" ]) ]))
+                                      (atom "2");
+                                  ]);
+                           ]);
+                      atom ";";
+                    ]);
+             ]))
       layout;
     assert_output ~ctxt "var x=1;var y=2;" layout;
     assert_output ~ctxt ~pretty:true "var x = 1;\n\nvar y = 2;" layout );
@@ -144,7 +159,11 @@ let tests =
       L.(
         program
           (fused
-             [group [loc (fused [loc (id "x"); atom ";"])]; hardline; atom "/* @artifact abc123 */"]))
+             [
+               group [loc (fused [loc (id "x"); atom ";"])];
+               hardline;
+               atom "/* @artifact abc123 */";
+             ]))
       layout;
     assert_output ~ctxt "x;\n/* @artifact abc123 */" layout;
     assert_output ~ctxt ~pretty:true "x;\n/* @artifact abc123 */" layout );
@@ -159,9 +178,11 @@ let tests =
       L.(
         program
           (group
-             [ loc (fused [loc (id "x"); atom ";"]);
+             [
+               loc (fused [loc (id "x"); atom ";"]);
                pretty_hardline;
-               loc (fused [loc (id "y"); atom ";"]) ]))
+               loc (fused [loc (id "y"); atom ";"]);
+             ]))
       layout;
     assert_output ~ctxt "x;y;" layout;
     assert_output ~ctxt ~pretty:true "x;\ny;" layout );
@@ -181,9 +202,11 @@ let tests =
         L.(
           program
             (group
-               [ loc ~loc:c_loc (fused [atom "//"; atom " hello world"; hardline]);
+               [
+                 loc ~loc:c_loc (fused [atom "//"; atom " hello world"; hardline]);
                  pretty_hardline;
-                 loc ~loc:s_loc (fused [loc (id "x"); atom ";"]) ]))
+                 loc ~loc:s_loc (fused [loc (id "x"); atom ";"]);
+               ]))
         layout;
       assert_output ~ctxt "// hello world\nx;" layout;
 
@@ -197,4 +220,5 @@ let tests =
       L.(program (group [loc ~loc:s_loc (fused [loc (id "x"); atom ";"])]))
       layout;
     assert_output ~ctxt "x;" layout;
-    assert_output ~ctxt ~pretty:true "x;" layout ) ]
+    assert_output ~ctxt ~pretty:true "x;" layout );
+  ]

@@ -204,13 +204,15 @@ class ruleset_depth =
       (var_decl, new_env)
 
     method! get_all_rules () =
-      [| self#rule_num_lit;
-         self#rule_obj_lit 2 0;
-         self#rule_vardecl_with_type;
-         self#rule_obj_lit 1 0;
-         self#rule_vardecl_with_type;
-         self#rule_prop_update;
-         self#rule_runtime_check |]
+      [|
+        self#rule_num_lit;
+        self#rule_obj_lit 2 0;
+        self#rule_vardecl_with_type;
+        self#rule_obj_lit 1 0;
+        self#rule_vardecl_with_type;
+        self#rule_prop_update;
+        self#rule_runtime_check;
+      |]
   end
 
 class ruleset_random_depth =

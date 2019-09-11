@@ -47,7 +47,10 @@ let parse_position (json : json option) : position =
 
 let print_position (position : position) : json =
   JSON_Object
-    [("line", position.line |> int_); ("character", position.character |> int_)]
+    [
+      ("line", position.line |> int_);
+      ("character", position.character |> int_);
+    ]
 
 let print_range (range : range) : json =
   JSON_Object
@@ -56,16 +59,21 @@ let print_range (range : range) : json =
 let print_location (location : Location.t) : json =
   Location.(
     JSON_Object
-      [("uri", JSON_String location.uri); ("range", print_range location.range)])
+      [
+        ("uri", JSON_String location.uri);
+        ("range", print_range location.range);
+      ])
 
 let print_definition_location (definition_location : DefinitionLocation.t) :
     json =
   DefinitionLocation.(
     let location = definition_location.location in
     Jprint.object_opt
-      [ ("uri", Some (JSON_String location.Location.uri));
+      [
+        ("uri", Some (JSON_String location.Location.uri));
         ("range", Some (print_range location.Location.range));
-        ("title", Option.map definition_location.title ~f:string_) ])
+        ("title", Option.map definition_location.title ~f:string_);
+      ])
 
 let parse_range_exn (json : json option) : range =
   {
@@ -107,10 +115,12 @@ let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
 let print_textDocumentItem (item : TextDocumentItem.t) : json =
   TextDocumentItem.(
     JSON_Object
-      [ ("uri", JSON_String item.uri);
+      [
+        ("uri", JSON_String item.uri);
         ("languageId", JSON_String item.languageId);
         ("version", JSON_Number (string_of_int item.version));
-        ("text", JSON_String item.text) ])
+        ("text", JSON_String item.text);
+      ])
 
 let print_markedItem (item : markedString) : json =
   match item with
@@ -142,7 +152,10 @@ let parse_textEdit (params : json option) : TextEdit.t option =
 let print_textEdit (edit : TextEdit.t) : json =
   TextEdit.(
     JSON_Object
-      [("range", print_range edit.range); ("newText", JSON_String edit.newText)])
+      [
+        ("range", print_range edit.range);
+        ("newText", JSON_String edit.newText);
+      ])
 
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
@@ -150,17 +163,21 @@ let print_workspaceEdit (r : WorkspaceEdit.t) : json =
       (uri, JSON_Array (List.map ~f:print_textEdit text_edits))
     in
     JSON_Object
-      [ ( "changes",
+      [
+        ( "changes",
           JSON_Object
             (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes)
-        ) ])
+        );
+      ])
 
 let print_command (command : Command.t) : json =
   Command.(
     JSON_Object
-      [ ("title", JSON_String command.title);
+      [
+        ("title", JSON_String command.title);
         ("command", JSON_String command.command);
-        ("arguments", JSON_Array command.arguments) ])
+        ("arguments", JSON_Array command.arguments);
+      ])
 
 let parse_command (json : json option) : Command.t =
   Command.
@@ -200,10 +217,12 @@ let print_symbolInformation (info : SymbolInformation.t) : json =
       | Array -> int_ 18
     in
     Jprint.object_opt
-      [ ("name", Some (JSON_String info.name));
+      [
+        ("name", Some (JSON_String info.name));
         ("kind", Some (print_symbol_kind info.kind));
         ("location", Some (print_location info.location));
-        ("containerName", Option.map info.containerName string_) ])
+        ("containerName", Option.map info.containerName string_);
+      ])
 
 let print_messageType (type_ : MessageType.t) : json =
   MessageType.(
@@ -224,12 +243,14 @@ let parse_codeLens (json : json option) : CodeLens.t =
 let print_codeLens (codeLens : CodeLens.t) : json =
   CodeLens.(
     JSON_Object
-      [ ("range", print_range codeLens.range);
+      [
+        ("range", print_range codeLens.range);
         ("command", print_command codeLens.command);
         ( "data",
           match codeLens.data with
           | None -> JSON_Null
-          | Some json -> json ) ])
+          | Some json -> json );
+      ])
 
 (************************************************************************)
 (* shutdown request                                                     *)
@@ -255,11 +276,13 @@ let print_rage (r : Rage.result) : json =
   Rage.(
     let print_item (item : rageItem) : json =
       JSON_Object
-        [ ("data", JSON_String item.data);
+        [
+          ("data", JSON_String item.data);
           ( "title",
             match item.title with
             | None -> JSON_Null
-            | Some s -> JSON_String s ) ]
+            | Some s -> JSON_String s );
+        ]
     in
     JSON_Array (List.map r ~f:print_item))
 
@@ -335,28 +358,34 @@ let print_signatureHelp (r : SignatureHelp.result) : json =
   SignatureHelp.(
     let print_parInfo parInfo =
       Jprint.object_opt
-        [ ("label", Some (Hh_json.JSON_String parInfo.parinfo_label));
+        [
+          ("label", Some (Hh_json.JSON_String parInfo.parinfo_label));
           ( "documentation",
-            Option.map ~f:Hh_json.string_ parInfo.parinfo_documentation ) ]
+            Option.map ~f:Hh_json.string_ parInfo.parinfo_documentation );
+        ]
     in
     let print_sigInfo sigInfo =
       Jprint.object_opt
-        [ ("label", Some (Hh_json.JSON_String sigInfo.siginfo_label));
+        [
+          ("label", Some (Hh_json.JSON_String sigInfo.siginfo_label));
           ( "documentation",
             Option.map ~f:Hh_json.string_ sigInfo.siginfo_documentation );
           ( "parameters",
             Some
               (Hh_json.JSON_Array
-                 (List.map ~f:print_parInfo sigInfo.parameters)) ) ]
+                 (List.map ~f:print_parInfo sigInfo.parameters)) );
+        ]
     in
     match r with
     | None -> Hh_json.JSON_Null
     | Some r ->
       Hh_json.JSON_Object
-        [ ( "signatures",
+        [
+          ( "signatures",
             Hh_json.JSON_Array (List.map ~f:print_sigInfo r.signatures) );
           ("activeSignature", Hh_json.int_ r.activeSignature);
-          ("activeParameter", Hh_json.int_ r.activeParameter) ])
+          ("activeParameter", Hh_json.int_ r.activeParameter);
+        ])
 
 (************************************************************************)
 (* codeLens/resolve Request                                             *)
@@ -413,11 +442,14 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
     in
     let print_related (related : relatedLocation) : json =
       Hh_json.JSON_Object
-        [ ("location", print_location related.relatedLocation);
-          ("message", string_ related.relatedMessage) ]
+        [
+          ("location", print_location related.relatedLocation);
+          ("message", string_ related.relatedMessage);
+        ]
     in
     Jprint.object_opt
-      [ ("range", Some (print_range diagnostic.range));
+      [
+        ("range", Some (print_range diagnostic.range));
         ("severity", Option.map diagnostic.severity print_diagnosticSeverity);
         ("code", print_diagnosticCode diagnostic.code);
         ("source", Option.map diagnostic.source string_);
@@ -429,7 +461,8 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
         ( "relatedLocations",
           Some
             (JSON_Array (List.map diagnostic.relatedLocations ~f:print_related))
-        ) ])
+        );
+      ])
 
 let print_diagnostic_list (ds : PublishDiagnostics.diagnostic list) : json =
   JSON_Array (List.map ds ~f:print_diagnostic)
@@ -437,8 +470,10 @@ let print_diagnostic_list (ds : PublishDiagnostics.diagnostic list) : json =
 let print_diagnostics (r : PublishDiagnostics.params) : json =
   PublishDiagnostics.(
     JSON_Object
-      [ ("uri", JSON_String r.uri);
-        ("diagnostics", print_diagnostic_list r.diagnostics) ])
+      [
+        ("uri", JSON_String r.uri);
+        ("diagnostics", print_diagnostic_list r.diagnostics);
+      ])
 
 let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
   PublishDiagnostics.(
@@ -515,11 +550,13 @@ let print_codeAction (c : CodeAction.t) : json =
       | BothEditThenCommand (e, c) -> (Some e, Some c)
     in
     Jprint.object_opt
-      [ ("title", Some (JSON_String c.title));
+      [
+        ("title", Some (JSON_String c.title));
         ("kind", Some (JSON_String (CodeActionKind.string_of_kind c.kind)));
         ("diagnostics", Some (print_diagnostic_list c.diagnostics));
         ("edit", Option.map edit ~f:print_documentRename);
-        ("command", Option.map command ~f:print_command) ])
+        ("command", Option.map command ~f:print_command);
+      ])
 
 let print_codeActionResult (c : CodeAction.result) : json =
   CodeAction.(
@@ -561,12 +598,14 @@ let print_showMessageRequest (r : ShowMessageRequest.showMessageRequestParams)
     JSON_Object [("title", JSON_String action.ShowMessageRequest.title)]
   in
   Jprint.object_opt
-    [ ("type", Some (print_messageType r.ShowMessageRequest.type_));
+    [
+      ("type", Some (print_messageType r.ShowMessageRequest.type_));
       ("message", Some (JSON_String r.ShowMessageRequest.message));
       ( "actions",
         Some
           (JSON_Array (List.map r.ShowMessageRequest.actions ~f:print_action))
-      ) ]
+      );
+    ]
 
 let parse_result_showMessageRequest (result : json option) :
     ShowMessageRequest.result =
@@ -584,7 +623,8 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
   in
   let rr = r.ShowStatus.request in
   Jprint.object_opt
-    [ ("type", Some (print_messageType rr.ShowMessageRequest.type_));
+    [
+      ("type", Some (print_messageType rr.ShowMessageRequest.type_));
       ( "actions",
         Some
           (JSON_Array (List.map rr.ShowMessageRequest.actions ~f:print_action))
@@ -594,8 +634,11 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
       ( "progress",
         Option.map r.ShowStatus.progress ~f:(fun progress ->
             Jprint.object_opt
-              [ ("numerator", Some (int_ progress));
-                ("denominator", Option.map r.ShowStatus.total ~f:int_) ]) ) ]
+              [
+                ("numerator", Some (int_ progress));
+                ("denominator", Option.map r.ShowStatus.total ~f:int_);
+              ]) );
+    ]
 
 (************************************************************************)
 (* window/progress notification                                         *)
@@ -604,11 +647,13 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
 let print_progress (id : int) (label : string option) : json =
   let r = { Progress.id; label } in
   JSON_Object
-    [ ("id", r.Progress.id |> int_);
+    [
+      ("id", r.Progress.id |> int_);
       ( "label",
         match r.Progress.label with
         | None -> JSON_Null
-        | Some s -> JSON_String s ) ]
+        | Some s -> JSON_String s );
+    ]
 
 (************************************************************************)
 (* window/actionRequired notification                                   *)
@@ -617,11 +662,13 @@ let print_progress (id : int) (label : string option) : json =
 let print_actionRequired (id : int) (label : string option) : json =
   let r = { ActionRequired.id; label } in
   JSON_Object
-    [ ("id", r.ActionRequired.id |> int_);
+    [
+      ("id", r.ActionRequired.id |> int_);
       ( "label",
         match r.ActionRequired.label with
         | None -> JSON_Null
-        | Some s -> JSON_String s ) ]
+        | Some s -> JSON_String s );
+    ]
 
 (************************************************************************)
 (* telemetry/connectionStatus notification                              *)
@@ -643,10 +690,12 @@ let print_hover (r : Hover.result) : json =
     | None -> JSON_Null
     | Some r ->
       Jprint.object_opt
-        [ ( "contents",
+        [
+          ( "contents",
             Some (JSON_Array (List.map r.Hover.contents ~f:print_markedItem))
           );
-          ("range", Option.map r.range ~f:print_range) ])
+          ("range", Option.map r.range ~f:print_range);
+        ])
 
 (************************************************************************)
 (* textDocument/definition request                                      *)
@@ -704,7 +753,8 @@ let string_of_markedString (acc : string) (marked : markedString) : string =
 let print_completionItem (item : Completion.completionItem) : json =
   Completion.(
     Jprint.object_opt
-      [ ("label", Some (JSON_String item.label));
+      [
+        ("label", Some (JSON_String item.label));
         ( "kind",
           Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x)
         );
@@ -714,11 +764,12 @@ let print_completionItem (item : Completion.completionItem) : json =
         ( "documentation",
           Option.map item.documentation ~f:(fun doc ->
               JSON_Object
-                [ ("kind", JSON_String "markdown");
+                [
+                  ("kind", JSON_String "markdown");
                   ( "value",
                     JSON_String
                       (String.trim
-                         (List.fold doc ~init:"" ~f:string_of_markedString)) )
+                         (List.fold doc ~init:"" ~f:string_of_markedString)) );
                 ]) );
         ("sortText", Option.map item.sortText string_);
         ("filterText", Option.map item.filterText string_);
@@ -734,7 +785,8 @@ let print_completionItem (item : Completion.completionItem) : json =
             None
           | Some l -> Some (JSON_Array (List.map l ~f:print_textEdit)) );
         ("command", Option.map item.command print_command);
-        ("data", item.data) ])
+        ("data", item.data);
+      ])
 
 (************************************************************************)
 (* textDocument/completion request                                      *)
@@ -763,8 +815,10 @@ let parse_completion (params : json option) : Completion.params =
 let print_completion (r : Completion.result) : json =
   Completion.(
     JSON_Object
-      [ ("isIncomplete", JSON_Bool r.isIncomplete);
-        ("items", JSON_Array (List.map r.items ~f:print_completionItem)) ])
+      [
+        ("isIncomplete", JSON_Bool r.isIncomplete);
+        ("items", JSON_Array (List.map r.items ~f:print_completionItem));
+      ])
 
 (************************************************************************)
 (* workspace/symbol request                                             *)
@@ -827,8 +881,10 @@ let print_documentHighlight (r : DocumentHighlight.result) : json =
     in
     let print_highlight highlight =
       Jprint.object_opt
-        [ ("range", Some (print_range highlight.range));
-          ("kind", Option.map highlight.kind ~f:print_highlightKind) ]
+        [
+          ("range", Some (print_range highlight.range));
+          ("kind", Option.map highlight.kind ~f:print_highlightKind);
+        ]
     in
     JSON_Array (List.map r ~f:print_highlight))
 
@@ -846,14 +902,18 @@ let print_typeCoverage (r : TypeCoverage.result) : json =
   TypeCoverage.(
     let print_uncov (uncov : uncoveredRange) : json =
       Jprint.object_opt
-        [ ("range", Some (print_range uncov.range));
-          ("message", Option.map uncov.message ~f:string_) ]
+        [
+          ("range", Some (print_range uncov.range));
+          ("message", Option.map uncov.message ~f:string_);
+        ]
     in
     JSON_Object
-      [ ("coveredPercent", int_ r.coveredPercent);
+      [
+        ("coveredPercent", int_ r.coveredPercent);
         ( "uncoveredRanges",
           JSON_Array (List.map r.uncoveredRanges ~f:print_uncov) );
-        ("defaultMessage", JSON_String r.defaultMessage) ])
+        ("defaultMessage", JSON_String r.defaultMessage);
+      ])
 
 (************************************************************************)
 (* workspace/toggleTypeCoverage request                                 *)
@@ -1027,12 +1087,15 @@ let print_initialize (r : Initialize.result) : json =
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
     JSON_Object
-      [ ( "capabilities",
+      [
+        ( "capabilities",
           Jprint.object_opt
-            [ ( "textDocumentSync",
+            [
+              ( "textDocumentSync",
                 Some
                   (Jprint.object_opt
-                     [ ("openClose", Some (JSON_Bool sync.want_openClose));
+                     [
+                       ("openClose", Some (JSON_Bool sync.want_openClose));
                        ( "change",
                          Some (print_textDocumentSyncKind sync.want_change) );
                        ("willSave", Some (JSON_Bool sync.want_willSave));
@@ -1042,20 +1105,24 @@ let print_initialize (r : Initialize.result) : json =
                          Option.map sync.want_didSave ~f:(fun save ->
                              JSON_Object
                                [("includeText", JSON_Bool save.includeText)])
-                       ) ]) );
+                       );
+                     ]) );
               ("hoverProvider", Some (JSON_Bool cap.hoverProvider));
               ( "completionProvider",
                 Option.map cap.completionProvider ~f:(fun comp ->
                     JSON_Object
-                      [ ("resolveProvider", JSON_Bool comp.resolveProvider);
+                      [
+                        ("resolveProvider", JSON_Bool comp.resolveProvider);
                         ( "triggerCharacters",
                           Jprint.string_array comp.completion_triggerCharacters
-                        ) ]) );
+                        );
+                      ]) );
               ( "signatureHelpProvider",
                 Option.map cap.signatureHelpProvider ~f:(fun shp ->
                     JSON_Object
-                      [ ( "triggerCharacters",
-                          Jprint.string_array shp.sighelp_triggerCharacters )
+                      [
+                        ( "triggerCharacters",
+                          Jprint.string_array shp.sighelp_triggerCharacters );
                       ]) );
               ("definitionProvider", Some (JSON_Bool cap.definitionProvider));
               ( "typeDefinitionProvider",
@@ -1071,8 +1138,10 @@ let print_initialize (r : Initialize.result) : json =
               ( "codeLensProvider",
                 Option.map cap.codeLensProvider ~f:(fun codelens ->
                     JSON_Object
-                      [ ( "resolveProvider",
-                          JSON_Bool codelens.codelens_resolveProvider ) ]) );
+                      [
+                        ( "resolveProvider",
+                          JSON_Bool codelens.codelens_resolveProvider );
+                      ]) );
               ( "documentFormattingProvider",
                 Some (JSON_Bool cap.documentFormattingProvider) );
               ( "documentRangeFormattingProvider",
@@ -1080,23 +1149,29 @@ let print_initialize (r : Initialize.result) : json =
               ( "documentOnTypeFormattingProvider",
                 Option.map cap.documentOnTypeFormattingProvider ~f:(fun o ->
                     JSON_Object
-                      [ ( "firstTriggerCharacter",
+                      [
+                        ( "firstTriggerCharacter",
                           JSON_String o.firstTriggerCharacter );
                         ( "moreTriggerCharacter",
-                          Jprint.string_array o.moreTriggerCharacter ) ]) );
+                          Jprint.string_array o.moreTriggerCharacter );
+                      ]) );
               ("renameProvider", Some (JSON_Bool cap.renameProvider));
               ( "documentLinkProvider",
                 Option.map cap.documentLinkProvider ~f:(fun dlp ->
                     JSON_Object
-                      [ ( "resolveProvider",
-                          JSON_Bool dlp.doclink_resolveProvider ) ]) );
+                      [
+                        ( "resolveProvider",
+                          JSON_Bool dlp.doclink_resolveProvider );
+                      ]) );
               ( "executeCommandProvider",
                 Option.map cap.executeCommandProvider ~f:(fun p ->
                     JSON_Object [("commands", Jprint.string_array p.commands)])
               );
               ( "typeCoverageProvider",
                 Some (JSON_Bool cap.typeCoverageProvider) );
-              ("rageProvider", Some (JSON_Bool cap.rageProvider)) ] ) ])
+              ("rageProvider", Some (JSON_Bool cap.rageProvider));
+            ] );
+      ])
 
 (************************************************************************)
 (* capabilities                                                         *)
@@ -1108,27 +1183,36 @@ let print_registrationOptions (registerOptions : Lsp.lsp_registration_options)
   | Lsp.DidChangeWatchedFilesRegistrationOptions registerOptions ->
     Lsp.DidChangeWatchedFiles.(
       JSON_Object
-        [ ( "watchers",
+        [
+          ( "watchers",
             JSON_Array
               (List.map registerOptions.watchers ~f:(fun watcher ->
                    JSON_Object
-                     [ ("globPattern", JSON_String watcher.globPattern);
-                       ("kind", int_ 7)
-                       (* all events: create, change, and delete *) ])) ) ])
+                     [
+                       ("globPattern", JSON_String watcher.globPattern);
+                       ("kind", int_ 7);
+                         (* all events: create, change, and delete *)
+                       
+                     ])) );
+        ])
 
 let print_registerCapability (params : Lsp.RegisterCapability.params) :
     Hh_json.json =
   Lsp.RegisterCapability.(
     JSON_Object
-      [ ( "registrations",
+      [
+        ( "registrations",
           JSON_Array
             (List.map params.registrations ~f:(fun registration ->
                  JSON_Object
-                   [ ("id", string_ registration.id);
+                   [
+                     ("id", string_ registration.id);
                      ("method", string_ registration.method_);
                      ( "registerOptions",
                        print_registrationOptions registration.registerOptions
-                     ) ])) ) ])
+                     );
+                   ])) );
+      ])
 
 let parse_didChangeWatchedFiles (json : Hh_json.json option) :
     DidChangeWatchedFiles.params =
@@ -1463,10 +1547,12 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
       failwith ("Don't know how to print request " ^ method_)
   in
   JSON_Object
-    [ ("jsonrpc", JSON_String "2.0");
+    [
+      ("jsonrpc", JSON_String "2.0");
       ("id", print_id id);
       ("method", JSON_String method_);
-      ("params", params) ]
+      ("params", params);
+    ]
 
 let print_lsp_response
     ?include_error_stack_trace (id : lsp_id) (result : lsp_result) : json =
@@ -1535,9 +1621,11 @@ let print_lsp_notification (notification : lsp_notification) : json =
       failwith ("Don't know how to print notification " ^ method_)
   in
   JSON_Object
-    [ ("jsonrpc", JSON_String "2.0");
+    [
+      ("jsonrpc", JSON_String "2.0");
       ("method", JSON_String method_);
-      ("params", params) ]
+      ("params", params);
+    ]
 
 let print_lsp ?include_error_stack_trace (message : lsp_message) : json =
   match message with

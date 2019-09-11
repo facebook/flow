@@ -81,7 +81,8 @@ let run_full_test source =
 
 let tests =
   "offset_utils"
-  >::: [ ("empty_line" >:: (fun ctxt -> run ctxt "foo\n\nbar" (3, 0) 5));
+  >::: [
+         ("empty_line" >:: (fun ctxt -> run ctxt "foo\n\nbar" (3, 0) 5));
          ( "Loc.none"
          >:: fun ctxt ->
          (* This is a fake location but it's used often enough that we should at least not crash when
@@ -159,4 +160,5 @@ let tests =
          ( "lexing_error_complex_regex_newline"
          >:: fun _ctxt ->
          let source = "/a\\\n/" in
-         run_full_test source ) ]
+         run_full_test source );
+       ]

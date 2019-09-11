@@ -18,7 +18,8 @@ module L = Layout_builder
 
 let tests =
   "js_layout_generator"
-  >::: [ "operator_precedence" >::: Operator_precedence_test.tests;
+  >::: [
+         "operator_precedence" >::: Operator_precedence_test.tests;
          "assignment_precedence" >:: Assignment_precedence_test.test;
          "variable_declaration_precedence" >:: Variable_declaration_precedence_test.test;
          "objects" >::: Object_test.tests;
@@ -78,12 +79,14 @@ let tests =
              L.(
                loc
                  (fused
-                    [ loc (id "x");
+                    [
+                      loc (id "x");
                       pretty_space;
                       atom "+";
                       pretty_space;
                       ugly_space;
-                      loc (fused [atom "++"; loc (id "y")]) ]))
+                      loc (fused [atom "++"; loc (id "y")]);
+                    ]))
              layout;
            assert_output ~ctxt "x+ ++y" layout;
            assert_output ~ctxt ~pretty:true "x + ++y" layout
@@ -188,17 +191,21 @@ let tests =
            L.(
              loc
                (group
-                  [ loc (id "a");
+                  [
+                    loc (id "a");
                     indent
                       (fused
-                         [ pretty_line;
+                         [
+                           pretty_line;
                            atom "?";
                            pretty_space;
                            loc (id "b");
                            pretty_line;
                            atom ":";
                            pretty_space;
-                           loc (id "c") ]) ]))
+                           loc (id "c");
+                         ]);
+                  ]))
            layout;
          assert_output ~ctxt "a?b:c" layout;
          assert_output ~ctxt ~pretty:true "a ? b : c" layout;
@@ -310,10 +317,12 @@ let tests =
          let underscore_d =
            E.call
              ~args:
-               [ E.expression (E.literal (Literals.string "a"));
+               [
+                 E.expression (E.literal (Literals.string "a"));
                  E.expression (E.literal (Literals.string "b"));
                  E.expression (E.function_ ());
-                 E.expression (E.literal (Literals.number 1. "1")) ]
+                 E.expression (E.literal (Literals.number 1. "1"));
+               ]
              (E.identifier "__d")
          in
          assert_expression ~ctxt "__d(\"a\",\"b\",(function(){}),1)" underscore_d );
@@ -393,20 +402,24 @@ let tests =
            L.(
              loc
                (group
-                  [ atom "new";
+                  [
+                    atom "new";
                     space;
                     loc (id "Foo");
                     atom "(";
                     indent
                       (fused
-                         [ softline;
+                         [
+                           softline;
                            loc (id "x");
                            atom ",";
                            pretty_line;
                            loc (id "y");
-                           Layout.IfBreak (atom ",", empty) ]);
+                           Layout.IfBreak (atom ",", empty);
+                         ]);
                     softline;
-                    atom ")" ]))
+                    atom ")";
+                  ]))
            layout;
          assert_output ~ctxt "new Foo(x,y)" layout;
          assert_output ~ctxt ~pretty:true "new Foo(x, y)" layout );
@@ -423,13 +436,15 @@ let tests =
            L.(
              loc
                (group
-                  [ atom "new";
+                  [
+                    atom "new";
                     space;
                     loc (id "Foo");
                     atom "(";
                     indent (fused [softline; loc (id x80); Layout.IfBreak (atom ",", empty)]);
                     softline;
-                    atom ")" ]))
+                    atom ")";
+                  ]))
            layout;
          assert_output ~ctxt ("new Foo(" ^ x80 ^ ")") layout;
          assert_output ~ctxt ~pretty:true ("new Foo(\n" ^ "  " ^ x80 ^ ",\n" ^ ")") layout );
@@ -447,11 +462,13 @@ let tests =
              L.(
                loc
                  (group
-                    [ atom "new";
+                    [
+                      atom "new";
                       pretty_space;
                       wrap_in_parens (loc (fused [loc (id "x"); atom "++"]));
                       atom "(";
-                      atom ")" ]))
+                      atom ")";
+                    ]))
              layout;
            assert_output ~ctxt "new(x++)()" layout;
            assert_output ~ctxt ~pretty:true "new (x++)()" layout;
@@ -630,11 +647,13 @@ let tests =
              L.(
                loc
                  (fused
-                    [ loc (fused [atom "\""; atom "foo"; atom "\""]);
+                    [
+                      loc (fused [atom "\""; atom "foo"; atom "\""]);
                       pretty_space;
                       atom "instanceof";
                       pretty_space;
-                      loc (group [atom "{"; atom "}"]) ]))
+                      loc (group [atom "{"; atom "}"]);
+                    ]))
              layout;
            assert_output ~ctxt {|"foo"instanceof{}|} layout;
            assert_output ~ctxt ~pretty:true {|"foo" instanceof {}|} layout
@@ -648,11 +667,13 @@ let tests =
              L.(
                loc
                  (fused
-                    [ loc (fused [atom "\""; atom "foo"; atom "\""]);
+                    [
+                      loc (fused [atom "\""; atom "foo"; atom "\""]);
                       pretty_space;
                       atom "instanceof";
                       space;
-                      loc (id "bar") ]))
+                      loc (id "bar");
+                    ]))
              layout;
            assert_output ~ctxt {|"foo"instanceof bar|} layout;
            assert_output ~ctxt ~pretty:true {|"foo" instanceof bar|} layout
@@ -665,11 +686,13 @@ let tests =
            L.(
              loc
                (fused
-                  [ loc (id "foo");
+                  [
+                    loc (id "foo");
                     space;
                     atom "instanceof";
                     pretty_space;
-                    loc (group [atom "{"; atom "}"]) ]))
+                    loc (group [atom "{"; atom "}"]);
+                  ]))
            layout;
          assert_output ~ctxt {|foo instanceof{}|} layout;
          assert_output ~ctxt ~pretty:true {|foo instanceof {}|} layout );
@@ -683,13 +706,17 @@ let tests =
            L.(
              loc
                (group
-                  [ loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                  [
+                    loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                     pretty_space;
                     atom "&&";
                     indent
                       (fused
-                         [ Layout.IfBreak (hardline, pretty_space);
-                           loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx") ]) ]))
+                         [
+                           Layout.IfBreak (hardline, pretty_space);
+                           loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                         ]);
+                  ]))
            layout;
          assert_output ~ctxt (x40 ^ "&&" ^ x40) layout;
          assert_output ~ctxt ~pretty:true (x40 ^ " &&\n  " ^ x40) layout );
@@ -718,22 +745,30 @@ let tests =
            L.(
              loc
                (fused
-                  [ atom "return";
+                  [
+                    atom "return";
                     space;
                     group
-                      [ Layout.IfBreak (atom "(", empty);
+                      [
+                        Layout.IfBreak (atom "(", empty);
                         indent
                           (fused
-                             [ softline;
+                             [
+                               softline;
                                loc
                                  (group
-                                    [ loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                                    [
+                                      loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                                       atom ",";
                                       pretty_line;
-                                      loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy") ]) ]);
+                                      loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
+                                    ]);
+                             ]);
                         softline;
-                        Layout.IfBreak (atom ")", empty) ];
-                    Layout.IfPretty (atom ";", empty) ]))
+                        Layout.IfBreak (atom ")", empty);
+                      ];
+                    Layout.IfPretty (atom ";", empty);
+                  ]))
            Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
          assert_statement ~ctxt ("function f(){return " ^ x40 ^ "," ^ y40 ^ "}") func;
          assert_statement
@@ -752,14 +787,18 @@ let tests =
            L.(
              loc
                (fused
-                  [ atom "return";
+                  [
+                    atom "return";
                     space;
                     group
-                      [ Layout.IfBreak (atom "(", empty);
+                      [
+                        Layout.IfBreak (atom "(", empty);
                         indent (fused [softline; expression logical]);
                         softline;
-                        Layout.IfBreak (atom ")", empty) ];
-                    Layout.IfPretty (atom ";", empty) ]))
+                        Layout.IfBreak (atom ")", empty);
+                      ];
+                    Layout.IfPretty (atom ";", empty);
+                  ]))
            Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
          assert_statement
            ~ctxt
@@ -777,14 +816,18 @@ let tests =
            L.(
              loc
                (fused
-                  [ atom "return";
+                  [
+                    atom "return";
                     space;
                     group
-                      [ Layout.IfBreak (atom "(", empty);
+                      [
+                        Layout.IfBreak (atom "(", empty);
                         indent (fused [softline; expression plus]);
                         softline;
-                        Layout.IfBreak (atom ")", empty) ];
-                    Layout.IfPretty (atom ";", empty) ]))
+                        Layout.IfBreak (atom ")", empty);
+                      ];
+                    Layout.IfPretty (atom ";", empty);
+                  ]))
            Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
          assert_statement
            ~ctxt
@@ -803,14 +846,18 @@ let tests =
            L.(
              loc
                (fused
-                  [ atom "return";
+                  [
+                    atom "return";
                     pretty_space;
                     group
-                      [ Layout.IfBreak (atom "(", empty);
+                      [
+                        Layout.IfBreak (atom "(", empty);
                         indent (fused [softline; expression jsx]);
                         softline;
-                        Layout.IfBreak (atom ")", empty) ];
-                    Layout.IfPretty (atom ";", empty) ]))
+                        Layout.IfBreak (atom ")", empty);
+                      ];
+                    Layout.IfPretty (atom ";", empty);
+                  ]))
            Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
          assert_statement
            ~ctxt
@@ -830,12 +877,14 @@ let tests =
            L.(
              loc
                (fused
-                  [ atom "return";
+                  [
+                    atom "return";
                     atom " ";
                     loc
                       (id
                          "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                    Layout.IfPretty (atom ";", empty) ]))
+                    Layout.IfPretty (atom ";", empty);
+                  ]))
            Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
          assert_statement ~ctxt ("function f(){return " ^ x80 ^ "}") func;
          assert_statement ~ctxt ~pretty:true ("function f() {\n  return " ^ x80 ^ ";\n}") func );
@@ -869,16 +918,20 @@ let tests =
            L.(
              loc
                (fused
-                  [ atom "for";
+                  [
+                    atom "for";
                     pretty_space;
                     group
-                      [ atom "(";
+                      [
+                        atom "(";
                         indent
                           (fused
                              [softline; loc (id x80); atom ";"; pretty_line; atom ";"; pretty_line]);
                         softline;
-                        atom ")" ];
-                    loc (atom ";") ]))
+                        atom ")";
+                      ];
+                    loc (atom ";");
+                  ]))
            layout;
          assert_output ~ctxt ("for(" ^ x80 ^ ";;);") layout;
          assert_output
@@ -1078,17 +1131,21 @@ let tests =
            L.(
              loc
                (group
-                  [ atom "[";
+                  [
+                    atom "[";
                     indent
                       (fused
-                         [ softline;
+                         [
+                           softline;
                            loc (id a80);
                            atom ",";
                            pretty_line;
                            loc (id a80);
-                           Layout.IfBreak (atom ",", empty) ]);
+                           Layout.IfBreak (atom ",", empty);
+                         ]);
                     softline;
-                    atom "]" ]))
+                    atom "]";
+                  ]))
            layout;
          assert_output ~ctxt ("[" ^ a80 ^ "," ^ a80 ^ "]") layout;
          assert_output
@@ -1106,10 +1163,12 @@ let tests =
            L.(
              loc
                (group
-                  [ atom "[";
+                  [
+                    atom "[";
                     indent (fused [softline; loc (id "a"); atom ","; pretty_line; atom ","]);
                     softline;
-                    atom "]" ]))
+                    atom "]";
+                  ]))
            layout;
          assert_output ~ctxt "[a,,]" layout;
          assert_output ~ctxt ~pretty:true "[a, ,]" layout;
@@ -1211,21 +1270,25 @@ let tests =
              L.(
                loc
                  (group
-                    [ atom "class";
+                    [
+                      atom "class";
                       space;
                       id "a";
                       indent
                         (fused
-                           [ line;
+                           [
+                             line;
                              atom "extends";
                              space;
                              loc (loc (id "b"));
                              line;
                              atom "implements";
                              space;
-                             loc (id "c") ]);
+                             loc (id "c");
+                           ]);
                       pretty_space;
-                      atom "{}" ]))
+                      atom "{}";
+                    ]))
              layout;
            assert_output ~ctxt "class a extends b implements c{}" layout;
            assert_output ~ctxt ~pretty:true "class a extends b implements c {}" layout
@@ -1243,25 +1306,33 @@ let tests =
                loc
                  (loc
                     (group
-                       [ atom "{";
+                       [
+                         atom "{";
                          indent
                            (fused
-                              [ pretty_hardline;
+                              [
+                                pretty_hardline;
                                 loc
                                   (group
-                                     [ atom "class";
+                                     [
+                                       atom "class";
                                        space;
                                        id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
                                        indent
                                          (fused
-                                            [ line;
+                                            [
+                                              line;
                                               atom "extends";
                                               space;
-                                              loc (loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy")) ]);
+                                              loc (loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"));
+                                            ]);
                                        pretty_space;
-                                       atom "{}" ]) ]);
+                                       atom "{}";
+                                     ]);
+                              ]);
                          pretty_hardline;
-                         atom "}" ])))
+                         atom "}";
+                       ])))
              layout;
            assert_output ~ctxt ("{class " ^ x35 ^ " extends " ^ y29 ^ "{}}") layout;
            assert_output
@@ -1352,29 +1423,36 @@ let tests =
              L.(
                loc
                  (fused
-                    [ atom "for";
+                    [
+                      atom "for";
                       pretty_space;
                       group
-                        [ atom "(";
+                        [
+                          atom "(";
                           loc (fused [atom "var"; space; loc (loc (id "a"))]);
                           space;
                           atom "in";
                           space;
                           loc (id "b");
-                          atom ")" ];
+                          atom ")";
+                        ];
                       pretty_space;
                       loc
                         (loc
                            (group
-                              [ atom "{";
+                              [
+                                atom "{";
                                 indent
                                   (fused
-                                     [ pretty_hardline;
+                                     [
+                                       pretty_hardline;
                                        loc
-                                         (fused [loc (id "a"); Layout.IfPretty (atom ";", empty)])
+                                         (fused [loc (id "a"); Layout.IfPretty (atom ";", empty)]);
                                      ]);
                                 pretty_hardline;
-                                atom "}" ])) ]))
+                                atom "}";
+                              ]));
+                    ]))
              layout;
            assert_output ~ctxt "for(var a in b){a}" layout;
            assert_output ~ctxt ~pretty:true ("for (var a in b) {\n" ^ "  a;\n" ^ "}") layout
@@ -1401,12 +1479,14 @@ let tests =
              L.(
                loc
                  (fused
-                    [ atom "for";
+                    [
+                      atom "for";
                       pretty_space;
                       group
                         [atom "("; loc (id "a"); space; atom "in"; space; loc (id "b"); atom ")"];
                       pretty_space;
-                      loc (loc (atom "{}")) ]))
+                      loc (loc (atom "{}"));
+                    ]))
              layout;
            assert_output ~ctxt "for(a in b){}" layout;
            assert_output ~ctxt ~pretty:true "for (a in b) {}" layout
@@ -1444,29 +1524,36 @@ let tests =
              L.(
                loc
                  (fused
-                    [ atom "for";
+                    [
+                      atom "for";
                       pretty_space;
                       group
-                        [ atom "(";
+                        [
+                          atom "(";
                           loc (fused [atom "var"; space; loc (loc (id "a"))]);
                           space;
                           atom "of";
                           space;
                           loc (id "b");
-                          atom ")" ];
+                          atom ")";
+                        ];
                       pretty_space;
                       loc
                         (loc
                            (group
-                              [ atom "{";
+                              [
+                                atom "{";
                                 indent
                                   (fused
-                                     [ pretty_hardline;
+                                     [
+                                       pretty_hardline;
                                        loc
-                                         (fused [loc (id "a"); Layout.IfPretty (atom ";", empty)])
+                                         (fused [loc (id "a"); Layout.IfPretty (atom ";", empty)]);
                                      ]);
                                 pretty_hardline;
-                                atom "}" ])) ]))
+                                atom "}";
+                              ]));
+                    ]))
              layout;
            assert_output ~ctxt "for(var a of b){a}" layout;
            assert_output ~ctxt ~pretty:true ("for (var a of b) {\n" ^ "  a;\n" ^ "}") layout
@@ -1493,12 +1580,14 @@ let tests =
              L.(
                loc
                  (fused
-                    [ atom "for";
+                    [
+                      atom "for";
                       pretty_space;
                       group
                         [atom "("; loc (id "a"); space; atom "of"; space; loc (id "b"); atom ")"];
                       pretty_space;
-                      loc (loc (atom "{}")) ]))
+                      loc (loc (atom "{}"));
+                    ]))
              layout;
            assert_output ~ctxt "for(a of b){}" layout;
            assert_output ~ctxt ~pretty:true "for (a of b) {}" layout
@@ -1660,10 +1749,12 @@ let tests =
            L.(
              loc
                (group
-                  [ atom "(";
+                  [
+                    atom "(";
                     loc (id "a");
                     loc (fused [atom ":"; pretty_space; loc (atom "mixed")]);
-                    atom ")" ]))
+                    atom ")";
+                  ]))
            layout;
          assert_output ~ctxt "(a:mixed)" layout;
          assert_output ~ctxt ~pretty:true "(a: mixed)" layout;
@@ -1877,62 +1968,75 @@ let tests =
            Js_layout_generator.statement
              (S.switch
                 (E.identifier "x")
-                [ S.switch_case
+                [
+                  S.switch_case
                     ~loc:case1_loc
                     ~test:(E.literal (Literals.string "a"))
                     [S.expression (E.increment ~prefix:false (E.identifier "x")); S.break ()];
                   S.switch_case
                     ~loc:case2_loc
                     ~test:(E.literal (Literals.string "b"))
-                    [S.expression (E.increment ~prefix:false (E.identifier "x")); S.break ()] ])
+                    [S.expression (E.increment ~prefix:false (E.identifier "x")); S.break ()];
+                ])
          in
          assert_layout
            ~ctxt
            L.(
              loc
                (fused
-                  [ atom "switch";
+                  [
+                    atom "switch";
                     pretty_space;
                     group [atom "("; indent (fused [softline; loc (id "x")]); softline; atom ")"];
                     pretty_space;
                     atom "{";
                     indent
                       (fused
-                         [ pretty_hardline;
+                         [
+                           pretty_hardline;
                            loc
                              ~loc:case1_loc
                              (fused
-                                [ atom "case";
+                                [
+                                  atom "case";
                                   pretty_space;
                                   loc (fused [atom "\""; atom "a"; atom "\""]);
                                   atom ":";
                                   indent
                                     (fused
-                                       [ pretty_hardline;
+                                       [
+                                         pretty_hardline;
                                          loc
                                            (fused [loc (fused [loc (id "x"); atom "++"]); atom ";"]);
                                          pretty_hardline;
-                                         loc (fused [atom "break"; atom ";"]) ]) ]);
+                                         loc (fused [atom "break"; atom ";"]);
+                                       ]);
+                                ]);
                            pretty_hardline;
                            pretty_hardline;
                            loc
                              ~loc:case2_loc
                              (fused
-                                [ atom "case";
+                                [
+                                  atom "case";
                                   pretty_space;
                                   loc (fused [atom "\""; atom "b"; atom "\""]);
                                   atom ":";
                                   indent
                                     (fused
-                                       [ pretty_hardline;
+                                       [
+                                         pretty_hardline;
                                          loc
                                            (fused [loc (fused [loc (id "x"); atom "++"]); atom ";"]);
                                          pretty_hardline;
                                          loc
-                                           (fused [atom "break"; Layout.IfPretty (atom ";", empty)])
-                                       ]) ]) ]);
+                                           (fused [atom "break"; Layout.IfPretty (atom ";", empty)]);
+                                       ]);
+                                ]);
+                         ]);
                     pretty_hardline;
-                    atom "}" ]))
+                    atom "}";
+                  ]))
            layout;
          assert_output ~ctxt "switch(x){case\"a\":x++;break;case\"b\":x++;break}" layout;
          assert_output
@@ -2072,8 +2176,10 @@ let tests =
                   (I.identifier "E")
                   (boolean_body
                      ~explicit_type
-                     [ initialized_member (I.identifier "A") true;
-                       initialized_member (I.identifier "B") false ])
+                     [
+                       initialized_member (I.identifier "A") true;
+                       initialized_member (I.identifier "B") false;
+                     ])
            in
            assert_output ~ctxt "enum E{A=true,B=false,}" (layout ~explicit_type:false);
            let pretty_output = "enum E {\n" ^ "  A = true,\n" ^ "  B = false,\n" ^ "}" in
@@ -2097,8 +2203,10 @@ let tests =
                   (I.identifier "E")
                   (number_body
                      ~explicit_type
-                     [ initialized_member (I.identifier "A") (number_literal 1.0 "1");
-                       initialized_member (I.identifier "B") (number_literal 2.0 "2") ])
+                     [
+                       initialized_member (I.identifier "A") (number_literal 1.0 "1");
+                       initialized_member (I.identifier "B") (number_literal 2.0 "2");
+                     ])
            in
            assert_output ~ctxt "enum E{A=1,B=2,}" (layout ~explicit_type:false);
            let pretty_output = "enum E {\n" ^ "  A = 1,\n" ^ "  B = 2,\n" ^ "}" in
@@ -2122,8 +2230,10 @@ let tests =
                   (I.identifier "E")
                   (string_initialized_body
                      ~explicit_type
-                     [ initialized_member (I.identifier "A") (string_literal "a");
-                       initialized_member (I.identifier "B") (string_literal "b") ])
+                     [
+                       initialized_member (I.identifier "A") (string_literal "a");
+                       initialized_member (I.identifier "B") (string_literal "b");
+                     ])
            in
            assert_output ~ctxt "enum E{A=\"a\",B=\"b\",}" (layout ~explicit_type:false);
            let pretty_output = "enum E {\n" ^ "  A = \"a\",\n" ^ "  B = \"b\",\n" ^ "}" in
@@ -2172,4 +2282,5 @@ let tests =
            in
            assert_output ~ctxt "enum E of symbol{A,B,}" layout;
            let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
-           assert_output ~ctxt ~pretty:true pretty_output layout) ) ]
+           assert_output ~ctxt ~pretty:true pretty_output layout) );
+       ]

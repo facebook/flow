@@ -35,11 +35,13 @@ class ruleset_exact =
           super#is_subtype_obj o1 o2)
 
     method! get_all_rules () =
-      [| self#rule_num_lit;
-         self#rule_obj_lit 1 0;
-         self#rule_vardecl_with_type;
-         self#rule_prop_read;
-         self#rule_prop_update |]
+      [|
+        self#rule_num_lit;
+        self#rule_obj_lit 1 0;
+        self#rule_vardecl_with_type;
+        self#rule_prop_read;
+        self#rule_prop_update;
+      |]
   end
 
 class ruleset_random_exact =

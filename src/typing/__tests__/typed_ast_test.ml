@@ -140,9 +140,11 @@ let before_and_after_stmts file_name =
       | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
       | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]
       | Abnormal.Exn (Abnormal.Expr (annot, t_expr), _) ->
-        [ ( annot,
+        [
+          ( annot,
             Flow_ast.Statement.Expression
-              { Flow_ast.Statement.Expression.expression = t_expr; directive = None } ) ]
+              { Flow_ast.Statement.Expression.expression = t_expr; directive = None } );
+        ]
       | e ->
         let e = Exception.wrap e in
         let message = Exception.get_ctor_string e in

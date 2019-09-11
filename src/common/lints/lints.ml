@@ -70,10 +70,12 @@ let string_of_kind = function
 let kinds_of_string = function
   | "sketchy-null" ->
     Some
-      [ SketchyNull SketchyNullBool;
+      [
+        SketchyNull SketchyNullBool;
         SketchyNull SketchyNullString;
         SketchyNull SketchyNullNumber;
-        SketchyNull SketchyNullMixed ]
+        SketchyNull SketchyNullMixed;
+      ]
   | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
   | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
   | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]

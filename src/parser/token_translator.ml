@@ -18,7 +18,8 @@ with type t = Impl.t = struct
   let token offset_table { Parser_env.token_loc; token; token_context } =
     Loc.(
       Impl.obj
-        [ ("type", Impl.string (Token.token_to_string token));
+        [
+          ("type", Impl.string (Token.token_to_string token));
           ( "context",
             Impl.string
               Parser_env.Lex_mode.(
@@ -31,19 +32,28 @@ with type t = Impl.t = struct
                 | REGEXP -> "regexp") );
           ( "loc",
             Impl.obj
-              [ ( "start",
+              [
+                ( "start",
                   Impl.obj
-                    [ ("line", Impl.number (float token_loc.start.line));
-                      ("column", Impl.number (float token_loc.start.column)) ] );
+                    [
+                      ("line", Impl.number (float token_loc.start.line));
+                      ("column", Impl.number (float token_loc.start.column));
+                    ] );
                 ( "end",
                   Impl.obj
-                    [ ("line", Impl.number (float token_loc._end.line));
-                      ("column", Impl.number (float token_loc._end.column)) ] ) ] );
+                    [
+                      ("line", Impl.number (float token_loc._end.line));
+                      ("column", Impl.number (float token_loc._end.column));
+                    ] );
+              ] );
           ( "range",
             Impl.array
-              [ Impl.number (float (Offset_utils.offset offset_table token_loc.start));
-                Impl.number (float (Offset_utils.offset offset_table token_loc._end)) ] );
-          ("value", Impl.string (Token.value_of_token token)) ])
+              [
+                Impl.number (float (Offset_utils.offset offset_table token_loc.start));
+                Impl.number (float (Offset_utils.offset offset_table token_loc._end));
+              ] );
+          ("value", Impl.string (Token.value_of_token token));
+        ])
 
   let token_list offset_table tokens =
     Impl.array (List.rev_map (token offset_table) tokens |> List.rev)

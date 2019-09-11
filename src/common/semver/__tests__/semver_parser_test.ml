@@ -26,11 +26,13 @@ let parse_range str =
 
 let tests =
   "parser"
-  >::: [ ( "version_basics"
+  >::: [
+         ( "version_basics"
          >:: fun ctxt ->
          Semver_version.(
            let cases =
-             [ ("0", zero);
+             [
+               ("0", zero);
                ("0.1", { zero with minor = 1 });
                ("1", { zero with major = 1 });
                ("1.2", { zero with major = 1; minor = 2 });
@@ -39,7 +41,8 @@ let tests =
                  { zero with major = 1; minor = 2; patch = 3; prerelease = [Str "alpha"] } );
                ( "1.2.3-alpha.2",
                  { zero with major = 1; minor = 2; patch = 3; prerelease = [Str "alpha"; Int 2] }
-               ) ]
+               );
+             ]
            in
            List.iter
              (fun (str, version) ->
@@ -54,7 +57,8 @@ let tests =
          Semver_comparator.(
            let v1 = Semver_version.{ zero with major = 1 } in
            let cases =
-             [ (">1", { op = Some Greater; version = v1 });
+             [
+               (">1", { op = Some Greater; version = v1 });
                (">=1", { op = Some GreaterOrEqual; version = v1 });
                ("<1", { op = Some Less; version = v1 });
                ("<=1", { op = Some LessOrEqual; version = v1 });
@@ -62,7 +66,8 @@ let tests =
                ("1", { op = None; version = v1 });
                ("= 1", { op = Some Equal; version = v1 });
                (" = 1", { op = Some Equal; version = v1 });
-               ("  = 1 ", { op = Some Equal; version = v1 }) ]
+               ("  = 1 ", { op = Some Equal; version = v1 });
+             ]
            in
            List.iter
              (fun (str, comparator) ->
@@ -80,13 +85,15 @@ let tests =
            let ge1 = Comparator Semver_comparator.{ op = Some GreaterOrEqual; version = v1 } in
            let lt2 = Comparator Semver_comparator.{ op = Some Less; version = v2 } in
            let cases =
-             [ (">=1", [ge1]);
+             [
+               (">=1", [ge1]);
                (">=1 <2", [ge1; lt2]);
                ("^1", [Caret v1]);
                ("^1.0", [Caret v1]);
                ("^1.0.0", [Caret v1]);
                ("^1 ^2", [Caret v1; Caret v2]);
-               (">=1 ^2", [ge1; Caret v2]) ]
+               (">=1 ^2", [ge1; Caret v2]);
+             ]
            in
            List.iter
              (fun (str, range) ->
@@ -94,5 +101,7 @@ let tests =
                with Semver_parse_error token ->
                  assert_failure ("Failed to parse " ^ str ^ ": unexpected token " ^ token))
              cases;
-           assert_bool "done" true) )
-         (* fixes ounit error reporting *) ]
+           assert_bool "done" true) );
+           (* fixes ounit error reporting *)
+         
+       ]

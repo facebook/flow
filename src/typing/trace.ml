@@ -177,7 +177,8 @@ let reasons_of_trace ?(level = 0) trace =
       []
     else
       [pretty_r (reason_of_t_add_id lower) (spf "%s " (string_of_ctor lower)) ""] )
-    @ [ pretty_r
+    @ [
+        pretty_r
           (reason_of_use_t_add_id upper)
           (spf "~> %s " (string_of_use_ctor upper))
           ( if parent = [] then
@@ -185,7 +186,8 @@ let reasons_of_trace ?(level = 0) trace =
           else
             match TraceMap.get parent tmap with
             | Some i -> spf " (from path %d)" (i + 1)
-            | None -> " (from [not shown])" ) ]
+            | None -> " (from [not shown])" );
+      ]
   in
   let print_path i (steps : step list) =
     let desc = RCustom (spf "* path %d:" (i + 1)) in

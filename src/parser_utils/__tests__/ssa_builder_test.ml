@@ -24,7 +24,8 @@ let mk_write pos1 pos2 = Ssa_api.Write (mk_loc pos1 pos2)
 
 let tests =
   "ssa_builder"
-  >::: [ "var"
+  >::: [
+         "var"
          >:: mk_ssa_builder_test
                "function foo(x) {
        var y;
@@ -218,9 +219,11 @@ let tests =
                       [mk_write (1, 18) (1, 19); mk_write (1, 80) (1, 81)]
                  |> add
                       (mk_loc (1, 120) (1, 121))
-                      [ mk_write (1, 18) (1, 19);
+                      [
+                        mk_write (1, 18) (1, 19);
                         mk_write (1, 50) (1, 51);
-                        mk_write (1, 100) (1, 101) ]);
+                        mk_write (1, 100) (1, 101);
+                      ]);
          "break_labeled"
          >:: mk_ssa_builder_test
                "(function() { var a = 0; L: { a = a + 1; break L; a = a + 1; } return a; })"
@@ -263,15 +266,27 @@ let tests =
                  empty
                  |> add
                       (mk_loc (1, 32) (1, 33))
-                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 65) (1, 66)]
+                      [
+                        mk_write (1, 18) (1, 19);
+                        mk_write (1, 37) (1, 38);
+                        mk_write (1, 65) (1, 66);
+                      ]
                  |> add
                       (mk_loc (1, 41) (1, 42))
-                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 65) (1, 66)]
+                      [
+                        mk_write (1, 18) (1, 19);
+                        mk_write (1, 37) (1, 38);
+                        mk_write (1, 65) (1, 66);
+                      ]
                  |> add (mk_loc (1, 52) (1, 53)) [mk_write (1, 37) (1, 38)]
                  |> add (mk_loc (1, 69) (1, 70)) [mk_write (1, 37) (1, 38)]
                  |> add
                       (mk_loc (1, 85) (1, 86))
-                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 65) (1, 66)]);
+                      [
+                        mk_write (1, 18) (1, 19);
+                        mk_write (1, 37) (1, 38);
+                        mk_write (1, 65) (1, 66);
+                      ]);
          "continue_labeled_while"
          >:: mk_ssa_builder_test
                "(function() { var x = 0; L: while (x) { x = 1; continue L; x; x = 2; } return x; })"
@@ -303,10 +318,12 @@ let tests =
                  |> add (mk_loc (1, 63) (1, 64)) [mk_write (1, 54) (1, 55)]
                  |> add
                       (mk_loc (1, 95) (1, 96))
-                      [ mk_write (1, 18) (1, 19);
+                      [
+                        mk_write (1, 18) (1, 19);
                         mk_write (1, 34) (1, 35);
                         mk_write (1, 59) (1, 60);
-                        mk_write (1, 91) (1, 92) ]
+                        mk_write (1, 91) (1, 92);
+                      ]
                  |> add (mk_loc (1, 111) (1, 112)) [mk_write (1, 91) (1, 92)]);
          "nested_labeled_break_try_catch"
          >:: mk_ssa_builder_test
@@ -317,10 +334,12 @@ let tests =
                  |> add (mk_loc (1, 70) (1, 71)) [mk_write (1, 61) (1, 62)]
                  |> add
                       (mk_loc (1, 102) (1, 103))
-                      [ mk_write (1, 18) (1, 19);
+                      [
+                        mk_write (1, 18) (1, 19);
                         mk_write (1, 41) (1, 42);
                         mk_write (1, 66) (1, 67);
-                        mk_write (1, 98) (1, 99) ]
+                        mk_write (1, 98) (1, 99);
+                      ]
                  |> add (mk_loc (1, 142) (1, 143)) [mk_write (1, 98) (1, 99)]);
          "throw"
          >:: mk_ssa_builder_test
@@ -343,7 +362,11 @@ let tests =
                  |> add (mk_loc (1, 94) (1, 95)) [mk_write (1, 62) (1, 63)]
                  |> add
                       (mk_loc (1, 109) (1, 110))
-                      [mk_write (1, 18) (1, 19); mk_write (1, 37) (1, 38); mk_write (1, 90) (1, 91)]);
+                      [
+                        mk_write (1, 18) (1, 19);
+                        mk_write (1, 37) (1, 38);
+                        mk_write (1, 90) (1, 91);
+                      ]);
          "JSX"
          >:: mk_ssa_builder_test
                "class Foo {}; <Foo></Foo>; <Foo/>"
@@ -361,5 +384,5 @@ let tests =
                "(function() { var x; new Y(function() { x = 1; }); return x; })"
                LocMap.(
                  empty
-                 |> add (mk_loc (1, 58) (1, 59)) [Ssa_api.uninitialized; mk_write (1, 40) (1, 41)])
+                 |> add (mk_loc (1, 58) (1, 59)) [Ssa_api.uninitialized; mk_write (1, 40) (1, 41)]);
        ]

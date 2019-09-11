@@ -10,10 +10,12 @@ let sample_init_memory profiling =
     let hash_stats = hash_stats () in
     let heap_size = heap_size () in
     let memory_metrics =
-      [ ("heap.size", heap_size);
+      [
+        ("heap.size", heap_size);
         ("hash_table.nonempty_slots", hash_stats.nonempty_slots);
         ("hash_table.used_slots", hash_stats.used_slots);
-        ("hash_table.slots", hash_stats.slots) ]
+        ("hash_table.slots", hash_stats.slots);
+      ]
     in
     List.iter
       (fun (metric, value) ->

@@ -975,19 +975,21 @@ class ruleset_base =
 
     method get_all_rules () =
       let all_rules =
-        [| self#rule_num_lit;
-           self#rule_str_lit;
-           self#rule_obj_lit 1 0;
-           self#rule_obj_type 1 0;
-           self#rule_vardecl;
-           self#rule_vardecl_with_type;
-           self#rule_func_type;
-           self#rule_union_type 2;
-           self#rule_prim_type;
-           self#rule_funcdef;
-           self#rule_func_call;
-           self#rule_prop_read;
-           self#rule_prop_update |]
+        [|
+          self#rule_num_lit;
+          self#rule_str_lit;
+          self#rule_obj_lit 1 0;
+          self#rule_obj_type 1 0;
+          self#rule_vardecl;
+          self#rule_vardecl_with_type;
+          self#rule_func_type;
+          self#rule_union_type 2;
+          self#rule_prim_type;
+          self#rule_funcdef;
+          self#rule_func_call;
+          self#rule_prop_read;
+          self#rule_prop_update;
+        |]
       in
       all_rules
   end

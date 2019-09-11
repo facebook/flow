@@ -35,18 +35,22 @@ let rec iter_pairs f = function
 
 let tests =
   "version"
-  >::: [ "compare_precedence"
-         >::: [ ( "prerelease"
+  >::: [
+         "compare_precedence"
+         >::: [
+                ( "prerelease"
                 >:: fun _ctxt ->
                 let ordered =
-                  [ v1_0_0_alpha;
+                  [
+                    v1_0_0_alpha;
                     v1_0_0_alpha_1;
                     v1_0_0_alpha_beta;
                     v1_0_0_beta;
                     v1_0_0_beta_2;
                     v1_0_0_beta_11;
                     v1_0_0_rc_1;
-                    v1_0_0 ]
+                    v1_0_0;
+                  ]
                 in
                 iter_pairs
                   (fun a b ->
@@ -64,10 +68,14 @@ let tests =
                 >:: fun _ctxt ->
                 let a = v 1 0 0 [] [Int 1] in
                 let b = v 1 0 0 [] [Int 2] in
-                assert_bool "1.0.0+1 should be = 1.0.0+2" (compare_precedence a b = 0) ) ];
+                assert_bool "1.0.0+1 should be = 1.0.0+2" (compare_precedence a b = 0) );
+              ];
          "compare"
-         >::: [ ( "build"
+         >::: [
+                ( "build"
                 >:: fun _ctxt ->
                 let a = v 1 0 0 [] [Int 1] in
                 let b = v 1 0 0 [] [Int 2] in
-                assert_bool "1.0.0+1 should NOT be = 1.0.0+2" (compare a b < 0) ) ] ]
+                assert_bool "1.0.0+1 should NOT be = 1.0.0+2" (compare a b < 0) );
+              ];
+       ]

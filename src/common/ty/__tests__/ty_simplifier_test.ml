@@ -11,151 +11,170 @@ open Ty_utils
 
 module UnionSimplification = struct
   let tests =
-    [ (*
+    [
+      (*
        * {f: number} | {f: number}
        * ~>
        * {f: number}
        *)
-      ( "simplify_union_obj"
-      >:: fun ctxt ->
-      let t_in =
-        Ty.Union
-          ( Ty.Obj
-              {
-                Ty.obj_exact = false;
-                obj_frozen = false;
-                obj_literal = false;
-                obj_props =
-                  [ Ty.NamedProp
-                      ( "f",
-                        Ty.Field
-                          (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false }) )
-                  ];
-              },
-            Ty.Obj
-              {
-                Ty.obj_exact = false;
-                obj_frozen = false;
-                obj_literal = false;
-                obj_props =
-                  [ Ty.NamedProp
-                      ( "f",
-                        Ty.Field
-                          (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false }) )
-                  ];
-              },
-            [] )
-      in
-      let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
-      let t_exp =
-        Ty.Obj
-          {
-            Ty.obj_exact = false;
-            obj_frozen = false;
-            obj_literal = false;
-            obj_props =
-              [ Ty.NamedProp
-                  ( "f",
-                    Ty.Field (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false })
-                  ) ];
-          }
-      in
-      assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        ( "simplify_union_obj"
+        >:: fun ctxt ->
+        let t_in =
+          Ty.Union
+            ( Ty.Obj
+                {
+                  Ty.obj_exact = false;
+                  obj_frozen = false;
+                  obj_literal = false;
+                  obj_props =
+                    [
+                      Ty.NamedProp
+                        ( "f",
+                          Ty.Field
+                            (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false })
+                        );
+                    ];
+                },
+              Ty.Obj
+                {
+                  Ty.obj_exact = false;
+                  obj_frozen = false;
+                  obj_literal = false;
+                  obj_props =
+                    [
+                      Ty.NamedProp
+                        ( "f",
+                          Ty.Field
+                            (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false })
+                        );
+                    ];
+                },
+              [] )
+        in
+        let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
+        let t_exp =
+          Ty.Obj
+            {
+              Ty.obj_exact = false;
+              obj_frozen = false;
+              obj_literal = false;
+              obj_props =
+                [
+                  Ty.NamedProp
+                    ( "f",
+                      Ty.Field (Ty.Num None, { Ty.fld_polarity = Ty.Neutral; fld_optional = false })
+                    );
+                ];
+            }
+        in
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
       (*
        * {+f: number} | {-f: number}
        * ~>
        * {+f: number} | {-f: number}
        *)
-      ( "simplify_union_obj"
-      >:: fun ctxt ->
-      let t_in =
-        Ty.Union
-          ( Ty.Obj
-              {
-                Ty.obj_exact = false;
-                obj_frozen = false;
-                obj_literal = false;
-                obj_props =
-                  [ Ty.NamedProp
-                      ( "f",
-                        Ty.Field
-                          (Ty.Num None, { Ty.fld_polarity = Ty.Positive; fld_optional = false }) )
-                  ];
-              },
-            Ty.Obj
-              {
-                Ty.obj_exact = false;
-                obj_frozen = false;
-                obj_literal = false;
-                obj_props =
-                  [ Ty.NamedProp
-                      ( "f",
-                        Ty.Field
-                          (Ty.Num None, { Ty.fld_polarity = Ty.Negative; fld_optional = false }) )
-                  ];
-              },
-            [] )
-      in
-      let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
-      let t_exp = t_in in
-      assert_equal ~ctxt ~printer:Ty.show t_exp t_out ) ]
+        ( "simplify_union_obj"
+        >:: fun ctxt ->
+        let t_in =
+          Ty.Union
+            ( Ty.Obj
+                {
+                  Ty.obj_exact = false;
+                  obj_frozen = false;
+                  obj_literal = false;
+                  obj_props =
+                    [
+                      Ty.NamedProp
+                        ( "f",
+                          Ty.Field
+                            (Ty.Num None, { Ty.fld_polarity = Ty.Positive; fld_optional = false })
+                        );
+                    ];
+                },
+              Ty.Obj
+                {
+                  Ty.obj_exact = false;
+                  obj_frozen = false;
+                  obj_literal = false;
+                  obj_props =
+                    [
+                      Ty.NamedProp
+                        ( "f",
+                          Ty.Field
+                            (Ty.Num None, { Ty.fld_polarity = Ty.Negative; fld_optional = false })
+                        );
+                    ];
+                },
+              [] )
+        in
+        let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
+        let t_exp = t_in in
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+    ]
 end
 
 module BotAndTopSimplification = struct
   let tests =
-    [ (* When merge_kinds is true, all kinds of `empty` are equivalent, even when
+    [
+      (* When merge_kinds is true, all kinds of `empty` are equivalent, even when
        * nested under a type constructor.
        *
        * {f: empty} | {f: empty'}
        * ~> (merge_kinds:true)
        * {f: empty'}
        *)
-      ( "simplify_union_obj_empty_insensitive"
-      >:: fun ctxt ->
-      let t_in =
-        Ty.Union
-          ( Ty.Obj
-              {
-                Ty.obj_exact = false;
-                obj_frozen = false;
-                obj_literal = false;
-                obj_props =
-                  [ Ty.NamedProp
-                      ( "f",
-                        Ty.Field
-                          ( Ty.Bot Ty.EmptyType,
-                            { Ty.fld_polarity = Ty.Neutral; fld_optional = false } ) ) ];
-              },
-            Ty.Obj
-              {
-                Ty.obj_exact = false;
-                obj_frozen = false;
-                obj_literal = false;
-                obj_props =
-                  [ Ty.NamedProp
-                      ( "f",
-                        Ty.Field
-                          ( Ty.Bot Ty.EmptyMatchingPropT,
-                            { Ty.fld_polarity = Ty.Neutral; fld_optional = false } ) ) ];
-              },
-            [] )
-      in
-      let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
-      let t_exp =
-        Ty.Obj
-          {
-            Ty.obj_exact = false;
-            obj_frozen = false;
-            obj_literal = false;
-            obj_props =
-              [ Ty.NamedProp
-                  ( "f",
-                    Ty.Field
-                      (Ty.Bot Ty.EmptyType, { Ty.fld_polarity = Ty.Neutral; fld_optional = false })
-                  ) ];
-          }
-      in
-      assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        ( "simplify_union_obj_empty_insensitive"
+        >:: fun ctxt ->
+        let t_in =
+          Ty.Union
+            ( Ty.Obj
+                {
+                  Ty.obj_exact = false;
+                  obj_frozen = false;
+                  obj_literal = false;
+                  obj_props =
+                    [
+                      Ty.NamedProp
+                        ( "f",
+                          Ty.Field
+                            ( Ty.Bot Ty.EmptyType,
+                              { Ty.fld_polarity = Ty.Neutral; fld_optional = false } ) );
+                    ];
+                },
+              Ty.Obj
+                {
+                  Ty.obj_exact = false;
+                  obj_frozen = false;
+                  obj_literal = false;
+                  obj_props =
+                    [
+                      Ty.NamedProp
+                        ( "f",
+                          Ty.Field
+                            ( Ty.Bot Ty.EmptyMatchingPropT,
+                              { Ty.fld_polarity = Ty.Neutral; fld_optional = false } ) );
+                    ];
+                },
+              [] )
+        in
+        let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
+        let t_exp =
+          Ty.Obj
+            {
+              Ty.obj_exact = false;
+              obj_frozen = false;
+              obj_literal = false;
+              obj_props =
+                [
+                  Ty.NamedProp
+                    ( "f",
+                      Ty.Field
+                        ( Ty.Bot Ty.EmptyType,
+                          { Ty.fld_polarity = Ty.Neutral; fld_optional = false } ) );
+                ];
+            }
+        in
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
       (* This tests the conversion `mixed & T -> T` and that `empty' | T` remains
        * as is when:
        * - `empty'` is not the empty type due to
@@ -167,29 +186,29 @@ module BotAndTopSimplification = struct
        * ~> (merge_kinds:false)
        * empty' | empty'' | number
        *)
-      ( "merge_bot_and_any_kinds_sensitive"
-      >:: fun ctxt ->
-      let t_in =
-        Ty.Inter
-          ( Ty.Top,
-            Ty.Union
-              ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
-                Ty.Inter
-                  ( Ty.Top,
-                    Ty.Union
-                      (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
-                    [] ),
-                [] ),
-            [] )
-      in
-      let t_out = Ty_utils.simplify_type ~merge_kinds:false ~sort:false t_in in
-      let t_exp =
-        Ty.Union
-          ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
-            Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")),
-            [Ty.Num None] )
-      in
-      assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        ( "merge_bot_and_any_kinds_sensitive"
+        >:: fun ctxt ->
+        let t_in =
+          Ty.Inter
+            ( Ty.Top,
+              Ty.Union
+                ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
+                  Ty.Inter
+                    ( Ty.Top,
+                      Ty.Union
+                        (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
+                      [] ),
+                  [] ),
+              [] )
+        in
+        let t_out = Ty_utils.simplify_type ~merge_kinds:false ~sort:false t_in in
+        let t_exp =
+          Ty.Union
+            ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
+              Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")),
+              [Ty.Num None] )
+        in
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
       (* This tests the conversion `mixed & T -> T` and `empty' | T -> T` when
        * merge_kinds is true.
        *
@@ -197,24 +216,25 @@ module BotAndTopSimplification = struct
        * ~>
        * number
        *)
-      ( "merge_bot_and_any_kinds_insensitive"
-      >:: fun ctxt ->
-      let t_in =
-        Ty.Inter
-          ( Ty.Top,
-            Ty.Union
-              ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
-                Ty.Inter
-                  ( Ty.Top,
-                    Ty.Union
-                      (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
-                    [] ),
-                [] ),
-            [] )
-      in
-      let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
-      let t_exp = Ty.Num None in
-      assert_equal ~ctxt ~printer:Ty.show t_exp t_out ) ]
+        ( "merge_bot_and_any_kinds_insensitive"
+        >:: fun ctxt ->
+        let t_in =
+          Ty.Inter
+            ( Ty.Top,
+              Ty.Union
+                ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
+                  Ty.Inter
+                    ( Ty.Top,
+                      Ty.Union
+                        (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
+                      [] ),
+                  [] ),
+              [] )
+        in
+        let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
+        let t_exp = Ty.Num None in
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+    ]
 end
 
 module AnySimplification = struct
@@ -227,7 +247,8 @@ module AnySimplification = struct
    * any | (any' & (any & any'))
    *)
   let tests =
-    [ ( "merge_any_kinds_sensitive"
+    [
+      ( "merge_any_kinds_sensitive"
       >:: fun ctxt ->
       let t_in =
         Union
@@ -248,17 +269,19 @@ module AnySimplification = struct
        * The output could also be any'. The kind of the resulting any type when
        * merge_kinds is true, is not specified.
        *)
-      ( "merge_any_kinds_insensitive"
-      >:: fun ctxt ->
-      let t_in =
-        Union
-          ( Any (Unsound BoundFunctionThis),
-            Inter (Any Annotated, Union (Any (Unsound BoundFunctionThis), Ty.Any Annotated, []), []),
-            [] )
-      in
-      let t_out = Ty_utils.simplify_type ~merge_kinds:true t_in in
-      let t_exp = Any (Unsound BoundFunctionThis) in
-      assert_equal ~ctxt ~printer:Ty.show t_exp t_out ) ]
+        ( "merge_any_kinds_insensitive"
+        >:: fun ctxt ->
+        let t_in =
+          Union
+            ( Any (Unsound BoundFunctionThis),
+              Inter
+                (Any Annotated, Union (Any (Unsound BoundFunctionThis), Ty.Any Annotated, []), []),
+              [] )
+        in
+        let t_out = Ty_utils.simplify_type ~merge_kinds:true t_in in
+        let t_exp = Any (Unsound BoundFunctionThis) in
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+    ]
 end
 
 module Sorting = struct
@@ -283,7 +306,8 @@ module Sorting = struct
   let t6_sorted = Union (Any Annotated, NumLit "1", [NumLit "2"; NumLit "42"; Num None])
 
   let tests =
-    [ ( "idempotence"
+    [
+      ( "idempotence"
       >:: fun ctxt ->
       assert_equal
         ~ctxt
@@ -321,7 +345,8 @@ module Sorting = struct
       in
       let t_out = simplify_sort t_in in
       let t_exp = Union (Void, Inter (Any Annotated, Void, [NumLit "1"]), []) in
-      assert_equal ~ctxt ~printer:Ty.show t_exp t_out ) ]
+      assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+    ]
 end
 
 let tests =

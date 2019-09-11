@@ -104,7 +104,8 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
                 assoc
             in
             let json =
-              JSON_Object [("not_flow", JSON_Bool false); ("requirements", JSON_Array requirements)]
+              JSON_Object
+                [("not_flow", JSON_Bool false); ("requirements", JSON_Array requirements)]
             in
             (module_name, json) :: acc)
           requirements_map

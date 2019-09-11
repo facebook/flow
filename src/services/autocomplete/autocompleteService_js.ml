@@ -30,14 +30,19 @@ let remove_autocomplete_token_from_loc loc =
 let autocomplete_result_to_json ~strip_root result =
   let func_param_to_json param =
     Hh_json.JSON_Object
-      [("name", Hh_json.JSON_String param.param_name); ("type", Hh_json.JSON_String param.param_ty)]
+      [
+        ("name", Hh_json.JSON_String param.param_name);
+        ("type", Hh_json.JSON_String param.param_ty);
+      ]
   in
   let func_details_to_json details =
     match details with
     | Some fd ->
       Hh_json.JSON_Object
-        [ ("return_type", Hh_json.JSON_String fd.return_ty);
-          ("params", Hh_json.JSON_Array (Core_list.map ~f:func_param_to_json fd.param_tys)) ]
+        [
+          ("return_type", Hh_json.JSON_String fd.return_ty);
+          ("params", Hh_json.JSON_Array (Core_list.map ~f:func_param_to_json fd.param_tys));
+        ]
     | None -> Hh_json.JSON_Null
   in
   let name = result.res_name in
@@ -65,10 +70,12 @@ let autocomplete_response_to_json ~strip_root response =
     match response with
     | Error error ->
       JSON_Object
-        [ ("error", JSON_String error);
-          ("result", JSON_Array [])
-          (* TODO: remove this? kept for BC *)
-         ]
+        [
+          ("error", JSON_String error);
+          ("result", JSON_Array []);
+            (* TODO: remove this? kept for BC *)
+          
+        ]
     | Ok completions ->
       let results = List.map (autocomplete_result_to_json ~strip_root) completions in
       JSON_Object [("result", JSON_Array results)])
@@ -176,14 +183,16 @@ let autocomplete_member
     in
     let json_data_to_log =
       JSON_Object
-        [ ("ac_type", JSON_String ac_type);
+        [
+          ("ac_type", JSON_String ac_type);
           ("ac_name", JSON_String ac_name);
           (* don't need to strip root for logging *)
-          ("ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc));
+            ("ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc));
           ("loc", Reason.json_of_loc ~offset_table:None ac_loc);
           ("docblock", Docblock.json_of_docblock docblock);
           ("result", JSON_String result_str);
-          ("type", Debug_js.json_of_t ~depth:3 cx t) ]
+          ("type", Debug_js.json_of_t ~depth:3 cx t);
+        ]
     in
     match Members.to_command_result result with
     | Error error -> Error (error, Some json_data_to_log)
@@ -279,13 +288,15 @@ let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
         | (_, _) -> "PARTIAL"
       in
       JSON_Object
-        [ ("ac_type", JSON_String "Acid");
+        [
+          ("ac_type", JSON_String "Acid");
           ("result", JSON_String result_str);
           ("count", JSON_Number (result |> List.length |> string_of_int));
           ( "errors",
             JSON_Array
               (Core_list.rev_map errors ~f:(fun err ->
-                   JSON_String (Ty_normalizer.error_to_string err))) ) ])
+                   JSON_String (Ty_normalizer.error_to_string err))) );
+        ])
   in
   Ok (result, Some json_data_to_log)
 

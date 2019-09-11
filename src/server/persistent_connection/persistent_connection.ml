@@ -43,10 +43,12 @@ let send_errors =
     fun filename warn_map ->
       get_first_contained
         warn_map
-        [ File_key.SourceFile filename;
+        [
+          File_key.SourceFile filename;
           File_key.LibFile filename;
           File_key.JsonFile filename;
-          File_key.ResourceFile filename ]
+          File_key.ResourceFile filename;
+        ]
   in
   fun ~errors_reason ~errors ~warnings client ->
     let opened_filenames = SMap.bindings client.opened_files |> Core_list.map ~f:fst in

@@ -34,10 +34,12 @@ let error_list_of_json_response json =
   Hh_json.(
     match json with
     | JSON_Object
-        [ ("jsonrpc", JSON_String "2.0");
+        [
+          ("jsonrpc", JSON_String "2.0");
           ("method", JSON_String "textDocument/publishDiagnostics");
           ( "params",
-            JSON_Object [("uri", JSON_String uri); ("diagnostics", JSON_Array diagnostics)] ) ] ->
+            JSON_Object [("uri", JSON_String uri); ("diagnostics", JSON_Array diagnostics)] );
+        ] ->
       begin
         match diagnostics with
         | [] -> [mk_clear_error uri]
@@ -45,13 +47,15 @@ let error_list_of_json_response json =
           List.map
             (function
               | JSON_Object
-                  [ ("range", _);
+                  [
+                    ("range", _);
                     ("severity", _);
                     ("code", JSON_String kind);
                     ("source", JSON_String "Flow");
                     ("message", JSON_String msg);
                     ("relatedInformation", _);
-                    ("relatedLocations", _) ] ->
+                    ("relatedLocations", _);
+                  ] ->
                 { uri; kind; msg }
               | _ -> assert_failure "Diagnostic JSON doesn't match expected format")
             diagnostics
@@ -627,7 +631,8 @@ let live_parse_errors_and_live_non_parse_errors ctxt =
 
 let tests =
   "LwtErrors"
-  >::: [ "clearing_errors_from_empty_is_a_no_op" >:: clearing_errors_from_empty_is_a_no_op;
+  >::: [
+         "clearing_errors_from_empty_is_a_no_op" >:: clearing_errors_from_empty_is_a_no_op;
          "clear_all_live_errors_and_send" >:: clear_all_live_errors_and_send;
          "finalized_errors_in_isolation" >:: finalized_errors_in_isolation;
          "streamed_errors_in_isolation" >:: streamed_errors_in_isolation;
@@ -641,6 +646,7 @@ let tests =
          "live_non_parse_errors_override_streamed_errors"
          >:: live_non_parse_errors_override_streamed_errors;
          "live_parse_errors_and_live_non_parse_errors"
-         >:: live_parse_errors_and_live_non_parse_errors ]
+         >:: live_parse_errors_and_live_non_parse_errors;
+       ]
 
 let () = run_test_tt_main tests

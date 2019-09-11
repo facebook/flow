@@ -132,9 +132,11 @@ let wait_for_signficant_status ~timeout =
   (* If there is a significant transition before the timeout, the cancel the sleep and return the
    * new status. Otherwise, stop waiting on the condition variable and return the current status *)
   Lwt.pick
-    [ (let%lwt () = Lwt_unix.sleep timeout in
+    [
+      (let%lwt () = Lwt_unix.sleep timeout in
        Lwt.return (get_status ()));
-      Lwt_condition.wait significant_transition ]
+      Lwt_condition.wait significant_transition;
+    ]
 
 (* Updates will show up on the connection in order. Let's push them immediately to a stream to
  * preserve that order *)

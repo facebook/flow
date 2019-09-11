@@ -33,9 +33,11 @@ let primitive_types = TypeSet.of_list [T.Number; T.String; T.Boolean]
 
 let literal_types =
   TypeSet.of_list
-    [ T.StringLiteral T.StringLiteral.{ value = "strlit"; raw = "\"strlit\"" };
+    [
+      T.StringLiteral T.StringLiteral.{ value = "strlit"; raw = "\"strlit\"" };
       T.NumberLiteral T.NumberLiteral.{ value = 2.2; raw = "2.2" };
-      T.BooleanLiteral T.BooleanLiteral.{ value = true; raw = "true" } ]
+      T.BooleanLiteral T.BooleanLiteral.{ value = true; raw = "true" };
+    ]
 
 (* Make a union type out of an array of types *)
 let mk_union_type (tarray : T.t' array) : T.t' =

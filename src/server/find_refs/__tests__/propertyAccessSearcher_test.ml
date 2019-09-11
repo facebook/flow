@@ -37,7 +37,8 @@ let run ctxt expected name content =
 
 let tests =
   "SymbolKind"
-  >::: [ ("property_access_positive" >:: (fun ctxt -> run ctxt true "bar" "foo.bar"));
+  >::: [
+         ("property_access_positive" >:: (fun ctxt -> run ctxt true "bar" "foo.bar"));
          ("property_access_negative" >:: (fun ctxt -> run ctxt false "bar" "foo.baz"));
          ( "destructuring_shorthand_positive"
          >:: (fun ctxt -> run ctxt true "bar" "const {bar} = baz") );
@@ -54,4 +55,5 @@ let tests =
          ("class_method" >:: (fun ctxt -> run ctxt true "bar" "class Foo { bar(): void {} }"));
          ("class_property" >:: (fun ctxt -> run ctxt true "bar" "class Foo { bar: number }"));
          ("optional_chain_new" >:: (fun ctxt -> run ctxt true "bar" "foo?.bar"));
-         ("optional_chain_continued" >:: (fun ctxt -> run ctxt true "baz" "foo?.bar.baz")) ]
+         ("optional_chain_continued" >:: (fun ctxt -> run ctxt true "baz" "foo?.bar.baz"));
+       ]

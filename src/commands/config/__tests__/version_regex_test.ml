@@ -17,7 +17,8 @@ let assert_regex ~ctxt ~regex exp act =
 
 let tests =
   "version_regex"
-  >::: [ ( "less_than_or_equal_to_zero"
+  >::: [
+         ( "less_than_or_equal_to_zero"
          >:: fun ctxt ->
          let regex = Version_regex.less_than_or_equal_to_version in
          let assert_regex = assert_regex ~ctxt ~regex in
@@ -63,4 +64,5 @@ let tests =
            "10.20.0";
          assert_regex
            "\\(10\\(\\.\\(20\\(\\.[0-4]\\)?\\|\\(1[0-9]\\|[0-9]\\)\\(\\.[0-9]+\\)?\\)\\)?\\|[0-9]\\(\\.[0-9]+\\)?\\(\\.[0-9]+\\)?\\)"
-           "10.20.4" ) ]
+           "10.20.4" );
+       ]

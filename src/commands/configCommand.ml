@@ -75,13 +75,15 @@ let check_subcommand =
   let json_of_issue kind (line, msg) =
     Hh_json.(
       JSON_Object
-        [ ("line", JSON_Number (string_of_int line));
+        [
+          ("line", JSON_Number (string_of_int line));
           ("message", JSON_String msg);
           ( "level",
             JSON_String
               (match kind with
               | `Error -> "error"
-              | `Warning -> "warning") ) ])
+              | `Warning -> "warning") );
+        ])
   in
   let exit_with_json ~pretty json =
     Hh_json.(

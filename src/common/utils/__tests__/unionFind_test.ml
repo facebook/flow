@@ -30,7 +30,8 @@ let makeUnionFind () =
 
 let tests =
   "union_find"
-  >::: [ ( "add"
+  >::: [
+         ( "add"
          >:: fun ctxt ->
          let x = UnionFind.make () in
          UnionFind.add x 3;
@@ -112,4 +113,5 @@ let tests =
          UnionFind.union x 1 2;
          UnionFind.union x 1 3;
          UnionFind.union x 4 5;
-         assert_same_elements ~ctxt (UnionFind.members x 1) [1; 2; 3] ) ]
+         assert_same_elements ~ctxt (UnionFind.members x 1) [1; 2; 3] );
+       ]

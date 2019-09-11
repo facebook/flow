@@ -23,7 +23,8 @@ let make_loc start_line end_line =
     }
 
 let tests =
-  [ ("simple_self_closing" >:: (fun ctxt -> assert_expression_string ~ctxt "<A/>"));
+  [
+    ("simple_self_closing" >:: (fun ctxt -> assert_expression_string ~ctxt "<A/>"));
     ("simple" >:: (fun ctxt -> assert_expression_string ~ctxt "<A></A>"));
     ("namespaced" >:: (fun ctxt -> assert_expression_string ~ctxt "<A:a/>"));
     ("member" >:: (fun ctxt -> assert_expression_string ~ctxt "<A.b/>"));
@@ -42,44 +43,60 @@ let tests =
         (J.element
            (J.identifier "A")
            ~attrs:
-             [ J.attr
+             [
+               J.attr
                  (J.attr_identifier "a")
-                 (Some (J.attr_literal (Literals.string (String.make 80 'a')))) ]
+                 (Some (J.attr_literal (Literals.string (String.make 80 'a'))));
+             ]
            ~children:
-             [ J.child_element ~loc:b_loc (J.identifier "B") ~selfclosing:true;
-               J.child_element ~loc:c_loc (J.identifier "C") ~selfclosing:true ])
+             [
+               J.child_element ~loc:b_loc (J.identifier "B") ~selfclosing:true;
+               J.child_element ~loc:c_loc (J.identifier "C") ~selfclosing:true;
+             ])
     in
     let layout =
       L.(
         loc
           ~loc:a_loc
           (fused
-             [ loc
+             [
+               loc
                  (group
-                    [ atom "<";
+                    [
+                      atom "<";
                       id "A";
                       indent
                         (fused
-                           [ line;
+                           [
+                             line;
                              loc
                                (fused
-                                  [ id "a";
+                                  [
+                                    id "a";
                                     atom "=";
                                     loc
                                       (fused
-                                         [ atom "\"";
+                                         [
+                                           atom "\"";
                                            atom
                                              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-                                           atom "\"" ]) ]) ]);
-                      atom ">" ]);
+                                           atom "\"";
+                                         ]);
+                                  ]);
+                           ]);
+                      atom ">";
+                    ]);
                indent
                  (fused
-                    [ pretty_hardline;
+                    [
+                      pretty_hardline;
                       loc ~loc:b_loc (loc (group [atom "<"; id "B"; pretty_space; atom "/>"]));
                       hardline;
-                      loc ~loc:c_loc (loc (group [atom "<"; id "C"; pretty_space; atom "/>"])) ]);
+                      loc ~loc:c_loc (loc (group [atom "<"; id "C"; pretty_space; atom "/>"]));
+                    ]);
                pretty_hardline;
-               loc (fused [atom "</"; id "A"; atom ">"]) ]))
+               loc (fused [atom "</"; id "A"; atom ">"]);
+             ]))
     in
     assert_layout_of_expression ~ctxt layout ast;
     assert_expression
@@ -104,12 +121,14 @@ let tests =
         (J.element
            (J.identifier "aaaaaaaaaaaaa")
            ~attrs:
-             [ J.attr
+             [
+               J.attr
                  (J.attr_identifier "bbbb")
                  (Some (J.attr_literal (Literals.string "cccccccccccccccccccccccccccccccccccc")));
                J.attr
                  (J.attr_identifier "ddddd")
-                 (Some (J.attr_literal (Literals.string "eeeeeeeeeeee"))) ]
+                 (Some (J.attr_literal (Literals.string "eeeeeeeeeeee")));
+             ]
            ~children:[J.child_element ~loc:f_loc (J.identifier "f") ~selfclosing:true])
     in
     let layout = Js_layout_generator.expression ast in
@@ -119,35 +138,49 @@ let tests =
         loc
           ~loc:a_loc
           (fused
-             [ loc
+             [
+               loc
                  (group
-                    [ atom "<";
+                    [
+                      atom "<";
                       id "aaaaaaaaaaaaa";
                       indent
                         (fused
-                           [ line;
+                           [
+                             line;
                              loc
                                (fused
-                                  [ id "bbbb";
+                                  [
+                                    id "bbbb";
                                     atom "=";
                                     loc
                                       (fused
-                                         [ atom "\"";
+                                         [
+                                           atom "\"";
                                            atom "cccccccccccccccccccccccccccccccccccc";
-                                           atom "\"" ]) ]);
+                                           atom "\"";
+                                         ]);
+                                  ]);
                              pretty_line;
                              loc
                                (fused
-                                  [ id "ddddd";
+                                  [
+                                    id "ddddd";
                                     atom "=";
-                                    loc (fused [atom "\""; atom "eeeeeeeeeeee"; atom "\""]) ]) ]);
-                      atom ">" ]);
+                                    loc (fused [atom "\""; atom "eeeeeeeeeeee"; atom "\""]);
+                                  ]);
+                           ]);
+                      atom ">";
+                    ]);
                indent
                  (fused
-                    [ pretty_hardline;
-                      loc ~loc:f_loc (loc (group [atom "<"; id "f"; pretty_space; atom "/>"])) ]);
+                    [
+                      pretty_hardline;
+                      loc ~loc:f_loc (loc (group [atom "<"; id "f"; pretty_space; atom "/>"]));
+                    ]);
                pretty_hardline;
-               loc (fused [atom "</"; id "aaaaaaaaaaaaa"; atom ">"]) ]))
+               loc (fused [atom "</"; id "aaaaaaaaaaaaa"; atom ">"]);
+             ]))
       layout;
     assert_output
       ~ctxt
@@ -239,4 +272,5 @@ let tests =
     assert_expression_string ~ctxt ~pretty:true ("<A\n  a=\"" ^ String.make 80 'a' ^ "\"\n  b\n/>")
     );
     ( "expression_longhand_and_shorthand_attributes"
-    >:: (fun ctxt -> assert_expression_string ~ctxt "<A b={1}a />") ) ]
+    >:: (fun ctxt -> assert_expression_string ~ctxt "<A b={1}a />") );
+  ]

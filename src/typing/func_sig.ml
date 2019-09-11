@@ -238,9 +238,10 @@ module Make (F : Func_params.S) = struct
         | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
           (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body }))))
         | Some (Ast.Function.BodyExpression expr) ->
-          ( [ ( fst expr,
+          ( [
+              ( fst expr,
                 Return
-                  { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () } )
+                  { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () } );
             ],
             (function
             | [(_, Return { Return.argument = Some expr; comments = _ })]

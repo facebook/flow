@@ -21,11 +21,13 @@ let parse_args () =
   let verbose = ref false in
   let rev_versions = ref [] in
   let speclist =
-    [ ("-l", Arg.Set loose, "Use \"loose\" parsing, allowing versions to start with \"v\"");
+    [
+      ("-l", Arg.Set loose, "Use \"loose\" parsing, allowing versions to start with \"v\"");
       ( "-r",
         Arg.String (fun r -> ranges := parse_range_arg r :: !ranges),
         "Print versions that match this range (if passed multiple times, must pass all ranges)." );
-      ("-v", Arg.Set verbose, "Enables verbose mode") ]
+      ("-v", Arg.Set verbose, "Enables verbose mode");
+    ]
   in
   let usage_msg = "Usage: semver [options] <version> [<version> [...]]\n\nOptions:" in
   Arg.parse speclist (fun version -> rev_versions := version :: !rev_versions) usage_msg;

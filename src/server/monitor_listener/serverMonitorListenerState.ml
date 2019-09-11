@@ -201,11 +201,13 @@ let rec wait_for_updates_for_recheck ~process_updates ~get_forced =
 let wait_for_anything ~process_updates ~get_forced =
   let%lwt () =
     Lwt.pick
-      [ WorkloadStream.wait_for_workload workload_stream;
+      [
+        WorkloadStream.wait_for_workload workload_stream;
         (let%lwt _ = Lwt_stream.is_empty env_update_stream in
          Lwt.return_unit);
         (let%lwt _ = Lwt_stream.is_empty recheck_stream in
          Lwt.return_unit);
-        wait_for_updates_for_recheck ~process_updates ~get_forced ]
+        wait_for_updates_for_recheck ~process_updates ~get_forced;
+      ]
   in
   Lwt.return_unit

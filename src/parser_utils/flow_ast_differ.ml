@@ -1019,7 +1019,9 @@ let program
       let quasis_diff = diff_and_recurse_no_trivial template_literal_element quasis1 quasis2 in
       let exprs_diff = diff_and_recurse_nonopt_no_trivial expression exprs1 exprs2 in
       let result = join_diff_list [quasis_diff; exprs_diff] in
-      Option.value result ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))])
+      Option.value
+        result
+        ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))])
   and template_literal_element
       (tl_elem1 : Loc.t Ast.Expression.TemplateLiteral.Element.t)
       (tl_elem2 : Loc.t Ast.Expression.TemplateLiteral.Element.t) : node change list option =
@@ -1251,7 +1253,8 @@ let program
       let { properties = properties1; comments = comments1 } = obj1 in
       let { properties = properties2; comments = comments2 } = obj2 in
       let comments = syntax_opt loc comments1 comments2 in
-      join_diff_list [comments; diff_and_recurse_no_trivial object_property properties1 properties2])
+      join_diff_list
+        [comments; diff_and_recurse_no_trivial object_property properties1 properties2])
   and binary
       (b1 : (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2 : (Loc.t, Loc.t) Ast.Expression.Binary.t) :
       node change list option =

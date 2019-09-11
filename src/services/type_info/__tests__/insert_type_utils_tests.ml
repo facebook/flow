@@ -12,7 +12,8 @@ let stylize = (new Insert_type_utils.stylize_ty_mapper ())#on_t Loc.none
 
 let tests =
   "insert_type_utils"
-  >::: [ ( "stylize_union_number_with_number_literal"
+  >::: [
+         ( "stylize_union_number_with_number_literal"
          >:: fun ctxt ->
          let t_in = Union (Num None, NumLit "1", []) in
          let t_exp = Num None in
@@ -38,11 +39,11 @@ let tests =
          let t_exp = Union (NumLit "1", NumLit "2", [Str None]) in
          assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in) );
          (* These tests just document that sorting is working in a sane order *)
-         ( "sort_types_numeric_literals"
-         >:: fun ctxt ->
-         let t_in = Union (NumLit "5", NumLit "11", [NumLit "1"; NumLit "2"]) in
-         let t_exp = Union (NumLit "1", NumLit "2", [NumLit "5"; NumLit "11"]) in
-         assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) );
+           ( "sort_types_numeric_literals"
+           >:: fun ctxt ->
+           let t_in = Union (NumLit "5", NumLit "11", [NumLit "1"; NumLit "2"]) in
+           let t_exp = Union (NumLit "1", NumLit "2", [NumLit "5"; NumLit "11"]) in
+           assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) );
          ( "sort_types_top_any"
          >:: fun ctxt ->
          let t_in = Union (Top, Any Annotated, []) in
@@ -57,4 +58,5 @@ let tests =
          >:: fun ctxt ->
          let t_in = Union (Void, Any Annotated, [Null; Str None; NumLit "5"; Bool None]) in
          let t_exp = Union (Any Annotated, Void, [Null; Bool None; NumLit "5"; Str None]) in
-         assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) ) ]
+         assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) );
+       ]

@@ -118,8 +118,10 @@ let json_of_docblock info =
     let isDeclarationFile = JSON_Bool (isDeclarationFile info) in
     let typeAssert = JSON_Bool (typeAssert info) in
     JSON_Object
-      [ ("flow", flow);
+      [
+        ("flow", flow);
         ("typeAssert", typeAssert);
         ("preventMunge", preventsMunge);
         ("providesModule", providesModule);
-        ("isDeclarationFile", isDeclarationFile) ])
+        ("isDeclarationFile", isDeclarationFile);
+      ])

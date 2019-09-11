@@ -23,10 +23,12 @@ type 'a t = {
 let default_lint_severities = [(Lints.DeprecatedUtility, (Severity.Err, None))]
 
 let ignored_by_all =
-  [ Lints.DynamicExport;
+  [
+    Lints.DynamicExport;
     Lints.DeprecatedUtility;
     Lints.ImplicitInexactObject;
-    Lints.UninitializedInstanceProperty ]
+    Lints.UninitializedInstanceProperty;
+  ]
 
 let config_default =
   Core_list.Assoc.find default_lint_severities ~equal:( = )

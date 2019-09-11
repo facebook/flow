@@ -113,7 +113,8 @@ module Patterns = struct
         Object
           {
             properties =
-              [ Property
+              [
+                Property
                   ( Loc.none,
                     {
                       Property.key =
@@ -121,7 +122,8 @@ module Patterns = struct
                       pattern = identifier str;
                       default = None;
                       shorthand = true;
-                    } ) ];
+                    } );
+              ];
             annot = Ast.Type.Missing Loc.none;
           } )
 end

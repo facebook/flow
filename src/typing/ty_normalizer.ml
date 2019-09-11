@@ -648,8 +648,10 @@ end = struct
             Ty.(
               mk_fun
                 ~params:
-                  [ (Some "thisArg", explicit_any, non_opt_param);
-                    (Some "argArray", explicit_any, opt_param) ]
+                  [
+                    (Some "thisArg", explicit_any, non_opt_param);
+                    (Some "argArray", explicit_any, opt_param);
+                  ]
                 explicit_any)
         else
           return Ty.(TypeOf FunProtoApply)
@@ -1275,8 +1277,10 @@ end = struct
           mk_fun ~params:[(Some "demaybefiedObj", idxObject, non_opt_param)] idxResult
         in
         let params =
-          [ (Some "obj", idxObject, non_opt_param);
-            (Some "pathCallback", pathCallback, non_opt_param) ]
+          [
+            (Some "obj", idxObject, non_opt_param);
+            (Some "pathCallback", pathCallback, non_opt_param);
+          ]
         in
         return (mk_fun ~tparams ~params (Ty.mk_maybe idxResult))
       (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
@@ -1297,7 +1301,8 @@ end = struct
         let params = [(Some "value", Ty.Top, non_opt_param)] in
         let result_fail_ty =
           Ty.mk_object
-            (Ty.mk_field_props [("success", Ty.BoolLit false, false); ("error", Ty.Str None, false)])
+            (Ty.mk_field_props
+               [("success", Ty.BoolLit false, false); ("error", Ty.Str None, false)])
         in
         let result_succ_ty =
           Ty.mk_object
@@ -1312,9 +1317,11 @@ end = struct
           Ty.(
             mk_fun
               ~params:
-                [ ( Some "_",
+                [
+                  ( Some "_",
                     Arr { arr_readonly = false; arr_literal = false; arr_elt_t = explicit_any },
-                    non_opt_param ) ]
+                    non_opt_param );
+                ]
               Void)
       (* debugThrow: () => empty *)
       | DebugThrow -> return (mk_fun (mk_empty Ty.EmptyType))
@@ -1342,9 +1349,11 @@ end = struct
             let tparams = [param_t] in
             let t = Bound (ALoc.none, "T") in
             let params =
-              [ (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
+              [
+                (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
                 (Some "config", t, non_opt_param);
-                (Some "children", explicit_any, opt_param) ]
+                (Some "children", explicit_any, opt_param);
+              ]
             in
             let reactElement = generic_builtin_t "React$Element" [t] in
             let f1 = mk_fun ~tparams ~params reactElement in
@@ -1353,9 +1362,11 @@ end = struct
             in
             let sfc = mk_fun ~tparams ~params reactElement in
             let params =
-              [ (Some "fn", sfc, non_opt_param);
+              [
+                (Some "fn", sfc, non_opt_param);
                 (Some "config", t, non_opt_param);
-                (Some "children", explicit_any, opt_param) ]
+                (Some "children", explicit_any, opt_param);
+              ]
             in
             let f2 = mk_fun ~tparams ~params reactElement in
             mk_inter (f1, [f2]))
@@ -1395,7 +1406,8 @@ end = struct
         let params = [(Some "value", Ty.Top, non_opt_param)] in
         let result_fail_ty =
           Ty.mk_object
-            (Ty.mk_field_props [("success", Ty.BoolLit false, false); ("error", Ty.Str None, false)])
+            (Ty.mk_field_props
+               [("success", Ty.BoolLit false, false); ("error", Ty.Str None, false)])
         in
         let result_succ_ty =
           Ty.mk_object

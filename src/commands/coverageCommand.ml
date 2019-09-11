@@ -225,26 +225,32 @@ let handle_response
     Hh_json.(
       let covered_data =
         if trust then
-          [ ("untainted_count", int_ untainted);
+          [
+            ("untainted_count", int_ untainted);
             ( "untainted_locs",
               JSON_Array
                 (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) untainted_locs) );
             ("tainted_count", int_ tainted);
             ( "tainted_locs",
               JSON_Array
-                (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs) ) ]
+                (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs) );
+          ]
         else
           let covered_locs = untainted_locs @ tainted_locs |> Core_list.sort ~cmp:compare in
-          [ ("covered_count", int_ covered);
+          [
+            ("covered_count", int_ covered);
             ( "covered_locs",
               JSON_Array
-                (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs) ) ]
+                (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs) );
+          ]
       in
       JSON_Object
-        [ ( "expressions",
+        [
+          ( "expressions",
             JSON_Object
               ( covered_data
-              @ [ ("uncovered_count", int_ (total - covered));
+              @ [
+                  ("uncovered_count", int_ (total - covered));
                   ( "uncovered_locs",
                     JSON_Array
                       (Core_list.map
@@ -254,7 +260,9 @@ let handle_response
                   ( "empty_locs",
                     JSON_Array
                       (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) empty_locs)
-                  ) ] ) ) ]
+                  );
+                ] ) );
+        ]
       |> print_json_endline ~pretty)
   else
     Utils_js.print_endlinef "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total

@@ -181,10 +181,12 @@ struct
     in
     PP.items_to_record_string
       1
-      [ ("module_kind_info", string_of_module_kind_info exports_info.module_kind_info);
+      [
+        ("module_kind_info", string_of_module_kind_info exports_info.module_kind_info);
         ( "type_exports_named_info",
           PP.items_to_list_string 2
-          @@ Core_list.map ~f:string_of_es_export_def exports_info.type_exports_named_info ) ]
+          @@ Core_list.map ~f:string_of_es_export_def exports_info.type_exports_named_info );
+      ]
 
   (* Applications may not care about the info carried by signatures. *)
   type module_sig = unit module_sig'
@@ -244,19 +246,23 @@ struct
         | ES { named; star } ->
           PP.items_to_record_string
             2
-            [ ("named", PP.items_to_record_string 3 @@ Core_list.map ~f:string_of_export named);
-              ("star", PP.items_to_list_string 3 @@ Core_list.map ~f:string_of_export_star star) ]
+            [
+              ("named", PP.items_to_record_string 3 @@ Core_list.map ~f:string_of_export named);
+              ("star", PP.items_to_list_string 3 @@ Core_list.map ~f:string_of_export_star star);
+            ]
       in
       PP.items_to_record_string
         1
-        [ ("requires", string_of_require_list module_sig.requires);
+        [
+          ("requires", string_of_require_list module_sig.requires);
           ("module_kind", string_of_module_kind module_sig.module_kind);
           ( "type_exports_named",
             PP.items_to_record_string 2
             @@ Core_list.map ~f:string_of_type_export module_sig.type_exports_named );
           ( "type_exports_star",
             PP.items_to_list_string 2
-            @@ Core_list.map ~f:string_of_export_star module_sig.type_exports_star ) ]
+            @@ Core_list.map ~f:string_of_export_star module_sig.type_exports_star );
+        ]
     in
     PP.items_to_record_string 0 [("module_sig", string_of_module_sig t.module_sig)]
 
@@ -561,12 +567,14 @@ struct
                 | TemplateLiteral
                     {
                       TemplateLiteral.quasis =
-                        [ ( _,
+                        [
+                          ( _,
                             {
                               TemplateLiteral.Element.value =
                                 { TemplateLiteral.Element.cooked = name; _ };
                               _;
-                            } ) ];
+                            } );
+                        ];
                       _;
                     } ) ) ->
               this#add_require (ImportDynamic { source = (loc, name); import_loc })
@@ -963,20 +971,24 @@ struct
             this#visit_requires_with_bindings call_loc bindings;
             match (callee, arguments) with
             | ( (_, Identifier (loc, { Ast.Identifier.name = "require"; comments = _ })),
-                [ Expression
+                [
+                  Expression
                     ( source_loc,
                       ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
                       | TemplateLiteral
                           {
                             TemplateLiteral.quasis =
-                              [ ( _,
+                              [
+                                ( _,
                                   {
                                     TemplateLiteral.Element.value =
                                       { TemplateLiteral.Element.cooked = name; _ };
                                     _;
-                                  } ) ];
+                                  } );
+                              ];
                             _;
-                          } ) ) ] ) ->
+                          } ) );
+                ] ) ->
               if not (Scope_api.is_local_use scope_info loc) then
                 this#add_require
                   (Require { source = (source_loc, name); require_loc = call_loc; bindings })

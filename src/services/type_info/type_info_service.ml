@@ -19,9 +19,11 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
     let (json_data, loc, ty) =
       let mk_data result_str loc ty_json =
         Hh_json.JSON_Object
-          [ ("result", Hh_json.JSON_String result_str);
+          [
+            ("result", Hh_json.JSON_String result_str);
             ("loc", Reason.json_of_loc ~offset_table:None loc);
-            ("type", ty_json) ]
+            ("type", ty_json);
+          ]
       in
       Query_types.(
         let file = Context.file cx in
@@ -157,7 +159,8 @@ let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_content
                     |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
                   in
                   Ok
-                    [ Action
+                    [
+                      Action
                         {
                           CodeAction.title = "insert type annotation";
                           kind = quickfix;
@@ -165,7 +168,8 @@ let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_content
                eventually generating the diagnostics for the errors we are fixing *)
                           diagnostics = CodeActionRequest.(context.diagnostics);
                           action = EditOnly WorkspaceEdit.{ changes = SMap.of_list [(uri, edits)] };
-                        } ]
+                        };
+                    ]
               else
                 Ok [])
           | _ -> Ok []))))

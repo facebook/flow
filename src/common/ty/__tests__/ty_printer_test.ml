@@ -9,7 +9,8 @@ open OUnit2
 
 let tests =
   "ty_printer"
-  >::: [ ( "type_object_property_get"
+  >::: [
+         ( "type_object_property_get"
          >:: fun ctxt ->
          let getter = Ty.NamedProp ("foo", Ty.Get (Ty.Str None)) in
          let obj =
@@ -26,4 +27,5 @@ let tests =
              { Ty.obj_exact = true; obj_frozen = false; obj_literal = false; obj_props = [setter] }
          in
          let str = Ty_printer.string_of_t obj in
-         assert_equal ~ctxt ~printer:(fun x -> x) "{|set foo(string): void|}" str ) ]
+         assert_equal ~ctxt ~printer:(fun x -> x) "{|set foo(string): void|}" str );
+       ]

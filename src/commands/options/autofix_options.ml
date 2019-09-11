@@ -14,9 +14,11 @@ type ambiguity_strategy =
   | Suppress
 
 let ambiguity_strategies =
-  [ ("fail", Fail);
+  [
+    ("fail", Fail);
     ("temporary", Temporary);
     ("generalize", Generalize);
     ("specialize", Specialize);
     ("fixme", Fixme);
-    ("suppress", Suppress) ]
+    ("suppress", Suppress);
+  ]

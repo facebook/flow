@@ -110,16 +110,22 @@ let json_of_request =
     | Subscribe -> JSON_Object [("method", JSON_String "subscribe")]
     | Autocomplete (f, _) ->
       JSON_Object
-        [ ("method", JSON_String "autocomplete");
-          ("file", JSON_String (File_input.filename_of_file_input f)) ]
+        [
+          ("method", JSON_String "autocomplete");
+          ("file", JSON_String (File_input.filename_of_file_input f));
+        ]
     | DidOpen files ->
       JSON_Object
-        [ ("method", JSON_String "didOpen");
-          ("files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_)) ]
+        [
+          ("method", JSON_String "didOpen");
+          ("files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_));
+        ]
     | DidClose files ->
       JSON_Object
-        [ ("method", JSON_String "didClose");
-          ("files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_)) ]
+        [
+          ("method", JSON_String "didClose");
+          ("files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_));
+        ]
     | LspToServer (_, metadata) -> metadata.start_json_truncated)
 
 (* Why is the server sending us a list of errors *)

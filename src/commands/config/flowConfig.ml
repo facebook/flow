@@ -339,7 +339,8 @@ module Opts = struct
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
   let parsers =
-    [ ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
+    [
+      ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
       ( "esproposal.class_instance_fields",
         esproposal_feature_flag ~allow_enable:true (fun opts v ->
             Ok { opts with esproposal_class_instance_fields = v }) );
@@ -362,17 +363,21 @@ module Opts = struct
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ( "file_watcher",
         enum
-          [ ("none", Options.NoFileWatcher);
+          [
+            ("none", Options.NoFileWatcher);
             ("dfind", Options.DFind);
-            ("watchman", Options.Watchman) ]
+            ("watchman", Options.Watchman);
+          ]
           (fun opts v -> Ok { opts with file_watcher = Some v }) );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ( "lazy_mode",
         enum
-          [ ("fs", Options.LAZY_MODE_FILESYSTEM);
+          [
+            ("fs", Options.LAZY_MODE_FILESYSTEM);
             ("ide", Options.LAZY_MODE_IDE);
             ("watchman", Options.LAZY_MODE_WATCHMAN);
-            ("none", Options.NON_LAZY_MODE) ]
+            ("none", Options.NON_LAZY_MODE);
+          ]
           (fun opts v -> Ok { opts with lazy_mode = Some v }) );
       ( "merge_timeout",
         uint (fun opts v ->
@@ -481,9 +486,11 @@ module Opts = struct
       ("temp_dir", string (fun opts v -> Ok { opts with temp_dir = v }));
       ( "saved_state.fetcher",
         enum
-          [ ("none", Options.Dummy_fetcher);
+          [
+            ("none", Options.Dummy_fetcher);
             ("local", Options.Local_fetcher);
-            ("fb", Options.Fb_fetcher) ]
+            ("fb", Options.Fb_fetcher);
+          ]
           (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher }) );
       ( "sharedmemory.dirs",
         string ~multiple:true (fun opts v -> Ok { opts with shm_dirs = opts.shm_dirs @ [v] }) );
@@ -531,13 +538,16 @@ module Opts = struct
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "trust_mode",
         enum
-          [ ("check", Options.CheckTrust);
+          [
+            ("check", Options.CheckTrust);
             ("silent", Options.SilentTrust);
-            ("none", Options.NoTrust) ]
+            ("none", Options.NoTrust);
+          ]
           (fun opts trust_mode -> Ok { opts with trust_mode }) );
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
       ( "experimental.types_first.max_files_checked_per_worker",
-        uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v }) ) ]
+        uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v }) );
+    ]
 
   let parse =
     let error_of_opt_error key (line_num, opt_error) =
@@ -962,13 +972,15 @@ let parse =
 
 let is_not_comment =
   let comment_regexps =
-    [ Str.regexp_string "#";
+    [
+      Str.regexp_string "#";
       (* Line starts with # *)
-      Str.regexp_string ";";
+        Str.regexp_string ";";
       (* Line starts with ; *)
-      Str.regexp_string "\240\159\146\169"
-      (* Line starts with poop emoji *)
-     ]
+        Str.regexp_string "\240\159\146\169";
+        (* Line starts with poop emoji *)
+      
+    ]
   in
   fun (_, line) ->
     not (Core_list.exists ~f:(fun regexp -> Str.string_match regexp line 0) comment_regexps)

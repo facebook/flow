@@ -102,17 +102,21 @@ let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
       let key = ALoc.ALocRepresentationDoNotUse.get_key_exn aloc in
       let source = ALoc.source aloc in
       JSON_Object
-        [ ("source", json_of_source ?strip_root source);
+        [
+          ("source", json_of_source ?strip_root source);
           ("type", json_source_type_of_source source);
-          ("key", JSON_Number (ALoc.ALocRepresentationDoNotUse.string_of_key key)) ])
+          ("key", JSON_Number (ALoc.ALocRepresentationDoNotUse.string_of_key key));
+        ])
   else
     json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
 
 let json_of_reason ?(strip_root = None) ~offset_table r =
   Hh_json.(
     JSON_Object
-      [ ("pos", json_of_aloc ~strip_root ~offset_table (aloc_of_reason r));
-        ("desc", JSON_String (string_of_desc (desc_of_reason ~unwrap:false r))) ])
+      [
+        ("pos", json_of_aloc ~strip_root ~offset_table (aloc_of_reason r));
+        ("desc", JSON_String (string_of_desc (desc_of_reason ~unwrap:false r)));
+      ])
 
 let check_depth continuation json_cx =
   let depth = json_cx.depth - 1 in
@@ -145,9 +149,11 @@ and _json_of_targ json_cx t =
 and _json_of_t_impl json_cx t =
   Hh_json.(
     JSON_Object
-      ( [ ( "reason",
+      ( [
+          ( "reason",
             json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None (reason_of_t t) );
-          ("kind", JSON_String (string_of_ctor t)) ]
+          ("kind", JSON_String (string_of_ctor t));
+        ]
       @
       match t with
       | OpenT (_, id) -> _json_of_tvar json_cx id
@@ -177,35 +183,45 @@ and _json_of_t_impl json_cx t =
       | FunProtoCallT _ ->
         []
       | DefT (_, _, FunT (static, proto, funtype)) ->
-        [ ("static", _json_of_t json_cx static);
+        [
+          ("static", _json_of_t json_cx static);
           ("prototype", _json_of_t json_cx proto);
-          ("funType", json_of_funtype json_cx funtype) ]
+          ("funType", json_of_funtype json_cx funtype);
+        ]
       | DefT (_, _, ObjT objtype) -> [("type", json_of_objtype json_cx objtype)]
       | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->
-        [ ("kind", JSON_String "Array");
+        [
+          ("kind", JSON_String "Array");
           ("elemType", _json_of_t json_cx elemt);
           ( "tupleType",
             match tuple_types with
             | Some tuplet -> JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuplet)
-            | None -> JSON_Null ) ]
+            | None -> JSON_Null );
+        ]
       | DefT (_, _, ArrT (TupleAT (elemt, tuple_types))) ->
-        [ ("kind", JSON_String "Tuple");
+        [
+          ("kind", JSON_String "Tuple");
           ("elemType", _json_of_t json_cx elemt);
-          ("tupleType", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuple_types)) ]
+          ("tupleType", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuple_types));
+        ]
       | DefT (_, _, ArrT (ROArrayAT elemt)) ->
         [("kind", JSON_String "ReadOnlyArray"); ("elemType", _json_of_t json_cx elemt)]
       | DefT (_, _, CharSetT chars) ->
         [("chars", JSON_String (String_utils.CharSet.to_string chars))]
       | DefT (_, _, ClassT t) -> [("type", _json_of_t json_cx t)]
       | DefT (_, _, InstanceT (static, super, implements, instance)) ->
-        [ ("static", _json_of_t json_cx static);
+        [
+          ("static", _json_of_t json_cx static);
           ("super", _json_of_t json_cx super);
           ("implements", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) implements));
-          ("instance", json_of_insttype json_cx instance) ]
+          ("instance", json_of_insttype json_cx instance);
+        ]
       | OptionalT (_, t) -> [("type", _json_of_t json_cx t)]
       | EvalT (t, defer_use_t, id) ->
-        [ ("type", _json_of_t json_cx t);
-          ("defer_use_type", json_of_defer_use_t json_cx defer_use_t) ]
+        [
+          ("type", _json_of_t json_cx t);
+          ("defer_use_type", json_of_defer_use_t json_cx defer_use_t);
+        ]
         @
         let evaluated = Context.evaluated json_cx.cx in
         begin
@@ -214,13 +230,17 @@ and _json_of_t_impl json_cx t =
           | Some t -> [("result", _json_of_t json_cx t)]
         end
       | DefT (_, _, PolyT (_, tparams, t, id)) ->
-        [ ("id", JSON_Number (string_of_int id));
+        [
+          ("id", JSON_Number (string_of_int id));
           ( "typeParams",
             JSON_Array (Core_list.map ~f:(json_of_typeparam json_cx) (Nel.to_list tparams)) );
-          ("type", _json_of_t json_cx t) ]
+          ("type", _json_of_t json_cx t);
+        ]
       | TypeAppT (_, _, t, targs) ->
-        [ ("typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
-          ("type", _json_of_t json_cx t) ]
+        [
+          ("typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
+          ("type", _json_of_t json_cx t);
+        ]
       | ThisClassT (_, t) -> [("type", _json_of_t json_cx t)]
       | ThisTypeAppT (_, t, this, targs_opt) ->
         (match targs_opt with
@@ -233,15 +253,20 @@ and _json_of_t_impl json_cx t =
       | ExactT (_, t) -> [("type", _json_of_t json_cx t)]
       | MaybeT (_, t) -> [("type", _json_of_t json_cx t)]
       | IntersectionT (_, rep) ->
-        [ (let ts = InterRep.members rep in
-           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts))) ]
+        [
+          (let ts = InterRep.members rep in
+           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)));
+        ]
       | UnionT (_, rep) ->
-        [ (let ts = UnionRep.members rep in
-           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts))) ]
+        [
+          (let ts = UnionRep.members rep in
+           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)));
+        ]
       | AnyWithLowerBoundT t
       | AnyWithUpperBoundT t ->
         [("type", _json_of_t json_cx t)]
-      | MergedT (_, uses) -> [("uses", JSON_Array (Core_list.map ~f:(_json_of_use_t json_cx) uses))]
+      | MergedT (_, uses) ->
+        [("uses", JSON_Array (Core_list.map ~f:(_json_of_use_t json_cx) uses))]
       | DefT (_, _, IdxWrapper t) -> [("wrappedObj", _json_of_t json_cx t)]
       | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
         [("config", _json_of_t json_cx config); ("instance", _json_of_t json_cx instance)]
@@ -252,7 +277,8 @@ and _json_of_t_impl json_cx t =
       | DefT (_, _, SingletonNumT (_, raw)) -> [("literal", JSON_String raw)]
       | DefT (_, _, SingletonBoolT b) -> [("literal", JSON_Bool b)]
       | DefT (_, _, TypeT (_, t)) -> [("result", _json_of_t json_cx t)]
-      | AnnotT (_, t, use_desc) -> [("type", _json_of_t json_cx t); ("useDesc", JSON_Bool use_desc)]
+      | AnnotT (_, t, use_desc) ->
+        [("type", _json_of_t json_cx t); ("useDesc", JSON_Bool use_desc)]
       | OpaqueT (_, opaquetype) ->
         let t =
           match opaquetype.underlying_t with
@@ -264,9 +290,11 @@ and _json_of_t_impl json_cx t =
           | Some st -> _json_of_t json_cx st
           | None -> JSON_Null
         in
-        [ ("type", t);
+        [
+          ("type", t);
           ("id", JSON_String (ALoc.debug_to_string opaquetype.opaque_id));
-          ("supertype", st) ]
+          ("supertype", st);
+        ]
       | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export }, is_strict) ->
         let tmap = Context.find_exports json_cx.cx exports_tmap in
         let cjs_export =
@@ -274,17 +302,21 @@ and _json_of_t_impl json_cx t =
           | Some t -> _json_of_t json_cx t
           | None -> JSON_Null
         in
-        [ ("namedExports", json_of_loc_tmap json_cx tmap);
+        [
+          ("namedExports", json_of_loc_tmap json_cx tmap);
           ("cjsExport", cjs_export);
           ("hasEveryNamedExport", JSON_Bool has_every_named_export);
-          ("isStrict", JSON_Bool is_strict) ]
+          ("isStrict", JSON_Bool is_strict);
+        ]
       | InternalT (ExtendsT (_, t1, t2)) ->
         [("type1", _json_of_t json_cx t1); ("type2", _json_of_t json_cx t2)]
       | InternalT (ChoiceKitT (_, tool)) ->
-        [ ( "tool",
+        [
+          ( "tool",
             JSON_String
               (match tool with
-              | Trigger -> "trigger") ) ]
+              | Trigger -> "trigger") );
+        ]
       | TypeDestructorTriggerT (_, _, _, s, t) ->
         [("destructor", json_of_destructor json_cx s); ("type", _json_of_t json_cx t)]
       | CustomFunT (_, kind) ->
@@ -294,16 +326,20 @@ and _json_of_t_impl json_cx t =
         | ReactElementFactory t -> [("componentType", _json_of_t json_cx t)]
         | _ -> [])
       | OpenPredT (_, t, pos_preds, neg_preds) ->
-        [ (let json_key_map f map =
+        [
+          (let json_key_map f map =
              JSON_Object
                (Key_map.elements map |> Core_list.map ~f:(Utils_js.map_pair Key.string_of_key f))
            in
            let json_pred_key_map = json_key_map (json_of_pred json_cx) in
            ( "OpenPred",
              JSON_Object
-               [ ("base_type", _json_of_t_impl json_cx t);
+               [
+                 ("base_type", _json_of_t_impl json_cx t);
                  ("pos_preds", json_pred_key_map pos_preds);
-                 ("neg_preds", json_pred_key_map neg_preds) ] )) ]
+                 ("neg_preds", json_pred_key_map neg_preds);
+               ] ));
+        ]
       | ReposT (_, t)
       | InternalT (ReposUpperT (_, t)) ->
         [("type", _json_of_t json_cx t)]
@@ -328,9 +364,11 @@ and _json_of_cont json_cx =
     function
     | Upper u -> [("cont", JSON_String "upper"); ("type", _json_of_use_t json_cx u)]
     | Lower (op, l) ->
-      [ ("cont", JSON_String "lower");
+      [
+        ("cont", JSON_String "lower");
         ("use", JSON_String (string_of_use_op op));
-        ("type", _json_of_t json_cx l) ])
+        ("type", _json_of_t json_cx l);
+      ])
 
 and _json_of_custom_fun_kind kind =
   Hh_json.JSON_String
@@ -358,12 +396,15 @@ and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
 and _json_of_use_t_impl json_cx t =
   Hh_json.(
     JSON_Object
-      ( [ ( "reason",
+      ( [
+          ( "reason",
             json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None (reason_of_use_t t) );
-          ("kind", JSON_String (string_of_use_ctor t)) ]
+          ("kind", JSON_String (string_of_use_ctor t));
+        ]
       @
       match t with
-      | UseT (op, t) -> [("use", JSON_String (string_of_use_op op)); ("type", _json_of_t json_cx t)]
+      | UseT (op, t) ->
+        [("use", JSON_String (string_of_use_op op)); ("type", _json_of_t json_cx t)]
       | AssertArithmeticOperandT _ -> []
       | AssertBinaryInLHST _ -> []
       | AssertBinaryInRHST _ -> []
@@ -373,14 +414,18 @@ and _json_of_use_t_impl json_cx t =
         [("funType", json_of_funcalltype json_cx funtype); ("passThrough", JSON_Bool pass)]
       | CallT (_, _, funtype) -> [("funType", json_of_funcalltype json_cx funtype)]
       | MethodT (_, _, _, propref, funtype, _) ->
-        [ ("propRef", json_of_propref json_cx propref);
-          ("funType", json_of_funcalltype json_cx funtype) ]
+        [
+          ("propRef", json_of_propref json_cx propref);
+          ("funType", json_of_funcalltype json_cx funtype);
+        ]
       | ReposLowerT (_, use_desc, use_t) ->
         [("type", _json_of_use_t json_cx use_t); ("useDesc", JSON_Bool use_desc)]
       | ReposUseT (_, use_desc, op, t) ->
-        [ ("use", JSON_String (string_of_use_op op));
+        [
+          ("use", JSON_String (string_of_use_op op));
           ("type", _json_of_t json_cx t);
-          ("useDesc", JSON_Bool use_desc) ]
+          ("useDesc", JSON_Bool use_desc);
+        ]
       | SetPropT (_, _, name, _, t, _)
       | GetPropT (_, _, name, t)
       | MatchPropT (_, _, name, t)
@@ -393,22 +438,29 @@ and _json_of_use_t_impl json_cx t =
       | GetElemT (_, _, indext, elemt) ->
         [("indexType", _json_of_t json_cx indext); ("elemType", _json_of_t json_cx elemt)]
       | CallElemT (_, _, indext, funtype) ->
-        [("indexType", _json_of_t json_cx indext); ("funType", json_of_funcalltype json_cx funtype)]
+        [
+          ("indexType", _json_of_t json_cx indext);
+          ("funType", json_of_funcalltype json_cx funtype);
+        ]
       | GetStaticsT (_, t) -> [("type", _json_of_t json_cx t)]
       | GetProtoT (_, t)
       | SetProtoT (_, t) ->
         [("type", _json_of_t json_cx t)]
       | ConstructorT (_, _, targs, args, t) ->
-        [ ( "typeArgs",
+        [
+          ( "typeArgs",
             match targs with
             | None -> JSON_Null
             | Some ts -> JSON_Array (Core_list.map ~f:(_json_of_targ json_cx) ts) );
           ("argTypes", JSON_Array (Core_list.map ~f:(json_of_funcallarg json_cx) args));
-          ("type", _json_of_t json_cx t) ]
+          ("type", _json_of_t json_cx t);
+        ]
       | SuperT (_, _, Derived { own; proto; static }) ->
-        [ ("own", json_of_pmap json_cx own);
+        [
+          ("own", json_of_pmap json_cx own);
           ("proto", json_of_pmap json_cx proto);
-          ("static", json_of_pmap json_cx static) ]
+          ("static", json_of_pmap json_cx static);
+        ]
       | ImplementsT (op, t) ->
         [("use", JSON_String (string_of_use_op op)); ("instance", _json_of_t json_cx t)]
       | MixinT (_, t) -> [("type", _json_of_t json_cx t)]
@@ -419,9 +471,11 @@ and _json_of_use_t_impl json_cx t =
       | UnaryMinusT (_, t) -> [("type", _json_of_t json_cx t)]
       | PredicateT (p, t) -> [("pred", json_of_pred json_cx p); ("type", _json_of_t json_cx t)]
       | GuardT (p, r, t) ->
-        [ ("pred", json_of_pred json_cx p);
+        [
+          ("pred", json_of_pred json_cx p);
           ("result", _json_of_t json_cx r);
-          ("sink", _json_of_t json_cx t) ]
+          ("sink", _json_of_t json_cx t);
+        ]
       | EqT (_, _, t) -> [("type", _json_of_t json_cx t)]
       | AndT (_, right, res)
       | OrT (_, right, res)
@@ -437,57 +491,77 @@ and _json_of_use_t_impl json_cx t =
       | ThisSpecializeT (_, this, k) ->
         ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
       | VarianceCheckT (_, targs, polarity) ->
-        [ ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
-          ("polarity", json_of_polarity json_cx polarity) ]
+        [
+          ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
+          ("polarity", json_of_polarity json_cx polarity);
+        ]
       | TypeAppVarianceCheckT (_, _, _, targs) ->
-        [ ( "typeArgs",
+        [
+          ( "typeArgs",
             JSON_Array
               (Core_list.map
                  ~f:(fun (t1, t2) ->
                    JSON_Object [("t1", _json_of_t json_cx t1); ("t2", _json_of_t json_cx t2)])
-                 targs) ) ]
+                 targs) );
+        ]
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) ->
-        [ ("willFlip", JSON_Bool will_flip);
+        [
+          ("willFlip", JSON_Bool will_flip);
           ("currentTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts1));
           ("currentUpper", _json_of_t json_cx t2);
-          ("currentUpperTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts2)) ]
+          ("currentUpperTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts2));
+        ]
       | LookupT (_, rstrict, _, propref, action) ->
         (match rstrict with
         | NonstrictReturning (default_opt, test_opt) ->
           let ret =
             match default_opt with
             | Some (default, result) ->
-              [ ("defaultType", _json_of_t json_cx default);
-                ("resultType", _json_of_t json_cx result) ]
+              [
+                ("defaultType", _json_of_t json_cx default);
+                ("resultType", _json_of_t json_cx result);
+              ]
             | None -> []
           in
           Option.value_map test_opt ~default:ret ~f:(fun (id, _) -> ("testID", int_ id) :: ret)
         | Strict r ->
           [("strictReason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r)]
         | ShadowRead (_, ids) ->
-          [ ( "shadowRead",
+          [
+            ( "shadowRead",
               JSON_Array
                 ( Nel.to_list ids
-                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) ) ]
+                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
+          ]
         | ShadowWrite ids ->
-          [ ( "shadowWrite",
+          [
+            ( "shadowWrite",
               JSON_Array
                 ( Nel.to_list ids
-                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) ) ])
-        @ [ ("propref", json_of_propref json_cx propref);
-            ("action", json_of_lookup_action json_cx action) ]
+                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
+          ])
+        @ [
+            ("propref", json_of_propref json_cx propref);
+            ("action", json_of_lookup_action json_cx action);
+          ]
       | ObjAssignFromT (_, _, proto, tvar, kind) ->
-        [ ("target", _json_of_t json_cx proto);
+        [
+          ("target", _json_of_t json_cx proto);
           ("resultType", _json_of_t json_cx tvar);
-          ("kind", json_of_obj_assign_kind json_cx kind) ]
+          ("kind", json_of_obj_assign_kind json_cx kind);
+        ]
       | ObjAssignToT (_, _, from, tvar, kind) ->
-        [ ("source", _json_of_t json_cx from);
+        [
+          ("source", _json_of_t json_cx from);
           ("resultType", _json_of_t json_cx tvar);
-          ("kind", json_of_obj_assign_kind json_cx kind) ]
+          ("kind", json_of_obj_assign_kind json_cx kind);
+        ]
       | ObjFreezeT (_, t) -> [("type", _json_of_t json_cx t)]
       | ObjRestT (_, excludes, tvar) ->
-        [ ("excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes));
-          ("resultType", _json_of_t json_cx tvar) ]
+        [
+          ("excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes));
+          ("resultType", _json_of_t json_cx tvar);
+        ]
       | ObjSealT (_, t) -> [("type", _json_of_t json_cx t)]
       | ObjTestProtoT (_, res) -> [("returnType", _json_of_t json_cx res)]
       | ObjTestT (_, default, res) ->
@@ -499,46 +573,62 @@ and _json_of_use_t_impl json_cx t =
       | HasOwnPropT (_, _, key) -> [("key", JSON_Object (_json_of_string_literal key))]
       | GetValuesT (_, t) -> [("type", _json_of_t json_cx t)]
       | ElemT (_, _, base, action) ->
-        [ ("baseType", _json_of_t json_cx base);
+        [
+          ("baseType", _json_of_t json_cx base);
           (match action with
           | ReadElem t -> ("readElem", _json_of_t json_cx t)
           | WriteElem (t, _) -> ("writeElem", _json_of_t json_cx t)
-          | CallElem (_, funtype) -> ("callElem", json_of_funcalltype json_cx funtype)) ]
+          | CallElem (_, funtype) -> ("callElem", json_of_funcalltype json_cx funtype));
+        ]
       | MakeExactT (_, cont) -> _json_of_cont json_cx cont
       | CJSRequireT (_, export, _) -> [("export", _json_of_t json_cx export)]
       | ImportModuleNsT (_, t, _) -> [("t_out", _json_of_t json_cx t)]
       | ImportDefaultT (_, import_kind, (local_name, module_name), t, _) ->
-        [ ("import_kind", _json_of_import_kind import_kind);
+        [
+          ("import_kind", _json_of_import_kind import_kind);
           ("local_name", JSON_String local_name);
           ("module_name", JSON_String module_name);
-          ("t_out", _json_of_t json_cx t) ]
+          ("t_out", _json_of_t json_cx t);
+        ]
       | ImportNamedT (_, import_kind, export_name, module_name, t, _) ->
-        [ ("import_kind", _json_of_import_kind import_kind);
+        [
+          ("import_kind", _json_of_import_kind import_kind);
           ("export_name", JSON_String export_name);
           ("module_name", JSON_String module_name);
-          ("t_out", _json_of_t json_cx t) ]
+          ("t_out", _json_of_t json_cx t);
+        ]
       | ImportTypeT (_, export_name, t)
       | ImportTypeofT (_, export_name, t) ->
         [("export_name", JSON_String export_name); ("t_out", _json_of_t json_cx t)]
       | AssertImportIsValueT (_, name) -> [("name", JSON_String name)]
       | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes, is_strict), t_out) ->
-        [ ("module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes, is_strict)));
-          ("t_out", _json_of_t json_cx t_out) ]
+        [
+          ("module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes, is_strict)));
+          ("t_out", _json_of_t json_cx t_out);
+        ]
       | CopyNamedExportsT (_, target_module_t, t_out) ->
-        [ ("target_module_t", _json_of_t json_cx target_module_t);
-          ("t_out", _json_of_t json_cx t_out) ]
+        [
+          ("target_module_t", _json_of_t json_cx target_module_t);
+          ("t_out", _json_of_t json_cx t_out);
+        ]
       | CopyTypeExportsT (_, target_module_t, t_out) ->
-        [ ("target_module_t", _json_of_t json_cx target_module_t);
-          ("t_out", _json_of_t json_cx t_out) ]
+        [
+          ("target_module_t", _json_of_t json_cx target_module_t);
+          ("t_out", _json_of_t json_cx t_out);
+        ]
       | ExportNamedT (_, skip_dupes, tmap, _export_kind, t_out) ->
-        [ ("skip_duplicates", JSON_Bool skip_dupes);
+        [
+          ("skip_duplicates", JSON_Bool skip_dupes);
           ("tmap", json_of_loc_tmap json_cx tmap);
-          ("t_out", _json_of_t json_cx t_out) ]
+          ("t_out", _json_of_t json_cx t_out);
+        ]
       | ExportTypeT (_, skip_dupes, name, t, t_out) ->
-        [ ("skip_duplicates", JSON_Bool skip_dupes);
+        [
+          ("skip_duplicates", JSON_Bool skip_dupes);
           ("name", JSON_String name);
           ("tmap", _json_of_t json_cx t);
-          ("t_out", _json_of_t json_cx t_out) ]
+          ("t_out", _json_of_t json_cx t_out);
+        ]
       | AssertExportIsTypeT (_, name, t_out) ->
         [("name", JSON_String name); ("t_out", _json_of_t json_cx t_out)]
       | DebugPrintT _ -> []
@@ -548,18 +638,21 @@ and _json_of_use_t_impl json_cx t =
       | ObjKitT (_, _, _, _, tout) -> [("t_out", _json_of_t json_cx tout)]
       | ReactKitT (_, _, React.CreateElement0 (shape, config, (children, children_spread), t_out))
         ->
-        [ ("shape", JSON_Bool shape);
+        [
+          ("shape", JSON_Bool shape);
           ("config", _json_of_t json_cx config);
           ("children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children));
           ( "childrenSpread",
             match children_spread with
             | Some children_spread -> _json_of_t json_cx children_spread
             | None -> JSON_Null );
-          ("returnType", _json_of_t json_cx t_out) ]
+          ("returnType", _json_of_t json_cx t_out);
+        ]
       | ReactKitT
           (_, _, React.CreateElement (shape, component, config, (children, children_spread), t_out))
         ->
-        [ ("shape", JSON_Bool shape);
+        [
+          ("shape", JSON_Bool shape);
           ("component", _json_of_t json_cx component);
           ("config", _json_of_t json_cx config);
           ("children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children));
@@ -567,64 +660,84 @@ and _json_of_use_t_impl json_cx t =
             match children_spread with
             | Some children_spread -> _json_of_t json_cx children_spread
             | None -> JSON_Null );
-          ("returnType", _json_of_t json_cx t_out) ]
+          ("returnType", _json_of_t json_cx t_out);
+        ]
       | ReactKitT _ -> [] (* TODO *)
       | ChoiceKitUseT (_, tool) ->
-        [ ( "tool",
+        [
+          ( "tool",
             JSON_String
               (match tool with
               | FullyResolveType _ -> "fullyResolveType"
-              | TryFlow _ -> "tryFlow") ) ]
+              | TryFlow _ -> "tryFlow") );
+        ]
       | IntersectionPreprocessKitT (_, tool) ->
-        [ ( "tool",
+        [
+          ( "tool",
             JSON_String
               (match tool with
               | ConcretizeTypes _ -> "concretizeTypes"
               | SentinelPropTest _ -> "sentinelPropTest"
-              | PropExistsTest _ -> "propExistsTest") ) ]
+              | PropExistsTest _ -> "propExistsTest") );
+        ]
       | SentinelPropTestT (_, l, key, sense, sentinel, result) ->
-        [ ("l", _json_of_t json_cx l);
+        [
+          ("l", _json_of_t json_cx l);
           ("key", JSON_String key);
           ("sense", JSON_Bool sense);
           ("sentinel", json_of_sentinel json_cx sentinel);
-          ("result", _json_of_t json_cx result) ]
+          ("result", _json_of_t json_cx result);
+        ]
       | IdxUnwrap (_, t_out) -> [("t_out", _json_of_t json_cx t_out)]
       | IdxUnMaybeifyT (_, t_out) -> [("t_out", _json_of_t json_cx t_out)]
       | OptionalChainT (_, _, uses) ->
-        [ ( "chain",
+        [
+          ( "chain",
             JSON_Array
               ( Nel.to_list
               @@ Nel.map (fun (use, tout) -> _json_of_use_t json_cx (apply_opt_use use tout)) uses
-              ) ) ]
+              ) );
+        ]
       | InvariantT _ -> []
       | CallLatentPredT (_, sense, offset, l, t) ->
-        [ ("sense", JSON_Bool sense);
+        [
+          ("sense", JSON_Bool sense);
           ("offset", JSON_Number (spf "%d" offset));
           ("t_in", _json_of_t json_cx l);
-          ("t_out", _json_of_t json_cx t) ]
+          ("t_out", _json_of_t json_cx t);
+        ]
       | CallOpenPredT (_, sense, key, l, t) ->
-        [ ("sense", JSON_Bool sense);
+        [
+          ("sense", JSON_Bool sense);
           ("key", JSON_String (Key.string_of_key key));
           ("t_in", _json_of_t json_cx l);
-          ("t_out", _json_of_t json_cx t) ]
+          ("t_out", _json_of_t json_cx t);
+        ]
       | SubstOnPredT (_, subst, t) ->
-        [ ( "PredWithSubst",
+        [
+          ( "PredWithSubst",
             JSON_Object
-              [ ( "subst",
+              [
+                ( "subst",
                   JSON_Array
                     ( subst
                     |> SMap.elements
                     |> Core_list.map ~f:(fun (x, k) ->
                            JSON_Array [JSON_String x; JSON_String (Key.string_of_key k)]) ) );
-                ("pred_t", _json_of_t_impl json_cx t) ] ) ]
+                ("pred_t", _json_of_t_impl json_cx t);
+              ] );
+        ]
       | ReactPropsToOut (_, props) -> [("props", _json_of_t json_cx props)]
       | ReactInToProps (_, props) -> [("props", _json_of_t json_cx props)]
       | RefineT (_, p, t) ->
-        [ ( "Refined",
+        [
+          ( "Refined",
             JSON_Object
-              [("pred_t", json_of_pred json_cx p); ("refined_t", _json_of_t_impl json_cx t)] ) ]
+              [("pred_t", json_of_pred json_cx p); ("refined_t", _json_of_t_impl json_cx t)] );
+        ]
       | ResolveSpreadT (_, _, { rrt_resolved; rrt_unresolved; rrt_resolve_to }) ->
-        [ ( "resolved",
+        [
+          ( "resolved",
             JSON_Array
               (Core_list.map
                  ~f:(fun param ->
@@ -648,24 +761,29 @@ and _json_of_use_t_impl json_cx t =
                    in
                    JSON_Object [("kind", JSON_String kind); ("type", _json_of_t_impl json_cx t)])
                  rrt_unresolved) );
-          ("resolve_to", json_of_resolve_to json_cx rrt_resolve_to) ]
+          ("resolve_to", json_of_resolve_to json_cx rrt_resolve_to);
+        ]
       | CondT (_, consequent, alternate, t_out) ->
-        [ ( "consequent",
+        [
+          ( "consequent",
             match consequent with
             | Some t -> _json_of_t json_cx t
             | None -> JSON_Null );
           ("alternate", _json_of_t json_cx alternate);
-          ("t_out", _json_of_t json_cx t_out) ]
+          ("t_out", _json_of_t json_cx t_out);
+        ]
       | ExtendsUseT (_, _, _, t1, t2) ->
         [("type1", _json_of_t json_cx t1); ("type2", _json_of_t json_cx t2)]
       | DestructuringT (_, k, s, t_out) ->
-        [ ( "kind",
+        [
+          ( "kind",
             JSON_String
               (match k with
               | DestructAnnot -> "annot"
               | DestructInfer -> "infer") );
           ("selector", json_of_selector json_cx s);
-          ("t_out", _json_of_t json_cx t_out) ]
+          ("t_out", _json_of_t json_cx t_out);
+        ]
       | ModuleExportsAssignT (_, assign, t_out) ->
         [("assign", _json_of_t json_cx assign); ("t_out", _json_of_t json_cx t_out)] ))
 
@@ -677,24 +795,30 @@ and json_of_resolve_to_impl json_cx resolve_to =
       (match resolve_to with
       | ResolveSpreadsToTuple (id, elem_t, tout)
       | ResolveSpreadsToArrayLiteral (id, elem_t, tout) ->
-        [ ("id", JSON_Number (string_of_int id));
+        [
+          ("id", JSON_Number (string_of_int id));
           ("elem_t", _json_of_t json_cx elem_t);
-          ("t_out", _json_of_t json_cx tout) ]
+          ("t_out", _json_of_t json_cx tout);
+        ]
       | ResolveSpreadsToArray (elem_t, tout) ->
         [("elem_t", _json_of_t json_cx elem_t); ("t_out", _json_of_t json_cx tout)]
       | ResolveSpreadsToMultiflowCallFull (id, ft)
       | ResolveSpreadsToMultiflowSubtypeFull (id, ft) ->
         [("id", JSON_Number (string_of_int id)); ("funtype", json_of_funtype json_cx ft)]
       | ResolveSpreadsToCustomFunCall (id, kind, tout) ->
-        [ ("id", JSON_Number (string_of_int id));
+        [
+          ("id", JSON_Number (string_of_int id));
           ("kind", _json_of_custom_fun_kind kind);
-          ("t_out", _json_of_t json_cx tout) ]
+          ("t_out", _json_of_t json_cx tout);
+        ]
       | ResolveSpreadsToMultiflowPartial (id, ft, call_reason, tout) ->
-        [ ("id", JSON_Number (string_of_int id));
+        [
+          ("id", JSON_Number (string_of_int id));
           ("funtype", json_of_funtype json_cx ft);
           ( "callReason",
             json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None call_reason );
-          ("t_out", _json_of_t json_cx tout) ]
+          ("t_out", _json_of_t json_cx tout);
+        ]
       | ResolveSpreadsToCallT (fct, tin) ->
         [("funcalltype", json_of_funcalltype json_cx fct); ("t_in", _json_of_t json_cx tin)]))
 
@@ -722,10 +846,12 @@ and json_of_typeparam json_cx = check_depth json_of_typeparam_impl json_cx
 and json_of_typeparam_impl json_cx tparam =
   Hh_json.(
     JSON_Object
-      ( [ ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None tparam.reason);
+      ( [
+          ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None tparam.reason);
           ("name", JSON_String tparam.name);
           ("bound", _json_of_t json_cx tparam.bound);
-          ("polarity", json_of_polarity json_cx tparam.polarity) ]
+          ("polarity", json_of_polarity json_cx tparam.polarity);
+        ]
       @
       match tparam.default with
       | None -> []
@@ -741,8 +867,10 @@ and json_of_objtype_impl json_cx objtype =
       @ (match objtype.dict_t with
         | None -> []
         | Some d -> [("dictType", json_of_dicttype json_cx d)])
-      @ [ ("propTypes", json_of_pmap json_cx pmap);
-          ("prototype", _json_of_t json_cx objtype.proto_t) ] ))
+      @ [
+          ("propTypes", json_of_pmap json_cx pmap);
+          ("prototype", _json_of_t json_cx objtype.proto_t);
+        ] ))
 
 and json_of_dicttype json_cx = check_depth json_of_dicttype_impl json_cx
 
@@ -752,21 +880,25 @@ and json_of_dicttype_impl json_cx dicttype =
       ( (match dicttype.dict_name with
         | None -> []
         | Some name -> [("name", JSON_String name)])
-      @ [ ("keyType", _json_of_t json_cx dicttype.key);
-          ("valueType", _json_of_t json_cx dicttype.value) ] ))
+      @ [
+          ("keyType", _json_of_t json_cx dicttype.key);
+          ("valueType", _json_of_t json_cx dicttype.value);
+        ] ))
 
 and json_of_flags json_cx = check_depth json_of_flags_impl json_cx
 
 and json_of_flags_impl _json_cx flags =
   Hh_json.(
     JSON_Object
-      [ ("frozen", JSON_Bool flags.frozen);
+      [
+        ("frozen", JSON_Bool flags.frozen);
         ( "sealed",
           JSON_Bool
             (match flags.sealed with
             | Sealed -> true
             | UnsealedInFile _ -> false) );
-        ("exact", JSON_Bool flags.exact) ])
+        ("exact", JSON_Bool flags.exact);
+      ])
 
 and json_of_changeset json_cx = check_depth json_of_changeset_impl json_cx
 
@@ -774,9 +906,11 @@ and json_of_changeset_impl _json_cx =
   Hh_json.(
     let json_of_entry_ref (scope_id, name, op) =
       JSON_Object
-        [ ("scope_id", int_ scope_id);
+        [
+          ("scope_id", int_ scope_id);
           ("name", JSON_String name);
-          ("op", JSON_String (Changeset.string_of_op op)) ]
+          ("op", JSON_String (Changeset.string_of_op op));
+        ]
     in
     let json_of_changed_vars changed_vars =
       JSON_Array
@@ -788,9 +922,11 @@ and json_of_changeset_impl _json_cx =
     in
     let json_of_refi_ref (scope_id, key, op) =
       JSON_Object
-        [ ("scope_id", int_ scope_id);
+        [
+          ("scope_id", int_ scope_id);
           ("key", JSON_String (Key.string_of_key key));
-          ("op", JSON_String (Changeset.string_of_op op)) ]
+          ("op", JSON_String (Changeset.string_of_op op));
+        ]
     in
     let json_of_changed_refis changed_refis =
       JSON_Array
@@ -802,8 +938,10 @@ and json_of_changeset_impl _json_cx =
     in
     fun (changed_vars, changed_refis) ->
       JSON_Object
-        [ ("vars", json_of_changed_vars changed_vars);
-          ("refis", json_of_changed_refis changed_refis) ])
+        [
+          ("vars", json_of_changed_vars changed_vars);
+          ("refis", json_of_changed_refis changed_refis);
+        ])
 
 and json_of_funtype json_cx = check_depth json_of_funtype_impl json_cx
 
@@ -821,14 +959,16 @@ and json_of_funtype_impl
       | (Some name, _) :: xs -> params_names (true, name :: names_rev) xs
     in
     JSON_Object
-      ( [ ("thisType", _json_of_t json_cx this_t);
-          ("paramTypes", JSON_Array (Core_list.map ~f:(fun (_, t) -> _json_of_t json_cx t) params))
+      ( [
+          ("thisType", _json_of_t json_cx this_t);
+          ("paramTypes", JSON_Array (Core_list.map ~f:(fun (_, t) -> _json_of_t json_cx t) params));
         ]
       @ (match params_names (false, []) params with
         | None -> []
         | Some names_rev ->
           [("paramNames", JSON_Array (List.rev_map (fun s -> JSON_String s) names_rev))])
-      @ [ ( "restParam",
+      @ [
+          ( "restParam",
             match rest_param with
             | None -> JSON_Null
             | Some (name, _, t) ->
@@ -842,7 +982,7 @@ and json_of_funtype_impl
           ("isPredicate", JSON_Bool is_predicate);
           ("closureIndex", int_ closure_t);
           ("changeset", json_of_changeset json_cx changeset);
-          ("defLoc", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None def_reason)
+          ("defLoc", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None def_reason);
         ] ))
 
 and json_of_funcalltype json_cx = check_depth json_of_funcalltype_impl json_cx
@@ -853,7 +993,8 @@ and json_of_funcalltype_impl
   Hh_json.(
     let arg_types = Core_list.map ~f:(json_of_funcallarg json_cx) call_args_tlist in
     JSON_Object
-      [ ("thisType", _json_of_t json_cx call_this_t);
+      [
+        ("thisType", _json_of_t json_cx call_this_t);
         ( "typeArgs",
           match call_targs with
           | None -> JSON_Null
@@ -861,7 +1002,8 @@ and json_of_funcalltype_impl
         ("argTypes", JSON_Array arg_types);
         ("tout", _json_of_t json_cx call_tout);
         ("closureIndex", int_ call_closure_t);
-        ("strictArity", JSON_Bool call_strict_arity) ])
+        ("strictArity", JSON_Bool call_strict_arity);
+      ])
 
 and json_of_funcallarg json_cx = check_depth json_of_funcallarg_impl json_cx
 
@@ -885,20 +1027,24 @@ and json_of_insttype_impl json_cx insttype =
       | InterfaceKind { inline } -> JSON_Object [("inline", JSON_Bool inline)]
     in
     JSON_Object
-      [ ("classId", json_of_aloc ~offset_table:None insttype.class_id);
+      [
+        ("classId", json_of_aloc ~offset_table:None insttype.class_id);
         ( "typeArgs",
           JSON_Array
             (Core_list.map
                ~f:(fun (x, _, t, p) ->
                  JSON_Object
-                   [ ("name", JSON_String x);
+                   [
+                     ("name", JSON_String x);
                      ("type", _json_of_t json_cx t);
-                     ("polarity", json_of_polarity json_cx p) ])
+                     ("polarity", json_of_polarity json_cx p);
+                   ])
                insttype.type_args) );
         ("fieldTypes", json_of_pmap json_cx own_props);
         ("methodTypes", json_of_pmap json_cx proto_props);
         ("mixins", JSON_Bool insttype.has_unknown_react_mixins);
-        ("inst_kind", inst_kind) ])
+        ("inst_kind", inst_kind);
+      ])
 
 and json_of_selector json_cx = check_depth json_of_selector_impl json_cx
 
@@ -930,21 +1076,25 @@ and json_of_destructor_impl json_cx =
             | Value -> [("target", JSON_String "Value")]
             | Annot { make_exact } ->
               [("target", JSON_String "Annot"); ("makeExact", JSON_Bool make_exact)])
-          @ [ ("spread", JSON_Array (Core_list.map ~f:(json_of_spread_operand json_cx) ts));
+          @ [
+              ("spread", JSON_Array (Core_list.map ~f:(json_of_spread_operand json_cx) ts));
               ( "head_slice",
                 match head_slice with
                 | None -> JSON_Null
-                | Some head_slice -> json_of_spread_operand_slice json_cx head_slice ) ] ))
+                | Some head_slice -> json_of_spread_operand_slice json_cx head_slice );
+            ] ))
     | RestType (merge_mode, t) ->
       Object.Rest.(
         JSON_Object
-          [ ( "mergeMode",
+          [
+            ( "mergeMode",
               JSON_String
                 (match merge_mode with
                 | Sound -> "Sound"
                 | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
                 | ReactConfigMerge _ -> "ReactConfigMerge") );
-            ("restType", _json_of_t json_cx t) ])
+            ("restType", _json_of_t json_cx t);
+          ])
     | ValuesType -> JSON_Object [("values", JSON_Bool true)]
     | CallType args ->
       JSON_Object [("args", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) args))]
@@ -958,22 +1108,26 @@ and json_of_destructor_impl json_cx =
 and json_of_spread_operand_slice json_cx { Object.Spread.reason; prop_map; dict } =
   Hh_json.(
     JSON_Object
-      [ ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
+      [
+        ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
         ( "props",
           JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p) :: acc) prop_map [])
         );
         ( "dict",
           match dict with
           | Some dict -> json_of_dicttype json_cx dict
-          | None -> JSON_Null ) ])
+          | None -> JSON_Null );
+      ])
 
 and json_of_spread_operand json_cx =
   Hh_json.(
     function
     | Object.Spread.Slice operand_slice ->
       JSON_Object
-        [ ("kind", JSON_String "slice");
-          ("slice", json_of_spread_operand_slice json_cx operand_slice) ]
+        [
+          ("kind", JSON_String "slice");
+          ("slice", json_of_spread_operand_slice json_cx operand_slice);
+        ]
     | Object.Spread.Type t ->
       JSON_Object [("kind", JSON_String "type"); ("type", _json_of_t json_cx t)])
 
@@ -993,8 +1147,10 @@ and json_of_propref_impl json_cx =
     function
     | Named (r, x) ->
       JSON_Object
-        [ ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r);
-          ("name", JSON_String x) ]
+        [
+          ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r);
+          ("name", JSON_String x);
+        ]
     | Computed t -> JSON_Object [("elem", _json_of_t json_cx t)])
 
 and json_of_loc_tmap json_cx = check_depth json_of_loc_tmap_impl json_cx
@@ -1088,9 +1244,11 @@ and json_of_pred_impl json_cx p =
       | ArrP ->
         []
       | LatentP (t, i) ->
-        [ ( "latent",
+        [
+          ( "latent",
             JSON_Object
-              [("type", _json_of_t_impl json_cx t); ("position", JSON_Number (spf "%d" i))] ) ] ))
+              [("type", _json_of_t_impl json_cx t); ("position", JSON_Number (spf "%d" i))] );
+        ] ))
 
 and json_of_binary_test json_cx = check_depth json_of_binary_test_impl json_cx
 
@@ -1142,10 +1300,12 @@ and json_of_bounds_impl json_cx bounds =
     match bounds with
     | { Constraint.lower; upper; lowertvars; uppertvars } ->
       JSON_Object
-        [ ("lower", json_of_tkeys json_cx lower);
+        [
+          ("lower", json_of_tkeys json_cx lower);
           ("upper", json_of_use_tkeys json_cx upper);
           ("lowertvars", json_of_tvarkeys json_cx lowertvars);
-          ("uppertvars", json_of_tvarkeys json_cx uppertvars) ])
+          ("uppertvars", json_of_tvarkeys json_cx uppertvars);
+        ])
 
 and json_of_tkeys json_cx = check_depth json_of_tkeys_impl json_cx
 
@@ -1175,9 +1335,11 @@ and json_of_lookup_action_impl json_cx action =
       | WriteProp { use_op = _; obj_t = _; prop_tout = _; tin; write_ctx = _ } ->
         [("kind", JSON_String "WriteProp"); ("t", _json_of_t json_cx tin)]
       | LookupProp (op, p) ->
-        [ ("kind", JSON_String "LookupProp");
+        [
+          ("kind", JSON_String "LookupProp");
           ("use", JSON_String (string_of_use_op op));
-          ("prop", json_of_prop json_cx p) ]
+          ("prop", json_of_prop json_cx p);
+        ]
       | SuperProp (_, p) -> [("kind", JSON_String "SuperProp"); ("prop", json_of_prop json_cx p)]
       | MatchProp (_, t) -> [("kind", JSON_String "MatchProp"); ("t", _json_of_t json_cx t)]))
 
@@ -1189,11 +1351,13 @@ and json_of_specialize_cache_impl json_cx cache =
       (match cache with
       | None -> []
       | Some rs ->
-        [ ( "reasons",
+        [
+          ( "reasons",
             JSON_Array
               (Core_list.map
                  ~f:(json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None)
-                 rs) ) ]))
+                 rs) );
+        ]))
 
 and json_of_obj_assign_kind json_cx = check_depth json_of_obj_assign_kind_impl json_cx
 
@@ -1241,7 +1405,8 @@ let json_of_scope =
           json_cx
           { Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general } =
         JSON_Object
-          [ ("entry_type", JSON_String "Value");
+          [
+            ("entry_type", JSON_String "Value");
             ("kind", JSON_String (Entry.string_of_value_kind kind));
             ("value_state", JSON_String (State.to_string value_state));
             ( "value_declare_loc",
@@ -1249,22 +1414,27 @@ let json_of_scope =
             ( "value_assign_loc",
               json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None value_assign_loc );
             ("specific", _json_of_t json_cx specific);
-            ("general", _json_of_t json_cx general) ]
+            ("general", _json_of_t json_cx general);
+          ]
       in
       let json_of_value json_cx = check_depth json_of_value_impl json_cx in
       let json_of_type_impl json_cx { Entry.type_state; type_loc; type_; type_binding_kind = _ } =
         JSON_Object
-          [ ("entry_type", JSON_String "Type");
+          [
+            ("entry_type", JSON_String "Type");
             ("type_state", JSON_String (State.to_string type_state));
             ("type_loc", json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None type_loc);
-            ("type_", _json_of_t json_cx type_) ]
+            ("type_", _json_of_t json_cx type_);
+          ]
       in
       let json_of_type json_cx = check_depth json_of_type_impl json_cx in
       let json_of_class json_cx c =
         let pmap = Context.find_props json_cx.cx c.class_private_fields in
         JSON_Object
-          [ ("class_id", JSON_String (ALoc.debug_to_string c.class_binding_id));
-            ("class_private_fields", json_of_pmap json_cx pmap) ]
+          [
+            ("class_id", JSON_String (ALoc.debug_to_string c.class_binding_id));
+            ("class_private_fields", json_of_pmap json_cx pmap);
+          ]
       in
       let json_of_entry_impl json_cx =
         Entry.(
@@ -1284,9 +1454,11 @@ let json_of_scope =
       let json_of_entries json_cx = check_depth json_of_entries_impl json_cx in
       let json_of_refi_impl json_cx { refi_loc; refined; original } =
         JSON_Object
-          [ ("refi_loc", json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None refi_loc);
+          [
+            ("refi_loc", json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None refi_loc);
             ("refined", _json_of_t json_cx refined);
-            ("original", _json_of_t json_cx original) ]
+            ("original", _json_of_t json_cx original);
+          ]
       in
       let json_of_refi json_cx = check_depth json_of_refi_impl json_cx in
       let json_of_refis_impl json_cx refis =
@@ -1303,9 +1475,11 @@ let json_of_scope =
       fun ?(size = 5000) ?(depth = 1000) ?(strip_root = None) cx scope ->
         let json_cx = { cx; size = ref size; depth; stack = ISet.empty; strip_root } in
         JSON_Object
-          [ ("kind", JSON_String (string_of_kind scope.kind));
+          [
+            ("kind", JSON_String (string_of_kind scope.kind));
             ("entries", json_of_entries json_cx scope.entries);
-            ("refis", json_of_refis json_cx scope.refis) ]))
+            ("refis", json_of_refis json_cx scope.refis);
+          ]))
 
 let json_of_env ?(size = 5000) ?(depth = 1000) cx env =
   Hh_json.JSON_Array (Core_list.map ~f:(json_of_scope ~size ~depth cx) env)

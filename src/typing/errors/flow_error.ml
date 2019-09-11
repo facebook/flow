@@ -445,12 +445,14 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
               `Root
                 ( lower,
                   None,
-                  [ text "Cannot call ";
+                  [
+                    text "Cannot call ";
                     desc fn;
                     text " with ";
                     desc lower;
                     text " bound to ";
-                    param ] )
+                    param;
+                  ] )
             | Op (FunReturnStatement { value }) ->
               `Root (value, None, [text "Cannot return "; desc value])
             | Op (FunImplicitReturn { upper; fn }) ->
@@ -528,8 +530,10 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
               `Frame
                 ( lower,
                   use_op,
-                  [ text "property ";
-                    code (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props) ] )
+                  [
+                    text "property ";
+                    code (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props);
+                  ] )
             | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "index "; text (string_of_int (n - 1))])
             | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
@@ -685,32 +689,39 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
               else
                 string_of_int n ^ " arguments"
             in
-            [ ref op;
+            [
+              ref op;
               text (spf " passes only %s to the provided function type, but " exp);
               ref def;
               text (spf " expects more than %s. See " exp);
               text Friendly.(docs.call);
-              text " for documentation" ]
+              text " for documentation";
+            ]
           | Frame (TupleMapFunCompatibility { value }, _) ->
-            [ ref op;
+            [
+              ref op;
               text " expects the provided function type to take only one argument, the value type ";
               ref value;
               text ", but ";
               ref def;
               text " takes more than one argument. See ";
               text Friendly.(docs.tuplemap);
-              text " for documentation" ]
+              text " for documentation";
+            ]
           | Frame (ObjMapFunCompatibility { value }, _) ->
-            [ ref op;
+            [
+              ref op;
               text " expects the provided function type to take only one argument, the value type ";
               ref value;
               text ", but ";
               ref def;
               text " takes more than one argument. See ";
               text Friendly.(docs.objmap);
-              text " for documentation" ]
+              text " for documentation";
+            ]
           | Frame (ObjMapiFunCompatibility { key; value }, _) ->
-            [ ref op;
+            [
+              ref op;
               text " expects the provided function type to take only two arguments, the key type ";
               ref key;
               text " and the value type ";
@@ -719,7 +730,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
               ref def;
               text " takes more than two arguments. See ";
               text Friendly.(docs.objmapi);
-              text " for documentation" ]
+              text " for documentation";
+            ]
           | _ -> [ref def; text " requires another argument from "; ref op]
         in
         mk_use_op_error (loc_of_reason op) use_op message
@@ -750,21 +762,25 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
               mk_use_op_error
                 (loc_of_reason lower)
                 use_op
-                [ text "the expected type is not parametric in ";
+                [
+                  text "the expected type is not parametric in ";
                   ref upper;
                   text ", perhaps due to the use of ";
                   code "*";
-                  text " or the lack of a type annotation" ]
+                  text " or the lack of a type annotation";
+                ]
             | (RLongStringLit n, RStringLit _) ->
               mk_use_op_error
                 (loc_of_reason lower)
                 use_op
-                [ ref lower;
+                [
+                  ref lower;
                   text " is incompatible with ";
                   ref upper;
                   text " because strings longer than ";
                   code (string_of_int n);
-                  text " characters are not treated as literals" ]
+                  text " characters are not treated as literals";
+                ]
             | _ ->
               mk_use_op_error
                 (loc_of_reason lower)
@@ -794,31 +810,39 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
         mk_use_op_error
           (loc_of_reason lower)
           use_op
-          ( [ text "`any` may have been passed into ";
+          ( [
+              text "`any` may have been passed into ";
               ref lower;
               text " and `any` is incompatible with ";
               ref upper;
-              text ", and " ]
-          @ [ ref upper;
+              text ", and ";
+            ]
+          @ [
+              ref upper;
               text " may be passed into `any` and ";
               ref lower;
-              text " is incompatible with `any`" ] )
+              text " is incompatible with `any`";
+            ] )
       | (_, (RTrusted _ | RPrivate (RTrusted _))) ->
         mk_use_op_error
           (loc_of_reason lower)
           use_op
-          [ text "`any` may have been passed into ";
+          [
+            text "`any` may have been passed into ";
             ref lower;
             text " and `any` is incompatible with ";
-            ref upper ]
+            ref upper;
+          ]
       | ((RPrivate _ | RTrusted (RPrivate _)), _) ->
         mk_use_op_error
           (loc_of_reason lower)
           use_op
-          [ ref upper;
+          [
+            ref upper;
             text " may be passed into `any` and ";
             ref lower;
-            text " is incompatible with `any`" ]
+            text " is incompatible with `any`";
+          ]
       | _ ->
         mk_use_op_error
           (loc_of_reason lower)

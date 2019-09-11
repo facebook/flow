@@ -91,9 +91,11 @@ let main
         print_json_endline
           ~pretty
           (JSON_Object
-             [ ("pid", JSON_String (string_of_int pid));
+             [
+               ("pid", JSON_String (string_of_int pid));
                ("log_file", JSON_String server_log_file);
-               ("monitor_log_file", JSON_String monitor_log_file) ]))
+               ("monitor_log_file", JSON_String monitor_log_file);
+             ]))
     else if not (Options.is_quiet options) then (
       Printf.eprintf "Spawned flow server (pid=%d)\n" pid;
       Printf.eprintf "Logs will go to %s\n%!" server_log_file;

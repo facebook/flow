@@ -14,7 +14,8 @@ module FlowShell : sig
 end = struct
   (* normal commands *)
   let commands =
-    [ AstCommand.command;
+    [
+      AstCommand.command;
       AutocompleteCommand.command;
       AutofixCommand.command;
       CheckCommands.CheckCommand.command;
@@ -42,7 +43,8 @@ end = struct
       StopCommand.command;
       SuggestCommand.command;
       TypeAtPosCommand.command;
-      VersionCommand.command ]
+      VersionCommand.command;
+    ]
     @ Extra_commands.extra_commands ()
 
   (* status commands, which need a list of other commands *)

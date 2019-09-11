@@ -26,7 +26,8 @@ let name ?prevent_munge ?facebook_fbt ?ignore_static_propTypes ?facebook_keyMirr
   (prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, x)
 
 let tests_data =
-  [ (name "export_number_literal", ["export default 0;"], [], []);
+  [
+    (name "export_number_literal", ["export default 0;"], [], []);
     ( name "export_function_literal",
       ["export default function(x: number): number { return x };"],
       [],
@@ -65,11 +66,13 @@ let tests_data =
       ["Cannot determine types of initialized properties of an empty object @ (1, 15) to (1, 18)"],
       [] );
     ( name "export_class_reference",
-      [ "class C {";
+      [
+        "class C {";
         "  f: number = 0;";
         "  m(x: number): number { return x; }";
         "}";
-        "export default C;" ],
+        "export default C;";
+      ],
       [],
       ["Reachable: C"] );
     ( name "export_class_reference_check1",
@@ -85,50 +88,60 @@ let tests_data =
       ["Expected annotation at function return @ (3, 14) to (3, 14)"],
       ["Reachable: C"] );
     ( name "type_alias_dependencies",
-      [ "type T1 = number;";
+      [
+        "type T1 = number;";
         "type T2 = number;";
         "type T3 = number;";
         "class C {";
         "  f: T1 = 0;";
         "  m(x: T2): T3 { return x; }";
         "}";
-        "export default C;" ],
+        "export default C;";
+      ],
       [],
       ["Reachable: C, T1, T2, T3"] );
     ( name "class_dependencies",
-      [ "class D { f: number = 0; }";
+      [
+        "class D { f: number = 0; }";
         "class C {";
         "  f: D = new D;";
         "  m(x: D): D { return x; }";
         "}";
-        "export default C;" ],
+        "export default C;";
+      ],
       [],
       ["Reachable: C, D"] );
     ( name "class_dependencies_check",
-      [ "class D { f = 0; }";
+      [
+        "class D { f = 0; }";
         "class C {";
         "  f: D = new D;";
         "  m(x: D): D { return x; }";
         "}";
-        "export default C;" ],
+        "export default C;";
+      ],
       ["Expected annotation at property `f` @ (1, 10) to (1, 16)"],
       ["Reachable: C, D"] );
     ( name "export_new_typecast",
-      [ "class D { f: number = 0; }";
+      [
+        "class D { f: number = 0; }";
         "class C {";
         "  f: D = new D;";
         "  m(x: D): D { return x; }";
         "}";
-        "export default (new C: C);" ],
+        "export default (new C: C);";
+      ],
       [],
       ["Reachable: C, D"] );
     ( name "export_new_typecast_check",
-      [ "class D { f = 0; }";
+      [
+        "class D { f = 0; }";
         "class C {";
         "  f: D = new D;";
         "  m(x: D): D { return x; }";
         "}";
-        "export default (new C: C);" ],
+        "export default (new C: C);";
+      ],
       ["Expected annotation at property `f` @ (1, 10) to (1, 16)"],
       ["Reachable: C, D"] );
     ( name "recursive_dependencies",
@@ -162,38 +175,49 @@ let tests_data =
       ["Expected annotation at function return @ (1, 15) to (1, 15)"],
       ["Reachable: foo"] );
     ( name "import_default_dependencies",
-      [ "import x from './import_default_dependencies_helper';";
+      [
+        "import x from './import_default_dependencies_helper';";
         "class C {";
         "  p: typeof x = 0";
         "}";
-        "export default (new C: C);" ],
+        "export default (new C: C);";
+      ],
       [],
       ["import { default } from './import_default_dependencies_helper'"; "Reachable: C, x"] );
     ( name "import_type_dependencies",
-      [ "import type { T1, T2, T3 } from './import_type_dependencies_helper';";
+      [
+        "import type { T1, T2, T3 } from './import_type_dependencies_helper';";
         "class C {";
         "  f: T1 = 0;";
         "  m(x: T2): T3 { return x; }";
         "}";
-        "export default C;" ],
+        "export default C;";
+      ],
       [],
-      [ "import type { T1 } from './import_type_dependencies_helper'";
+      [
+        "import type { T1 } from './import_type_dependencies_helper'";
         "import type { T2 } from './import_type_dependencies_helper'";
         "import type { T3 } from './import_type_dependencies_helper'";
-        "Reachable: C, T1, T2, T3" ] );
+        "Reachable: C, T1, T2, T3";
+      ] );
     ( name "qualified_references",
-      [ "import M1 from './qualified_references_helper';";
+      [
+        "import M1 from './qualified_references_helper';";
         "import type M2 from './qualified_references_helper';";
         "class C {";
         "  m(x: M1.T): M2.T { return x; }";
         "}";
-        "export default C;" ],
+        "export default C;";
+      ],
       [],
-      [ "import type { default } from './qualified_references_helper'";
+      [
+        "import type { default } from './qualified_references_helper'";
         "import { default } from './qualified_references_helper'";
-        "Reachable: C, M1, M2" ] );
+        "Reachable: C, M1, M2";
+      ] );
     ( name "hoisted_requires",
-      [ "const M = require('./hoisted_requires_helper');";
+      [
+        "const M = require('./hoisted_requires_helper');";
         "if (Math.random() < 0.5) {";
         "  var { D } = require('./hoisted_requires_helper');";
         "} else {";
@@ -203,14 +227,18 @@ let tests_data =
         "class C extends M.D {";
         "  f: D = 0;";
         "}";
-        "module.exports = C;" ],
+        "module.exports = C;";
+      ],
       ["Expected annotation at declaration of variable `D` @ (7, 4) to (7, 5)"],
-      [ "require('./hoisted_requires_helper')";
+      [
+        "require('./hoisted_requires_helper')";
         "require('./hoisted_requires_helper').D";
         "require('./hoisted_requires_helper').D";
-        "Reachable: C, D, M" ] );
+        "Reachable: C, D, M";
+      ] );
     ( name "hoisted_locals",
-      [ "const M = require('./hoisted_locals_helper');";
+      [
+        "const M = require('./hoisted_locals_helper');";
         "if (Math.random() < 0.5) {";
         "  var D = 0;";
         "} else {";
@@ -219,27 +247,33 @@ let tests_data =
         "class C extends M.D {";
         "  f: D = 0;";
         "}";
-        "module.exports = C;" ],
-      [ "Unexpected toplevel definition that needs hoisting @ (3, 2) to (3, 12)";
-        "Unexpected toplevel definition that needs hoisting @ (5, 2) to (5, 16)" ],
+        "module.exports = C;";
+      ],
+      [
+        "Unexpected toplevel definition that needs hoisting @ (3, 2) to (3, 12)";
+        "Unexpected toplevel definition that needs hoisting @ (5, 2) to (5, 16)";
+      ],
       ["require('./hoisted_locals_helper')"; "Reachable: C, D, M"] );
     ( name "dynamic_requires",
       ["module.exports = require('./dynamic_requires_helper');"],
       [],
       ["require('./dynamic_requires_helper')"] );
     ( name "scope_extrusion",
-      [ "{";
+      [
+        "{";
         "  class C {}";
         "  var x: C = new C;";
         "}";
         "class C {";
         "  f = 0;";
         "}";
-        "module.exports = x;" ],
+        "module.exports = x;";
+      ],
       ["Unexpected toplevel definition that needs hoisting @ (3, 2) to (3, 19)"],
       ["Reachable: x"] );
     ( name "scope_extrusion_nested",
-      [ "{";
+      [
+        "{";
         "  class C {}";
         "  let y = 0;";
         "  if (b) {";
@@ -249,19 +283,24 @@ let tests_data =
         "class C {";
         "  f = 0;";
         "}";
-        "module.exports = { x, y };" ],
+        "module.exports = { x, y };";
+      ],
       ["Unexpected toplevel definition that needs hoisting @ (5, 4) to (5, 21)"],
       ["global value: y"; "Reachable: x"] );
     ( name "report_all_errors",
-      [ "class A {";
+      [
+        "class A {";
         "  f = (x: number) => x;     // C";
         "}";
         "module.exports = {";
         "  a: A,                     // A";
         "  b: (x: string) => x,      // B";
-        "};" ],
-      [ "Expected annotation at property `f` @ (2, 2) to (2, 23)";
-        "Expected annotation at function return @ (6, 16) to (6, 16)" ],
+        "};";
+      ],
+      [
+        "Expected annotation at property `f` @ (2, 2) to (2, 23)";
+        "Expected annotation at function return @ (6, 16) to (6, 16)";
+      ],
       ["Reachable: A"] );
     ( name "munged_methods_ignored",
       ["class C {"; "  _method() { return 1; }"; "}"; "export default C;"],
@@ -341,50 +380,64 @@ let tests_data =
       [] );
     ( name "function_return",
       ["var n = false;"; "export function foo<X: typeof n>(x: X) { return 1; };"],
-      [ "Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
-        "Expected annotation at function return @ (2, 38) to (2, 38)" ],
+      [
+        "Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
+        "Expected annotation at function return @ (2, 38) to (2, 38)";
+      ],
       ["Reachable: foo, n"] );
     ( name "function_return_2",
       ["var n = false;"; "export function bar(x: (typeof n) => void) { return 1; };"],
-      [ "Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
-        "Expected annotation at function return @ (2, 42) to (2, 42)" ],
+      [
+        "Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
+        "Expected annotation at function return @ (2, 42) to (2, 42)";
+      ],
       ["Reachable: bar, n"] );
     ( name "function_statics",
       ["function bar(): void { };"; "const x = 42;"; "bar.x = x;"; "module.exports = bar;"],
       [],
       ["Reachable: bar, x"] );
     ( name "function_predicates_1",
-      [ "class A {}";
+      [
+        "class A {}";
         "export function foo(x: mixed): boolean %checks {";
         "  return x === new A;";
-        "}" ],
+        "}";
+      ],
       ["Unsupported predicate expression @ (3, 15) to (3, 20)"],
       ["Reachable: foo"] );
     ( name "function_predicates_2",
-      [ "declare function bar(x: mixed): boolean %checks(x === null);";
+      [
+        "declare function bar(x: mixed): boolean %checks(x === null);";
         "export function foo(x: mixed): boolean %checks {";
         "  return bar(x);";
-        "}" ],
+        "}";
+      ],
       [],
       ["Reachable: bar, foo"] );
     ( name "function_predicates_3",
-      [ "function bar(x: mixed): %checks { return x === null; }";
-        "declare export function foo(x: mixed): boolean %checks(bar(x));" ],
+      [
+        "function bar(x: mixed): %checks { return x === null; }";
+        "declare export function foo(x: mixed): boolean %checks(bar(x));";
+      ],
       ["Expected annotation at function return @ (1, 31) to (1, 31)"],
       ["Reachable: bar, foo"] );
     ( name "function_predicates_4",
-      [ "function one() { return 1; }";
+      [
+        "function one() { return 1; }";
         "const n = one()";
         "export function isOne(x: mixed): boolean %checks {";
         "  return x === n;";
-        "}" ],
+        "}";
+      ],
       ["Cannot determine the type of this call expression @ (2, 10) to (2, 15)"],
       ["Reachable: isOne, n"] );
     ( name "function_predicates_5",
-      [ "const one = 1;";
+      [
+        "const one = 1;";
         "export function isOne(x: mixed): boolean %checks {";
         "  return x === one;";
-        "}" ],
+        "}";
+      ],
       [],
       ["Reachable: isOne, one"] );
     ( name "async_function_1",
@@ -398,7 +451,8 @@ let tests_data =
     ( name "async_function_3",
       ["module.exports = async () => await 1;"],
       ["Expected annotation at function return @ (1, 25) to (1, 25)"],
-      [] ) ]
+      [] );
+  ]
 
 let mk_signature_verifier_test
     ?prevent_munge

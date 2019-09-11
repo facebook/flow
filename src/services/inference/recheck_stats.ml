@@ -125,9 +125,11 @@ let save_averages ~options ?estimates new_averages =
               }
               ->
         Hh_json.
-          [ ( estimates_key,
+          [
+            ( estimates_key,
               JSON_Object
-                [ ( estimated_time_to_recheck_key,
+                [
+                  ( estimated_time_to_recheck_key,
                     JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_recheck) );
                   ( estimated_time_to_restart_key,
                     JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_restart) );
@@ -137,8 +139,9 @@ let save_averages ~options ?estimates new_averages =
                     JSON_Number (Dtoa.ecma_string_of_float estimated_time_per_file) );
                   ( estimated_files_to_recheck_key,
                     JSON_Number (string_of_int estimated_files_to_recheck) );
-                  (estimated_files_to_init_key, JSON_Number (string_of_int estimated_files_to_init))
-                ] ) ])
+                  (estimated_files_to_init_key, JSON_Number (string_of_int estimated_files_to_init));
+                ] );
+          ])
   in
   let json_str =
     Hh_json.(

@@ -344,9 +344,11 @@ let notify
   Hh_json.(
     let message =
       JSON_Object
-        ( [ ("jsonrpc", JSON_String "2.0");
+        ( [
+            ("jsonrpc", JSON_String "2.0");
             ("method", JSON_String method_);
-            ("params", params) ]
+            ("params", params);
+          ]
         @
         match powered_by with
         | Some powered_by -> [("powered_by", JSON_String powered_by)]

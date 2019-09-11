@@ -648,9 +648,11 @@ end = struct
     let record_ref = ref false in
     let path_ref = ref None in
     let speclist =
-      [ ("-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode");
+      [
+        ("-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode");
         ("-v", Arg.Unit (fun () -> verbose_ref := Verbose), "Enables verbose mode");
-        ("-r", Arg.Set record_ref, "Re-record failing expected trees") ]
+        ("-r", Arg.Set record_ref, "Re-record failing expected trees");
+      ]
     in
     let usage_msg = "Runs flow parser on esprima tests. Options available:" in
     Arg.parse speclist (fun anon -> path_ref := Some anon) usage_msg;
@@ -677,8 +679,10 @@ end = struct
                 | Case_ok ->
                   if verbose then
                     print
-                      [ (C.Normal C.Green, "[\xE2\x9C\x93] PASS");
-                        (C.Normal C.Default, spf ": %s\n" key) ];
+                      [
+                        (C.Normal C.Green, "[\xE2\x9C\x93] PASS");
+                        (C.Normal C.Default, spf ": %s\n" key);
+                      ];
                   ({ results with ok = results.ok + 1 }, shown_header)
                 | Case_skipped reason ->
                   begin
@@ -689,16 +693,20 @@ end = struct
                     | Some reason ->
                       if not quiet then
                         print
-                          [ (C.Normal C.Yellow, "[-] SKIP");
-                            (C.Normal C.Default, spf ": %s - %s\n" key reason) ]
+                          [
+                            (C.Normal C.Yellow, "[-] SKIP");
+                            (C.Normal C.Default, spf ": %s - %s\n" key reason);
+                          ]
                   end;
                   ({ results with skipped = results.skipped + 1 }, shown_header)
                 | Case_error errs ->
                   if quiet && not shown_header then
                     print [(C.Bold C.White, spf "=== %s ===\n" test_name)];
                   print
-                    [ (C.Normal C.Red, "[\xE2\x9C\x97] FAIL");
-                      (C.Normal C.Default, spf ": %s\n" key) ];
+                    [
+                      (C.Normal C.Red, "[\xE2\x9C\x97] FAIL");
+                      (C.Normal C.Default, spf ": %s\n" key);
+                    ];
                   List.iter (fun err -> print [(C.Normal C.Default, spf "    %s\n" err)]) errs;
                   flush stdout;
                   if record then record_tree path test_name key case;
@@ -718,23 +726,27 @@ end = struct
     if results.failed_tests = 0 then
       let _ =
         print
-          [ ( C.Bold C.Default,
+          [
+            ( C.Bold C.Default,
               spf
                 "Passed: %d (%d cases), Failed: %d (%d cases), Skipped: %d cases\n"
                 results.ok_tests
                 results.ok_cases
                 results.failed_tests
                 results.failed_cases
-                results.skipped_cases ) ]
+                results.skipped_cases );
+          ]
       in
       exit 0
     else
       let _ =
         print
-          [ (C.Bold C.Default, spf "Passed: %d (%d cases), " results.ok_tests results.ok_cases);
+          [
+            (C.Bold C.Default, spf "Passed: %d (%d cases), " results.ok_tests results.ok_cases);
             ( C.BoldWithBG (C.White, C.Red),
               spf "Failed: %d (%d cases)" results.failed_tests results.failed_cases );
-            (C.Bold C.Default, spf ", Skipped: %d cases\n" results.skipped_cases) ]
+            (C.Bold C.Default, spf ", Skipped: %d cases\n" results.skipped_cases);
+          ]
       in
       exit 1
 end

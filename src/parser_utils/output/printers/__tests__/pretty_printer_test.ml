@@ -19,22 +19,26 @@ let assert_pretty_print ~ctxt ?msg expected_str layout =
 
 let tests =
   "pretty_printer"
-  >::: [ ( "breaks_in_list"
+  >::: [
+         ( "breaks_in_list"
          >:: fun ctxt ->
          let layout =
            fuse
-             [ Atom "return";
+             [
+               Atom "return";
                space;
-               list ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [Atom "null"] ]
+               list ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [Atom "null"];
+             ]
          in
          assert_pretty_print ~ctxt "return null" layout;
 
          let long_string = String.make 80 'x' in
          let layout =
            fuse
-             [ Atom "return";
+             [
+               Atom "return";
                space;
-               list ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [Atom long_string]
+               list ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [Atom long_string];
              ]
          in
          assert_pretty_print ~ctxt ("return (\n  " ^ long_string ^ "\n)") layout );
@@ -43,16 +47,22 @@ let tests =
          let short_string = String.make 10 'x' in
          let layout =
            fuse
-             [ Atom "myFunc";
+             [
+               Atom "myFunc";
                list
                  ~wrap:(Atom "(", Atom ")")
                  ~sep:(Atom ",")
-                 [ Atom "a";
+                 [
+                   Atom "a";
                    fuse
-                     [ Atom "b";
+                     [
+                       Atom "b";
                        space;
                        Atom "=>";
-                       Indent (fuse [pretty_hardline; Atom short_string]) ] ] ]
+                       Indent (fuse [pretty_hardline; Atom short_string]);
+                     ];
+                 ];
+             ]
          in
          assert_pretty_print ~ctxt ("myFunc(\n  a,\n  b =>\n    " ^ short_string ^ ",\n)") layout
          );
@@ -63,10 +73,12 @@ let tests =
          begin
            let layout =
              fuse
-               [ Atom short_string;
+               [
+                 Atom short_string;
                  Sequence
                    ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                     [fuse [flat_pretty_space; Atom short_string]] ) ]
+                     [fuse [flat_pretty_space; Atom short_string]] );
+               ]
            in
            assert_pretty_print ~ctxt (short_string ^ " " ^ short_string) layout
          end;
@@ -74,14 +86,18 @@ let tests =
          begin
            let layout =
              fuse
-               [ fuse
-                   [ Atom short_string;
+               [
+                 fuse
+                   [
+                     Atom short_string;
                      Sequence
                        ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                         [fuse [flat_pretty_space; Atom short_string]] ) ];
+                         [fuse [flat_pretty_space; Atom short_string]] );
+                   ];
                  Sequence
                    ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                     [fuse [flat_pretty_space; Atom short_string]] ) ]
+                     [fuse [flat_pretty_space; Atom short_string]] );
+               ]
            in
            assert_pretty_print
              ~ctxt
@@ -92,24 +108,30 @@ let tests =
          begin
            let layout =
              fuse
-               [ Atom long_string;
+               [
+                 Atom long_string;
                  Sequence
                    ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                     [fuse [flat_pretty_space; Atom long_string]] ) ]
+                     [fuse [flat_pretty_space; Atom long_string]] );
+               ]
            in
            assert_pretty_print ~ctxt (long_string ^ "\n  " ^ long_string) layout
          end;
 
          let layout =
            fuse
-             [ fuse
-                 [ Atom long_string;
+             [
+               fuse
+                 [
+                   Atom long_string;
                    Sequence
                      ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                       [fuse [flat_pretty_space; Atom long_string]] ) ];
+                       [fuse [flat_pretty_space; Atom long_string]] );
+                 ];
                Sequence
                  ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                   [fuse [flat_pretty_space; Atom long_string]] ) ]
+                   [fuse [flat_pretty_space; Atom long_string]] );
+             ]
          in
          assert_pretty_print
            ~ctxt
@@ -120,10 +142,12 @@ let tests =
          let a41 = String.make 41 'A' in
          let layout =
            Concat
-             [ Atom a41;
+             [
+               Atom a41;
                IfBreak (Empty, Atom " ");
                (* this never breaks because it's fused *)
-               Atom a41 ]
+                 Atom a41;
+             ]
          in
          assert_pretty_print ~ctxt (a41 ^ " " ^ a41) layout );
          ( "if_break_inside_concat_inside_sequence"
@@ -152,29 +176,35 @@ let tests =
          (* fits in 80 cols *)
          let layout =
            Concat
-             [ Atom "(";
+             [
+               Atom "(";
                Sequence
                  ({ break = Break_if_needed; inline = (false, false); indent = 2 }, [Atom "a"]);
-               Atom ")" ]
+               Atom ")";
+             ]
          in
          assert_pretty_print ~ctxt "(a)" layout;
 
          (* doesn't fit in 80 cols, so indents *)
          let layout =
            Concat
-             [ Atom "(";
+             [
+               Atom "(";
                Sequence
                  ({ break = Break_if_needed; inline = (false, false); indent = 2 }, [Atom a80]);
-               Atom ")" ]
+               Atom ")";
+             ]
          in
          assert_pretty_print ~ctxt ("(\n  " ^ a80 ^ "\n)") layout;
 
          (* doesn't fit in 80 cols, but doesn't indent *)
          let layout =
            Concat
-             [ Atom "(";
+             [
+               Atom "(";
                Sequence ({ break = Break_if_needed; inline = (true, true); indent = 2 }, [Atom a80]);
-               Atom ")" ]
+               Atom ")";
+             ]
          in
          assert_pretty_print ~ctxt ("(" ^ a80 ^ ")") layout );
          ( "group_break"
@@ -209,4 +239,5 @@ let tests =
          assert_pretty_print
            ~ctxt
            ("(\n  " ^ a80 ^ "\n)")
-           (Group [Atom "("; Indent (Concat [line; Atom a80]); line; Atom ")"]) ) ]
+           (Group [Atom "("; Indent (Concat [line; Atom a80]); line; Atom ")"]) );
+       ]

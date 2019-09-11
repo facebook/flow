@@ -23,8 +23,10 @@ let expand_caret version =
       | { major = 0; _ } -> incr_minor version
       | _ -> incr_major version
     in
-    [ Semver_comparator.{ op = Some GreaterOrEqual; version };
-      Semver_comparator.{ op = Some Less; version = upper } ])
+    [
+      Semver_comparator.{ op = Some GreaterOrEqual; version };
+      Semver_comparator.{ op = Some Less; version = upper };
+    ])
 
 let fold_comparators_of_range f acc t =
   List.fold_left

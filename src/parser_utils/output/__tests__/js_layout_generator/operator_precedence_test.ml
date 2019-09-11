@@ -28,7 +28,8 @@ let ( + ) a b = E.binary ~op:Flow_ast.Expression.Binary.Plus a b
 let ( - ) a b = E.binary ~op:Flow_ast.Expression.Binary.Minus a b
 
 let tests =
-  [ ( "and_with_and_lhs"
+  [
+    ( "and_with_and_lhs"
     >:: fun ctxt ->
     let layout = Js_layout_generator.expression ((x && y) && z) in
     assert_layout
@@ -36,10 +37,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression (x && y);
+             [
+               expression (x && y);
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; expression z]) ]))
+               indent (fused [pretty_line; expression z]);
+             ]))
       layout;
     assert_output ~ctxt "x&&y&&z" layout;
     assert_output ~ctxt ~pretty:true "x && y && z" layout;
@@ -64,10 +67,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; wrap_in_parens (expression (y && z))]) ]))
+               indent (fused [pretty_line; wrap_in_parens (expression (y && z))]);
+             ]))
       layout;
     assert_output ~ctxt "x&&(y&&z)" layout;
     assert_output ~ctxt ~pretty:true "x && (y && z)" layout;
@@ -92,10 +97,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression (x && y);
+             [
+               expression (x && y);
                pretty_space;
                atom "||";
-               indent (fused [pretty_line; expression z]) ]))
+               indent (fused [pretty_line; expression z]);
+             ]))
       layout;
     assert_output ~ctxt "x&&y||z" layout;
     assert_output ~ctxt ~pretty:true "x && y || z" layout;
@@ -120,10 +127,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; wrap_in_parens (expression (y || z))]) ]))
+               indent (fused [pretty_line; wrap_in_parens (expression (y || z))]);
+             ]))
       layout;
     assert_output ~ctxt "x&&(y||z)" layout;
     assert_output ~ctxt ~pretty:true "x && (y || z)" layout;
@@ -148,10 +157,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression (x || y);
+             [
+               expression (x || y);
                pretty_space;
                atom "||";
-               indent (fused [pretty_line; expression z]) ]))
+               indent (fused [pretty_line; expression z]);
+             ]))
       layout;
     assert_output ~ctxt "x||y||z" layout;
     assert_output ~ctxt ~pretty:true "x || y || z" layout;
@@ -176,10 +187,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "||";
-               indent (fused [pretty_line; wrap_in_parens (expression (y || z))]) ]))
+               indent (fused [pretty_line; wrap_in_parens (expression (y || z))]);
+             ]))
       layout;
     assert_output ~ctxt "x||(y||z)" layout;
     assert_output ~ctxt ~pretty:true "x || (y || z)" layout );
@@ -191,10 +204,12 @@ let tests =
       L.(
         loc
           (group
-             [ wrap_in_parens (expression (x || y));
+             [
+               wrap_in_parens (expression (x || y));
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; expression z]) ]))
+               indent (fused [pretty_line; expression z]);
+             ]))
       layout;
     assert_output ~ctxt "(x||y)&&z" layout;
     assert_output ~ctxt ~pretty:true "(x || y) && z" layout );
@@ -206,10 +221,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "||";
-               indent (fused [pretty_line; expression (y && z)]) ]))
+               indent (fused [pretty_line; expression (y && z)]);
+             ]))
       layout;
     assert_output ~ctxt "x||y&&z" layout;
     assert_output ~ctxt ~pretty:true "x || y && z" layout );
@@ -230,11 +247,13 @@ let tests =
       L.(
         loc
           (fused
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "+";
                pretty_space;
-               wrap_in_parens (expression (y + z)) ]))
+               wrap_in_parens (expression (y + z));
+             ]))
       layout;
     assert_output ~ctxt "x+(y+z)" layout;
     assert_output ~ctxt ~pretty:true "x + (y + z)" layout );
@@ -255,11 +274,13 @@ let tests =
       L.(
         loc
           (fused
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "+";
                pretty_space;
-               wrap_in_parens (expression (y - z)) ]))
+               wrap_in_parens (expression (y - z));
+             ]))
       layout;
     assert_output ~ctxt "x+(y-z)" layout;
     assert_output ~ctxt ~pretty:true "x + (y - z)" layout );
@@ -271,10 +292,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression (x + y);
+             [
+               expression (x + y);
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; expression z]) ]))
+               indent (fused [pretty_line; expression z]);
+             ]))
       layout;
     assert_output ~ctxt "x+y&&z" layout;
     assert_output ~ctxt ~pretty:true "x + y && z" layout );
@@ -286,11 +309,13 @@ let tests =
       L.(
         loc
           (fused
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "+";
                pretty_space;
-               wrap_in_parens (expression (y && z)) ]))
+               wrap_in_parens (expression (y && z));
+             ]))
       layout;
     assert_output ~ctxt "x+(y&&z)" layout;
     assert_output ~ctxt ~pretty:true "x + (y && z)" layout );
@@ -302,11 +327,13 @@ let tests =
       L.(
         loc
           (fused
-             [ wrap_in_parens (expression (x && y));
+             [
+               wrap_in_parens (expression (x && y));
                pretty_space;
                atom "+";
                pretty_space;
-               expression z ]))
+               expression z;
+             ]))
       layout;
     assert_output ~ctxt "(x&&y)+z" layout;
     assert_output ~ctxt ~pretty:true "(x && y) + z" layout );
@@ -318,10 +345,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression x;
+             [
+               expression x;
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; expression (y + z)]) ]))
+               indent (fused [pretty_line; expression (y + z)]);
+             ]))
       layout;
     assert_output ~ctxt "x&&y+z" layout;
     assert_output ~ctxt ~pretty:true "x && y + z" layout );
@@ -382,10 +411,12 @@ let tests =
       L.(
         loc
           (group
-             [ wrap_in_parens (expression seq);
+             [
+               wrap_in_parens (expression seq);
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; expression z]) ]))
+               indent (fused [pretty_line; expression z]);
+             ]))
       layout;
     assert_output ~ctxt "(x,y)&&z" layout;
     assert_output ~ctxt ~pretty:true "(x, y) && z" layout;
@@ -396,10 +427,12 @@ let tests =
       L.(
         loc
           (group
-             [ expression z;
+             [
+               expression z;
                pretty_space;
                atom "&&";
-               indent (fused [pretty_line; wrap_in_parens (expression seq)]) ]))
+               indent (fused [pretty_line; wrap_in_parens (expression seq)]);
+             ]))
       layout;
     assert_output ~ctxt "z&&(x,y)" layout;
     assert_output ~ctxt ~pretty:true "z && (x, y)" layout;
@@ -418,4 +451,5 @@ let tests =
       L.(loc (group [wrap_in_parens (expression seq); atom ","; pretty_line; loc (id "z")]))
       layout;
     assert_output ~ctxt "(x,y),z" layout;
-    assert_output ~ctxt ~pretty:true "(x, y), z" layout ) ]
+    assert_output ~ctxt ~pretty:true "(x, y), z" layout );
+  ]

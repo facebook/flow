@@ -21,11 +21,13 @@ let debug_to_string t =
     | None -> "None"
     | Some loc -> ALoc.debug_to_string ~include_source:true loc
   in
-  [ ("null_loc", t.null_loc);
+  [
+    ("null_loc", t.null_loc);
     ("bool_loc", t.bool_loc);
     ("string_loc", t.string_loc);
     ("number_loc", t.number_loc);
-    ("mixed_loc", t.mixed_loc) ]
+    ("mixed_loc", t.mixed_loc);
+  ]
   |> Core_list.map ~f:(fun (name, loc_opt) -> (name, string_of_loc_option loc_opt))
   |> Core_list.map ~f:(fun (name, loc) -> Printf.sprintf "  %s: %s;\n" name loc)
   |> String.concat ""

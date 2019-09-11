@@ -251,10 +251,12 @@ end = struct
     try%lwt
       let%lwt server_status =
         Lwt.pick
-          [ (let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
+          [
+            (let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
              Lwt.return (Some status));
             (let%lwt () = Lwt_unix.sleep 0.75 in
-             Lwt.return None) ]
+             Lwt.return None);
+          ]
       in
       let%lwt () = ServerConnection.close_immediately connection in
       let still_alive =
@@ -635,15 +637,17 @@ end)
 
 let setup_signal_handlers =
   let signals =
-    [ Sys.sigint;
+    [
+      Sys.sigint;
       (* Interrupt - ctrl-c *)
-      Sys.sigterm;
+        Sys.sigterm;
       (* Termination - like a nicer sigkill giving you a chance to cleanup *)
-      Sys.sighup;
+        Sys.sighup;
       (* Hang up - the terminal went away *)
-      Sys.sigquit
-      (* Dump core - Kind of a meaner sigterm *)
-     ]
+        Sys.sigquit;
+        (* Dump core - Kind of a meaner sigterm *)
+      
+    ]
   in
   let handle_signal signal =
     Lwt.async (fun () ->

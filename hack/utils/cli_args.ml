@@ -14,8 +14,10 @@ let files_to_check_range_to_json (range : files_to_check_range) : Hh_json.json
   let range_properties =
     match range.to_prefix_excl with
     | Some to_prefix_excl ->
-      [ ( "to_prefix_excl",
-          Hh_json.JSON_String (Relative_path.suffix to_prefix_excl) ) ]
+      [
+        ( "to_prefix_excl",
+          Hh_json.JSON_String (Relative_path.suffix to_prefix_excl) );
+      ]
     | None -> []
   in
   let range_properties =
@@ -42,16 +44,19 @@ let get_save_state_spec_json (spec : save_state_spec_info) : string =
     List.map ~f:files_to_check_spec_to_json spec.files_to_check
   in
   let (properties : (string * Hh_json.json) list) =
-    [ ("gen_with_errors", Hh_json.JSON_Bool spec.gen_with_errors);
+    [
+      ("gen_with_errors", Hh_json.JSON_Bool spec.gen_with_errors);
       ("files_to_check", Hh_json.JSON_Array files_to_check_spec_list);
-      ("filename", Hh_json.JSON_String spec.filename) ]
+      ("filename", Hh_json.JSON_String spec.filename);
+    ]
   in
   Hh_json.json_to_string ~pretty:true (Hh_json.JSON_Object properties)
 
 let save_state_spec_json_example =
   {
     files_to_check =
-      [ Prefix (Relative_path.from_root "/some/path/prefix1");
+      [
+        Prefix (Relative_path.from_root "/some/path/prefix1");
         Range
           {
             from_prefix_incl =
@@ -73,7 +78,8 @@ let save_state_spec_json_example =
           {
             from_prefix_incl = None;
             to_prefix_excl = Some (Relative_path.from_root "/to/path/only");
-          } ];
+          };
+      ];
     filename = "/some/dir/some_filename";
     gen_with_errors = true;
   }

@@ -372,10 +372,11 @@ module Node = struct
         let path = Files.normalize_path dir file in
         let path_w_index = Filename.concat path "index" in
         lazy_seq
-          [ lazy (path_if_exists ~file_options resolution_acc path);
+          [
+            lazy (path_if_exists ~file_options resolution_acc path);
             lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
             lazy
-              (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts)
+              (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
           ]
 
   let resolve_relative ~options ~reader ((loc : ALoc.t), _) ?resolution_acc root_path rel_path =
@@ -391,7 +392,8 @@ module Node = struct
       let file_exts = SSet.elements (Files.module_file_exts file_options) in
       let root = Options.root options in
       lazy_seq
-        [ lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
+        [
+          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
           lazy
             (parse_main
                ~reader
@@ -401,13 +403,14 @@ module Node = struct
                resolution_acc
                (Filename.concat path "package.json")
                file_exts);
-          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts)
+          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
         ]
 
   let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
     let file_options = Options.file_options options in
     lazy_seq
-      [ lazy
+      [
+        lazy
           ( if SSet.mem dir node_modules_containers then
             lazy_seq
               ( Files.node_resolver_dirnames file_options
@@ -435,7 +438,8 @@ module Node = struct
                loc
                resolution_acc
                (Filename.dirname dir)
-               r) ]
+               r);
+      ]
 
   let absolute r = Str.string_match Files.absolute_path_regexp r 0
 
@@ -564,13 +568,15 @@ module Haste : MODULE_SYSTEM = struct
   let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r =
     let file = File_key.to_string f in
     lazy_seq
-      [ lazy (External.resolve_import options f r);
+      [
+        lazy (External.resolve_import options f r);
         lazy (Node.resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r);
         lazy
           (match expanded_name ~reader r with
           | Some r ->
             Node.resolve_relative ~options ~reader loc ?resolution_acc (Filename.dirname file) r
-          | None -> None) ]
+          | None -> None);
+      ]
 
   let imported_module
       ~options ~reader node_modules_containers file loc ?resolution_acc imported_name =

@@ -264,9 +264,11 @@ let command =
                "subcommand"
                (required
                   (command
-                     [ ("suggest", SuggestCommand.command);
+                     [
+                       ("suggest", SuggestCommand.command);
                        ("insert-type", InsertType.command);
-                       ("exports", Exports.command) ])));
+                       ("exports", Exports.command);
+                     ])));
     }
   in
   CommandSpec.command spec main

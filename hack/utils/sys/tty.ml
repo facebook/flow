@@ -97,14 +97,17 @@ let emoji_spinner =
     may take up two columns, and put the cursor immediately after it in an
     illegible manner. Add an extra space to separate the cursor from the emoji. *)
     ~f:(fun x -> x ^ " ")
-    [ "\xF0\x9F\x98\xA1";
+    [
+      "\xF0\x9F\x98\xA1";
       (* Angry Face *)
-      "\xF0\x9F\x98\x82";
+        "\xF0\x9F\x98\x82";
       (* Face With Tears of Joy *)
-      "\xF0\x9F\xA4\x94";
+        "\xF0\x9F\xA4\x94";
       (* Thinking Face *)
-      "\xF0\x9F\x92\xAF"
-      (* Hundred Points *) ]
+        "\xF0\x9F\x92\xAF";
+        (* Hundred Points *)
+      
+    ]
 
 (* See https://github.com/yarnpkg/yarn/issues/405. *)
 let supports_emoji () = Sys.os_type <> "Win32" && supports_color ()

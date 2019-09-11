@@ -849,11 +849,13 @@ let deprecated_json_props_of_loc ~strip_root loc =
       | None -> Hh_json.JSON_String ""
       (* TODO: return Hh_json.JSON_Null *)
     in
-    [ ("path", file);
+    [
+      ("path", file);
       ("line", Hh_json.int_ loc.start.line);
       ("endline", Hh_json.int_ loc._end.line);
       ("start", Hh_json.int_ (loc.start.column + 1));
-      ("end", Hh_json.int_ loc._end.column) ])
+      ("end", Hh_json.int_ loc._end.column);
+    ])
 
 (* first reason's position, then second reason's position, etc.; if all
    positions match then first message, then second message, etc.
@@ -1311,7 +1313,8 @@ module Cli_output = struct
         String.make horizontal_line_length '-'
     in
     (* Construct the header by appending the constituent pieces. *)
-    [ severity_style
+    [
+      severity_style
         ( severity_name
         ^ " "
         ^ horizontal_line
@@ -1320,7 +1323,8 @@ module Cli_output = struct
           else
             " " )
         ^ filename );
-      default_style "\n" ]
+      default_style "\n";
+    ]
 
   module FileKeyMap = MyMap.Make (File_key)
 
@@ -1821,10 +1825,12 @@ module Cli_output = struct
                  | Reference (inlines, id) ->
                    let message =
                      Core_list.map ~f:(print_message_inline ~flags ~reference:true) inlines
-                     @ [ (false, Tty.Normal Tty.Default, " ");
+                     @ [
+                         (false, Tty.Normal Tty.Default, " ");
                          (false, Tty.Dim Tty.Default, "[");
                          (false, Tty.Normal (get_tty_color id colors), string_of_int id);
-                         (false, Tty.Dim Tty.Default, "]") ]
+                         (false, Tty.Dim Tty.Default, "]");
+                       ]
                    in
                    List.rev_append message acc)
                []
@@ -2213,9 +2219,11 @@ module Cli_output = struct
                 (List.fold_left
                    (fun acc code_frame ->
                      code_frame
-                     :: [ default_style (String.make (gutter_width + max_line_number_length) ' ');
+                     :: [
+                          default_style (String.make (gutter_width + max_line_number_length) ' ');
                           dim_style ":";
-                          default_style "\n" ]
+                          default_style "\n";
+                        ]
                      :: acc)
                    [code_frame]
                    code_frames))
@@ -2572,19 +2580,20 @@ module Cli_output = struct
       in
       (* Put it all together! *)
       Core_list.concat
-        [ (* Header: *)
-          header;
+        [
+          (* Header: *)
+            header;
           [default_style "\n"];
           (* Error Message: *)
-          message;
+            message;
           (* Code frame: *)
-          (match code_frame with
-          | [] -> []
-          | code_frame -> default_style "\n" :: code_frame);
+            (match code_frame with
+            | [] -> []
+            | code_frame -> default_style "\n" :: code_frame);
           (* Trace: *)
-          (match trace with
-          | [] -> []
-          | _ -> [default_style "\n"]);
+            (match trace with
+            | [] -> []
+            | _ -> [default_style "\n"]);
           Core_list.concat
             (Core_list.map
                ~f:
@@ -2597,7 +2606,8 @@ module Cli_output = struct
                     | None -> "[No file]"))
                (append_trace_reasons [] trace));
           (* Next error: *)
-          [default_style "\n"] ])
+            [default_style "\n"];
+        ])
 
   let get_pretty_printed_error
       ~flags ~stdin_file ~strip_root ~severity ~show_all_branches ~on_hidden_branches group =
@@ -2647,10 +2657,12 @@ module Cli_output = struct
               if omitted = 0 then
                 []
               else
-                [ {
+                [
+                  {
                     group_message_list = [];
                     group_message =
-                      [ text
+                      [
+                        text
                           ( "... "
                           ^ string_of_int omitted
                           ^ " more error"
@@ -2658,8 +2670,10 @@ module Cli_output = struct
                               ""
                             else
                               "s" )
-                          ^ "." ) ];
-                  } ]
+                          ^ "." );
+                      ];
+                  };
+                ]
             in
             let (primary_locs, group_message_list) =
               List.fold_left
@@ -2937,12 +2951,16 @@ module Json_output = struct
                 ~f:(function
                   | Inline inlines -> Core_list.map ~f:json_of_message_inline_friendly inlines
                   | Reference (inlines, id) ->
-                    [ JSON_Object
-                        [ ("kind", JSON_String "Reference");
+                    [
+                      JSON_Object
+                        [
+                          ("kind", JSON_String "Reference");
                           ("referenceId", JSON_String (string_of_int id));
                           ( "message",
                             JSON_Array (Core_list.map ~f:json_of_message_inline_friendly inlines)
-                          ) ] ])
+                          );
+                        ];
+                    ])
                 message))))
 
   let rec json_of_message_group_friendly message_group =
@@ -2954,10 +2972,11 @@ module Json_output = struct
           group_message
         else
           JSON_Object
-            [ ("kind", JSON_String "UnorderedList");
+            [
+              ("kind", JSON_String "UnorderedList");
               ("message", group_message);
               ( "items",
-                JSON_Array (Core_list.map ~f:json_of_message_group_friendly group_message_list) )
+                JSON_Array (Core_list.map ~f:json_of_message_group_friendly group_message_list) );
             ]))
 
   let json_of_references ~strip_root ~stdin_file references =
@@ -2982,21 +3001,23 @@ module Json_output = struct
           | None -> JSON_Null
           | Some { root_loc; _ } -> json_of_loc_with_context ~strip_root ~stdin_file root_loc
         in
-        [ (* Unfortunately, Nuclide currently depends on this flag. Remove it in
+        [
+          (* Unfortunately, Nuclide currently depends on this flag. Remove it in
            * the future? *)
-          ("classic", JSON_Bool false);
+            ("classic", JSON_Bool false);
           (* NOTE: `primaryLoc` is the location we want to show in an IDE! `rootLoc`
            * is another loc which Flow associates with some errors. We include it
            * for tools which are interested in using the location to enhance
            * their rendering. `primaryLoc` will always be inside `rootLoc`. *)
-          ("primaryLoc", json_of_loc_with_context ~strip_root ~stdin_file primary_loc);
+            ("primaryLoc", json_of_loc_with_context ~strip_root ~stdin_file primary_loc);
           ("rootLoc", root_loc);
           (* NOTE: This `messageMarkup` can be concatenated into a string when
            * implementing the LSP error output. *)
-          ("messageMarkup", json_of_message_group_friendly message_group);
+            ("messageMarkup", json_of_message_group_friendly message_group);
           (* NOTE: These `referenceLocs` can become `relatedLocations` when
            * implementing the LSP error output. *)
-          ("referenceLocs", json_of_references ~strip_root ~stdin_file references) ]))
+            ("referenceLocs", json_of_references ~strip_root ~stdin_file references);
+        ]))
 
   let json_of_error_props
       ~strip_root
@@ -3027,14 +3048,17 @@ module Json_output = struct
         |> Core_list.map ~f:(fun loc ->
                let offset_table = get_offset_table_expensive ~stdin_file loc in
                JSON_Object
-                 [ ( "loc",
-                     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc )
+                 [
+                   ( "loc",
+                     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc );
                  ])
       in
       let props =
-        [ ("kind", JSON_String kind_str);
+        [
+          ("kind", JSON_String kind_str);
           ("level", JSON_String severity_str);
-          ("suppressions", JSON_Array suppressions) ]
+          ("suppressions", JSON_Array suppressions);
+        ]
       in
       props
       (* add the error type specific props *)
@@ -3099,7 +3123,8 @@ module Json_output = struct
       =
     Hh_json.(
       let props =
-        [ ("flowVersion", JSON_String Flow_version.version);
+        [
+          ("flowVersion", JSON_String Flow_version.version);
           ( "jsonVersion",
             JSON_String
               (match version with
@@ -3114,7 +3139,8 @@ module Json_output = struct
               ~errors
               ~warnings
               () );
-          ("passed", JSON_Bool (ConcreteLocPrintableErrorSet.is_empty errors)) ]
+          ("passed", JSON_Bool (ConcreteLocPrintableErrorSet.is_empty errors));
+        ]
       in
       (fun ~profiling_props -> JSON_Object (props @ profiling_props)))
 

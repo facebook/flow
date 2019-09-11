@@ -14,11 +14,13 @@ let rec pattern loc ?annot_path ?init_path (p : (Loc.t, Loc.t) Ast.Pattern.t) =
   Ast.Pattern.(
     match p with
     | (_, Identifier { Identifier.name; annot; _ }) ->
-      [ ( name,
+      [
+        ( name,
           ( loc,
             Kind.VariableDef
               { id = name; annot = Kind.Annot_path.mk_annot ?annot_path annot; init = init_path }
-          ) ) ]
+          ) );
+      ]
     | (_, Object { Object.properties; annot }) ->
       Object.(
         let annot_path = Kind.Annot_path.mk_annot ?annot_path annot in

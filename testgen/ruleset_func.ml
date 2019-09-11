@@ -240,14 +240,16 @@ class ruleset_func =
       (func_call, new_env)
 
     method! get_all_rules () =
-      [| self#rule_num_lit;
-         self#rule_obj_lit 1 0;
-         self#rule_obj_lit 2 0;
-         self#rule_funcdef;
-         self#rule_funcdef;
-         self#rule_func_call;
-         self#rule_funcdef;
-         self#rule_func_call |]
+      [|
+        self#rule_num_lit;
+        self#rule_obj_lit 1 0;
+        self#rule_obj_lit 2 0;
+        self#rule_funcdef;
+        self#rule_funcdef;
+        self#rule_func_call;
+        self#rule_funcdef;
+        self#rule_func_call;
+      |]
   end
 
 class ruleset_random_func =

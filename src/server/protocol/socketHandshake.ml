@@ -105,7 +105,8 @@ let string_to_version_mismatch_strategy = function
 let client_to_monitor_1__to_json (c : client_to_monitor_1) : Hh_json.json =
   Hh_json.(
     JSON_Object
-      [ ("client_build_id", JSON_String c.client_build_id);
+      [
+        ("client_build_id", JSON_String c.client_build_id);
         ("is_stop_request", JSON_Bool c.is_stop_request);
         ( "server_should_hangup_if_still_initializing",
           JSON_Bool c.server_should_hangup_if_still_initializing );
@@ -113,13 +114,14 @@ let client_to_monitor_1__to_json (c : client_to_monitor_1) : Hh_json.json =
         ( "version_mismatch_strategy",
           JSON_String (version_mismatch_strategy_to_string c.version_mismatch_strategy) );
         (* Deprecated - sent to talk to old servers *)
-        ( "server_should_exit_if_version_mismatch",
-          JSON_Bool
-            (match c.version_mismatch_strategy with
-            | Always_stop_server -> true
-            | Stop_server_if_older -> true
-            (* Any server reading this field is older than this client *)
-            | Error_client -> false) ) ])
+          ( "server_should_exit_if_version_mismatch",
+            JSON_Bool
+              (match c.version_mismatch_strategy with
+              | Always_stop_server -> true
+              | Stop_server_if_older -> true
+              (* Any server reading this field is older than this client *)
+              | Error_client -> false) );
+      ])
 
 let default_client_to_monitor_1 =
   {
@@ -170,10 +172,12 @@ let monitor_to_client_1__to_json (m : monitor_to_client_1) : Hh_json.json =
       | Server_will_continue -> "Server_will_continue"
     in
     JSON_Object
-      [ ("server_build_id", JSON_String m.server_build_id);
+      [
+        ("server_build_id", JSON_String m.server_build_id);
         ("server_bin", JSON_String m.server_bin);
         ("server_intent", JSON_String (m.server_intent |> intent_to_string));
-        ("server_version", JSON_String m.server_version) ])
+        ("server_version", JSON_String m.server_version);
+      ])
 
 let json_to__monitor_to_client_1 (json : Hh_json.json) : monitor_to_client_1 =
   Hh_json_helpers.(

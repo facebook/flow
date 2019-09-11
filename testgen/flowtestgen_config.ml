@@ -32,11 +32,13 @@ let config_filename = "flowtestgen.json"
 let string_of_config (conf : t) : string =
   let plist =
     Config_utils.
-      [ ("num_prog", Int conf.num_prog);
+      [
+        ("num_prog", Int conf.num_prog);
         ("type_check", Bool conf.type_check);
         ("random", Bool conf.random);
         ("engine", Str conf.engine);
-        ("log_to_console", Bool conf.log_to_console) ]
+        ("log_to_console", Bool conf.log_to_console);
+      ]
   in
   Config_utils.string_of_config plist
 

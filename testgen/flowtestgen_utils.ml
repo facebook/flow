@@ -117,9 +117,11 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
   | E.Literal lit -> Ast.Literal.(lit.raw)
   | E.Assignment assign ->
     E.Assignment.(
-      [ string_of_pattern (snd assign.left);
+      [
+        string_of_pattern (snd assign.left);
         string_of_assign_op assign.operator;
-        string_of_expr (snd assign.right) ]
+        string_of_expr (snd assign.right);
+      ]
       |> String.concat " ")
   | E.Call call ->
     E.Call.(

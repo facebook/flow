@@ -77,17 +77,20 @@ let assert_substrings_equal ~ctxt expected_remote expected_local source { remote
 
 let tests =
   "require"
-  >::: [ ( "cjs_require"
+  >::: [
+         ( "cjs_require"
          >:: fun ctxt ->
          let source = "const Foo = require('foo')" in
          let { module_sig = { requires; _ }; _ } = visit source in
          match requires with
-         | [ Require
-               {
-                 source = (source_loc, "foo");
-                 require_loc;
-                 bindings = Some (BindIdent (ident_loc, "Foo"));
-               } ] ->
+         | [
+          Require
+            {
+              source = (source_loc, "foo");
+              require_loc;
+              bindings = Some (BindIdent (ident_loc, "Foo"));
+            };
+         ] ->
            assert_substring_equal ~ctxt "'foo'" source source_loc;
            assert_substring_equal ~ctxt "require('foo')" source require_loc;
            assert_substring_equal ~ctxt "Foo" source ident_loc
@@ -97,8 +100,10 @@ let tests =
          let source = "let foo = {x: require('bar')}; func(foo, require('baz'));" in
          let { module_sig = { requires; _ }; _ } = visit source in
          match requires with
-         | [ Require { source = (baz_loc, "baz"); require_loc = req_baz_loc; bindings = None };
-             Require { source = (bar_loc, "bar"); require_loc = req_bar_loc; bindings = None } ] ->
+         | [
+          Require { source = (baz_loc, "baz"); require_loc = req_baz_loc; bindings = None };
+          Require { source = (bar_loc, "bar"); require_loc = req_bar_loc; bindings = None };
+         ] ->
            assert_substring_equal ~ctxt "'bar'" source bar_loc;
            assert_substring_equal ~ctxt "require('bar')" source req_bar_loc;
            assert_substring_equal ~ctxt "'baz'" source baz_loc;
@@ -109,13 +114,15 @@ let tests =
          let source = "const Foo = require('foo'); func(Foo, require('bar'));" in
          let { module_sig = { requires; _ }; _ } = visit source in
          match requires with
-         | [ Require { source = (bar_loc, "bar"); require_loc = req_bar_loc; bindings = None };
-             Require
-               {
-                 source = (foo_loc, "foo");
-                 require_loc = req_foo_loc;
-                 bindings = Some (BindIdent (foo_id_loc, "Foo"));
-               } ] ->
+         | [
+          Require { source = (bar_loc, "bar"); require_loc = req_bar_loc; bindings = None };
+          Require
+            {
+              source = (foo_loc, "foo");
+              require_loc = req_foo_loc;
+              bindings = Some (BindIdent (foo_id_loc, "Foo"));
+            };
+         ] ->
            assert_substring_equal ~ctxt "'foo'" source foo_loc;
            assert_substring_equal ~ctxt "require('foo')" source req_foo_loc;
            assert_substring_equal ~ctxt "Foo" source foo_id_loc;
@@ -127,12 +134,14 @@ let tests =
          let source = "const Foo = require(`foo`)" in
          let { module_sig = { requires; _ }; _ } = visit source in
          match requires with
-         | [ Require
-               {
-                 source = (source_loc, "foo");
-                 require_loc;
-                 bindings = Some (BindIdent (ident_loc, "Foo"));
-               } ] ->
+         | [
+          Require
+            {
+              source = (source_loc, "foo");
+              require_loc;
+              bindings = Some (BindIdent (ident_loc, "Foo"));
+            };
+         ] ->
            assert_substring_equal ~ctxt "`foo`" source source_loc;
            assert_substring_equal ~ctxt "require(`foo`)" source require_loc;
            assert_substring_equal ~ctxt "Foo" source ident_loc
@@ -174,8 +183,10 @@ let tests =
            assert_equal ~ctxt 2 (List.length map);
            let (bar_loc, foo_loc, baz_loc, foo_loc') =
              match List.find_all (fun ((_, x), _) -> x = "foo") map with
-             | [ ((foo_loc', _), BindIdent (baz_loc, "baz"));
-                 ((foo_loc, _), BindIdent (bar_loc, "bar")) ] ->
+             | [
+              ((foo_loc', _), BindIdent (baz_loc, "baz"));
+              ((foo_loc, _), BindIdent (bar_loc, "bar"));
+             ] ->
                (bar_loc, foo_loc, baz_loc, foo_loc')
              | _ -> assert_failure "Unexpected requires"
            in
@@ -835,4 +846,5 @@ let tests =
          let source = "module.exports = 0; export default 0;" in
          match visit_err source with
          | IndeterminateModuleType loc ->
-           assert_substring_equal ~ctxt "export default 0;" source loc ) ]
+           assert_substring_equal ~ctxt "export default 0;" source loc );
+       ]

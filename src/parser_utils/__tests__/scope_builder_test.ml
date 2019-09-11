@@ -76,31 +76,34 @@ let mk_scope_builder_scope_loc_test contents expected_scope_locs ctxt =
 
 let tests =
   "scope_builder"
-  >::: [ "let_all_uses"
+  >::: [
+         "let_all_uses"
          >:: mk_scope_builder_all_uses_test
                ( "function foo(x, ...y) {\n"
                ^ "  let z = 0;\n"
                ^ "  x, y;\n"
                ^ "  return z;\n"
                ^ "}" )
-               [ mk_loc (1, 9) (1, 12);
+               [
+                 mk_loc (1, 9) (1, 12);
                  (* foo *)
-                 mk_loc (1, 13) (1, 14);
+                   mk_loc (1, 13) (1, 14);
                  (* x def *)
-                 mk_loc (1, 19) (1, 20);
+                   mk_loc (1, 19) (1, 20);
                  (* y def *)
-                 mk_loc (2, 6) (2, 7);
+                   mk_loc (2, 6) (2, 7);
                  (* z def *)
-                 mk_loc (3, 2) (3, 3);
+                   mk_loc (3, 2) (3, 3);
                  (* x use *)
-                 mk_loc (3, 5) (3, 6);
+                   mk_loc (3, 5) (3, 6);
                  (* y use *)
-                 mk_loc (4, 9) (4, 10) ];
+                   mk_loc (4, 9) (4, 10);
+               ];
          (* z use *)
-         "let_locs_of_defs_of_all_uses"
-         >:: mk_scope_builder_locs_of_defs_of_all_uses_test
-               "function foo() { let x = 0; return x; }"
-               [[mk_loc (1, 9) (1, 12)]; [mk_loc (1, 21) (1, 22)]; [mk_loc (1, 21) (1, 22)]];
+           "let_locs_of_defs_of_all_uses"
+           >:: mk_scope_builder_locs_of_defs_of_all_uses_test
+                 "function foo() { let x = 0; return x; }"
+                 [[mk_loc (1, 9) (1, 12)]; [mk_loc (1, 21) (1, 22)]; [mk_loc (1, 21) (1, 22)]];
          "let_uses_of_all_uses"
          >:: mk_scope_builder_uses_of_all_uses_test
                "function foo() { let x = 0; return x; }"
@@ -108,23 +111,28 @@ let tests =
          "var_locs_of_defs_of_all_uses"
          >:: mk_scope_builder_locs_of_defs_of_all_uses_test
                "function foo({y}) { var {x} = y; return x; }"
-               [ [mk_loc (1, 9) (1, 12)];
+               [
+                 [mk_loc (1, 9) (1, 12)];
                  [mk_loc (1, 14) (1, 15)];
                  [mk_loc (1, 25) (1, 26)];
                  [mk_loc (1, 14) (1, 15)];
-                 [mk_loc (1, 25) (1, 26)] ];
+                 [mk_loc (1, 25) (1, 26)];
+               ];
          "var_uses_of_all_uses"
          >:: mk_scope_builder_uses_of_all_uses_test
                "function foo({y}) { var {x} = y; return x; }"
-               [ [];
+               [
+                 [];
                  [mk_loc (1, 30) (1, 31)];
                  [mk_loc (1, 40) (1, 41)];
                  [mk_loc (1, 30) (1, 31)];
-                 [mk_loc (1, 40) (1, 41)] ];
+                 [mk_loc (1, 40) (1, 41)];
+               ];
          "var_locs_of_defs_of_all_uses2"
          >:: mk_scope_builder_locs_of_defs_of_all_uses_test
                "function foo() { var { x, y } = { x: 0, y: 0 }; var { x: _x, y: _y } = { x, y }; return ({ x: _x, y: _y }); }"
-               [ [mk_loc (1, 9) (1, 12)];
+               [
+                 [mk_loc (1, 9) (1, 12)];
                  [mk_loc (1, 23) (1, 24)];
                  [mk_loc (1, 26) (1, 27)];
                  [mk_loc (1, 57) (1, 59)];
@@ -132,11 +140,13 @@ let tests =
                  [mk_loc (1, 23) (1, 24)];
                  [mk_loc (1, 26) (1, 27)];
                  [mk_loc (1, 57) (1, 59)];
-                 [mk_loc (1, 64) (1, 66)] ];
+                 [mk_loc (1, 64) (1, 66)];
+               ];
          "let_uses_of_all_uses2"
          >:: mk_scope_builder_uses_of_all_uses_test
                "function foo() { let { x, y } = { x: 0, y: 0 }; let { x: _x, y: _y } = { x, y }; return ({ x: _x, y: _y }); }"
-               [ [];
+               [
+                 [];
                  [mk_loc (1, 73) (1, 74)];
                  [mk_loc (1, 76) (1, 77)];
                  [mk_loc (1, 94) (1, 96)];
@@ -144,14 +154,17 @@ let tests =
                  [mk_loc (1, 73) (1, 74)];
                  [mk_loc (1, 76) (1, 77)];
                  [mk_loc (1, 94) (1, 96)];
-                 [mk_loc (1, 101) (1, 103)] ];
+                 [mk_loc (1, 101) (1, 103)];
+               ];
          "jsx_uses_of_all_uses"
          >:: mk_scope_builder_all_uses_test
                "class Foo {}; <Foo></Foo>; <Foo/>"
-               [ mk_loc (1, 6) (1, 9);
+               [
+                 mk_loc (1, 6) (1, 9);
                  mk_loc (1, 15) (1, 18);
                  mk_loc (1, 21) (1, 24);
-                 mk_loc (1, 28) (1, 31) ];
+                 mk_loc (1, 28) (1, 31);
+               ];
          "declare_var"
          >:: mk_scope_builder_all_uses_test
                "declare var foo: number; foo"
@@ -191,61 +204,72 @@ let tests =
          "computed_property_destructuring"
          >:: mk_scope_builder_all_uses_test
                "const x = {}; const foo = ''; const {[foo]: bar} = x;"
-               [ mk_loc (1, 6) (1, 7);
+               [
+                 mk_loc (1, 6) (1, 7);
                  mk_loc (1, 20) (1, 23);
                  mk_loc (1, 38) (1, 41);
                  mk_loc (1, 44) (1, 47);
-                 mk_loc (1, 51) (1, 52) ];
+                 mk_loc (1, 51) (1, 52);
+               ];
          "switch"
          >:: mk_scope_builder_all_uses_test "switch ('') { case '': const foo = ''; foo; };" [];
          (* TODO this should be the output, but there is a bug:
     [mk_loc (1, 29) (1, 32);
      mk_loc (1, 39) (1, 42)];
     *)
-         "scope_loc_function_declaration"
-         >:: mk_scope_builder_scope_loc_test
-               "function a() {};"
-               [ (0, mk_loc (1, 0) (1, 16));
-                 (* program *)
-                 (1, mk_loc (1, 0) (1, 16));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 0) (1, 15));
-                 (* function params and body *)
-                 (3, mk_loc (1, 13) (1, 15)) ];
+           "scope_loc_function_declaration"
+           >:: mk_scope_builder_scope_loc_test
+                 "function a() {};"
+                 [
+                   (0, mk_loc (1, 0) (1, 16));
+                   (* program *)
+                     (1, mk_loc (1, 0) (1, 16));
+                   (* program (lexical) *)
+                     (2, mk_loc (1, 0) (1, 15));
+                   (* function params and body *)
+                     (3, mk_loc (1, 13) (1, 15));
+                 ];
          (* block (lexical) *)
-         "scope_loc_function_expression"
-         >:: mk_scope_builder_scope_loc_test
-               "const x = function() {};"
-               [ (0, mk_loc (1, 0) (1, 24));
-                 (* program *)
-                 (1, mk_loc (1, 0) (1, 24));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 10) (1, 23));
-                 (* function name (lexical) *)
-                 (3, mk_loc (1, 10) (1, 23));
-                 (* function params and body *)
-                 (4, mk_loc (1, 21) (1, 23)) ];
+           "scope_loc_function_expression"
+           >:: mk_scope_builder_scope_loc_test
+                 "const x = function() {};"
+                 [
+                   (0, mk_loc (1, 0) (1, 24));
+                   (* program *)
+                     (1, mk_loc (1, 0) (1, 24));
+                   (* program (lexical) *)
+                     (2, mk_loc (1, 10) (1, 23));
+                   (* function name (lexical) *)
+                     (3, mk_loc (1, 10) (1, 23));
+                   (* function params and body *)
+                     (4, mk_loc (1, 21) (1, 23));
+                 ];
          (* block (lexical) *)
-         "scope_loc_arrow_function"
-         >:: mk_scope_builder_scope_loc_test
-               "const x = () => 1;"
-               [ (0, mk_loc (1, 0) (1, 18));
-                 (* program *)
-                 (1, mk_loc (1, 0) (1, 18));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 10) (1, 17));
-                 (* function name (lexical) *)
-                 (3, mk_loc (1, 10) (1, 17)) ];
+           "scope_loc_arrow_function"
+           >:: mk_scope_builder_scope_loc_test
+                 "const x = () => 1;"
+                 [
+                   (0, mk_loc (1, 0) (1, 18));
+                   (* program *)
+                     (1, mk_loc (1, 0) (1, 18));
+                   (* program (lexical) *)
+                     (2, mk_loc (1, 10) (1, 17));
+                   (* function name (lexical) *)
+                     (3, mk_loc (1, 10) (1, 17));
+                 ];
          (* function params and body *)
-         "scope_loc_for_in"
-         >:: mk_scope_builder_scope_loc_test
-               "for (let a in b) {}"
-               [ (0, mk_loc (1, 0) (1, 19));
-                 (* program *)
-                 (1, mk_loc (1, 0) (1, 19));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 0) (1, 19));
-                 (* for in (lexical) *)
-                 (3, mk_loc (1, 17) (1, 19)) ]
-         (* block (lexical) *)
-        ]
+           "scope_loc_for_in"
+           >:: mk_scope_builder_scope_loc_test
+                 "for (let a in b) {}"
+                 [
+                   (0, mk_loc (1, 0) (1, 19));
+                   (* program *)
+                     (1, mk_loc (1, 0) (1, 19));
+                   (* program (lexical) *)
+                     (2, mk_loc (1, 0) (1, 19));
+                   (* for in (lexical) *)
+                     (3, mk_loc (1, 17) (1, 19));
+                 ];
+           (* block (lexical) *)
+         
+       ]

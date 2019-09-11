@@ -1183,11 +1183,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               cx
               reason
               "Promise"
-              [ Tvar.mk_derivable_where cx reason (fun tvar ->
+              [
+                Tvar.mk_derivable_where cx reason (fun tvar ->
                     let funt = Flow.get_builtin cx "$await" reason in
                     let callt = mk_functioncalltype reason None [Arg t] tvar in
                     let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
-                    Flow.flow cx (funt, CallT (unknown_use, reason, callt))) ]
+                    Flow.flow cx (funt, CallT (unknown_use, reason, callt)));
+              ]
           in
           Flow.reposition cx ~desc:(desc_of_t t) loc t'
         | Scope.Generator ->
@@ -1199,9 +1201,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               cx
               reason
               "Generator"
-              [ Env.get_internal_var cx "yield" loc;
+              [
+                Env.get_internal_var cx "yield" loc;
                 Tvar.mk_derivable_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
-                Env.get_internal_var cx "next" loc ]
+                Env.get_internal_var cx "next" loc;
+              ]
           in
           Flow.reposition cx ~desc:(desc_of_t t) loc t'
         | Scope.AsyncGenerator ->
@@ -1211,9 +1215,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               cx
               reason
               "AsyncGenerator"
-              [ Env.get_internal_var cx "yield" loc;
+              [
+                Env.get_internal_var cx "yield" loc;
                 Tvar.mk_derivable_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
-                Env.get_internal_var cx "next" loc ]
+                Env.get_internal_var cx "next" loc;
+              ]
           in
           Flow.reposition cx ~desc:(desc_of_t t) loc t'
         | _ -> t
@@ -1681,7 +1687,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             ( _,
               {
                 VariableDeclaration.declarations =
-                  [ ( _,
+                  [
+                    ( _,
                       {
                         VariableDeclaration.Declarator.id =
                           ( _,
@@ -1692,7 +1699,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                                 _;
                               } );
                         _;
-                      } ) ];
+                      } );
+                  ];
                 _;
               } ) ->
           RIdentifier name
@@ -1717,9 +1725,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           (* Second and third args here are never relevant to the loop, but they should be as
              general as possible to allow iterating over arbitrary generators *)
           let targs =
-            [ elem_t;
+            [
+              elem_t;
               MixedT.why reason |> with_trust bogus_trust;
-              EmptyT.why reason |> with_trust bogus_trust ]
+              EmptyT.why reason |> with_trust bogus_trust;
+            ]
           in
           if async then
             let reason = mk_reason (RCustom "async iteration expected on AsyncIterable") loc in
@@ -3388,12 +3398,14 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           TemplateLiteral
             {
               TemplateLiteral.quasis =
-                [ ( _,
+                [
+                  ( _,
                     {
                       TemplateLiteral.Element.value =
                         { TemplateLiteral.Element.cooked = module_name; raw };
                       _;
-                    } ) ];
+                    } );
+                ];
               expressions = [];
             } ) ->
         let comments =
@@ -3496,27 +3508,32 @@ and subscript =
         let (lhs_t, arguments) =
           match (targs, arguments) with
           | ( None,
-              [ Expression
+              [
+                Expression
                   ( ( source_loc,
                       Ast.Expression.Literal
-                        { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp ) ]
-            ) ->
+                        { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp );
+              ] ) ->
             ( Import_export.require cx (source_loc, module_name) loc,
               [Expression (expression cx lit_exp)] )
           | ( None,
-              [ Expression
+              [
+                Expression
                   ( ( source_loc,
                       TemplateLiteral
                         {
                           TemplateLiteral.quasis =
-                            [ ( _,
+                            [
+                              ( _,
                                 {
                                   TemplateLiteral.Element.value =
                                     { TemplateLiteral.Element.cooked = module_name; _ };
                                   _;
-                                } ) ];
+                                } );
+                            ];
                           expressions = [];
-                        } ) as lit_exp ) ] ) ->
+                        } ) as lit_exp );
+              ] ) ->
             ( Import_export.require cx (source_loc, module_name) loc,
               [Expression (expression cx lit_exp)] )
           | (Some _, _) ->
@@ -3567,8 +3584,10 @@ and subscript =
         let (lhs_t, arguments) =
           match (targs, arguments) with
           | ( None,
-              [ Expression ((_, Array { Array.elements; comments = _ }) as elems_exp);
-                Expression callback_expr ] ) ->
+              [
+                Expression ((_, Array { Array.elements; comments = _ }) as elems_exp);
+                Expression callback_expr;
+              ] ) ->
             (*
              * From a static perspective (and as long as side-effects aren't
              * considered in Flow), a requireLazy call can be viewed as an immediate
@@ -5719,12 +5738,14 @@ and predicates_of_condition cx e =
               ( Expression.TemplateLiteral
                   {
                     TemplateLiteral.quasis =
-                      [ ( _,
+                      [
+                        ( _,
                           {
                             TemplateLiteral.Element.value =
                               { TemplateLiteral.Element.cooked = s; _ };
                             _;
-                          } ) ];
+                          } );
+                      ];
                     expressions = [];
                   } as lit_exp ) ) ) ->
           typeof_test loc sense argument s str_loc (fun argument ->
@@ -5740,12 +5761,14 @@ and predicates_of_condition cx e =
               ( Expression.TemplateLiteral
                   {
                     TemplateLiteral.quasis =
-                      [ ( _,
+                      [
+                        ( _,
                           {
                             TemplateLiteral.Element.value =
                               { TemplateLiteral.Element.cooked = s; _ };
                             _;
-                          } ) ];
+                          } );
+                      ];
                     expressions = [];
                   } as lit_exp ) ),
             (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }) )
@@ -5789,12 +5812,14 @@ and predicates_of_condition cx e =
                 Expression.TemplateLiteral
                   {
                     TemplateLiteral.quasis =
-                      [ ( lit_loc,
+                      [
+                        ( lit_loc,
                           {
                             TemplateLiteral.Element.value =
                               { TemplateLiteral.Element.cooked = lit; _ };
                             _;
-                          } ) ];
+                          } );
+                      ];
                     _;
                   } ) as value ),
             expr ) ->
@@ -5813,12 +5838,14 @@ and predicates_of_condition cx e =
                 Expression.TemplateLiteral
                   {
                     TemplateLiteral.quasis =
-                      [ ( lit_loc,
+                      [
+                        ( lit_loc,
                           {
                             TemplateLiteral.Element.value =
                               { TemplateLiteral.Element.cooked = lit; _ };
                             _;
-                          } ) ];
+                          } );
+                      ];
                     _;
                   } ) as value ) ) ->
           let (((_, val_t), _) as val_ast) = expression cx value in
@@ -6220,9 +6247,10 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       in
       ( Obj_type.mk_with_proto cx reason ~props proto,
         None,
-        [ Expression e_ast;
+        [
+          Expression e_ast;
           (* TODO(vijayramamurthy) construct object type *)
-          Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments })
+            Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments });
         ] )
     | (("getOwnPropertyNames" | "keys"), None, [Expression e]) ->
       let arr_reason = mk_reason RArrayType loc in
@@ -6244,10 +6272,12 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         [Expression e_ast] )
     | ( "defineProperty",
         None,
-        [ Expression e;
+        [
+          Expression e;
           Expression
             ((ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ }) as key);
-          Expression config ] ) ->
+          Expression config;
+        ] ) ->
       let (((_, o), _) as e_ast) = expression cx e in
       let key_ast = expression cx key in
       let (((_, spec), _) as config_ast) = expression cx config in
@@ -6286,9 +6316,10 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
                  (o, SetPropT (unknown_use, reason, Named (reason, x), Normal, tvar, None)));
       ( o,
         None,
-        [ Expression e_ast;
+        [
+          Expression e_ast;
           (* TODO(vijayramamurthy) construct object type *)
-          Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments })
+            Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments });
         ] )
     (* Freezing an object literal is supported since there's no way it could
      have been mutated elsewhere *)
@@ -7023,12 +7054,14 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             ( loc,
               {
                 Ast.Statement.Block.body =
-                  [ ( loc,
+                  [
+                    ( loc,
                       Ast.Statement.Return
                         {
                           Ast.Statement.Return.argument = Some e;
                           comments = Flow_ast_utils.mk_comments_opt ();
-                        } ) ];
+                        } );
+                  ];
               } )
         in
         let return = Ast.Type.Available (loc, return) in
@@ -7058,9 +7091,11 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                         ( pred_loc,
                           {
                             Ast.Statement.Block.body =
-                              [ ( _,
+                              [
+                                ( _,
                                   Ast.Statement.Return
-                                    { Ast.Statement.Return.argument = Some e; comments = _ } ) ];
+                                    { Ast.Statement.Return.argument = Some e; comments = _ } );
+                              ];
                           } );
                     _;
                   } ) ->

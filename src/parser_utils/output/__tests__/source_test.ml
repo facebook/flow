@@ -36,7 +36,8 @@ let assert_sourcemaps_equal =
 
 let tests =
   "source"
-  >::: [ ( "simple_string"
+  >::: [
+         ( "simple_string"
          >:: fun ctxt ->
          let s =
            mk_source ()
@@ -76,4 +77,5 @@ let tests =
         "names": [],
         "mappings": "AAAA,IAAI"
       }|})
-           s ) ]
+           s );
+       ]

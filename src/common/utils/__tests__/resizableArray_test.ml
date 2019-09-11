@@ -9,7 +9,8 @@ open OUnit2
 
 let tests =
   "resizable_array"
-  >::: [ ( "basic"
+  >::: [
+         ( "basic"
          >:: fun ctxt ->
          let arr = ResizableArray.make 1 in
          ResizableArray.push arr "foo";
@@ -124,4 +125,5 @@ let tests =
          let tbl = ResizableArray.to_hashtbl arr in
          assert_equal ~ctxt (Hashtbl.find tbl "foo") 0;
          assert_equal ~ctxt (Hashtbl.find tbl "bar") 1;
-         assert_equal ~ctxt (Hashtbl.length tbl) 2 ) ]
+         assert_equal ~ctxt (Hashtbl.length tbl) 2 );
+       ]

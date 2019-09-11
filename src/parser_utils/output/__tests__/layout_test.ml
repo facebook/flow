@@ -11,7 +11,8 @@ open Layout_test_utils
 
 let tests =
   "layout"
-  >::: [ ( "fuse_list"
+  >::: [
+         ( "fuse_list"
          >:: fun ctxt ->
          let a = Atom "a" in
          let b = Atom "b" in
@@ -40,4 +41,5 @@ let tests =
 
          let actual = fuse_list ~sep ~wrap:(c, d) [a; b] in
          let expected = Concat [c; a; sep; pretty_space; b; d] in
-         assert_layout ~ctxt expected actual ) ]
+         assert_layout ~ctxt expected actual );
+       ]

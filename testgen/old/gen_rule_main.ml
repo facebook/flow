@@ -82,9 +82,11 @@ let mk_rule_from_string
 
 (* We set up three simple rules: object decl, prop read and prop write *)
 let rules =
-  [ mk_rule_from_string "var o = {};" [] [("o", "{}")];
+  [
+    mk_rule_from_string "var o = {};" [] [("o", "{}")];
     mk_rule_from_string "o.p = 1;" [("o", "{}")] [("o", "{p : number}")];
-    mk_rule_from_string "o.p;" [("o", "{p : number}")] [("o.p", "number")] ]
+    mk_rule_from_string "o.p;" [("o", "{p : number}")] [("o.p", "number")];
+  ]
 
 let main rule_index =
   let (code, facts) = Gen.gen_prog rules [] (List.nth rules rule_index) in

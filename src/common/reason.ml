@@ -400,10 +400,12 @@ let json_of_loc_props ?(strip_root = None) ?(catch_offset_errors = false) ~offse
         [("offset", offset)]
       in
       let start =
-        [ ("line", int_ loc.start.line);
+        [
+          ("line", int_ loc.start.line);
           (* It's not ideal that we use a different column numbering system here
            * versus other places (like the estree translator) *)
-          ("column", int_ (loc.start.column + 1)) ]
+            ("column", int_ (loc.start.column + 1));
+        ]
         @
         match offset_table with
         | None -> []
@@ -416,10 +418,12 @@ let json_of_loc_props ?(strip_root = None) ?(catch_offset_errors = false) ~offse
         | None -> []
         | Some table -> offset_entry table loc._end
       in
-      [ ("source", json_of_source ~strip_root loc.source);
+      [
+        ("source", json_of_source ~strip_root loc.source);
         ("type", json_source_type_of_source loc.source);
         ("start", JSON_Object start);
-        ("end", JSON_Object end_) ]))
+        ("end", JSON_Object end_);
+      ]))
 
 let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc =
   Hh_json.(JSON_Object (json_of_loc_props ?strip_root ?catch_offset_errors ~offset_table loc))

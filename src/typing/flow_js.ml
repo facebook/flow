@@ -3297,9 +3297,11 @@ struct
                     targs
                 else
                   let targs =
-                    [ element_tvar;
+                    [
+                      element_tvar;
                       Unsoundness.why ResolveSpread reason;
-                      Unsoundness.why ResolveSpread reason ]
+                      Unsoundness.why ResolveSpread reason;
+                    ]
                   in
                   get_builtin_typeapp
                     cx

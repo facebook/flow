@@ -364,9 +364,11 @@ let main () =
   let path_ref = ref None in
   let strip_root_ref = ref false in
   let speclist =
-    [ ("-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode");
+    [
+      ("-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode");
       ("-v", Arg.Unit (fun () -> verbose_ref := Verbose), "Enables verbose mode");
-      ("-s", Arg.Set strip_root_ref, "Print paths relative to root directory") ]
+      ("-s", Arg.Set strip_root_ref, "Print paths relative to root directory");
+    ]
   in
   let usage_msg = "Runs flow parser on test262 tests. Options available:" in
   Arg.parse speclist (fun anon -> path_ref := Some anon) usage_msg;

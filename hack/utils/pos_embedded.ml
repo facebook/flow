@@ -178,10 +178,12 @@ let json pos =
   let (line, start, end_) = info_pos pos in
   let fn = filename pos in
   Hh_json.JSON_Object
-    [ ("filename", Hh_json.JSON_String fn);
+    [
+      ("filename", Hh_json.JSON_String fn);
       ("line", Hh_json.int_ line);
       ("char_start", Hh_json.int_ start);
-      ("char_end", Hh_json.int_ end_) ]
+      ("char_end", Hh_json.int_ end_);
+    ]
 
 (*
  * !!! Be careful !!!
@@ -476,11 +478,13 @@ let multiline_json t =
   let (line_start, char_start, line_end, char_end) = destruct_range t in
   let fn = filename t in
   Hh_json.JSON_Object
-    [ ("filename", Hh_json.JSON_String fn);
+    [
+      ("filename", Hh_json.JSON_String fn);
       ("line_start", Hh_json.int_ line_start);
       ("char_start", Hh_json.int_ char_start);
       ("line_end", Hh_json.int_ line_end);
-      ("char_end", Hh_json.int_ (char_end - 1)) ]
+      ("char_end", Hh_json.int_ (char_end - 1));
+    ]
 
 let line_beg_offset p =
   match p with

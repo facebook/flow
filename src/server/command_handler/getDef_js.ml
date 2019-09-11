@@ -81,9 +81,11 @@ let extract_member_def ~reader cx this name =
   let json_data_to_log =
     Hh_json.(
       JSON_Object
-        [ ("type", Debug_js.json_of_t ~depth:3 cx t);
+        [
+          ("type", Debug_js.json_of_t ~depth:3 cx t);
           ("gd_name", JSON_String name);
-          ("result", JSON_String result_str) ])
+          ("result", JSON_String result_str);
+        ])
   in
   let command_result = Members.to_command_result member_result in
   ( Done

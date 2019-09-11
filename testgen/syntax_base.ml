@@ -138,9 +138,11 @@ let mk_check_opt_prop (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t')
     E.Array.(E.Array { elements; comments = Flow_ast_utils.mk_comments_opt () })
   in
   let arguments =
-    [ E.Expression (Loc.none, parent_array);
+    [
+      E.Expression (Loc.none, parent_array);
       E.Expression (Loc.none, expr);
-      E.Expression (Loc.none, mk_literal_expr etype) ]
+      E.Expression (Loc.none, mk_literal_expr etype);
+    ]
   in
   let call = E.Call.(E.Call { callee = (Loc.none, callee); targs = None; arguments }) in
   Stmt S.Expression.(S.Expression { expression = (Loc.none, call); directive = None })
