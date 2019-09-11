@@ -47,6 +47,7 @@ module Friendly : sig
     | Code of string
 
   type docs = {
+    call: string;
     tuplemap: string;
     objmap: string;
     objmapi: string;

@@ -282,9 +282,9 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       | TupleElementCompatibility c ->
         TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
       | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
-      | ( TupleMapFunCompatibility _ | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _
-        | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip )
-        as use_op ->
+      | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | ObjMapFunCompatibility _
+        | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
+        | ReactGetConfig _ | UnifyFlip ) as use_op ->
         use_op
     in
     (* Unification produces two errors. One for both sides. For example,
@@ -542,6 +542,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
             | Frame (ReactConfigCheck, use_op)
             | Frame (ReactGetConfig _, use_op)
             | Frame (UnifyFlip, use_op)
+            | Frame (CallFunCompatibility _, use_op)
             | Frame (TupleMapFunCompatibility _, use_op)
             | Frame (ObjMapFunCompatibility _, use_op)
             | Frame (ObjMapiFunCompatibility _, use_op) ->
@@ -677,6 +678,19 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
                 def
             in
             [ref def; text " requires another argument"]
+          | Frame (CallFunCompatibility { n }, _) ->
+            let exp =
+              if n = 1 then
+                "one argument"
+              else
+                string_of_int n ^ " arguments"
+            in
+            [ ref op;
+              text (spf " passes only %s to the provided function type, but " exp);
+              ref def;
+              text (spf " expects more than %s. See " exp);
+              text Friendly.(docs.call);
+              text " for documentation" ]
           | Frame (TupleMapFunCompatibility { value }, _) ->
             [ ref op;
               text " expects the provided function type to take only one argument, the value type ";

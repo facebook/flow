@@ -7835,6 +7835,20 @@ struct
             let args = Core_list.map ~f:(fun arg -> Arg arg) args in
             let call = mk_functioncalltype reason None args tout in
             let call = { call with call_strict_arity = false } in
+            let use_op =
+              match use_op with
+              (* The following use ops are for operations that internally delegate to CallType. We
+                 don't want to leak the internally delegation to error messages by pushing an
+                 additional frame. Alternatively, we could have pushed here and filtered out when
+                 rendering error messages, but that seems a bit wasteful. *)
+              | Frame (TupleMapFunCompatibility _, _)
+              | Frame (ObjMapFunCompatibility _, _)
+              | Frame (ObjMapiFunCompatibility _, _) ->
+                use_op
+              (* For external CallType operations, we push an additional frame to distinguish their
+                 error messages from those of "normal" calls. *)
+              | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
+            in
             CallT (use_op, reason, call)
           | TypeMap tmap -> MapTypeT (use_op, reason, tmap, tout)
           | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps tout)

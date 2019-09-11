@@ -370,6 +370,88 @@ References:
        --------^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- arity4.js:3:30
+
+Cannot instantiate `$Call` because `$Call` [1] passes only one argument to the provided function type, but function
+type [2] expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+
+   arity4.js:3:30
+    3| function g<T: number>(o: T): $Call<typeof makeEditedColumn, T> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   arity4.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- arity4.js:8:10
+
+Cannot call `g` because `$Call` [1] passes only one argument to the provided function type, but function type [2]
+expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+
+   arity4.js:8:10
+    8|   return g(o);
+                ^^^^
+
+References:
+   arity4.js:3:30
+    3| function g<T: number>(o: T): $Call<typeof makeEditedColumn, T> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity4.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- arity4.js:12:10
+
+Cannot call `g` because `$Call` [1] passes only one argument to the provided function type, but function type [2]
+expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+
+   arity4.js:12:10
+   12|   return g<Columns>(o);
+                ^^^^^^^^^^^^^
+
+References:
+   arity4.js:3:30
+    3| function g<T: number>(o: T): $Call<typeof makeEditedColumn, T> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity4.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- arity4.js:15:25
+
+Cannot instantiate `$Call` because `$Call` [1] passes only one argument to the provided function type, but function
+type [2] expects more than one argument. See https://flow.org/en/docs/types/utilities/#toc-call for documentation.
+
+   arity4.js:15:25
+   15| function h(o: Columns): $Call<typeof makeEditedColumn, Columns> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   arity4.js:21:34
+                                        v
+   21| declare function makeEditedColumn(
+   22|   a: number,
+   23|   b: string,
+   24| ): number;
+       --------^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- identity.js:19:2
 
 Cannot cast object literal to `Foo` because:
@@ -742,4 +824,4 @@ References:
 
 
 
-Found 38 errors
+Found 42 errors

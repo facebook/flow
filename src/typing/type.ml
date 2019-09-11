@@ -363,6 +363,7 @@ module rec TypeTerm : sig
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
       }
+    | CallFunCompatibility of { n: int }
     | TupleMapFunCompatibility of { value: 'loc virtual_reason }
     | ObjMapFunCompatibility of { value: 'loc virtual_reason }
     | ObjMapiFunCompatibility of {
@@ -2913,6 +2914,7 @@ end = struct
       | ImplicitTypeParam -> ImplicitTypeParam
       | IndexerKeyCompatibility { lower; upper } ->
         IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+      | CallFunCompatibility { n } -> CallFunCompatibility { n }
       | TupleMapFunCompatibility { value } -> TupleMapFunCompatibility { value = mod_reason value }
       | ObjMapFunCompatibility { value } -> ObjMapFunCompatibility { value = mod_reason value }
       | ObjMapiFunCompatibility { key; value } ->
@@ -3467,6 +3469,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | FunReturn _ -> "FunReturn"
   | ImplicitTypeParam -> "ImplicitTypeParam"
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
+  | CallFunCompatibility _ -> "CallFunCompatibility"
   | TupleMapFunCompatibility _ -> "TupleMapFunCompatibility"
   | ObjMapFunCompatibility _ -> "ObjMapFunCompatibility"
   | ObjMapiFunCompatibility _ -> "ObjMapiFunCompatibility"
