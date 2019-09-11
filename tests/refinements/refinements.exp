@@ -786,6 +786,34 @@ References:
                   ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- issue_7475.js:18:5
+
+Cannot get `thing["B-only"]` because property `B-only` is missing in `A` [1].
+
+   issue_7475.js:18:5
+   18|     thing["B-only"]; // should error
+           ^^^^^^^^^^^^^^^
+
+References:
+   issue_7475.js:13:24
+   13| (function stuff(thing: A | B): void {
+                              ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- issue_7475.js:23:5
+
+Cannot get `thing["B-only"]` because property `B-only` is missing in `A` [1].
+
+   issue_7475.js:23:5
+   23|     thing["B-only"]; // should error
+           ^^^^^^^^^^^^^^^
+
+References:
+   issue_7475.js:13:24
+   13| (function stuff(thing: A | B): void {
+                              ^ [1]
+
+
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:4:7
 
 Property `p1` is missing in object type [1].
@@ -3533,4 +3561,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 256 errors
+Found 258 errors
