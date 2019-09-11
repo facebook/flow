@@ -95,22 +95,22 @@ end = struct
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
-  let write_version =
+  let write_version fd =
     let version = Flow_build_id.get_build_id () in
     let version_length = String.length version in
+    (* Build ID should always be 16 bytes *)
     assert (version_length = 16);
 
-    (* Build ID should always be 16 bytes *)
-    let rec write_version fd offset len =
+    let rec loop offset len =
       if len > 0 then
         let%lwt bytes_written = Lwt_unix.write_string fd version offset len in
         let offset = offset + bytes_written in
         let len = len - bytes_written in
-        write_version fd offset len
+        loop offset len
       else
         Lwt.return version_length
     in
-    (fun fd -> write_version fd 0 version_length)
+    loop 0 version_length
 
   let normalize_info ~root info =
     let module_name =
