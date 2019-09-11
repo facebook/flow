@@ -122,7 +122,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- cond_expr.js:4:2
 
-Property `q` is missing in object literal [1].
+Cannot get `a.q` because property `q` is missing in object literal [1].
 
    cond_expr.js:4:2
    4| (a.q ? a.q : "foo");
@@ -150,7 +150,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- cond_expr.js:8:5
 
-Property `q` is missing in object literal [1].
+Cannot get `b.q` because property `q` is missing in object literal [1].
 
    cond_expr.js:8:5
    8| if (b.q) {} else {};
@@ -280,7 +280,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ cond_prop.js:54:9
 
-Property `p` is missing in object type [1].
+Cannot get `o.p` because:
+ - property `p` is missing in object type [1].
+ - property `p` is missing in null [2].
 
    cond_prop.js:54:9
    54|     if (o.p) {} // 2 errors: property `p` not found on null and not found in {}
@@ -290,20 +292,9 @@ References:
    cond_prop.js:53:20
    53|   function(o: null|{}) {
                           ^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:54:11
-
-Property `p` is missing in null [1].
-
-   cond_prop.js:54:11
-   54|     if (o.p) {} // 2 errors: property `p` not found on null and not found in {}
-                 ^
-
-References:
    cond_prop.js:53:15
    53|   function(o: null|{}) {
-                     ^^^^ [1]
+                     ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- eq.js:5:9
@@ -786,6 +777,80 @@ References:
                   ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- issue_2990.js:23:6
+
+Cannot cast `param["tag.tag"]` to string literal `first` because:
+ - string literal `second` [1] is incompatible with string literal `first` [2].
+ - string literal `second` [3] is incompatible with string literal `first` [2].
+
+   issue_2990.js:23:6
+   23|     (param["tag.tag"]: "first"); // error
+            ^^^^^^^^^^^^^^^^
+
+References:
+   issue_2990.js:16:18
+   16|       "tag.tag": "second",
+                        ^^^^^^^^ [1]
+   issue_2990.js:23:24
+   23|     (param["tag.tag"]: "first"); // error
+                              ^^^^^^^ [2]
+   issue_2990.js:21:28
+   21|   if (param["tag.tag"] === "second") {
+                                  ^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- issue_2990.js:25:6
+
+Cannot cast `param["tag.tag"]` to string literal `second` because string literal `first` [1] is incompatible with string
+literal `second` [2].
+
+   issue_2990.js:25:6
+   25|     (param["tag.tag"]: "second"); // ok
+            ^^^^^^^^^^^^^^^^
+
+References:
+   issue_2990.js:12:18
+   12|       "tag.tag": "first",
+                        ^^^^^^^ [1]
+   issue_2990.js:25:24
+   25|     (param["tag.tag"]: "second"); // ok
+                              ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue_2990.js:33:6
+
+Cannot cast `param["a.c"]` to undefined because string [1] is incompatible with undefined [2].
+
+   issue_2990.js:33:6
+   33|     (param["a.c"]: void); // error
+            ^^^^^^^^^^^^
+
+References:
+   issue_2990.js:7:14
+    7|       "a.c": string
+                    ^^^^^^ [1]
+   issue_2990.js:33:20
+   33|     (param["a.c"]: void); // error
+                          ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue_2990.js:35:6
+
+Cannot cast `param["a.c"]` to string because property `a.c` does not exist [1] is incompatible with string [2].
+
+   issue_2990.js:35:6
+   35|     (param["a.c"]: string); // error
+            ^^^^^^^^^^^^
+
+References:
+   issue_2990.js:31:7
+   31|   if (param["a.c"] != null) {
+             ^^^^^^^^^^^^ [1]
+   issue_2990.js:35:20
+   35|     (param["a.c"]: string); // error
+                          ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- issue_7475.js:18:5
 
 Cannot get `thing["B-only"]` because property `B-only` is missing in `A` [1].
@@ -816,7 +881,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:4:7
 
-Property `p1` is missing in object type [1].
+Cannot get `o.p1` because property `p1` is missing in object type [1].
 
    missing-property-cond.js:4:7
    4|   if (o.p1) { // Error, testing for unknown property
@@ -830,7 +895,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:10:7
 
-Property `p2` is missing in object type [1].
+Cannot get `o.p2` because property `p2` is missing in object type [1].
 
    missing-property-cond.js:10:7
    10|   if (o.p2) { // Error, testing for unknown property
@@ -872,7 +937,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:20:7
 
-Property `p4` is missing in object type [1].
+Cannot get `o.p4` because property `p4` is missing in object type [1].
 
    missing-property-cond.js:20:7
    20|   if (o.p4) { // Error, testing for unknown property
@@ -898,13 +963,13 @@ References:
              ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:37:9
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:37:7
 
-Property `bar` is missing in mixed [1].
+Cannot get `o.bar` because property `bar` is missing in mixed [1].
 
-   missing-property-cond.js:37:9
+   missing-property-cond.js:37:7
    37|   if (o.bar) {} // error, any lookup on mixed is unsafe
-               ^^^
+             ^^^^^
 
 References:
    missing-property-cond.js:36:18
@@ -912,13 +977,13 @@ References:
                         ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------- missing-property-cond.js:41:16
+Error ----------------------------------------------------------------------------------- missing-property-cond.js:41:14
 
-Property `bar` is missing in mixed [1].
+Cannot get `o.bar` because property `bar` is missing in mixed [1].
 
-   missing-property-cond.js:41:16
+   missing-property-cond.js:41:14
    41|   if (typeof o.bar === 'string') {} // error
-                      ^^^
+                    ^^^^^
 
 References:
    missing-property-cond.js:40:18
@@ -926,13 +991,13 @@ References:
                         ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------- missing-property-cond.js:65:12
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:65:7
 
-Property `q` is missing in null [1].
+Cannot get `null.q` because property `q` is missing in null [1].
 
-   missing-property-cond.js:65:12
+   missing-property-cond.js:65:7
    65|   if (null.q) {} // error: property `q` on null
-                  ^
+             ^^^^^^
 
 References:
    missing-property-cond.js:65:7
@@ -1536,13 +1601,13 @@ References:
                                        ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:77:17
+Error -------------------------------------------------------------------------------------------------- number.js:77:21
 
-Property `bar` is missing in object type [1].
+Cannot get property `bar` because property `bar` is missing in object type [1].
 
-   number.js:77:17
+   number.js:77:21
    77|     if (num === obj.bar) { // Error, accessing unknown property
-                       ^^^^^^^
+                           ^^^
 
 References:
    number.js:76:30
@@ -2063,13 +2128,13 @@ References:
                                        ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- string.js:77:17
+Error -------------------------------------------------------------------------------------------------- string.js:77:21
 
-Property `bar` is missing in object type [1].
+Cannot get property `bar` because property `bar` is missing in object type [1].
 
-   string.js:77:17
+   string.js:77:21
    77|     if (str === obj.bar) { // Error, testing for unknown property
-                       ^^^^^^^
+                           ^^^
 
 References:
    string.js:76:30
@@ -2118,7 +2183,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- super_member.js:12:9
 
-Property `prop` is missing in super of `B` [1].
+Cannot get `super.prop` because property `prop` is missing in super of `B` [1].
 
    super_member.js:12:9
    12|     if (super.prop) { // Error, super.prop doesn't exist
@@ -2301,13 +2366,13 @@ References:
                                 ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:88:9
+Error -------------------------------------------------------------------------------------------- tagged_union.js:88:11
 
-Property `kindTypo` is missing in `A` [1].
+Cannot get property `kindTypo` because property `kindTypo` is missing in `A` [1].
 
-   tagged_union.js:88:9
+   tagged_union.js:88:11
    88|     if (x.kindTypo === 1) { // error: kindTypo prop missing
-               ^^^^^^^^^^
+                 ^^^^^^^^
 
 References:
    tagged_union.js:87:21
@@ -2379,13 +2444,13 @@ References:
                                     ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:111:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:111:11
 
-Property `legnth` is missing in array type [1].
+Cannot get property `legnth` because property `legnth` is missing in array type [1].
 
-   tagged_union.js:111:9
+   tagged_union.js:111:11
    111|     if (x.legnth === 0) { // Error, typos
-                ^^^^^^^^
+                  ^^^^^^
 
 References:
    tagged_union.js:107:8
@@ -2415,13 +2480,13 @@ References:
                              ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:116:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:116:11
 
-Property `legnth` is missing in string [1].
+Cannot get property `legnth` because property `legnth` is missing in string [1].
 
-   tagged_union.js:116:9
+   tagged_union.js:116:11
    116|     if (y.legnth === 0) { // Error, typo
-                ^^^^^^^^
+                  ^^^^^^
 
 References:
    tagged_union.js:107:26
@@ -2465,13 +2530,13 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:121:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:121:11
 
-Property `toStirng` is missing in number [1].
+Cannot get property `toStirng` because property `toStirng` is missing in number [1].
 
-   tagged_union.js:121:9
+   tagged_union.js:121:11
    121|     if (z.toStirng === 0) { // Error, typo
-                ^^^^^^^^^^
+                  ^^^^^^^^
 
 References:
    tagged_union.js:107:37
@@ -2515,13 +2580,13 @@ References:
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:126:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:126:11
 
-Property `valeuOf` is missing in boolean [1].
+Cannot get property `valeuOf` because property `valeuOf` is missing in boolean [1].
 
-   tagged_union.js:126:9
+   tagged_union.js:126:11
    126|     if (q.valeuOf === 0) { // Error, typo
-                ^^^^^^^^^
+                  ^^^^^^^
 
 References:
    tagged_union.js:107:48
@@ -2599,13 +2664,13 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:138:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:138:11
 
-Property `calll` is missing in statics of function type [1].
+Cannot get property `calll` because property `calll` is missing in statics of function type [1].
 
-   tagged_union.js:138:9
+   tagged_union.js:138:11
    138|     if (t.calll === 0) { // error: calll prop missing
-                ^^^^^^^
+                  ^^^^^
 
 References:
    tagged_union.js:108:32
@@ -2701,13 +2766,13 @@ References:
                            ^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:156:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:156:11
 
-Property `badStr` is missing in object type [1].
+Cannot get property `badStr` because property `badStr` is missing in object type [1].
 
-   tagged_union.js:156:9
+   tagged_union.js:156:11
    156|     if (x.badStr === 'bad') { // Error, reading unknown property
-                ^^^^^^^^
+                  ^^^^^^
 
 References:
    tagged_union.js:145:15
@@ -2737,13 +2802,13 @@ References:
                              ^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:159:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:159:11
 
-Property `badNum` is missing in object type [1].
+Cannot get property `badNum` because property `badNum` is missing in object type [1].
 
-   tagged_union.js:159:9
+   tagged_union.js:159:11
    159|     if (x.badNum === 123) { // Error, reading unknown property
-                ^^^^^^^^
+                  ^^^^^^
 
 References:
    tagged_union.js:145:15
@@ -2773,13 +2838,13 @@ References:
                              ^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:162:9
+Error ------------------------------------------------------------------------------------------- tagged_union.js:162:11
 
-Property `badBool` is missing in object type [1].
+Cannot get property `badBool` because property `badBool` is missing in object type [1].
 
-   tagged_union.js:162:9
+   tagged_union.js:162:11
    162|     if (x.badBool === true) { // Error, reading unknown property
-                ^^^^^^^^^
+                  ^^^^^^^
 
 References:
    tagged_union.js:145:15
@@ -3561,4 +3626,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 258 errors
+Found 263 errors
