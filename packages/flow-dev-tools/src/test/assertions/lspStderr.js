@@ -20,15 +20,15 @@ export default function(
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env) => {
-    const actual = formatIfJSON(env.getIDEStderrSinceStartOfStep());
+    const actual = formatIfJSON(env.getLSPStderrSinceStartOfStep());
     expected = formatIfJSON(expected);
-    const suggestion = {method: 'ideStderr', args: [formatIfJSON(actual)]};
+    const suggestion = {method: 'lspStderr', args: [formatIfJSON(actual)]};
     return simpleDiffAssertion(
       expected,
       actual,
       assertLoc,
       reason,
-      'ideStderr',
+      'lspStderr',
       suggestion,
     );
   };

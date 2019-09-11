@@ -90,42 +90,18 @@ let normalized_string_of_recheck_reason = function
 
 type request =
   | Subscribe
-  | Autocomplete of (File_input.t * (* request id *) int)
-  | DidOpen of (* filename *) string Nel.t
-  | DidClose of (* filename *) string Nel.t
   | LspToServer of Lsp.lsp_message * metadata
 
 (* requests, notifications, responses from client *)
 
 let string_of_request = function
   | Subscribe -> "subscribe"
-  | Autocomplete _ -> "autocomplete"
-  | DidOpen _ -> "didOpen"
-  | DidClose _ -> "didClose"
   | LspToServer (msg, _) -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
 
 let json_of_request =
   Hh_json.(
     function
     | Subscribe -> JSON_Object [("method", JSON_String "subscribe")]
-    | Autocomplete (f, _) ->
-      JSON_Object
-        [
-          ("method", JSON_String "autocomplete");
-          ("file", JSON_String (File_input.filename_of_file_input f));
-        ]
-    | DidOpen files ->
-      JSON_Object
-        [
-          ("method", JSON_String "didOpen");
-          ("files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_));
-        ]
-    | DidClose files ->
-      JSON_Object
-        [
-          ("method", JSON_String "didClose");
-          ("files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_));
-        ]
     | LspToServer (_, metadata) -> metadata.start_json_truncated)
 
 (* Why is the server sending us a list of errors *)
@@ -149,9 +125,6 @@ type response =
     }
   | StartRecheck
   | EndRecheck of ServerProt.Response.lazy_stats
-  | AutocompleteResult of (ServerProt.Response.autocomplete_response * (* request id *) int)
-  | DidOpenAck
-  | DidCloseAck
   | ServerExit of FlowExitStatus.t (* only used for the subset of exists which client handles *)
   | LspFromServer of Lsp.lsp_message option * metadata
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
@@ -163,9 +136,6 @@ let string_of_response = function
   | Errors _ -> "errors"
   | StartRecheck -> "startRecheck"
   | EndRecheck _ -> "endRecheck"
-  | AutocompleteResult _ -> "autocompleteResult"
-  | DidOpenAck -> "didOpenAck"
-  | DidCloseAck -> "didCloseAck"
   | ServerExit code -> "serverExit_" ^ FlowExitStatus.to_string code
   | LspFromServer (None, _) -> "lspFromServer None"
   | LspFromServer (Some msg, _) ->

@@ -18,13 +18,13 @@ type AssertionMethod =
   | 'stderr'
   | 'sortedStdout'
   | 'exitCodes'
-  | 'ideStartAndConnect'
+  | 'lspStartAndConnect'
   | 'verifyServerStatus'
-  | 'verifyIDEStatus'
-  | 'verifyAllIDEMessagesInStep'
-  | 'waitAndVerifyAllIDEMessagesContentSinceStartOfStep'
-  | 'waitAndVerifyNoIDEMessagesSinceStartOfStep'
-  | 'ideStderr';
+  | 'verifyLSPStatus'
+  | 'verifyAllLSPMessagesInStep'
+  | 'waitAndVerifyAllLSPMessagesContentSinceStartOfStep'
+  | 'waitAndVerifyNoLSPMessagesSinceStartOfStep'
+  | 'lspStderr';
 
 export type Suggestion = {
   method: AssertionMethod,

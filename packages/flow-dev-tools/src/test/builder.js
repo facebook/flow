@@ -13,7 +13,7 @@ import EventEmitter from 'events';
 
 import * as rpc from 'vscode-jsonrpc';
 
-import type {IDEMessage, RpcConnection} from './ide';
+import type {LSPMessage, RpcConnection} from './lsp';
 
 import {
   appendFile,
@@ -45,8 +45,7 @@ export class TestBuilder {
   flowConfigFilename: string;
   lazyMode: 'ide' | 'fs' | null;
   server: null | child_process$ChildProcess = null;
-  ide: null | {
-    mode: 'legacy' | 'lsp',
+  lsp: null | {
     connection: RpcConnection,
     process: child_process$ChildProcess,
     outstandingRequestsFromServer: Map<
@@ -57,8 +56,8 @@ export class TestBuilder {
     stderr: Array<string>,
     messageEmitter: EventEmitter,
   } = null;
-  ideMessages: Array<IDEMessage>; // this should outlive the death of the ide+server in a step
-  ideEmitter: EventEmitter;
+  lspMessages: Array<LSPMessage>; // this should outlive the death of the lsp+server in a step
+  lspEmitter: EventEmitter;
   serverEmitter: EventEmitter;
   sourceDir: string;
   suiteName: string;
@@ -82,15 +81,15 @@ export class TestBuilder {
     // If we're testing lazy mode, then we must use status
     this.errorCheckCommand = lazyMode == null ? errorCheckCommand : 'status';
     this.suiteName = suiteName;
-    this.ideEmitter = new EventEmitter();
+    this.lspEmitter = new EventEmitter();
     this.serverEmitter = new EventEmitter();
     this.dir = join(baseDir, String(testNum));
     this.sourceDir = join(getTestsDir(), suiteName);
     this.tmpDir = join(baseDir, 'tmp', String(testNum));
     this.flowConfigFilename = flowConfigFilename;
     this.lazyMode = lazyMode;
-    this.ide = null;
-    this.ideMessages = [];
+    this.lsp = null;
+    this.lspMessages = [];
     this.waitForRecheck = wait_for_recheck;
   }
 
@@ -403,40 +402,21 @@ export class TestBuilder {
     }
   }
 
-  async createIDEConnection(mode: 'legacy' | 'lsp'): Promise<void> {
-    if (this.ide != null) {
-      // No-op if the server is already running
-      if (this.ide.mode == mode) {
-        return;
-      } else {
-        throw new Error(`IDE process already running as ${this.ide.mode}.`);
-      }
+  async createLSPConnection(): Promise<void> {
+    if (this.lsp != null) {
+      // No-op if the lsp server is already running
     }
 
-    const primaryArg = mode === 'lsp' ? 'lsp' : 'ide';
-    const args =
-      mode === 'lsp'
-        ? ['lsp', '--autostop', '--lazy-mode', 'ide']
-        : [
-            'ide',
-            '--protocol',
-            'very-unstable',
-            '--no-auto-start',
-            '--strip-root',
-            '--temp-dir',
-            this.tmpDir,
-            '--root',
-            this.dir,
-          ];
-    const ideProcess = spawn(this.bin, args, {
-      // Useful for debugging flow ide
+    const args = ['lsp', '--autostop', '--lazy-mode', 'ide'];
+    const lspProcess = spawn(this.bin, args, {
+      // Useful for debugging flow lsp
       // stdio: ["pipe", "pipe", process.stderr],
       cwd: this.dir,
       env: {...process.env, OCAMLRUNPARAM: 'b'},
     });
     const connection = rpc.createMessageConnection(
-      new rpc.StreamMessageReader(ideProcess.stdout),
-      new rpc.StreamMessageWriter(ideProcess.stdin),
+      new rpc.StreamMessageReader(lspProcess.stdout),
+      new rpc.StreamMessageWriter(lspProcess.stdin),
     );
     connection.listen();
 
@@ -444,25 +424,14 @@ export class TestBuilder {
     // the 'close' event is fired when its stdio streams have been closed.
     // The streams might be closed before exit if the process manually
     // closes them, or after if it leaves that to the system.
-    ideProcess.on('exit', (code, signal) => {
-      if (this.ide != null && this.ide.mode == 'legacy') {
-        this.testErrors.push(
-          format(
-            'flow %s mysteriously died. Code: %d, Signal: %s, stderr:\n%s',
-            primaryArg,
-            code,
-            signal,
-            this.getIDEStderrSinceStartOfStep(),
-          ),
-        );
-      }
-      this.cleanupIDEConnection();
+    lspProcess.on('exit', (code, signal) => {
+      this.cleanupLSPConnection();
     });
 
-    ideProcess.on('close', () => this.cleanupIDEConnection());
+    lspProcess.on('close', () => this.cleanupLSPConnection());
 
     const messageEmitter = new EventEmitter();
-    const messages: Array<IDEMessage> = [];
+    const messages: Array<LSPMessage> = [];
     const outstandingRequestsInfo = {
       nextId: 1,
       mostRecent: (null: ?number),
@@ -481,9 +450,9 @@ export class TestBuilder {
       const cancellationToken = ((rawParams.pop(): any): CancellationToken);
       // We'll add our own {id: ...} to the array of params, so it's present
       // in our messages[] array, so that people can match on it.
-      const params = [{id}, ...this.sanitizeIncomingIDEMessage(rawParams)];
+      const params = [{id}, ...this.sanitizeIncomingLSPMessage(rawParams)];
       messages.push({method, params});
-      this.log('IDE <<request %s\n%s', method, JSON.stringify(params));
+      this.log('LSP <<request %s\n%s', method, JSON.stringify(params));
       messageEmitter.emit('message');
 
       cancellationToken.onCancellationRequested(() => {
@@ -493,7 +462,7 @@ export class TestBuilder {
         const synthesizedParams = [{id}];
         messages.push({method: '$/cancelRequest', params: synthesizedParams});
         this.log(
-          'IDE <<notification $/cancelRequest\n%s',
+          'LSP <<notification $/cancelRequest\n%s',
           JSON.stringify(synthesizedParams),
         );
         messageEmitter.emit('message');
@@ -508,75 +477,40 @@ export class TestBuilder {
     });
 
     connection.onNotification((method: string, ...rawParams: Array<mixed>) => {
-      const params = this.sanitizeIncomingIDEMessage(rawParams);
+      const params = this.sanitizeIncomingLSPMessage(rawParams);
       messages.push({method, params});
-      this.log('IDE <<notification %s\n%s', method, JSON.stringify(params));
+      this.log('LSP <<notification %s\n%s', method, JSON.stringify(params));
       messageEmitter.emit('message');
     });
 
     const stderr = [];
-    ideProcess.stderr.on('data', data => {
+    lspProcess.stderr.on('data', data => {
       stderr.push(data.toString());
     });
 
-    await this.log('Created IDE process with pid %d', ideProcess.pid);
+    await this.log('Created LSP process with pid %d', lspProcess.pid);
 
-    // Execing a process can take some time. Let's wait for the ide process
-    // to be up and connected to the server.
-    const log = this.log.bind(this);
-    await new Promise((resolve, reject) => {
-      if (mode === 'lsp') {
-        resolve();
-        return;
-      }
-      const timeout = setTimeout(onTimeout, 20000); // Max 20 seconds
-      function cleanup(then) {
-        ideProcess.stderr.removeListener('data', onData);
-        ideProcess.removeListener('exit', onExit);
-        clearTimeout(timeout);
-        then();
-      }
-      function onData(data) {
-        stderr.join('').match(/Connected to server/) && cleanup(resolve);
-      }
-      function onExit() {
-        cleanup(resolve);
-      }
-      function onTimeout() {
-        log('flow ide start up timed out. stderr:\n%s', stderr.join('')).then(
-          () => {
-            cleanup(() => {
-              reject(new Error('Timed out waiting for flow ide to start up'));
-            });
-          },
-        );
-      }
-      ideProcess.stderr.on('data', onData);
-      ideProcess.on('exit', onExit);
-    });
-
-    this.ideMessages = messages;
-    this.ide = {
-      mode,
-      process: ideProcess,
+    this.lspMessages = messages;
+    this.lsp = {
+      process: lspProcess,
       connection,
       outstandingRequestsFromServer,
       outstandingRequestsInfo,
       stderr,
       messageEmitter,
     };
-    this.ideEmitter.emit('ide');
+    this.lspEmitter.emit('lsp');
   }
 
-  cleanupIDEConnection(): void {
-    const ide = this.ide;
-    if (ide != null) {
-      this.ide = null;
-      ide.process.stdin.end();
-      ide.process.kill();
-      ide.connection.dispose();
-      this.ideEmitter.emit('ide');
-      // but leave ideMessages so it can be examined even after IDE has gone
+  cleanupLSPConnection(): void {
+    const lsp = this.lsp;
+    if (lsp != null) {
+      this.lsp = null;
+      lsp.process.stdin.end();
+      lsp.process.kill();
+      lsp.connection.dispose();
+      this.lspEmitter.emit('lsp');
+      // but leave lspMessages so it can be examined even after LSP has gone
     }
   }
 
@@ -588,10 +522,10 @@ export class TestBuilder {
     }
   }
 
-  // sanitizeIncomingIDEMessage: removes a few known fields from server output
+  // sanitizeIncomingLSPMessage: removes a few known fields from server output
   // that are known to be specific to an instance of a test, and replaces
   // them with something fixed.
-  sanitizeIncomingIDEMessage(params: any): any {
+  sanitizeIncomingLSPMessage(params: any): any {
     const params2 = JSON.parse(JSON.stringify(params));
 
     // Legacy IDE sends back an array of objects where those objects have
@@ -648,9 +582,9 @@ export class TestBuilder {
     return params2;
   }
 
-  // sanitizeOutoingIDEMessage: replaces some placeholders with values
+  // sanitizeOutgoingLSPMessage: replaces some placeholders with values
   // that can only be computed by the builder instance
-  sanitizeOutgoingIDEMessage(params: Array<mixed>): Array<mixed> {
+  sanitizeOutgoingLSPMessage(params: Array<mixed>): Array<mixed> {
     const params2: any = JSON.parse(JSON.stringify(params));
 
     const dir = this.dir;
@@ -681,83 +615,83 @@ export class TestBuilder {
     return params2;
   }
 
-  async sendIDENotification(
+  async sendLSPNotification(
     method: string,
     argsRaw: Array<mixed>,
   ): Promise<void> {
-    const ide = this.ide;
-    if (ide == null) {
-      throw new Error('No IDE process running! Cannot sendIDENotification');
+    const lsp = this.lsp;
+    if (lsp == null) {
+      throw new Error('No LSP process running! Cannot sendLSPNotification');
     }
-    const args = this.sanitizeOutgoingIDEMessage(argsRaw);
-    await this.log('IDE >>notification %s\n%s', method, JSON.stringify(args));
-    ide.connection.sendNotification(method, ...args);
+    const args = this.sanitizeOutgoingLSPMessage(argsRaw);
+    await this.log('LSP >>notification %s\n%s', method, JSON.stringify(args));
+    lsp.connection.sendNotification(method, ...args);
   }
 
-  async sendIDEResponse(
+  async sendLSPResponse(
     id: number | 'mostRecent',
     argsRaw: Array<mixed>,
   ): Promise<void> {
-    const ide = this.ide;
-    if (ide == null) {
-      throw new Error('No IDE process running! Cannot sendIDEResponse');
+    const lsp = this.lsp;
+    if (lsp == null) {
+      throw new Error('No LSP process running! Cannot sendLSPResponse');
     }
     if (id === 'mostRecent') {
-      id = ide.outstandingRequestsInfo.mostRecent || 0;
+      id = lsp.outstandingRequestsInfo.mostRecent || 0;
     }
-    const callbacks = ide.outstandingRequestsFromServer.get(id);
+    const callbacks = lsp.outstandingRequestsFromServer.get(id);
     if (callbacks == null) {
       throw new Error(`No request id ${id} has arrived`);
     }
-    ide.outstandingRequestsFromServer.delete(id);
+    lsp.outstandingRequestsFromServer.delete(id);
     if (argsRaw.length == 1 && argsRaw[0] instanceof Error) {
       const e = (argsRaw[0]: Error);
-      await this.log('IDE >>response "id":%d\n%s', id, JSON.stringify(e));
+      await this.log('LSP >>response "id":%d\n%s', id, JSON.stringify(e));
       callbacks.reject(e);
     } else {
-      const args = this.sanitizeOutgoingIDEMessage(argsRaw);
-      await this.log('IDE >>response "id":%d\n%s', id, JSON.stringify(args));
+      const args = this.sanitizeOutgoingLSPMessage(argsRaw);
+      await this.log('LSP >>response "id":%d\n%s', id, JSON.stringify(args));
       callbacks.resolve(...args);
     }
   }
 
-  // This sends an IDE request and, when the response comes back, adds
+  // This sends an LSP request and, when the response comes back, adds
   // the response to the message queue. It doesn't fulfil its returned promise
   // until that time.
-  async sendIDERequestAndWaitForResponse(
+  async sendLSPRequestAndWaitForResponse(
     method: string,
     argsRaw: Array<mixed>,
   ): Promise<void> {
-    const ide = this.ide;
-    const ideMessages = this.ideMessages;
-    if (ide == null) {
+    const lsp = this.lsp;
+    const lspMessages = this.lspMessages;
+    if (lsp == null) {
       throw new Error(
-        'No ide process running! Cannot sendIDERequestAndWaitForResponse',
+        'No lsp process running! Cannot sendLSPRequestAndWaitForResponse',
       );
     }
 
-    const args = this.sanitizeOutgoingIDEMessage(argsRaw);
-    await this.log('IDE >>request %s\n%s', method, JSON.stringify(args));
+    const args = this.sanitizeOutgoingLSPMessage(argsRaw);
+    await this.log('LSP >>request %s\n%s', method, JSON.stringify(args));
     let resultRaw;
     try {
-      resultRaw = await ide.connection.sendRequest(method, ...args);
+      resultRaw = await lsp.connection.sendRequest(method, ...args);
     } catch (error) {
       const message = error.message;
       error = {message, ...error}; // otherwise it doesn't show up in JSON.stringify
-      ideMessages.push({method, error});
-      await this.log('IDE <<error %s\n%s', method, JSON.stringify(error));
-      ide.messageEmitter.emit('message');
+      lspMessages.push({method, error});
+      await this.log('LSP <<error %s\n%s', method, JSON.stringify(error));
+      lsp.messageEmitter.emit('message');
       return;
     }
-    const result = this.sanitizeIncomingIDEMessage(resultRaw);
-    ideMessages.push({method, result});
-    await this.log('IDE <<response %s\n%s', method, JSON.stringify(resultRaw));
-    ide.messageEmitter.emit('message');
+    const result = this.sanitizeIncomingLSPMessage(resultRaw);
+    lspMessages.push({method, result});
+    await this.log('LSP <<response %s\n%s', method, JSON.stringify(resultRaw));
+    lsp.messageEmitter.emit('message');
   }
 
-  waitUntilIDEMessage(timeoutMs: number, expected: string): Promise<void> {
-    const ide = this.ide;
-    const ideMessages = this.ideMessages;
+  waitUntilLSPMessage(timeoutMs: number, expected: string): Promise<void> {
+    const lsp = this.lsp;
+    const lspMessages = this.lspMessages;
 
     return new Promise(resolve => {
       var timeout = null;
@@ -765,8 +699,8 @@ export class TestBuilder {
       var alreadyDone = false;
       const startTime = new Date().getTime();
 
-      if (ide == null) {
-        this.log('No IDE process running! Cannot waitUntilIDEMessage');
+      if (lsp == null) {
+        this.log('No LSP process running! Cannot waitUntilLSPMessage');
         resolve();
         return;
       }
@@ -785,8 +719,8 @@ export class TestBuilder {
 
       let nextMessageIndex = 0;
       const checkMessages = () => {
-        for (; nextMessageIndex < ideMessages.length; nextMessageIndex++) {
-          const message = ideMessages[nextMessageIndex];
+        for (; nextMessageIndex < lspMessages.length; nextMessageIndex++) {
+          const message = lspMessages[nextMessageIndex];
           if (Builder.doesMessageMatch(message, expected)) {
             doneWithVerb('Got');
           }
@@ -803,28 +737,28 @@ export class TestBuilder {
       checkMessages();
 
       // And account for all further messages that arrive
-      emitter = ide.messageEmitter.on('message', checkMessages);
+      emitter = lsp.messageEmitter.on('message', checkMessages);
 
       // ... until our stopping condition
       timeout = setTimeout(() => doneWithVerb('Failed to get'), timeoutMs);
     });
   }
 
-  // waitUntilIDEMessageCount is a confusing method. It looks at all messages
+  // waitUntilLSPMessageCount is a confusing method. It looks at all messages
   // that have arrived in this step so far, plus all messages that arrive
   // until the timeout, including both notifications and responses. It stops
   // as soon as either the specified number of messages or until the timeout
   // happens, whichever comes first.
-  waitUntilIDEMessageCount(
+  waitUntilLSPMessageCount(
     timeoutMs: number,
     expectedCount: number,
   ): Promise<void> {
-    const ide = this.ide;
-    const ideMessages = this.ideMessages;
+    const lsp = this.lsp;
+    const lspMessages = this.lspMessages;
 
     return new Promise(resolve => {
-      if (ide == null) {
-        this.log('No IDE process running! Cannot waitUntilIDEMessageCount');
+      if (lsp == null) {
+        this.log('No LSP process running! Cannot waitUntilLSPMessageCount');
         resolve();
         return;
       }
@@ -841,8 +775,8 @@ export class TestBuilder {
       };
       var timeout = null;
       const done = ok => {
-        this.ide &&
-          this.ide.messageEmitter.removeListener('message', onMessage);
+        this.lsp &&
+          this.lsp.messageEmitter.removeListener('message', onMessage);
         timeout && clearTimeout(timeout);
         this.log(
           '%s all %d messages in under %dms',
@@ -855,7 +789,7 @@ export class TestBuilder {
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
       // let's account for them:
-      ideMessages.forEach(onMessage);
+      lspMessages.forEach(onMessage);
 
       // And account for all further messages that arrive, until our stopping
       // condition:
@@ -868,27 +802,27 @@ export class TestBuilder {
         timeout = setTimeout(onTimeout, timeoutMs);
       });
 
-      ide.messageEmitter.on('message', onMessage);
+      lsp.messageEmitter.on('message', onMessage);
     });
   }
 
-  getIDEMessagesSinceStartOfStep(): Array<IDEMessage> {
-    return this.ideMessages;
+  getLSPMessagesSinceStartOfStep(): Array<LSPMessage> {
+    return this.lspMessages;
   }
 
-  getIDEStderrSinceStartOfStep(): string {
-    return this.ide ? this.ide.stderr.join('') : '';
+  getLSPStderrSinceStartOfStep(): string {
+    return this.lsp ? this.lsp.stderr.join('') : '';
   }
 
-  clearIDEMessages(): void {
-    this.ideMessages.splice(0, this.ideMessages.length);
+  clearLSPMessages(): void {
+    this.lspMessages.splice(0, this.lspMessages.length);
   }
 
-  clearIDEStderr(): void {
-    this.ide && this.ide.stderr.splice(0, this.ide.stderr.length);
+  clearLSPStderr(): void {
+    this.lsp && this.lsp.stderr.splice(0, this.lsp.stderr.length);
   }
 
-  waitUntilIDEStatus(
+  waitUntilLSPStatus(
     timeoutMs: number,
     expected: 'stopped' | 'running',
   ): Promise<void> {
@@ -905,15 +839,15 @@ export class TestBuilder {
         alreadyDone = true;
         const duration = new Date().getTime() - startTime;
         timeout && clearTimeout(timeout);
-        emitter && emitter.removeListener('ide', checkStatus);
-        await this.log('%s IDE %s status in %dms', verb, expected, duration);
+        emitter && emitter.removeListener('lsp', checkStatus);
+        await this.log('%s LSP %s status in %dms', verb, expected, duration);
         resolve();
       };
 
       const checkStatus = () => {
         if (
-          (expected === 'running' && this.ide != null) ||
-          (expected === 'stopped' && this.ide == null)
+          (expected === 'running' && this.lsp != null) ||
+          (expected === 'stopped' && this.lsp == null)
         ) {
           doneWithVerb('Got');
         }
@@ -921,13 +855,13 @@ export class TestBuilder {
 
       // It's unavoidably racey whether the async logger does its work before
       // or after we get the first successfull checkStatus
-      this.log('Waiting up to %dms for %s IDE status', timeoutMs, expected);
+      this.log('Waiting up to %dms for %s LSP status', timeoutMs, expected);
 
       // Test whether we're okay already?
       checkStatus();
 
       // And look for further changes
-      emitter = this.ideEmitter.on('ide', checkStatus);
+      emitter = this.lspEmitter.on('lsp', checkStatus);
 
       // ... until our stopping condition
       timeout = setTimeout(() => doneWithVerb('Failed to get'), timeoutMs);
@@ -982,7 +916,7 @@ export class TestBuilder {
   }
 
   async cleanup(): Promise<void> {
-    this.cleanupIDEConnection();
+    this.cleanupLSPConnection();
     this.stopFlowServer();
     this.closeLog();
     // We'll also do a belt-and-braces "flow stop" in case
@@ -1057,7 +991,7 @@ export default class Builder {
   // message was M. And doesMethodMatch(actual, 'M{C1,C2,...}') judges also
   // whether the strings C1, C2, ... were all found in the JSON representation
   // of the actual message.
-  static doesMessageMatch(actual: IDEMessage, expected: string): boolean {
+  static doesMessageMatch(actual: LSPMessage, expected: string): boolean {
     const iOpenBrace = expected.indexOf('{');
     const iCloseBrace = expected.lastIndexOf('}');
     if (iOpenBrace == -1 || iCloseBrace == -1) {

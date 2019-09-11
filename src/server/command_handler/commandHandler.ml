@@ -1085,24 +1085,6 @@ let handle_persistent_subscribe ~reader ~options ~client ~profiling:_ ~env =
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (IdeResponse (Ok (env, None)))
 
-let handle_persistent_autocomplete ~reader ~options ~file_input ~id ~client ~profiling ~env =
-  let%lwt (results, json_data) = autocomplete ~reader ~options ~env ~profiling file_input in
-  let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
-  Persistent_connection.send_message wrapped client;
-  Lwt.return (IdeResponse (Ok ((), json_data)))
-
-let handle_persistent_did_open ~reader ~genv ~filenames ~client ~profiling:_ ~env =
-  Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
-  let files = Nel.map (fun fn -> (fn, "%%Legacy IDE has no content")) filenames in
-  let%lwt env =
-    if Persistent_connection.client_did_open client ~files then
-      did_open ~reader genv env client files
-    else
-      Lwt.return env
-    (* No new files were opened, so do nothing *)
-  in
-  Lwt.return (IdeResponse (Ok (env, None)))
-
 (* A did_open notification can come in about N files, which is great. But sometimes we'll get
  * N did_open notifications in quick succession. Let's batch them up and run them all at once!
  *)
@@ -1142,17 +1124,6 @@ let handle_persistent_did_change_notification ~params ~metadata ~client ~profili
 
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
   Lwt.return (LspResponse (Ok ((), None, metadata)))
-
-let handle_persistent_did_close ~reader ~genv ~filenames ~client ~profiling:_ ~env =
-  Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-  let%lwt env =
-    if Persistent_connection.client_did_close client ~filenames then
-      did_close ~reader genv env client
-    else
-      Lwt.return env
-    (* No new files were closed, so do nothing *)
-  in
-  Lwt.return (IdeResponse (Ok (env, None)))
 
 let handle_persistent_did_close_notification ~reader ~genv ~metadata ~client ~profiling:_ ~env =
   let%lwt env = did_close ~reader genv env client in
@@ -1611,13 +1582,6 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     | Subscribe ->
       (* This mutates env, so it can't run in parallel *)
       Handle_nonparallelizable_persistent (handle_persistent_subscribe ~reader ~options)
-    | Autocomplete (file_input, id) ->
-      mk_parallelizable_persistent
-        ~options
-        (handle_persistent_autocomplete ~reader ~options ~file_input ~id)
-    | DidOpen filenames ->
-      (* This mutates env, so it can't run in parallel *)
-      Handle_nonparallelizable_persistent (handle_persistent_did_open ~reader ~genv ~filenames)
     | LspToServer (NotificationMessage (DidOpenNotification params), metadata) ->
       Lsp.DidOpen.(
         TextDocumentItem.(
@@ -1647,9 +1611,6 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     | LspToServer (NotificationMessage (DidSaveNotification _params), metadata) ->
       (* No-op can be handled immediately *)
       Handle_persistent_immediately (handle_persistent_did_save_notification ~metadata)
-    | Persistent_connection_prot.DidClose filenames ->
-      (* This mutates env, so it can't run in parallel *)
-      Handle_nonparallelizable_persistent (handle_persistent_did_close ~reader ~genv ~filenames)
     | LspToServer (NotificationMessage (DidCloseNotification params), metadata) ->
       Lsp.DidClose.(
         TextDocumentIdentifier.(

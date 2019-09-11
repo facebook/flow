@@ -4,17 +4,17 @@
  */
 
 import type {FlowResult} from '../flowResult';
-import type {IDEMessage} from './ide';
+import type {LSPMessage} from './lsp';
 
 export interface StepEnvWriteable {
   reportStdout(output: string): void;
   reportStderr(output: string): void;
   reportExitCode(code: number): void;
-  setIDEMessagesSinceStartOfStep(messages: Array<IDEMessage>): void;
-  setIDEStderrSinceStartOfStep(stderr: string): void;
+  setLSPMessagesSinceStartOfStep(messages: Array<LSPMessage>): void;
+  setLSPStderrSinceStartOfStep(stderr: string): void;
   setNewErrors(errors: FlowResult): void;
   setServerRunning(running: 'stopped' | 'running'): void;
-  setIDERunning(running: 'stopped' | 'running'): void;
+  setLSPRunning(running: 'stopped' | 'running'): void;
   triggerFlowCheck(): void;
 }
 
@@ -22,12 +22,12 @@ export interface StepEnvReadable {
   getStdout(): string;
   getStderr(): string;
   getExitCodes(): Array<number>;
-  getIDEMessagesSinceStartOfStep(): Array<IDEMessage>;
-  getIDEStderrSinceStartOfStep(): string;
+  getLSPMessagesSinceStartOfStep(): Array<LSPMessage>;
+  getLSPStderrSinceStartOfStep(): string;
   getOldErrors(): FlowResult;
   getNewErrors(): FlowResult;
   getServerRunning(): 'stopped' | 'running';
-  getIDERunning(): 'stopped' | 'running';
+  getLSPRunning(): 'stopped' | 'running';
   shouldRunFlow(): boolean;
 }
 
@@ -39,10 +39,10 @@ export function newEnv(
   let exitCodes = [];
   let newErrors = oldErrors;
   let serverRunning = 'stopped';
-  let ideRunning = 'stopped';
+  let lspRunning = 'stopped';
   let shouldRunFlow = false;
-  let ideMessagesSinceStartOfStep = [];
-  let ideStderrSinceStartOfStep = '';
+  let lspMessagesSinceStartOfStep = [];
+  let lspStderrSinceStartOfStep = '';
 
   const envWrite = {
     reportStdout(output) {
@@ -57,12 +57,12 @@ export function newEnv(
       exitCodes.push(code);
     },
 
-    setIDEMessagesSinceStartOfStep(messages) {
-      ideMessagesSinceStartOfStep = messages;
+    setLSPMessagesSinceStartOfStep(messages) {
+      lspMessagesSinceStartOfStep = messages;
     },
 
-    setIDEStderrSinceStartOfStep(stderr) {
-      ideStderrSinceStartOfStep = stderr;
+    setLSPStderrSinceStartOfStep(stderr) {
+      lspStderrSinceStartOfStep = stderr;
     },
 
     setNewErrors(errors) {
@@ -73,8 +73,8 @@ export function newEnv(
       serverRunning = running;
     },
 
-    setIDERunning(running) {
-      ideRunning = running;
+    setLSPRunning(running) {
+      lspRunning = running;
     },
 
     triggerFlowCheck() {
@@ -95,12 +95,12 @@ export function newEnv(
       return exitCodes.slice();
     },
 
-    getIDEMessagesSinceStartOfStep() {
-      return ideMessagesSinceStartOfStep;
+    getLSPMessagesSinceStartOfStep() {
+      return lspMessagesSinceStartOfStep;
     },
 
-    getIDEStderrSinceStartOfStep() {
-      return ideStderrSinceStartOfStep;
+    getLSPStderrSinceStartOfStep() {
+      return lspStderrSinceStartOfStep;
     },
 
     getOldErrors() {
@@ -115,8 +115,8 @@ export function newEnv(
       return serverRunning;
     },
 
-    getIDERunning() {
-      return ideRunning;
+    getLSPRunning() {
+      return lspRunning;
     },
 
     shouldRunFlow() {

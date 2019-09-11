@@ -7,30 +7,30 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
   ({
-    ideStart,
-    ideRequest,
-    ideNotification,
+    lspStart,
+    lspRequest,
+    lspNotification,
     lspInitializeParams,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('initialize error for wrong version', [
-      ideStart({mode: 'lsp', needsFlowServer: false}),
-      ideRequest('initialize', lspInitializeParams)
-        .waitUntilIDEMessage(30000, 'initialize')
-        .verifyAllIDEMessagesInStep(
+      lspStart({needsFlowServer: false}),
+      lspRequest('initialize', lspInitializeParams)
+        .waitUntilLSPMessage(30000, 'initialize')
+        .verifyAllLSPMessagesInStep(
           ['initialize{Wrong version of Flow. The config specifies}'],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideRequest('shutdown')
-        .waitUntilIDEMessage(10000, 'shutdown')
-        .verifyAllIDEMessagesInStep(
+      lspRequest('shutdown')
+        .waitUntilLSPMessage(10000, 'shutdown')
+        .verifyAllLSPMessagesInStep(
           ['shutdown'],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideNotification('exit')
-        .waitUntilIDEStatus(10000, 'stopped')
+      lspNotification('exit')
+        .waitUntilLSPStatus(10000, 'stopped')
         .waitUntilServerStatus(10000, 'stopped')
-        .verifyIDEStatus('stopped')
+        .verifyLSPStatus('stopped')
         .verifyServerStatus('stopped'),
     ]),
   ],

@@ -18,7 +18,7 @@ export default function(
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env): ErrorAssertionResult => {
-    const actual = env.getIDEMessagesSinceStartOfStep();
+    const actual = env.getLSPMessagesSinceStartOfStep();
     if (actual.length > 0) {
       const locMessage =
         assertLoc == null
@@ -32,8 +32,8 @@ export default function(
               ),
             ];
       const keyMessage = [
-        colors.green('Actual IDE messages (+)') +
-          colors.grey(" didn't match expected no new IDE messages"),
+        colors.green('Actual LSP messages (+)') +
+          colors.grey(" didn't match expected no new LSP messages"),
       ];
       const errorMessages = JSON.stringify(actual, null, 2)
         .split('\n')
@@ -49,7 +49,7 @@ export default function(
         errorMessages,
       );
       const suggestion = {
-        method: 'waitAndVerifyAllIDEMessagesContentSinceStartOfStep',
+        method: 'waitAndVerifyAllLSPMessagesContentSinceStartOfStep',
         args: [timeoutMs * 10, actual],
       };
 

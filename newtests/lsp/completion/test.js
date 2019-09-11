@@ -7,21 +7,21 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
   ({
-    ideStartAndConnect,
-    ideStart,
-    ideRequest,
+    lspStartAndConnect,
+    lspStart,
+    lspRequest,
     lspInitializeParams,
-    ideRequestAndWaitUntilResponse,
+    lspRequestAndWaitUntilResponse,
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/completion', [
       addFile('completion.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
         position: {line: 10, character: 15}, // statement position
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           (() => {
             const expectedResponse = {
@@ -87,12 +87,12 @@ export default suite(
     ]),
     test('textDocument/completion', [
       addFile('kind.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>kind.js'},
         position: {line: 13, character: 15},
         context: {triggerKind: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           (() => {
             const expectedResponse = {
@@ -180,7 +180,7 @@ export default suite(
     ]),
     test('textDocument/completion', [
       addFile('params.js'),
-      ideStartAndConnect(6000, {
+      lspStartAndConnect(6000, {
         ...lspInitializeParams,
         capabilities: {
           ...lspInitializeParams.capabilities,
@@ -195,11 +195,11 @@ export default suite(
           },
         },
       }),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>params.js'},
         position: {line: 9, character: 15},
         context: {triggerKind: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           (() => {
             const expectedResponse = {

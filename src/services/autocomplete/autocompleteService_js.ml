@@ -55,7 +55,7 @@ let autocomplete_result_to_json ~strip_root result =
    *      instead be the range to replace (usually but not always the token
    *      being completed; perhaps we also want to replace the whole member
    *      expression, for example). That's `result.res_loc`, but we're not
-   *      exposing it in the legacy `flow autocomplete` or `flow ide` APIs; use
+   *      exposing it in the legacy `flow autocomplete` API; use
    *      LSP instead.
    *)
   let deprecated_loc = Errors.deprecated_json_props_of_loc ~strip_root ty_loc in

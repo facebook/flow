@@ -32,8 +32,8 @@ typecheck the unchecked files.
 There are two ways which Flow can use to tell which files the user cares about.
 
 1. **IDE lazy mode**. The IDE tells Flow which files have been opened and closed
-via `flow ide` (and in the future `flow lsp`). Flow treats any file which has
-ever been opened since the Flow server started as focused.
+via `flow lsp`. Flow treats any file which has ever been opened since the Flow
+server started as focused.
 2. **Filesystem lazy mode**. Flow treats any file which has changed on the
 filesystem as focused. This mode is easier to use from the commandline, but
 a rebase can make every file appear focused.
@@ -53,8 +53,7 @@ flow server --lazy-mode ide
 
 Alternatively, [you can set the lazy mode from the `.flowconfig`](/en/docs/config/options/#toc-lazy-mode-fs-ide-watchman-none).
 
-The IDE needs to integrate with `flow ide` (or in the future `flow lsp`) to tell
-Flow which files are open.
+The IDE needs to integrate with `flow lsp` to tell Flow which files are open.
 
 ### Using Filesystem Lazy Mode <a class="toc" id="toc-using-filesystem-lazy-mode" href="#toc-using-filesystem-lazy-mode"></a>
 

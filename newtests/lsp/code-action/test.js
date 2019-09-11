@@ -7,18 +7,18 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
   ({
-    ideStartAndConnect,
-    ideStart,
-    ideRequest,
+    lspStartAndConnect,
+    lspStart,
+    lspRequest,
     lspInitializeParams,
-    ideRequestAndWaitUntilResponse,
+    lspRequestAndWaitUntilResponse,
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/codeAction #0', [
       addFile('error1.js.ignored', 'error1.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/codeAction', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
         },
@@ -35,15 +35,15 @@ export default suite(
         context: {
           diagnostics: [],
         },
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [`textDocument/codeAction{[]}`],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/codeAction #1', [
       addFile('error1.js.ignored', 'error1.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/codeAction', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
         },
@@ -77,7 +77,7 @@ export default suite(
             },
           ],
         },
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           `textDocument/codeAction{${JSON.stringify([
             {
@@ -118,8 +118,8 @@ export default suite(
     ]),
     test('textDocument/codeAction #2', [
       addFile('error1.js.ignored', 'error1.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/codeAction', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
         },
@@ -136,7 +136,7 @@ export default suite(
         context: {
           diagnostics: [],
         },
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           `textDocument/codeAction{${JSON.stringify([
             {

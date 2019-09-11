@@ -13,7 +13,7 @@ export type RpcConnection = {
   dispose(): void,
 };
 
-export type IDEMessage =
+export type LSPMessage =
   | {method: string, params: $ReadOnlyArray<mixed>} // Notification/request
   | {method: string, result: mixed} // Response
   | {method: string, error: mixed}; // Response-error
