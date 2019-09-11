@@ -5640,6 +5640,7 @@ struct
               | OptionalT (_, t) -> (t, true)
               | _ -> (t, false)
             in
+            let use_op = Frame (ObjMapFunCompatibility { value = reason_of_t t }, use_op) in
             let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [t]), mk_id ()) in
             if opt then
               optional t

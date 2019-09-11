@@ -363,6 +363,7 @@ module rec TypeTerm : sig
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
       }
+    | ObjMapFunCompatibility of { value: 'loc virtual_reason }
     | PropertyCompatibility of {
         prop: string option;
         lower: 'loc virtual_reason;
@@ -2907,6 +2908,7 @@ end = struct
       | ImplicitTypeParam -> ImplicitTypeParam
       | IndexerKeyCompatibility { lower; upper } ->
         IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+      | ObjMapFunCompatibility { value } -> ObjMapFunCompatibility { value = mod_reason value }
       | PropertyCompatibility { prop; lower; upper } ->
         PropertyCompatibility { prop; lower = mod_reason lower; upper = mod_reason upper }
       | ReactConfigCheck -> ReactConfigCheck
@@ -3457,6 +3459,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | FunReturn _ -> "FunReturn"
   | ImplicitTypeParam -> "ImplicitTypeParam"
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
+  | ObjMapFunCompatibility _ -> "ObjMapFunCompatibility"
   | PropertyCompatibility _ -> "PropertyCompatibility"
   | ReactConfigCheck -> "ReactConfigCheck"
   | ReactGetConfig _ -> "ReactGetConfig"

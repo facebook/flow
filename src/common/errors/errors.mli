@@ -46,6 +46,10 @@ module Friendly : sig
     | Text of string
     | Code of string
 
+  type docs = { objmap: string }
+
+  val docs : docs
+
   val message_of_string : string -> 'a message
 
   val text : string -> 'a message_feature
