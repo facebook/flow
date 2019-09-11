@@ -218,9 +218,7 @@ let maybe_send_status_to_controller fd status =
  *
  * To avoid this, we deserialize a dummy closure before forking, so that we only
  * need to calculate the digest once per worker instead of once per job. *)
-let dummy_closure_bytes =
-  let closure () = () in
-  Marshal.to_bytes closure [Marshal.Closures]
+let dummy_closure () = ()
 
 (**
  * On Windows, the Worker is a process and runs the job directly. See above.
@@ -248,8 +246,9 @@ let dummy_closure_bytes =
 let unix_worker_main restore (state, controller_fd) (ic, oc) =
   restore state;
 
-  (* see dummy_closure_bytes above *)
-  ignore (Marshal.from_bytes dummy_closure_bytes 0);
+  (* see dummy_closure above *)
+  ignore Marshal.(from_bytes (to_bytes dummy_closure [Closures]) 0);
+
   let in_fd = Daemon.descr_of_in_channel ic in
   if !Utils.profile then Utils.log := prerr_endline;
   try
