@@ -125,6 +125,7 @@ type hash =
   | MatchPropH
   | GetPrivatePropH
   | TestPropH
+  | TestElemH
   | SetElemH
   | GetElemH
   | CallElemH
@@ -328,6 +329,7 @@ let hash_of_use_ctor =
     | MatchPropT _ -> MatchPropH
     | GetPrivatePropT _ -> GetPrivatePropH
     | TestPropT _ -> TestPropH
+    | TestElemT _ -> TestElemH
     | SetElemT _ -> SetElemH
     | GetElemT _ -> GetElemH
     | CallElemT _ -> CallElemH

@@ -3966,7 +3966,7 @@ and subscript =
         let reason = mk_reason (RProperty None) loc in
         let (((_, tind), _) as index) = expression cx index in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let opt_use = OptGetElemT (use_op, reason, tind) in
+        let opt_use = get_elem_opt_use ~is_cond reason ~use_op tind in
         begin
           match opt_state with
           | NonOptional ->
@@ -6163,9 +6163,15 @@ and get_private_field cx reason ~use_op tobj name =
 *)
 and get_prop_opt_use ~is_cond reason ~use_op (prop_reason, name) =
   if is_cond then
-    OptTestPropT (reason, mk_id (), Named (prop_reason, name))
+    OptTestPropT (use_op, reason, mk_id (), Named (prop_reason, name))
   else
     OptGetPropT (use_op, reason, Named (prop_reason, name))
+
+and get_elem_opt_use ~is_cond reason ~use_op tind =
+  if is_cond then
+    OptTestElemT (use_op, reason, mk_id (), tind)
+  else
+    OptGetElemT (use_op, reason, tind)
 
 and get_prop ~is_cond cx reason ~use_op tobj (prop_reason, name) =
   let opt_use = get_prop_opt_use ~is_cond reason ~use_op (prop_reason, name) in

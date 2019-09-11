@@ -251,7 +251,7 @@ class ['a] t =
         acc
       | GetPropT (_, _, p, t)
       | MatchPropT (_, _, p, t)
-      | TestPropT (_, _, p, t) ->
+      | TestPropT (_, _, _, p, t) ->
         let acc = self#propref cx acc p in
         let acc = self#type_ cx pole_TODO acc t in
         acc
@@ -269,6 +269,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in
         acc
+      | TestElemT (_, _, _, e, t)
       | GetElemT (_, _, e, t) ->
         let acc = self#type_ cx pole_TODO acc e in
         let acc = self#type_ cx pole_TODO acc t in
@@ -777,6 +778,7 @@ class ['a] t =
 
     method private elem_action cx acc =
       function
+      | TestElem (_, t)
       | ReadElem t -> self#type_ cx pole_TODO acc t
       | WriteElem (tin, tout) ->
         let acc = self#type_ cx pole_TODO acc tin in

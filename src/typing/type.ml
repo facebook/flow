@@ -428,7 +428,8 @@ module rec TypeTerm : sig
     | MatchPropT of use_op * reason * propref * t
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
-    | TestPropT of reason * ident * propref * t
+    | TestPropT of use_op * reason * ident * propref * t
+    | TestElemT of use_op * reason * ident * t * t
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
        In particular, a computed property in the object initializer users SetElemT
@@ -727,7 +728,8 @@ module rec TypeTerm : sig
     | OptCallT of use_op * reason * opt_funcalltype
     | OptGetPropT of use_op * reason * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
-    | OptTestPropT of reason * ident * propref
+    | OptTestPropT of use_op * reason * ident * propref
+    | OptTestElemT of use_op * reason * ident * t
     | OptGetElemT of use_op * reason * t
 
   and opt_state =
@@ -966,6 +968,7 @@ module rec TypeTerm : sig
      need to ensure that reads happen after writes. *)
   and elem_action =
     | ReadElem of t
+    | TestElem of ident * t
     | WriteElem of t * t option (* tout *)
     | CallElem of reason (* call *) * funcalltype
 
@@ -1744,13 +1747,13 @@ end = struct
         (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
         | OpenT _
         (* some types may not be evaluated yet; TODO *)
-        
+
         | EvalT _
         | TypeAppT _
         | KeysT _
         | IntersectionT _
         (* other types might wrap parts that are accessible directly *)
-        
+
         | OpaqueT _
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->
@@ -2513,7 +2516,8 @@ end = struct
     | ModuleExportsAssignT (reason, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
     | SuperT (_, reason, _) -> reason
-    | TestPropT (reason, _, _, _) -> reason
+    | TestPropT (_, reason, _, _, _) -> reason
+    | TestElemT (_, reason, _, _, _) -> reason
     | ThisSpecializeT (reason, _, _) -> reason
     | ToStringT (reason, _) -> reason
     | UnaryMinusT (reason, _) -> reason
@@ -2688,7 +2692,8 @@ end = struct
     | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
     | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
     | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
-    | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
+    | TestPropT (op, reason, id, n, t) -> TestPropT (op, f reason, id, n, t)
+    | TestElemT (op, reason, id, t1, t2) -> TestElemT (op, f reason, id, t1, t2)
     | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
     | ToStringT (reason, t) -> ToStringT (f reason, t)
     | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
@@ -2709,7 +2714,8 @@ end = struct
     | OptGetPropT (use_op, reason, n) -> OptGetPropT (use_op, f reason, n)
     | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
       OptGetPrivatePropT (use_op, f reason, name, bindings, static)
-    | OptTestPropT (reason, id, n) -> OptTestPropT (f reason, id, n)
+    | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
+    | OptTestElemT (use_op, reason, id, it) -> OptTestElemT (use_op, f reason, id, it)
     | OptGetElemT (use_op, reason, it) -> OptGetElemT (use_op, f reason, it)
 
   let rec util_use_op_of_use_t :
@@ -2761,8 +2767,9 @@ end = struct
     | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
     | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
     | MakeExactT (r, Lower (op, t)) -> util op (fun op -> MakeExactT (r, Lower (op, t)))
+    | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
+    | TestElemT (op, r, id, t1, t2) -> util op (fun op -> TestElemT (op, r, id, t1, t2))
     | MakeExactT (_, _)
-    | TestPropT (_, _, _, _)
     | CallElemT (_, _, _, _)
     | GetStaticsT (_, _)
     | GetProtoT (_, _)
@@ -3266,7 +3273,8 @@ let primitive_promoting_use_t = function
   | GetPrivatePropT _
   | GetProtoT _
   | MethodT _
-  | TestPropT _ ->
+  | TestPropT _
+  | TestElemT _ ->
     true
   (* "internal" use types, which should not be called directly on primitives,
    * but it's OK if they are in practice. TODO: consider making this an internal
@@ -3600,6 +3608,7 @@ let string_of_use_ctor = function
   | SubstOnPredT _ -> "SubstOnPredT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"
+  | TestElemT _ -> "TestElemT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | ToStringT _ -> "ToStringT"
   | UnaryMinusT _ -> "UnaryMinusT"
@@ -3874,7 +3883,8 @@ let apply_opt_use opt_use t_out =
   | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
   | OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
-  | OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
+  | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
+  | OptTestElemT (u, r, i, t) -> TestElemT (u, r, i, t, t_out)
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
 
 module TypeParams : sig

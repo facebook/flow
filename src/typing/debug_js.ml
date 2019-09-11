@@ -384,11 +384,12 @@ and _json_of_use_t_impl json_cx t =
       | SetPropT (_, _, name, _, t, _)
       | GetPropT (_, _, name, t)
       | MatchPropT (_, _, name, t)
-      | TestPropT (_, _, name, t) ->
+      | TestPropT (_, _, _, name, t) ->
         [("propRef", json_of_propref json_cx name); ("propType", _json_of_t json_cx t)]
       | SetPrivatePropT (_, _, name, _, _, t, _)
       | GetPrivatePropT (_, _, name, _, _, t) ->
         [("propRef", JSON_String name); ("propType", _json_of_t json_cx t)]
+      | TestElemT (_, _, _, indext, elemt)
       | SetElemT (_, _, indext, elemt, _)
       | GetElemT (_, _, indext, elemt) ->
         [("indexType", _json_of_t json_cx indext); ("elemType", _json_of_t json_cx elemt)]
@@ -501,6 +502,7 @@ and _json_of_use_t_impl json_cx t =
       | ElemT (_, _, base, action) ->
         [ ("baseType", _json_of_t json_cx base);
           (match action with
+          | TestElem (_, t) -> ("testElem", _json_of_t json_cx t)
           | ReadElem t -> ("readElem", _json_of_t json_cx t)
           | WriteElem (t, _) -> ("writeElem", _json_of_t json_cx t)
           | CallElem (_, funtype) -> ("callElem", json_of_funcalltype json_cx funtype)) ]
@@ -1905,6 +1907,7 @@ and dump_use_t_ (depth, tvars) cx t =
              (String.concat "; " (Core_list.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
     | ExportTypeT _ -> p t
     | AssertExportIsTypeT _ -> p t
+    | TestElemT (_, _, _, ix, etype)
     | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
@@ -2003,7 +2006,7 @@ and dump_use_t_ (depth, tvars) cx t =
         ~extra:
           (spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))
         t
-    | TestPropT (_, _, prop, ptype) -> p ~extra:(spf "(%s), %s" (propref prop) (kid ptype)) t
+    | TestPropT (_, _, _, prop, ptype) -> p ~extra:(spf "(%s), %s" (propref prop) (kid ptype)) t
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
     | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
     | UnaryMinusT _ -> p t
