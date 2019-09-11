@@ -5929,8 +5929,11 @@ and predicates_of_condition cx e =
             {
               Member._object;
               property =
-                Member.PropertyIdentifier
-                  (prop_loc, ({ Ast.Identifier.name = prop_name; comments = _ } as id));
+                (Member.PropertyIdentifier
+                  (prop_loc, { Ast.Identifier.name = prop_name; comments = _ })
+                | Member.PropertyExpression
+                  (prop_loc, Ast.Expression.Literal
+                            { Ast.Literal.value = Ast.Literal.String prop_name; _ } )) as property;
             } ) ->
         let (((_, obj_t), _) as _object_ast) =
           match _object with
@@ -5956,7 +5959,8 @@ and predicates_of_condition cx e =
               let use_op = Op (GetProperty (mk_expression_reason e)) in
               get_prop ~is_cond:true cx expr_reason ~use_op obj_t (prop_reason, prop_name)
         in
-        let property = Member.PropertyIdentifier ((prop_loc, t), id) in
+        let m = new loc_mapper t in
+        let property = m#member_property property in
         let ast = ((loc, t), Member { Member._object = _object_ast; property }) in
         let out =
           match Refinement.key e with
