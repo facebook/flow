@@ -1,5 +1,5 @@
 predicates.js - undefined: {
-  "type":"any (implicit)",
+  "type":"void",
   "reasons":[],
   "loc":{
     "source":"predicates.js",
