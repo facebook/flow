@@ -373,7 +373,7 @@ and statement_decl cx =
           |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent))
     | (_, Return _) -> ()
     | (_, Throw _) -> ()
-    | (_, Try { Try.block = (_, b); handler; finalizer }) ->
+    | (_, Try { Try.block = (_, b); handler; finalizer; comments = _ }) ->
       block_body cx b;
 
       (match handler with
@@ -1303,7 +1303,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
      subsequent analysis without loss of soundness.
      *)
     (***************************************************************************)
-    | (loc, Try { Try.block = (b_loc, b); handler; finalizer }) ->
+    | (loc, Try { Try.block = (b_loc, b); handler; finalizer; comments }) ->
       let oldset = Changeset.Global.clear () in
       (* save ref to initial env and swap in a clone *)
       let start_env = Env.peek_env () in
@@ -1397,6 +1397,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               Try.block = (b_loc, { Block.body = try_block_ast });
               handler = catch_ast;
               finalizer = finally_ast;
+              comments;
             } )
       in
       (* if finally has abnormal control flow, we throw here *)

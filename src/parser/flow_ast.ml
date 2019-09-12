@@ -440,6 +440,7 @@ and Statement : sig
       block: 'M * ('M, 'T) Block.t;
       handler: ('M, 'T) CatchClause.t option;
       finalizer: ('M * ('M, 'T) Block.t) option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

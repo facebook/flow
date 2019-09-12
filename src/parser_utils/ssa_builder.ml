@@ -960,7 +960,7 @@ struct
       method! try_catch _loc (stmt : (L.t, L.t) Ast.Statement.Try.t) =
         this#expecting_abrupt_completions (fun () ->
             Ast.Statement.Try.(
-              let { block = (loc, block); handler; finalizer } = stmt in
+              let { block = (loc, block); handler; finalizer; comments = _ } = stmt in
               let try_completion_state =
                 this#run_to_completion (fun () -> ignore @@ this#block loc block)
               in

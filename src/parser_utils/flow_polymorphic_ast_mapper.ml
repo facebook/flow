@@ -1457,11 +1457,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method try_catch (stmt : ('M, 'T) Ast.Statement.Try.t) : ('N, 'U) Ast.Statement.Try.t =
       Ast.Statement.Try.(
-        let { block; handler; finalizer } = stmt in
+        let { block; handler; finalizer; comments } = stmt in
         let block' = (this#on_loc_annot * this#block) block in
         let handler' = Option.map ~f:(this#on_loc_annot * this#catch_clause) handler in
         let finalizer' = Option.map ~f:(this#on_loc_annot * this#block) finalizer in
-        { block = block'; handler = handler'; finalizer = finalizer' })
+        let comments' = Option.map ~f:this#syntax comments in
+        { block = block'; handler = handler'; finalizer = finalizer'; comments = comments' })
 
     method type_cast (expr : ('M, 'T) Ast.Expression.TypeCast.t)
         : ('N, 'U) Ast.Expression.TypeCast.t =

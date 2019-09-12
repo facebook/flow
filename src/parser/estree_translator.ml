@@ -163,8 +163,9 @@ with type t = Impl.t = struct
           node ?comments "ReturnStatement" loc [("argument", option expression argument)]
         | (loc, Throw { Throw.argument }) ->
           node "ThrowStatement" loc [("argument", expression argument)]
-        | (loc, Try { Try.block = block_; handler; finalizer }) ->
+        | (loc, Try { Try.block = block_; handler; finalizer; comments }) ->
           node
+            ?comments
             "TryStatement"
             loc
             [

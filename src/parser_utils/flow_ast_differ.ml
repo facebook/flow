@@ -536,7 +536,7 @@ let program
           import_declaration import1 import2
         | ((_, ExportNamedDeclaration export1), (_, ExportNamedDeclaration export2)) ->
           export_named_declaration export1 export2
-        | ((_, Try try1), (_, Try try2)) -> try_ try1 try2
+        | ((loc, Try try1), (_, Try try2)) -> try_ loc try1 try2
         | ((_, Throw throw1), (_, Throw throw2)) -> Some (throw_statement throw1 throw2)
         | ((_, DeclareTypeAlias d_t_alias1), (_, DeclareTypeAlias d_t_alias2)) ->
           type_alias d_t_alias1 d_t_alias2
@@ -790,17 +790,24 @@ let program
       let _object_diff = diff_if_changed expression _object1 _object2 in
       let body_diff = diff_if_changed statement body1 body2 in
       _object_diff @ body_diff)
-  and try_ (try1 : (Loc.t, Loc.t) Ast.Statement.Try.t) (try2 : (Loc.t, Loc.t) Ast.Statement.Try.t)
-      =
+  and try_
+      loc (try1 : (Loc.t, Loc.t) Ast.Statement.Try.t) (try2 : (Loc.t, Loc.t) Ast.Statement.Try.t) =
     Ast.Statement.Try.(
-      let { block = (_, block1); handler = handler1; finalizer = finalizer1 } = try1 in
-      let { block = (_, block2); handler = handler2; finalizer = finalizer2 } = try2 in
+      let { block = (_, block1); handler = handler1; finalizer = finalizer1; comments = comments1 }
+          =
+        try1
+      in
+      let { block = (_, block2); handler = handler2; finalizer = finalizer2; comments = comments2 }
+          =
+        try2
+      in
+      let comments = syntax_opt loc comments1 comments2 in
       let block_diff = diff_if_changed_ret_opt block block1 block2 in
       let finalizer_diff =
         diff_if_changed_opt block (Option.map ~f:snd finalizer1) (Option.map ~f:snd finalizer2)
       in
       let handler_diff = diff_if_changed_opt handler handler1 handler2 in
-      join_diff_list [block_diff; finalizer_diff; handler_diff])
+      join_diff_list [comments; block_diff; finalizer_diff; handler_diff])
   and handler
       (hand1 : (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t)
       (hand2 : (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t) =

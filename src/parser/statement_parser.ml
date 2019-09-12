@@ -431,7 +431,9 @@ module Statement
 
   and try_ =
     with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_TRY;
+        let trailing = Peek.comments env in
         let block = Parse.block_body env in
         let handler =
           match Peek.token env with
@@ -467,7 +469,13 @@ module Statement
         if handler = None && finalizer = None then
           error_at env (fst block, Parse_error.NoCatchOrFinally);
 
-        Statement.Try { Statement.Try.block; handler; finalizer })
+        Statement.Try
+          {
+            Statement.Try.block;
+            handler;
+            finalizer;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 
   and var =
     with_loc (fun env ->

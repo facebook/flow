@@ -1711,7 +1711,7 @@ class ['loc] mapper =
 
     method try_catch _loc (stmt : ('loc, 'loc) Ast.Statement.Try.t) =
       Ast.Statement.Try.(
-        let { block; handler; finalizer } = stmt in
+        let { block; handler; finalizer; comments } = stmt in
         let block' = map_loc this#block block in
         let handler' =
           match handler with
@@ -1726,10 +1726,16 @@ class ['loc] mapper =
                 Some (finalizer_loc, block))
           | None -> finalizer
         in
-        if block == block' && handler == handler' && finalizer == finalizer' then
+        let comments' = this#syntax_opt comments in
+        if
+          block == block'
+          && handler == handler'
+          && finalizer == finalizer'
+          && comments == comments'
+        then
           stmt
         else
-          { block = block'; handler = handler'; finalizer = finalizer' })
+          { block = block'; handler = handler'; finalizer = finalizer'; comments = comments' })
 
     method type_cast _loc (expr : ('loc, 'loc) Ast.Expression.TypeCast.t) =
       Ast.Expression.TypeCast.(

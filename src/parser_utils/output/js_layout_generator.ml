@@ -615,31 +615,34 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
       | S.Throw { S.Throw.argument } ->
         with_semicolon
           (fuse_with_space [Atom "throw"; group [wrap_in_parens_on_break (expression argument)]])
-      | S.Try { S.Try.block = b; handler; finalizer } ->
-        fuse
-          [
-            Atom "try";
-            pretty_space;
-            block b;
-            (match handler with
-            | Some (loc, { S.Try.CatchClause.param; body }) ->
-              source_location_with_comments
-                ( loc,
-                  match param with
-                  | Some p ->
-                    fuse
-                      [
-                        pretty_space;
-                        statement_with_test "catch" (pattern ~ctxt:normal_context p);
-                        pretty_space;
-                        block body;
-                      ]
-                  | None -> fuse [pretty_space; Atom "catch"; pretty_space; block body] )
-            | None -> Empty);
-            (match finalizer with
-            | Some b -> fuse [pretty_space; Atom "finally"; pretty_space; block b]
-            | None -> Empty);
-          ]
+      | S.Try { S.Try.block = b; handler; finalizer; comments } ->
+        layout_node_with_simple_comments_opt
+          loc
+          comments
+          (fuse
+             [
+               Atom "try";
+               pretty_space;
+               block b;
+               (match handler with
+               | Some (loc, { S.Try.CatchClause.param; body }) ->
+                 source_location_with_comments
+                   ( loc,
+                     match param with
+                     | Some p ->
+                       fuse
+                         [
+                           pretty_space;
+                           statement_with_test "catch" (pattern ~ctxt:normal_context p);
+                           pretty_space;
+                           block body;
+                         ]
+                     | None -> fuse [pretty_space; Atom "catch"; pretty_space; block body] )
+               | None -> Empty);
+               (match finalizer with
+               | Some b -> fuse [pretty_space; Atom "finally"; pretty_space; block b]
+               | None -> Empty);
+             ])
       | S.While { S.While.test; body } ->
         fuse
           [
