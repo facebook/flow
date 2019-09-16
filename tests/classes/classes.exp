@@ -100,7 +100,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:22:15
 
-Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2].
+Cannot assign `x` to `y` because:
+ - property `b` is missing in `TestClass` [1] but exists in `Foo` [2].
+ - property `d` is missing in `TestClass` [1] but exists in `Foo` [2].
 
    class_shapes.js:22:15
    22| var y : Foo = x;
@@ -118,33 +120,40 @@ References:
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
 Cannot assign `z` to `w` because:
- - number [1] is incompatible with string [2] in property `a`.
- - number [3] is incompatible with string [4] in property `b`.
- - number [5] is incompatible with string [6] in property `c`.
+ - property `d` is missing in `Test2Class` [1] but exists in `Foo` [2].
+ - number [3] is incompatible with string [4] in property `a`.
+ - number [5] is incompatible with string [6] in property `b`.
+ - number [7] is incompatible with string [8] in property `c`.
 
    class_shapes.js:35:15
    35| var w : Foo = z;
                      ^
 
 References:
+   class_shapes.js:34:9
+   34| var z = new Test2Class();
+               ^^^^^^^^^^^^^^^^ [1]
+   class_shapes.js:35:9
+   35| var w : Foo = z;
+               ^^^ [2]
    class_shapes.js:27:6
    27|   a: number;  // conflicts with cast to Foo
-            ^^^^^^ [1]
+            ^^^^^^ [3]
    class_shapes.js:4:6
     4|   a: string;    // exists in TestClass
-            ^^^^^^ [2]
+            ^^^^^^ [4]
    class_shapes.js:31:6
    31|   b: number;  // conflicts with cast to Foo
-            ^^^^^^ [3]
+            ^^^^^^ [5]
    class_shapes.js:5:6
     5|   b: string;    // doesn't exist
-            ^^^^^^ [4]
+            ^^^^^^ [6]
    class_shapes.js:28:7
    28|   c: ?number; // conflicts with cast to Foo
-             ^^^^^^ [5]
+             ^^^^^^ [7]
    class_shapes.js:6:8
     6|   c?: ?string;  // exists in TestClass, optional
-              ^^^^^^ [6]
+              ^^^^^^ [8]
 
 
 Error ---------------------------------------------------------------------------------------------------- expr.js:14:13
@@ -277,4 +286,4 @@ References:
 
 
 
-Found 19 errors
+Found 21 errors
