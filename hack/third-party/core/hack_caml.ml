@@ -36,7 +36,6 @@ module Queue = Queue
 module Random = Random
 module Scanf = Scanf
 module Set = Set
-module Sort = Sort
 module Stack = Stack
 module StdLabels = StdLabels
 module Stream = Stream
