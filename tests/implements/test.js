@@ -1,4 +1,4 @@
-/* @noflow */
+/* @flow */
 
 interface IFoo { foo: string }
 
@@ -28,3 +28,31 @@ class C7 implements C1 {} // error: C1 is a class, expected an interface
 // ensure BoundT substituted appropriately
 interface IPoly<T> { x: T }
 class C8<T> implements IPoly<T> { x: T }
+
+type T1 = { a: string, b?: string }
+class C9 {
+  a: string
+}
+(new C9: T1); // error
+
+interface I2 {
+  a: string,
+  b?: string
+}
+class C10 implements I2 { // error
+  a: string
+}
+
+interface I3 {
+  +a?: string
+}
+class C11a implements I3 { // ok
+  a: void
+}
+class C11b implements I3 { // ok
+  a: string
+}
+class C11c implements I3 {} // error
+declare class C11d implements I3 { // ok
+  a?: string
+}
