@@ -259,6 +259,21 @@ References:
                       ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- indexer.js:37:36
+
+Cannot assign `new F()` to `g` because an index signature declaring the expected key / value type is read-only in
+`F` [1] but writable in object type [2].
+
+   indexer.js:37:36
+   37| var g: { [key: string]: string } = new F(); // error
+                                          ^^^^^^^ [1]
+
+References:
+   indexer.js:37:8
+   37| var g: { [key: string]: string } = new F(); // error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------- loc.js:5:7
 
 Cannot declare `Foo` [1] because the name is already bound.
@@ -342,4 +357,4 @@ References:
 
 
 
-Found 25 errors
+Found 26 errors

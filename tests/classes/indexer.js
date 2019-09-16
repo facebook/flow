@@ -29,3 +29,10 @@ declare class E {
 
 var e: { [key: number]: string } = new E(); // ok
 var f: { [key: string]: string } = new E(); // error, string ~> number
+
+declare class F {
+  +[key: string]: string;
+}
+
+var g: { [key: string]: string } = new F(); // error
+var h: { +[key: string]: string } = new F(); // ok
