@@ -1490,6 +1490,25 @@ module Recheck : sig
     recheck_reasons:Persistent_connection_prot.recheck_reason list ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
+
+  (* Exposed only for testing purposes. Not meant for general consumption. *)
+  val determine_what_to_recheck :
+    profiling:Profiling_js.running ->
+    options:Options.t ->
+    is_file_checked:(File_key.t -> bool) ->
+    ide_open_files:SSet.t Lazy.t ->
+    dependency_graph:FilenameSet.t FilenameMap.t ->
+    all_dependency_graph:FilenameSet.t FilenameMap.t ->
+    checked_files:CheckedSet.t ->
+    freshparsed:FilenameSet.t ->
+    unparsed_set:FilenameSet.t ->
+    deleted:FilenameSet.t ->
+    unchanged_checked:CheckedSet.t ->
+    files_to_force:CheckedSet.t ->
+    unchanged_files_to_force:CheckedSet.t ->
+    direct_dependent_files:FilenameSet.t ->
+    (* to_merge, components, recheck_set, all_dependent_files *)
+    (CheckedSet.t * File_key.t Nel.t list * FilenameSet.t * FilenameSet.t) Lwt.t
 end = struct
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
@@ -2837,3 +2856,5 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       let checked_files = merged_files in
       Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
       Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, first_internal_error))
+
+let debug_determine_what_to_recheck = Recheck.determine_what_to_recheck

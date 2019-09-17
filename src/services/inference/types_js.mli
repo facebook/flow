@@ -82,3 +82,21 @@ val ensure_checked_dependencies :
   File_key.t ->
   File_sig.With_Loc.t ->
   unit Lwt.t
+
+(* Exposed only for testing purposes. Not meant for general consumption. *)
+val debug_determine_what_to_recheck :
+  profiling:Profiling_js.running ->
+  options:Options.t ->
+  is_file_checked:(File_key.t -> bool) ->
+  ide_open_files:SSet.t Lazy.t ->
+  dependency_graph:FilenameSet.t FilenameMap.t ->
+  all_dependency_graph:FilenameSet.t FilenameMap.t ->
+  checked_files:CheckedSet.t ->
+  freshparsed:FilenameSet.t ->
+  unparsed_set:FilenameSet.t ->
+  deleted:FilenameSet.t ->
+  unchanged_checked:CheckedSet.t ->
+  files_to_force:CheckedSet.t ->
+  unchanged_files_to_force:CheckedSet.t ->
+  direct_dependent_files:FilenameSet.t ->
+  (CheckedSet.t * File_key.t Nel.t list * FilenameSet.t * FilenameSet.t) Lwt.t
