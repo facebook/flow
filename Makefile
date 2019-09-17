@@ -201,7 +201,8 @@ FINDLIB_PACKAGES=\
   lwt_ppx\
   unix\
   str\
-  bigarray
+  bigarray\
+	ppx_let
 
 NATIVE_LIBRARIES=\
   pthread\

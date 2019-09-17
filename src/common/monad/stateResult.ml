@@ -34,6 +34,15 @@ module type S = sig
   val error : 'b -> ('a, 'b) t
 
   val run : s -> ('a, 'b) t -> ('a, 'b) r * s
+
+  (* Used by let%bind syntax *)
+  module Let_syntax : sig
+    val return : 'a -> ('a, 'b) t
+
+    val bind : ('a, 'b) t -> f:('a -> ('c, 'b) t) -> ('c, 'b) t
+
+    val map : ('a, 'b) t -> f:('a -> 'c) -> ('c, 'b) t
+  end
 end
 
 module Make (S : State) : S with type s = S.t = struct
@@ -70,4 +79,12 @@ module Make (S : State) : S with type s = S.t = struct
   let error x s = (Error x, s)
 
   let run x m = m x
+
+  module Let_syntax = struct
+    let return = return
+
+    let bind x ~f = bind x f
+
+    let map x ~f = x >>| f
+  end
 end
