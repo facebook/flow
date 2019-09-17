@@ -360,7 +360,6 @@ let object_ cx t =
       | Mixed_non_void ->
         let reason = replace_desc_new_reason RUnion (reason_of_t t) in
         UnionT (reason, UnionRep.make (NullT.why r trust) obj [])
-      | Empty_intersection -> DefT (r, trust, EmptyT Bottom)
     end
   | DefT (_, _, (ObjT _ | ArrT _ | NullT | InstanceT _))
   | AnyT _ ->

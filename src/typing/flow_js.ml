@@ -689,9 +689,8 @@ let error_message_kind_of_lower = function
   | DefT (_, _, VoidT) -> Some Error_message.Possibly_void
   | MaybeT _ -> Some Error_message.Possibly_null_or_void
   | IntersectionT _
-  | DefT (_, _, MixedT Empty_intersection) ->
-    Some Error_message.Incompatible_intersection
-  | _ -> None
+  | _ ->
+    None
 
 let error_message_kind_of_upper = function
   | GetPropT (_, _, Named (r, name), _) ->

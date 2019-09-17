@@ -788,7 +788,6 @@ module rec TypeTerm : sig
     | Mixed_non_void
     | Mixed_function
     | Mixed_symbol
-    | Empty_intersection
 
   and empty_flavor =
     | Bottom

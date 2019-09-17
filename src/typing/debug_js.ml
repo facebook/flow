@@ -1538,7 +1538,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | Mixed_non_null -> "Mixed_non_null"
     | Mixed_non_void -> "Mixed_non_void"
     | Mixed_symbol -> "Mixed_symbol"
-    | Empty_intersection -> "Empty_intersection"
   in
   let string_of_any_source = function
     | Annotated -> "Annotated"
