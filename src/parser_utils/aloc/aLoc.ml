@@ -27,6 +27,10 @@ let compare_key : key -> key -> int = Pervasives.compare
 
 let string_of_key = string_of_int
 
+type reverse_table = (Loc.t, key) Hashtbl.t
+
+let make_empty_reverse_table () = Hashtbl.create 0
+
 module Repr : sig
   type t
 

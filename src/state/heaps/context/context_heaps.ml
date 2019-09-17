@@ -152,7 +152,7 @@ end = struct
        * exception during typechecking. It doesn't really matter what we choose, so we might as well
        * make it the empty map. *)
       let aloc_tables = FilenameMap.empty in
-      let rev_table = lazy (Hashtbl.create 0) in
+      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
       let module_ref = Files.module_ref leader_f in
       Context.make sig_cx metadata leader_f aloc_tables rev_table module_ref Context.Merging
     in

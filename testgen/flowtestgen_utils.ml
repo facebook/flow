@@ -644,7 +644,7 @@ let flow_check (code : string) : string option =
       let root = Path.dummy_path in
       let master_sig_cx = Context.make_sig () in
       let aloc_table = Utils_js.FilenameMap.empty in
-      let rev_table = lazy (Hashtbl.create 0) in
+      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
       let master_cx =
         Context.make
           master_sig_cx

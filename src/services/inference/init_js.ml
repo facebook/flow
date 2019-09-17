@@ -78,7 +78,7 @@ let load_lib_files ~sig_cx ~options ~reader files =
                in
                (* Lib files use only concrete locations, so this is not needed. *)
                let aloc_tables = FilenameMap.empty in
-               let rev_table = lazy (Hashtbl.create 0) in
+               let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
                let cx =
                  Context.make
                    sig_cx
@@ -168,7 +168,7 @@ let init ~options ~reader lib_files =
     in
     (* Builtins use only concrete locations, so this is not needed. *)
     let aloc_tables = FilenameMap.empty in
-    let rev_table = lazy (Hashtbl.create 0) in
+    let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
     Context.make
       sig_cx
       metadata

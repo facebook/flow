@@ -116,7 +116,7 @@ let before_and_after_stmts file_name =
     let cx =
       let sig_cx = Context.make_sig () in
       let aloc_table = Utils_js.FilenameMap.empty in
-      let rev_table = lazy (Hashtbl.create 0) in
+      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
       Context.make
         sig_cx
         metadata

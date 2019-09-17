@@ -83,7 +83,7 @@ val make :
   metadata ->
   File_key.t ->
   ALoc.table Lazy.t Utils_js.FilenameMap.t ->
-  (Loc.t, ALoc.key) Hashtbl.t Lazy.t ->
+  ALoc.reverse_table Lazy.t ->
   string ->
   phase ->
   t

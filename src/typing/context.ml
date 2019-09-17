@@ -147,7 +147,7 @@ type t = {
      We only need this table during the check phase, when we are checking single
      files, so storing the rev table for the whole component would be a waste
      of space/ *)
-  rev_aloc_table: (Loc.t, ALoc.key) Hashtbl.t Lazy.t;
+  rev_aloc_table: ALoc.reverse_table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
   mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;

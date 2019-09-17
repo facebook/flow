@@ -373,7 +373,7 @@ let merge_component
           handle this exception here rather than explicitly making an optional
           version of the get_aloc_table function for simplicity. *)
              | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
-               Hashtbl.create 0)
+               ALoc.make_empty_reverse_table ())
         in
         (FilenameMap.add filename table tables, FilenameMap.add filename rev_table rev_tables))
       (FilenameMap.empty, FilenameMap.empty)

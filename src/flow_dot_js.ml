@@ -97,7 +97,7 @@ let load_lib_files
            | Ok (ast, file_sig) ->
              let sig_cx = Context.make_sig () in
              let aloc_table = Utils_js.FilenameMap.empty in
-             let rev_table = lazy (Hashtbl.create 0) in
+             let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
              let cx =
                Context.make
                  sig_cx
@@ -206,7 +206,7 @@ let get_master_cx =
     | None ->
       let sig_cx = Context.make_sig () in
       let aloc_table = Utils_js.FilenameMap.empty in
-      let rev_table = lazy (Hashtbl.create 0) in
+      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
       let cx =
         Context.make
           sig_cx
