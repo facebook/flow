@@ -38,7 +38,7 @@ class type_finder t =
 module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
   include Flow
 
-  class assert_ground_visitor r ~max_reasons =
+  class assert_ground_visitor r ~max_reasons ~should_munge_underscores =
     object (self)
       inherit [Marked.t] Type_visitor.t as super
 
@@ -289,7 +289,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
         let props = Context.find_props cx id in
         SMap.fold
           (fun x p acc ->
-            if is_munged_prop_name cx x then
+            if is_munged_prop_name_with_munge x ~should_munge_underscores then
               acc
             else if SSet.mem x init then
               Property.read_t p |> Option.fold ~f:(self#type_ cx pole) ~init:acc
@@ -357,9 +357,12 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
             seen
     end
 
-  let enforce_strict cx t =
+  let enforce_strict cx t ~should_munge_underscores =
     let visitor =
-      new assert_ground_visitor (reason_of_t t) ~max_reasons:(Context.max_trace_depth cx)
+      new assert_ground_visitor
+        (reason_of_t t)
+        ~max_reasons:(Context.max_trace_depth cx)
+        ~should_munge_underscores
     in
     let seen = visitor#type_ cx Polarity.Positive Marked.empty t in
     ignore (seen : Marked.t)

@@ -197,7 +197,10 @@ let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
 let force_annotations leader_cx other_cxs =
   Core_list.iter
     ~f:(fun cx ->
-      Context.module_ref cx |> Flow_js.lookup_module leader_cx |> Flow_js.enforce_strict leader_cx)
+      let should_munge_underscores = Context.should_munge_underscores cx in
+      Context.module_ref cx
+      |> Flow_js.lookup_module leader_cx
+      |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
     (leader_cx :: other_cxs)
 
 let is_builtin_or_flowlib cx =
