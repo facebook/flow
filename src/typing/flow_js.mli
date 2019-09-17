@@ -113,7 +113,7 @@ val mk_typeof_annotation :
 (* strict *)
 val types_of : Constraint.constraints -> Type.t list
 
-val enforce_strict : Context.t -> Type.t -> unit
+val enforce_strict : Context.t -> Type.t -> should_munge_underscores:bool -> unit
 
 val possible_types : Context.t -> Constraint.ident -> Type.t list
 

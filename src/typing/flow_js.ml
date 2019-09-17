@@ -9027,7 +9027,12 @@ struct
  * the `munge_underscores` config option is set.
  *)
   and is_munged_prop_name cx name =
-    Context.should_munge_underscores cx && Signature_utils.is_munged_property_name name
+    is_munged_prop_name_with_munge
+      name
+      ~should_munge_underscores:(Context.should_munge_underscores cx)
+
+  and is_munged_prop_name_with_munge name ~should_munge_underscores =
+    Signature_utils.is_munged_property_name name && should_munge_underscores
 
   and lookup_prop cx trace l reason_prop reason_op strict x action =
     let l =

@@ -11,7 +11,7 @@ open Type
 (* This is here instead of assert_ground.ml to avoid the duplication of the enforce strict
  * signature *)
 module type ASSERT_GROUND = sig
-  val enforce_strict : Context.t -> Type.t -> unit
+  val enforce_strict : Context.t -> Type.t -> should_munge_underscores:bool -> unit
 end
 
 module type TRUST_CHECKING = sig
@@ -63,6 +63,8 @@ module type S = sig
     Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
   val is_munged_prop_name : Context.t -> name -> bool
+
+  val is_munged_prop_name_with_munge : name -> should_munge_underscores:bool -> bool
 
   val lookup_builtin :
     Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
