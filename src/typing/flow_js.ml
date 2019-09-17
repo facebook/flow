@@ -6812,6 +6812,9 @@ struct
       match (l, r) with
       | (DefT (_, _, StrT _), DefT (_, _, StrT _)) -> ()
       | (_, _) when numberesque l && numberesque r -> ()
+      | (DefT (_, _, EmptyT _), _)
+      | (_, DefT (_, _, EmptyT _)) ->
+        ()
       | _ ->
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
         add_output cx ~trace (Error_message.EComparison reasons)
