@@ -218,6 +218,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/libdefs/usage/":
   title: "Using Library Definitions"
   description: ""
+"/docs/declarations/":
+  title: "Declaration Files"
+  description: "Using .flow files"
 "/docs/modules/":
   title: "Modules"
   description: ""
@@ -426,6 +429,10 @@ guides:
     description: >
       Learn how to create and use library definitions for the third-party code
       your code depends on.
+  declarations:
+    title: "Declaration Files"
+    description: >
+      Learn how to write types in .flow files.
   # errors:
   #   title: "Debugging Errors"
   #   description: >
