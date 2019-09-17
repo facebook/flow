@@ -788,6 +788,7 @@ let merge
     ~profiling
     ~workers
     ~errors
+    ~coverage
     ~to_merge
     ~components
     ~recheck_set
@@ -797,7 +798,6 @@ let merge
     ~recheck_reasons
     ~prep_merge =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions } = errors in
-  let coverage = FilenameMap.empty in
   let%lwt intermediate_result_callback =
     let persistent_connections =
       match Options.arch options with
@@ -2085,6 +2085,7 @@ end = struct
         ~profiling
         ~workers
         ~errors
+        ~coverage:env.ServerEnv.coverage
         ~to_merge
         ~components
         ~recheck_set
@@ -2822,6 +2823,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~profiling
           ~workers
           ~errors
+          ~coverage:env.ServerEnv.coverage
           ~to_merge
           ~components
           ~recheck_set
