@@ -208,6 +208,23 @@ json
   }
 }
 -----------------------------
+root info survives recheck
+-----------------------------
+
+Coverage results from 1 file(s):
+
+a.js: 57.14% (4 of 7 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 1
+Expressions          :
+  Covered            : 4
+  Total              : 7
+  Covered Percentage : 57.14%
+
+-----------------------------
 trust
 -----------------------------
 

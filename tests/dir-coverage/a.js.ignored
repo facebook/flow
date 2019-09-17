@@ -1,0 +1,4 @@
+// @flow
+
+let x : $Trusted<number> = 4;
+module.exports = (x : any);
