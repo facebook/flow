@@ -62,7 +62,7 @@ and 'loc t' =
       min_arity: int;
       max_arity: int;
     }
-  | EValueUsedAsType of 'loc virtual_reason
+  | EValueUsedAsType of { reason_use: 'loc virtual_reason }
   | EExpectedStringLit of {
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
@@ -563,7 +563,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         min_arity;
         max_arity;
       }
-  | EValueUsedAsType reason -> EValueUsedAsType (map_reason reason)
+  | EValueUsedAsType { reason_use } -> EValueUsedAsType { reason_use = map_reason reason_use }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     EPolarityMismatch { reason = map_reason reason; name; expected_polarity; actual_polarity }
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
@@ -846,7 +846,7 @@ let util_use_op_of_msg nope util = function
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
   determined while locations are abstract. We just return None in this case. *)
 let aloc_of_msg : t -> ALoc.t option = function
-  | EValueUsedAsType primary
+  | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
   | EDynamicExport (_, primary)
@@ -1359,15 +1359,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                  else
                    "s" ));
           ]
-    | EValueUsedAsType value ->
+    | EValueUsedAsType { reason_use } ->
       Normal
         [
           text "Cannot use ";
-          desc value;
-          text " as a type because ";
-          desc value;
-          text " is a value. To get the type of ";
-          text "a value use ";
+          desc reason_use;
+          text " as a type. ";
+          text "A name can be used as a type only if it refers to ";
+          text "a type definition, an interface definition, or a class definition. ";
+          text "To get the type of a non-class value, use ";
           code "typeof";
           text ".";
         ]

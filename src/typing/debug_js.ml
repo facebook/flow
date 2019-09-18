@@ -2469,7 +2469,8 @@ let dump_error_message =
           (dump_reason cx reason_arity)
           min_arity
           max_arity
-      | EValueUsedAsType reason -> spf "EValueUsedAsType (%s)" (dump_reason cx reason)
+      | EValueUsedAsType { reason_use } ->
+        spf "EValueUsedAsType { use = %s }" (dump_reason cx reason_use)
       | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
         spf
           "EExpectedStringLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
