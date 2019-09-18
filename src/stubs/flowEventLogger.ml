@@ -154,3 +154,5 @@ let load_saved_state_success ~changed_files_count:_ = ()
 let load_saved_state_error ~saved_state_filename:_ ~changed_files_count:_ ~invalid_reason:_ = ()
 
 let idle_heartbeat ~idle_time:_ ~profiling:_ = ()
+
+let live_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()

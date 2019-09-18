@@ -1482,8 +1482,11 @@ let log_interaction ~ux state id =
   LspInteraction.log ~end_state ~ux ~id
 
 let do_live_diagnostics
-    flowconfig_name (state : state) (trigger : LspInteraction.trigger option) (uri : string) :
-    state =
+    flowconfig_name
+    (state : state)
+    (trigger : LspInteraction.trigger option)
+    (metadata : Persistent_connection_prot.metadata)
+    (uri : string) : state =
   (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
    * diagnostics and want to log what triggered it regardless of whether it's known or not *)
   let trigger = Option.value trigger ~default:LspInteraction.UnknownTrigger in
@@ -1502,6 +1505,17 @@ let do_live_diagnostics
       (state, LspInteraction.PushedLiveParseErrors)
   in
   log_interaction ~ux state interaction_id;
+  let error_count =
+    Option.value_map live_parse_errors ~default:Hh_json.JSON_Null ~f:(fun errors ->
+        Hh_json.JSON_Number (errors |> List.length |> string_of_int))
+  in
+  FlowEventLogger.live_parse_errors
+    ~request:(metadata.Persistent_connection_prot.start_json_truncated |> Hh_json.json_to_string)
+    ~data:
+      Hh_json.(
+        JSON_Object [("uri", JSON_String uri); ("error_count", error_count)] |> json_to_string)
+    ~wall_start:metadata.Persistent_connection_prot.start_wall_time;
+
   state
 
 (************************************************************************)
@@ -1716,7 +1730,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             Option.value_map
               changed_live_uri
               ~default:state
-              ~f:(do_live_diagnostics flowconfig_name state trigger)
+              ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
           in
           state)
     in
@@ -1753,7 +1767,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             Option.value_map
               changed_live_uri
               ~default:state
-              ~f:(do_live_diagnostics flowconfig_name state trigger)
+              ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
           in
           state)
     in
