@@ -31,10 +31,11 @@ const data: Fields = {
 };
 
 function getField<K: $Keys<Fields>>(key: K): $ElementType<Fields, K> {
+  (data[key]: number | string); // OK
   return data[key];
 }
 
 const aValue = getField("a");
 const bValue = getField("b");
-(aValue: string);
-(bValue: number);
+(aValue: string); // OK
+(bValue: number); // OK
