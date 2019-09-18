@@ -114,8 +114,8 @@ Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [
                         ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:292:13
-   292|     length: number;
+   <BUILTINS>/core.js:294:13
+   294|     length: number;
                     ^^^^^^ [1]
    test7.js:5:8
      5| var y: string = arr[0](); // error: number ~> string

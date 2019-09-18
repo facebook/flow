@@ -264,8 +264,8 @@ Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is i
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:162:22
-   162|     toString(radix?: number): string;
+   <BUILTINS>/core.js:164:22
+   164|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -278,8 +278,8 @@ Cannot call `123.toString` with `null` bound to `radix` because null [1] is inco
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:162:22
-   162|     toString(radix?: number): string;
+   <BUILTINS>/core.js:164:22
+   164|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -422,8 +422,8 @@ Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:428:5
-   428|     valueOf(): number;
+   <BUILTINS>/core.js:433:5
+   433|     valueOf(): number;
             ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
    122| var xValueOf : number = x.valueOf; // error
@@ -464,8 +464,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:424:5
-   424|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:429:5
+   429|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
    150| var xToLocaleString : number = x.toLocaleString; // error
@@ -482,8 +482,8 @@ value.
                                               ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:424:93
-   424|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:429:93
+   429|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                     ^^^^^^ [1]
    object_prototype.js:151:30
    151| var xToLocaleString2 : () => number = x.toLocaleString; // error

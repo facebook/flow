@@ -2432,8 +2432,8 @@ number [1] is incompatible with function type [2].
                                ^ [1]
 
 References:
-   <BUILTINS>/core.js:162:5
-   162|     toString(radix?: number): string;
+   <BUILTINS>/core.js:164:5
+   164|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2482,8 +2482,8 @@ number [1] is incompatible with function type [2].
                               ^ [1]
 
 References:
-   <BUILTINS>/core.js:137:5
-   137|     valueOf(): boolean;
+   <BUILTINS>/core.js:139:5
+   139|     valueOf(): boolean;
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2566,8 +2566,8 @@ number [1] is incompatible with function type [2].
                            ^ [1]
 
 References:
-   <BUILTINS>/core.js:126:17
-   126|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
+   <BUILTINS>/core.js:128:17
+   128|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
                         ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3371,8 +3371,8 @@ Cannot get `x[0]` because an index signature declaring the expected key / value 
             ^^^^
 
 References:
-   <BUILTINS>/core.js:134:15
-   134| declare class Boolean {
+   <BUILTINS>/core.js:136:15
+   136| declare class Boolean {
                       ^^^^^^^ [1]
 
 

@@ -7,8 +7,8 @@ Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because number [1] is incompatibl
                         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:143:30
-   143|     static MAX_SAFE_INTEGER: number;
+   <BUILTINS>/core.js:145:30
+   145|     static MAX_SAFE_INTEGER: number;
                                      ^^^^^^ [1]
    number_constants.js:2:8
      2| var b: string = Number.MAX_SAFE_INTEGER;
@@ -24,8 +24,8 @@ Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because number [1] is incompatibl
                         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:145:30
-   145|     static MIN_SAFE_INTEGER: number;
+   <BUILTINS>/core.js:147:30
+   147|     static MIN_SAFE_INTEGER: number;
                                      ^^^^^^ [1]
    number_constants.js:4:8
      4| var d: string = Number.MIN_SAFE_INTEGER;
@@ -41,8 +41,8 @@ Cannot assign `Number.MAX_VALUE` to `f` because number [1] is incompatible with 
                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:144:23
-   144|     static MAX_VALUE: number;
+   <BUILTINS>/core.js:146:23
+   146|     static MAX_VALUE: number;
                               ^^^^^^ [1]
    number_constants.js:6:8
      6| var f: string = Number.MAX_VALUE;
@@ -58,8 +58,8 @@ Cannot assign `Number.MIN_VALUE` to `h` because number [1] is incompatible with 
                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:146:23
-   146|     static MIN_VALUE: number;
+   <BUILTINS>/core.js:148:23
+   148|     static MIN_VALUE: number;
                               ^^^^^^ [1]
    number_constants.js:8:8
      8| var h: string = Number.MIN_VALUE;
@@ -75,8 +75,8 @@ Cannot assign `Number.NaN` to `j` because number [1] is incompatible with string
                         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:147:17
-   147|     static NaN: number;
+   <BUILTINS>/core.js:149:17
+   149|     static NaN: number;
                         ^^^^^^ [1]
    number_constants.js:10:8
     10| var j: string = Number.NaN;
@@ -92,8 +92,8 @@ Cannot assign `Number.EPSILON` to `l` because number [1] is incompatible with st
                         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:142:21
-   142|     static EPSILON: number;
+   <BUILTINS>/core.js:144:21
+   144|     static EPSILON: number;
                             ^^^^^^ [1]
    number_constants.js:12:8
     12| var l: string = Number.EPSILON;
