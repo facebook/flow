@@ -143,7 +143,7 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
-      cache_direct_dependents = false;
+      cache_direct_dependents = true;
       emoji = false;
       enable_const_params = false;
       enforce_strict_call_arity = true;
