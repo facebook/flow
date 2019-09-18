@@ -36,4 +36,5 @@ function getField<K: $Keys<Fields>>(key: K): $ElementType<Fields, K> {
 
 const aValue = getField("a");
 const bValue = getField("b");
-
+(aValue: string);
+(bValue: number);
