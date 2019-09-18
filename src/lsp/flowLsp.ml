@@ -1100,16 +1100,6 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
     let (open_ast, _) = parse file in
     (state, (open_ast, None))
 
-let do_live_diagnostics flowconfig_name (state : state) (uri : string) : state =
-  (* reparse the file and write it into the state's editor_open_files as needed *)
-  let (state, (_, live_parse_errors)) = parse_and_cache flowconfig_name state uri in
-  (* Set the live parse errors *)
-  match live_parse_errors with
-  | None -> state
-  | Some live_parse_errors ->
-    state
-    |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
-
 let show_recheck_progress (cenv : connected_env) : state =
   let (type_, message, shortMessage, progress, total) =
     match (cenv.c_is_rechecking, cenv.c_server_status, cenv.c_lazy_stats) with
@@ -1491,6 +1481,29 @@ let log_interaction ~ux state id =
   let end_state = collect_interaction_state state in
   LspInteraction.log ~end_state ~ux ~id
 
+let do_live_diagnostics
+    flowconfig_name (state : state) (trigger : LspInteraction.trigger option) (uri : string) :
+    state =
+  (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
+   * diagnostics and want to log what triggered it regardless of whether it's known or not *)
+  let trigger = Option.value trigger ~default:LspInteraction.UnknownTrigger in
+  let interaction_id = start_interaction ~trigger state in
+  (* reparse the file and write it into the state's editor_open_files as needed *)
+  let (state, (_, live_parse_errors)) = parse_and_cache flowconfig_name state uri in
+  (* Set the live parse errors *)
+  let (state, ux) =
+    match live_parse_errors with
+    | None -> (state, LspInteraction.ErroredPushingLiveParseErrors)
+    | Some live_parse_errors ->
+      let state =
+        state
+        |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
+      in
+      (state, LspInteraction.PushedLiveParseErrors)
+  in
+  log_interaction ~ux state interaction_id;
+  state
+
 (************************************************************************)
 (** Main loop                                                          **)
 
@@ -1686,9 +1699,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)
   | (Connected cenv, Client_message (c, metadata)) ->
+    let trigger = LspInteraction.trigger_of_lsp_msg c in
     let interaction_tracking_id =
-      LspInteraction.trigger_of_lsp_msg c
-      |> Option.map ~f:(fun trigger -> start_interaction ~trigger state)
+      Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state)
     in
     (* We'll track what's being sent to the server. This might involve some client *)
     (* computation work, which we'll profile, and send it over in metadata. *)
@@ -1703,7 +1716,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             Option.value_map
               changed_live_uri
               ~default:state
-              ~f:(do_live_diagnostics flowconfig_name state)
+              ~f:(do_live_diagnostics flowconfig_name state trigger)
           in
           state)
     in
@@ -1730,10 +1743,8 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | (_, Client_message ((NotificationMessage (DidChangeNotification _) as c), metadata))
   | (_, Client_message ((NotificationMessage (DidSaveNotification _) as c), metadata))
   | (_, Client_message ((NotificationMessage (DidCloseNotification _) as c), metadata)) ->
-    let interaction_id =
-      LspInteraction.trigger_of_lsp_msg c
-      |> Option.map ~f:(fun trigger -> start_interaction ~trigger state)
-    in
+    let trigger = LspInteraction.trigger_of_lsp_msg c in
+    let interaction_id = Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state) in
     (* these are editor events that happen while disconnected. *)
     let (client_duration, state) =
       with_timer (fun () ->
@@ -1742,7 +1753,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             Option.value_map
               changed_live_uri
               ~default:state
-              ~f:(do_live_diagnostics flowconfig_name state)
+              ~f:(do_live_diagnostics flowconfig_name state trigger)
           in
           state)
     in

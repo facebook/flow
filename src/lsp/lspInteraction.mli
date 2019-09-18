@@ -26,11 +26,14 @@ type trigger =
   | Rage
   | Rename
   | TypeCoverage
+  | UnknownTrigger
 
 type ux =
   | Canceled
   | Errored
+  | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveParseErrors
   | Responded
   | Timeout
 

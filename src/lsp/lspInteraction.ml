@@ -31,17 +31,21 @@ type trigger =
   | Rage
   | Rename
   | TypeCoverage
+  | UnknownTrigger
 
 (* Source of the trigger *)
 type source =
   | Server
   | Client
+  | UnknownSource
 
 (* What was the result of this interaction. *)
 type ux =
   | Canceled
   | Errored
+  | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveParseErrors
   | Responded
   | Timeout
 
@@ -87,11 +91,14 @@ let string_of_trigger = function
   | Rage -> "Rage"
   | Rename -> "Rename"
   | TypeCoverage -> "TypeCoverage"
+  | UnknownTrigger -> "UnknownTrigger"
 
 let string_of_ux = function
   | Canceled -> "Canceled"
   | Errored -> "Errored"
+  | ErroredPushingLiveParseErrors -> "ErroredPushingLiveParseErrors"
   | PushedErrors -> "PushedErrors"
+  | PushedLiveParseErrors -> "PushedLiveParseErrors"
   | Responded -> "Responded"
   | Timeout -> "Timeout"
 
@@ -127,10 +134,12 @@ let source_of_trigger = function
   | PushedErrorsNewSubscription
   | PushedErrorsRecheckStreaming _ ->
     Server
+  | UnknownTrigger -> UnknownSource
 
 let string_of_source = function
   | Client -> "Client"
   | Server -> "Server"
+  | UnknownSource -> "UnknownSource"
 
 (* An interaction which has been triggered but which hasn't yet produced the UX for this trigger *)
 type pending_interaction = {
