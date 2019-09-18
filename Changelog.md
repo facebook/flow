@@ -1,3 +1,22 @@
+### 0.108.0
+
+Notable bug fixes:
+
+* Batch coverage info now persists through rechecks.
+* When a file with @preventMunge is in a cycle with a file that does not, the un-munged file no longer has exported munged properties checked for annotations.
+* Fixed a bug where autocomplete would not be triggered in a file with Windows-style line endings.
+* Improved error messages for uses of `$ObjMap`, `$ObjMapi`, `$TupleMap`, and `$Call` with incorrect arity.
+
+Misc:
+
+* The deprecated `flow ide` command and associated machinery have been removed.
+
+Library definitions:
+
+* Added the missing parts of the Pointer Lock spec to libdefs.
+* Thanks to @lyleunderwood for adding scrolling support to libdefs.
+* Thanks to @goodmind for adding a definition for `undefined` to the prelude.
+
 ### 0.107.0
 New Features:
 
