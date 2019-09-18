@@ -211,18 +211,30 @@ json
 root info survives recheck
 -----------------------------
 
-Coverage results from 1 file(s):
+Coverage results from 13 file(s):
 
+other_folder/i.js: 33.33% (4 of 12 expressions)
+other_folder/h.js: 100.00% (9 of 9 expressions)
+match_coverage/coverage.js: 24.39% (10 of 41 expressions)
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/e.js: 37.50% (3 of 8 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+folder/c.js: 100.00% (6 of 6 expressions)
+f.js: 37.50% (3 of 8 expressions)
+cycle/cycle3.js: 42.11% (8 of 19 expressions)
+cycle/cycle2.js: 52.63% (10 of 19 expressions)
+cycle/cycle1.js: 50.00% (8 of 16 expressions)
+b.js: 100.00% (6 of 6 expressions)
 a.js: 57.14% (4 of 7 expressions)
 
 -----------------------------------
 Aggregate coverage statistics
 -----------------------------------
-Files                : 1
+Files                : 13
 Expressions          :
-  Covered            : 4
-  Total              : 7
-  Covered Percentage : 57.14%
+  Covered            : 80
+  Total              : 163
+  Covered Percentage : 49.08%
 
 -----------------------------
 trust
