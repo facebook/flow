@@ -9,7 +9,7 @@ type table = {
   (* This is not strictly necessary, but it allows us to check that the location source matches the
    * table source, to avoid confusing issues if we try a lookup with the wrong table. *)
   file: File_key.t;
-  map: Loc.t ResizableArray.t;
+  map: RelativeLoc.t ResizableArray.t;
 }
 
 let make_table file =
@@ -27,7 +27,7 @@ let compare_key : key -> key -> int = Pervasives.compare
 
 let string_of_key = string_of_int
 
-type reverse_table = (Loc.t, key) Hashtbl.t
+type reverse_table = (RelativeLoc.t, key) Hashtbl.t
 
 let make_empty_reverse_table () = Hashtbl.create 0
 
@@ -144,7 +144,7 @@ let abstractify table loc =
     if source <> Some table.file then
       failwith "abstractify: File mismatch between location and table"
     else
-      ResizableArray.push table.map underlying_loc;
+      ResizableArray.push table.map (RelativeLoc.of_loc underlying_loc);
     let key = ResizableArray.size table.map - 1 in
     Repr.of_key source key
 
@@ -159,7 +159,7 @@ let to_loc table loc =
       failwith "to_loc_safe: File mismatch between location and table"
     else
       match ResizableArray.get table.map key with
-      | Some loc -> loc
+      | Some loc -> RelativeLoc.to_loc loc source
       | None ->
         failwith
           (Printf.sprintf
@@ -313,7 +313,7 @@ let lookup_key_if_possible rev_table loc =
   | Repr.ALocNone ->
     loc
   | Repr.Concrete ->
-    let underlying_loc = Repr.to_loc_exn loc in
+    let underlying_loc = Repr.to_loc_exn loc |> RelativeLoc.of_loc in
     (match Hashtbl.find_opt (Lazy.force rev_table) underlying_loc with
     | Some key ->
       begin
