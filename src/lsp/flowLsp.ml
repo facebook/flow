@@ -81,7 +81,7 @@ type open_file_info = {
   (* o_open_doc is guaranteed to be up-to-date with respect to the editor *)
   o_open_doc: Lsp.TextDocumentItem.t;
   (* o_ast, if present, is guaranteed to be up-to-date. It gets computed lazily. *)
-  o_ast: (Loc.t, Loc.t) Flow_ast.program option;
+  o_ast: ((Loc.t, Loc.t) Flow_ast.program * Lsp.PublishDiagnostics.diagnostic list option) option;
   (* o_unsaved if true means that this open file has unsaved changes to the buffer. *)
   o_unsaved: bool;
 }
@@ -1018,7 +1018,7 @@ let error_to_lsp
  * or it's an unopened file in which case we'll retrieve parse results but
  * won't store them. *)
 let parse_and_cache flowconfig_name (state : state) (uri : string) :
-    state * (Loc.t, Loc.t) Flow_ast.program =
+    state * ((Loc.t, Loc.t) Flow_ast.program * Lsp.PublishDiagnostics.diagnostic list option) =
   (* part of parsing is producing parse errors, if so desired *)
   let liveSyntaxErrors =
     Initialize.(
@@ -1088,29 +1088,27 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
   | Some { o_open_doc; o_unsaved; _ } ->
     (* We have not parsed this file yet. We need to parse it now and save the updated ast *)
     let file = lsp_DocumentItem_to_flow o_open_doc in
-    let (o_ast, live_parse_errors) = parse file in
+    let o_ast = parse file in
     let open_file_info = Some { o_open_doc; o_ast = Some o_ast; o_unsaved } in
     let state = state |> update_open_file uri open_file_info in
-    let state =
-      match live_parse_errors with
-      | None -> state
-      | Some live_parse_errors ->
-        state
-        |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
-    in
     (state, o_ast)
   | None ->
-    (* This is an unopened file, so we won't cache the results *)
+    (* This is an unopened file, so we won't cache the results and won't return the errors *)
     let fn = Lsp_helpers.lsp_uri_to_path uri in
     let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
     let file = File_input.FileName fn in
     let (open_ast, _) = parse file in
-    (state, open_ast)
+    (state, (open_ast, None))
 
 let do_live_diagnostics flowconfig_name (state : state) (uri : string) : state =
   (* reparse the file and write it into the state's editor_open_files as needed *)
-  let (state, _) = parse_and_cache flowconfig_name state uri in
-  state
+  let (state, (_, live_parse_errors)) = parse_and_cache flowconfig_name state uri in
+  (* Set the live parse errors *)
+  match live_parse_errors with
+  | None -> state
+  | Some live_parse_errors ->
+    state
+    |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
 
 let show_recheck_progress (cenv : connected_env) : state =
   let (type_, message, shortMessage, progress, total) =
@@ -1140,7 +1138,8 @@ let show_recheck_progress (cenv : connected_env) : state =
 let do_documentSymbol
     flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params) : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
-  let (state, ast) = parse_and_cache flowconfig_name state uri in
+  (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
+  let (state, (ast, _live_parse_errors)) = parse_and_cache flowconfig_name state uri in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json = Lsp_fmt.print_lsp (ResponseMessage (id, DocumentSymbolResult result)) in
   to_stdout json;
