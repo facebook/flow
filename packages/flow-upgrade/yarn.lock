@@ -3344,9 +3344,9 @@ jsbn@~0.1.0:
   resolved "https://registry.yarnpkg.com/jsbn/-/jsbn-0.1.1.tgz#a5e654c2e5a2deb5f201d96cefbca80c0ef2f513"
   integrity sha1-peZUwuWi3rXyAdls77yoDA7y9RM=
 
-"jscodeshift@git://github.com/jbrown215/jscodeshift.git":
+"jscodeshift@https://github.com/jbrown215/jscodeshift.git":
   version "0.6.4"
-  resolved "git://github.com/jbrown215/jscodeshift.git#3f5b13d61855b2b6a96fac50a60dceb4ce18f770"
+  resolved "https://github.com/jbrown215/jscodeshift.git#3f5b13d61855b2b6a96fac50a60dceb4ce18f770"
   dependencies:
     "@babel/core" "^7.1.6"
     "@babel/parser" "^7.1.6"
