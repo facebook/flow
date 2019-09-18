@@ -12,8 +12,12 @@ babelConfig.plugins = babelConfig.plugins.map(function(p) {
   return resolvePlugin(p, __dirname);
 });
 babelConfig.presets = babelConfig.presets.map(function(p) {
+  if (Array.isArray(p)) {
+    return [resolvePreset(p[0], __dirname), p[1]];
+  }
   return resolvePreset(p, __dirname);
 });
 
 require("babel-register")(babelConfig);
+require("babel-polyfill");
 require("../src/main.js").run();
