@@ -12,7 +12,7 @@ open Parsing_heaps_exceptions
 module ASTHeap =
   SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
     (struct
-      type t = (Loc.t, Loc.t) Flow_ast.program
+      type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.program
 
       let prefix = Prefix.make ()
 
@@ -41,15 +41,15 @@ module SigASTALocTableHeap =
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
-let source_remover_loc =
+let loc_compactifier =
   object (this)
-    inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+    inherit [Loc.t, Loc.t, RelativeLoc.t, RelativeLoc.t] Flow_polymorphic_ast_mapper.mapper
 
-    method private remove_source loc = { loc with Loc.source = None }
+    method private compactify_loc loc = RelativeLoc.of_loc loc
 
-    method on_loc_annot = this#remove_source
+    method on_loc_annot = this#compactify_loc
 
-    method on_type_annot = this#remove_source
+    method on_type_annot = this#compactify_loc
   end
 
 let source_remover_aloc =
@@ -63,19 +63,19 @@ let source_remover_aloc =
     method on_type_annot = this#remove_source
   end
 
-let remove_source_loc ast = source_remover_loc#program ast
+let compactify_loc ast = loc_compactifier#program ast
 
 let remove_source_aloc ast = source_remover_aloc#program ast
 
-let source_adder_loc source =
+let loc_decompactifier source =
   object (this)
-    inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+    inherit [RelativeLoc.t, RelativeLoc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
 
-    method private add_source loc = { loc with Loc.source }
+    method private decompactify_loc loc = RelativeLoc.to_loc loc source
 
-    method on_loc_annot = this#add_source
+    method on_loc_annot = this#decompactify_loc
 
-    method on_type_annot = this#add_source
+    method on_type_annot = this#decompactify_loc
   end
 
 let source_adder_aloc source =
@@ -89,7 +89,7 @@ let source_adder_aloc source =
     method on_type_annot = this#add_source
   end
 
-let add_source_loc file ast = (source_adder_loc (Some file))#program ast
+let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 
 let add_source_aloc file ast = (source_adder_aloc (Some file))#program ast
 
@@ -154,7 +154,7 @@ module FileHashHeap =
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
   let add file info (ast, file_sig) sig_opt =
-    ASTHeap.add file (remove_source_loc ast);
+    ASTHeap.add file (compactify_loc ast);
     DocblockHeap.add file info;
     FileSigHeap.add file file_sig;
     Option.iter sig_opt ~f:(fun (sig_ast, sig_file_sig, aloc_table) ->
@@ -246,7 +246,7 @@ end = struct
 
   let get_ast ~reader:_ key =
     let ast = ASTHeap.get key in
-    Option.map ~f:(add_source_loc key) ast
+    Option.map ~f:(decompactify_loc key) ast
 
   let get_docblock ~reader:_ = DocblockHeap.get
 
@@ -259,7 +259,7 @@ end = struct
   let get_old_file_hash ~reader:_ = FileHashHeap.get_old
 
   let get_ast_unsafe ~reader:_ file =
-    try ASTHeap.find_unsafe file |> add_source_loc file
+    try ASTHeap.find_unsafe file |> decompactify_loc file
     with Not_found -> raise (Ast_not_found (File_key.to_string file))
 
   let get_sig_ast_unsafe ~reader:_ file =
@@ -391,7 +391,7 @@ module Reader : READER with type reader = State_reader.t = struct
       else
         ASTHeap.get key
     in
-    Option.map ~f:(add_source_loc key) ast
+    Option.map ~f:(decompactify_loc key) ast
 
   let get_sig_ast ~reader:_ key =
     let ast =
