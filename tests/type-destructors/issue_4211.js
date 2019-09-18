@@ -11,11 +11,29 @@ declare var v1: T1;
 
 (1: T); // works
 (2: T1); // works
-('foo': T); // works
-('foo': T1); // works
-({a: 1}: T); // error
+("foo": T); // works
+("foo": T1); // works
+({ a: 1 }: T); // error
 
 declare var x: string & number;
 
 (x: T); // works
 (x: T1); // works
+
+type Fields = {|
+  a: string,
+  b: number
+|};
+
+const data: Fields = {
+  a: "foo",
+  b: 42
+};
+
+function getField<K: $Keys<Fields>>(key: K): $ElementType<Fields, K> {
+  return data[key];
+}
+
+const aValue = getField("a");
+const bValue = getField("b");
+
