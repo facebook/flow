@@ -3498,7 +3498,6 @@ struct
 
         (* exactify incoming LB object type, flow to UB *)
         | (DefT (r, trust, ObjT obj), MakeExactT (_, Upper u)) ->
-          let r = if is_literal_object_reason r then replace_desc_reason RObjectType r else r in
           let exactobj = { obj with flags = { obj.flags with exact = true } } in
           rec_flow cx trace (DefT (r, trust, ObjT exactobj), u)
         (* exactify incoming UB object type, flow to LB *)
