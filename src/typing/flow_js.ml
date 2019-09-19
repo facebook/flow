@@ -1587,7 +1587,7 @@ struct
                      | ExportValue
                      (* If it's a re-export, we can assume that the appropriate export checks have been
                       * applied in the original module. *)
-                     
+
                      | ReExport ->
                        t
                      (* If it's of the form `export type` then check to make sure it's actually a type. *)
@@ -3498,12 +3498,14 @@ struct
 
         (* exactify incoming LB object type, flow to UB *)
         | (DefT (r, trust, ObjT obj), MakeExactT (_, Upper u)) ->
+          let r = if is_literal_object_reason r then replace_desc_reason RObjectType r else r in
           let exactobj = { obj with flags = { obj.flags with exact = true } } in
           rec_flow cx trace (DefT (r, trust, ObjT exactobj), u)
         (* exactify incoming UB object type, flow to LB *)
         | (DefT (ru, trust, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, l))) ->
           (* forward to standard obj ~> obj *)
           let ru = repos_reason (aloc_of_reason reason_op) ru in
+          let ru = if is_literal_object_reason ru then replace_desc_reason RObjectType ru else ru in
           let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
           rec_flow cx trace (l, UseT (use_op, DefT (ru, trust, ObjT xu)))
         | (AnyT (_, src), MakeExactT (reason_op, k)) ->
@@ -7123,7 +7125,7 @@ struct
     (* Propagation cases: these cases don't use the fact that the LHS is
      empty, but they propagate the LHS to other types and trigger additional
      flows that may need to occur. *)
-    
+
     | (_, UseT (_, DefT (_, _, PolyT _)))
     | (_, UseT (_, TypeAppT _))
     | (_, UseT (_, AnyWithLowerBoundT _))
@@ -7181,7 +7183,7 @@ struct
      types; either the flow would succeed anyways or it would fall
      through to the final catch-all error case and cause a spurious
      error. *)
-    
+
     | (_, UseT _)
     | (_, ArrRestT _)
     | (_, CallElemT _)
@@ -7298,7 +7300,7 @@ struct
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t)))
     (* read-only arrays are covariant *)
-    
+
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT (_, t, _, _))
@@ -7394,7 +7396,7 @@ struct
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
-    
+
     | TestPropT _
     | ThisSpecializeT _
     | ToStringT _
@@ -7406,11 +7408,11 @@ struct
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
-    
+
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     (* Should never occur, so we just defer to __flow to handle errors *)
-    
+
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
     | UseT (_, DefT (_, _, IdxWrapper _))
@@ -7420,11 +7422,11 @@ struct
     (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
      this can be handled by the pre-existing rules *)
-    
+
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _)
     (* Already handled in the wildcard case in __flow *)
-    
+
     | UseT (_, OpenT _) ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
@@ -10561,7 +10563,7 @@ struct
     *)
       | (_, [])
       (* No more arguments *)
-      
+
       | ([], _) ->
         ([], arglist, parlist)
       | (tin :: tins, (name, tout) :: touts) ->
@@ -10774,7 +10776,7 @@ struct
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
           | `Literal
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          
+
           | `Tuple ->
             AnyT.untyped reason_op
         else
