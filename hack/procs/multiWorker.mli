@@ -21,7 +21,7 @@ module type CALLER = sig
 
   val multi_threaded_call :
     WorkerController.worker list ->
-    ('c -> 'a -> 'b) ->
+    (WorkerController.worker_id * 'c -> 'a -> 'b) ->
     (WorkerController.worker_id * 'b -> 'c -> 'c) ->
     'c ->
     'a Hh_bucket.next ->
@@ -31,7 +31,7 @@ end
 module CallFunctor (Caller : CALLER) : sig
   val call :
     WorkerController.worker list option ->
-    job:('c -> 'a -> 'b) ->
+    job:(WorkerController.worker_id * 'c -> 'a -> 'b) ->
     merge:(WorkerController.worker_id * 'b -> 'c -> 'c) ->
     neutral:'c ->
     next:'a Hh_bucket.next ->
@@ -63,7 +63,7 @@ val call :
 (* Can raise MultiThreadedCall.Coalesced_failures unless in single-threaded mode. *)
 val call_with_worker_id :
   worker list option ->
-  job:('c -> 'a -> 'b) ->
+  job:(WorkerController.worker_id * 'c -> 'a -> 'b) ->
   merge:(WorkerController.worker_id * 'b -> 'c -> 'c) ->
   neutral:'c ->
   next:'a Hh_bucket.next ->

@@ -60,7 +60,7 @@ let on_exception_ref =
 let multi_threaded_call
     (type a b c d)
     workers
-    (job : c -> a -> b)
+    (job : worker_id * c -> a -> b)
     (merge : worker_id * b -> c -> c)
     (neutral : c)
     (next : a Hh_bucket.next)
@@ -152,11 +152,12 @@ let multi_threaded_call
         dispatch None handles acc
       | Hh_bucket.Job bucket ->
         (* ... send a job to the worker.*)
+        let worker_id = WorkerController.worker_id worker in
         let handle =
           WorkerController.call
             ~call_id
             worker
-            (fun xl -> job neutral xl)
+            (fun xl -> job (worker_id, neutral) xl)
             bucket
         in
         dispatch (Some workers) (handle :: handles) acc)
@@ -222,6 +223,7 @@ let call_with_worker_id workers job merge neutral next =
   res
 
 let call workers job merge neutral next =
+  let job (_id, a) b = job a b in
   let merge (_id, a) b = merge a b in
   let ((res, ()), unfinished) =
     multi_threaded_call workers job merge neutral next (no_interrupt ())
@@ -237,6 +239,7 @@ let call_with_interrupt workers job merge neutral next ?on_cancelled interrupt
   assert (
     List.for_all workers ~f:(fun x ->
         Option.is_none @@ WorkerController.get_handle_UNSAFE x) );
+  let job (_id, a) b = job a b in
   let merge (_id, a) b = merge a b in
   let ((res, interrupt_env), unfinished) =
     multi_threaded_call workers job merge neutral next ?on_cancelled interrupt

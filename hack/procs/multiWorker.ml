@@ -30,7 +30,7 @@ let single_threaded_call_with_worker_id job merge neutral next =
            there is no hope for ever getting out of this state *)
       failwith "stuck!"
     | Hh_bucket.Job l ->
-      let res = job neutral l in
+      let res = job (0, neutral) l in
       acc := merge (0, res) !acc;
       x := next ()
     | Hh_bucket.Done -> ()
@@ -38,6 +38,7 @@ let single_threaded_call_with_worker_id job merge neutral next =
   !acc
 
 let single_threaded_call job merge neutral next =
+  let job (_worker_id, a) b = job a b in
   let merge (_worker_id, a) b = merge a b in
   single_threaded_call_with_worker_id job merge neutral next
 
@@ -48,7 +49,7 @@ module type CALLER = sig
 
   val multi_threaded_call :
     WorkerController.worker list ->
-    ('c -> 'a -> 'b) ->
+    (WorkerController.worker_id * 'c -> 'a -> 'b) ->
     (WorkerController.worker_id * 'b -> 'c -> 'c) ->
     'c ->
     'a Hh_bucket.next ->
@@ -58,7 +59,7 @@ end
 module CallFunctor (Caller : CALLER) : sig
   val call :
     WorkerController.worker list option ->
-    job:('c -> 'a -> 'b) ->
+    job:(WorkerController.worker_id * 'c -> 'a -> 'b) ->
     merge:(WorkerController.worker_id * 'b -> 'c -> 'c) ->
     neutral:'c ->
     next:'a Hh_bucket.next ->
@@ -83,6 +84,7 @@ end)
 let call_with_worker_id = Call.call
 
 let call workers ~job ~merge ~neutral ~next =
+  let job (_worker_id, a) b = job a b in
   let merge (_worker_id, a) b = merge a b in
   Call.call workers ~job ~merge ~neutral ~next
 

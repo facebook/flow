@@ -21,7 +21,7 @@ include MultiWorker.CallFunctor (struct
   let multi_threaded_call
       (type a b c)
       workers
-      (job : c -> a -> b)
+      (job : WorkerController.worker_id * c -> a -> b)
       (merge : WorkerController.worker_id * b -> c -> c)
       (neutral : c)
       (next : a Hh_bucket.next) =
@@ -57,7 +57,10 @@ include MultiWorker.CallFunctor (struct
       | None -> Lwt.return idle_start_wall_time
       | Some bucket ->
         Measure.sample "worker_idle" (Unix.gettimeofday () -. idle_start_wall_time);
-        let%lwt result = WorkerControllerLwt.call worker (fun xl -> job neutral xl) bucket in
+        let worker_id = WorkerController.worker_id worker in
+        let%lwt result =
+          WorkerControllerLwt.call worker (fun xl -> job (worker_id, neutral) xl) bucket
+        in
         let%lwt () = merge_with_acc (WorkerController.worker_id worker, result) in
         (* Wait means "ask again after a worker has finished and has merged its result". So now that
          * we've merged our response, let's wake any other workers which are waiting for work *)
@@ -118,6 +121,7 @@ let call_with_worker_id workers ~job ~merge ~neutral ~next =
   )
 
 let call workers ~job ~merge ~neutral ~next =
+  let job (_worker_id, a) b = job a b in
   let merge (_worker_id, a) b = merge a b in
   call_with_worker_id workers ~job ~merge ~neutral ~next
 

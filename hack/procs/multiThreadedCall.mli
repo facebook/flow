@@ -47,7 +47,7 @@ val call :
 
 val call_with_worker_id :
   WorkerController.worker list ->
-  ('c -> 'a -> 'b) ->
+  (worker_id * 'c -> 'a -> 'b) ->
   (worker_id * 'b -> 'c -> 'c) ->
   'c ->
   'a Bucket.next ->
