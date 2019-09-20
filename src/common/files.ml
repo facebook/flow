@@ -80,8 +80,12 @@ let is_valid_path =
       )
     in
 
-    fun file_exts basename ->
+    fun ~no_dotfiles file_exts basename ->
       let extension = Filename.extension basename in
+      let extension = match (no_dotfiles, extension) with
+      | (false, "") -> basename
+      | _ -> extension
+      in
       let acc = "" in
       if extension = flow_ext
       then
@@ -101,9 +105,10 @@ let is_valid_path =
 
     fun path  ->
       let basename = Filename.basename path in
-      if ignore_dotfiles options
-      then not (is_dot_file basename) && (check_ext file_exts basename || basename = "package.json")
-      else check_ext file_exts basename || basename = "package.json"
+      let no_dotfiles = ignore_dotfiles options in
+      if no_dotfiles
+      then not (is_dot_file basename) && (check_ext ~no_dotfiles file_exts basename || basename = "package.json")
+      else check_ext ~no_dotfiles file_exts basename || basename = "package.json"
 
 let is_node_module options path =
   List.mem (Filename.basename path) options.node_resolver_dirnames
