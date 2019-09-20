@@ -649,14 +649,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
             else
               SocketHandshake.Error_client );
         },
-        {
-          client_type =
-            Persistent
-              {
-                logging_context = FlowEventLogger.get_context ();
-                lsp = Some env.d_ienv.i_initialize_params;
-              };
-        } )
+        { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } } )
   in
   let conn =
     CommandConnectSimple.connect_once

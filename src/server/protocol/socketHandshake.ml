@@ -73,10 +73,7 @@ type monitor_to_client_1 = {
 
 type client_type =
   | Ephemeral (* a client that sends a request, gets a response, and disconnects *)
-  | Persistent of {
-      logging_context: FlowEventLogger.logging_context;
-      lsp: Lsp.Initialize.params option;
-    }
+  | Persistent of { lsp_init_params: Lsp.Initialize.params }
 
 type client_to_monitor_2 = { client_type: client_type }
 

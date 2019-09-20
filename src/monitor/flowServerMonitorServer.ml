@@ -34,8 +34,7 @@ type command =
     }
   | Notify_new_persistent_connection of {
       client_id: PersistentProt.client_id;
-      logging_context: FlowEventLogger.logging_context;
-      lsp: Lsp.Initialize.params option;
+      lsp_init_params: Lsp.Initialize.params;
     }
   | Notify_dead_persistent_connection of { client_id: PersistentProt.client_id }
   | Notify_file_changes
@@ -198,8 +197,8 @@ end = struct
           let msg = MonitorProt.PersistentConnectionRequest (client_id, request) in
           send_request ~msg conn;
           Lwt.return_unit
-        | Notify_new_persistent_connection { client_id; logging_context; lsp } ->
-          let msg = MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) in
+        | Notify_new_persistent_connection { client_id; lsp_init_params } ->
+          let msg = MonitorProt.NewPersistentConnection (client_id, lsp_init_params) in
           send_request ~msg conn;
           Lwt.return_unit
         | Notify_dead_persistent_connection { client_id } ->
@@ -679,10 +678,9 @@ let send_persistent_request ~client_id ~request =
     (PersistentProt.string_of_request request);
   push_to_command_stream (Some (Write_persistent_request { client_id; request }))
 
-let notify_new_persistent_connection ~client_id ~logging_context ~lsp =
+let notify_new_persistent_connection ~client_id ~lsp_init_params =
   Logger.debug "Adding notification that there's a new persistent client #%d" client_id;
-  push_to_command_stream
-    (Some (Notify_new_persistent_connection { client_id; logging_context; lsp }))
+  push_to_command_stream (Some (Notify_new_persistent_connection { client_id; lsp_init_params }))
 
 let notify_dead_persistent_connection ~client_id =
   Logger.debug "Adding notification that persistent client #%d died" client_id;

@@ -14,8 +14,7 @@ type single_client
 
 val empty : t
 
-val add_client :
-  Prot.client_id -> FlowEventLogger.logging_context -> Lsp.Initialize.params option -> unit
+val add_client : Prot.client_id -> Lsp.Initialize.params -> unit
 
 val remove_client : Prot.client_id -> unit
 
@@ -65,8 +64,6 @@ val client_did_change :
   (unit, string * Utils.callstack) result
 
 val client_did_close : single_client -> filenames:string Nel.t -> bool
-
-val get_logging_context : single_client -> FlowEventLogger.logging_context
 
 val get_opened_files : t -> SSet.t
 (** Returns the set of all opened files across all clients.

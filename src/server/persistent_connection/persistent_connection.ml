@@ -8,10 +8,8 @@
 module Prot = Persistent_connection_prot
 
 type single_client = {
-  is_lsp: bool;
-  logging_context: FlowEventLogger.logging_context;
   client_id: Prot.client_id;
-  lsp_initialize_params: Lsp.Initialize.params option;
+  lsp_initialize_params: Lsp.Initialize.params;
   mutable subscribed: bool;
   mutable opened_files: string SMap.t; (* map from filename to content *)
 }
@@ -72,16 +70,9 @@ let send_single_start_recheck client = send_message Prot.StartRecheck client
 
 let send_single_end_recheck ~lazy_stats client = send_message (Prot.EndRecheck lazy_stats) client
 
-let add_client client_id logging_context lsp =
+let add_client client_id lsp_initialize_params =
   let new_client =
-    {
-      is_lsp = lsp <> None;
-      logging_context;
-      subscribed = false;
-      opened_files = SMap.empty;
-      client_id;
-      lsp_initialize_params = lsp;
-    }
+    { subscribed = false; opened_files = SMap.empty; client_id; lsp_initialize_params }
   in
   active_clients := IMap.add client_id new_client !active_clients;
   Hh_logger.info "Adding new persistent connection #%d" new_client.client_id
@@ -106,7 +97,7 @@ let get_subscribed_lsp_clients =
   List.fold_left
     (fun acc client_id ->
       match get_client client_id with
-      | Some client when client.subscribed && client.is_lsp -> client :: acc
+      | Some client when client.subscribed -> client :: acc
       | _ -> acc)
     []
 
@@ -202,8 +193,6 @@ let get_file (client : single_client) (fn : string) : File_input.t =
   | None -> File_input.FileName fn
   | Some content -> File_input.FileContent (Some fn, content)
 
-let get_logging_context client = client.logging_context
-
 let get_opened_files (clients : t) : SSet.t =
   let per_file filename _content acc = SSet.add filename acc in
   let per_client acc client_id =
@@ -217,7 +206,5 @@ let get_id client = client.client_id
 
 let client_snippet_support (client : single_client) =
   Lsp.Initialize.(
-    match client.lsp_initialize_params with
-    | None -> false
-    | Some params ->
-      params.client_capabilities.textDocument.completion.completionItem.snippetSupport)
+    client.lsp_initialize_params.client_capabilities.textDocument.completion.completionItem
+      .snippetSupport)

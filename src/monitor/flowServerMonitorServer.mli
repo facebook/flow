@@ -14,10 +14,7 @@ val send_persistent_request :
   unit
 
 val notify_new_persistent_connection :
-  client_id:Persistent_connection_prot.client_id ->
-  logging_context:FlowEventLogger.logging_context ->
-  lsp:Lsp.Initialize.params option ->
-  unit
+  client_id:Persistent_connection_prot.client_id -> lsp_init_params:Lsp.Initialize.params -> unit
 
 val notify_dead_persistent_connection : client_id:Persistent_connection_prot.client_id -> unit
 

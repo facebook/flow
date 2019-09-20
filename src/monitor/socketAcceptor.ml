@@ -97,11 +97,11 @@ let create_persistent_id =
     incr last_persistent_id;
     !last_persistent_id
 
-let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
+let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   let client_id = create_persistent_id () in
   Logger.debug "Creating a persistent connection #%d" client_id;
 
-  Server.notify_new_persistent_connection ~client_id ~logging_context ~lsp;
+  Server.notify_new_persistent_connection ~client_id ~lsp_init_params;
 
   let close () =
     Server.notify_dead_persistent_connection ~client_id;
@@ -307,8 +307,8 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
       SocketHandshake.(
         match client with
         | Some { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
-        | Some { client_type = Persistent { logging_context; lsp }; _ } ->
-          create_persistent_connection ~client_fd ~close ~logging_context ~lsp
+        | Some { client_type = Persistent { lsp_init_params }; _ } ->
+          create_persistent_connection ~client_fd ~close ~lsp_init_params
         | None -> Lwt.return_unit)
     with exn -> catch close_without_autostop exn
 

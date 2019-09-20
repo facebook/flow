@@ -1062,10 +1062,7 @@ let with_data ~(extra_data : Hh_json.json option) (metadata : Persistent_connect
     { metadata with extra_data })
 
 type 'a persistent_handling_result =
-  (* IdeResponse means that handle_persistent_unsafe is responsible for sending
-     the message to the client, and handle_persistent is responsible for logging. *)
-  | IdeResponse of ('a * Hh_json.json option, 'a * Persistent_connection_prot.error_info) result
-      (** LspResponse means that handle_persistent is responsible for sending the
+  (* LspResponse means that handle_persistent is responsible for sending the
      message (if needed) to the client, and lspCommand is responsible for logging. *)
   | LspResponse of
       ( 'a * Lsp.lsp_message option * Persistent_connection_prot.metadata,
@@ -1557,8 +1554,6 @@ let mk_parallelizable_persistent ~options f =
         let%lwt result = f ~client ~profiling ~env in
         let result =
           match result with
-          | IdeResponse (Ok ((), json_data)) -> IdeResponse (Ok (env, json_data))
-          | IdeResponse (Error ((), error_info)) -> IdeResponse (Error (env, error_info))
           | LspResponse (Ok ((), msg, metadata)) -> LspResponse (Ok (env, msg, metadata))
           | LspResponse (Error ((), metadata)) -> LspResponse (Error (env, metadata))
         in
@@ -1730,9 +1725,7 @@ let wrap_persistent_handler
       Hh_logger.info "Persistent request: %s" (string_of_request request);
       MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
-      let client_context = Persistent_connection.get_logging_context client in
       let should_print_summary = Options.should_profile genv.options in
-      let wall_start = Unix.gettimeofday () in
       let%lwt (profiling, result) =
         Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
             match request with
@@ -1757,11 +1750,10 @@ let wrap_persistent_handler
                 let error_info = (UnexpectedError, reason, stack) in
                 begin
                   match request with
-                  | (LspToServer _, metadata) ->
+                  | (_, metadata) ->
                     Lwt.return
                       (LspResponse
                          (Error (default_ret, { metadata with error_info = Some error_info })))
-                  | _ -> Lwt.return (IdeResponse (Error (default_ret, error_info)))
                 end))
       in
       (* we'll send this "Finishing_up" event only after sending the LSP response *)
@@ -1811,55 +1803,6 @@ let wrap_persistent_handler
         Hh_logger.info
           "Persistent response: Error lspFromServer %s"
           (Option.value_map lsp_response ~default:"None" ~f:Lsp_fmt.message_name_to_string);
-        MonitorRPC.status_update ~event;
-        Lwt.return ret
-      | IdeResponse (Ok (ret, extra_data)) ->
-        Hh_logger.info "Persistent response: Ok IdeResponse";
-        let request = json_of_request request |> Hh_json.json_to_string in
-        let extra_data = keyvals_of_json extra_data in
-        FlowEventLogger.persistent_command_success
-          ~server_logging_context:None
-          ~extra_data
-          ~persistent_context:None
-          ~persistent_delay:None
-          ~request
-          ~client_context
-          ~server_profiling
-          ~client_duration:None
-          ~wall_start
-          ~error:None;
-        MonitorRPC.status_update ~event;
-        Lwt.return ret
-      | IdeResponse (Error (ret, (ExpectedError, reason, stack))) ->
-        let request = json_of_request request |> Hh_json.json_to_string in
-        FlowEventLogger.persistent_command_success
-          ~server_logging_context:None
-          ~extra_data:[]
-          ~persistent_context:None
-          ~persistent_delay:None
-          ~request
-          ~client_context
-          ~server_profiling
-          ~client_duration:None
-          ~wall_start
-          ~error:(Some (reason, stack));
-        Hh_logger.info "Persistent response: ExpectedError IdeResponse";
-        MonitorRPC.status_update ~event;
-        Lwt.return ret
-      | IdeResponse (Error (ret, (UnexpectedError, reason, stack))) ->
-        let request = json_of_request request |> Hh_json.json_to_string in
-        FlowEventLogger.persistent_command_failure
-          ~server_logging_context:None
-          ~extra_data:[]
-          ~persistent_context:None
-          ~persistent_delay:None
-          ~request
-          ~client_context
-          ~server_profiling
-          ~client_duration:None
-          ~wall_start
-          ~error:(reason, stack);
-        Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request reason;
         MonitorRPC.status_update ~event;
         Lwt.return ret))
 
