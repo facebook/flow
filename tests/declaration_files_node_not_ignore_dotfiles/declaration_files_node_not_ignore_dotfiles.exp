@@ -1,3 +1,37 @@
+Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
+
+Cannot cast `B1.fun()` to string because number [1] is incompatible with string [2].
+
+   test_absolute.js:5:2
+   5| (B1.fun(): string); // Error number ~> string
+       ^^^^^^^^
+
+References:
+   node_modules/test/.A.js:3:26
+   3| module.exports.fun = (): number => 0;
+                               ^^^^^^ [1]
+   test_absolute.js:5:12
+   5| (B1.fun(): string); // Error number ~> string
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- test_absolute.js:9:2
+
+Cannot cast `B2.fun()` to number because string [1] is incompatible with number [2].
+
+   test_absolute.js:9:2
+   9| (B2.fun(): number); // Error string ~> number
+       ^^^^^^^^
+
+References:
+   node_modules/test/.js:3:26
+   3| module.exports.fun = (): string => "hello there!";
+                               ^^^^^^ [1]
+   test_absolute.js:9:12
+   9| (B2.fun(): number); // Error string ~> number
+                 ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:5:2
 
 Cannot cast `A1.fun()` to string because number [1] is incompatible with string [2].
@@ -32,38 +66,56 @@ References:
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- test_relative.js:12:18
+Error -------------------------------------------------------------------------------------------- test_relative.js:13:2
 
-Cannot resolve module `./.`.
+Cannot cast `A3.fun()` to string because number [1] is incompatible with string [2].
 
-   12| var A1 = require('./.');
-                        ^^^^^
+   test_relative.js:13:2
+   13| (A3.fun(): string); // Error number ~> string
+        ^^^^^^^^
+
+References:
+   .js.flow:3:32
+    3| declare export function fun(): number;
+                                      ^^^^^^ [1]
+   test_relative.js:13:12
+   13| (A3.fun(): string); // Error number ~> string
+                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- test_relative.js:16:18
+Error -------------------------------------------------------------------------------------------- test_relative.js:17:2
 
-Cannot resolve module `./.js`.
+Cannot cast `A4.fun()` to number because string [1] is incompatible with number [2].
 
-   16| var A2 = require('./.js');
-                        ^^^^^^^
+   test_relative.js:17:2
+   17| (A4.fun(): number); // Error string ~> number
+        ^^^^^^^^
+
+References:
+   index.js:3:26
+    3| module.exports.fun = (): string => "hello there!";
+                                ^^^^^^ [1]
+   test_relative.js:17:12
+   17| (A4.fun(): number); // Error string ~> number
+                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_relative.js:22:2
+Error -------------------------------------------------------------------------------------------- test_relative.js:21:2
 
 Cannot cast `CJS` to number because string [1] is incompatible with number [2].
 
-   test_relative.js:22:2
-   22| (CJS: number); //
+   test_relative.js:21:2
+   21| (CJS: number); //
         ^^^
 
 References:
    .CJS.js.flow:1:25
     1| declare module.exports: string;
                                ^^^^^^ [1]
-   test_relative.js:22:7
-   22| (CJS: number); //
+   test_relative.js:21:7
+   21| (CJS: number); //
              ^^^^^^ [2]
 
 
 
-Found 5 errors
+Found 7 errors
