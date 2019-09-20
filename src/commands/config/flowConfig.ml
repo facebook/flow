@@ -140,7 +140,6 @@ module Opts = struct
     |> SSet.add ".mp4"
     |> SSet.add ".webm"
 
-<<<<<<< HEAD
   let default_options =
     {
       abstract_locations = false;

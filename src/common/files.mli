@@ -20,6 +20,7 @@ type options = {
   node_resolver_aliases: string list;
 }
 
+val default_lib_dir : options -> Path.t option
 
 val ignores : options -> (string * Str.regexp) list
 

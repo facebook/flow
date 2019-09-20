@@ -408,42 +408,57 @@ module Node = struct
 
   let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
     let file_options = Options.file_options options in
-    lazy_seq [
-      lazy (
-        if SSet.mem dir node_modules_containers then
-          lazy_seq([
-            lazy (
-              lazy_seq (Files.node_resolver_aliases file_options |> Core_list.map ~f:(fun dirname ->
-                lazy (resolve_relative
-                  ~options ~reader
-                  loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
-                )
-              ))
-            );
-            lazy (
-              lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
-                lazy (resolve_relative
-                  ~options ~reader
-                  loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
-                )
-              ))
-            );
-          ])
-        else None
-      );
+    lazy_seq
+      [
+        lazy
+          ( if SSet.mem dir node_modules_containers then
+            lazy_seq([
+              lazy (
+                lazy_seq
+                  ( Files.node_resolver_aliases file_options
+                  |> Core_list.map ~f:(fun dirname ->
+                        lazy
+                          (resolve_relative
+                            ~options
+                            ~reader
+                            loc
+                            ?resolution_acc
+                            dir
+                            (spf "%s%s%s" dirname Filename.dir_sep r))) )
+              );
+              lazy (
+                lazy_seq
+                  ( Files.node_resolver_dirnames file_options
+                  |> Core_list.map ~f:(fun dirname ->
+                        lazy
+                          (resolve_relative
+                            ~options
+                            ~reader
+                            loc
+                            ?resolution_acc
+                            dir (spf "%s%s%s" dirname Filename.dir_sep r))) )
+              );
+            ])
+          else None
+        );
 
-      lazy (
-        let parent_dir = Filename.dirname dir in
-        if dir = parent_dir then None
-        else
-          node_module
-            ~options ~reader node_modules_containers
-            file loc resolution_acc (Filename.dirname dir) r
-      );
-    ]
+        lazy
+          (let parent_dir = Filename.dirname dir in
+           if dir = parent_dir then
+             None
+           else
+             node_module
+               ~options
+               ~reader
+               node_modules_containers
+               file
+               loc
+               resolution_acc
+               (Filename.dirname dir)
+               r);
+      ]
 
-  let absolute r =
-    Str.string_match Files.absolute_path_regexp r 0
+  let absolute r = Str.string_match Files.absolute_path_regexp r 0
 
   let explicitly_relative r =
     Str.string_match Files.current_dir_name r 0 || Str.string_match Files.parent_dir_name r 0

@@ -190,7 +190,12 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter
+    ~module_alias_filter
+    ~path_filter
+    ~realpath_filter
+    ~error_filter
+    paths =
   let prefix_checkers = Core_list.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -248,7 +253,12 @@ let make_next_files_and_symlinks
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
 let make_next_files_following_symlinks
-    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter
+    ~module_alias_filter
+    ~path_filter
+    ~realpath_filter
+    ~error_filter
+    paths =
   let paths = Core_list.map ~f:Path.to_string paths in
   let cb =
     ref
