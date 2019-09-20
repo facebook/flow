@@ -828,9 +828,12 @@ let ground_subtype = function
   | (DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _)))
   | (DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _)))
   | (DefT (_, _, NullT), UseT (_, DefT (_, _, NullT)))
-  | (DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT)))
-  | (_, UseT (_, DefT (_, _, MixedT _))) ->
+  | (DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))) ->
     true
+  | (DefT (_, _, NullT), UseT (_, DefT (_, _, MixedT (Mixed_non_maybe | Mixed_non_null))))
+  | (DefT (_, _, VoidT), UseT (_, DefT (_, _, MixedT (Mixed_non_maybe | Mixed_non_void)))) ->
+    false
+  | (_, UseT (_, DefT (_, _, MixedT _))) -> true
   (* we handle the any propagation check later *)
   | (AnyT _, _) -> false
   | (_, UseT (_, AnyT _)) -> false
@@ -2320,6 +2323,8 @@ struct
         (***************)
 
         (* The type maybe(T) is the same as null | undefined | UseT *)
+        | (DefT (r, trust, MixedT Mixed_everything), UseT (use_op, MaybeT (_, tout))) ->
+          rec_flow cx trace (DefT (r, trust, MixedT Mixed_non_maybe), UseT (use_op, tout))
         | (DefT (r, trust, (NullT | VoidT)), UseT (use_op, MaybeT (_, tout))) ->
           rec_flow cx trace (EmptyT.why r trust, UseT (use_op, tout))
         | (MaybeT _, ReposLowerT (reason_op, use_desc, u)) ->
@@ -7289,9 +7294,7 @@ struct
     | SubstOnPredT (_, _, OpenPredT (_, t, _, _)) ->
       covariant_flow ~use_op:unknown_use t;
       true
-    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t)))
-    (* read-only arrays are covariant *)
-    
+    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT (_, t, _, _))
@@ -7415,9 +7418,7 @@ struct
      this can be handled by the pre-existing rules *)
     
     | UseT (_, UnionT _)
-    | UseT (_, IntersectionT _)
-    (* Already handled in the wildcard case in __flow *)
-    
+    | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
     | UseT (_, OpenT _) ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
