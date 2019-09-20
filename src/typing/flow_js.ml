@@ -709,6 +709,7 @@ let error_message_kind_of_upper = function
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> Error_message.IncompatibleCallT
   | ConstructorT _ -> Error_message.IncompatibleConstructorT
+  | TestElemT (_, _, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
   | GetElemT (_, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
   | SetElemT (_, _, t, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
   | CallElemT (_, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
@@ -884,6 +885,7 @@ let object_like_op = function
   | SetPropT _
   | GetPropT _
   | TestPropT _
+  | TestElemT _
   | MethodT _
   | LookupT _
   | MatchPropT _
@@ -1587,7 +1589,7 @@ struct
                      | ExportValue
                      (* If it's a re-export, we can assume that the appropriate export checks have been
                       * applied in the original module. *)
-                     
+
                      | ReExport ->
                        t
                      (* If it's of the form `export type` then check to make sure it's actually a type. *)
@@ -3124,8 +3126,8 @@ struct
             cx
             trace
             (List.hd ts, LookupT (reason, strict, List.tl ts @ try_ts_on_failure, s, t))
-        | (IntersectionT _, TestPropT (reason, _, prop, tout)) ->
-          rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
+        | (IntersectionT _, TestPropT (use_op, reason, _, prop, tout)) ->
+          rec_flow cx trace (l, GetPropT (use_op, reason, prop, tout))
         (* extends **)
         | (IntersectionT (_, rep), ExtendsUseT (use_op, reason, try_ts_on_failure, l, u)) ->
           let (t, ts) = InterRep.members_nel rep in
@@ -4121,7 +4123,7 @@ struct
          * function component and class component
          *)
         | ( DefT (r, _, ReactAbstractComponentT _),
-            (TestPropT _ | GetPropT _ | SetPropT _ | GetElemT _ | SetElemT _) ) ->
+            (TestPropT _ | TestElemT _ | GetPropT _ | SetPropT _ | GetElemT _ | SetElemT _) ) ->
           let statics = get_builtin_type cx ~trace r "React$AbstractComponentStatics" in
           rec_flow cx trace (statics, u)
         (******************)
@@ -5445,6 +5447,10 @@ struct
         | (DefT (reason_s, trust, StrT _), GetElemT (use_op, reason_op, index, tout)) ->
           rec_flow cx trace (index, UseT (use_op, NumT.why reason_s |> with_trust bogus_trust));
           rec_flow_t cx trace (StrT.why reason_op trust, tout)
+        | (DefT (reason_s, trust, StrT _), TestElemT (use_op, reason_op, id, index, tout)) ->
+          Context.test_prop_hit cx id;
+          rec_flow cx trace (index, UseT (use_op, NumT.why reason_s |> with_trust bogus_trust));
+          rec_flow_t cx trace (StrT.why reason_op trust, tout)
         (* Expressions may be used as keys to access objects and arrays. In
         general, we cannot evaluate such expressions at compile time. However,
         in some idiomatic special cases, we can; in such cases, we know exactly
@@ -5459,6 +5465,8 @@ struct
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout)))
         | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), GetElemT (use_op, reason_op, key, tout)) ->
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem tout))
+        | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), TestElemT (use_op, reason_op, id, key, tout)) ->
+          rec_flow cx trace (key, ElemT (use_op, reason_op, l, TestElem (id, tout)))
         | ( (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
             CallElemT (reason_call, reason_lookup, key, ft) ) ->
           let action = CallElem (reason_call, ft) in
@@ -5473,6 +5481,7 @@ struct
           in
           (match action with
           | ReadElem t -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, propref, t))
+          | TestElem (id, t) -> rec_flow cx trace (obj, TestPropT (use_op, reason_op, id, propref, t))
           | WriteElem (tin, tout) ->
             rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, Normal, tin, None));
             Option.iter ~f:(fun t -> rec_flow_t cx trace (obj, t)) tout
@@ -5558,6 +5567,7 @@ struct
             match action with
             (* These are safe to do with tuples and unknown indexes *)
             | ReadElem _
+            | TestElem _
             | CallElem _ ->
               ()
             (* This isn't *)
@@ -6276,20 +6286,22 @@ struct
        know what the type of the property would be, we set things up so that the
        result of the read cannot be used in any interesting way. *)
         (**************************************************************************)
-        | (DefT (_, _, NullT), TestPropT (reason_op, _, propref, tout)) ->
+        | (DefT (_, _, NullT), TestPropT (use_op, reason_op, _, propref, tout)) ->
           (* The wildcard TestPropT implementation forwards the lower bound to
          LookupT. This is unfortunate, because LookupT is designed to terminate
          (successfully) on NullT, but property accesses on null should be type
          errors. Ideally, we should prevent LookupT constraints from being
          syntax-driven, in order to preserve the delicate invariants that
          surround it. *)
-          rec_flow cx trace (l, GetPropT (unknown_use, reason_op, propref, tout))
-        | (DefT (r, trust, MixedT (Mixed_truthy | Mixed_non_maybe)), TestPropT (_, id, _, tout)) ->
+          rec_flow cx trace (l, GetPropT (use_op, reason_op, propref, tout))
+        | (DefT (_, _, NullT), TestElemT (use_op, reason_op, _, t, tout)) ->
+          rec_flow cx trace (l, GetElemT (use_op, reason_op, t, tout))
+        | (DefT (r, trust, MixedT (Mixed_truthy | Mixed_non_maybe)), (TestPropT (_, _, id, _, tout) | TestElemT (_, _, id, _, tout))) ->
           (* Special-case property tests of definitely non-null/non-void values to
          return mixed and treat them as a hit. *)
           Context.test_prop_hit cx id;
           rec_flow_t cx trace (DefT (r, trust, MixedT Mixed_everything), tout)
-        | (_, TestPropT (reason_op, id, propref, tout)) ->
+        | (_, TestPropT (use_op, reason_op, id, propref, tout)) ->
           (* NonstrictReturning lookups unify their result, but we don't want to
          unify with the tout tvar directly, so we create an indirection here to
          ensure we only supply lower bounds to tout. *)
@@ -6339,7 +6351,7 @@ struct
                   lookup_kind,
                   [],
                   propref,
-                  ReadProp { use_op = unknown_use; obj_t = l; tout } ) )
+                  ReadProp { use_op; obj_t = l; tout } ) )
         (************)
         (* indexing *)
         (************)
@@ -7123,7 +7135,7 @@ struct
     (* Propagation cases: these cases don't use the fact that the LHS is
      empty, but they propagate the LHS to other types and trigger additional
      flows that may need to occur. *)
-    
+
     | (_, UseT (_, DefT (_, _, PolyT _)))
     | (_, UseT (_, TypeAppT _))
     | (_, UseT (_, AnyWithLowerBoundT _))
@@ -7160,6 +7172,7 @@ struct
     | (_, ObjTestProtoT _)
     | (_, OptionalChainT _)
     | (_, SentinelPropTestT _)
+    | (_, TestElemT _)
     | (_, TestPropT _) ->
       false
     (* Error prevention: we should succeed because otherwise we'll hit
@@ -7181,7 +7194,7 @@ struct
      types; either the flow would succeed anyways or it would fall
      through to the final catch-all error case and cause a spurious
      error. *)
-    
+
     | (_, UseT _)
     | (_, ArrRestT _)
     | (_, CallElemT _)
@@ -7298,7 +7311,7 @@ struct
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t)))
     (* read-only arrays are covariant *)
-    
+
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT (_, t, _, _))
@@ -7394,8 +7407,9 @@ struct
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
-    
+
     | TestPropT _
+    | TestElemT _
     | ThisSpecializeT _
     | ToStringT _
     | UnaryMinusT _
@@ -7406,11 +7420,11 @@ struct
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
-    
+
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     (* Should never occur, so we just defer to __flow to handle errors *)
-    
+
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
     | UseT (_, DefT (_, _, IdxWrapper _))
@@ -7420,11 +7434,11 @@ struct
     (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
      this can be handled by the pre-existing rules *)
-    
+
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _)
     (* Already handled in the wildcard case in __flow *)
-    
+
     | UseT (_, OpenT _) ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
@@ -10561,7 +10575,7 @@ struct
     *)
       | (_, [])
       (* No more arguments *)
-      
+
       | ([], _) ->
         ([], arglist, parlist)
       | (tin :: tins, (name, tout) :: touts) ->
@@ -10774,7 +10788,7 @@ struct
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
           | `Literal
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          
+
           | `Tuple ->
             AnyT.untyped reason_op
         else
@@ -11061,6 +11075,7 @@ struct
       end
 
   and perform_elem_action cx trace ~use_op reason_op l value = function
+    | TestElem (_, t)
     | ReadElem t ->
       let loc = aloc_of_reason reason_op in
       rec_flow_t cx trace (reposition cx ~trace loc value, t)

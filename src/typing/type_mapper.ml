@@ -859,13 +859,20 @@ class virtual ['a] t_with_uses =
           t
         else
           GetPrivatePropT (use_op, r, prop, scopes', static, t'')
-      | TestPropT (r, id, prop, t') ->
+      | TestPropT (use_op, r, id, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then
           t
         else
-          TestPropT (r, id, prop', t'')
+          TestPropT (use_op, r, id, prop', t'')
+      | TestElemT (use_op, r, id, t1, t2) ->
+        let t1' = self#type_ cx map_cx t1 in
+        let t2' = self#type_ cx map_cx t2 in
+        if t1' == t1 && t2' == t2 then
+          t
+        else
+          TestElemT (use_op, r, id, t1', t2')
       | SetElemT (use_op, r, t1, t2, t3) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -1415,12 +1422,18 @@ class virtual ['a] t_with_uses =
           t
         else
           OptGetPrivatePropT (use_op, r, prop, scopes', static)
-      | OptTestPropT (r, id, prop) ->
+      | OptTestPropT (use_op, r, id, prop) ->
         let prop' = self#prop_ref cx map_cx prop in
         if prop' == prop then
           t
         else
-          OptTestPropT (r, id, prop')
+          OptTestPropT (use_op, r, id, prop')
+      | OptTestElemT (use_op, r, id, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then
+          t
+        else
+          OptTestElemT (use_op, r, id, t'')
       | OptGetElemT (use_op, r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -1460,6 +1473,7 @@ class virtual ['a] t_with_uses =
 
     method elem_action cx map_cx t =
       match t with
+      | TestElem (_, t')
       | ReadElem t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
