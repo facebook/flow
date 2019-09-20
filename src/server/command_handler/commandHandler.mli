@@ -11,5 +11,5 @@ val enqueue_or_handle_ephemeral :
 val enqueue_persistent :
   ServerEnv.genv ->
   Persistent_connection_prot.client_id ->
-  Persistent_connection_prot.request ->
+  Persistent_connection_prot.request_with_metadata ->
   unit Lwt.t

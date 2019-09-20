@@ -9,7 +9,7 @@
  * clients. *)
 
 include FlowServerMonitorConnection.Make (struct
-  type in_message = Persistent_connection_prot.request
+  type in_message = Persistent_connection_prot.request_with_metadata
 
   type out_message = Persistent_connection_prot.response
 end)

@@ -36,7 +36,7 @@ type monitor_to_server_message =
   | NewPersistentConnection of
       PersistentProt.client_id * FlowEventLogger.logging_context * Lsp.Initialize.params option
   (* A request from a persistent socket connection. It does not expect a response *)
-  | PersistentConnectionRequest of PersistentProt.client_id * PersistentProt.request
+  | PersistentConnectionRequest of PersistentProt.client_id * PersistentProt.request_with_metadata
   (* A notification that a persistent socket connection is dead *)
   | DeadPersistentConnection of PersistentProt.client_id
   (* The file watcher has noticed changes *)

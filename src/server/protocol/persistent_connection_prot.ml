@@ -41,9 +41,26 @@ type metadata = {
   (* If we're tracking an interaction in the lsp process, this is the id of the interaction *)
   interaction_tracking_id: int option;
 }
+
 (** For LSP work-items, we keep metadata about requests, to help us log better telemetry.
    After the work has been handled, we fill out the second part of the metadata.
 *)
+let empty_metadata =
+  {
+    start_wall_time = 0.0;
+    start_server_status = None;
+    start_watcher_status = None;
+    start_json_truncated = Hh_json.JSON_Object [];
+    start_lsp_state = None;
+    start_lsp_state_reason = None;
+    error_info = None;
+    server_profiling = None;
+    client_duration = None;
+    extra_data = [];
+    server_logging_context = None;
+    lsp_method_name = "";
+    interaction_tracking_id = None;
+  }
 
 (* This is the reason why we start to do a recheck. Since rechecks can be combined together, there
  * may be multiple reasons for a single recheck *)
@@ -90,19 +107,21 @@ let normalized_string_of_recheck_reason = function
 
 type request =
   | Subscribe
-  | LspToServer of Lsp.lsp_message * metadata
+  | LspToServer of Lsp.lsp_message
+
+type request_with_metadata = request * metadata
 
 (* requests, notifications, responses from client *)
 
 let string_of_request = function
-  | Subscribe -> "subscribe"
-  | LspToServer (msg, _) -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
+  | (Subscribe, _) -> "subscribe"
+  | (LspToServer msg, _) -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
 
 let json_of_request =
   Hh_json.(
     function
-    | Subscribe -> JSON_Object [("method", JSON_String "subscribe")]
-    | LspToServer (_, metadata) -> metadata.start_json_truncated)
+    | (Subscribe, _) -> JSON_Object [("method", JSON_String "subscribe")]
+    | (LspToServer _, metadata) -> metadata.start_json_truncated)
 
 (* Why is the server sending us a list of errors *)
 type errors_reason =

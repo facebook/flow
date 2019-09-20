@@ -10,7 +10,7 @@ val send_request :
 
 val send_persistent_request :
   client_id:Persistent_connection_prot.client_id ->
-  request:Persistent_connection_prot.request ->
+  request:Persistent_connection_prot.request_with_metadata ->
   unit
 
 val notify_new_persistent_connection :

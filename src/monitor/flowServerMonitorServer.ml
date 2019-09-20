@@ -30,7 +30,7 @@ type command =
     }
   | Write_persistent_request of {
       client_id: PersistentProt.client_id;
-      request: PersistentProt.request;
+      request: PersistentProt.request_with_metadata;
     }
   | Notify_new_persistent_connection of {
       client_id: PersistentProt.client_id;

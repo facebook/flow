@@ -1078,12 +1078,12 @@ let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let metadata = with_error metadata ~reason:"cancelled" in
   Lwt.return (LspResponse (Ok (ret, Some response, metadata)))
 
-let handle_persistent_subscribe ~reader ~options ~client ~profiling:_ ~env =
+let handle_persistent_subscribe ~reader ~options ~metadata ~client ~profiling:_ ~env =
   let (current_errors, current_warnings, _) =
     ErrorCollator.get_with_separate_warnings ~reader ~options env
   in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
-  Lwt.return (IdeResponse (Ok (env, None)))
+  Lwt.return (LspResponse (Ok (env, None, metadata)))
 
 (* A did_open notification can come in about N files, which is great. But sometimes we'll get
  * N did_open notifications in quick succession. Let's batch them up and run them all at once!
@@ -1574,15 +1574,15 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     let options = genv.ServerEnv.options in
     let reader = State_reader.create () in
     match request with
-    | LspToServer (RequestMessage (id, _), metadata)
+    | (LspToServer (RequestMessage (id, _)), metadata)
       when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
       (* We don't do any work, we just immediately tell the monitor that this request was already
        * canceled *)
       Handle_persistent_immediately (handle_persistent_canceled ~ret:() ~id ~metadata)
-    | Subscribe ->
+    | (Subscribe, metadata) ->
       (* This mutates env, so it can't run in parallel *)
-      Handle_nonparallelizable_persistent (handle_persistent_subscribe ~reader ~options)
-    | LspToServer (NotificationMessage (DidOpenNotification params), metadata) ->
+      Handle_nonparallelizable_persistent (handle_persistent_subscribe ~reader ~options ~metadata)
+    | (LspToServer (NotificationMessage (DidOpenNotification params)), metadata) ->
       Lsp.DidOpen.(
         TextDocumentItem.(
           let content = params.textDocument.text in
@@ -1605,13 +1605,13 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
           ) else
             (* It's a no-op, so we can respond immediately *)
             Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)))
-    | LspToServer (NotificationMessage (DidChangeNotification params), metadata) ->
+    | (LspToServer (NotificationMessage (DidChangeNotification params)), metadata) ->
       (* This just updates our copy of the file in question. We want to do this immediately *)
       Handle_persistent_immediately (handle_persistent_did_change_notification ~params ~metadata)
-    | LspToServer (NotificationMessage (DidSaveNotification _params), metadata) ->
+    | (LspToServer (NotificationMessage (DidSaveNotification _params)), metadata) ->
       (* No-op can be handled immediately *)
       Handle_persistent_immediately (handle_persistent_did_save_notification ~metadata)
-    | LspToServer (NotificationMessage (DidCloseNotification params), metadata) ->
+    | (LspToServer (NotificationMessage (DidCloseNotification params)), metadata) ->
       Lsp.DidClose.(
         TextDocumentIdentifier.(
           let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
@@ -1631,7 +1631,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
             (* It's a no-op, so we can respond immediately *)
             Handle_persistent_immediately
               (handle_persistent_did_close_notification_no_op ~metadata)))
-    | LspToServer (NotificationMessage (CancelRequestNotification params), metadata) ->
+    | (LspToServer (NotificationMessage (CancelRequestNotification params)), metadata) ->
       (* The general idea here is this:
        *
        * 1. As soon as we get a cancel notification, add the ID to the canceled requests set.
@@ -1644,7 +1644,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       let id = params.CancelRequest.id in
       ServerMonitorListenerState.(cancellation_requests := IdSet.add id !cancellation_requests);
       Handle_nonparallelizable_persistent (handle_persistent_cancel_notification ~params ~metadata)
-    | LspToServer (RequestMessage (id, DefinitionRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, DefinitionRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc =
         Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
@@ -1653,7 +1653,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       mk_parallelizable_persistent
         ~options
         (handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata)
-    | LspToServer (RequestMessage (id, HoverRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, HoverRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc =
         Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
@@ -1662,11 +1662,11 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       mk_parallelizable_persistent
         ~options
         (handle_persistent_infer_type ~options ~id ~params ~loc ~metadata)
-    | LspToServer (RequestMessage (id, CodeActionRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, CodeActionRequest params)), metadata) ->
       mk_parallelizable_persistent
         ~options
         (handle_persistent_code_action_request ~options ~id ~params ~metadata)
-    | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, CompletionRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let loc = params.Completion.loc in
       let loc =
@@ -1676,11 +1676,11 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       mk_parallelizable_persistent
         ~options
         (handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata)
-    | LspToServer (RequestMessage (id, DocumentHighlightRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, DocumentHighlightRequest params)), metadata) ->
       mk_parallelizable_persistent
         ~options
         (handle_persistent_document_highlight ~reader ~options ~id ~params ~metadata)
-    | LspToServer (RequestMessage (id, TypeCoverageRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, TypeCoverageRequest params)), metadata) ->
       (* Grab the file contents immediately in case of any future didChanges *)
       let textDocument = params.TypeCoverage.textDocument in
       let file =
@@ -1690,19 +1690,19 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       mk_parallelizable_persistent
         ~options
         (handle_persistent_coverage ~options ~id ~params ~file ~metadata)
-    | LspToServer (RequestMessage (id, FindReferencesRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, FindReferencesRequest params)), metadata) ->
       (* Like `flow find-refs`, this is kind of slow and mutates env, so it can't run in parallel *)
       Handle_nonparallelizable_persistent
         (handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata)
-    | LspToServer (RequestMessage (id, RenameRequest params), metadata) ->
+    | (LspToServer (RequestMessage (id, RenameRequest params)), metadata) ->
       (* rename delegates to find-refs, which can be kind of slow and might mutate the env, so it
        * can't run in parallel *)
       Handle_nonparallelizable_persistent
         (handle_persistent_rename ~reader ~genv ~id ~params ~metadata)
-    | LspToServer (RequestMessage (id, RageRequest), metadata) ->
+    | (LspToServer (RequestMessage (id, RageRequest)), metadata) ->
       (* Whoever is waiting for the rage results probably doesn't want to wait for a recheck *)
       mk_parallelizable_persistent ~options (handle_persistent_rage ~reader ~genv ~id ~metadata)
-    | LspToServer (unhandled, metadata) ->
+    | (LspToServer unhandled, metadata) ->
       (* We can reject unsupported stuff immediately *)
       Handle_persistent_immediately (handle_persistent_unsupported ~unhandled ~metadata))
 
@@ -1717,7 +1717,7 @@ let wrap_persistent_handler
       c persistent_handling_result Lwt.t)
     ~(genv : ServerEnv.genv)
     ~(client_id : Persistent_connection_prot.client_id)
-    ~(request : Persistent_connection_prot.request)
+    ~(request : Persistent_connection_prot.request_with_metadata)
     ~(workload : a)
     ~(default_ret : c)
     (arg : b) : c Lwt.t =
@@ -1736,7 +1736,7 @@ let wrap_persistent_handler
       let%lwt (profiling, result) =
         Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
             match request with
-            | LspToServer (RequestMessage (id, _), metadata)
+            | (LspToServer (RequestMessage (id, _)), metadata)
               when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
               Hh_logger.info "Skipping canceled persistent request: %s" (string_of_request request);
 
@@ -1757,7 +1757,7 @@ let wrap_persistent_handler
                 let error_info = (UnexpectedError, reason, stack) in
                 begin
                   match request with
-                  | LspToServer (_, metadata) ->
+                  | (LspToServer _, metadata) ->
                     Lwt.return
                       (LspResponse
                          (Error (default_ret, { metadata with error_info = Some error_info })))
@@ -1791,14 +1791,14 @@ let wrap_persistent_handler
         let e = Lsp_fmt.error_of_exn (Failure reason) in
         let lsp_response =
           match request with
-          | LspToServer (RequestMessage (id, _), _) ->
+          | (LspToServer (RequestMessage (id, _)), _) ->
             let friendly_message =
               "Flow encountered an unexpected error while handling this request. "
               ^ "See the Flow logs for more details."
             in
             let e = { e with Lsp.Error.message = friendly_message } in
             Some (ResponseMessage (id, ErrorResult (e, stack)))
-          | LspToServer _ ->
+          | (LspToServer _, _) ->
             LogMessage.(
               let text = Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack in
               Some
@@ -1916,7 +1916,7 @@ let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload env 
 let enqueue_persistent
     (genv : ServerEnv.genv)
     (client_id : Persistent_connection.Prot.client_id)
-    (request : Persistent_connection_prot.request) : unit Lwt.t =
+    (request : Persistent_connection_prot.request_with_metadata) : unit Lwt.t =
   match get_persistent_handler ~genv ~client_id ~request with
   | Handle_persistent_immediately workload ->
     handle_persistent_immediately ~genv ~client_id ~request ~workload

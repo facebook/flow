@@ -233,6 +233,7 @@ let new_metadata (state : state) (message : Jsonrpc.message) : Persistent_connec
     | Some (Shown (_, params)) -> Some params.ShowStatus.request.ShowMessageRequest.message
   in
   {
+    Persistent_connection_prot.empty_metadata with
     Persistent_connection_prot.start_wall_time = message.Jsonrpc.timestamp;
     start_server_status;
     start_watcher_status;
@@ -240,13 +241,7 @@ let new_metadata (state : state) (message : Jsonrpc.message) : Persistent_connec
       Hh_json.json_truncate message.Jsonrpc.json ~max_string_length:256 ~max_child_count:4;
     start_lsp_state;
     start_lsp_state_reason;
-    error_info = None;
-    server_profiling = None;
-    client_duration = None;
-    extra_data = [];
-    server_logging_context = None;
     lsp_method_name = Jsonrpc.(message.method_);
-    interaction_tracking_id = None;
   }
 
 let edata_of_exception exn =
@@ -457,16 +452,19 @@ let show_status
             i_outstanding_local_handlers;
           })))
 
-let send_to_server (env : connected_env) (request : Persistent_connection_prot.request) : unit =
+let send_to_server
+    (env : connected_env)
+    (request : Persistent_connection_prot.request)
+    (metadata : Persistent_connection_prot.metadata) : unit =
   let _bytesWritten =
-    Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) request
+    Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) (request, metadata)
   in
   ()
 
 let send_lsp_to_server
     (cenv : connected_env) (metadata : Persistent_connection_prot.metadata) (message : lsp_message)
     : unit =
-  send_to_server cenv (Persistent_connection_prot.LspToServer (message, metadata))
+  send_to_server cenv (Persistent_connection_prot.LspToServer message) metadata
 
 (************************************************************************)
 (** Protocol                                                           **)
@@ -669,11 +667,6 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
   in
   match conn with
   | Ok (ic, oc) ->
-    let _bytesWritten =
-      Marshal_tools.to_fd_with_preamble
-        (Unix.descr_of_out_channel oc)
-        Persistent_connection_prot.Subscribe
-    in
     let i_server_id = env.d_ienv.i_server_id + 1 in
     let new_env =
       {
@@ -688,7 +681,21 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
       }
     in
     (* send the initial messages to the server *)
-    send_to_server new_env Persistent_connection_prot.Subscribe;
+    let () =
+      let metadata =
+        let method_name = "synthetic/subscribe" in
+        Hh_json.
+          {
+            Persistent_connection_prot.empty_metadata with
+            Persistent_connection_prot.start_wall_time = Unix.gettimeofday ();
+            start_server_status = Some (fst new_env.c_server_status);
+            start_watcher_status = snd new_env.c_server_status;
+            start_json_truncated = JSON_Object [("method", JSON_String method_name)];
+            lsp_method_name = method_name;
+          }
+      in
+      send_to_server new_env Persistent_connection_prot.Subscribe metadata
+    in
     let make_open_message (textDocument : TextDocumentItem.t) : lsp_message =
       NotificationMessage (DidOpenNotification { DidOpen.textDocument })
     in
@@ -701,19 +708,12 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
       let method_name = "synthetic/open" in
       let metadata =
         {
+          Persistent_connection_prot.empty_metadata with
           Persistent_connection_prot.start_wall_time = Unix.gettimeofday ();
           start_server_status = Some (fst new_env.c_server_status);
           start_watcher_status = snd new_env.c_server_status;
           start_json_truncated = JSON_Object [("method", JSON_String method_name)];
-          start_lsp_state = None;
-          start_lsp_state_reason = None;
-          error_info = None;
-          server_profiling = None;
-          client_duration = None;
-          extra_data = [];
-          server_logging_context = None;
           lsp_method_name = method_name;
-          interaction_tracking_id = None;
         }
       in
       List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
