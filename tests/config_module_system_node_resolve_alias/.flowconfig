@@ -2,6 +2,5 @@
 module.system.node.resolve_dirname=node_modules
 module.system.node.resolve_dirname=custom_node_modules
 module.system.node.resolve_alias=custom_resolve_dir
-; should also be able to specify as
-; <PROJECT_ROOT>/root_resolve_dir
-module.system.node.resolve_alias=./root_resolve_dir
+module.system.node.resolve_alias=<PROJECT_ROOT>/root_resolve_dir
+; module.system.node.resolve_alias=./root_resolve_dir

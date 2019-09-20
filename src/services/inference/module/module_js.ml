@@ -62,6 +62,9 @@ let choose_provider_and_warn_about_duplicates =
       in
       (defn, errmap)
 
+let get_root ~options =
+  Options.root options |> Path.to_string |> Sys_utils.normalize_filename_dir_sep
+
 (**
  * A set of module.name_mapper config entry allows users to specify regexp
  * matcher strings each with a template string in order to map the names of a
@@ -75,7 +78,7 @@ let choose_provider_and_warn_about_duplicates =
 let module_name_candidates ~options =
   Module_hashtables.memoize_with_module_name_candidates_cache ~f:(fun name ->
       let mappers = Options.module_name_mappers options in
-      let root = Options.root options |> Path.to_string |> Sys_utils.normalize_filename_dir_sep in
+      let root = get_root options in
       let map_name mapped_names (regexp, template) =
         let new_name =
           name
@@ -408,6 +411,7 @@ module Node = struct
 
   let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
     let file_options = Options.file_options options in
+    let root = get_root options in
     lazy_seq
       [
         lazy
@@ -417,14 +421,18 @@ module Node = struct
                 lazy_seq
                   ( Files.node_resolver_aliases file_options
                   |> Core_list.map ~f:(fun dirname ->
+                        let modified_dirname =
+                          dirname
+                          |> Str.split_delim Files.project_root_token
+                          |> String.concat root
+                        in
                         lazy
                           (resolve_relative
                             ~options
                             ~reader
                             loc
                             ?resolution_acc
-                            dir
-                            (spf "%s%s%s" dirname Filename.dir_sep r))) )
+                            dir (spf "%s%s%s" modified_dirname Filename.dir_sep r))) )
               );
               lazy (
                 lazy_seq

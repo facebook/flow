@@ -36,4 +36,4 @@ import { name as seven } from "testproj6";
 // should still resolve custom_node_modules
 (five: "custom_node_modules/testproj4");
 
-(seven: "root_resolve_dir/testproj6/");
+(seven: "root_resolve_dir/testproj6");
