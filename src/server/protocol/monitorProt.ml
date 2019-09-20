@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* The Flow server monitor uses this module to communicate with the server and with clients *)
-
 (* Ephemeral socket connections expect a response to their requests. We use request_id to indicate
  * to which request a given response is replying *)
 type request_id = string
@@ -48,7 +46,7 @@ type server_to_monitor_message =
   (* An exception was thrown while processing the request *)
   | RequestFailed of request_id * string
   (* A response to a persistent socket connection *)
-  | PersistentConnectionResponse of LspProt.client_id * LspProt.response
+  | PersistentConnectionResponse of LspProt.client_id * LspProt.message_from_server
   (* A notification of the server's current status *)
   | StatusUpdate of ServerStatus.status
 

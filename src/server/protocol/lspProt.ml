@@ -136,7 +136,11 @@ type errors_reason =
   (* The persistent client just subscribed to errors, so was sent the initial error list *)
   | New_subscription
 
-type response =
+type response = LspFromServer of Lsp.lsp_message option
+
+type response_with_metadata = response * metadata
+
+type notification_from_server =
   | Errors of {
       errors: Errors.ConcreteLocPrintableErrorSet.t;
       warnings: Errors.ConcreteLocPrintableErrorSet.t;
@@ -144,24 +148,35 @@ type response =
     }
   | StartRecheck
   | EndRecheck of ServerProt.Response.lazy_stats
-  | ServerExit of FlowExitStatus.t (* only used for the subset of exists which client handles *)
-  | LspFromServer of Lsp.lsp_message option * metadata
+  (* only used for the subset of exists which client handles *)
+  | ServerExit of FlowExitStatus.t
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
+  (* monitor is about to close the connection *)
   | EOF
 
-(* monitor is about to close the connection *)
+type message_from_server =
+  | RequestResponse of response_with_metadata
+  | NotificationFromServer of notification_from_server
 
-let string_of_response = function
-  | Errors _ -> "errors"
-  | StartRecheck -> "startRecheck"
-  | EndRecheck _ -> "endRecheck"
-  | ServerExit code -> "serverExit_" ^ FlowExitStatus.to_string code
-  | LspFromServer (None, _) -> "lspFromServer None"
-  | LspFromServer (Some msg, _) ->
-    Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
-  | Please_hold (server_status, watcher_status) ->
-    Printf.sprintf
-      "pleaseHold_server=%s_watcher=%s"
-      (ServerStatus.string_of_status server_status)
-      (FileWatcherStatus.string_of_status watcher_status)
-  | EOF -> "EOF"
+let string_of_message_from_server = function
+  | RequestResponse response ->
+    begin
+      match response with
+      | (LspFromServer None, _) -> "lspFromServer None"
+      | (LspFromServer (Some msg), _) ->
+        Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
+    end
+  | NotificationFromServer notification ->
+    begin
+      match notification with
+      | Errors _ -> "errors"
+      | StartRecheck -> "startRecheck"
+      | EndRecheck _ -> "endRecheck"
+      | ServerExit code -> "serverExit_" ^ FlowExitStatus.to_string code
+      | Please_hold (server_status, watcher_status) ->
+        Printf.sprintf
+          "pleaseHold_server=%s_watcher=%s"
+          (ServerStatus.string_of_status server_status)
+          (FileWatcherStatus.string_of_status watcher_status)
+      | EOF -> "EOF"
+    end

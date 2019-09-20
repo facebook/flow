@@ -11,5 +11,5 @@
 include FlowServerMonitorConnection.Make (struct
   type in_message = LspProt.request_with_metadata
 
-  type out_message = LspProt.response
+  type out_message = LspProt.message_from_server
 end)

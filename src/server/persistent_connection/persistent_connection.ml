@@ -5,14 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Prot = LspProt
+
 type single_client = {
-  client_id: LspProt.client_id;
+  client_id: Prot.client_id;
   lsp_initialize_params: Lsp.Initialize.params;
   mutable subscribed: bool;
   mutable opened_files: string SMap.t; (* map from filename to content *)
 }
 
-type t = LspProt.client_id list
+type t = Prot.client_id list
 
 let active_clients : single_client IMap.t ref = ref IMap.empty
 
@@ -20,10 +22,14 @@ let get_client client_id = IMap.get client_id !active_clients
 
 let empty = []
 
-let send_message_to_client response client =
+let send_message_to_client (response : Prot.message_from_server) client =
   MonitorRPC.respond_to_persistent_connection ~client_id:client.client_id ~response
 
-let send_message message client = send_message_to_client (message : LspProt.response) client
+let send_response (response : Prot.response_with_metadata) client =
+  send_message_to_client (Prot.RequestResponse response) client
+
+let send_notification (response : Prot.notification_from_server) client =
+  send_message_to_client (Prot.NotificationFromServer response) client
 
 let send_errors =
   (* We don't know what kind of file the filename represents,
@@ -56,18 +62,18 @@ let send_errors =
         opened_filenames
         Errors.ConcreteLocPrintableErrorSet.empty
     in
-    send_message (LspProt.Errors { errors; warnings; errors_reason }) client
+    send_notification (Prot.Errors { errors; warnings; errors_reason }) client
 
 let send_errors_if_subscribed ~client ~errors_reason ~errors ~warnings =
   if client.subscribed then send_errors ~errors_reason ~errors ~warnings client
 
 let send_single_lsp (message, metadata) client =
-  send_message (LspProt.LspFromServer (message, metadata)) client
+  send_response (Prot.LspFromServer message, metadata) client
 
-let send_single_start_recheck client = send_message LspProt.StartRecheck client
+let send_single_start_recheck client = send_notification Prot.StartRecheck client
 
 let send_single_end_recheck ~lazy_stats client =
-  send_message (LspProt.EndRecheck lazy_stats) client
+  send_notification (Prot.EndRecheck lazy_stats) client
 
 let add_client client_id lsp_initialize_params =
   let new_client =
@@ -132,7 +138,7 @@ let subscribe_client ~client ~current_errors ~current_warnings =
     (* noop *)
     ()
   else
-    let errors_reason = LspProt.New_subscription in
+    let errors_reason = Prot.New_subscription in
     send_errors ~errors_reason ~errors:current_errors ~warnings:current_warnings client;
     client.subscribed <- true
 

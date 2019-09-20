@@ -37,7 +37,7 @@ val send_start_recheck : t -> unit
 val send_end_recheck : lazy_stats:ServerProt.Response.lazy_stats -> t -> unit
 
 (* Send a message to just one client *)
-val send_message : LspProt.response -> single_client -> unit
+val send_response : LspProt.response_with_metadata -> single_client -> unit
 
 val send_errors_if_subscribed :
   client:single_client ->

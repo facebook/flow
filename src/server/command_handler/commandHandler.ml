@@ -1765,8 +1765,8 @@ let wrap_persistent_handler
       (match result with
       | LspResponse (Ok (ret, lsp_response, metadata)) ->
         let metadata = { metadata with server_profiling; server_logging_context } in
-        let response = LspFromServer (lsp_response, metadata) in
-        Persistent_connection.send_message response client;
+        let response = (LspFromServer lsp_response, metadata) in
+        Persistent_connection.send_response response client;
         Hh_logger.info
           "Persistent response: Ok lspFromServer %s"
           (Option.value_map lsp_response ~default:"None" ~f:Lsp_fmt.message_name_to_string);
@@ -1793,8 +1793,8 @@ let wrap_persistent_handler
                    (TelemetryNotification { type_ = MessageType.ErrorMessage; message = text })))
           | _ -> None
         in
-        let response = LspFromServer (lsp_response, metadata) in
-        Persistent_connection.send_message response client;
+        let response = (LspFromServer lsp_response, metadata) in
+        Persistent_connection.send_response response client;
         Hh_logger.info
           "Persistent response: Error lspFromServer %s"
           (Option.value_map lsp_response ~default:"None" ~f:Lsp_fmt.message_name_to_string);

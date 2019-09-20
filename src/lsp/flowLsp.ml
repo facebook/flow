@@ -140,7 +140,7 @@ exception Client_recoverable_connection_exception of Marshal_tools.remote_except
 exception Server_fatal_connection_exception of Marshal_tools.remote_exception_data
 
 type event =
-  | Server_message of LspProt.response
+  | Server_message of LspProt.message_from_server
   | Client_message of Lsp.lsp_message * LspProt.metadata
   | Tick
 
@@ -156,7 +156,7 @@ let string_of_state (state : state) : string =
 let denorm_string_of_event (event : event) : string =
   match event with
   | Server_message response ->
-    Printf.sprintf "Server_message(%s)" (LspProt.string_of_response response)
+    Printf.sprintf "Server_message(%s)" (LspProt.string_of_message_from_server response)
   | Client_message (c, _) ->
     Printf.sprintf "Client_message(%s)" (Lsp_fmt.denorm_message_to_string c)
   | Tick -> "Tick"
@@ -288,7 +288,7 @@ let get_next_event_from_server (fd : Unix.file_descr) : event =
   (* The server sends an explicit 'EOF' message in case the underlying *)
   (* transport protocol doesn't result in EOF normally. We'll respond  *)
   (* to it by synthesizing the EOF exception we'd otherwise get. *)
-  if r = Server_message LspProt.EOF then
+  if r = Server_message LspProt.(NotificationFromServer EOF) then
     let stack = Exception.get_current_callstack_string 100 in
     raise (Server_fatal_connection_exception { Marshal_tools.message = "End_of_file"; stack })
   else
@@ -1777,10 +1777,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     Error (state, e, Utils.Callstack stack)
   | (Post_shutdown, Client_message (_, _metadata)) ->
     raise (Error.RequestCancelled "Server shutting down")
-  | (Connected cenv, Server_message (LspProt.ServerExit exit_code)) ->
+  | (Connected cenv, Server_message LspProt.(NotificationFromServer (ServerExit exit_code))) ->
     let state = Connected { cenv with c_about_to_exit_code = Some exit_code } in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message (LspProt.LspFromServer (msg, metadata))) ->
+  | (Connected cenv, Server_message LspProt.(RequestResponse (LspFromServer msg, metadata))) ->
     let (state, metadata, ux) =
       match msg with
       | None -> (state, metadata, LspInteraction.Responded)
@@ -1815,7 +1815,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     in
     Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
     Ok (state, LogNeeded metadata)
-  | (Connected cenv, Server_message (LspProt.Errors { errors; warnings; errors_reason })) ->
+  | ( Connected cenv,
+      Server_message LspProt.(NotificationFromServer (Errors { errors; warnings; errors_reason }))
+    ) ->
     (* A note about the errors reported by this server message:               *)
     (* While a recheck is in progress, between StartRecheck and EndRecheck,   *)
     (* the server will periodically send errors+warnings. These are additive  *)
@@ -1854,17 +1856,17 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
              LspErrors.set_finalized_server_errors_and_send to_stdout all )
     in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message LspProt.StartRecheck) ->
+  | (Connected cenv, Server_message LspProt.(NotificationFromServer StartRecheck)) ->
     let start_state = collect_interaction_state state in
     LspInteraction.recheck_start ~start_state;
     let state = show_recheck_progress { cenv with c_is_rechecking = true; c_lazy_stats = None } in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message (LspProt.EndRecheck lazy_stats)) ->
+  | (Connected cenv, Server_message LspProt.(NotificationFromServer (EndRecheck lazy_stats))) ->
     let state =
       show_recheck_progress { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats }
     in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message (LspProt.Please_hold status)) ->
+  | (Connected cenv, Server_message LspProt.(NotificationFromServer (Please_hold status))) ->
     let (server_status, watcher_status) = status in
     let c_server_status = (server_status, Some watcher_status) in
     (* We keep a log of typecheck summaries over the past 2mins. *)

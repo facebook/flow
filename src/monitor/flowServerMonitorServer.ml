@@ -561,7 +561,11 @@ module KeepAliveLoop = LwtLoop.Make (struct
           (* connection. This WEXITED case covers them. (It doesn't matter that    *)
           (* it also sends the reason in a few additional cases as well.)          *)
           let send_close conn =
-            (try PersistentConnection.write ~msg:(LspProt.ServerExit exit_type) conn with _ -> ())
+            try
+              PersistentConnection.write
+                ~msg:LspProt.(NotificationFromServer (ServerExit exit_type))
+                conn
+            with _ -> ()
           in
           PersistentConnectionMap.get_all_clients () |> List.iter send_close;
 

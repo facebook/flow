@@ -8,4 +8,4 @@
 include
   FlowServerMonitorConnection.CONNECTION
     with type in_message := LspProt.request_with_metadata
-     and type out_message := LspProt.response
+     and type out_message := LspProt.message_from_server
