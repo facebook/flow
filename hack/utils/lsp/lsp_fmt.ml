@@ -215,7 +215,11 @@ let print_symbolInformation (info : SymbolInformation.t) : json =
       | Number -> int_ 16
       | Boolean -> int_ 17
       | Array -> int_ 18
-      | RecordDef -> int_ 19
+      | Object -> int_ 19
+      | Key -> int_ 20
+      | Null -> int_ 21
+      | EnumMember -> int_ 22
+      | Struct -> int_ 23
     in
     Jprint.object_opt
       [
