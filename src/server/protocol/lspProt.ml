@@ -158,14 +158,13 @@ type message_from_server =
   | RequestResponse of response_with_metadata
   | NotificationFromServer of notification_from_server
 
+let string_of_response = function
+  | LspFromServer None -> "lspFromServer None"
+  | LspFromServer (Some msg) ->
+    Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
+
 let string_of_message_from_server = function
-  | RequestResponse response ->
-    begin
-      match response with
-      | (LspFromServer None, _) -> "lspFromServer None"
-      | (LspFromServer (Some msg), _) ->
-        Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
-    end
+  | RequestResponse (response, _) -> string_of_response response
   | NotificationFromServer notification ->
     begin
       match notification with
