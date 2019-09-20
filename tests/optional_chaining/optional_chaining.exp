@@ -1590,5 +1590,22 @@ References:
          ^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- typeof.js:6:25
 
-Found 121 errors
+undefined [1] is incompatible with read-only array type [2].
+
+   typeof.js:6:25
+   6|   type T = $ElementType<typeof y, 0>;
+                              ^^^^^^^^
+
+References:
+   typeof.js:4:17
+   4|   const x: {a?: {b: $ReadOnlyArray<{c: number}>}} = {};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:4:21
+   4|   const x: {a?: {b: $ReadOnlyArray<{c: number}>}} = {};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 122 errors

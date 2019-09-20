@@ -1418,14 +1418,7 @@ struct
         (****************************************************************)
         (* BecomeT unifies a tvar with an incoming concrete lower bound *)
         (****************************************************************)
-
-        (* MatchingPropT is triggered by a refinement, which means that the
-       BecomeT has already fired and become the type being refined. We
-       prevent the refined type from unifying with the original type
-       because the former is necessarily a subtype of the latter and
-       attempting to unify them is a symptom of an issue with BecomeT. *)
-        | (MatchingPropT _, BecomeT _) -> ()
-        | (_, BecomeT (reason, t)) ->
+        | (_, BecomeT (reason, t)) when is_proper_def l ->
           let l = reposition ~trace cx (aloc_of_reason reason) l in
           rec_unify cx trace ~use_op:unknown_use ~unify_any:true l t
         (***********************)
