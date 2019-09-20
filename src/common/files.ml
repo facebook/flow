@@ -80,18 +80,24 @@ let is_valid_path =
       )
     in
 
-    fun ~no_dotfiles file_exts basename ->
+    let filename_ext ~no_dotfiles basename =
       let extension = Filename.extension basename in
       let extension = match (no_dotfiles, extension) with
       | (false, "") -> basename
       | _ -> extension
       in
+      extension
+    in
+
+    fun ~no_dotfiles file_exts basename ->
+      let extension = filename_ext ~no_dotfiles basename in
       let acc = "" in
       if extension = flow_ext
       then
         (* We treat bar.foo.flow like bar.foo *)
         let basename = Filename.chop_suffix basename flow_ext in
-        helper file_exts basename acc (Filename.extension basename)
+        let extension = filename_ext ~no_dotfiles basename in
+        helper file_exts basename acc extension
       else
         helper file_exts basename acc extension
   in
