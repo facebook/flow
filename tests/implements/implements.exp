@@ -110,5 +110,56 @@ Cannot implement `C1` because it is not an interface.
                            ^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:36:2
 
-Found 8 errors
+Cannot cast `new C9()` to `T1` because property `b` is missing in `C9` [1] but exists in `T1` [2].
+
+   test.js:36:2
+   36| (new C9: T1); // error
+        ^^^^^^ [1]
+
+References:
+   test.js:36:10
+   36| (new C9: T1); // error
+                ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:1
+
+Cannot implement `I2` [1] with `C10` because property `b` is missing in `C10` [2] but exists in `I2` [1].
+
+   test.js:42:1
+       v---------------------------------
+   42| class C10 implements I2 { // error
+   43|   a: string
+   44| }
+       ^
+
+References:
+   test.js:42:22
+   42| class C10 implements I2 { // error
+                            ^^ [1]
+   test.js:42:7
+   42| class C10 implements I2 { // error
+             ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:55:1
+
+Cannot implement `I3` [1] with `C11c` because property `a` is missing in `C11c` [2] but exists in `I3` [1].
+
+   test.js:55:1
+   55| class C11c implements I3 {} // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:55:23
+   55| class C11c implements I3 {} // error
+                             ^^ [1]
+   test.js:55:7
+   55| class C11c implements I3 {} // error
+             ^^^^ [2]
+
+
+
+Found 11 errors

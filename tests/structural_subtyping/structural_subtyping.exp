@@ -109,10 +109,26 @@ References:
             ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- optional.js:8:26
+
+Cannot assign object literal to `test1` because property `b` is missing in object literal [1] but exists in
+`HasOptional` [2].
+
+   optional.js:8:26
+   8| var test1: HasOptional = { a: "hello" }
+                               ^^^^^^^^^^^^^^ [1]
+
+References:
+   optional.js:8:12
+   8| var test1: HasOptional = { a: "hello" }
+                 ^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ optional.js:10:26
 
-Cannot assign object literal to `test2` because property `a` is missing in object literal [1] but exists in
-`HasOptional` [2].
+Cannot assign object literal to `test2` because:
+ - property `a` is missing in object literal [1] but exists in `HasOptional` [2].
+ - property `b` is missing in object literal [1] but exists in `HasOptional` [2].
 
    optional.js:10:26
    10| var test2: HasOptional = {}; // Error: missing property a
@@ -126,7 +142,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:12:26
 
-Cannot assign object literal to `test3` because boolean [1] is incompatible with number [2] in property `b`.
+Cannot assign object literal to `test3` because:
+ - boolean [1] is incompatible with number [2] in property `b`.
+ - boolean [1] is incompatible with undefined [2] in property `b`.
 
    optional.js:12:26
    12| var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
@@ -142,4 +160,4 @@ References:
 
 
 
-Found 9 errors
+Found 12 errors

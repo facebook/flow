@@ -1587,7 +1587,7 @@ struct
                      | ExportValue
                      (* If it's a re-export, we can assume that the appropriate export checks have been
                       * applied in the original module. *)
-                     
+
                      | ReExport ->
                        t
                      (* If it's of the form `export type` then check to make sure it's actually a type. *)
@@ -4543,7 +4543,7 @@ struct
             UseT
               ( use_op,
                 ( DefT
-                    (ureason, _, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ })
+                    (ureason, _, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; dict_t = udict; _ })
                 as u_deft ) ) ) ->
           Type_inference_hooks_js.dispatch_instance_to_obj_hook cx l u_deft;
 
@@ -4552,6 +4552,41 @@ struct
             let proto_props = Context.find_props cx lproto in
             SMap.union own_props proto_props
           in
+          let ldict = match SMap.get "$key" lflds, SMap.get "$value" lflds with
+          | Some (Field (_, key, _)), Some (Field (_, value, dict_polarity)) -> Some ({
+              dict_name = None;
+              key;
+              value;
+              dict_polarity;
+            })
+          | _ -> None
+          in
+          (* If both are dictionaries, ensure the keys and values are compatible
+          with each other. *)
+          (match (ldict, udict) with
+          | ( Some { key = lk; value = lv; dict_polarity = lpolarity; _ },
+              Some { key = uk; value = uv; dict_polarity = upolarity; _ } ) ->
+            (* Don't report polarity errors when checking the indexer key. We would
+            * report these errors again a second time when checking values. *)
+            rec_flow_p
+              cx
+              trace
+              ~report_polarity:false
+              ~use_op:(Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op))
+              lreason
+              ureason
+              (Computed uk)
+              (Field (None, lk, lpolarity), Field (None, uk, upolarity));
+            rec_flow_p
+              cx
+              trace
+              ~use_op:
+                (Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op))
+              lreason
+              ureason
+              (Computed uv)
+              (Field (None, lv, lpolarity), Field (None, uv, upolarity))
+          | _ -> ());
           Option.iter ucall ~f:(fun ucall ->
               let prop_name = Some "$call" in
               let use_op =
@@ -4586,11 +4621,6 @@ struct
               match SMap.get s lflds with
               | Some lp -> rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
               | _ ->
-                let strict =
-                  match up with
-                  | Field (_, OptionalT _, _) -> NonstrictReturning (None, None)
-                  | _ -> Strict lreason
-                in
                 rec_flow
                   cx
                   trace
@@ -4598,7 +4628,36 @@ struct
                     ReposLowerT
                       ( lreason,
                         false,
-                        LookupT (ureason, strict, [], propref, LookupProp (use_op, up)) ) ));
+                        LookupT (ureason, Strict lreason, [], propref, LookupProp (use_op, up)) ) ));
+
+          (* Any properties in l but not u must match indexer *)
+          (match udict with
+          | None -> ()
+          | Some { key; value; dict_polarity; _ } ->
+            SMap.iter (fun s lp ->
+                if not (Context.has_prop cx uflds s) && s <> "$key" && s <> "$value" && s <> "constructor" then (
+                  rec_flow
+                    cx
+                    trace
+                    ( string_key s lreason,
+                      UseT
+                        ( Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op),
+                          key ) );
+                  let use_op =
+                    Frame
+                      (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op)
+                  in
+                  let lp =
+                    match lp with
+                    | Field (loc, OptionalT (_, lt), lpolarity) -> Field (loc, lt, lpolarity)
+                    | _ -> lp
+                  in
+                  let up = Field (None, value, dict_polarity) in
+                  let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
+                  let propref = Named (reason_prop, s) in
+                  rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
+                )) lflds;
+          );
 
           rec_flow cx trace (l, UseT (use_op, uproto))
         (* For some object `x` and constructor `C`, if `x instanceof C`, then the
@@ -7123,7 +7182,7 @@ struct
     (* Propagation cases: these cases don't use the fact that the LHS is
      empty, but they propagate the LHS to other types and trigger additional
      flows that may need to occur. *)
-    
+
     | (_, UseT (_, DefT (_, _, PolyT _)))
     | (_, UseT (_, TypeAppT _))
     | (_, UseT (_, AnyWithLowerBoundT _))
@@ -7181,7 +7240,7 @@ struct
      types; either the flow would succeed anyways or it would fall
      through to the final catch-all error case and cause a spurious
      error. *)
-    
+
     | (_, UseT _)
     | (_, ArrRestT _)
     | (_, CallElemT _)
@@ -7298,7 +7357,7 @@ struct
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t)))
     (* read-only arrays are covariant *)
-    
+
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT (_, t, _, _))
@@ -7394,7 +7453,7 @@ struct
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
-    
+
     | TestPropT _
     | ThisSpecializeT _
     | ToStringT _
@@ -7406,11 +7465,11 @@ struct
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
-    
+
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     (* Should never occur, so we just defer to __flow to handle errors *)
-    
+
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
     | UseT (_, DefT (_, _, IdxWrapper _))
@@ -7420,11 +7479,11 @@ struct
     (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
      this can be handled by the pre-existing rules *)
-    
+
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _)
     (* Already handled in the wildcard case in __flow *)
-    
+
     | UseT (_, OpenT _) ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
@@ -7600,7 +7659,7 @@ struct
                  use_op )
            in
            match p with
-           | Field (_, OptionalT (_, t), polarity) ->
+           | Field (_, OptionalT (r, t), polarity) ->
              let propref =
                let reason_prop =
                  update_desc_reason (fun desc -> ROptional (RPropertyOf (s, desc))) reason_struct
@@ -7613,10 +7672,10 @@ struct
                ( lower,
                  LookupT
                    ( reason_struct,
-                     NonstrictReturning (None, None),
+                     Strict lreason,
                      [],
                      propref,
-                     LookupProp (use_op, Field (None, t, polarity)) ) )
+                     LookupProp (use_op, Field (None, OptionalT (r, t), polarity)) ) )
            | _ ->
              let propref =
                let reason_prop =
@@ -10561,7 +10620,7 @@ struct
     *)
       | (_, [])
       (* No more arguments *)
-      
+
       | ([], _) ->
         ([], arglist, parlist)
       | (tin :: tins, (name, tout) :: touts) ->
@@ -10774,7 +10833,7 @@ struct
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
           | `Literal
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          
+
           | `Tuple ->
             AnyT.untyped reason_op
         else
