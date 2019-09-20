@@ -146,6 +146,7 @@ module SymbolInformation : sig
     | Number
     | Boolean
     | Array
+    | RecordDef
 end
 
 module MessageType : sig
@@ -515,6 +516,7 @@ module Completion : sig
     | Event (* 23 *)
     | Operator (* 24 *)
     | TypeParameter (* 25 *)
+    | RecordDef (* 26 *)
   [@@deriving enum]
 
   type insertTextFormat =

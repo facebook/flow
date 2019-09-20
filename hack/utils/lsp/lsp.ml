@@ -230,9 +230,10 @@ module SymbolInformation = struct
     | String (* 15 *)
     | Number (* 16 *)
     | Boolean (* 17 *)
-    | Array
+    | Array (* 18 *)
+    | RecordDef
 
-  (* 18 *)
+  (* 19 *)
 end
 
 (* For showing messages (not diagnostics) in the user interface. *)
@@ -756,6 +757,7 @@ module Completion = struct
     | Event [@value 23]
     | Operator [@value 24]
     | TypeParameter [@value 25]
+    | RecordDef [@value 26]
   [@@deriving enum]
 
   (* These numbers should match

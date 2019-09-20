@@ -9,6 +9,7 @@
 
 type kind =
   | Class
+  | Record
   | Function
   | Method of string * string
   | LocalVar
@@ -29,6 +30,7 @@ let to_absolute x = { x with pos = Pos.to_absolute x.pos }
 
 let kind_to_string = function
   | Class -> "type_id"
+  | Record -> "record"
   | Method _ -> "method"
   | Function -> "function"
   | LocalVar -> "local"

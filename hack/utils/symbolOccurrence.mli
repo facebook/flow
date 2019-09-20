@@ -15,6 +15,7 @@ shape. *)
 
 type kind =
   | Class
+  | Record
   | Function
   | Method of string * string
   | LocalVar
