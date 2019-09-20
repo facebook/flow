@@ -56,8 +56,7 @@ end)
 module PersistentStatusLoop = StatusLoop (struct
   type t = PersistentConnection.t
 
-  let write status conn =
-    PersistentConnection.write ~msg:(Persistent_connection_prot.Please_hold status) conn
+  let write status conn = PersistentConnection.write ~msg:(LspProt.Please_hold status) conn
 end)
 
 let create_ephemeral_connection ~client_fd ~close =
@@ -118,7 +117,7 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    PersistentConnection.write Persistent_connection_prot.EOF conn;
+    PersistentConnection.write LspProt.EOF conn;
     PersistentConnection.flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
@@ -128,9 +127,7 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   Lwt.async (fun () ->
       PersistentConnectionMap.add ~client_id ~client:conn;
       start ();
-      PersistentConnection.write
-        ~msg:(Persistent_connection_prot.Please_hold (StatusStream.get_status ()))
-        conn;
+      PersistentConnection.write ~msg:(LspProt.Please_hold (StatusStream.get_status ())) conn;
       let%lwt () = PersistentStatusLoop.run ~cancel_condition:ExitSignal.signal conn in
       Lwt.return_unit);
 

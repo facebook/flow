@@ -7,5 +7,5 @@
 
 include
   FlowServerMonitorConnection.CONNECTION
-    with type in_message := Persistent_connection_prot.request_with_metadata
-     and type out_message := Persistent_connection_prot.response
+    with type in_message := LspProt.request_with_metadata
+     and type out_message := LspProt.response

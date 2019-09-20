@@ -529,7 +529,7 @@ let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~pro
 let handle_force_recheck ~files ~focus ~profile ~profiling =
   let fileset = SSet.of_list files in
   let reason =
-    Persistent_connection_prot.(
+    LspProt.(
       match files with
       | [filename] -> Single_file_changed { filename }
       | _ -> Many_files_changed { file_count = List.length files })
@@ -1012,7 +1012,7 @@ let did_open ~reader genv env client (files : (string * string) Nel.t) : ServerE
       let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
       Persistent_connection.send_errors_if_subscribed
         ~client
-        ~errors_reason:Persistent_connection_prot.Env_change
+        ~errors_reason:LspProt.Env_change
         ~errors
         ~warnings );
     Lwt.return env
@@ -1024,7 +1024,7 @@ let did_open ~reader genv env client (files : (string * string) Nel.t) : ServerE
     let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
     Persistent_connection.send_errors_if_subscribed
       ~client
-      ~errors_reason:Persistent_connection_prot.Env_change
+      ~errors_reason:LspProt.Env_change
       ~errors
       ~warnings;
     Lwt.return env
@@ -1034,16 +1034,14 @@ let did_close ~reader genv env client : ServerEnv.env Lwt.t =
   let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
   Persistent_connection.send_errors_if_subscribed
     ~client
-    ~errors_reason:Persistent_connection_prot.Env_change
+    ~errors_reason:LspProt.Env_change
     ~errors
     ~warnings;
   Lwt.return env
 
-let with_error
-    ?(stack : Utils.callstack option)
-    ~(reason : string)
-    (metadata : Persistent_connection_prot.metadata) : Persistent_connection_prot.metadata =
-  Persistent_connection_prot.(
+let with_error ?(stack : Utils.callstack option) ~(reason : string) (metadata : LspProt.metadata) :
+    LspProt.metadata =
+  LspProt.(
     let local_stack = Exception.get_current_callstack_string 100 in
     let stack = Option.value stack ~default:(Utils.Callstack local_stack) in
     let error_info = Some (ExpectedError, reason, stack) in
@@ -1055,19 +1053,16 @@ let keyvals_of_json (json : Hh_json.json option) : (string * Hh_json.json) list 
   | Some (Hh_json.JSON_Object keyvals) -> keyvals
   | Some json -> [("json_data", json)]
 
-let with_data ~(extra_data : Hh_json.json option) (metadata : Persistent_connection_prot.metadata)
-    : Persistent_connection_prot.metadata =
-  Persistent_connection_prot.(
+let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) : LspProt.metadata
+    =
+  LspProt.(
     let extra_data = metadata.extra_data @ keyvals_of_json extra_data in
     { metadata with extra_data })
 
 type 'a persistent_handling_result =
   (* LspResponse means that handle_persistent is responsible for sending the
      message (if needed) to the client, and lspCommand is responsible for logging. *)
-  | LspResponse of
-      ( 'a * Lsp.lsp_message option * Persistent_connection_prot.metadata,
-        'a * Persistent_connection_prot.metadata )
-      result
+  | LspResponse of ('a * Lsp.lsp_message option * LspProt.metadata, 'a * LspProt.metadata) result
 
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
@@ -1565,7 +1560,7 @@ let mk_parallelizable_persistent ~options f =
  * persistent command's handler.
  *)
 let get_persistent_handler ~genv ~client_id ~request : persistent_command_handler =
-  Persistent_connection_prot.(
+  LspProt.(
     let options = genv.ServerEnv.options in
     let reader = State_reader.create () in
     match request with
@@ -1711,12 +1706,12 @@ let wrap_persistent_handler
       b ->
       c persistent_handling_result Lwt.t)
     ~(genv : ServerEnv.genv)
-    ~(client_id : Persistent_connection_prot.client_id)
-    ~(request : Persistent_connection_prot.request_with_metadata)
+    ~(client_id : LspProt.client_id)
+    ~(request : LspProt.request_with_metadata)
     ~(workload : a)
     ~(default_ret : c)
     (arg : b) : c Lwt.t =
-  Persistent_connection_prot.(
+  LspProt.(
     match Persistent_connection.get_client client_id with
     | None ->
       Hh_logger.error "Unknown persistent client %d. Maybe connection went away?" client_id;
@@ -1858,8 +1853,8 @@ let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload env 
 
 let enqueue_persistent
     (genv : ServerEnv.genv)
-    (client_id : Persistent_connection.Prot.client_id)
-    (request : Persistent_connection_prot.request_with_metadata) : unit Lwt.t =
+    (client_id : LspProt.client_id)
+    (request : LspProt.request_with_metadata) : unit Lwt.t =
   match get_persistent_handler ~genv ~client_id ~request with
   | Handle_persistent_immediately workload ->
     handle_persistent_immediately ~genv ~client_id ~request ~workload

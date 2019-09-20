@@ -21,7 +21,6 @@
 let spf = Printf.sprintf
 
 module Logger = FlowServerMonitorLogger
-module PersistentProt = Persistent_connection_prot
 
 type command =
   | Write_ephemeral_request of {
@@ -29,14 +28,14 @@ type command =
       client: EphemeralConnection.t;
     }
   | Write_persistent_request of {
-      client_id: PersistentProt.client_id;
-      request: PersistentProt.request_with_metadata;
+      client_id: LspProt.client_id;
+      request: LspProt.request_with_metadata;
     }
   | Notify_new_persistent_connection of {
-      client_id: PersistentProt.client_id;
+      client_id: LspProt.client_id;
       lsp_init_params: Lsp.Initialize.params;
     }
-  | Notify_dead_persistent_connection of { client_id: PersistentProt.client_id }
+  | Notify_dead_persistent_connection of { client_id: LspProt.client_id }
   | Notify_file_changes
 
 (* A wrapper for Pervasives.exit which gives other threads a second to handle their business
@@ -562,8 +561,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
           (* connection. This WEXITED case covers them. (It doesn't matter that    *)
           (* it also sends the reason in a few additional cases as well.)          *)
           let send_close conn =
-            try PersistentConnection.write ~msg:(PersistentProt.ServerExit exit_type) conn
-            with _ -> ()
+            (try PersistentConnection.write ~msg:(LspProt.ServerExit exit_type) conn with _ -> ())
           in
           PersistentConnectionMap.get_all_clients () |> List.iter send_close;
 
@@ -673,9 +671,7 @@ let send_request ~client ~request =
   push_to_command_stream (Some (Write_ephemeral_request { request; client }))
 
 let send_persistent_request ~client_id ~request =
-  Logger.debug
-    "Adding request (%s) to the command stream"
-    (PersistentProt.string_of_request request);
+  Logger.debug "Adding request (%s) to the command stream" (LspProt.string_of_request request);
   push_to_command_stream (Some (Write_persistent_request { client_id; request }))
 
 let notify_new_persistent_connection ~client_id ~lsp_init_params =

@@ -748,9 +748,7 @@ let mk_intermediate_result_callback
                     ( ConcreteLocPrintableErrorSet.is_empty new_errors
                     && FilenameMap.is_empty new_warnings )
                 then
-                  let errors_reason =
-                    Persistent_connection_prot.Recheck_streaming { recheck_reasons }
-                  in
+                  let errors_reason = LspProt.Recheck_streaming { recheck_reasons } in
                   Persistent_connection.update_clients
                     ~clients
                     ~errors_reason
@@ -1012,7 +1010,7 @@ let ensure_parsed ~options ~profiling ~workers ~reader files =
         in
         let file_count = SSet.cardinal files_to_recheck in
         let reason =
-          Persistent_connection_prot.(
+          LspProt.(
             if file_count = 1 then
               Single_file_changed { filename = SSet.elements files_to_recheck |> List.hd }
             else
@@ -1075,9 +1073,7 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
     Hh_logger.info
       "Canceling command due to %d unchecked dependencies"
       (CheckedSet.cardinal unchecked_dependencies);
-    let reason =
-      Persistent_connection_prot.Unchecked_dependencies { filename = File_key.to_string file }
-    in
+    let reason = LspProt.Unchecked_dependencies { filename = File_key.to_string file } in
     ServerMonitorListenerState.push_checked_set_to_force ~reason unchecked_dependencies;
     raise Lwt.Canceled
   )
@@ -1474,7 +1470,7 @@ module Recheck : sig
     updates:Utils_js.FilenameSet.t ->
     files_to_force:CheckedSet.t ->
     file_watcher_metadata:MonitorProt.file_watcher_metadata ->
-    recheck_reasons:Persistent_connection_prot.recheck_reason list ->
+    recheck_reasons:LspProt.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
     (ServerEnv.env * recheck_result * string option) Lwt.t
@@ -1487,7 +1483,7 @@ module Recheck : sig
     workers:MultiWorkerLwt.worker list option ->
     updates:Utils_js.FilenameSet.t ->
     files_to_force:CheckedSet.t ->
-    recheck_reasons:Persistent_connection_prot.recheck_reason list ->
+    recheck_reasons:LspProt.recheck_reason list ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
 
@@ -1606,7 +1602,7 @@ end = struct
         if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0 then
           Persistent_connection.update_clients
             ~clients:env.ServerEnv.connections
-            ~errors_reason:(Persistent_connection_prot.Recheck_streaming { recheck_reasons })
+            ~errors_reason:(LspProt.Recheck_streaming { recheck_reasons })
             ~calc_errors_and_warnings:(fun () -> (error_set, FilenameMap.empty))
       in
       let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
@@ -2294,8 +2290,7 @@ let recheck
   in
   (* TODO: update log to reflect current terminology **)
   FlowEventLogger.recheck
-    ~recheck_reasons:
-      (List.map Persistent_connection_prot.verbose_string_of_recheck_reason recheck_reasons)
+    ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
     ~modified
     ~deleted
     ~dependent_files
@@ -2730,7 +2725,7 @@ let init ~profiling ~workers options =
          * anything yet. *)
         with_transaction
         @@ fun transaction reader ->
-        let recheck_reasons = [Persistent_connection_prot.Lazy_init_update_deps] in
+        let recheck_reasons = [LspProt.Lazy_init_update_deps] in
         let%lwt env =
           Recheck.parse_and_update_dependency_info
             ~profiling
@@ -2776,7 +2771,7 @@ let init ~profiling ~workers options =
     Lwt.return (libs_ok, env, last_estimates)
   else
     let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
-    let recheck_reasons = [Persistent_connection_prot.Lazy_init_typecheck] in
+    let recheck_reasons = [LspProt.Lazy_init_typecheck] in
     let%lwt (recheck_profiling, _summary, env) =
       recheck
         ~options
@@ -2814,7 +2809,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
        of calling include_dependencies_and_dependents is to compute components. *)
       let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
       let dependency_graph = Dependency_info.dependency_graph dependency_info in
-      let recheck_reasons = [Persistent_connection_prot.Full_init] in
+      let recheck_reasons = [LspProt.Full_init] in
       let%lwt (updated_errors, coverage, _, sig_new_or_changed, _, _, merge_internal_error) =
         merge
           ~transaction

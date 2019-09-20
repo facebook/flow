@@ -19,10 +19,10 @@ type trigger =
   | DocumentSymbol
   | FindReferences
   | Hover
-  | PushedErrorsEndOfRecheck of Persistent_connection_prot.recheck_reason
+  | PushedErrorsEndOfRecheck of LspProt.recheck_reason
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
-  | PushedErrorsRecheckStreaming of Persistent_connection_prot.recheck_reason
+  | PushedErrorsRecheckStreaming of LspProt.recheck_reason
   | Rage
   | Rename
   | TypeCoverage
@@ -62,8 +62,7 @@ val recheck_start : start_state:state -> unit
 
 val log : end_state:state -> ux:ux -> id:id -> unit
 
-val log_pushed_errors :
-  end_state:state -> errors_reason:Persistent_connection_prot.errors_reason -> unit
+val log_pushed_errors : end_state:state -> errors_reason:LspProt.errors_reason -> unit
 
 val trigger_of_lsp_msg : Lsp.lsp_message -> trigger option
 

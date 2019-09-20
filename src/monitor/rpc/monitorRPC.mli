@@ -22,8 +22,6 @@ val respond_to_request :
 val request_failed : request_id:MonitorProt.request_id -> exn_str:string -> unit
 
 val respond_to_persistent_connection :
-  client_id:Persistent_connection_prot.client_id ->
-  response:Persistent_connection_prot.response ->
-  unit
+  client_id:LspProt.client_id -> response:LspProt.response -> unit
 
 val status_update : event:ServerStatus.event -> unit

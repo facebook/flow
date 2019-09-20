@@ -120,7 +120,7 @@ let recheck
     let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
     (errors, warnings)
   in
-  let errors_reason = Persistent_connection_prot.End_of_recheck { recheck_reasons } in
+  let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
   Persistent_connection.update_clients
     ~clients:env.connections
     ~errors_reason

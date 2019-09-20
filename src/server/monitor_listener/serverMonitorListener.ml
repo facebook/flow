@@ -39,7 +39,7 @@ module ListenLoop = LwtLoop.Make (struct
     | MonitorProt.FileWatcherNotification (changed_files, metadata) ->
       let file_count = SSet.cardinal changed_files in
       let reason =
-        Persistent_connection_prot.(
+        LspProt.(
           match metadata with
           | Some { MonitorProt.changed_mergebase = true; total_update_distance } ->
             Rebased { distance = total_update_distance; file_count }

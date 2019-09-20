@@ -9,14 +9,12 @@ val send_request :
   client:EphemeralConnection.t -> request:ServerProt.Request.command_with_context -> unit
 
 val send_persistent_request :
-  client_id:Persistent_connection_prot.client_id ->
-  request:Persistent_connection_prot.request_with_metadata ->
-  unit
+  client_id:LspProt.client_id -> request:LspProt.request_with_metadata -> unit
 
 val notify_new_persistent_connection :
-  client_id:Persistent_connection_prot.client_id -> lsp_init_params:Lsp.Initialize.params -> unit
+  client_id:LspProt.client_id -> lsp_init_params:Lsp.Initialize.params -> unit
 
-val notify_dead_persistent_connection : client_id:Persistent_connection_prot.client_id -> unit
+val notify_dead_persistent_connection : client_id:LspProt.client_id -> unit
 
 val start : FlowServerMonitorOptions.t -> unit Lwt.t
 

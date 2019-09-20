@@ -6,7 +6,7 @@
  *)
 
 module List = Core_list
-open Persistent_connection_prot
+open LspProt
 
 (* Each interaction gets a unique id. *)
 type id = int

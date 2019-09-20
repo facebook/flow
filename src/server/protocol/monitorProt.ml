@@ -7,8 +7,6 @@
 
 (* The Flow server monitor uses this module to communicate with the server and with clients *)
 
-module PersistentProt = Persistent_connection_prot
-
 (* Ephemeral socket connections expect a response to their requests. We use request_id to indicate
  * to which request a given response is replying *)
 type request_id = string
@@ -33,11 +31,11 @@ type monitor_to_server_message =
   (* A request from an ephemeral socket connection. It expects a response *)
   | Request of request_id * ServerProt.Request.command_with_context
   (* A notification that there is a new persistent socket connection *)
-  | NewPersistentConnection of PersistentProt.client_id * Lsp.Initialize.params
+  | NewPersistentConnection of LspProt.client_id * Lsp.Initialize.params
   (* A request from a persistent socket connection. It does not expect a response *)
-  | PersistentConnectionRequest of PersistentProt.client_id * PersistentProt.request_with_metadata
+  | PersistentConnectionRequest of LspProt.client_id * LspProt.request_with_metadata
   (* A notification that a persistent socket connection is dead *)
-  | DeadPersistentConnection of PersistentProt.client_id
+  | DeadPersistentConnection of LspProt.client_id
   (* The file watcher has noticed changes *)
   | FileWatcherNotification of SSet.t * file_watcher_metadata option
   (* Monitor wants to kill the server but first asks nicely for the server to honorably kill itself *)
@@ -50,7 +48,7 @@ type server_to_monitor_message =
   (* An exception was thrown while processing the request *)
   | RequestFailed of request_id * string
   (* A response to a persistent socket connection *)
-  | PersistentConnectionResponse of PersistentProt.client_id * PersistentProt.response
+  | PersistentConnectionResponse of LspProt.client_id * LspProt.response
   (* A notification of the server's current status *)
   | StatusUpdate of ServerStatus.status
 

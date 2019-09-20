@@ -140,8 +140,8 @@ exception Client_recoverable_connection_exception of Marshal_tools.remote_except
 exception Server_fatal_connection_exception of Marshal_tools.remote_exception_data
 
 type event =
-  | Server_message of Persistent_connection_prot.response
-  | Client_message of Lsp.lsp_message * Persistent_connection_prot.metadata
+  | Server_message of LspProt.response
+  | Client_message of Lsp.lsp_message * LspProt.metadata
   | Tick
 
 (* once per second, on idle *)
@@ -156,7 +156,7 @@ let string_of_state (state : state) : string =
 let denorm_string_of_event (event : event) : string =
   match event with
   | Server_message response ->
-    Printf.sprintf "Server_message(%s)" (Persistent_connection_prot.string_of_response response)
+    Printf.sprintf "Server_message(%s)" (LspProt.string_of_response response)
   | Client_message (c, _) ->
     Printf.sprintf "Client_message(%s)" (Lsp_fmt.denorm_message_to_string c)
   | Tick -> "Tick"
@@ -214,8 +214,7 @@ let update_errors f state =
   | Post_shutdown ->
     state
 
-let new_metadata (state : state) (message : Jsonrpc.message) : Persistent_connection_prot.metadata
-    =
+let new_metadata (state : state) (message : Jsonrpc.message) : LspProt.metadata =
   let (start_lsp_state, start_lsp_state_reason, start_server_status, start_watcher_status) =
     match state with
     | Connected { c_server_status = (s, w); _ } -> (None, None, Some s, w)
@@ -233,8 +232,8 @@ let new_metadata (state : state) (message : Jsonrpc.message) : Persistent_connec
     | Some (Shown (_, params)) -> Some params.ShowStatus.request.ShowMessageRequest.message
   in
   {
-    Persistent_connection_prot.empty_metadata with
-    Persistent_connection_prot.start_wall_time = message.Jsonrpc.timestamp;
+    LspProt.empty_metadata with
+    LspProt.start_wall_time = message.Jsonrpc.timestamp;
     start_server_status;
     start_watcher_status;
     start_json_truncated =
@@ -289,7 +288,7 @@ let get_next_event_from_server (fd : Unix.file_descr) : event =
   (* The server sends an explicit 'EOF' message in case the underlying *)
   (* transport protocol doesn't result in EOF normally. We'll respond  *)
   (* to it by synthesizing the EOF exception we'd otherwise get. *)
-  if r = Server_message Persistent_connection_prot.EOF then
+  if r = Server_message LspProt.EOF then
     let stack = Exception.get_current_callstack_string 100 in
     raise (Server_fatal_connection_exception { Marshal_tools.message = "End_of_file"; stack })
   else
@@ -452,19 +451,16 @@ let show_status
             i_outstanding_local_handlers;
           })))
 
-let send_to_server
-    (env : connected_env)
-    (request : Persistent_connection_prot.request)
-    (metadata : Persistent_connection_prot.metadata) : unit =
+let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata)
+    : unit =
   let _bytesWritten =
     Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) (request, metadata)
   in
   ()
 
-let send_lsp_to_server
-    (cenv : connected_env) (metadata : Persistent_connection_prot.metadata) (message : lsp_message)
+let send_lsp_to_server (cenv : connected_env) (metadata : LspProt.metadata) (message : lsp_message)
     : unit =
-  send_to_server cenv (Persistent_connection_prot.LspToServer message) metadata
+  send_to_server cenv (LspProt.LspToServer message) metadata
 
 (************************************************************************)
 (** Protocol                                                           **)
@@ -679,15 +675,15 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
         let method_name = "synthetic/subscribe" in
         Hh_json.
           {
-            Persistent_connection_prot.empty_metadata with
-            Persistent_connection_prot.start_wall_time = Unix.gettimeofday ();
+            LspProt.empty_metadata with
+            LspProt.start_wall_time = Unix.gettimeofday ();
             start_server_status = Some (fst new_env.c_server_status);
             start_watcher_status = snd new_env.c_server_status;
             start_json_truncated = JSON_Object [("method", JSON_String method_name)];
             lsp_method_name = method_name;
           }
       in
-      send_to_server new_env Persistent_connection_prot.Subscribe metadata
+      send_to_server new_env LspProt.Subscribe metadata
     in
     let make_open_message (textDocument : TextDocumentItem.t) : lsp_message =
       NotificationMessage (DidOpenNotification { DidOpen.textDocument })
@@ -701,8 +697,8 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
       let method_name = "synthetic/open" in
       let metadata =
         {
-          Persistent_connection_prot.empty_metadata with
-          Persistent_connection_prot.start_wall_time = Unix.gettimeofday ();
+          LspProt.empty_metadata with
+          LspProt.start_wall_time = Unix.gettimeofday ();
           start_server_status = Some (fst new_env.c_server_status);
           start_watcher_status = snd new_env.c_server_status;
           start_json_truncated = JSON_Object [("method", JSON_String method_name)];
@@ -1478,7 +1474,7 @@ let do_live_diagnostics
     flowconfig_name
     (state : state)
     (trigger : LspInteraction.trigger option)
-    (metadata : Persistent_connection_prot.metadata)
+    (metadata : LspProt.metadata)
     (uri : string) : state =
   (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
    * diagnostics and want to log what triggered it regardless of whether it's known or not *)
@@ -1503,11 +1499,11 @@ let do_live_diagnostics
         Hh_json.JSON_Number (errors |> List.length |> string_of_int))
   in
   FlowEventLogger.live_parse_errors
-    ~request:(metadata.Persistent_connection_prot.start_json_truncated |> Hh_json.json_to_string)
+    ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
     ~data:
       Hh_json.(
         JSON_Object [("uri", JSON_String uri); ("error_count", error_count)] |> json_to_string)
-    ~wall_start:metadata.Persistent_connection_prot.start_wall_time;
+    ~wall_start:metadata.LspProt.start_wall_time;
 
   state
 
@@ -1517,7 +1513,7 @@ let do_live_diagnostics
 (************************************************************************)
 
 type log_needed =
-  | LogNeeded of Persistent_connection_prot.metadata
+  | LogNeeded of LspProt.metadata
   | LogDeferred
   | LogNotNeeded
 
@@ -1574,7 +1570,7 @@ and main_loop flowconfig_name (client : Jsonrpc.queue) (state : state) : unit Lw
   let state =
     match result with
     | Ok (state, LogNeeded metadata, client_duration) ->
-      Persistent_connection_prot.(
+      LspProt.(
         let client_duration =
           if metadata.client_duration = None then
             Some client_duration
@@ -1728,11 +1724,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           state)
     in
     let metadata =
-      {
-        metadata with
-        Persistent_connection_prot.client_duration = Some client_duration;
-        interaction_tracking_id;
-      }
+      { metadata with LspProt.client_duration = Some client_duration; interaction_tracking_id }
     in
     send_lsp_to_server cenv metadata c;
     Ok (state, LogDeferred)
@@ -1767,9 +1759,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (* TODO - In the future if we start running check-contents on DidChange, we should probably
      * log Errored instead of Responded for that one *)
     Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Responded state);
-    let metadata =
-      { metadata with Persistent_connection_prot.client_duration = Some client_duration }
-    in
+    let metadata = { metadata with LspProt.client_duration = Some client_duration } in
     Ok (state, LogNeeded metadata)
   | (_, Client_message (NotificationMessage (CancelRequestNotification _), _metadata)) ->
     (* let's just not bother reporting any error in this case *)
@@ -1787,10 +1777,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     Error (state, e, Utils.Callstack stack)
   | (Post_shutdown, Client_message (_, _metadata)) ->
     raise (Error.RequestCancelled "Server shutting down")
-  | (Connected cenv, Server_message (Persistent_connection_prot.ServerExit exit_code)) ->
+  | (Connected cenv, Server_message (LspProt.ServerExit exit_code)) ->
     let state = Connected { cenv with c_about_to_exit_code = Some exit_code } in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message (Persistent_connection_prot.LspFromServer (msg, metadata))) ->
+  | (Connected cenv, Server_message (LspProt.LspFromServer (msg, metadata))) ->
     let (state, metadata, ux) =
       match msg with
       | None -> (state, metadata, LspInteraction.Responded)
@@ -1805,7 +1795,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             (* we'll zero out the "client_duration", which at the moment represents client-side *)
             (* work we did before sending out the request. By zeroing it out now, it'll get *)
             (* filled out with the client-side work that gets done right here and now. *)
-            let metadata = { metadata with Persistent_connection_prot.client_duration = None } in
+            let metadata = { metadata with LspProt.client_duration = None } in
             let ux = LspInteraction.Responded in
             (ResponseMessage (id, RageResult (items @ do_rage flowconfig_name state)), metadata, ux)
           | ResponseMessage (_, ErrorResult (e, _)) ->
@@ -1819,18 +1809,13 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             (outgoing, metadata, ux)
           | _ -> (outgoing, metadata, LspInteraction.Responded)
         in
-        let outgoing =
-          selectively_omit_errors Persistent_connection_prot.(metadata.lsp_method_name) outgoing
-        in
+        let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
         to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
         (state, metadata, ux)
     in
-    Option.iter
-      metadata.Persistent_connection_prot.interaction_tracking_id
-      ~f:(log_interaction ~ux state);
+    Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
     Ok (state, LogNeeded metadata)
-  | ( Connected cenv,
-      Server_message (Persistent_connection_prot.Errors { errors; warnings; errors_reason }) ) ->
+  | (Connected cenv, Server_message (LspProt.Errors { errors; warnings; errors_reason })) ->
     (* A note about the errors reported by this server message:               *)
     (* While a recheck is in progress, between StartRecheck and EndRecheck,   *)
     (* the server will periodically send errors+warnings. These are additive  *)
@@ -1869,17 +1854,17 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
              LspErrors.set_finalized_server_errors_and_send to_stdout all )
     in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message Persistent_connection_prot.StartRecheck) ->
+  | (Connected cenv, Server_message LspProt.StartRecheck) ->
     let start_state = collect_interaction_state state in
     LspInteraction.recheck_start ~start_state;
     let state = show_recheck_progress { cenv with c_is_rechecking = true; c_lazy_stats = None } in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message (Persistent_connection_prot.EndRecheck lazy_stats)) ->
+  | (Connected cenv, Server_message (LspProt.EndRecheck lazy_stats)) ->
     let state =
       show_recheck_progress { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats }
     in
     Ok (state, LogNotNeeded)
-  | (Connected cenv, Server_message (Persistent_connection_prot.Please_hold status)) ->
+  | (Connected cenv, Server_message (LspProt.Please_hold status)) ->
     let (server_status, watcher_status) = status in
     let c_server_status = (server_status, Some watcher_status) in
     (* We keep a log of typecheck summaries over the past 2mins. *)
@@ -1904,8 +1889,8 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     Ok (state, LogNotNeeded)
   | (_, Tick) -> Ok (state, LogNotNeeded)
 
-and main_log_command (state : state) (metadata : Persistent_connection_prot.metadata) : unit =
-  Persistent_connection_prot.(
+and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
+  LspProt.(
     let client_context = FlowEventLogger.get_context () in
     let request = metadata.start_json_truncated |> Hh_json.json_to_string in
     let wall_start = metadata.start_wall_time in
@@ -1987,7 +1972,7 @@ and main_log_error ~(expected : bool) (msg : string) (stack : string) (event : e
   let request =
     match event with
     | Some (Client_message (_, metadata)) ->
-      Some (metadata.Persistent_connection_prot.start_json_truncated |> Hh_json.json_to_string)
+      Some (metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
     | Some (Server_message _)
     | Some Tick
     | None ->

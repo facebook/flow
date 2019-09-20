@@ -51,7 +51,7 @@ type recheck_msg = {
   callback: (Profiling_js.finished option -> unit) option;
   file_watcher_metadata: MonitorProt.file_watcher_metadata option;
   files: recheck_files;
-  recheck_reason: Persistent_connection_prot.recheck_reason;
+  recheck_reason: LspProt.recheck_reason;
 }
 
 and recheck_files =
@@ -90,7 +90,7 @@ type recheck_workload = {
   files_to_force: CheckedSet.t;
   profiling_callbacks: (Profiling_js.finished option -> unit) list;
   metadata: MonitorProt.file_watcher_metadata;
-  recheck_reasons_rev: Persistent_connection_prot.recheck_reason list;
+  recheck_reasons_rev: LspProt.recheck_reason list;
 }
 
 let empty_recheck_workload =
