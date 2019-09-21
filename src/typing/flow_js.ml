@@ -5645,11 +5645,13 @@ struct
         (**************)
         (* object kit *)
         (**************)
-        | (DefT (reason, trust, ArrT (TupleAT (elemt, tuple_types))), ObjKitT (use_op, _, _, Object.ReadOnly, tout)) ->
+        | (DefT (_, trust, ArrT (TupleAT (elemt, tuple_types))), ObjKitT (use_op, reason, _, Object.ReadOnly, tout)) ->
           rec_flow_t cx ~use_op trace (
             DefT (replace_desc_reason RROTupleType reason, trust, ArrT (ROTupleAT (elemt, tuple_types))),
             tout
           )
+        | (DefT (_, _, ArrT (ROTupleAT _)), ObjKitT (use_op, _, _, Object.ReadOnly, tout)) ->
+          rec_flow_t cx ~use_op trace (l, tout)
         | (_, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
         (**************************************************)
