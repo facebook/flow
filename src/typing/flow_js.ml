@@ -7343,8 +7343,7 @@ struct
     | SubstOnPredT (_, _, OpenPredT (_, t, _, _)) ->
       covariant_flow ~use_op:unknown_use t;
       true
-    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t)))
-    | UseT (use_op, DefT (_, _, ArrT (ROTupleAT (t, _)))) (* read-only arrays are covariant *)
+    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, OpenPredT (_, t, _, _))
     | UseT (use_op, ShapeT t) ->
@@ -7353,6 +7352,10 @@ struct
     | UseT (use_op, DefT (_, _, ReactAbstractComponentT { config; instance })) ->
       contravariant_flow ~use_op config;
       covariant_flow ~use_op instance;
+      true
+    | UseT (use_op, DefT (_, _, ArrT (ROTupleAT (t, ts)))) ->
+      List.iter (covariant_flow ~use_op) ts;
+      covariant_flow ~use_op t;
       true
     (* Some types just need to be expanded and filled with any types *)
     | UseT (use_op, (DefT (_, _, ArrT (ArrayAT _)) as t))
@@ -7535,13 +7538,16 @@ struct
       true
     | DefT (_, _, ClassT t)
     | DefT (_, _, ArrT (ROArrayAT t))
-    | DefT (_, _, ArrT (ROTupleAT (t, _)))
     | DefT (_, _, TypeT (_, t)) ->
       covariant_flow ~use_op t;
       true
     | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
       contravariant_flow ~use_op config;
       covariant_flow ~use_op instance;
+      true
+    | DefT (_, _, ArrT (ROTupleAT (t, ts))) ->
+      List.iter (covariant_flow ~use_op) ts;
+      covariant_flow ~use_op t;
       true
     (* These types have no negative positions in their lower bounds *)
     | ExistsT _
