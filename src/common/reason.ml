@@ -90,6 +90,7 @@ type 'loc virtual_reason_desc =
   | RArrayType
   | RROArrayType
   | RTupleType
+  | RROTupleType
   | RTupleElement
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
@@ -240,7 +241,7 @@ let rec map_desc_locs f = function
     | RVoid | RNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
     | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RROArrayType | RTupleType | RTupleElement | RTupleOutOfBoundsAccess | RFunction _
+    | RROArrayType | RTupleType | RROTupleType | RTupleElement | RTupleOutOfBoundsAccess | RFunction _
     | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
       ) as r ->
@@ -537,6 +538,7 @@ let rec string_of_desc = function
   | RArrayType -> "array type"
   | RROArrayType -> "read-only array type"
   | RTupleType -> "tuple type"
+  | RROTupleType -> "read-only tuple type"
   | RTupleElement -> "tuple element"
   | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
@@ -1279,6 +1281,7 @@ let classification_of_reason r =
   | RArrayType
   | RROArrayType
   | RTupleType
+  | RROTupleType
   | RRestArray _
   | RArrayPatternRestProp ->
     `Array

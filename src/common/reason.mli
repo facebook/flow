@@ -40,6 +40,7 @@ type 'loc virtual_reason_desc =
   | RArrayType
   | RROArrayType
   | RTupleType
+  | RROTupleType
   | RTupleElement
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
