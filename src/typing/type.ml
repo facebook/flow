@@ -867,6 +867,7 @@ module rec TypeTerm : sig
      * myTuple[expr]
      *)
     | TupleAT of t * t list
+    | ROTupleAT of t * t list
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)
     | ROArrayAT of t
@@ -1770,13 +1771,13 @@ end = struct
         (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
         | OpenT _
         (* some types may not be evaluated yet; TODO *)
-        
+
         | EvalT _
         | TypeAppT _
         | KeysT _
         | IntersectionT _
         (* other types might wrap parts that are accessible directly *)
-        
+
         | OpaqueT _
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->
@@ -3698,7 +3699,8 @@ and extract_getter_type = function
 and elemt_of_arrtype = function
   | ArrayAT (elemt, _)
   | ROArrayAT elemt
-  | TupleAT (elemt, _) ->
+  | TupleAT (elemt, _)
+  | ROTupleAT (elemt, _) ->
     elemt
 
 let optional ?annot_loc t =

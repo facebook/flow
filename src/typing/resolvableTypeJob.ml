@@ -135,7 +135,7 @@ and collect_of_type ?log_unresolved cx acc = function
     let ts = Option.value ~default:[] tuple_types in
     let ts = elemt :: ts in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, ArrT (TupleAT (elemt, tuple_types))) ->
+  | DefT (_, _, ArrT (TupleAT (elemt, tuple_types) | ROTupleAT (elemt, tuple_types))) ->
     collect_of_types ?log_unresolved cx acc (elemt :: tuple_types)
   | DefT (_, _, ArrT (ROArrayAT elemt)) -> collect_of_type ?log_unresolved cx acc elemt
   | DefT

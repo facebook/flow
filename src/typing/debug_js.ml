@@ -204,6 +204,12 @@ and _json_of_t_impl json_cx t =
           ("elemType", _json_of_t json_cx elemt);
           ("tupleType", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuple_types));
         ]
+      | DefT (_, _, ArrT (ROTupleAT (elemt, tuple_types))) ->
+        [
+          ("kind", JSON_String "ReadOnlyTuple");
+          ("elemType", _json_of_t json_cx elemt);
+          ("tupleType", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuple_types));
+        ]
       | DefT (_, _, ArrT (ROArrayAT elemt)) ->
         [("kind", JSON_String "ReadOnlyArray"); ("elemType", _json_of_t json_cx elemt)]
       | DefT (_, _, CharSetT chars) ->
@@ -1661,6 +1667,11 @@ let rec dump_t_ (depth, tvars) cx t =
       p
         ~trust:(Some trust)
         ~extra:(spf "Tuple [%s]" (String.concat ", " (Core_list.map ~f:kid tup)))
+        t
+    | DefT (_, trust, ArrT (ROTupleAT (_, tup))) ->
+      p
+        ~trust:(Some trust)
+        ~extra:(spf "ReadOnlyTuple [%s]" (String.concat ", " (Core_list.map ~f:kid tup)))
         t
     | DefT (_, trust, ArrT (ROArrayAT elemt)) ->
       p ~trust:(Some trust) ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t

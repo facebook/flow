@@ -912,6 +912,9 @@ end = struct
     | T.TupleAT (_, ts) ->
       let%map ts = mapM (type__ ~env) ts in
       Ty.Tup ts
+    | T.ROTupleAT (_, ts) ->
+      let%map ts = mapM (type__ ~env) ts in
+      Ty.Utility (Ty.ReadOnly (Ty.Tup ts))
 
   (* Used for instances of React.createClass(..) *)
   and react_component =

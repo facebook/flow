@@ -679,6 +679,10 @@ class ['a] t =
         let acc = self#type_ cx P.Neutral acc t in
         let acc = self#list (self#type_ cx P.Neutral) acc ts in
         acc
+      | ROTupleAT (t, ts) ->
+        let acc = self#type_ cx pole acc t in
+        let acc = self#list (self#type_ cx pole) acc ts in
+        acc
       | ROArrayAT t -> self#type_ cx pole acc t
 
     method private inst_type cx pole acc i =

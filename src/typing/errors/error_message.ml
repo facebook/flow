@@ -1204,7 +1204,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           export;
           text " as a value. ";
             (* text "Use "; code "import type"; text " instead."; *)
-          
+
         ]
     | ENoDefaultExport (_, module_name, suggestion) ->
       Normal
@@ -1493,8 +1493,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [text "the index must be statically known to write a tuple element"],
           use_op )
     | EROArrayWrite (reasons, use_op) ->
-      let (lower, _) = reasons in
-      UseOp (loc_of_reason lower, [text "read-only arrays cannot be written to"], use_op)
+      let (lower, reason_tup) = reasons in
+      let desc = match (desc_of_reason reason_tup) with
+      | RROTupleType -> "read-only tuples"
+      | _ -> "read-only arrays"
+      in
+      UseOp (loc_of_reason lower, [text desc; text " cannot be written to"], use_op)
     | EUnionSpeculationFailed { use_op; reason; reason_op = _; branches } ->
       Speculation (loc_of_reason reason, use_op, branches)
     | ESpeculationAmbiguous

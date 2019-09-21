@@ -1583,7 +1583,7 @@ struct
                      | ExportValue
                      (* If it's a re-export, we can assume that the appropriate export checks have been
                       * applied in the original module. *)
-                     
+
                      | ReExport ->
                        t
                      (* If it's of the form `export type` then check to make sure it's actually a type. *)
@@ -3389,6 +3389,8 @@ struct
                       | ArrayAT (elemt, Some _)
                       | TupleAT (elemt, _) ->
                         ArrayAT (elemt, None)
+                      | ROTupleAT (elemt, _) ->
+                        ROArrayAT elemt
                       (* These cannot *)
                       | ArrayAT (_, None)
                       | ROArrayAT _ ->
@@ -4697,6 +4699,24 @@ struct
           let ts2 = Option.value ~default:[] ts2 in
           array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
         (* Tuples can flow to tuples with the same arity *)
+        | ( DefT (r1, _, ArrT (TupleAT (_, ts1) | ROTupleAT (_, ts1))),
+            UseT (use_op, DefT (r2, _, ArrT (ROTupleAT (_, ts2)))) ) ->
+          let l1 = List.length ts1 in
+          let l2 = List.length ts2 in
+          if l1 <> l2 then
+            add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), l1, l2, use_op));
+          let n = ref 0 in
+          iter2opt
+            (fun t1 t2 ->
+              match (t1, t2) with
+              | (Some t1, Some t2) ->
+                n := !n + 1;
+                let use_op =
+                  Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
+                in
+                flow_to_mutable_child cx trace use_op true t1 t2
+              | _ -> ())
+            (ts1, ts2)
         | ( DefT (r1, _, ArrT (TupleAT (_, ts1))),
             UseT (use_op, DefT (r2, _, ArrT (TupleAT (_, ts2)))) ) ->
           let fresh = desc_of_reason r1 = RArrayLit in
@@ -4722,10 +4742,19 @@ struct
           begin
             match ts1 with
             | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
-            | Some ts1 -> rec_flow cx trace (DefT (r1, trust, ArrT (TupleAT (t1, ts1))), u)
+            | Some ts1 ->
+              rec_flow cx trace (DefT (r1, trust, ArrT (TupleAT (t1, ts1))), u)
+          end
+        | ( DefT (r1, trust, ArrT (ArrayAT (t1, ts1))),
+            UseT (use_op, DefT (r2, _, ArrT (ROTupleAT _))) ) ->
+          begin
+            match ts1 with
+            | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
+            | Some ts1 ->
+              rec_flow cx trace (DefT (r1, trust, ArrT (ROTupleAT (t1, ts1))), u)
           end
         (* Read only arrays are the super type of all tuples and arrays *)
-        | ( DefT (r1, _, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT t1)),
+        | ( DefT (r1, _, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROTupleAT (t1, _) | ROArrayAT t1)),
             UseT (use_op, DefT (r2, _, ArrT (ROArrayAT t2))) ) ->
           let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
           rec_flow cx trace (t1, UseT (use_op, t2))
@@ -5269,6 +5298,7 @@ struct
               (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
               rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
             | TupleAT (_, ts)
+            | ROTupleAT (_, ts)
             | ArrayAT (_, Some ts) ->
               (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
               List.iter
@@ -5492,7 +5522,7 @@ struct
           ->
           begin
             match (action, arrtype) with
-            | (WriteElem _, ROArrayAT _) ->
+            | (WriteElem _, (ROArrayAT _ | ROTupleAT _)) ->
               let reasons = (reason_op, reason_tup) in
               add_output cx ~trace (Error_message.EROArrayWrite (reasons, use_op))
             | _ -> ()
@@ -5501,11 +5531,12 @@ struct
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
         | (l, ElemT (use_op, reason, (DefT (reason_tup, _, ArrT arrtype) as arr), action))
           when numeric l ->
-          let (value, ts, is_index_restricted, is_tuple) =
+          let (value, ts, can_write_tuple, is_tuple, is_index_restricted) =
             match arrtype with
-            | ArrayAT (value, ts) -> (value, ts, false, false)
-            | TupleAT (value, ts) -> (value, Some ts, true, true)
-            | ROArrayAT value -> (value, None, true, false)
+            | ArrayAT (value, ts) -> (value, ts, true, false, false)
+            | TupleAT (value, ts) -> (value, Some ts, true, true, true)
+            | ROTupleAT (value, ts) -> (value, Some ts, false, true, true)
+            | ROArrayAT value -> (value, None, false, true, false)
           in
           let (can_write_tuple, value) =
             match l with
@@ -5523,7 +5554,7 @@ struct
                       in
                       begin
                         match value_opt with
-                        | Some value -> (true, value)
+                        | Some value -> (can_write_tuple, value)
                         | None ->
                           if is_tuple then (
                             add_output
@@ -5537,11 +5568,11 @@ struct
                                    length = List.length ts;
                                    index = index_string;
                                  });
-                            ( true,
+                            ( can_write_tuple,
                               AnyT.error
                                 (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason)) )
                           ) else
-                            (true, value)
+                            (can_write_tuple, value)
                       end
                     | None ->
                       (* not an integer index *)
@@ -5551,9 +5582,9 @@ struct
                           ~trace
                           (Error_message.ETupleNonIntegerIndex
                              { use_op; reason = index_reason; index = index_string });
-                        (true, AnyT.error reason)
+                        (can_write_tuple, AnyT.error reason)
                       ) else
-                        (true, value)
+                        (can_write_tuple, value)
                   end
               end
             | _ -> (false, value)
@@ -5567,9 +5598,9 @@ struct
             (* This isn't *)
             | WriteElem _ ->
               let error =
-                match ts with
-                | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
-                | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
+                match (ts, arrtype) with
+                | (Some _, TupleAT _) -> Error_message.ETupleUnsafeWrite { reason; use_op }
+                | _ -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
               in
               add_output cx ~trace error );
 
@@ -5590,6 +5621,7 @@ struct
               arrtype
             | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Core_list.drop ts i))
             | TupleAT (elemt, ts) -> TupleAT (elemt, Core_list.drop ts i)
+            | ROTupleAT (elemt, ts) -> ROTupleAT (elemt, Core_list.drop ts i)
           in
           let a = DefT (reason, trust, ArrT arrtype) in
           rec_flow_t cx trace (a, tout)
@@ -5613,6 +5645,11 @@ struct
         (**************)
         (* object kit *)
         (**************)
+        | (DefT (reason, trust, ArrT (TupleAT (elemt, tuple_types))), ObjKitT (use_op, _, _, Object.ReadOnly, tout)) ->
+          rec_flow_t cx ~use_op trace (
+            DefT (replace_desc_reason RROTupleType reason, trust, ArrT (ROTupleAT (elemt, tuple_types))),
+            tout
+          )
         | (_, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
         (**************************************************)
@@ -5629,6 +5666,7 @@ struct
             match arrtype with
             | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(Core_list.map ~f) ts)
             | TupleAT (elemt, ts) -> TupleAT (f elemt, Core_list.map ~f ts)
+            | ROTupleAT (elemt, ts) -> ROTupleAT (f elemt, Core_list.map ~f ts)
             | ROArrayAT elemt -> ROArrayAT (f elemt)
           in
           let t =
@@ -6647,7 +6685,7 @@ struct
         | ( DefT (reason, _, ArrT (ArrayAT (t, _))),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
           rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
-        | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
+        | ( DefT (reason, _, ArrT ((TupleAT _ | ROTupleAT _ | ROArrayAT _) as arrtype)),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
           let t = elemt_of_arrtype arrtype in
           rec_flow cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
@@ -7134,7 +7172,7 @@ struct
     (* Propagation cases: these cases don't use the fact that the LHS is
      empty, but they propagate the LHS to other types and trigger additional
      flows that may need to occur. *)
-    
+
     | (_, UseT (_, DefT (_, _, PolyT _)))
     | (_, UseT (_, TypeAppT _))
     | (_, UseT (_, MaybeT _))
@@ -7190,7 +7228,7 @@ struct
      types; either the flow would succeed anyways or it would fall
      through to the final catch-all error case and cause a spurious
      error. *)
-    
+
     | (_, UseT _)
     | (_, ArrRestT _)
     | (_, CallElemT _)
@@ -7305,9 +7343,9 @@ struct
     | SubstOnPredT (_, _, OpenPredT (_, t, _, _)) ->
       covariant_flow ~use_op:unknown_use t;
       true
-    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
+    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t)))
+    | UseT (use_op, DefT (_, _, ArrT (ROTupleAT (t, _)))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
-    | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT (_, t, _, _))
     | UseT (use_op, ShapeT t) ->
       covariant_flow ~use_op t;
@@ -7401,7 +7439,7 @@ struct
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
-    
+
     | TestPropT _
     | ThisSpecializeT _
     | ToStringT _
@@ -7413,11 +7451,11 @@ struct
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
-    
+
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     (* Should never occur, so we just defer to __flow to handle errors *)
-    
+
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
     | UseT (_, DefT (_, _, IdxWrapper _))
@@ -7427,11 +7465,9 @@ struct
     (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
      this can be handled by the pre-existing rules *)
-    
+
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, OpenT _) ->
-      false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
      true *)
     | AssertArithmeticOperandT _
@@ -7499,6 +7535,7 @@ struct
       true
     | DefT (_, _, ClassT t)
     | DefT (_, _, ArrT (ROArrayAT t))
+    | DefT (_, _, ArrT (ROTupleAT (t, _)))
     | DefT (_, _, TypeT (_, t)) ->
       covariant_flow ~use_op t;
       true
@@ -7911,6 +7948,8 @@ struct
     | DefT (_, _, ArrT (ArrayAT (elemt, _))) -> check_polarity cx ?trace Polarity.Neutral elemt
     | DefT (_, _, ArrT (TupleAT (_, tuple_types))) ->
       List.iter (check_polarity cx ?trace Polarity.Neutral) tuple_types
+    | DefT (_, _, ArrT (ROTupleAT (_, tuple_types))) ->
+      List.iter (check_polarity cx ?trace polarity) tuple_types
     | DefT (_, _, ArrT (ROArrayAT elemt)) -> check_polarity cx ?trace polarity elemt
     | DefT (_, _, ObjT obj) ->
       check_polarity_propmap cx ?trace polarity obj.props_tmap;
@@ -10252,6 +10291,7 @@ struct
           let ts1 = Option.value ~default:[] ts1 in
           let ts2 = Option.value ~default:[] ts2 in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
+        | (DefT (r1, _, ArrT (ROTupleAT (_, ts1))), DefT (r2, _, ArrT (ROTupleAT (_, ts2))))
         | (DefT (r1, _, ArrT (TupleAT (_, ts1))), DefT (r2, _, ArrT (TupleAT (_, ts2)))) ->
           let l1 = List.length ts1 in
           let l2 = List.length ts2 in
@@ -10578,7 +10618,7 @@ struct
     *)
       | (_, [])
       (* No more arguments *)
-      
+
       | ([], _) ->
         ([], arglist, parlist)
       | (tin :: tins, (name, tout) :: touts) ->
@@ -10754,6 +10794,7 @@ struct
                begin
                  match arrtype with
                  | ArrayAT (_, Some tuple_types)
+                 | ROTupleAT (_, tuple_types)
                  | TupleAT (_, tuple_types) ->
                    Core_list.fold_left
                      ~f:(fun acc elem -> ResolvedArg elem :: acc)
@@ -10791,7 +10832,7 @@ struct
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
           | `Literal
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          
+
           | `Tuple ->
             AnyT.untyped reason_op
         else
@@ -10881,7 +10922,7 @@ struct
           | None ->
             (match resolved with
             | ResolvedArg t :: rest -> flatten r (t :: args) spread rest
-            | ResolvedSpreadArg (_, (ArrayAT (_, Some ts) | TupleAT (_, ts))) :: rest ->
+            | ResolvedSpreadArg (_, (ArrayAT (_, Some ts) | TupleAT (_, ts) | ROTupleAT (_, ts))) :: rest ->
               let args = List.rev_append ts args in
               flatten r args spread rest
             | ResolvedSpreadArg (r, _) :: _

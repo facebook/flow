@@ -305,7 +305,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Error reason
     in
     let coerce_array = function
-      | DefT (_, _, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) -> Ok ts
+      | DefT (_, _, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts) | ROTupleAT (_, ts))) -> Ok ts
       | DefT (reason, _, ArrT _)
       | AnyT (reason, _) ->
         Error reason
@@ -349,7 +349,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Stateless functional components. *)
       | DefT (_, _, FunT _)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      
+
       | DefT (_, _, ObjT { call_t = Some _; _ }) ->
         rec_flow cx trace (component, ReactInToProps (reason_op, tin))
       (* Abstract components. *)
