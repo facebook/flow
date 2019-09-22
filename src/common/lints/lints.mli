@@ -38,6 +38,7 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | NonArraySpread
+  | NoFloatingPromises
 
 val string_of_kind : lint_kind -> string
 
