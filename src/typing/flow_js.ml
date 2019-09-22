@@ -7347,6 +7347,7 @@ struct
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
+    | UseT (use_op, ExactT (_, t))
     | UseT (use_op, OpenPredT (_, t, _, _))
     | UseT (use_op, ShapeT t) ->
       covariant_flow ~use_op t;
@@ -7473,6 +7474,8 @@ struct
 
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
+    | UseT (_, OpenT _) ->
+      false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
      true *)
     | AssertArithmeticOperandT _
