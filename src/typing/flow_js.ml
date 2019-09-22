@@ -1583,7 +1583,7 @@ struct
                      | ExportValue
                      (* If it's a re-export, we can assume that the appropriate export checks have been
                       * applied in the original module. *)
-                     
+
                      | ReExport ->
                        t
                      (* If it's of the form `export type` then check to make sure it's actually a type. *)
@@ -2318,6 +2318,18 @@ struct
               (match Type_filter.not_exists l with
               | DefT (_, _, EmptyT Bottom) -> false
               | _ -> true)
+        (************************)
+        (* no floating promises *)
+        (************************)
+        | (TypeAppT (reason, _, _, _), NoFloatingPromisesT (reason_op, useful)) ->
+          let typeapp_desc = DescFormat.name_of_instance_reason reason in
+          if typeapp_desc = "`Promise`" then
+            Context.mark_floating_promise
+              cx
+              (aloc_of_reason reason_op)
+              (reason_of_t l)
+              ~useful;
+        | (_, NoFloatingPromisesT _) -> ()
         (***************)
         (* maybe types *)
         (***************)
@@ -4253,6 +4265,7 @@ struct
           let { this_t = o1; params = _; return_t = t1; closure_t = func_scope_id; changeset; _ } =
             funtype
           in
+          rec_flow cx trace (t1, NoFloatingPromisesT (reason_callsite, false));
           let {
             call_this_t = o2;
             call_targs;
@@ -5080,6 +5093,11 @@ struct
         | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
             MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x), funtype, prop_t)
           ) ->
+          let instance_desc = DescFormat.name_of_instance_reason reason_c in
+          if instance_desc = "Promise" && x = "then" then
+            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length funtype.call_args_tlist) >= 2);
+          if instance_desc = "Promise" && x = "catch" then
+            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length funtype.call_args_tlist) >= 1);
           (* TODO: closure *)
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
@@ -7121,7 +7139,7 @@ struct
     (* Propagation cases: these cases don't use the fact that the LHS is
      empty, but they propagate the LHS to other types and trigger additional
      flows that may need to occur. *)
-    
+
     | (_, UseT (_, DefT (_, _, PolyT _)))
     | (_, UseT (_, TypeAppT _))
     | (_, UseT (_, AnyWithLowerBoundT _))
@@ -7157,6 +7175,7 @@ struct
     | (_, ObjTestT _)
     | (_, ObjTestProtoT _)
     | (_, OptionalChainT _)
+    | (_, NoFloatingPromisesT _)
     | (_, SentinelPropTestT _)
     | (_, TestPropT _) ->
       false
@@ -7179,7 +7198,7 @@ struct
      types; either the flow would succeed anyways or it would fall
      through to the final catch-all error case and cause a spurious
      error. *)
-    
+
     | (_, UseT _)
     | (_, ArrRestT _)
     | (_, CallElemT _)
@@ -7390,7 +7409,7 @@ struct
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
-    
+
     | TestPropT _
     | ThisSpecializeT _
     | ToStringT _
@@ -7402,11 +7421,11 @@ struct
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
-    
+
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     (* Should never occur, so we just defer to __flow to handle errors *)
-    
+
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
     | UseT (_, DefT (_, _, IdxWrapper _))
@@ -7416,10 +7435,11 @@ struct
     (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
      this can be handled by the pre-existing rules *)
-    
+
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, OpenT _) ->
+    | UseT (_, OpenT _)
+    | NoFloatingPromisesT _ ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
      true *)
@@ -10555,7 +10575,7 @@ struct
     *)
       | (_, [])
       (* No more arguments *)
-      
+
       | ([], _) ->
         ([], arglist, parlist)
       | (tin :: tins, (name, tout) :: touts) ->
@@ -10768,7 +10788,6 @@ struct
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
           | `Literal
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          
           | `Tuple ->
             AnyT.untyped reason_op
         else

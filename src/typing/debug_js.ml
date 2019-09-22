@@ -699,6 +699,7 @@ and _json_of_use_t_impl json_cx t =
               ) );
         ]
       | InvariantT _ -> []
+      | NoFloatingPromisesT _ -> []
       | CallLatentPredT (_, sense, offset, l, t) ->
         [
           ("sense", JSON_Bool sense);
@@ -2102,6 +2103,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ImportTypeT _ -> p t
     | IntersectionPreprocessKitT _ -> p t
     | InvariantT _ -> p t
+    | NoFloatingPromisesT _ -> p t
     | LookupT (_, kind, _, prop, action) ->
       p ~extra:(spf "%S, %s, %s" (propref prop) (lookup_kind kind) (lookup_action action)) t
     | MakeExactT _ -> p t
@@ -2846,6 +2848,7 @@ let dump_error_message =
           (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
       | EBigIntNotYetSupported reason -> spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
       | ENonArraySpread reason -> spf "ENonArraySpread (%s)" (dump_reason cx reason)
+      | ENoFloatingPromises (loc, _) -> spf "ENoFloatingPromises (%s)" (string_of_aloc loc)
       | ECannotSpreadInterface { spread_reason; interface_reason } ->
         spf
           "ECannotSpreadInterface (%s) (%s)"

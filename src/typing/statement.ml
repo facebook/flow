@@ -592,6 +592,11 @@ and toplevels =
   in
   (fun cx -> loop [] cx)
 
+and mark_bare_expression cx loc t =
+  let reason = mk_reason (RCustom "bare expression") loc in
+  Flow.flow cx (t, NoFloatingPromisesT (reason, false));
+  Context.mark_bare_expression cx (aloc_of_reason reason) (reason_of_t t);
+
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
 and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   Ast.Statement.(
@@ -705,7 +710,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       Abnormal.check_stmt_control_flow_exception ((loc, Block { Block.body }), abnormal_opt)
     | (loc, Expression { Expression.expression = e; directive }) ->
-      (loc, Expression { Expression.expression = expression cx e; directive })
+      let (((expr_loc, t), _) as expression_ast) = expression cx e in
+      mark_bare_expression cx expr_loc t;
+      (loc, Expression { Expression.expression = expression_ast; directive })
     (* Refinements for `if` are derived by the following Hoare logic rule:
 
      [Pre & c] S1 [Post1]
@@ -1177,7 +1184,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           (* Convert the return expression's type T to Promise<T>. If the
            * expression type is itself a Promise<T>, ensure we still return
            * a Promise<T> via Promise.resolve. *)
-          let reason = mk_reason (RCustom "async return") loc in
+          let reason = mk_reason (RType "Promise") loc in
           let t' =
             Flow.get_builtin_typeapp
               cx
@@ -1191,11 +1198,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                     Flow.flow cx (funt, CallT (unknown_use, reason, callt)));
               ]
           in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+          Flow.reposition cx ~desc:(desc_of_t t') loc t'
         | Scope.Generator ->
           (* Convert the return expression's type R to Generator<Y,R,N>, where
            * Y and R are internals, installed earlier. *)
-          let reason = mk_reason (RCustom "generator return") loc in
+          let reason = mk_reason (RType "Generator") loc in
           let t' =
             Flow.get_builtin_typeapp
               cx
@@ -1207,9 +1214,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                 Env.get_internal_var cx "next" loc;
               ]
           in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+          Flow.reposition cx ~desc:(desc_of_t t') loc t'
         | Scope.AsyncGenerator ->
-          let reason = mk_reason (RCustom "async generator return") loc in
+          let reason = mk_reason (RType "AsyncGenerator") loc in
           let t' =
             Flow.get_builtin_typeapp
               cx
@@ -1221,7 +1228,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                 Env.get_internal_var cx "next" loc;
               ]
           in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+          Flow.reposition cx ~desc:(desc_of_t t') loc t'
         | _ -> t
       in
       let use_op =

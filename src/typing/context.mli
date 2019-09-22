@@ -356,6 +356,14 @@ val mark_invariant : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_invariants : t -> (ALoc.t * Reason.t) list
 
+val mark_floating_promise : t -> ALoc.t -> Reason.t -> useful:bool -> unit
+
+val floating_promises : t -> (ALoc.t * Reason.t) list
+
+val mark_bare_expression : t -> ALoc.t -> Reason.t -> unit
+
+val bare_expressions : t -> (Reason.t * bool) ALocMap.t
+
 (* utils *)
 val iter_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
 

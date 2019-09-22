@@ -196,6 +196,7 @@ type hash =
   | IdxUnwrapH
   | IdxUnMaybeifyH
   | OptionalChainH
+  | NoFloatingPromisesH
   | CallLatentPredH
   | CallOpenPredH
   | SubstOnPredH
@@ -399,6 +400,7 @@ let hash_of_use_ctor =
     | IdxUnwrap _ -> IdxUnwrapH
     | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
     | OptionalChainT _ -> OptionalChainH
+    | NoFloatingPromisesT _ -> NoFloatingPromisesH
     | CallLatentPredT _ -> CallLatentPredH
     | CallOpenPredT _ -> CallOpenPredH
     | SubstOnPredT _ -> SubstOnPredH

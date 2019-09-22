@@ -261,6 +261,7 @@ and 'loc t' =
   | EOptionalChainingMethods of 'loc
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
+  | ENoFloatingPromises of 'loc * 'loc virtual_reason
   | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
   | EBigIntNotYetSupported of 'loc virtual_reason
@@ -652,6 +653,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
+  | ENoFloatingPromises (loc, r) -> ENoFloatingPromises (f loc, map_reason r)
   | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
@@ -832,6 +834,7 @@ let util_use_op_of_msg nope util = function
   | EOptionalChainingMethods _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
+  | ENoFloatingPromises _
   | EInexactSpread _
   | EUnexpectedTemporaryBaseType _
   | EBigIntNotYetSupported _
@@ -910,6 +913,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
+  | ENoFloatingPromises (loc, _)
   | EOptionalChainingMethods loc
   | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
@@ -1032,6 +1036,7 @@ let kind_of_msg =
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | ENonArraySpread _ -> LintError Lints.NonArraySpread
+    | ENoFloatingPromises _ -> LintError Lints.NoFloatingPromises
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -1200,7 +1205,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           export;
           text " as a value. ";
             (* text "Use "; code "import type"; text " instead."; *)
-          
+
         ]
     | ENoDefaultExport (_, module_name, suggestion) ->
       Normal
@@ -2337,6 +2342,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "...Array.from(<iterable>)";
           text " instead.";
         ]
+    | ENoFloatingPromises (_, reason) ->
+      Normal [
+        text "Floating promises can lead to unexpected scheduling.";
+        ref reason;
+      ]
     | ECannotSpreadInterface { spread_reason; interface_reason } ->
       Normal
         [
@@ -2426,6 +2436,7 @@ let is_lint_error = function
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
   | EUninitializedInstanceProperty _
-  | ENonArraySpread _ ->
+  | ENonArraySpread _
+  | ENoFloatingPromises _ ->
     true
   | _ -> false

@@ -510,6 +510,7 @@ class ['a] t =
           (fun acc (use, tout) -> self#use_type_ cx acc (apply_opt_use use tout))
           acc
           uses
+      | NoFloatingPromisesT _ -> acc
       | InvariantT _ -> acc
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->

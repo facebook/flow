@@ -602,6 +602,7 @@ module rec TypeTerm : sig
     | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * t_out
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
+    | NoFloatingPromisesT of reason * bool
     | OptionalChainT of reason * reason * (opt_use_t * t_out) Nel.t
     | InvariantT of reason
     (* Function predicate uses *)
@@ -1743,13 +1744,13 @@ end = struct
         (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
         | OpenT _
         (* some types may not be evaluated yet; TODO *)
-        
+
         | EvalT _
         | TypeAppT _
         | KeysT _
         | IntersectionT _
         (* other types might wrap parts that are accessible directly *)
-        
+
         | OpaqueT _
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->
@@ -2495,6 +2496,7 @@ end = struct
     | ObjTestProtoT (reason, _) -> reason
     | ObjTestT (reason, _, _) -> reason
     | OptionalChainT (reason, _, _) -> reason
+    | NoFloatingPromisesT (reason, _) -> reason
     | OrT (reason, _, _) -> reason
     | PredicateT (_, t) -> reason_of_t t
     | ReactKitT (_, reason, _) -> reason
@@ -2666,6 +2668,7 @@ end = struct
     | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
     | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
     | OptionalChainT (reason, lhs_reason, us) -> OptionalChainT (f reason, lhs_reason, us)
+    | NoFloatingPromisesT (reason, useful) -> NoFloatingPromisesT (f reason, useful)
     | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
     | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
     | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
@@ -2812,6 +2815,7 @@ end = struct
     | IdxUnwrap (_, _)
     | IdxUnMaybeifyT (_, _)
     | OptionalChainT (_, _, _)
+    | NoFloatingPromisesT (_, _)
     | InvariantT _
     | CallLatentPredT (_, _, _, _, _)
     | CallOpenPredT (_, _, _, _, _)
@@ -3568,6 +3572,7 @@ let string_of_use_ctor = function
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
   | OptionalChainT _ -> "OptionalChainT"
+  | NoFloatingPromisesT _ -> "NoFloatingPromisesT"
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
   | ReactKitT _ -> "ReactKitT"
