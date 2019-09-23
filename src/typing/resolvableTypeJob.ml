@@ -190,8 +190,6 @@ and collect_of_type ?log_unresolved cx acc = function
     let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     acc
-  | AnyWithUpperBoundT t
-  | AnyWithLowerBoundT t
   | ExactT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)

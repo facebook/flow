@@ -210,11 +210,9 @@ let rec convert cx tparams_map =
        unsound reads.
 
        The correct solution is to safely case a tuple type to a covariant
-       array interface whose element type would be a union. Until we have
-       that, we use the following closest approximation, that behaves like a
-       union as a lower bound but `any` as an upper bound.
+       array interface whose element type would be a union.
     *)
-          AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make t0 t1 ts))
+          UnionT (element_reason, UnionRep.make t0 t1 ts)
       in
       ((loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast)
     | (loc, Array t) ->
@@ -578,14 +576,14 @@ let rec convert cx tparams_map =
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
-              reconstruct_ast (AnyWithLowerBoundT t) targs)
+              reconstruct_ast (reason_of_t t |> AnyT.annot) targs)
         (* $Subtype<T> acts as any over subtypes of T *)
         | "$Subtype" ->
           Error_message.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
-              reconstruct_ast (AnyWithUpperBoundT t) targs)
+              reconstruct_ast (reason_of_t t |> AnyT.annot) targs)
         (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
         | "$PropertyType" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->

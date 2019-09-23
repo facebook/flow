@@ -2475,25 +2475,6 @@ struct
             | DefT (_, _, (NullT | VoidT)) -> rec_flow_t cx trace (right, u)
             | _ -> rec_flow_t cx trace (left, u)
           end
-        (*****************************)
-        (* upper and lower any types *)
-        (*****************************)
-
-        (* AnyWithLowerBoundT and AnyWithUpperBoundT are mildly useful types that
-        model subtyping constraints without introducing potentially unwanted
-        effects: they can appear on both sides of a type, but only constrain one
-        of those sides. In some sense, they are liked bounded AnyT: indeed, AnyT
-        has the same behavior as AnyWithLowerBound (EmptyT) and
-        AnyWithUpperBoundT (MixedT). Thus, these types can be used instead of
-        AnyT when some precise typechecking is required without overconstraining
-        the system. A completely static alternative would be achieved with
-        bounded type variables, which Flow does not support yet. **)
-        | (AnyWithLowerBoundT t, _) -> rec_flow cx trace (t, u)
-        | (_, UseT (use_op, AnyWithLowerBoundT t)) ->
-          rec_flow cx trace (l, UseT (use_op, MixedT.why (reason_of_t t) |> with_trust bogus_trust))
-        | (AnyWithUpperBoundT t, _) ->
-          rec_flow cx trace (EmptyT.why (reason_of_t t) |> with_trust bogus_trust, u)
-        | (_, UseT (_, AnyWithUpperBoundT t)) -> rec_flow_t cx trace (l, t)
         | (_, ReactKitT (use_op, reason_op, React.CreateElement0 (clone, config, children, tout)))
           ->
           let tool = React.CreateElement (clone, l, config, children, tout) in
@@ -7124,8 +7105,6 @@ struct
     
     | (_, UseT (_, DefT (_, _, PolyT _)))
     | (_, UseT (_, TypeAppT _))
-    | (_, UseT (_, AnyWithLowerBoundT _))
-    | (_, UseT (_, AnyWithUpperBoundT _))
     | (_, UseT (_, MaybeT _))
     | (_, UseT (_, MergedT _))
     | (_, UseT (_, OpaqueT _))
@@ -7506,8 +7485,6 @@ struct
       true
     (* Handled already in __flow *)
     | AnnotT _
-    | AnyWithLowerBoundT _
-    | AnyWithUpperBoundT _
     | ExactT _
     | ThisClassT _
     | ReposT _
@@ -7884,8 +7861,6 @@ struct
     | OptionalT (_, t)
     | ExactT (_, t)
     | MaybeT (_, t)
-    | AnyWithLowerBoundT t
-    | AnyWithUpperBoundT t
     | ReposT (_, t)
     | InternalT (ReposUpperT (_, t)) ->
       check_polarity cx ?trace polarity t
@@ -8083,11 +8058,7 @@ struct
     let (ts, _) =
       Nel.fold_left
         (fun (ts, map) typeparam ->
-          let t =
-            match typeparam.bound with
-            | DefT (_, _, MixedT _) -> Unsoundness.why InstanceOfRefinement reason_op
-            | other_bound -> AnyWithUpperBoundT (subst cx ~use_op map other_bound)
-          in
+          let t = Unsoundness.why InstanceOfRefinement reason_op in
           (t :: ts, SMap.add typeparam.name t map))
         ([], SMap.empty)
         xs
@@ -10121,13 +10092,10 @@ struct
 
    However, unifying with any-like types is sometimes desirable /
    intentional. Thus, we limit the set of types on which unification is banned
-   to just AnyWithUpperBoundT, AnyWithLowerBoundT, and MergedT which are
-   internal types.
+   to just MergedT which is an internal type.
 *)
   and ok_unify ~unify_any desc = function
-    | AnyT _
-    | AnyWithUpperBoundT _
-    | AnyWithLowerBoundT _ ->
+    | AnyT _ ->
       (match desc with
       | RExistential -> true
       | _ -> unify_any)

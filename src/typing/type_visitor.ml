@@ -53,9 +53,6 @@ class ['a] t =
       | BoundT _ -> acc
       | ExistsT _ -> acc
       | ExactT (_, t) -> self#type_ cx pole acc t
-      | AnyWithLowerBoundT t
-      | AnyWithUpperBoundT t ->
-        self#type_ cx pole acc t
       | MergedT (_, uses) -> List.fold_left (self#use_type_ cx) acc uses
       | ShapeT t -> self#type_ cx pole acc t
       | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t

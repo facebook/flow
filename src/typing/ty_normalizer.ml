@@ -573,12 +573,6 @@ end = struct
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t ~env t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
-      | AnyWithUpperBoundT t ->
-        let%map t = type__ ~env t in
-        Ty.Utility (Ty.Subtype t)
-      | AnyWithLowerBoundT t ->
-        let%map t = type__ ~env t in
-        Ty.Utility (Ty.Supertype t)
       | DefT (_, _, MixedT _) -> return Ty.Top
       | AnyT (_, kind) -> return (Ty.Any (any_t kind))
       | DefT (_, _, VoidT) -> return Ty.Void

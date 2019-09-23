@@ -88,9 +88,6 @@ module rec TypeTerm : sig
     | FunProtoApplyT of reason (* Function.prototype.apply *)
     | FunProtoBindT of reason (* Function.prototype.bind *)
     | FunProtoCallT of reason (* Function.prototype.call *)
-    (* generalizations of AnyT *)
-    | AnyWithLowerBoundT of t (* any supertype of t *)
-    | AnyWithUpperBoundT of t (* any subtype of t *)
     (* a merged tvar that had no lowers *)
     | MergedT of reason * use_t list
     (* constrains some properties of an object *)
@@ -2389,8 +2386,6 @@ end = struct
   let rec reason_of_t = function
     | OpenT (reason, _) -> reason
     | AnnotT (reason, _, _) -> reason
-    | AnyWithLowerBoundT t -> reason_of_t t
-    | AnyWithUpperBoundT t -> reason_of_t t
     | MergedT (reason, _) -> reason
     | BoundT (reason, _, _) -> reason
     | InternalT (ChoiceKitT (reason, _)) -> reason
@@ -2548,8 +2543,6 @@ end = struct
   let rec mod_reason_of_t f = function
     | OpenT (reason, id) -> OpenT (f reason, id)
     | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
-    | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
-    | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
     | MergedT (reason, uses) -> MergedT (f reason, uses)
     | BoundT (reason, name, polarity) -> BoundT (f reason, name, polarity)
     | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
@@ -3386,8 +3379,6 @@ let string_of_ctor = function
   | OpenT _ -> "OpenT"
   | AnyT _ -> "AnyT"
   | AnnotT _ -> "AnnotT"
-  | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
-  | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
   | MergedT _ -> "MergedT"
   | BoundT _ -> "BoundT"
   | InternalT (ChoiceKitT (_, tool)) ->

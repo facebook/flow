@@ -75,8 +75,6 @@ type hash =
   | MaybeH
   | IntersectionH
   | UnionH
-  | AnyWithLowerBoundH
-  | AnyWithUpperBoundH
   | MergedH
   | ShapeH
   | KeysH
@@ -256,8 +254,6 @@ let hash_of_ctor =
     | OpaqueT _ -> failwith "undefined hash of OpaqueT"
     | AnyT _ -> AnyH
     | AnnotT _ -> AnnotH
-    | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
-    | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
     | MergedT _ -> MergedH
     | BoundT _ -> BoundH
     | TypeDestructorTriggerT _ -> TvarDestructorH

@@ -262,9 +262,6 @@ and _json_of_t_impl json_cx t =
           (let ts = UnionRep.members rep in
            ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)));
         ]
-      | AnyWithLowerBoundT t
-      | AnyWithUpperBoundT t ->
-        [("type", _json_of_t json_cx t)]
       | MergedT (_, uses) ->
         [("uses", JSON_Array (Core_list.map ~f:(_json_of_use_t json_cx) uses))]
       | DefT (_, _, IdxWrapper t) -> [("wrappedObj", _json_of_t json_cx t)]
@@ -1701,9 +1698,6 @@ let rec dump_t_ (depth, tvars) cx t =
       p ~extra:(spf "[%s]" (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
     | UnionT (_, rep) ->
       p ~extra:(spf "[%s]" (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))) t
-    | AnyWithLowerBoundT arg
-    | AnyWithUpperBoundT arg ->
-      p ~reason:false ~extra:(kid arg) t
     | MergedT (_, uses) ->
       p
         ~extra:

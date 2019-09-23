@@ -188,8 +188,6 @@ class visitor =
         let (t0, (t1, ts)) = InterRep.members_nel rep in
         self#types_nel cx OpAnd (t0, t1 :: ts)
       (* Concrete covered constructors *)
-      | AnyWithLowerBoundT _
-      | AnyWithUpperBoundT _
       | BoundT _
       | CustomFunT _
       | ExistsT _

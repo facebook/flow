@@ -458,8 +458,6 @@ let rec extract_type cx this_t =
     let array_t = resolve_type cx builtin in
     Some [elemt] |> instantiate_poly_t cx array_t |> instantiate_type |> extract_type cx
   | EvalT (t, defer, id) -> eval_evalt cx t defer id |> extract_type cx
-  | AnyWithLowerBoundT _
-  | AnyWithUpperBoundT _
   | BoundT _
   | InternalT (ChoiceKitT (_, _))
   | TypeDestructorTriggerT _
