@@ -423,7 +423,8 @@ module Expressions = struct
   let optional_member_expression ~optional expr =
     (Loc.none, OptionalMember { OptionalMember.member = expr; optional })
 
-  let new_ ?targs ?(args = []) callee = (Loc.none, New { New.callee; targs; arguments = args })
+  let new_ ?comments ?targs ?(args = []) callee =
+    (Loc.none, New { New.callee; targs; arguments = args; comments })
 
   let sequence exprs = (Loc.none, Sequence { Sequence.expressions = exprs })
 

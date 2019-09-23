@@ -912,7 +912,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.Member m -> member ~precedence ~ctxt m
       | E.OptionalMember { E.OptionalMember.member = m; optional } ->
         member ~optional ~precedence ~ctxt m
-      | E.New { E.New.callee; targs; arguments } ->
+      | E.New { E.New.callee; targs; arguments; comments } ->
         let callee_layout =
           if definitely_needs_parens ~precedence ctxt callee || contains_call_expression callee
           then
@@ -920,15 +920,16 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           else
             expression ~ctxt callee
         in
-        group
-          [
-            fuse_with_space [Atom "new"; callee_layout];
-            option type_parameter_instantiation_with_implicit targs;
-            new_list
-              ~wrap:(Atom "(", Atom ")")
-              ~sep:(Atom ",")
-              (Core_list.map ~f:expression_or_spread arguments);
-          ]
+        layout_node_with_simple_comments_opt loc comments
+        @@ group
+             [
+               fuse_with_space [Atom "new"; callee_layout];
+               option type_parameter_instantiation_with_implicit targs;
+               new_list
+                 ~wrap:(Atom "(", Atom ")")
+                 ~sep:(Atom ",")
+                 (Core_list.map ~f:expression_or_spread arguments);
+             ]
       | E.Unary { E.Unary.operator; argument; comments } ->
         let (s_operator, needs_space) =
           match operator with

@@ -1356,14 +1356,16 @@ class ['loc] mapper =
 
     method new_ _loc (expr : ('loc, 'loc) Ast.Expression.New.t) =
       Ast.Expression.New.(
-        let { callee; targs; arguments } = expr in
+        let { callee; targs; arguments; comments } = expr in
         let callee' = this#expression callee in
         let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
         let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
-        if callee == callee' && targs == targs' && arguments == arguments' then
+        let comments' = this#syntax_opt comments in
+        if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'
+        then
           expr
         else
-          { callee = callee'; targs = targs'; arguments = arguments' })
+          { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' })
 
     method object_ _loc (expr : ('loc, 'loc) Ast.Expression.Object.t) =
       Ast.Expression.Object.(

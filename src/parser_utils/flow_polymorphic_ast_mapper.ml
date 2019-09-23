@@ -1156,11 +1156,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method new_ (expr : ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
       Ast.Expression.New.(
-        let { callee; targs; arguments } = expr in
+        let { callee; targs; arguments; comments } = expr in
         let callee' = this#expression callee in
         let targs' = Option.map ~f:this#type_parameter_instantiation_with_implicit targs in
         let arguments' = Core_list.map ~f:this#expression_or_spread arguments in
-        { callee = callee'; targs = targs'; arguments = arguments' })
+        let comments' = Option.map ~f:this#syntax comments in
+        { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' })
 
     method object_ (expr : ('M, 'T) Ast.Expression.Object.t) : ('N, 'U) Ast.Expression.Object.t =
       Ast.Expression.Object.(

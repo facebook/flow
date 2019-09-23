@@ -987,7 +987,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
           property = (_, { Ast.Identifier.name = p; comments = _ });
         } ->
       o ^ "." ^ p
-    | New { New.callee; targs; arguments } ->
+    | New { New.callee; targs; arguments; comments = _ } ->
       let targs =
         match targs with
         | None -> ""

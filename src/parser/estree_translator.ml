@@ -511,8 +511,9 @@ with type t = Impl.t = struct
               ("consequent", expression consequent);
               ("alternate", expression alternate);
             ]
-        | (loc, New { New.callee; targs; arguments }) ->
+        | (loc, New { New.callee; targs; arguments; comments }) ->
           node
+            ?comments
             "NewExpression"
             loc
             [

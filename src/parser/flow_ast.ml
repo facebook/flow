@@ -1019,6 +1019,7 @@ and Expression : sig
       callee: ('M, 'T) Expression.t;
       targs: ('M, 'T) Expression.TypeParameterInstantiation.t option;
       arguments: ('M, 'T) expression_or_spread list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

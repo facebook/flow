@@ -967,7 +967,7 @@ let program
         | ((_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2)) ->
           identifier id1 id2 |> Option.return
         | ((_, Conditional c1), (_, Conditional c2)) -> conditional c1 c2 |> Option.return
-        | ((_, New new1), (_, New new2)) -> new_ new1 new2
+        | ((loc, New new1), (_, New new2)) -> new_ loc new1 new2
         | ((_, Member member1), (_, Member member2)) -> member member1 member2
         | ((_, Call call1), (_, Call call2)) -> call call1 call2
         | ((_, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true f1 f2
@@ -1306,17 +1306,28 @@ let program
       let alt_diff = diff_if_changed expression alt1 alt2 in
       List.concat [test_diff; cons_diff; alt_diff])
   and new_
-      (new1 : (Loc.t, Loc.t) Ast.Expression.New.t) (new2 : (Loc.t, Loc.t) Ast.Expression.New.t) :
-      node change list option =
+      loc (new1 : (Loc.t, Loc.t) Ast.Expression.New.t) (new2 : (Loc.t, Loc.t) Ast.Expression.New.t)
+      : node change list option =
     Ast.Expression.New.(
-      let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
-      let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in
-      if targs1 != targs2 then
-        diff_if_changed_opt type_parameter_instantiation_with_implicit targs1 targs2
-      else
-        let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
-        let callee = Some (diff_if_changed expression callee1 callee2) in
-        join_diff_list [args; callee])
+      let { callee = callee1; targs = targs1; arguments = arguments1; comments = comments1 } =
+        new1
+      in
+      let { callee = callee2; targs = targs2; arguments = arguments2; comments = comments2 } =
+        new2
+      in
+      let comments = syntax_opt loc comments1 comments2 in
+      let args_diff_list =
+        if targs1 != targs2 then
+          let targs =
+            diff_if_changed_opt type_parameter_instantiation_with_implicit targs1 targs2
+          in
+          [targs]
+        else
+          let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+          let callee = Some (diff_if_changed expression callee1 callee2) in
+          [args; callee]
+      in
+      join_diff_list ([comments] @ args_diff_list))
   and member
       (member1 : (Loc.t, Loc.t) Ast.Expression.Member.t)
       (member2 : (Loc.t, Loc.t) Ast.Expression.Member.t) : node change list option =

@@ -2984,6 +2984,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               Identifier (id_loc, ({ Ast.Identifier.name = "Function"; comments = _ } as name)) );
           targs;
           arguments;
+          comments;
         } ->
       let targts_opt =
         Option.map targs (fun (targts_loc, args) ->
@@ -3021,6 +3022,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               New.callee = (callee_annot, Identifier ((id_loc, id_t), name));
               targs = None;
               arguments = arges;
+              comments;
             } )
       | Some (targts_loc, targts) ->
         Flow.add_output
@@ -3039,6 +3041,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               New.callee = (callee_annot, Identifier ((id_loc, id_t), name));
               targs = Some (targts_loc, snd targts);
               arguments = arges;
+              comments;
             } ))
     | New
         {
@@ -3048,6 +3051,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
             );
           targs;
           arguments;
+          comments;
         } ->
       let targts =
         Option.map targs (fun (loc, args) ->
@@ -3091,11 +3095,12 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               New.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
               targs;
               arguments = [arg];
+              comments;
             } )
       | Error err ->
         Flow.add_output cx err;
         Tast_utils.error_mapper#expression ex)
-    | New { New.callee; targs; arguments } ->
+    | New { New.callee; targs; arguments; comments } ->
       let (((_, class_), _) as callee_ast) = expression cx callee in
       let (targts, targs_ast) = convert_targs cx targs in
       let (argts, arguments_ast) =
@@ -3113,7 +3118,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
              })
       in
       ( (loc, new_call cx reason ~use_op class_ targts argts),
-        New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast } )
+        New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments } )
     | Call _ -> subscript ~is_cond cx ex
     | OptionalCall _ -> subscript ~is_cond cx ex
     | Conditional { Conditional.test; consequent; alternate } ->
