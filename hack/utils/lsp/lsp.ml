@@ -204,6 +204,35 @@ end
 
 (* Represents information about programming constructs like variables etc. *)
 module SymbolInformation = struct
+  (* These numbers should match
+   * https://microsoft.github.io/language-server-protocol/specification#textDocument_documentSymbol
+   *)
+  type symbolKind =
+    | File [@value 1]
+    | Module [@value 2]
+    | Namespace [@value 3]
+    | Package [@value 4]
+    | Class [@value 5]
+    | Method [@value 6]
+    | Property [@value 7]
+    | Field [@value 8]
+    | Constructor [@value 9]
+    | Enum [@value 10]
+    | Interface [@value 11]
+    | Function [@value 12]
+    | Variable [@value 13]
+    | Constant [@value 14]
+    | String [@value 15]
+    | Number [@value 16]
+    | Boolean [@value 17]
+    | Array [@value 18]
+    | Object [@value 19]
+    | Key [@value 20]
+    | Null [@value 21]
+    | EnumMember [@value 22]
+    | Struct [@value 23]
+  [@@deriving enum]
+
   type t = {
     name: string;
     kind: symbolKind;
@@ -211,47 +240,16 @@ module SymbolInformation = struct
     (* the span of the symbol including its contents *)
     containerName: string option; (* the symbol containing this symbol *)
   }
-
-  (* These numbers should match
-   * https://microsoft.github.io/language-server-protocol/specification#textDocument_documentSymbol
-   *)
-  and symbolKind =
-    | File (* 1 *)
-    | Module (* 2 *)
-    | Namespace (* 3 *)
-    | Package (* 4 *)
-    | Class (* 5 *)
-    | Method (* 6 *)
-    | Property (* 7 *)
-    | Field (* 8 *)
-    | Constructor (* 9 *)
-    | Enum (* 10 *)
-    | Interface (* 11 *)
-    | Function (* 12 *)
-    | Variable (* 13 *)
-    | Constant (* 14 *)
-    | String (* 15 *)
-    | Number (* 16 *)
-    | Boolean (* 17 *)
-    | Array (* 18 *)
-    | Object (* 19 *)
-    | Key (* 20 *)
-    | Null (* 21 *)
-    | EnumMember (* 22 *)
-    | Struct
-
-  (* 23 *)
 end
 
 (* For showing messages (not diagnostics) in the user interface. *)
 module MessageType = struct
   type t =
-    | ErrorMessage (* 1 *)
-    | WarningMessage (* 2 *)
-    | InfoMessage (* 3 *)
-    | LogMessage
-
-  (* 4 *)
+    | ErrorMessage [@value 1]
+    | WarningMessage [@value 2]
+    | InfoMessage [@value 3]
+    | LogMessage [@value 4]
+  [@@deriving enum]
 end
 
 module CodeActionKind = struct
@@ -319,6 +317,14 @@ end
 
 (* Initialize request, method="initialize" *)
 module Initialize = struct
+  type textDocumentSyncKind =
+    (* docs should not be synced at all. Wire "None" *)
+    | NoSync [@value 0]
+    (* synced by always sending full content. Wire "Full" *)
+    | FullSync [@value 1]
+    | IncrementalSync [@value 2]
+  [@@deriving enum]
+
   type params = {
     processId: int option;
     (* pid of parent process *)
@@ -508,14 +514,6 @@ module Initialize = struct
     want_didSave: saveOptions option; (* textDocument/didSave *)
   }
 
-  and textDocumentSyncKind =
-    | NoSync (* 0 *)
-    (* docs should not be synced at all. Wire "None" *)
-    | FullSync (* 1 *)
-    (* synced by always sending full content. Wire "Full" *)
-    | IncrementalSync
-
-  (* 2 *)
   (* full only on open. Wire "Incremental" *)
   and saveOptions = {
     includeText: bool; (* the client should include content on save *)
@@ -774,6 +772,12 @@ module Completion = struct
     | SnippetFormat [@value 2] (* wire: just "Snippet" *)
   [@@deriving enum]
 
+  type completionTriggerKind =
+    | Invoked [@value 1]
+    | TriggerCharacter [@value 2]
+    | TriggerForIncompleteCompletions [@value 3]
+  [@@deriving enum]
+
   type params = completionParams
 
   and completionParams = {
@@ -783,12 +787,6 @@ module Completion = struct
 
   and completionContext = { triggerKind: completionTriggerKind }
 
-  and completionTriggerKind =
-    | Invoked (* 1 *)
-    | TriggerCharacter (* 2 *)
-    | TriggerForIncompleteCompletions
-
-  (* 3 *)
   and result = completionList
 
   (* wire: can also be 'completionItem list' *)
@@ -874,23 +872,22 @@ end
 module DocumentHighlight = struct
   type params = TextDocumentPositionParams.t
 
-  and result = documentHighlight list
+  type documentHighlightKind =
+    (* a textual occurrence *)
+    | Text [@value 1]
+    (* read-access of a symbol, like reading a variable *)
+    | Read [@value 2]
+    (* write-access of a symbol, like writing a variable *)
+    | Write [@value 3]
+  [@@deriving enum]
+
+  type result = documentHighlight list
 
   and documentHighlight = {
     range: range;
     (* the range this highlight applies to *)
     kind: documentHighlightKind option;
   }
-
-  and documentHighlightKind =
-    | Text (* 1 *)
-    (* a textual occurrence *)
-    | Read (* 2 *)
-    (* read-access of a symbol, like reading a variable *)
-    | Write
-
-  (* 3 *)
-  (* write-access of a symbol, like writing a variable *)
 end
 
 (* Type Coverage request, method="textDocument/typeCoverage" *)

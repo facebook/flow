@@ -57,8 +57,6 @@ val parse_formattingOptions :
 
 val print_symbolInformation : Lsp.SymbolInformation.t -> Hh_json.json
 
-val print_messageType : Lsp.MessageType.t -> Hh_json.json
-
 val print_shutdown : unit -> Hh_json.json
 
 val parse_cancelRequest : Hh_json.json option -> Lsp.CancelRequest.params

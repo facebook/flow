@@ -196,31 +196,7 @@ let parse_formattingOptions (json : json option) :
 
 let print_symbolInformation (info : SymbolInformation.t) : json =
   SymbolInformation.(
-    let print_symbol_kind = function
-      | File -> int_ 1
-      | Module -> int_ 2
-      | Namespace -> int_ 3
-      | Package -> int_ 4
-      | Class -> int_ 5
-      | Method -> int_ 6
-      | Property -> int_ 7
-      | Field -> int_ 8
-      | Constructor -> int_ 9
-      | Enum -> int_ 10
-      | Interface -> int_ 11
-      | Function -> int_ 12
-      | Variable -> int_ 13
-      | Constant -> int_ 14
-      | String -> int_ 15
-      | Number -> int_ 16
-      | Boolean -> int_ 17
-      | Array -> int_ 18
-      | Object -> int_ 19
-      | Key -> int_ 20
-      | Null -> int_ 21
-      | EnumMember -> int_ 22
-      | Struct -> int_ 23
-    in
+    let print_symbol_kind k = int_ (SymbolInformation.symbolKind_to_enum k) in
     Jprint.object_opt
       [
         ("name", Some (JSON_String info.name));
@@ -228,14 +204,6 @@ let print_symbolInformation (info : SymbolInformation.t) : json =
         ("location", Some (print_location info.location));
         ("containerName", Option.map info.containerName string_);
       ])
-
-let print_messageType (type_ : MessageType.t) : json =
-  MessageType.(
-    match type_ with
-    | ErrorMessage -> int_ 1
-    | WarningMessage -> int_ 2
-    | InfoMessage -> int_ 3
-    | LogMessage -> int_ 4)
 
 let parse_codeLens (json : json option) : CodeLens.t =
   CodeLens.
@@ -581,7 +549,10 @@ let print_logMessage (type_ : MessageType.t) (message : string) : json =
   LogMessage.(
     let r = { type_; message } in
     JSON_Object
-      [("type", print_messageType r.type_); ("message", JSON_String r.message)])
+      [
+        ("type", int_ (MessageType.to_enum r.type_));
+        ("message", JSON_String r.message);
+      ])
 
 (************************************************************************)
 (* window/showMessage notification                                      *)
@@ -591,7 +562,10 @@ let print_showMessage (type_ : MessageType.t) (message : string) : json =
   ShowMessage.(
     let r = { type_; message } in
     JSON_Object
-      [("type", print_messageType r.type_); ("message", JSON_String r.message)])
+      [
+        ("type", int_ (MessageType.to_enum r.type_));
+        ("message", JSON_String r.message);
+      ])
 
 (************************************************************************)
 (* window/showMessage request                                           *)
@@ -604,7 +578,7 @@ let print_showMessageRequest (r : ShowMessageRequest.showMessageRequestParams)
   in
   Jprint.object_opt
     [
-      ("type", Some (print_messageType r.ShowMessageRequest.type_));
+      ("type", Some (int_ (MessageType.to_enum r.ShowMessageRequest.type_)));
       ("message", Some (JSON_String r.ShowMessageRequest.message));
       ( "actions",
         Some
@@ -629,7 +603,7 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
   let rr = r.ShowStatus.request in
   Jprint.object_opt
     [
-      ("type", Some (print_messageType rr.ShowMessageRequest.type_));
+      ("type", Some (int_ (MessageType.to_enum rr.ShowMessageRequest.type_)));
       ( "actions",
         Some
           (JSON_Array (List.map rr.ShowMessageRequest.actions ~f:print_action))
@@ -805,14 +779,13 @@ let parse_completion (params : json option) : Completion.params =
       context =
         (match context with
         | Some _ ->
+          let tk = Jget.int_exn context "triggerKind" in
           Some
             {
               triggerKind =
-                (match Jget.int_exn context "triggerKind" with
-                | 1 -> Invoked
-                | 2 -> TriggerCharacter
-                | 3 -> TriggerForIncompleteCompletions
-                | x -> failwith ("Unsupported trigger kind: " ^ string_of_int x));
+                Option.value_exn
+                  ~message:(Printf.sprintf "Unsupported trigger kind: %d" tk)
+                  (Lsp.Completion.completionTriggerKind_of_enum tk);
             }
         | None -> None);
     })
@@ -878,12 +851,7 @@ let parse_documentHighlight (params : json option) : DocumentHighlight.params =
 
 let print_documentHighlight (r : DocumentHighlight.result) : json =
   DocumentHighlight.(
-    let print_highlightKind kind =
-      match kind with
-      | Text -> int_ 1
-      | Read -> int_ 2
-      | Write -> int_ 3
-    in
+    let print_highlightKind kind = int_ (documentHighlightKind_to_enum kind) in
     let print_highlight highlight =
       Jprint.object_opt
         [
@@ -1084,10 +1052,8 @@ let print_initializeError (r : Initialize.errorData) : json =
 
 let print_initialize (r : Initialize.result) : json =
   Initialize.(
-    let print_textDocumentSyncKind = function
-      | NoSync -> int_ 0
-      | FullSync -> int_ 1
-      | IncrementalSync -> int_ 2
+    let print_textDocumentSyncKind kind =
+      int_ (textDocumentSyncKind_to_enum kind)
     in
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
