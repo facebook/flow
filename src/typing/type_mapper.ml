@@ -810,22 +810,22 @@ class virtual ['a] t_with_uses =
           t
         else
           MethodT (op, r1, r2, prop', funcall', prop_t')
-      | SetPropT (use_op, r, prop, i, t', prop_t) ->
+      | SetPropT (use_op, r, prop, mode, i, t', prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
         if prop' == prop && t'' == t' && prop_t' == prop_t then
           t
         else
-          SetPropT (use_op, r, prop', i, t'', prop_t')
-      | SetPrivatePropT (use_op, r, prop, scopes, static, t', prop_t) ->
+          SetPropT (use_op, r, prop', mode, i, t'', prop_t')
+      | SetPrivatePropT (use_op, r, prop, mode, scopes, static, t', prop_t) ->
         let t'' = self#type_ cx map_cx t' in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
         if t'' == t' && scopes' == scopes && prop_t' == prop_t then
           t
         else
-          SetPrivatePropT (use_op, r, prop, scopes', static, t'', prop_t')
+          SetPrivatePropT (use_op, r, prop, mode, scopes', static, t'', prop_t')
       | GetPropT (use_op, r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
@@ -854,14 +854,14 @@ class virtual ['a] t_with_uses =
           t
         else
           TestPropT (r, id, prop', t'')
-      | SetElemT (use_op, r, t1, t2, t3) ->
+      | SetElemT (use_op, r, t1, m, t2, t3) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         let t3' = OptionUtils.ident_map (self#type_ cx map_cx) t3 in
         if t1' == t1 && t2' == t2 && t3' == t3 then
           t
         else
-          SetElemT (use_op, r, t1', t2', t3')
+          SetElemT (use_op, r, t1', m, t2', t3')
       | GetElemT (use_op, r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -1454,13 +1454,13 @@ class virtual ['a] t_with_uses =
           t
         else
           ReadElem t''
-      | WriteElem (tin, tout) ->
+      | WriteElem (tin, tout, mode) ->
         let tin' = self#type_ cx map_cx tin in
         let tout' = OptionUtils.ident_map (self#type_ cx map_cx) tout in
         if tin' == tin && tout' == tout then
           t
         else
-          WriteElem (tin', tout')
+          WriteElem (tin', tout', mode)
       | CallElem (r, funcall) ->
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall' == funcall then
@@ -1631,14 +1631,14 @@ class virtual ['a] t_with_uses =
           t
         else
           ReadProp { use_op; obj_t = obj_t'; tout = tout' }
-      | WriteProp { use_op; obj_t; prop_tout; tin; write_ctx } ->
+      | WriteProp { use_op; obj_t; prop_tout; tin; write_ctx; mode } ->
         let obj_t' = self#type_ cx map_cx obj_t in
         let tin' = self#type_ cx map_cx tin in
         let prop_tout' = OptionUtils.ident_map (self#type_ cx map_cx) prop_tout in
         if obj_t' == obj_t && tin' == tin && prop_tout' == prop_tout then
           t
         else
-          WriteProp { use_op; obj_t = obj_t'; prop_tout = prop_tout'; tin = tin'; write_ctx }
+          WriteProp { use_op; obj_t = obj_t'; prop_tout = prop_tout'; tin = tin'; write_ctx; mode }
       | LookupProp (use, prop) ->
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then

@@ -283,6 +283,11 @@ module rec TypeTerm : sig
         from: 'loc virtual_reason;
         target: 'loc virtual_reason;
       }
+    | DeleteProperty of {
+        lhs: 'loc virtual_reason;
+        prop: 'loc virtual_reason;
+      }
+    | DeleteVar of { var: 'loc virtual_reason }
     | FunCall of {
         op: 'loc virtual_reason;
         fn: 'loc virtual_reason;
@@ -414,12 +419,13 @@ module rec TypeTerm : sig
     | MethodT of
         use_op * (* call *) reason * (* lookup *) reason * propref * funcalltype * t option
     (* Similar to the last element of the MethodT *)
-    | SetPropT of use_op * reason * propref * write_ctx * t * t option
+    | SetPropT of use_op * reason * propref * set_mode * write_ctx * t * t option
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
      * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
      * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
-    | SetPrivatePropT of use_op * reason * string * class_binding list * bool * t * t option
+    | SetPrivatePropT of
+        use_op * reason * string * set_mode * class_binding list * bool * t * t option
     | GetPropT of use_op * reason * propref * t
     (* For shapes *)
     | MatchPropT of use_op * reason * propref * t
@@ -431,7 +437,7 @@ module rec TypeTerm : sig
        In particular, a computed property in the object initializer users SetElemT
        to initialize the property value, but in order to avoid race conditions we
        need to ensure that reads happen after writes. *)
-    | SetElemT of use_op * reason * t * t * t option (*tout *)
+    | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
     | GetElemT of use_op * reason * t * t
     | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
@@ -946,6 +952,7 @@ module rec TypeTerm : sig
         prop_tout: t option;
         tin: t;
         write_ctx: write_ctx;
+        mode: set_mode;
       }
     | LookupProp of use_op * Property.t
     | SuperProp of use_op * Property.t
@@ -955,6 +962,29 @@ module rec TypeTerm : sig
     | ThisInCtor
     | Normal
 
+  (* Property writes can either be assignments (from `a.x = e`) or deletions
+     (from `delete a.x`). For the most part, we can treat these the same
+     (flowing void into `a.x` in a deletion), but if the property being deleted
+     originates in an indexer, we need to know not to flow `void` into the
+     indexer's type, which would cause an error. The `set_mode` type records
+     whether a property write is an assignment or a deletion, to help handle
+     this special case. *)
+  and set_mode =
+    | Delete
+    | Assign
+
+  (* See the above comment on `set_mode`--this type is the other half, which
+     records whether a property originates in an indexer or from a property
+     map. This is relevant when the property is being deleted--we should flow
+     `void` to the property's type if it originates in a property map (to ensure
+     that its type is nullable and raise an error if it's not) but not if it's
+     from an indexer, where our current semantics are intentionally unsound with
+     respect to undefined anyways. *)
+  and property_source =
+    | DynamicProperty
+    | PropertyMapProperty
+    | IndexerProperty
+
   (* WriteElem has a `tout` parameter to serve as a trigger for ordering
      operations. We only need this in one place: object literal initialization.
      In particular, a computed property in the object initializer users SetElemT
@@ -962,7 +992,7 @@ module rec TypeTerm : sig
      need to ensure that reads happen after writes. *)
   and elem_action =
     | ReadElem of t
-    | WriteElem of t * t option (* tout *)
+    | WriteElem of t * t option (* tout *) * set_mode
     | CallElem of reason (* call *) * funcalltype
 
   and propref =
@@ -2498,9 +2528,9 @@ end = struct
     | ReposUseT (reason, _, _, _) -> reason
     | ResolveSpreadT (_, reason, _) -> reason
     | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
-    | SetElemT (_, reason, _, _, _) -> reason
-    | SetPropT (_, reason, _, _, _, _) -> reason
-    | SetPrivatePropT (_, reason, _, _, _, _, _) -> reason
+    | SetElemT (_, reason, _, _, _, _) -> reason
+    | SetPropT (_, reason, _, _, _, _, _) -> reason
+    | SetPrivatePropT (_, reason, _, _, _, _, _, _) -> reason
     | SetProtoT (reason, _) -> reason
     | SpecializeT (_, _, reason, _, _, _) -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
@@ -2668,10 +2698,10 @@ end = struct
     | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
     | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
       SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
-    | SetElemT (use_op, reason, it, et, t) -> SetElemT (use_op, f reason, it, et, t)
-    | SetPropT (use_op, reason, n, i, t, tp) -> SetPropT (use_op, f reason, n, i, t, tp)
-    | SetPrivatePropT (use_op, reason, n, scopes, static, t, tp) ->
-      SetPrivatePropT (use_op, f reason, n, scopes, static, t, tp)
+    | SetElemT (use_op, reason, it, mode, et, t) -> SetElemT (use_op, f reason, it, mode, et, t)
+    | SetPropT (use_op, reason, n, mode, i, t, tp) -> SetPropT (use_op, f reason, n, mode, i, t, tp)
+    | SetPrivatePropT (use_op, reason, n, mode, scopes, static, t, tp) ->
+      SetPrivatePropT (use_op, f reason, n, mode, scopes, static, t, tp)
     | SetProtoT (reason, t) -> SetProtoT (f reason, t)
     | SpecializeT (use_op, reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
@@ -2719,14 +2749,14 @@ end = struct
     | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
     | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
     | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
-    | SetPropT (op, r, p, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, w, t, tp))
-    | SetPrivatePropT (op, r, s, c, b, t, tp) ->
-      util op (fun op -> SetPrivatePropT (op, r, s, c, b, t, tp))
+    | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
+    | SetPrivatePropT (op, r, s, m, c, b, t, tp) ->
+      util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, t, tp))
     | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
     | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
     | GetPrivatePropT (op, r, s, c, b, t) ->
       util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
-    | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
+    | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))
     | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
     | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
     | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
@@ -2855,6 +2885,9 @@ end = struct
           { prop; own_loc = Option.map ~f own_loc; proto_loc = Option.map ~f proto_loc }
       | Coercion { from; target } ->
         Coercion { from = mod_reason from; target = mod_reason target }
+      | DeleteProperty { lhs; prop } ->
+        DeleteProperty { lhs = mod_reason lhs; prop = mod_reason prop }
+      | DeleteVar { var } -> DeleteVar { var = mod_reason var }
       | FunCall { op; fn; args; local } ->
         FunCall
           {
@@ -3306,6 +3339,8 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | ClassExtendsCheck { def = op; _ }
   | ClassImplementsCheck { def = op; _ }
   | Coercion { from = op; _ }
+  | DeleteProperty { lhs = op; _ }
+  | DeleteVar { var = op; _ }
   | FunCall { op; _ }
   | FunCallMethod { op; _ }
   | FunReturnStatement { value = op }
@@ -3435,6 +3470,8 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | ClassImplementsCheck _ -> "ClassImplementsCheck"
   | ClassOwnProtoCheck _ -> "ClassOwnProtoCheck"
   | Coercion _ -> "Coercion"
+  | DeleteProperty _ -> "DeleteProperty"
+  | DeleteVar _ -> "DeleteVar"
   | FunCall _ -> "FunCall"
   | FunCallMethod _ -> "FunCallMethod"
   | FunImplicitReturn _ -> "FunImplicitReturn"

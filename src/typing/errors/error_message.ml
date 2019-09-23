@@ -263,6 +263,7 @@ and 'loc t' =
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
   | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
+  | ECannotDelete of 'loc * 'loc virtual_reason
   | EBigIntNotYetSupported of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
@@ -654,6 +655,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
   | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
+  | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification _ as e -> e
   | ENonArraySpread r -> ENonArraySpread (map_reason r)
@@ -834,6 +836,7 @@ let util_use_op_of_msg nope util = function
   | EUnnecessaryInvariant _
   | EInexactSpread _
   | EUnexpectedTemporaryBaseType _
+  | ECannotDelete _
   | EBigIntNotYetSupported _
   | ESignatureVerification _
   | ENonArraySpread _
@@ -920,6 +923,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EInvalidTypeof (loc, _)
   | EUnreachable loc
   | EUnexpectedTemporaryBaseType loc
+  | ECannotDelete (loc, _)
   | EBadExportContext (_, loc)
   | EBadExportPosition loc
   | EIndeterminateModuleType loc
@@ -1913,6 +1917,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       Normal [code name; text " may only be used as part of a legal top level export statement"]
     | EUnexpectedTemporaryBaseType _ ->
       Normal [text "The type argument of a temporary base type must be a compatible literal type"]
+    | ECannotDelete (_, expr) ->
+      Normal
+        [
+          text "Cannot delete ";
+          ref expr;
+          text " because only member expressions and variables can be deleted.";
+        ]
     | ESignatureVerification sve ->
       Signature_builder_deps.With_ALoc.Error.(
         let msg =

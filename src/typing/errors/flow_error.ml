@@ -397,6 +397,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
                   match var with
                   | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
                   | None -> [text "Cannot assign "; desc init; text " to variable"] )
+            | Op (DeleteVar { var }) -> `Root (var, None, [text "Cannot delete "; desc var])
             | Op (InitField { op; body }) ->
               `Root (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
             | Op (Cast { lower; upper }) ->
@@ -480,6 +481,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
                   value
               in
               `Root (loc_reason, None, [text "Cannot assign "; desc value; text " to "; desc prop])
+            | Op (DeleteProperty { prop; lhs }) ->
+              `Root (lhs, None, [text "Cannot delete "; desc prop])
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; _ }, use_op) ->

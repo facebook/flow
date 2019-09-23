@@ -1550,8 +1550,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
           let (test_ast, preds, not_preds, xtypes) =
             match test with
-            | None -> (None, Key_map.empty, Key_map.empty, Key_map.empty)
-            (* TODO: prune the "not" case *)
+            | None ->
+              (None, Key_map.empty, Key_map.empty, Key_map.empty) (* TODO: prune the "not" case *)
             | Some expr ->
               let (expr_ast, preds, not_preds, xtypes) = predicates_of_condition cx expr in
               (Some expr_ast, preds, not_preds, xtypes)
@@ -2624,7 +2624,7 @@ and object_ cx reason ?(allow_sealed = true) props =
      to avoid race conditions. *)
     let mk_computed key value obj =
       Tvar.mk_where cx reason (fun t ->
-          Flow.flow cx (obj, SetElemT (unknown_use, reason, key, value, Some t)))
+          Flow.flow cx (obj, SetElemT (unknown_use, reason, key, Assign, value, Some t)))
     in
     (* When there's no result, return a new object with specified sealing. When
      there's result, copy a new object into it, sealing the result when
@@ -4445,9 +4445,10 @@ and unary cx loc =
     | { operator = Void; argument; comments } ->
       let argument = expression cx argument in
       (VoidT.at loc |> with_trust literal_trust, { operator = Void; argument; comments })
-    | { operator = Delete; argument; comments } ->
-      let argument = expression cx argument in
-      (BoolT.at loc |> with_trust literal_trust, { operator = Delete; argument; comments })
+    | { operator = Ast.Expression.Unary.Delete; argument; comments } ->
+      let argument = delete cx loc argument in
+      ( BoolT.at loc |> with_trust literal_trust,
+        { operator = Ast.Expression.Unary.Delete; argument; comments } )
     | { operator = Await; argument; comments } ->
       (* TODO: await should look up Promise in the environment instead of going
         directly to the core definition. Otherwise, the following won't work
@@ -4647,183 +4648,135 @@ and assignment_lhs cx patt =
     Flow.add_output cx (Error_message.EInvalidLHSInAssignment lhs_loc);
     Tast_utils.error_mapper#pattern patt
 
+(* write a type into a member *)
+and assign_member cx ~make_op t ~lhs_loc ~lhs_prop_reason ~mode lhs =
+  Ast.Expression.(
+    match lhs with
+    (* module.exports = e *)
+    | {
+     Member._object =
+       ( object_loc,
+         Ast.Expression.Identifier
+           (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as mod_name)) );
+     property =
+       Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
+    } ->
+      Import_export.cjs_clobber cx lhs_loc t;
+      let module_reason = mk_reason (RCustom "module") object_loc in
+      let module_t = MixedT.why module_reason |> with_trust bogus_trust in
+      let _object =
+        ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), mod_name))
+      in
+      let property = Member.PropertyIdentifier ((ploc, t), name) in
+      ((lhs_loc, t), Member { Member._object; property })
+    (* super.name = e *)
+    | {
+     Member._object = (super_loc, Super);
+     property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
+    } ->
+      let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+      let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+      let super = super_ cx lhs_loc in
+      let prop_t = Tvar.mk cx prop_reason in
+      let use_op =
+        make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+      in
+      Flow.flow
+        cx
+        (super, SetPropT (use_op, reason, Named (prop_reason, name), mode, Normal, t, Some prop_t));
+      let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
+      ((lhs_loc, prop_t), Member { Member._object = ((super_loc, super), Super); property })
+    (* _object.#name = e *)
+    | {
+     Member._object;
+     property =
+       Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as
+       property;
+    } ->
+      let (((_, o), _) as _object) = expression cx _object in
+      let prop_t =
+        (* if we fire this hook, it means the assignment is a sham. *)
+        if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
+          Unsoundness.at InferenceHooks prop_loc
+        else
+          let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+          (* flow type to object property itself *)
+          let class_entries = Env.get_class_entries () in
+          let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
+          let prop_t = Tvar.mk cx prop_reason in
+          let use_op =
+            make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+          in
+          Flow.flow
+            cx
+            (o, SetPrivatePropT (use_op, reason, name, mode, class_entries, false, t, Some prop_t));
+          post_assignment_havoc ~private_:true name (lhs_loc, Member lhs) prop_t t;
+          prop_t
+      in
+      ((lhs_loc, prop_t), Member { Member._object; property })
+    (* _object.name = e *)
+    | {
+     Member._object;
+     property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
+    } ->
+      let wr_ctx =
+        match (_object, Env.var_scope_kind ()) with
+        | ((_, This), Scope.Ctor) -> ThisInCtor
+        | _ -> Normal
+      in
+      let (((_, o), _) as _object) = expression cx _object in
+      let prop_t =
+        (* if we fire this hook, it means the assignment is a sham. *)
+        if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
+          Unsoundness.at InferenceHooks prop_loc
+        else
+          let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+          let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+          (* flow type to object property itself *)
+          let prop_t = Tvar.mk cx prop_reason in
+          let use_op =
+            make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+          in
+          Flow.flow
+            cx
+            (o, SetPropT (use_op, reason, Named (prop_reason, name), mode, wr_ctx, t, Some prop_t));
+          post_assignment_havoc ~private_:false name (lhs_loc, Member lhs) prop_t t;
+          prop_t
+      in
+      let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
+      ((lhs_loc, prop_t), Member { Member._object; property })
+    (* _object[index] = e *)
+    | { Member._object; property = Member.PropertyExpression ((iloc, _) as index) } ->
+      let reason = mk_reason (RPropertyAssignment None) lhs_loc in
+      let (((_, a), _) as _object) = expression cx _object in
+      let (((_, i), _) as index) = expression cx index in
+      let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
+      Flow.flow cx (a, SetElemT (use_op, reason, i, mode, t, None));
+
+      (* types involved in the assignment itself are computed
+         in pre-havoc environment. it's the assignment itself
+         which clears refis *)
+      Env.havoc_heap_refinements ();
+      ((lhs_loc, t), Member { Member._object; property = Member.PropertyExpression index }))
+
 (* traverse simple assignment expressions (`lhs = rhs`) *)
 and simple_assignment cx _loc lhs rhs =
-  Ast.Expression.(
-    let (((_, t), _) as typed_rhs) = expression cx rhs in
-    (* update env, add constraints arising from LHS structure,
+  let (((_, t), _) as typed_rhs) = expression cx rhs in
+  (* update env, add constraints arising from LHS structure,
      handle special cases, etc. *)
-    let lhs =
-      match lhs with
-      (* module.exports = e *)
-      | ( lhs_loc,
-          Ast.Pattern.Expression
-            ( pat_loc,
-              Member
-                {
-                  Member._object =
-                    ( object_loc,
-                      Ast.Expression.Identifier
-                        (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as mod_name)) );
-                  property =
-                    Member.PropertyIdentifier
-                      (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
-                } ) ) ->
-        Import_export.cjs_clobber cx lhs_loc t;
-        let module_reason = mk_reason (RCustom "module") object_loc in
-        let module_t = MixedT.why module_reason |> with_trust bogus_trust in
-        let _object =
-          ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), mod_name))
-        in
-        let property = Member.PropertyIdentifier ((ploc, t), name) in
-        ((lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), Member { Member._object; property }))
-      (* super.name = e *)
-      | ( lhs_loc,
-          Ast.Pattern.Expression
-            ( pat_loc,
-              Member
-                {
-                  Member._object = (super_loc, Super);
-                  property =
-                    Member.PropertyIdentifier
-                      (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                } ) ) ->
-        let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
-        let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
-        let super = super_ cx lhs_loc in
-        let prop_t = Tvar.mk cx prop_reason in
-        let use_op =
-          Op
-            (SetProperty
-               {
-                 lhs = reason;
-                 prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
-                 value = mk_expression_reason rhs;
-               })
-        in
-        Flow.flow
-          cx
-          (super, SetPropT (use_op, reason, Named (prop_reason, name), Normal, t, Some prop_t));
-        let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
-        ( (lhs_loc, prop_t),
-          Ast.Pattern.Expression
-            ((pat_loc, prop_t), Member { Member._object = ((super_loc, super), Super); property })
-        )
-      (* _object.#name = e *)
-      | ( lhs_loc,
-          Ast.Pattern.Expression
-            ( pat_loc,
-              Member
-                {
-                  Member._object;
-                  property =
-                    Member.PropertyPrivateName
-                      (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as property;
-                } ) ) ->
-        let (((_, o), _) as _object) = expression cx _object in
-        let prop_t =
-          (* if we fire this hook, it means the assignment is a sham. *)
-          if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
-            Unsoundness.at InferenceHooks prop_loc
-          else
-            let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
-            (* flow type to object property itself *)
-            let class_entries = Env.get_class_entries () in
-            let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
-            let prop_t = Tvar.mk cx prop_reason in
-            let use_op =
-              Op
-                (SetProperty
-                   {
-                     lhs = reason;
-                     prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
-                     value = mk_expression_reason rhs;
-                   })
-            in
-            Flow.flow
-              cx
-              (o, SetPrivatePropT (use_op, reason, name, class_entries, false, t, Some prop_t));
-            post_assignment_havoc ~private_:true name lhs prop_t t;
-            prop_t
-        in
-        ( (lhs_loc, prop_t),
-          Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member._object; property }) )
-      (* _object.name = e *)
-      | ( lhs_loc,
-          Ast.Pattern.Expression
-            ( pat_loc,
-              Member
-                {
-                  Member._object;
-                  property =
-                    Member.PropertyIdentifier
-                      (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                } ) ) ->
-        let wr_ctx =
-          match (_object, Env.var_scope_kind ()) with
-          | ((_, This), Scope.Ctor) -> ThisInCtor
-          | _ -> Normal
-        in
-        let (((_, o), _) as _object) = expression cx _object in
-        let prop_t =
-          (* if we fire this hook, it means the assignment is a sham. *)
-          if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
-            Unsoundness.at InferenceHooks prop_loc
-          else
-            let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
-            let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
-            (* flow type to object property itself *)
-            let prop_t = Tvar.mk cx prop_reason in
-            let use_op =
-              Op
-                (SetProperty
-                   {
-                     lhs = reason;
-                     prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
-                     value = mk_expression_reason rhs;
-                   })
-            in
-            Flow.flow
-              cx
-              (o, SetPropT (use_op, reason, Named (prop_reason, name), wr_ctx, t, Some prop_t));
-            post_assignment_havoc ~private_:false name lhs prop_t t;
-            prop_t
-        in
-        let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
-        ( (lhs_loc, prop_t),
-          Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member._object; property }) )
-      (* _object[index] = e *)
-      | ( lhs_loc,
-          Ast.Pattern.Expression
-            ( pat_loc,
-              Member { Member._object; property = Member.PropertyExpression ((iloc, _) as index) }
-            ) ) ->
-        let reason = mk_reason (RPropertyAssignment None) lhs_loc in
-        let (((_, a), _) as _object) = expression cx _object in
-        let (((_, i), _) as index) = expression cx index in
-        let use_op =
-          Op
-            (SetProperty
-               {
-                 lhs = reason;
-                 prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) iloc;
-                 value = mk_expression_reason rhs;
-               })
-        in
-        Flow.flow cx (a, SetElemT (use_op, reason, i, t, None));
-
-        (* types involved in the assignment itself are computed
-           in pre-havoc environment. it's the assignment itself
-           which clears refis *)
-        Env.havoc_heap_refinements ();
-        ( (lhs_loc, t),
-          Ast.Pattern.Expression
-            ((pat_loc, t), Member { Member._object; property = Member.PropertyExpression index })
-        )
-      (* other r structures are handled as destructuring assignments *)
-      | _ -> Destructuring.assignment cx ~expr:expression t rhs lhs
-    in
-    (t, lhs, typed_rhs))
+  let lhs =
+    match lhs with
+    | (lhs_loc, Ast.Pattern.Expression (pat_loc, Ast.Expression.Member mem)) ->
+      let lhs_prop_reason = mk_pattern_reason lhs in
+      let make_op ~lhs ~prop = Op (SetProperty { lhs; prop; value = mk_expression_reason rhs }) in
+      let ((lhs_loc, t), lhs) =
+        assign_member cx ~make_op t ~lhs_loc ~lhs_prop_reason ~mode:Assign mem
+      in
+      ((lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), lhs))
+    (* other r structures are handled as destructuring assignments *)
+    | _ -> Destructuring.assignment cx ~expr:expression t rhs lhs
+  in
+  (t, lhs, typed_rhs)
 
 (* traverse assignment expressions with operators (`lhs += rhs`, `lhs *= rhs`, etc) *)
 and op_assignment cx loc lhs op rhs =
@@ -4894,6 +4847,25 @@ and assignment cx loc (lhs, op, rhs) =
   match op with
   | None -> simple_assignment cx loc lhs rhs
   | Some op -> op_assignment cx loc lhs op rhs
+
+(* delete variables and properties *)
+and delete cx loc target =
+  Ast.Expression.(
+    let void = VoidT.at loc |> with_trust literal_trust in
+    let (lhs_loc, targ_exp) = target in
+    match targ_exp with
+    | Member mem ->
+      let lhs_prop_reason = mk_expression_reason target in
+      let make_op ~lhs ~prop = Op (DeleteProperty { lhs; prop }) in
+      assign_member cx ~make_op void ~lhs_loc ~lhs_prop_reason ~mode:Type.Delete mem
+    | Identifier (_, { Ast.Identifier.name; _ }) ->
+      let use_op = Op (DeleteVar { var = mk_expression_reason target }) in
+      ignore Env.(set_var cx ~use_op name void loc);
+      expression cx target
+    | _ ->
+      let (((_, t), _) as target) = expression cx target in
+      Flow.add_output cx Error_message.(ECannotDelete (loc, reason_of_t t));
+      target)
 
 and clone_object cx reason this that use_op =
   Tvar.mk_where cx reason (fun tvar ->
@@ -6293,7 +6265,9 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       let prop_t = Tvar.mk cx prop_reason in
       Flow.flow
         cx
-        (o, SetPropT (unknown_use, reason, Named (prop_reason, x), Normal, tvar, Some prop_t));
+        ( o,
+          SetPropT (unknown_use, reason, Named (prop_reason, x), Assign, Normal, tvar, Some prop_t)
+        );
       (o, None, [Expression e_ast; Expression key_ast; Expression config_ast])
     | ( "defineProperties",
         None,
@@ -6319,7 +6293,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
                Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
                Flow.flow
                  cx
-                 (o, SetPropT (unknown_use, reason, Named (reason, x), Normal, tvar, None)));
+                 (o, SetPropT (unknown_use, reason, Named (reason, x), Assign, Normal, tvar, None)));
       ( o,
         None,
         [
@@ -7183,14 +7157,14 @@ and check_default_pattern cx left right =
       end)
   | _ -> ()
 
-and post_assignment_havoc ~private_ name patt orig_t t =
+and post_assignment_havoc ~private_ name exp orig_t t =
   (* types involved in the assignment are computed
      in pre-havoc environment. it's the assignment itself
      which clears refis *)
   Env.havoc_heap_refinements_with_propname ~private_ name;
 
   (* add type refinement if LHS is a pattern we handle *)
-  match Refinement.key_of_pattern patt with
+  match Refinement.key exp with
   | Some key ->
     (* NOTE: currently, we allow property refinements to propagate
        even if they may turn out to be invalid w.r.t. the
@@ -7202,7 +7176,7 @@ and post_assignment_havoc ~private_ name patt orig_t t =
        object and refinement types - `o` and `t` here - are
        fully resolved.
      *)
-    ignore Env.(set_expr key (fst patt) t orig_t)
+    ignore Env.(set_expr key (fst exp) t orig_t)
   | None -> ()
 
 and mk_initial_arguments_reason =

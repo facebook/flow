@@ -423,15 +423,15 @@ and _json_of_use_t_impl json_cx t =
           ("type", _json_of_t json_cx t);
           ("useDesc", JSON_Bool use_desc);
         ]
-      | SetPropT (_, _, name, _, t, _)
+      | SetPropT (_, _, name, _, _, t, _)
       | GetPropT (_, _, name, t)
       | MatchPropT (_, _, name, t)
       | TestPropT (_, _, name, t) ->
         [("propRef", json_of_propref json_cx name); ("propType", _json_of_t json_cx t)]
-      | SetPrivatePropT (_, _, name, _, _, t, _)
+      | SetPrivatePropT (_, _, name, _, _, _, t, _)
       | GetPrivatePropT (_, _, name, _, _, t) ->
         [("propRef", JSON_String name); ("propType", _json_of_t json_cx t)]
-      | SetElemT (_, _, indext, elemt, _)
+      | SetElemT (_, _, indext, _, elemt, _)
       | GetElemT (_, _, indext, elemt) ->
         [("indexType", _json_of_t json_cx indext); ("elemType", _json_of_t json_cx elemt)]
       | CallElemT (_, _, indext, funtype) ->
@@ -574,7 +574,7 @@ and _json_of_use_t_impl json_cx t =
           ("baseType", _json_of_t json_cx base);
           (match action with
           | ReadElem t -> ("readElem", _json_of_t json_cx t)
-          | WriteElem (t, _) -> ("writeElem", _json_of_t json_cx t)
+          | WriteElem (t, _, _) -> ("writeElem", _json_of_t json_cx t)
           | CallElem (_, funtype) -> ("callElem", json_of_funcalltype json_cx funtype));
         ]
       | MakeExactT (_, cont) -> _json_of_cont json_cx cont
@@ -1329,7 +1329,7 @@ and json_of_lookup_action_impl json_cx action =
       (match action with
       | ReadProp { use_op = _; obj_t = _; tout } ->
         [("kind", JSON_String "ReadProp"); ("t", _json_of_t json_cx tout)]
-      | WriteProp { use_op = _; obj_t = _; prop_tout = _; tin; write_ctx = _ } ->
+      | WriteProp { use_op = _; obj_t = _; prop_tout = _; tin; write_ctx = _; mode = _ } ->
         [("kind", JSON_String "WriteProp"); ("t", _json_of_t json_cx tin)]
       | LookupProp (op, p) ->
         [
@@ -2146,10 +2146,11 @@ and dump_use_t_ (depth, tvars) cx t =
     | SubstOnPredT _ -> p t
     | SuperT _ -> p t
     | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-    | SetElemT (_, _, ix, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-    | SetPropT (use_op, _, prop, _, ptype, _) ->
+    | SetElemT (_, _, ix, _, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+    | SetPropT (use_op, _, prop, _, _, ptype, _) ->
       p ~extra:(spf "%s, (%s), %s" (string_of_use_op use_op) (propref prop) (kid ptype)) t
-    | SetPrivatePropT (_, _, prop, _, _, ptype, _) -> p ~extra:(spf "(%s), %s" prop (kid ptype)) t
+    | SetPrivatePropT (_, _, prop, _, _, _, ptype, _) ->
+      p ~extra:(spf "(%s), %s" prop (kid ptype)) t
     | SetProtoT (_, arg) -> p ~extra:(kid arg) t
     | SpecializeT (_, _, _, cache, args_opt, ret) ->
       p
@@ -2834,6 +2835,8 @@ let dump_error_message =
         spf "EInexactSpread (%s, %s)" (dump_reason cx reason) (dump_reason cx reason_op)
       | EUnexpectedTemporaryBaseType loc ->
         spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
+      | ECannotDelete (l1, r1) ->
+        spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
       | ESignatureVerification sve ->
         spf
           "ESignatureVerification (%s)"

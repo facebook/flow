@@ -241,7 +241,7 @@ class ['a] t =
         let acc = self#fun_call_type cx acc fn in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
         acc
-      | SetPropT (_, _, p, _, t, prop_t) ->
+      | SetPropT (_, _, p, _, _, t, prop_t) ->
         let acc = self#propref cx acc p in
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
@@ -252,7 +252,7 @@ class ['a] t =
         let acc = self#propref cx acc p in
         let acc = self#type_ cx pole_TODO acc t in
         acc
-      | SetPrivatePropT (_, _, _, scopes, _, t, prop_t) ->
+      | SetPrivatePropT (_, _, _, _, scopes, _, t, prop_t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
@@ -261,7 +261,7 @@ class ['a] t =
         let acc = List.fold_left (self#class_binding cx) acc scopes in
         let acc = self#type_ cx pole_TODO acc t in
         acc
-      | SetElemT (_, _, e, tin, tout) ->
+      | SetElemT (_, _, e, _, tin, tout) ->
         let acc = self#type_ cx pole_TODO acc e in
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in
@@ -762,7 +762,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | WriteProp { use_op = _; obj_t; prop_tout; tin; write_ctx = _ } ->
+      | WriteProp { use_op = _; obj_t; prop_tout; tin; write_ctx = _; mode = _ } ->
         let acc = self#type_ cx pole_TODO acc obj_t in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_tout in
         let acc = self#type_ cx pole_TODO acc tin in
@@ -775,7 +775,7 @@ class ['a] t =
     method private elem_action cx acc =
       function
       | ReadElem t -> self#type_ cx pole_TODO acc t
-      | WriteElem (tin, tout) ->
+      | WriteElem (tin, tout, _) ->
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in
         acc
