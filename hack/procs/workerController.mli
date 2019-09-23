@@ -85,7 +85,7 @@ type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
 
 type 'a entry
 
-val register_entry_point : restore:('a -> unit) -> 'a entry
+val register_entry_point : restore:('a -> worker_id:int -> unit) -> 'a entry
 
 (* Creates a pool of workers. *)
 val make :
