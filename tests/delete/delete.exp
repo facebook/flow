@@ -105,17 +105,17 @@ References:
              ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:40:21
+Error -------------------------------------------------------------------------------------------------- delete.js:40:14
 
-Property `freeze` is missing in statics of `Object` [1].
+Cannot call method `freeze` because property `freeze` is missing in statics of `Object` [1].
 
-   delete.js:40:21
+   delete.js:40:14
    40| const obj4 = Object.freeze({ f: 1 });
-                           ^^^^^^
+                    ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/prelude.js:3:15
-    3| declare class Object {}
+   <BUILTINS>/prelude.js:5:15
+    5| declare class Object {}
                      ^^^^^^ [1]
 
 

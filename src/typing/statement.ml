@@ -6178,6 +6178,17 @@ and get_prop ~is_cond cx reason ~use_op tobj (prop_reason, name) =
 and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args =
   Ast.Expression.(
     let reason = mk_reason (RCustom (spf "`Object.%s`" m)) loc in
+    let use_op =
+      Op
+        (FunCallMethod
+           {
+             op = reason;
+             fn = mk_reason (RMethod (Some m)) callee_loc;
+             prop = mk_reason (RProperty (Some m)) prop_loc;
+             args = mk_initial_arguments_reason args;
+             local = true;
+           })
+    in
     match (m, targs, args) with
     | ("create", None, [Expression e]) ->
       let (((_, e_t), _) as e_ast) = expression cx e in
@@ -6194,6 +6205,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
       in
       let (pmap, properties) = prop_map_of_object cx properties in
+      let propdesc_type = Flow.get_builtin cx "PropertyDescriptor" reason in
       let props =
         SMap.fold
           (fun x p acc ->
@@ -6214,9 +6226,9 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
               in
               let t =
                 Tvar.mk_where cx reason (fun tvar ->
-                    Flow.flow
-                      cx
-                      (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar)))
+                    let loc = aloc_of_reason reason in
+                    let propdesc = typeapp ~implicit:true ~annot_loc:loc propdesc_type [tvar] in
+                    Flow.flow cx (spec, UseT (use_op, propdesc)))
               in
               let p = Field (loc, t, Polarity.Neutral) in
               SMap.add x p acc)
@@ -6244,36 +6256,45 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
                            (fun desc -> RCustom (spf "element of %s" (string_of_desc desc)))
                            reason
                        in
-                       Flow.flow cx (o, GetKeysT (keys_reason, UseT (unknown_use, tvar)))),
+                       Flow.flow cx (o, GetKeysT (keys_reason, UseT (use_op, tvar)))),
                    None )) ),
         None,
         [Expression e_ast] )
     | ( "defineProperty",
-        None,
+        (None | Some (_, [Ast.Expression.TypeParameterInstantiation.Explicit _])),
         [
           Expression e;
           Expression
             ((ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ }) as key);
           Expression config;
         ] ) ->
+      let (ty, targs) =
+        match targs with
+        | None -> (Tvar.mk cx reason, None)
+        | Some (targs_loc, [Ast.Expression.TypeParameterInstantiation.Explicit targ]) ->
+          let (((_, ty), _) as targ) = Anno.convert cx SMap.empty targ in
+          (ty, Some (targs_loc, [Ast.Expression.TypeParameterInstantiation.Explicit targ]))
+        | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
+      in
+      let loc = aloc_of_reason reason in
+      let propdesc_type = Flow.get_builtin cx "PropertyDescriptor" reason in
+      let propdesc = typeapp ~implicit:true ~annot_loc:loc propdesc_type [ty] in
       let (((_, o), _) as e_ast) = expression cx e in
       let key_ast = expression cx key in
       let (((_, spec), _) as config_ast) = expression cx config in
-      let tvar = Tvar.mk cx reason in
       let prop_reason = mk_reason (RProperty (Some x)) ploc in
-      Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
+      Flow.flow cx (spec, UseT (use_op, propdesc));
       let prop_t = Tvar.mk cx prop_reason in
       Flow.flow
         cx
-        ( o,
-          SetPropT (unknown_use, reason, Named (prop_reason, x), Assign, Normal, tvar, Some prop_t)
-        );
-      (o, None, [Expression e_ast; Expression key_ast; Expression config_ast])
+        (o, SetPropT (use_op, reason, Named (prop_reason, x), Assign, Normal, ty, Some prop_t));
+      (o, targs, [Expression e_ast; Expression key_ast; Expression config_ast])
     | ( "defineProperties",
         None,
         [Expression e; Expression (obj_loc, Object { Object.properties; comments })] ) ->
       let (((_, o), _) as e_ast) = expression cx e in
       let (pmap, properties) = prop_map_of_object cx properties in
+      let propdesc_type = Flow.get_builtin cx "PropertyDescriptor" reason in
       pmap
       |> SMap.iter (fun x p ->
              match Property.read_t p with
@@ -6290,10 +6311,12 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
                    reason
                in
                let tvar = Tvar.mk cx reason in
-               Flow.flow cx (spec, GetPropT (unknown_use, reason, Named (reason, "value"), tvar));
+               let loc = aloc_of_reason reason in
+               let propdesc = typeapp ~implicit:true ~annot_loc:loc propdesc_type [tvar] in
+               Flow.flow cx (spec, UseT (use_op, propdesc));
                Flow.flow
                  cx
-                 (o, SetPropT (unknown_use, reason, Named (reason, x), Assign, Normal, tvar, None)));
+                 (o, SetPropT (use_op, reason, Named (reason, x), Assign, Normal, tvar, None)));
       ( o,
         None,
         [
@@ -6303,12 +6326,25 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         ] )
     (* Freezing an object literal is supported since there's no way it could
      have been mutated elsewhere *)
-    | ("freeze", None, [Expression ((arg_loc, Object _) as e)]) ->
+    | ("freeze", ((None | Some (_, [_])) as targs), [Expression ((arg_loc, Object _) as e)]) ->
+      let targs =
+        Option.map
+          ~f:(fun (loc, targs) -> (loc, convert_tparam_instantiations cx SMap.empty targs))
+          targs
+      in
       let (((_, arg_t), _) as e_ast) = expression cx e in
       let arg_t = Object_freeze.freeze_object cx arg_loc arg_t in
       let reason = mk_reason (RMethodCall (Some m)) loc in
-      ( snd (method_call cx reason prop_loc ~use_op:unknown_use (expr, obj_t, m) None [Arg arg_t]),
-        None,
+      ( snd
+          (method_call
+             cx
+             reason
+             prop_loc
+             ~use_op
+             (expr, obj_t, m)
+             (Option.map ~f:(snd %> fst) targs)
+             [Arg arg_t]),
+        Option.map ~f:(fun (loc, targs) -> (loc, snd targs)) targs,
         [Expression e_ast] )
     | ( ( "create" | "getOwnPropertyNames" | "keys" | "defineProperty" | "defineProperties"
         | "freeze" ),
@@ -6316,6 +6352,12 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         _ ) ->
       let targs = snd (convert_tparam_instantiations cx SMap.empty targs) in
       let args = Core_list.map ~f:(fun arg -> snd (expression_or_spread cx arg)) args in
+      let arity =
+        if m = "freeze" || m = "defineProperty" then
+          1
+        else
+          0
+      in
       Flow.add_output
         cx
         Error_message.(
@@ -6324,7 +6366,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
               call_loc = loc;
               is_new = false;
               reason_arity = Reason.(locationless_reason (RFunction RNormal));
-              expected_arity = 0;
+              expected_arity = arity;
             });
       (AnyT.at AnyError loc, Some (targs_loc, targs), args)
     (* TODO *)

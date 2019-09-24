@@ -1,5 +1,7 @@
 declare var undefined: void;
 
+type PropertyDescriptor<T> = any
+
 declare class Object {}
 
 declare class Function {}
