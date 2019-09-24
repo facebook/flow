@@ -1,123 +1,231 @@
 
-Should have all 3 expected errors
-Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:16:2
+Should have all expected errors
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:18:2
 
 Cannot cast `two` to string literal `custom_resolve_dir/testproj2` because string literal
 `subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `custom_resolve_dir/testproj2` [2].
 
-   subdir/sublevel.js:16:2
-   16| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:18:2
+   18| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
         ^^^
 
 References:
    subdir/custom_resolve_dir/testproj2/index.js:3:18
     3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subdir/sublevel.js:16:7
-   16| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:18:7
+   18| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:17:2
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:19:2
 
 Cannot cast `two` to string literal `node_modules/testproj2` because string literal
 `subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `node_modules/testproj2` [2].
 
-   subdir/sublevel.js:17:2
-   17| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:19:2
+   19| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
         ^^^
 
 References:
    subdir/custom_resolve_dir/testproj2/index.js:3:18
     3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subdir/sublevel.js:17:7
-   17| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:19:7
+   19| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- toplevel.js:7:2
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:45:2
+
+Cannot cast `incrementalRoot` to string literal `root_resolve_dir/incrementalRoot` because string literal
+`subdir/custom_resolve_dir/incrementalRoot` [1] is incompatible with string literal
+`root_resolve_dir/incrementalRoot` [2].
+
+   subdir/sublevel.js:45:2
+   45| (incrementalRoot: "root_resolve_dir/incrementalRoot");
+        ^^^^^^^^^^^^^^^
+
+References:
+   subdir/custom_resolve_dir/incrementalRoot/index.js:3:18
+    3| export var name: "subdir/custom_resolve_dir/incrementalRoot" = "subdir/custom_resolve_dir/incrementalRoot";
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subdir/sublevel.js:45:19
+   45| (incrementalRoot: "root_resolve_dir/incrementalRoot");
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- toplevel.js:8:2
 
 Cannot cast `one` to string literal `node_modules/testproj` because string literal `custom_resolve_dir/testproj` [1] is
 incompatible with string literal `node_modules/testproj` [2].
 
-   toplevel.js:7:2
-   7| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+   toplevel.js:8:2
+   8| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
        ^^^
 
 References:
    custom_resolve_dir/testproj/index.js:3:18
    3| export var name: "custom_resolve_dir/testproj" = "custom_resolve_dir/testproj";
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   toplevel.js:7:7
-   7| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+   toplevel.js:8:7
+   8| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- toplevel.js:15:2
+
+Cannot cast `incrementalNodeModules` to string literal `node_modules/incrementalNodeModules` because string literal
+`custom_resolve_dir/incrementalNodeModules` [1] is incompatible with string literal
+`node_modules/incrementalNodeModules` [2].
+
+   toplevel.js:15:2
+   15| (incrementalNodeModules: "node_modules/incrementalNodeModules");
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   custom_resolve_dir/incrementalNodeModules/index.js:3:18
+    3| export var name: "custom_resolve_dir/incrementalNodeModules" = "custom_resolve_dir/incrementalNodeModules";
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   toplevel.js:15:26
+   15| (incrementalNodeModules: "node_modules/incrementalNodeModules");
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 5 errors
+
+Should fix incrementalRoot
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:18:2
+
+Cannot cast `two` to string literal `custom_resolve_dir/testproj2` because string literal
+`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `custom_resolve_dir/testproj2` [2].
+
+   subdir/sublevel.js:18:2
+   18| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+        ^^^
+
+References:
+   subdir/custom_resolve_dir/testproj2/index.js:3:18
+    3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subdir/sublevel.js:18:7
+   18| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:19:2
+
+Cannot cast `two` to string literal `node_modules/testproj2` because string literal
+`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `node_modules/testproj2` [2].
+
+   subdir/sublevel.js:19:2
+   19| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+        ^^^
+
+References:
+   subdir/custom_resolve_dir/testproj2/index.js:3:18
+    3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subdir/sublevel.js:19:7
+   19| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- toplevel.js:8:2
+
+Cannot cast `one` to string literal `node_modules/testproj` because string literal `custom_resolve_dir/testproj` [1] is
+incompatible with string literal `node_modules/testproj` [2].
+
+   toplevel.js:8:2
+   8| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+       ^^^
+
+References:
+   custom_resolve_dir/testproj/index.js:3:18
+   3| export var name: "custom_resolve_dir/testproj" = "custom_resolve_dir/testproj";
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   toplevel.js:8:7
+   8| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- toplevel.js:15:2
+
+Cannot cast `incrementalNodeModules` to string literal `node_modules/incrementalNodeModules` because string literal
+`custom_resolve_dir/incrementalNodeModules` [1] is incompatible with string literal
+`node_modules/incrementalNodeModules` [2].
+
+   toplevel.js:15:2
+   15| (incrementalNodeModules: "node_modules/incrementalNodeModules");
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   custom_resolve_dir/incrementalNodeModules/index.js:3:18
+    3| export var name: "custom_resolve_dir/incrementalNodeModules" = "custom_resolve_dir/incrementalNodeModules";
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   toplevel.js:15:26
+   15| (incrementalNodeModules: "node_modules/incrementalNodeModules");
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 4 errors
+
+Should fix incrementalNodeModules
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:18:2
+
+Cannot cast `two` to string literal `custom_resolve_dir/testproj2` because string literal
+`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `custom_resolve_dir/testproj2` [2].
+
+   subdir/sublevel.js:18:2
+   18| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+        ^^^
+
+References:
+   subdir/custom_resolve_dir/testproj2/index.js:3:18
+    3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subdir/sublevel.js:18:7
+   18| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:19:2
+
+Cannot cast `two` to string literal `node_modules/testproj2` because string literal
+`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `node_modules/testproj2` [2].
+
+   subdir/sublevel.js:19:2
+   19| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+        ^^^
+
+References:
+   subdir/custom_resolve_dir/testproj2/index.js:3:18
+    3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subdir/sublevel.js:19:7
+   19| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- toplevel.js:8:2
+
+Cannot cast `one` to string literal `node_modules/testproj` because string literal `custom_resolve_dir/testproj` [1] is
+incompatible with string literal `node_modules/testproj` [2].
+
+   toplevel.js:8:2
+   8| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+       ^^^
+
+References:
+   custom_resolve_dir/testproj/index.js:3:18
+   3| export var name: "custom_resolve_dir/testproj" = "custom_resolve_dir/testproj";
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   toplevel.js:8:7
+   8| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 
 Found 3 errors
-
-Should fix the first error
-Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:17:2
-
-Cannot cast `two` to string literal `node_modules/testproj2` because string literal
-`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `node_modules/testproj2` [2].
-
-   subdir/sublevel.js:17:2
-   17| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
-        ^^^
-
-References:
-   subdir/custom_resolve_dir/testproj2/index.js:3:18
-    3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subdir/sublevel.js:17:7
-   17| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
-             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- toplevel.js:7:2
-
-Cannot cast `one` to string literal `node_modules/testproj` because string literal `custom_resolve_dir/testproj` [1] is
-incompatible with string literal `node_modules/testproj` [2].
-
-   toplevel.js:7:2
-   7| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
-       ^^^
-
-References:
-   custom_resolve_dir/testproj/index.js:3:18
-   3| export var name: "custom_resolve_dir/testproj" = "custom_resolve_dir/testproj";
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   toplevel.js:7:7
-   7| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
-            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 2 errors
-
-Should fix the second error
-Error -------------------------------------------------------------------------------------------------- toplevel.js:7:2
-
-Cannot cast `one` to string literal `node_modules/testproj` because string literal `custom_resolve_dir/testproj` [1] is
-incompatible with string literal `node_modules/testproj` [2].
-
-   toplevel.js:7:2
-   7| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
-       ^^^
-
-References:
-   custom_resolve_dir/testproj/index.js:3:18
-   3| export var name: "custom_resolve_dir/testproj" = "custom_resolve_dir/testproj";
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   toplevel.js:7:7
-   7| (one: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
-            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 1 error
-
-Should fix the third error
-No errors!

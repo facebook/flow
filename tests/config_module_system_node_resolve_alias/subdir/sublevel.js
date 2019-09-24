@@ -10,6 +10,8 @@ import { name as six } from "testproj5";
 
 import { name as seven } from "testproj6";
 
+import { name as incrementalRoot } from "incrementalRoot";
+
 (one: "custom_resolve_dir/testproj");
 
 (two: "subdir/custom_resolve_dir/testproj2");
@@ -36,4 +38,8 @@ import { name as seven } from "testproj6";
 // should still resolve custom_node_modules
 (five: "custom_node_modules/testproj4");
 
+// Should not resolve to the subdir
 (seven: "root_resolve_dir/testproj6");
+
+// should resolve to the subdirectory, and then get fixed
+(incrementalRoot: "root_resolve_dir/incrementalRoot");
