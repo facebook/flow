@@ -659,7 +659,7 @@ let file_options =
       module_file_exts = FlowConfig.module_file_exts flowconfig;
       module_resource_exts = FlowConfig.module_resource_exts flowconfig;
       node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
-      node_resolver_aliases = FlowConfig.node_resolver_aliases flowconfig
+      node_resolver_aliases = FlowConfig.node_resolver_aliases flowconfig;
     }
 
 let ignore_flag prev =

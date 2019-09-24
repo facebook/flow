@@ -461,11 +461,11 @@ module Opts = struct
             Ok { opts with node_resolver_dirnames }) );
       ( "module.system.node.resolve_alias",
         string
-          ~init: (fun opts -> { opts with node_resolver_aliases = [] })
-          ~multiple: true
+          ~init:(fun opts -> { opts with node_resolver_aliases = [] })
+          ~multiple:true
           (fun opts v ->
             let node_resolver_aliases = v :: opts.node_resolver_aliases in
-            Ok {opts with node_resolver_aliases;}) );
+            Ok { opts with node_resolver_aliases }) );
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ( "name",

@@ -37,6 +37,7 @@ let module_file_exts options = options.module_file_exts
 let module_resource_exts options = options.module_resource_exts
 
 let node_resolver_dirnames options = options.node_resolver_dirnames
+
 let node_resolver_aliases options = options.node_resolver_aliases
 
 let node_modules_containers = ref SSet.empty
@@ -108,8 +109,7 @@ let is_valid_path =
 
 let is_node_module options path = List.mem (Filename.basename path) options.node_resolver_dirnames
 
-let is_module_alias options path =
-  List.mem (Filename.basename path) options.node_resolver_aliases
+let is_module_alias options path = List.mem (Filename.basename path) options.node_resolver_aliases
 
 let is_flow_file ~options =
   let is_valid_path = is_valid_path ~options in
@@ -190,12 +190,7 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~node_module_filter
-    ~module_alias_filter
-    ~path_filter
-    ~realpath_filter
-    ~error_filter
-    paths =
+    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths =
   let prefix_checkers = Core_list.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -253,12 +248,7 @@ let make_next_files_and_symlinks
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
 let make_next_files_following_symlinks
-    ~node_module_filter
-    ~module_alias_filter
-    ~path_filter
-    ~realpath_filter
-    ~error_filter
-    paths =
+    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths =
   let paths = Core_list.map ~f:Path.to_string paths in
   let cb =
     ref
