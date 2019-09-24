@@ -99,6 +99,7 @@ val toplevels:
 (** Create a function type for function declarations/expressions. *)
 val functiontype: Context.t ->
   Type.t -> (* this *)
+  ?check_polarity:bool ->
   t -> Type.t
 
 (** Create a function type for class/interface methods. *)

@@ -1875,7 +1875,6 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; sig_loc; _} = func in
       let fn_type, func_ast = mk_function_declaration None cx sig_loc func in
-      Flow.check_polarity cx Polarity.Positive fn_type;
       (match id with
       | Some(_, { Ast.Identifier.name; comments= _ }) ->
         let use_op = Op (AssignVar {
@@ -3250,7 +3249,6 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
 
   | ArrowFunction func ->
       let t, f = mk_arrow cx loc func in
-      Flow.check_polarity cx Polarity.Positive t;
       (loc, t), ArrowFunction f
 
   | TaggedTemplate {

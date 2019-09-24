@@ -80,7 +80,7 @@ let generate_tests cx f x =
     return_t = Flow.subst cx map return_t;
   })
 
-let functiontype cx this_t {reason; kind; tparams; fparams; return_t; knot; _} =
+let functiontype cx this_t ?(check_polarity=true) {reason; kind; tparams; fparams; return_t; knot; _} =
   let make_trust = Context.trust_constructor cx in
   let static =
     let proto = FunProtoT reason in
@@ -103,6 +103,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; knot; _} =
   let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
   let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in
   Flow.unify cx t knot;
+  (if check_polarity then Flow.check_polarity cx Polarity.Positive t);
   t
 
 let methodtype cx {reason; tparams; fparams; return_t; _} =
