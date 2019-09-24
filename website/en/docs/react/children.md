@@ -285,9 +285,9 @@ Our [types reference](../types/) has more information about both
 
 Sometimes you want to enforce that your component will *only* receive a single
 child. You could use [`React.Children.only()` function][] to enforce this
-constraint, but you could also enforce this in Flow. To do this you would
+constraint, but you could also enforce this in Flow. To do this, do NOT
 wrap the type for your children in
-[`React.ChildrenArray<T>`](../types/#toc-react-childrenarray). Like so:
+[`React.ChildrenArray<T>`](../types/#toc-react-childrenarray). Specify a single element argument, like so:
 
 [`React.Children.only()` function]: https://facebook.github.io/react/docs/react-api.html#react.children.only
 
