@@ -166,6 +166,62 @@ References:
                              ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- fun.js:37:17
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   fun.js:37:17
+   37|   argPos<+T>(x: T): void {}, // Error: +T in negative position
+                       ^
+
+References:
+   fun.js:37:11
+   37|   argPos<+T>(x: T): void {}, // Error: +T in negative position
+                 ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:38:21
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   fun.js:38:21
+   38|   flipArgNeg<-T>(x: T => void): void {}, // Error: -T in positive position
+                           ^
+
+References:
+   fun.js:38:15
+   38|   flipArgNeg<-T>(x: T => void): void {}, // Error: -T in positive position
+                     ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:41:21
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   fun.js:41:21
+   41|   retNeg<-T>(x: T): T { return x }, // Error: -T in positive position
+                           ^
+
+References:
+   fun.js:41:11
+   41|   retNeg<-T>(x: T): T { return x }, // Error: -T in positive position
+                 ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:44:27
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   fun.js:44:27
+   44|   flipRetPos<+T>(x: () => T): void {} // Error: +T in negative position
+                                 ^
+
+References:
+   fun.js:44:15
+   44|   flipRetPos<+T>(x: () => T): void {} // Error: +T in negative position
+                     ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ obj.js:2:25
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
@@ -279,4 +335,4 @@ References:
 
 
 
-Found 20 errors
+Found 24 errors

@@ -30,3 +30,16 @@ const retNeg1 = <-T>(x: T): T => x // Error: -T in positive position
 const retPos1 = <+T>(): T => (null: any) // OK
 const flipRetNeg1 = <-T>(x: () => T): void => {} // OK
 const flipRetPos1 = <+T>(x: () => T): void => {} // Error: +T in negative position
+
+const obj = {
+  arg<T>(x: T): void {}, // OK
+  argNeg<-T>(x: T): void {}, // OK
+  argPos<+T>(x: T): void {}, // Error: +T in negative position
+  flipArgNeg<-T>(x: T => void): void {}, // Error: -T in positive position
+  flipArgPos<+T>(x: T => void): void {}, // OK
+  ret<T>(): T { return (null: any) }, // OK
+  retNeg<-T>(x: T): T { return x }, // Error: -T in positive position
+  retPos<+T>(): T { return (null: any) }, // OK
+  flipRetNeg<-T>(x: () => T): void {}, // OK
+  flipRetPos<+T>(x: () => T): void {} // Error: +T in negative position
+}
