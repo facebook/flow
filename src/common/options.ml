@@ -58,34 +58,40 @@ type trust_mode =
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
+  opt_arch: arch;
   opt_cache_direct_dependents: bool;
   opt_debug: bool;
-  opt_max_literal_length: int;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
   opt_enforce_well_formed_exports_whitelist: string list;
   opt_enums: bool;
-  opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
+  opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
-  opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
+  opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
-  opt_flowconfig_name: string;
   opt_file_options: Files.options;
+  opt_flowconfig_name: string;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_blacklist: string list;
   opt_haste_paths_whitelist: string list;
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
+  opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_lazy_mode: lazy_mode;
+  opt_lint_severities: Severity.severity LintSettings.t;
+  opt_lsp_code_actions: bool;
   opt_max_files_checked_per_worker: int;
+  opt_max_header_tokens: int;
+  opt_max_literal_length: int;
   opt_max_workers: int;
   opt_merge_timeout: float option;
   opt_module: module_system;
@@ -95,7 +101,6 @@ type t = {
   opt_munge_underscores: bool;
   opt_no_saved_state: bool;
   opt_profile: bool;
-  opt_lazy_mode: lazy_mode;
   opt_quiet: bool;
   opt_recursion_limit: int;
   opt_root: Path.t;
@@ -103,22 +108,17 @@ type t = {
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
+  opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
   opt_suppress_comments: Str.regexp list;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_traces: int;
+  opt_trust_mode: trust_mode;
+  opt_type_asserts: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
   opt_weak: bool;
-  opt_max_header_tokens: int;
-  opt_lint_severities: Severity.severity LintSettings.t;
-  opt_lsp_code_actions: bool;
-  opt_strict_mode: StrictModeSettings.t;
-  opt_arch: arch;
-  opt_include_suppressions: bool;
-  opt_trust_mode: trust_mode;
-  opt_type_asserts: bool;
 }
 
 let abstract_locations opts = opts.opt_abstract_locations
