@@ -53,6 +53,14 @@ References:
            ^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- read-only.js:5:1
+
+Cannot assign `1` to `x[0]` because read-only tuples cannot be written to.
+
+   5| x[0] = 1; // can't write
+      ^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- too-few.js:5:5
 
 Cannot call `foo` with array literal bound to `a` because array literal [1] has an arity of 1 but tuple type [2] has an
@@ -238,4 +246,4 @@ References:
 
 
 
-Found 16 errors
+Found 17 errors
