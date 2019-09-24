@@ -545,7 +545,10 @@ module Completion : sig
     context: completionContext option;
   }
 
-  and completionContext = { triggerKind: completionTriggerKind }
+  and completionContext = {
+    triggerKind: completionTriggerKind;
+    triggerCharacter: string option;
+  }
 
   and result = completionList
 

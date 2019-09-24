@@ -8,6 +8,7 @@
 .*/newtests/types-first-ide/fileWithNonLocalError.js
 .*/newtests/types-first-lazy-ide1/errorsWithFlowPragma.js
 .*/newtests/types-first-lazy-ide2/errorsWithFlowPragma.js
+.*/newtests/lsp/completion/jsx.js
 
 [options]
 suppress_comment=.*\\$FlowFixMe

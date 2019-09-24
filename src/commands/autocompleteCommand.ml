@@ -78,7 +78,9 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck a
     else
       None
   in
-  let request = ServerProt.Request.AUTOCOMPLETE { input = file; wait_for_recheck } in
+  let request =
+    ServerProt.Request.AUTOCOMPLETE { input = file; wait_for_recheck; trigger_character = None }
+  in
   let results =
     match connect_and_make_request flowconfig_name option_values root request with
     | ServerProt.Response.AUTOCOMPLETE response -> response

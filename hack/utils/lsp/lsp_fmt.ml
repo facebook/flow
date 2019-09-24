@@ -786,6 +786,7 @@ let parse_completion (params : json option) : Completion.params =
                 Option.value_exn
                   ~message:(Printf.sprintf "Unsupported trigger kind: %d" tk)
                   (Lsp.Completion.completionTriggerKind_of_enum tk);
+              triggerCharacter = Jget.string_opt context "triggerCharacter";
             }
         | None -> None);
     })

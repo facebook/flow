@@ -482,7 +482,7 @@ let do_initialize () : Initialize.result =
             };
           hoverProvider = true;
           completionProvider =
-            Some { resolveProvider = false; completion_triggerCharacters = ["."] };
+            Some { resolveProvider = false; completion_triggerCharacters = ["."; " "] };
           signatureHelpProvider = None;
           definitionProvider = true;
           typeDefinitionProvider = false;

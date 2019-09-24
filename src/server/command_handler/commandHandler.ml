@@ -58,13 +58,13 @@ let get_status ~reader genv env client_root =
   in
   (status_response, lazy_stats)
 
-let autocomplete ~reader ~options ~env ~profiling file_input =
+let autocomplete ~trigger_character ~reader ~options ~env ~profiling file_input =
   let (path, content) =
     match file_input with
     | File_input.FileName _ -> failwith "Not implemented"
     | File_input.FileContent (_, content) -> (File_input.filename_of_file_input file_input, content)
   in
-  let state = Autocomplete_js.autocomplete_set_hooks () in
+  let state = Autocomplete_js.autocomplete_set_hooks trigger_character in
   let path = File_key.SourceFile path in
   let%lwt check_contents_result =
     Types_js.basic_check_contents ~options ~env ~profiling content path
@@ -75,7 +75,14 @@ let autocomplete ~reader ~options ~env ~profiling file_input =
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json (fun () ->
             Lwt.return
-              (AutocompleteService_js.autocomplete_get_results ~reader cx file_sig tast state info)))
+              (AutocompleteService_js.autocomplete_get_results
+                 ~reader
+                 cx
+                 file_sig
+                 tast
+                 state
+                 trigger_character
+                 info)))
   in
   let (results, json_data_to_log) = split_result autocomplete_result in
   Autocomplete_js.autocomplete_unset_hooks ();
@@ -469,8 +476,10 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
       let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
       Lwt.return (Ok ()))
 
-let handle_autocomplete ~reader ~options ~input ~profiling ~env =
-  let%lwt (result, json_data) = autocomplete ~reader ~options ~env ~profiling input in
+let handle_autocomplete ~trigger_character ~reader ~options ~input ~profiling ~env =
+  let%lwt (result, json_data) =
+    autocomplete ~trigger_character ~reader ~options ~env ~profiling input
+  in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
 let handle_autofix_exports ~options ~input ~profiling ~env =
@@ -709,8 +718,11 @@ let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
-  | ServerProt.Request.AUTOCOMPLETE { input; wait_for_recheck } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_autocomplete ~reader ~options ~input)
+  | ServerProt.Request.AUTOCOMPLETE { trigger_character; input; wait_for_recheck } ->
+    mk_parallelizable
+      ~wait_for_recheck
+      ~options
+      (handle_autocomplete ~trigger_character ~reader ~options ~input)
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
     mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
@@ -1220,6 +1232,12 @@ let handle_persistent_autocomplete_lsp
          * a little more defensive. The only danger here is that the file contents may have changed *)
         Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc client
     in
+    let trigger_character =
+      Option.value_map
+        ~f:(fun completionContext -> completionContext.triggerCharacter)
+        ~default:None
+        params.context
+    in
     let fn_content =
       match file with
       | File_input.FileContent (fn, content) -> Ok (fn, content)
@@ -1235,7 +1253,7 @@ let handle_persistent_autocomplete_lsp
       let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
       let file_with_token = File_input.FileContent (fn, content_with_token) in
       let%lwt (result, extra_data) =
-        autocomplete ~reader ~options ~env ~profiling file_with_token
+        autocomplete ~trigger_character ~reader ~options ~env ~profiling file_with_token
       in
       let metadata = with_data ~extra_data metadata in
       begin

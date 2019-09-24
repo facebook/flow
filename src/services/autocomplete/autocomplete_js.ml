@@ -28,15 +28,15 @@ let is_autocomplete x =
   let suffix = String.sub x (String.length x - suffix_len) suffix_len in
   suffix = autocomplete_suffix
 
-let autocomplete_id state _cx ac_name ac_loc =
-  if is_autocomplete ac_name then (
+let autocomplete_id from_trigger_character state _cx ac_name ac_loc =
+  if is_autocomplete ac_name && not from_trigger_character then (
     state := Some { ac_name; ac_loc; ac_type = Acid (Env.all_entries ()) };
     true
   ) else
     false
 
-let autocomplete_object_key state _cx ac_name ac_loc =
-  if is_autocomplete ac_name then (
+let autocomplete_object_key from_trigger_character state _cx ac_name ac_loc =
+  if is_autocomplete ac_name && not from_trigger_character then (
     state := Some { ac_name; ac_loc; ac_type = Ackey };
     true
   ) else
@@ -56,10 +56,11 @@ let autocomplete_jsx state _cx ac_name ac_loc class_t =
   ) else
     false
 
-let autocomplete_set_hooks () =
+let autocomplete_set_hooks ~trigger_character =
   let state = ref None in
-  Type_inference_hooks_js.set_id_hook (autocomplete_id state);
-  Type_inference_hooks_js.set_obj_prop_decl_hook (autocomplete_object_key state);
+  Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None) state);
+  Type_inference_hooks_js.set_obj_prop_decl_hook
+    (autocomplete_object_key (trigger_character <> None) state);
   Type_inference_hooks_js.set_member_hook (autocomplete_member state);
   Type_inference_hooks_js.set_jsx_hook (autocomplete_jsx state);
   state

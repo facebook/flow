@@ -271,5 +271,282 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('textDocument/completion triggered by space in jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        position: {line: 12, character: 4},
+        context: {triggerKind: 2, triggerCharacter: ' '},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'a',
+                  kind: 6,
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by space outside of jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        position: {line: 11, character: 1},
+        context: {triggerKind: 2, triggerCharacter: ' '},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion invoked outside of jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        position: {line: 11, character: 1},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'exports',
+                  kind: 6,
+                  detail: '{||}',
+                  inlineDetail: '{||}',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'React',
+                  kind: 6,
+                  detail: '{createElement: any}',
+                  inlineDetail: '{createElement: any}',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Props',
+                  kind: 13,
+                  detail: 'type Props = {a: number}',
+                  inlineDetail: 'type Props = {a: number}',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'C',
+                  kind: 7,
+                  detail: 'class C',
+                  inlineDetail: 'class C',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion invoked in jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        position: {line: 12, character: 4},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'a',
+                  kind: 6,
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by dot in jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        position: {line: 13, character: 3},
+        context: {triggerKind: 2, triggerCharacter: '.'},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  inlineDetail: '(o: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'name',
+                  kind: 6,
+                  detail: 'string',
+                  inlineDetail: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  inlineDetail: '()',
+                  itemType: 'mixed',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by dot outside jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        position: {line: 14, character: 2},
+        context: {triggerKind: 2, triggerCharacter: '.'},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  inlineDetail: '(o: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'name',
+                  kind: 6,
+                  detail: 'string',
+                  inlineDetail: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  inlineDetail: '()',
+                  itemType: 'mixed',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 );

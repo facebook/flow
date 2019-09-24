@@ -167,7 +167,17 @@ let autocomplete_is_valid_member key =
      not (Reason.is_internal_name key)
 
 let autocomplete_member
-    ~reader ~exclude_proto_members ~ac_type cx file_sig typed_ast this ac_name ac_loc docblock =
+    ~reader
+    ~exclude_proto_members
+    ~ac_type
+    cx
+    file_sig
+    typed_ast
+    this
+    ac_name
+    ac_loc
+    ac_trigger
+    docblock =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let result = Members.extract ~exclude_proto_members cx this in
   Hh_json.(
@@ -188,6 +198,7 @@ let autocomplete_member
           ("ac_name", JSON_String ac_name);
           (* don't need to strip root for logging *)
             ("ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc));
+          ("ac_trigger", JSON_String (Option.value ac_trigger ~default:"None"));
           ("loc", Reason.json_of_loc ~offset_table:None ac_loc);
           ("docblock", Docblock.json_of_docblock docblock);
           ("result", JSON_String result_str);
@@ -234,7 +245,7 @@ let autocomplete_member
       Ok (result, Some json_data_to_log))
 
 (* env is all visible bound names at cursor *)
-let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
+let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let (result, errors) =
     SMap.fold
@@ -290,6 +301,7 @@ let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
       JSON_Object
         [
           ("ac_type", JSON_String "Acid");
+          ("ac_trigger", JSON_String (Option.value ac_trigger ~default:"None"));
           ("result", JSON_String result_str);
           ("count", JSON_Number (result |> List.length |> string_of_int));
           ( "errors",
@@ -304,7 +316,7 @@ let autocomplete_id ~reader cx ac_loc file_sig env typed_ast =
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock =
+let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger docblock =
   Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
@@ -326,13 +338,14 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock =
       props_object
       ac_name
       ac_loc
+      ac_trigger
       docblock)
 
-let autocomplete_get_results ~reader cx file_sig typed_ast state docblock =
+let autocomplete_get_results ~reader cx file_sig typed_ast state trigger_character docblock =
   let file_sig = File_sig.abstractify_locs file_sig in
   match !state with
   | Some { ac_loc; ac_type = Acid env; _ } ->
-    autocomplete_id ~reader cx ac_loc file_sig env typed_ast
+    autocomplete_id ~reader cx ac_loc trigger_character file_sig env typed_ast
   | Some { ac_name; ac_loc; ac_type = Acmem this } ->
     autocomplete_member
       ~reader
@@ -344,12 +357,27 @@ let autocomplete_get_results ~reader cx file_sig typed_ast state docblock =
       this
       ac_name
       ac_loc
+      trigger_character
       docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx cls } ->
-    autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc docblock
+    autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc trigger_character docblock
   | Some { ac_name = _; ac_loc = _; ac_type = Ackey } ->
-    let json_data_to_log = Hh_json.(JSON_Object [("ac_type", JSON_String "Ackey")]) in
+    let json_data_to_log =
+      Hh_json.(
+        JSON_Object
+          [
+            ("ac_type", JSON_String "Ackey");
+            ("ac_trigger", JSON_String (Option.value trigger_character ~default:"None"));
+          ])
+    in
     Ok ([], Some json_data_to_log)
   | None ->
-    let json_data_to_log = Hh_json.(JSON_Object [("ac_type", JSON_String "None")]) in
+    let json_data_to_log =
+      Hh_json.(
+        JSON_Object
+          [
+            ("ac_type", JSON_String "None");
+            ("ac_trigger", JSON_String (Option.value trigger_character ~default:"None"));
+          ])
+    in
     Ok ([], Some json_data_to_log)
