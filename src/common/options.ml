@@ -58,6 +58,7 @@ type trust_mode =
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
+  opt_allow_skip_direct_dependents: bool;
   opt_arch: arch;
   opt_cache_direct_dependents: bool;
   opt_debug: bool;
@@ -124,6 +125,8 @@ type t = {
 let abstract_locations opts = opts.opt_abstract_locations
 
 let all opts = opts.opt_all
+
+let allow_skip_direct_dependents opts = opts.opt_allow_skip_direct_dependents
 
 let arch opts = opts.opt_arch
 

@@ -49,6 +49,7 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
+    allow_skip_direct_dependents: bool;
     cache_direct_dependents: bool;
     emoji: bool;
     enable_const_params: bool;
@@ -143,6 +144,7 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
+      allow_skip_direct_dependents = false;
       cache_direct_dependents = true;
       emoji = false;
       enable_const_params = false;
@@ -535,6 +537,8 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.cache_direct_dependents",
         boolean (fun opts v -> Ok { opts with cache_direct_dependents = v }) );
+      ( "experimental.allow_skip_direct_dependents",
+        boolean (fun opts v -> Ok { opts with allow_skip_direct_dependents = v }) );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "trust_mode",
         enum
@@ -1082,6 +1086,8 @@ let libs config = config.libs
 let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
+
+let allow_skip_direct_dependents c = c.options.Opts.allow_skip_direct_dependents
 
 let cache_direct_dependents c = c.options.Opts.cache_direct_dependents
 

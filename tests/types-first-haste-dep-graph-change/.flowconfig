@@ -4,3 +4,4 @@
 [options]
 experimental.types_first=true
 module.system=haste
+experimental.allow_skip_direct_dependents=true

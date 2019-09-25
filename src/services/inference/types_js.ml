@@ -439,7 +439,7 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
           ~next:(MultiWorkerLwt.next workers parsed))
   in
   clear_cache_if_resolved_requires_changed resolved_requires_changed;
-  Lwt.return errors
+  Lwt.return (errors, resolved_requires_changed)
 
 let commit_modules_and_resolve_requires
     ~transaction
@@ -479,11 +479,14 @@ let commit_modules_and_resolve_requires
       ~local_errors
       ~new_or_changed
   in
-  let%lwt resolve_errors =
+  let%lwt (resolve_errors, resolved_requires_changed) =
     resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
   in
   let local_errors = FilenameMap.union resolve_errors local_errors in
-  Lwt.return (changed_modules, { ServerEnv.local_errors; merge_errors; warnings; suppressions })
+  Lwt.return
+    ( changed_modules,
+      resolved_requires_changed,
+      { ServerEnv.local_errors; merge_errors; warnings; suppressions } )
 
 let error_set_of_internal_error file (loc, internal_error) =
   Error_message.EInternal (loc, internal_error)
@@ -912,7 +915,8 @@ let check_files
     ~sig_new_or_changed
     ~dependency_info
     ~persistent_connections
-    ~recheck_reasons =
+    ~recheck_reasons
+    ~cannot_skip_direct_dependents =
   match Options.arch options with
   | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0, None)
   | Options.TypesFirst ->
@@ -924,16 +928,9 @@ let check_files
         let skipped_count = ref 0 in
         let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
         (* skip dependents whenever none of their dependencies have new or changed signatures *)
-        (* NOTE: We don't skip direct dependents because, in particular, they might be direct
-         dependents of files that were deleted, became unparsed, or fell out of @flow; those files
-         would not be dependencies tracked by the dependency graph; the direct dependents of those
-         files would need to be checked nevertheless. Of course, this is a hammer of a solution for
-         a nail of a problem.
-
-         TODO: Figure out how to safely skip direct dependents. *)
         let dependents_to_check =
           FilenameSet.filter (fun f ->
-              FilenameSet.mem f direct_dependent_files
+              (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
               || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
                  @@ FilenameMap.find_unsafe f all_dependency_graph
               ||
@@ -1759,7 +1756,7 @@ end = struct
           (not (FilenameSet.mem fn new_or_changed)) && FilenameSet.mem fn old_parsed)
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-    let%lwt (changed_modules, errors) =
+    let%lwt (changed_modules, resolved_requires_changed_in_commit_modules, errors) =
       commit_modules_and_resolve_requires
         ~transaction
         ~reader
@@ -1811,7 +1808,7 @@ end = struct
     let mutator =
       Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files
     in
-    let%lwt () =
+    let%lwt resolved_requires_changed_in_reresolve_direct_dependents =
       with_timer_lwt ~options "ReresolveDirectDependents" profiling (fun () ->
           let%lwt resolved_requires_changed =
             MultiWorkerLwt.call
@@ -1838,7 +1835,7 @@ end = struct
               ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
           in
           clear_cache_if_resolved_requires_changed resolved_requires_changed;
-          Lwt.return_unit)
+          Lwt.return resolved_requires_changed)
     in
     Hh_logger.info "Recalculating dependency graph";
     let%lwt dependency_info =
@@ -1879,6 +1876,13 @@ end = struct
       let to_remove = FilenameSet.union parsed deleted in
       FilenameSet.diff env.ServerEnv.unparsed to_remove |> FilenameSet.union unparsed_set
     in
+    let cannot_skip_direct_dependents =
+      (not (Options.allow_skip_direct_dependents options))
+      || resolved_requires_changed_in_commit_modules
+      || resolved_requires_changed_in_reresolve_direct_dependents
+      || deleted_count > 0
+      || FilenameSet.cardinal unparsed_set > 0
+    in
     let env = { env with ServerEnv.files = parsed; unparsed; dependency_info } in
     let intermediate_values =
       ( deleted,
@@ -1889,7 +1893,8 @@ end = struct
         new_or_changed,
         unchanged_checked,
         unchanged_files_to_force,
-        unparsed_set )
+        unparsed_set,
+        cannot_skip_direct_dependents )
     in
     Lwt.return (env, intermediate_values)
 
@@ -2033,7 +2038,8 @@ end = struct
           new_or_changed,
           unchanged_checked,
           unchanged_files_to_force,
-          unparsed_set ) =
+          unparsed_set,
+          cannot_skip_direct_dependents ) =
       intermediate_values
     in
     let dependency_info = env.ServerEnv.dependency_info in
@@ -2125,6 +2131,7 @@ end = struct
         ~dependency_info
         ~persistent_connections:(Some env.ServerEnv.connections)
         ~recheck_reasons
+        ~cannot_skip_direct_dependents
     in
     Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
@@ -2554,7 +2561,7 @@ let init ~profiling ~workers options =
       unparsed
   in
   let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
-  let%lwt (_, errors) =
+  let%lwt (_, _, errors) =
     let errors =
       { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
     in
@@ -2849,6 +2856,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~dependency_info
           ~persistent_connections:None
           ~recheck_reasons
+          ~cannot_skip_direct_dependents:true
       in
       Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 

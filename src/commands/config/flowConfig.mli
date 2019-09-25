@@ -54,6 +54,8 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
+val allow_skip_direct_dependents : config -> bool
+
 val cache_direct_dependents : config -> bool
 
 val emoji : config -> bool
