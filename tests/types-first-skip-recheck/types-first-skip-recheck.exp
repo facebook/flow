@@ -31,8 +31,16 @@ References:
           ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- unparsed.js:8:1
 
-Found 2 errors
+Unexpected token `=`
+
+   8| =
+      ^
+
+
+
+Found 3 errors
 
 Adding a line should cause minimal rechecking (but preserve errors)
 Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
@@ -66,8 +74,16 @@ References:
           ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- unparsed.js:8:1
 
-Found 2 errors
+Unexpected token `=`
+
+   8| =
+      ^
+
+
+
+Found 3 errors
 
 ========Skipping stats========
 Merge skipped 1 of 3 modules
@@ -105,8 +121,16 @@ References:
           ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- unparsed.js:8:1
 
-Found 2 errors
+Unexpected token `=`
+
+   8| =
+      ^
+
+
+
+Found 3 errors
 
 ========Skipping stats========
 Merge skipped 2 of 3 modules
