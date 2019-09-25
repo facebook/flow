@@ -792,6 +792,7 @@ let merge
     ~recheck_set
     ~dependency_graph
     ~deleted
+    ~unparsed_set
     ~persistent_connections
     ~recheck_reasons
     ~prep_merge =
@@ -842,7 +843,7 @@ let merge
     let (master_mutator, worker_mutator) =
       Context_heaps.Merge_context_mutator.create
         transaction
-        (FilenameSet.union files_to_merge deleted)
+        (FilenameSet.union files_to_merge deleted |> FilenameSet.union unparsed_set)
     in
     let merge_start_time = Unix.gettimeofday () in
     let%lwt result =
@@ -2087,6 +2088,7 @@ end = struct
         ~recheck_set
         ~dependency_graph
         ~deleted
+        ~unparsed_set
         ~persistent_connections:(Some env.ServerEnv.connections)
         ~recheck_reasons
         ~prep_merge:
@@ -2824,6 +2826,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~recheck_set
           ~dependency_graph
           ~deleted:FilenameSet.empty
+          ~unparsed_set:FilenameSet.empty
           ~persistent_connections:None
           ~recheck_reasons
           ~prep_merge:None
