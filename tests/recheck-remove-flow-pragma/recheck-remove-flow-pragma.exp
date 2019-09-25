@@ -1,0 +1,39 @@
+
+Server should start in types-first mode
+Error ------------------------------------------------------------------------------------------------------- bar.js:5:5
+
+Cannot call `foo` with `5` bound to `x` because number [1] is incompatible with string [2].
+
+   bar.js:5:5
+   5| foo(5);
+          ^ [1]
+
+References:
+   foo.js:3:24
+   3| export function foo(x: string): void {}
+                             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Removing the @flow pragma from foo.js should fix the errors
+No errors!
+
+Adding the @flow pragma back to foo.js should make the errors return
+Error ------------------------------------------------------------------------------------------------------- bar.js:5:5
+
+Cannot call `foo` with `5` bound to `x` because number [1] is incompatible with string [2].
+
+   bar.js:5:5
+   5| foo(5);
+          ^ [1]
+
+References:
+   foo.js:3:24
+   3| export function foo(x: string): void {}
+                             ^^^^^^ [2]
+
+
+
+Found 1 error
