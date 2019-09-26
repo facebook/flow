@@ -7710,7 +7710,34 @@ struct
       ?trace
       ( curr_t,
         match s with
-        | Prop x -> GetPropT (unknown_use, reason, Named (reason, x), tvar)
+        | Prop (x, has_default) ->
+          let lookup_ub () =
+            let use_op = unknown_use in
+            let action = ReadProp { use_op; obj_t = curr_t; tout = tvar } in
+            (* LookupT unifies with the default with tvar. To get around that, we can create some
+             * indirection with a fresh tvar in between to ensure that we only add a lower bound
+             *)
+            let default_tout =
+              Tvar.mk_where cx reason (fun tout -> flow_opt cx ?trace (tout, UseT (use_op, tvar)))
+            in
+            let void_reason = replace_desc_reason RVoid (reason_of_t tvar) in
+            let strict =
+              NonstrictReturning
+                (Some (DefT (void_reason, bogus_trust (), VoidT), default_tout), None)
+            in
+            LookupT (reason, strict, [], Named (reason, x), action)
+          in
+          (* We use GetPropT instead of a strict lookup because a strict lookup directly on
+           * an unsealed object would cause an error. *)
+          let getprop_ub () = GetPropT (unknown_use, reason, Named (reason, x), tvar) in
+          if has_default then
+            match curr_t with
+            | DefT (_, _, NullT) -> getprop_ub ()
+            | DefT (_, _, ObjT { flags = { exact = true; _ }; proto_t = ObjProtoT _; _ }) ->
+              lookup_ub ()
+            | _ -> getprop_ub ()
+          else
+            getprop_ub ()
         | Elem key -> GetElemT (unknown_use, reason, key, tvar)
         | ObjRest xs -> ObjRestT (reason, xs, tvar)
         | ArrRest i -> ArrRestT (unknown_use, reason, i, tvar)

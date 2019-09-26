@@ -60,7 +60,7 @@ let string_of_sentinel = function
 
 let string_of_selector = function
   | Elem _ -> "Elem _" (* TODO print info about the key *)
-  | Prop x -> spf "Prop %s" x
+  | Prop (x, _) -> spf "Prop %s" x
   | ArrRest i -> spf "ArrRest %i" i
   | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
   | Default -> "Default"
@@ -1048,7 +1048,7 @@ and json_of_selector json_cx = check_depth json_of_selector_impl json_cx
 and json_of_selector_impl json_cx =
   Hh_json.(
     function
-    | Prop x -> JSON_Object [("propName", JSON_String x)]
+    | Prop (x, _) -> JSON_Object [("propName", JSON_String x)]
     | Elem key -> JSON_Object [("keyType", _json_of_t json_cx key)]
     | ObjRest excludes ->
       JSON_Object

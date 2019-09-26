@@ -868,6 +868,124 @@ Destructuring assignment must be initialized
           ^^^^^
 
 
+Error ------------------------------------------------------------------------------- destructuring_missing_props.js:3:6
+
+Property `nonExistent` is missing in object type [1].
+
+   destructuring_missing_props.js:3:6
+   3| var {nonExistent, defaults = "hi", foo = 3} = x; // Error, missing nonExistent
+           ^^^^^^^^^^^
+
+References:
+   destructuring_missing_props.js:2:16
+   2| declare var x: {| foo: string |};
+                     ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------- destructuring_missing_props.js:5:2
+
+Cannot cast `foo` to number because string [1] is incompatible with number [2].
+
+   destructuring_missing_props.js:5:2
+   5| (foo: number); // Error, number | string
+       ^^^
+
+References:
+   destructuring_missing_props.js:2:24
+   2| declare var x: {| foo: string |};
+                             ^^^^^^ [1]
+   destructuring_missing_props.js:5:7
+   5| (foo: number); // Error, number | string
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- destructuring_missing_props.js:9:6
+
+Property `nonExistent2` is missing in object type [1].
+
+   destructuring_missing_props.js:9:6
+   9| var {nonExistent2, defaults2 = "hi", bar = 3} = y; // Error, missing nonExistent2
+           ^^^^^^^^^^^^
+
+References:
+   destructuring_missing_props.js:8:16
+   8| declare var y: {| bar: string |};
+                     ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:11:2
+
+Cannot cast `bar` to string because number [1] is incompatible with string [2].
+
+   destructuring_missing_props.js:11:2
+   11| (bar: string); // Error, number | string
+        ^^^
+
+References:
+   destructuring_missing_props.js:9:44
+    9| var {nonExistent2, defaults2 = "hi", bar = 3} = y; // Error, missing nonExistent2
+                                                  ^ [1]
+   destructuring_missing_props.js:11:7
+   11| (bar: string); // Error, number | string
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:14:7
+
+Property `baz` is missing in null [1].
+
+   destructuring_missing_props.js:14:7
+   14| var { baz = 15150 } = null // Error, baz is missing in null (you can't destructure null)
+             ^^^
+
+References:
+   destructuring_missing_props.js:14:23
+   14| var { baz = 15150 } = null // Error, baz is missing in null (you can't destructure null)
+                             ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:17:7
+
+Property `grunt` is missing in object type [1].
+
+   destructuring_missing_props.js:17:7
+   17| var { grunt = 15210 } = z; // Error, grunt missing in inexact object type
+             ^^^^^
+
+References:
+   destructuring_missing_props.js:16:17
+   16| declare var z : { thud : string };
+                       ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:21:7
+
+Property `qux` is missing in object literal [1].
+
+   destructuring_missing_props.js:21:7
+   21| var { qux = "string" } = obj; // Error, qux missing
+             ^^^
+
+References:
+   destructuring_missing_props.js:20:13
+   20| const obj = { __proto__ : proto, baz : "string" };
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------- destructuring_missing_props.js:26:47
+
+Property `regularProp` is missing in props [1].
+
+   destructuring_missing_props.js:26:47
+   26| function Component({defaultProps = "default", regularProp}) { // Error, missing regularProp
+                                                     ^^^^^^^^^^^
+
+References:
+   destructuring_missing_props.js:33:12
+   33| const _b = <Component />;
+                  ^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- destructuring_param.js:5:17
 
 Strict mode function may not have duplicate parameter names
@@ -964,4 +1082,4 @@ References:
 
 
 
-Found 71 errors
+Found 79 errors
