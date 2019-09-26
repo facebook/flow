@@ -82,7 +82,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion', [
@@ -175,7 +175,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion', [
@@ -268,7 +268,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion triggered by space in jsx', [
@@ -296,7 +296,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion triggered by space outside of jsx', [
@@ -316,7 +316,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion invoked outside of jsx', [
@@ -365,7 +365,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion invoked in jsx', [
@@ -393,7 +393,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion triggered by dot in jsx', [
@@ -469,7 +469,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion triggered by dot outside jsx', [
@@ -545,7 +545,7 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],
