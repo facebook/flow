@@ -593,9 +593,12 @@ let remove_old_results (errors, warnings, suppressions, coverage, first_internal
     FilenameMap.remove file coverage,
     first_internal_error )
 
-let add_new_results (errors, warnings, suppressions, coverage, first_internal_error) file result =
+let add_new_results
+    ~record_slow_file (errors, warnings, suppressions, coverage, first_internal_error) file result
+    =
   match result with
-  | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
+  | Ok (new_errors, new_warnings, new_suppressions, new_coverage, check_time) ->
+    if check_time > 1. then record_slow_file file check_time;
     ( update_errset errors file new_errors,
       update_errset warnings file new_warnings,
       Error_suppressions.update_suppressions suppressions new_suppressions,
@@ -645,7 +648,7 @@ let run_merge_service
           (fun acc (file, result) ->
             let component = FilenameMap.find_unsafe file component_map in
             let acc = Nel.fold_left remove_old_results acc component in
-            add_new_results acc file result)
+            add_new_results ~record_slow_file:(fun _ _ -> ()) acc file result)
           acc
           merged
       in
@@ -763,7 +766,7 @@ let mk_intermediate_result_callback
         (Core_list.map
            ~f:(fun (file, result) ->
              match result with
-             | Ok (errors, warnings, suppressions, _) ->
+             | Ok (errors, warnings, suppressions, _, _) ->
                let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
                let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
                (file, errors, warnings, suppressions)
@@ -918,7 +921,7 @@ let check_files
     ~recheck_reasons
     ~cannot_skip_direct_dependents =
   match Options.arch options with
-  | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0, None)
+  | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0, None, None, None)
   | Options.TypesFirst ->
     with_timer_lwt ~options "Check" profiling (fun () ->
         Hh_logger.info "Check prep";
@@ -926,6 +929,17 @@ let check_files
         let focused_to_check = CheckedSet.focused merged_files in
         let merged_dependents = CheckedSet.dependents merged_files in
         let skipped_count = ref 0 in
+        let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
+        let record_slow_file file time =
+          (num_slow_files :=
+             match !num_slow_files with
+             | None -> Some 1
+             | Some n -> Some (n + 1));
+          if time > !slowest_time then (
+            slowest_time := time;
+            slowest_file := Some file
+          )
+        in
         let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
         (* skip dependents whenever none of their dependencies have new or changed signatures *)
         let dependents_to_check =
@@ -978,7 +992,7 @@ let check_files
           List.fold_left
             (fun acc (file, result) ->
               let acc = remove_old_results acc file in
-              add_new_results acc file result)
+              add_new_results ~record_slow_file acc file result)
             (merge_errors, warnings, suppressions, coverage, None)
             ret
         in
@@ -990,6 +1004,8 @@ let check_files
             coverage,
             time_to_check_merged,
             !skipped_count,
+            Option.map ~f:File_key.to_string !slowest_file,
+            !num_slow_files,
             Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
@@ -1456,6 +1472,8 @@ module Recheck : sig
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
     check_skip_count: int;
+    slowest_file: string option;
+    num_slow_files: int option;
     estimates: Recheck_stats.estimates option;
   }
 
@@ -1511,6 +1529,8 @@ end = struct
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
     check_skip_count: int;
+    slowest_file: string option;
+    num_slow_files: int option;
     estimates: Recheck_stats.estimates option;
   }
 
@@ -2116,7 +2136,13 @@ end = struct
     Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
     let merged_files = to_merge in
-    let%lwt (errors, coverage, time_to_check_merged, check_skip_count, check_internal_error) =
+    let%lwt ( errors,
+              coverage,
+              time_to_check_merged,
+              check_skip_count,
+              slowest_file,
+              num_slow_files,
+              check_internal_error ) =
       check_files
         ~reader
         ~options
@@ -2155,6 +2181,8 @@ end = struct
           top_cycle;
           merge_skip_count;
           check_skip_count;
+          slowest_file;
+          num_slow_files;
           estimates;
         },
         Option.first_some merge_internal_error check_internal_error )
@@ -2268,6 +2296,8 @@ let recheck
     top_cycle;
     merge_skip_count;
     check_skip_count;
+    slowest_file;
+    num_slow_files;
     estimates;
   } =
     stats
@@ -2312,6 +2342,8 @@ let recheck
     ~estimated_time_per_file
     ~estimated_files_to_recheck
     ~estimated_files_to_init
+    ~slowest_file
+    ~num_slow_files
     ~first_internal_error
     ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
     ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase;
@@ -2841,7 +2873,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
       let merged_files = to_merge in
-      let%lwt (errors, coverage, _, _, check_internal_error) =
+      let%lwt (errors, coverage, _, _, _, _, check_internal_error) =
         check_files
           ~reader
           ~options
