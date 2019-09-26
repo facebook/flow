@@ -48,7 +48,7 @@ show_skipping_stats_classic() {
 show_skipping_stats_types_first() {
   printf "\\n========Skipping stats========\\n"
   grep -o "Merge skipped [0-9]\+ of [0-9]\+ modules" $1 | tail -n 1
-  grep -o "Check will skip [0-9]\+ files" $1 | tail -n 1
+  grep -o "Check will skip [0-9]\+ of [0-9]\+ files" $1 | tail -n 1
 }
 
 show_help() {
