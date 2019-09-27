@@ -20,5 +20,13 @@ Unused suppression comment.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Warning ------------------------------------------------------------------------------------------------------- B.js:1:1
 
-Found 1 error and 1 warning
+Unused suppression comment.
+
+   1| // $FlowFixMe
+      ^^^^^^^^^^^^^
+
+
+
+Found 1 error and 2 warnings
