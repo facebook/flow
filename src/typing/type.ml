@@ -1101,7 +1101,7 @@ module rec TypeTerm : sig
   and typeparams = typeparams_nonempty option
 
   and selector =
-    | Prop of string
+    | Prop of string * bool
     | Elem of t
     | ObjRest of string list
     | ArrRest of int
