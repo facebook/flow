@@ -106,10 +106,10 @@ let create
       (fun leader component ->
         {
           component;
+          (* computed later *)
           dependents = FilenameMap.empty;
           (* computed later *)
           blocking = 0;
-          (* computed later *)
           recheck = FilenameSet.mem leader recheck_leader_set;
           size = Nel.length component;
         })
