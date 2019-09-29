@@ -214,7 +214,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
-Cannot call `y` because a callable signature is missing in object literal [1].
+Cannot call `y` because a call signature declaring the expected parameter / return type is missing in object
+literal [1].
 
    test.js:19:5
    19|     y(); // object ~/> function call (no uninitialized error)
@@ -234,5 +235,107 @@ Unreachable code.
            ^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:49:21
 
-Found 16 errors
+Cannot assign `x[0]` to `a` because number [1] is incompatible with string [2].
+
+   test.js:49:21
+   49|     var a: string = x[0];
+                           ^^^^
+
+References:
+   test.js:45:10
+   45|   let x: number[] = [];
+                ^^^^^^ [1]
+   test.js:49:12
+   49|     var a: string = x[0];
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:51:21
+
+Cannot assign `x[0]` to `b` because number [1] is incompatible with string [2].
+
+   test.js:51:21
+   51|     var b: string = x[0];
+                           ^^^^
+
+References:
+   test.js:45:10
+   45|   let x: number[] = [];
+                ^^^^^^ [1]
+   test.js:51:12
+   51|     var b: string = x[0];
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:53:19
+
+Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2].
+
+   test.js:53:19
+   53|   var c: string = x[0]; // reachable
+                         ^^^^
+
+References:
+   test.js:45:10
+   45|   let x: number[] = [];
+                ^^^^^^ [1]
+   test.js:53:10
+   53|   var c: string = x[0]; // reachable
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:61:21
+
+Cannot assign `x[0]` to `a` because number [1] is incompatible with string [2].
+
+   test.js:61:21
+   61|     var a: string = x[0];
+                           ^^^^
+
+References:
+   test.js:57:10
+   57|   let x: number[] = [];
+                ^^^^^^ [1]
+   test.js:61:12
+   61|     var a: string = x[0];
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:63:19
+
+Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2].
+
+   test.js:63:19
+   63|   var c: string = x[0]; // reachable
+                         ^^^^
+
+References:
+   test.js:57:10
+   57|   let x: number[] = [];
+                ^^^^^^ [1]
+   test.js:63:10
+   63|   var c: string = x[0]; // reachable
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:72:19
+
+Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2].
+
+   test.js:72:19
+   72|   var c: string = x[0]; // reachable
+                         ^^^^
+
+References:
+   test.js:67:10
+   67|   let x: number[] = [];
+                ^^^^^^ [1]
+   test.js:72:10
+   72|   var c: string = x[0]; // reachable
+                ^^^^^^ [2]
+
+
+
+Found 22 errors

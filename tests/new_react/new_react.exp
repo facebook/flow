@@ -1,37 +1,52 @@
+Error ----------------------------------------------------------------------------------------- argless_function.js:10:1
+
+Cannot assign `3` to `x.foo` because property `foo` is missing in function [1].
+
+   argless_function.js:10:1
+   10| x.foo = 3; // Error, the props type for Component is a sealed empty object.
+       ^^^^^
+
+References:
+   argless_function.js:9:8
+    9| var x: React.ElementProps<typeof Component> = element.props;
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- bad_default_props.js:15:18
 
-Cannot use property `Component` [1] with fewer than 1 type argument.
+Cannot use `React.Component` [1] with fewer than 1 type argument.
 
    bad_default_props.js:15:18
    15| class C3 extends React.Component { // error
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
+   <BUILTINS>/react.js:26:30
    26| declare class React$Component<Props, State = void> {
-                                     ^^^^^^^^^^^^ [1]
+                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- bad_default_props.js:20:18
 
-Cannot use property `Component` [1] with fewer than 1 type argument.
+Cannot use `React.Component` [1] with fewer than 1 type argument.
 
    bad_default_props.js:20:18
    20| class C4 extends React.Component {
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
+   <BUILTINS>/react.js:26:30
    26| declare class React$Component<Props, State = void> {
-                                     ^^^^^^^^^^^^ [1]
+                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- classes.js:7:1
 
-Cannot extend property `Component` [1] with `Foo` because:
+Cannot extend `React.Component` [1] with `Foo` because:
  - property `y_` is missing in function type [2] but exists in object type [3] in the first argument of property
    `setState`.
  - property `y_` is missing in `State` [4] but exists in object type [3] in the first argument of property `setState`.
+ - object type [3] is incompatible with null or undefined [5] in the first argument of property `setState`.
 
    classes.js:7:1
        v------------------------------------------------
@@ -71,15 +86,18 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:35:36
-   35|     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:35:37
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
                      ^^^^^^^^^^^^^^ [3]
    classes.js:7:42
     7| class Foo extends React.Component<Props, State> {
                                                 ^^^^^ [4]
+   <BUILTINS>/react.js:35:19
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                         ^^^^^^^^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
@@ -132,19 +150,25 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
-Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in property `type`.
+Cannot assign `<Foo />` to `foo` because:
+ - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
+ - class `Foo` [3] is incompatible with number [1] in property `type`.
 
    classes.js:39:25
-   39| var foo: $jsx<number> = <Foo/>;
-                               ^^^^^^
+    39| var foo: $jsx<number> = <Foo/>;
+                                ^^^^^^
 
 References:
-   classes.js:7:7
-    7| class Foo extends React.Component<Props, State> {
-             ^^^ [1]
    classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [2]
+    39| var foo: $jsx<number> = <Foo/>;
+                      ^^^^^^ [1]
+   <BUILTINS>/react.js:170:5
+   170|   | string
+            ^^^^^^ [2]
+   classes.js:7:7
+     7| class Foo extends React.Component<Props, State> {
+              ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
@@ -161,25 +185,6 @@ References:
                                          ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:39:25
-
-Cannot instantiate `React.Element` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
-
-   classes.js:39:25
-    39| var foo: $jsx<number> = <Foo/>;
-                                ^^^^^^
-
-References:
-   classes.js:39:15
-    39| var foo: $jsx<number> = <Foo/>;
-                      ^^^^^^ [1]
-   <BUILTINS>/react.js:165:5
-   165|   | string
-            ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- classes.js:57:21
 
 Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2].
@@ -189,8 +194,8 @@ Cannot assign `this.props.x` to `_` because number [1] is incompatible with stri
                             ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:326:36
-   326|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:470:36
+   470|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    classes.js:57:12
     57|     var _: string = this.props.x;
@@ -206,9 +211,9 @@ Property `y_` is missing in function type [1] but exists in object type [2].
                  ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:35:36
-   35|     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:35:37
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:64:15
    64|   setState(o: { y_: string }): void { },
                      ^^^^^^^^^^^^^^ [2]
@@ -231,53 +236,76 @@ References:
                      ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:79:32
+Error ------------------------------------------------------------------------------------------------- classes.js:64:15
 
-Cannot assign `<FooLegacy />` to `foo_legacy` because class React component [1] is incompatible with number [2] in
-property `type`.
+object type [1] is incompatible with null or undefined [2].
 
-   classes.js:79:32
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                      ^^^^^^^^^^^^
+   classes.js:64:15
+   64|   setState(o: { y_: string }): void { },
+                     ^^^^^^^^^^^^^^ [1]
 
 References:
-   classes.js:43:17
-                       v------------------
-   43| var FooLegacy = React.createClass({
-   44|   is_mounted: (undefined: ?boolean),
-   45|
-   46|   propTypes: {
-   47|     x: React.PropTypes.number.isRequired
-   48|   },
-   49|
-   50|   getDefaultProps(): DefaultProps { return {} },
-   51|
-   52|   statics: {
-   53|     bar(): void {}
-   54|   },
-   55|
-   56|   qux(): void {
-   57|     var _: string = this.props.x;
-     :
-   62|   },
-   63|
-   64|   setState(o: { y_: string }): void { },
-   65|
-   66|   componentDidMount(): void {
-   67|     this.is_mounted = true;
-   68|   },
-   69|
-   70|   componentWillReceiveProps(
-   71|     nextProps: Object,
-   72|     nextContext: any
-   73|   ): void {
-   74|     this.qux();
-   75|   },
-   76| });
-       -^ [1]
+   <BUILTINS>/react.js:35:19
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                         ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:79:32
+
+Cannot assign `<FooLegacy />` to `foo_legacy` because:
+ - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
+ - class React component [3] is incompatible with number [1] in property `type`.
+ - number [4] is not an object in type argument `ElementType`.
+
+   classes.js:79:32
+    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                       ^^^^^^^^^^^^
+
+References:
    classes.js:79:22
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                            ^^^^^^ [2]
+    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                             ^^^^^^ [1]
+   <BUILTINS>/react.js:170:5
+   170|   | string
+            ^^^^^^ [2]
+   classes.js:43:17
+                        v------------------
+    43| var FooLegacy = React.createClass({
+    44|   is_mounted: (undefined: ?boolean),
+    45|
+    46|   propTypes: {
+    47|     x: React.PropTypes.number.isRequired
+    48|   },
+    49|
+    50|   getDefaultProps(): DefaultProps { return {} },
+    51|
+    52|   statics: {
+    53|     bar(): void {}
+    54|   },
+    55|
+    56|   qux(): void {
+    57|     var _: string = this.props.x;
+      :
+    62|   },
+    63|
+    64|   setState(o: { y_: string }): void { },
+    65|
+    66|   componentDidMount(): void {
+    67|     this.is_mounted = true;
+    68|   },
+    69|
+    70|   componentWillReceiveProps(
+    71|     nextProps: Object,
+    72|     nextContext: any
+    73|   ): void {
+    74|     this.qux();
+    75|   },
+    76| });
+        -^ [3]
+   classes.js:78:26
+    78| FooLegacy.defaultProps = 0;
+                                 ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
@@ -300,25 +328,6 @@ References:
    47|     x: React.PropTypes.number.isRequired
    48|   },
          ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:79:32
-
-Cannot instantiate `React.Element` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
-
-   classes.js:79:32
-    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                       ^^^^^^^^^^^^
-
-References:
-   classes.js:79:22
-    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                             ^^^^^^ [1]
-   <BUILTINS>/react.js:165:5
-   165|   | string
-            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- import-react.js:16:1
@@ -388,8 +397,8 @@ Cannot assign `this.props.z` to `qux` because:
                                   ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:326:36
-   326|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:470:36
+   470|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    new_react.js:19:18
     19|         var qux: string = this.props.z;
@@ -405,8 +414,8 @@ Cannot assign `this.props.x` to `w` because string [1] is incompatible with numb
                                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:328:36
-   328|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:472:36
+   472|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    new_react.js:20:15
     20|         var w:number = this.props.x;
@@ -415,7 +424,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ new_react.js:21:9
 
-Cannot get `this.props.y[0]` because an indexer property is missing in undefined [1].
+Cannot get `this.props.y[0]` because an index signature declaring the expected key / value type is missing in
+undefined [1].
 
    new_react.js:21:9
    21|         this.props.y[0];
@@ -439,8 +449,8 @@ References:
    new_react.js:29:23
     29| var element = <C x = {0}/>;
                               ^ [1]
-   <BUILTINS>/react.js:328:36
-   328|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:472:36
+   472|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 
@@ -475,63 +485,87 @@ Cannot assign `C.displayName` to `x` because:
                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:89:24
-   89|   static displayName?: ?string;
+   <BUILTINS>/react.js:87:24
+   87|   static displayName?: ?string;
                               ^^^^^^^ [1]
    new_react.js:32:8
    32| var x: number = C.displayName;
               ^^^^^^ [2]
-   <BUILTINS>/react.js:89:25
-   89|   static displayName?: ?string;
+   <BUILTINS>/react.js:87:25
+   87|   static displayName?: ?string;
                                ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ propTypes.js:13:1
+Error ---------------------------------------------------------------------------------------- object_component.js:14:12
 
-Cannot create `C` element because property `label` is missing in object literal [1] but exists in object type [2] in
-array element of property `statistics`.
+Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
 
-   propTypes.js:13:1
-       v---------------
-   13| <C statistics={[
-   14|   {},
-   15|   {label:"",value:undefined},
-   16| ]}/>; // error (label is required, value not required)
-       ---^
+   object_component.js:14:12
+   14| const _a = <Component />; // Error, missing bar
+                  ^^^^^^^^^^^^^ [1]
 
 References:
-   propTypes.js:14:3
-   14|   {},
-         ^^ [1]
-   propTypes.js:6:35
-                                         v----------------
-    6|     statistics: PropTypes.arrayOf(PropTypes.shape({
-    7|       label: PropTypes.string.isRequired,
-    8|       value: PropTypes.number,
-    9|     })).isRequired,
-           -^ [2]
+   object_component.js:8:11
+    8|   (props: {| foo: number, bar: number |}): React.Node,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- propTypes.js:18:53
+Error ---------------------------------------------------------------------------------------- object_component.js:17:12
 
-Cannot assign array literal to `props` because property `label` is missing in object literal [1] but exists in object
-type [2] in array element.
+Cannot create `Component` element because property `baz` is missing in object type [1] but exists in props [2].
 
-   propTypes.js:18:53
-                                                           v
-   18| var props: Array<{label: string, value?: number}> = [
-   19|   {},
-   20|   {label:"",value:undefined},
-   21| ]; // error (same as ^)
-       ^
+   object_component.js:17:12
+   17| const _d = <Component foo={3} bar={3} baz={3} />; // Error, baz is not in the config
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   propTypes.js:19:3
-   19|   {},
-         ^^ [1]
-   propTypes.js:18:18
-   18| var props: Array<{label: string, value?: number}> = [
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   object_component.js:8:11
+    8|   (props: {| foo: number, bar: number |}): React.Node,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- object_component.js:20:47
+
+Cannot assign `null` to `_y` because null [1] is incompatible with undefined [2].
+
+   object_component.js:20:47
+   20| const _y: React.ElementRef<ObjectComponent> = null; // Error, ref is undefined
+                                                     ^^^^ [1]
+
+References:
+   object_component.js:20:11
+   20| const _y: React.ElementRef<ObjectComponent> = null; // Error, ref is undefined
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_component.js:23:56
+
+Cannot assign object literal to `_badProps` because property `foo` is missing in object literal [1] but exists in object
+type [2].
+
+   object_component.js:23:56
+   23| const _badProps: React.ElementProps<ObjectComponent> = {bar: 3}; // Error missing foo
+                                                              ^^^^^^^^ [1]
+
+References:
+   object_component.js:23:18
+   23| const _badProps: React.ElementProps<ObjectComponent> = {bar: 3}; // Error missing foo
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_component.js:24:57
+
+Cannot assign object literal to `_badProps2` because property `baz` is missing in object type [1] but exists in object
+literal [2].
+
+   object_component.js:24:57
+   24| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   object_component.js:24:19
+   24| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- props.js:14:25
@@ -545,8 +579,8 @@ Cannot assign `this.props.x` to `a` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:328:36
-   328|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:472:36
+   472|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    props.js:14:16
     14|         var a: number = this.props.x; // error
@@ -582,8 +616,8 @@ Cannot assign `this.props.z` to `c` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:326:36
-   326|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:470:36
+   470|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    props.js:16:16
     16|         var c: string = this.props.z; // error
@@ -604,14 +638,14 @@ References:
    props.js:20:29
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                     ^^^^^ [1]
-   <BUILTINS>/react.js:328:36
-   328|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:472:36
+   472|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props.js:20:49
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                         ^^^^^ [3]
-   <BUILTINS>/react.js:326:36
-   326|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:470:36
+   470|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [4]
 
 
@@ -668,8 +702,8 @@ References:
    props2.js:9:41
      9|     getInitialState: function(): { bar: number } {
                                                 ^^^^^^ [1]
-   <BUILTINS>/react.js:328:36
-   328|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:472:36
+   472|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props2.js:15:42
     15|         return <C {...this.state} foo = {0} />;
@@ -685,8 +719,8 @@ Cannot get `React.PropTypes.imaginaryType` because property `imaginaryType` is m
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:211:33
-   211|   declare export var PropTypes: ReactPropTypes;
+   <BUILTINS>/react.js:224:33
+   224|   declare export var PropTypes: ReactPropTypes;
                                         ^^^^^^^^^^^^^^ [1]
 
 
@@ -700,12 +734,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` is 
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:302:39
+   <BUILTINS>/react.js:445:39
                                               v
-   302| type ReactPropsChainableTypeChecker = {
-   303|   isRequired: ReactPropsCheckType;
-   304|   (props: any, propName: string, componentName: string, href?: string): ?Error;
-   305| };
+   445| type ReactPropsChainableTypeChecker = {
+   446|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   447|   isRequired: ReactPropsCheckType,
+   448|   ...
+   449| };
         ^ [1]
 
 
@@ -750,8 +785,8 @@ Cannot call `ReactDOM.render` with `document.body` bound to `container` because 
           ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:619:27
-   619|   body: HTMLBodyElement | null;
+   <BUILTINS>/dom.js:733:27
+   733|   body: HTMLBodyElement | null;
                                   ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,
@@ -935,7 +970,7 @@ References:
 
 
 
-Found 60 errors
+Found 67 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

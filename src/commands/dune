@@ -1,0 +1,73 @@
+(library
+  (name flow_command_spec)
+  (wrapped false)
+  (modules
+    commandSpec)
+  (libraries
+    flow_common_utils
+    collections ; hack
+  )
+)
+
+(library
+  (name flow_commands_connect)
+  (wrapped false)
+  (modules
+    commandConnect
+    commandConnectSimple
+    commandMeanKill
+  )
+  (libraries
+    flow_exit_status
+    flow_server_files
+    flow_server_protocol
+    flow_server_status
+    socket ; hack
+  )
+)
+
+(library
+  (name flow_commands_utils)
+  (wrapped false)
+  (modules
+    commandUtils
+  )
+  (libraries
+    flow_command_spec
+    flow_commands_connect
+    flow_common
+    flow_common_errors
+    flow_common_lwt
+    flow_config
+    flow_exit_status
+    flow_flowlib
+    flow_server
+    flow_server_files
+    flow_shared_mem
+    find ; hack
+  )
+)
+
+(library
+  (name flow_commands)
+  (wrapped false)
+  (modules (:standard \
+    commandConnect
+    commandConnectSimple
+    commandMeanKill
+    commandSpec
+    commandUtils
+  ))
+  (libraries
+    flow_command_spec
+    flow_commands_utils
+    flow_common_build_id
+    flow_exit_status
+    flow_logging_utils
+    flow_lsp
+    flow_monitor
+    flow_parser
+    flow_server_status
+    flow_service_autocomplete
+  )
+)

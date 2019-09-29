@@ -30,6 +30,14 @@ Invalid left-hand side in assignment
       ^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------- no_nonidentifier_after_import_dot.js:4:8
+
+Unexpected token `while`, expected identifier for `import` metaproperty
+
+   4| import.while; // parse error
+             ^^^^^
+
+
 Error ----------------------------------------------------------------------------------- no_other_metaproperties.js:4:1
 
 The only valid meta property for import is import.meta
@@ -39,4 +47,4 @@ The only valid meta property for import is import.meta
 
 
 
-Found 5 errors
+Found 6 errors

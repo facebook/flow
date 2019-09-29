@@ -1,7 +1,6 @@
 /**
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import colors from 'colors/safe';
@@ -10,7 +9,7 @@ import {format} from 'util';
 import {noErrors} from '../flowResult';
 import {TestStep, TestStepFirstStage} from './TestStep';
 import {newEnv} from './stepEnv';
-import {writeFile} from '../utils/async';
+import {withTimeout, writeFile} from '../utils/async';
 
 import type Builder, {TestBuilder} from './builder';
 import type Suite from './Suite';
@@ -103,6 +102,7 @@ export default (async function(
         testNum,
         test.flowConfigFilename,
         test.lazyMode,
+        test.shouldWaitForRecheck,
       );
 
       let firstIdeStartStep = null;
@@ -124,10 +124,10 @@ export default (async function(
             throw new Error(
               format(
                 "Test '%s' step %d/%d must call either " +
-                  'waitAndVerifyAllIDEMessagesContentSinceStartOfStep or waitAndVerifyNoIDEMessagesSinceStartOfStep. ' +
-                  'We enforce this as a sanity-check, because testing flow IDE is tricky... ' +
-                  'Every step after the first ideStart step until the last ideExpect step ' +
-                  'must read IDE messages.\n\n',
+                  'waitAndVerifyAllLSPMessagesContentSinceStartOfStep or waitAndVerifyNoLSPMessagesSinceStartOfStep. ' +
+                  'We enforce this as a sanity-check, because testing flow lsp is tricky... ' +
+                  'Every step after the first lspStart step until the last lspExpect step ' +
+                  'must read LSP messages.\n\n',
                 test.name,
                 i + 1,
                 steps.length,
@@ -155,13 +155,22 @@ export default (async function(
         if (flowErrors == null && step.needsFlowCheck()) {
           flowErrors = await testBuilder.getFlowErrors();
         }
-        testBuilder.clearIDEMessages();
-        testBuilder.clearIDEStderr();
+        testBuilder.clearLSPMessages();
+        testBuilder.clearLSPStderr();
         let {envRead, envWrite} = newEnv(flowErrors || noErrors);
 
         testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
 
-        await step.performActions(testBuilder, envWrite);
+        const timeout = step.getTimeout();
+
+        let actions_promise = step.performActions(testBuilder, envWrite);
+        if (timeout == null) {
+          await actions_promise;
+        } else {
+          await withTimeout(timeout, actions_promise, () => {
+            testBuilder.log('Hit timeout of %dms.', timeout);
+          });
+        }
 
         let oldErrors = flowErrors;
 
@@ -174,16 +183,16 @@ export default (async function(
           flowErrors = null;
         }
 
-        envWrite.setIDEMessagesSinceStartOfStep(
-          testBuilder.getIDEMessagesSinceStartOfStep(),
+        envWrite.setLSPMessagesSinceStartOfStep(
+          testBuilder.getLSPMessagesSinceStartOfStep(),
         );
-        envWrite.setIDEStderrSinceStartOfStep(
-          testBuilder.getIDEStderrSinceStartOfStep(),
+        envWrite.setLSPStderrSinceStartOfStep(
+          testBuilder.getLSPStderrSinceStartOfStep(),
         );
         envWrite.setServerRunning(
           testBuilder.server == null ? 'stopped' : 'running',
         );
-        envWrite.setIDERunning(testBuilder.ide == null ? 'stopped' : 'running');
+        envWrite.setLSPRunning(testBuilder.lsp == null ? 'stopped' : 'running');
 
         let result = step.checkAssertions(envRead);
         testBuilder.assertNoErrors();

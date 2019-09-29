@@ -215,5 +215,13 @@ Cannot import `exports` because there is no `exports` export in `ES`.
                ^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------- es_declare_module.js:43:14
 
-Found 16 errors
+Cannot import `Foo` because there is no `Foo` export in `re-export`.
+
+   43| import type {Foo} from 're-export'; // Error: imports are not explicitly exported
+                    ^^^
+
+
+
+Found 17 errors

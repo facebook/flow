@@ -22,5 +22,19 @@ Missing type annotation for `x`.
                            ^
 
 
+Error ------------------------------------------------------------------------------------------- invariant_this.js:10:8
 
-Found 3 errors
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   invariant_this.js:10:8
+   10|   m(x: this) { } // error: this in contravariant position
+              ^^^^
+
+References:
+   invariant_this.js:9:7
+    9| class C {
+             ^ [1]
+
+
+
+Found 4 errors

@@ -1,0 +1,7 @@
+// @flow
+
+export default 123;
+
+declare var sleep: $Flow$DebugSleep;
+
+sleep(1000); // sleep for 1000 seconds

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -23,7 +23,7 @@
 type t
 
 (* Will invoke callback () after interval seconds *)
-val set_timer: interval:float -> callback:(unit -> unit) -> t
+val set_timer : interval:float -> callback:(unit -> unit) -> t
 
 (* Will prevent a future timer from firing *)
-val cancel_timer: t -> unit
+val cancel_timer : t -> unit

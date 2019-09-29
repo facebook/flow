@@ -4,9 +4,9 @@
 
 [ignore]
 .*/json5/test/parse-cases/.*
-
+.*/newtests/lsp/completion/jsx.js
 .*/newtests/gen_flow_files_command/type_error.js
-.*/newtests/ide/lazy/errorsWithFlowPragma.js
+.*/packages/flow-remove-types/.*
 
 [options]
 suppress_comment=.*\\$FlowFixMe

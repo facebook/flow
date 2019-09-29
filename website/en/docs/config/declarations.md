@@ -18,6 +18,8 @@ Conceptually one can think of declaration mode as if Flow still typechecks the
 files but acts as if there is a comment that matches
 [`suppress_comment`](options#toc-suppress-comment-regex") on every line.
 
+See also `[untyped]`(untyped) for not typechecking files, and instead using `any` for all contents.
+
 Things to keep in mind:
 
 1.  Declaration mode should only be used for existing third-party code. You

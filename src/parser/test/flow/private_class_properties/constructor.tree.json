@@ -7,6 +7,14 @@
     {
       "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":26}},
       "message":"Classes may not have private methods."
+    },
+    {
+      "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":14}},
+      "message":"Classes may not have fields named `#constructor`."
+    },
+    {
+      "loc":{"source":null,"start":{"line":14,"column":9},"end":{"line":14,"column":21}},
+      "message":"Classes may not have fields named `#constructor`."
     }
   ],
   "type":"Program",
@@ -73,8 +81,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -139,8 +147,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -190,8 +198,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -241,8 +249,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

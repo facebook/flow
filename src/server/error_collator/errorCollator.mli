@@ -1,16 +1,22 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-val regenerate: ServerEnv.env -> ServerEnv.collated_errors
-
-val get_with_separate_warnings:
+val get_with_separate_warnings :
+  reader:State_reader.t ->
+  options:Options.t ->
   ServerEnv.env ->
-  Errors.ErrorSet.t * Errors.ErrorSet.t Utils_js.FilenameMap.t * (Errors.error * Utils_js.LocSet.t) list
+  Errors.ConcreteLocPrintableErrorSet.t
+  * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
+  * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
 
-val get:
+val get :
+  reader:State_reader.t ->
+  options:Options.t ->
   ServerEnv.env ->
-  Errors.ErrorSet.t * Errors.ErrorSet.t * (Errors.error * Utils_js.LocSet.t) list
+  Errors.ConcreteLocPrintableErrorSet.t
+  * Errors.ConcreteLocPrintableErrorSet.t
+  * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list

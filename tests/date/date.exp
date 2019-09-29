@@ -3,24 +3,38 @@ Error --------------------------------------------------------------------------
 Cannot assign `d.getTime()` to `x` because number [1] is incompatible with string [2].
 
    date.js:2:16
-     2| var x:string = d.getTime();
+     2| var x:string = d.getTime(); // expect error
                        ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:363:16
-   363|     getTime(): number;
+   <BUILTINS>/core.js:400:16
+   400|     getTime(): number;
                        ^^^^^^ [1]
    date.js:2:7
-     2| var x:string = d.getTime();
+     2| var x:string = d.getTime(); // expect error
               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- date.js:4:16
+
+Cannot assign `d` to `y` because `Date` [1] is incompatible with number [2].
+
+   date.js:4:16
+   4| var y:number = d; // expect error
+                     ^
+
+References:
+   date.js:1:9
+   1| var d = new Date(0);
+              ^^^^^^^^^^^ [1]
+   date.js:4:7
+   4| var y:number = d; // expect error
+            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:18:1
 
-Cannot call `Date` because:
- - Either object literal [1] is incompatible with number [2].
- - Or object literal [1] is incompatible with string [3].
- - Or object literal [1] is incompatible with number [4].
+Cannot call `Date` because object literal [1] is incompatible with `Date` [2].
 
    date.js:18:1
     18| new Date({});
@@ -30,15 +44,9 @@ References:
    date.js:18:10
     18| new Date({});
                  ^^ [1]
-   <BUILTINS>/core.js:352:28
-   352|     constructor(timestamp: number): void;
-                                   ^^^^^^ [2]
-   <BUILTINS>/core.js:353:29
-   353|     constructor(dateString: string): void;
-                                    ^^^^^^ [3]
-   <BUILTINS>/core.js:354:23
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                              ^^^^^^ [4]
+   <BUILTINS>/core.js:389:23
+   389|     constructor(date: Date): void;
+                              ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:19:1
@@ -53,8 +61,8 @@ References:
    date.js:19:16
     19| new Date(2015, '6');
                        ^^^ [1]
-   <BUILTINS>/core.js:354:38
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:391:38
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                              ^^^^^^ [2]
 
 
@@ -70,8 +78,8 @@ References:
    date.js:20:19
     20| new Date(2015, 6, '18');
                           ^^^^ [1]
-   <BUILTINS>/core.js:354:52
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:391:52
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                            ^^^^^^ [2]
 
 
@@ -87,8 +95,8 @@ References:
    date.js:21:23
     21| new Date(2015, 6, 18, '11');
                               ^^^^ [1]
-   <BUILTINS>/core.js:354:67
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:391:67
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                           ^^^^^^ [2]
 
 
@@ -104,8 +112,8 @@ References:
    date.js:22:27
     22| new Date(2015, 6, 18, 11, '55');
                                   ^^^^ [1]
-   <BUILTINS>/core.js:354:84
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:391:84
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -121,8 +129,8 @@ References:
    date.js:23:31
     23| new Date(2015, 6, 18, 11, 55, '42');
                                       ^^^^ [1]
-   <BUILTINS>/core.js:354:101
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:391:101
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                                                             ^^^^^^ [2]
 
 
@@ -138,8 +146,8 @@ References:
    date.js:24:35
     24| new Date(2015, 6, 18, 11, 55, 42, '999');
                                           ^^^^^ [1]
-   <BUILTINS>/core.js:354:123
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:391:123
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                                                                                   ^^^^^^ [2]
 
 
@@ -149,25 +157,29 @@ Cannot call `Date` because:
  - Either no arguments are expected by function type [1].
  - Or no more than 1 argument is expected by function type [2].
  - Or no more than 1 argument is expected by function type [3].
- - Or no more than 7 arguments are expected by function type [4].
+ - Or no more than 1 argument is expected by function type [4].
+ - Or no more than 7 arguments are expected by function type [5].
 
    date.js:25:1
     25| new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:351:5
-   351|     constructor(): void;
+   <BUILTINS>/core.js:387:5
+   387|     constructor(): void;
             ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:352:5
-   352|     constructor(timestamp: number): void;
+   <BUILTINS>/core.js:388:5
+   388|     constructor(timestamp: number): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:353:5
-   353|     constructor(dateString: string): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:354:5
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/core.js:389:5
+   389|     constructor(date: Date): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:390:5
+   390|     constructor(dateString: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/core.js:391:5
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:26:1
@@ -182,13 +194,61 @@ References:
    date.js:26:10
     26| new Date('2015', 6);
                  ^^^^^^ [1]
-   <BUILTINS>/core.js:354:23
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:391:23
+   391|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                               ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- date.js:31:17
 
-Found 10 errors
+Cannot add `d` and `12` because `Date` [1] is incompatible with number [2].
+
+   date.js:31:17
+   31| var n3:number = d + 12; // expect error
+                       ^^^^^^
+
+References:
+   date.js:1:9
+    1| var d = new Date(0);
+               ^^^^^^^^^^^ [1]
+   date.js:31:21
+   31| var n3:number = d + 12; // expect error
+                           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- date.js:32:16
+
+Cannot add `d` and `12` because `Date` [1] is incompatible with number [2].
+
+   date.js:32:16
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+                      ^^^^^^
+
+References:
+   date.js:1:9
+    1| var d = new Date(0);
+               ^^^^^^^^^^^ [1]
+   date.js:32:20
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+                          ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- date.js:32:16
+
+Cannot assign `d + 12` to `s` because number [1] is incompatible with string [2].
+
+   date.js:32:16
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+                      ^^^^^^ [1]
+
+References:
+   date.js:32:7
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+             ^^^^^^ [2]
+
+
+
+Found 14 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

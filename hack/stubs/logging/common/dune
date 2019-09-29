@@ -1,0 +1,3 @@
+(library
+  (name logging_common_stubs)
+  (wrapped false))

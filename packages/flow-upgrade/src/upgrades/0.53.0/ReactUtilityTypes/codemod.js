@@ -33,37 +33,13 @@ const SYNTHETIC_EVENT_NAMES = new Set([
  * - The return type of React component render.
  */
 module.exports = (j, root) => {
-  const recast = require('recast');
   const ReactUtils = require('../../../codemods/ReactUtils')(j);
   const reactName = ReactUtils.getImportedReactName(root);
   const componentPattern = ReactUtils.getImportedComponentClassPattern(root);
   const hasElement = ReactUtils.hasDestructuredElement(root, reactName);
 
-  // There is a bug in recast so we can't use `root.find()`. Instead we need to
-  // visit with recast manually so we can visit the nodes it misses.
-  root.paths().forEach(path => {
-    recast.visit(path, {
-      // Here is where we do all of our transformations.
-      visitGenericTypeAnnotation: visitGenericTypeAnnotation,
-
-      // We want to replace default React imports with a namespace import.
-      visitImportDeclaration: visitImportDeclaration,
-
-      // recast has a bug where it won't visit `superTypeParameters` on class
-      // declarations and expressions. Fix that here.
-      visitClassDeclaration: visitClass,
-      visitClassExpression: visitClass,
-    });
-  });
-
-  function visitClass(path) {
-    // Continue traversing the path. This is the default behavior.
-    this.traverse(path);
-    // There is a bug in recast which means we end up not traversing
-    // `superTypeParameters`! So handle that that bug by visiting
-    // `superTypeParameters` here.
-    this.visitWithoutReset(path.get('superTypeParameters'));
-  }
+  root.find(j.GenericTypeAnnotation).forEach(visitGenericTypeAnnotation);
+  root.find(j.ImportDeclaration).forEach(visitImportDeclaration);
 
   function visitImportDeclaration(path) {
     const node = path.node;
@@ -79,10 +55,6 @@ module.exports = (j, root) => {
     ) {
       node.specifiers[0] = j.importNamespaceSpecifier(node.specifiers[0].local);
     }
-
-    // Continue traversal if we do not want to apply a transformation to
-    // this node.
-    this.traverse(path);
   }
 
   function visitGenericTypeAnnotation(path) {
@@ -103,12 +75,10 @@ module.exports = (j, root) => {
             j.identifier('Node'),
           )
         : j.identifier('React$Node');
-      // We have handled this node. No need to continue traversing.
-      return false;
     }
 
     // React$Element<Config> ==> React.Element<React.ComponentType<Props>>
-    if (
+    else if (
       // React$Element or ReactElement
       (node.id.type === 'Identifier' &&
         (node.id.name === 'React$Element' ||
@@ -177,34 +147,28 @@ module.exports = (j, root) => {
             j.identifier('Element'),
           )
         : j.identifier('React$Element');
-      // We have handled this node. No need to continue traversing.
-      return false;
     }
 
     // ReactClass<Config> ==> React.ComponentType<Props>
-    if (
+    else if (
       node.id.type === 'Identifier' &&
       node.id.name === 'ReactClass' &&
       node.typeParameters &&
       node.typeParameters.type === 'TypeParameterInstantiation'
     ) {
       // Replace ReactClass with the new type.
-      return j.genericTypeAnnotation(
-        // Get the component type name. Either as a qualified name from our
-        // React import or using the global.
-        reactName
-          ? j.qualifiedTypeIdentifier(
-              j.identifier(reactName),
-              j.identifier('ComponentType'),
-            )
-          : j.identifier('React$ComponentType'),
-        // Keep the type parameters we had previously.
-        node.typeParameters,
-      );
+      // Get the component type name. Either as a qualified name from our
+      // React import or using the global.
+      node.id = reactName
+        ? j.qualifiedTypeIdentifier(
+            j.identifier(reactName),
+            j.identifier('ComponentType'),
+          )
+        : j.identifier('React$ComponentType');
     }
 
     // React$Component<Defaults, Props, State> ==> React.Component<Props, State>
-    if (
+    else if (
       ((node.id.type === 'Identifier' &&
         (node.id.name === 'ReactComponent' ||
           node.id.name === 'React$Component')) ||
@@ -219,34 +183,27 @@ module.exports = (j, root) => {
       // If the user has destructured React and used Component or PureComponent
       // directly then we should not update the identifier of this node.
       if (
-        node.id.type === 'Identifier' &&
-        (node.id.name === 'Component' || node.id.name === 'PureComponent')
+        !(
+          node.id.type === 'Identifier' &&
+          (node.id.name === 'Component' || node.id.name === 'PureComponent')
+        )
       ) {
-        return false;
+        node.id = reactName
+          ? j.qualifiedTypeIdentifier(
+              j.identifier(reactName),
+              j.identifier('Component'),
+            )
+          : j.identifier('React$Component');
       }
-      // Replace the identifier with React.Component
-      node.id = reactName
-        ? j.qualifiedTypeIdentifier(
-            j.identifier(reactName),
-            j.identifier('Component'),
-          )
-        : j.identifier('React$Component');
-      // We have handled this node. No need to continue traversing.
-      return false;
     }
 
     // SyntheticEvent ==> SyntheticEvent<>
-    if (
+    else if (
       node.id.type === 'Identifier' &&
       SYNTHETIC_EVENT_NAMES.has(node.id.name)
     ) {
       node.typeParameters = j.typeParameterInstantiation([]);
-      return false;
     }
-
-    // Continue traversal if we do not want to apply a transformation to
-    // this node.
-    this.traverse(path);
   }
 
   // render(): React.Element<any> ==> render(): React.Node

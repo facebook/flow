@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -47,7 +47,6 @@
 
 (* Module type for code generation rules *)
 module type Gen_rule_t = sig
-
   (* condition/constraint type *)
   type cond_t
 
@@ -60,9 +59,9 @@ module type Gen_rule_t = sig
 
   (* The rule itself *)
   type rule_t = {
-    grammar : grammar_t;
-    premises : cond_t list;
-    cons : cond_t list;
+    grammar: grammar_t;
+    premises: cond_t list;
+    cons: cond_t list;
   }
 
   (* Make a rule *)
@@ -79,7 +78,7 @@ module type Gen_rule_t = sig
 
   (* Exercise a rule and return the syntactic element and the
      consequent condition. *)
-  val exercise : rule_t -> (code_t * cond_t list)
+  val exercise : rule_t -> code_t * cond_t list
 
   (* Combine two syntactic elements together *)
   val combine_code : code_t list -> code_t -> code_t
@@ -88,15 +87,18 @@ module type Gen_rule_t = sig
      might need some inferences here to discover new conditions until we
      reach a fixed point *)
   val merge_cond : cond_t list -> cond_t list -> cond_t list
-end;;
+end
 
 (* This functor makes a code generator with a given generation rule *)
 (* module *)
-module Mk_Generator(Gen_rule : Gen_rule_t) = struct
+module Mk_Generator (Gen_rule : Gen_rule_t) = struct
   (* Types for basic stuffs *)
   type cond_t = Gen_rule.cond_t
+
   type grammar_t = Gen_rule.grammar_t
+
   type code_t = Gen_rule.code_t
+
   type rule_t = Gen_rule.rule_t
 
   (* make a rule *)
@@ -106,33 +108,33 @@ module Mk_Generator(Gen_rule : Gen_rule_t) = struct
   (* to give it all the rules it can use during code generation, a *)
   (* state containing all the conditions that holds already and the *)
   (* rule we want to execute. *)
-  let rec gen_prog
-      (all_rules : rule_t list)
-      (state : cond_t list)
-      (rule : rule_t) : (code_t * cond_t list) =
-
+  let rec gen_prog (all_rules : rule_t list) (state : cond_t list) (rule : rule_t) :
+      code_t * cond_t list =
     (* get a list of premise conditions we need to satisfy *)
     let to_sat = List.filter (fun p -> not (Gen_rule.is_valid state p)) Gen_rule.(rule.premises) in
-
     (* all the code and conditions necessary to exercise the input
        rule *)
-    let pre_code, pre_cond =
+    let (pre_code, pre_cond) =
       if to_sat = [] then
-        [], []
+        ([], [])
       else
         (* get their corresponding rules *)
-        let new_rules = List.map (fun cond -> Gen_rule.cond_to_rule all_rules cond) to_sat in
-
+        let new_rules =
+          Core_list.map ~f:(fun cond -> Gen_rule.cond_to_rule all_rules cond) to_sat
+        in
         (* exercise necessary rules *)
-        let result = List.fold_left (fun acc r ->
-            let new_code, new_cond = gen_prog all_rules (snd acc) r in
-            new_code :: (fst acc), Gen_rule.merge_cond (snd acc) new_cond)
+        let result =
+          List.fold_left
+            (fun acc r ->
+              let (new_code, new_cond) = gen_prog all_rules (snd acc) r in
+              (new_code :: fst acc, Gen_rule.merge_cond (snd acc) new_cond))
             ([], state)
-            new_rules in
-        (fst result |> List.rev, snd result) in
-
+            new_rules
+        in
+        (fst result |> List.rev, snd result)
+    in
     (* We exercise the rule and return everything generated during
        this function call *)
-    let new_code, new_cond = Gen_rule.exercise rule in
-    Gen_rule.combine_code pre_code new_code, pre_cond @ new_cond
-end;;
+    let (new_code, new_cond) = Gen_rule.exercise rule in
+    (Gen_rule.combine_code pre_code new_code, pre_cond @ new_cond)
+end

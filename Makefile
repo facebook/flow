@@ -1,4 +1,4 @@
-# Copyright (c) 2013-present, Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 # All rights reserved.
 
 ################################################################################
@@ -8,8 +8,13 @@
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
 EXTRA_LIBS=
-INTERNAL_MODULES=hack/stubs src/stubs
+INTERNAL_MODULES=\
+	hack/stubs/logging\
+	hack/stubs/logging/common\
+	src/stubs
 INTERNAL_NATIVE_C_FILES=
+INTERNAL_BUILD_FLAGS=
+INTERNAL_FLAGS=
 
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
@@ -67,31 +72,41 @@ endif
 MODULES=\
   src/commands\
   src/commands/config\
+  src/commands/options\
   src/common\
   src/common/audit\
   src/common/build_id\
   src/common/errors\
+  src/common/exit_status\
   src/common/lints\
+  src/common/logging_utils\
   src/common/lwt\
   src/common/modulename\
   src/common/monad\
   src/common/profiling\
+  src/common/semver\
   src/common/span\
   src/common/tarjan\
   src/common/transaction\
   src/common/ty\
   src/common/utils\
+  src/common/utils/loc_utils\
   src/common/xx\
   src/flowlib\
+  src/lsp\
   src/monitor\
   src/monitor/connections\
   src/monitor/logger\
+  src/monitor/rpc\
+  src/monitor/status\
   src/monitor/utils\
   src/parser\
   src/parser_utils\
+  src/parser_utils/aloc\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parsing\
+  src/procs\
   src/server\
   src/server/command_handler\
   src/server/env\
@@ -105,21 +120,27 @@ MODULES=\
   src/server/server_files\
   src/server/server_utils\
   src/server/shmem\
+  src/server/watchman_expression_terms\
   src/services/autocomplete\
+  src/services/get_def\
   src/services/inference\
   src/services/inference/module\
   src/services/flowFileGen\
-  src/services/port\
   src/services/saved_state\
   src/services/type_info\
   src/state/heaps/context\
   src/state/heaps/module\
   src/state/heaps/parsing\
+  src/state/heaps/parsing/exceptions\
   src/state/locals/module\
+  src/state/readers\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
   src/typing\
+  src/typing/coverage_response\
+  src/typing/errors\
+  src/typing/polarity\
   hack/dfind\
   hack/find\
   hack/globals\
@@ -130,11 +151,22 @@ MODULES=\
   hack/socket\
   hack/third-party/avl\
   hack/third-party/core\
-  hack/utils\
+  hack/utils/cgroup\
+  hack/utils/core\
+  hack/utils/buffered_line_reader\
   hack/utils/build_mode/prod\
   hack/utils/collections\
   hack/utils/disk\
+  hack/utils/file_content\
+  hack/utils/file_url\
   hack/utils/hh_json\
+  hack/utils/http_lite\
+  hack/utils/jsonrpc\
+  hack/utils/lsp\
+  hack/utils/marshal_tools\
+  hack/utils/opaque_digest\
+  hack/utils/procfs\
+  hack/utils/string\
   hack/utils/sys\
   hack/watchman\
   $(INOTIFY)\
@@ -145,10 +177,10 @@ NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
+  src/services/saved_state/saved_state_compression_stubs.c\
   hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
-  hack/heap/hh_shared_sqlite.c\
-  hack/utils/get_build_id.c\
+  hack/utils/core/get_build_id.c\
   hack/utils/sys/files.c\
   hack/utils/sys/gc_profiling.c\
   hack/utils/sys/getrusage.c\
@@ -169,7 +201,8 @@ FINDLIB_PACKAGES=\
   lwt_ppx\
   unix\
   str\
-  bigarray
+  bigarray\
+	ppx_let
 
 NATIVE_LIBRARIES=\
   pthread\
@@ -182,8 +215,21 @@ COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
 JS_STUBS=\
+	+dtoa/dtoa_stubs.js\
 	$(wildcard js/*.js)
 
+OUNIT_TESTS=\
+	src/commands/config/__tests__/command_config_tests.native\
+	src/common/lwt/__tests__/lwt_tests.native\
+	src/common/ty/__tests__/ty_tests.native\
+	src/common/utils/__tests__/common_utils_tests.native\
+	src/common/semver/__tests__/semver_tests.native\
+	src/parser/__tests__/parser_tests.native\
+	src/parser_utils/__tests__/parser_utils_tests.native\
+	src/parser_utils/output/__tests__/parser_utils_output_tests.native\
+	src/parser_utils/output/printers/__tests__/parser_utils_output_printers_tests.native\
+	src/server/find_refs/__tests__/find_refs_tests.native
+	# src/typing/__tests__/typing_tests.native
 
 ################################################################################
 #                                    Rules                                     #
@@ -193,12 +239,13 @@ NATIVE_C_DIRS=$(patsubst %/,%,$(sort $(dir $(NATIVE_C_FILES))))
 ALL_HEADER_FILES=$(addprefix _build/,$(shell find $(NATIVE_C_DIRS) -name '*.h'))
 ALL_HEADER_FILES+=_build/src/third-party/lz4/xxhash.c
 NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
-NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
+NATIVE_OBJECT_FILES+=hack/utils/core/get_build_id.gen.o
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
+BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 
-CC_FLAGS=-DNO_SQLITE3 -DNO_HHVM
+CC_FLAGS=-DNO_SQLITE3
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
@@ -222,35 +269,35 @@ all-homebrew:
 	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
 	export OPAMYES="1"; \
 	export FLOW_RELEASE="1"; \
-	opam init --no-setup && \
-	opam pin add -n flowtype . && \
-	opam config exec -- opam install flowtype --deps-only && \
-	opam config exec -- make
+	opam init --bare --no-setup --disable-sandboxing && \
+	rm -rf _opam && \
+	opam switch create . --deps-only && \
+	opam exec -- make
 
 clean:
 	ocamlbuild -clean
 	rm -rf bin
-	rm -f hack/utils/get_build_id.gen.c
+	rm -f hack/utils/core/get_build_id.gen.c
 	rm -f flow.odocl
 
-build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
+build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
 
-build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 testgen: build-flow
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
@@ -269,10 +316,10 @@ $(BUILT_C_FILES): _build/%.c: %.c
 $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
-hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
-_build/hack/utils/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+_build/hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
 $(COPIED_FLOWLIB): _build/%.js: %.js
@@ -285,12 +332,45 @@ $(COPIED_PRELUDE): _build/%.js: %.js
 	cp $< $@
 	rm -rf _build/src/prelude
 
-_build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
-	$(OCB) -I scripts scripts/ppx_gen_flowlibs.native
+_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa: scripts/script_utils.ml scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.ml
+	$(OCB) -I scripts -tag linkall -pkg unix scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa
+
+_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa: scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.ml
+	$(OCB) -I scripts -tag linkall -pkg unix scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
+
+_build/scripts/ppx_gen_flowlibs.exe: _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
+	ocamlfind ocamlopt -linkpkg -linkall \
+		-package ocaml-migrate-parsetree,unix \
+		-I _build/scripts/ppx_gen_flowlibs \
+		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa \
+		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa \
+		-o "$@"
 
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@
+
+$(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
+	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+		-I $(patsubst _build/%,%,$(@D)) \
+		-lflags "$(LINKER_FLAGS)" \
+		$(patsubst _build/%,%,$@)
+
+.PHONY: build-ounit-tests
+build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
+	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+		$(foreach dir,$(dir $(OUNIT_TESTS)),-I $(dir)) \
+		-lflags "$(LINKER_FLAGS)" \
+		$(OUNIT_TESTS)
+
+.PHONY: ounit-tests
+ounit-tests: build-ounit-tests
+	@for cmd in $(BUILT_OUNIT_TESTS); do \
+		echo "Running $$cmd:"; \
+		"$$cmd"; \
+	done
 
 do-test:
 	./runtests.sh bin/flow$(EXE)
@@ -307,7 +387,7 @@ test-tool: bin/flow$(EXE)
 test: bin/flow$(EXE)
 	${MAKE} do-test
 
-js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	mkdir -p bin
 	# NOTE: temporarily disabling warning 31 because
 	# hack/third-party/core/result.ml and the opam `result` module both define
@@ -355,6 +435,9 @@ dist/npm-%.tgz: FORCE
 FORCE:
 
 .PHONY: all js build-flow build-flow-debug FORCE
+
+# Don't run in parallel because of https://github.com/ocaml/ocamlbuild/issues/300
+.NOTPARALLEL:
 
 # This rule runs if any .ml or .mli file has been touched. It recursively calls
 # ocamldep to figure out all the modules that we use to build src/flow.ml

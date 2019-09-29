@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":3}},
-      "message":"Unexpected token ["
+      "message":"Unexpected token `[`"
     }
   ],
   "type":"Program",
@@ -82,8 +82,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

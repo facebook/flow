@@ -67,7 +67,7 @@ Cannot declare predicate when a function body is present.
 
 Error -------------------------------------------------------------------------------------------- unsupported-0.js:5:31
 
-Unexpected token %
+Unexpected token `%`, expected the token `;`
 
    5| var a3: (x: mixed) => boolean %checks (x !== null);
                                     ^
@@ -75,7 +75,7 @@ Unexpected token %
 
 Error -------------------------------------------------------------------------------------------- unsupported-1.js:5:31
 
-Unexpected token %
+Unexpected token `%`, expected the token `;`
 
    5| var a4: (x: mixed) => boolean %checks = (x: mixed) => x !== null;
                                     ^
@@ -83,7 +83,7 @@ Unexpected token %
 
 Error -------------------------------------------------------------------------------------------- unsupported-2.js:5:31
 
-Unexpected token %
+Unexpected token `%`, expected the token `;`
 
    5| var a5: (x: mixed) => boolean %checks(x !== null) =
                                     ^

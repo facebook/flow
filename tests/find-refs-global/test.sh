@@ -209,3 +209,23 @@ echo "CJS default imports bound to a local:"
 #       ^
 # Should have the same results as above
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-4.js 4 7
+
+echo "declare var:"
+# declare var foo: number;
+#              ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root declare.js 3 14
+
+echo "declare export var:"
+# declare export var bar;
+#                     ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root declare.js 6 21
+
+echo "declare function:"
+# declare function baz(): void;
+#                   ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root declare.js 9 19
+
+echo "declare class:"
+# declare class Foo {};
+#                ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root declare.js 12 16

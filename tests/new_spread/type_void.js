@@ -49,8 +49,8 @@ declare var o5: O5;
 
 type O6 = {...{p:T}, ...void};
 declare var o6: O6;
-(o6: {p?:T}); // ok
-(o6: {p:T}); // error: o6.p is optional
+(o6: {p?:T}); // error, void doesn't overwrite p
+(o6: {p:T}); // ok
 ({}: O6); // ok
 ({p:x}: O6); // ok
 ({p:y}: O6); // error: y ~> T

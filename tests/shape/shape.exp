@@ -1,1 +1,232 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------------- test.js:11:23
+
+Cannot assign `f()` to `a` because undefined [1] is incompatible with `$Shape` of `Foo` [2].
+
+   test.js:11:23
+   11| var a : $Shape<Foo> = f(); // error
+                             ^^^
+
+References:
+   test.js:9:14
+    9| function f () {}
+                    ^ [1]
+   test.js:11:16
+   11| var a : $Shape<Foo> = f(); // error
+                      ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:23
+
+Cannot assign `null` to `b` because null [1] is incompatible with `$Shape` of `Foo` [2].
+
+   test.js:12:23
+   12| var b : $Shape<Foo> = null; // error
+                             ^^^^ [1]
+
+References:
+   test.js:12:16
+   12| var b : $Shape<Foo> = null; // error
+                      ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:5
+
+Cannot call `baz` with `y` bound to `n` because `Foo` [1] is incompatible with null [2].
+
+   test.js:15:5
+   15| baz(y, y)
+           ^
+
+References:
+   test.js:6:15
+    6| var y: $Shape<Foo> = x;
+                     ^^^ [1]
+   test.js:14:19
+   14| function baz (n : null, m : void) {}
+                         ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:8
+
+Cannot call `baz` with `y` bound to `m` because `Foo` [1] is incompatible with undefined [2].
+
+   test.js:15:8
+   15| baz(y, y)
+              ^
+
+References:
+   test.js:6:15
+    6| var y: $Shape<Foo> = x;
+                     ^^^ [1]
+   test.js:14:29
+   14| function baz (n : null, m : void) {}
+                                   ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:2
+
+Cannot cast `pc` to object type because property `y` is missing in object type [1] but exists in `PointC` [2].
+
+   test.js:40:2
+   40| (pc: $Shape<{x : number}>); // error
+        ^^
+
+References:
+   test.js:40:13
+   40| (pc: $Shape<{x : number}>); // error
+                   ^^^^^^^^^^^^ [1]
+   test.js:32:17
+   32| declare var pc: PointC;
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:2
+
+Cannot cast `pi` to `PointC` because `IPoint` [1] is incompatible with `PointC` [2].
+
+   test.js:42:2
+   42| (pi: PointC); // error
+        ^^
+
+References:
+   test.js:33:17
+   33| declare var pi: IPoint;
+                       ^^^^^^ [1]
+   test.js:42:6
+   42| (pi: PointC); // error
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:2
+
+Cannot cast `pi` to object type because property `y` is missing in object type [1] but exists in `IPoint` [2].
+
+   test.js:45:2
+   45| (pi: $Shape<{x : number}>); // error
+        ^^
+
+References:
+   test.js:45:13
+   45| (pi: $Shape<{x : number}>); // error
+                   ^^^^^^^^^^^^ [1]
+   test.js:33:17
+   33| declare var pi: IPoint;
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:2
+
+Cannot cast `ps` to `PointC` because `IPoint` [1] is incompatible with `PointC` [2].
+
+   test.js:47:2
+   47| (ps: PointC); // error
+        ^^
+
+References:
+   test.js:34:24
+   34| declare var ps: $Shape<IPoint>;
+                              ^^^^^^ [1]
+   test.js:47:6
+   47| (ps: PointC); // error
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:50:2
+
+Cannot cast `ps` to object type because property `y` is missing in object type [1] but exists in `IPoint` [2].
+
+   test.js:50:2
+   50| (ps: $Shape<{x : number}>); // error
+        ^^
+
+References:
+   test.js:50:13
+   50| (ps: $Shape<{x : number}>); // error
+                   ^^^^^^^^^^^^ [1]
+   test.js:34:24
+   34| declare var ps: $Shape<IPoint>;
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:100:2
+
+Cannot cast `one` to `Two` because `One` [1] is incompatible with `Two` [2].
+
+   test.js:100:2
+   100| (one : Two); // error
+         ^^^
+
+References:
+   test.js:96:11
+    96| let one = new One(3);
+                  ^^^^^^^^^^ [1]
+   test.js:100:8
+   100| (one : Two); // error
+               ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:101:2
+
+Cannot cast `one` to `Three` because:
+ - function [1] requires another argument from function type [2] in property `constructor`.
+ - undefined [3] is incompatible with function type [4] in the return value of property `constructor`.
+
+   test.js:101:2
+   101| (one : Three); // error
+         ^^^
+
+References:
+   test.js:82:3
+          v------------------------
+    82|   constructor(x : number) {
+    83|     this.foo = x;
+    84|   }
+          ^ [1]
+   test.js:94:30
+    94| type Three = { foo : number, constructor() : () => void }
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:82:26
+    82|   constructor(x : number) {
+                                 ^ [3]
+   test.js:94:46
+    94| type Three = { foo : number, constructor() : () => void }
+                                                     ^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:106:2
+
+Cannot cast `two` to `One` because `Two` [1] is incompatible with `One` [2].
+
+   test.js:106:2
+   106| (two : One); // error
+         ^^^
+
+References:
+   test.js:97:11
+    97| let two = new Two();
+                  ^^^^^^^^^ [1]
+   test.js:106:8
+   106| (two : One); // error
+               ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:108:2
+
+Cannot cast `two` to `Three` because undefined [1] is incompatible with function type [2] in the return value of
+property `constructor`.
+
+   test.js:108:2
+   108| (two : Three);  // error
+         ^^^
+
+References:
+   test.js:89:16
+    89|   constructor() {
+                       ^ [1]
+   test.js:94:46
+    94| type Three = { foo : number, constructor() : () => void }
+                                                     ^^^^^^^^^^ [2]
+
+
+
+Found 14 errors

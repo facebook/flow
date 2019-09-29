@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+experimental.types_first=true
+no_flowlib=false
+
+[strict]

@@ -1,0 +1,1 @@
+cmd: status --strip-root --show-all-errors --include-warnings

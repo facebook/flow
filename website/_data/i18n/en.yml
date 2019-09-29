@@ -86,6 +86,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/getting-started/":
   title: "Getting Started"
   description: "Introduction to type checking with Flow"
+"/docs/faq/":
+  title: "FAQ"
+  description: "Frequently asked questions about using Flow"
 "/docs/install/":
   title: "Installation"
   description: "Installing and setting up Flow for a project"
@@ -167,6 +170,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/config/options/":
   title: ".flowconfig [options]"
   description: "How to configure Flow's various options"
+"/docs/config/untyped/":
+  title: ".flowconfig [untyped]"
+  description: "How to configure Flow to treat certain files as untyped"
 "/docs/config/version/":
   title: ".flowconfig [version]"
   description: "How to pin your project to a specific version of Flow"
@@ -212,6 +218,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/libdefs/usage/":
   title: "Using Library Definitions"
   description: ""
+"/docs/declarations/":
+  title: "Declaration Files"
+  description: "Using .flow files"
 "/docs/modules/":
   title: "Modules"
   description: ""
@@ -391,6 +400,10 @@ guides:
     description: >
       Never used a type system before or just new to Flow? Let's get you up and
       running in a few minutes.
+  faq:
+    title: "FAQ"
+    description: >
+      Have a question about using Flow? Check here first!
   types:
     title: "Type Annotations"
     description: >
@@ -416,6 +429,10 @@ guides:
     description: >
       Learn how to create and use library definitions for the third-party code
       your code depends on.
+  declarations:
+    title: "Declaration Files"
+    description: >
+      Learn how to write types in .flow files.
   # errors:
   #   title: "Debugging Errors"
   #   description: >

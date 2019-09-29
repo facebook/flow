@@ -163,8 +163,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:2:32
-   2| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:3:32
+   3| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -374,8 +374,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:2:32
-   2| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:3:32
+   3| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -582,8 +582,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:2:32
-   2| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:3:32
+   3| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -680,12 +680,21 @@ References:
                     ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:3:24
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot resolve module `ImplicitProvidesModule`.
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
 
-   3| var Implicit = require('ImplicitProvidesModule');
-                             ^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:4:2
+   4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+       ^^^^^^^^^^^^^^
+
+References:
+   ImplicitProvidesModule.js.flow:3:32
+   3| declare export function fun(): Declaration;
+                                     ^^^^^^^^^^^ [1]
+   test.js:4:18
+   4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                       ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
@@ -784,8 +793,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:2:32
-   2| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:3:32
+   3| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -879,12 +888,21 @@ References:
                     ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:3:24
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot resolve module `ImplicitProvidesModule`.
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
 
-   3| var Implicit = require('ImplicitProvidesModule');
-                             ^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:4:2
+   4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+       ^^^^^^^^^^^^^^
+
+References:
+   ImplicitProvidesModule.js.flow:3:32
+   3| declare export function fun(): Declaration;
+                                     ^^^^^^^^^^^ [1]
+   test.js:4:18
+   4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                       ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2

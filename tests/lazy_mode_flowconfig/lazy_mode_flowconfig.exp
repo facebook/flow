@@ -1,0 +1,75 @@
+
+A full check should ignore the lazy mode in the .flowconfig
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   foo.js:3:17
+   3| var x: string = 123;
+                      ^^^ [1]
+
+References:
+   foo.js:3:8
+   3| var x: string = 123;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Server should start in fs lazy mode
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 0/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Editing a file should cause fs lazy mode to focus on the file
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   foo.js:3:17
+   3| var x: string = 123;
+                      ^^^ [1]
+
+References:
+   foo.js:3:8
+   3| var x: string = 123;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Server should start in non-lazy mode due to --lazy-mode none
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   foo.js:3:17
+   3| var x: string = 123;
+                      ^^^ [1]
+
+References:
+   foo.js:3:8
+   3| var x: string = 123;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Server should start in ide lazy mode due to --lazy-mode ide
+No errors!
+
+The Flow server is currently in IDE lazy mode and is only checking 0/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Editing a file shouldn't cause ide lazy mode to focus on the file
+No errors!
+
+The Flow server is currently in IDE lazy mode and is only checking 0/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

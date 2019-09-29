@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -8,10 +8,15 @@
  *)
 
 type env
+
 type event = string * string
+
 val init : unit -> env
+
 val add_watch : env -> string -> string
-val get_event_fd : env -> Unix.file_descr 
+
+val get_event_fd : env -> Unix.file_descr
+
 val read_events : env -> event list
 
 (* Currently unimplemented

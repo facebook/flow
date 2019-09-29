@@ -1,18 +1,23 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-let mk cx reason =
+let mk_no_wrap cx reason =
   let tvar = Reason.mk_id () in
   let graph = Context.graph cx in
   Context.add_tvar cx tvar (Constraint.new_unresolved_root ());
-  (if Context.is_verbose cx then Utils_js.prerr_endlinef
-    "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
-    (Debug_js.string_of_reason cx reason));
-  Type.OpenT (reason, tvar)
+  if Context.is_verbose cx then
+    Utils_js.prerr_endlinef
+      "TVAR %d (%d): %s"
+      tvar
+      (IMap.cardinal graph)
+      (Debug_js.string_of_reason cx reason);
+  tvar
+
+let mk cx reason = Type.OpenT (reason, mk_no_wrap cx reason)
 
 let mk_where cx reason f =
   let tvar = mk cx reason in

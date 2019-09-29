@@ -1,0 +1,225 @@
+predicates.js - undefined: {
+  "type":"void",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":10,"offset":51},
+    "end":{"line":5,"column":18,"offset":60}
+  },
+  "path":"predicates.js",
+  "line":5,
+  "endline":5,
+  "start":10,
+  "end":18
+}
+predicates.js - Array: {
+  "type":"class Array<T>",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":5,"offset":69},
+    "end":{"line":6,"column":9,"offset":74}
+  },
+  "path":"predicates.js",
+  "line":6,
+  "endline":6,
+  "start":5,
+  "end":9
+}
+predicates.js - isArray: {
+  "type":"any (implicit)",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":11,"offset":75},
+    "end":{"line":6,"column":17,"offset":82}
+  },
+  "path":"predicates.js",
+  "line":6,
+  "endline":6,
+  "start":11,
+  "end":17
+}
+predicates.js - y (refined obj): {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":5,"offset":95},
+    "end":{"line":8,"column":5,"offset":96}
+  },
+  "path":"predicates.js",
+  "line":8,
+  "endline":8,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO) obj: {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":5,"offset":119},
+    "end":{"line":9,"column":5,"offset":120}
+  },
+  "path":"predicates.js",
+  "line":9,
+  "endline":9,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO) prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":7,"offset":121},
+    "end":{"line":9,"column":9,"offset":124}
+  },
+  "path":"predicates.js",
+  "line":9,
+  "endline":9,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO == '') obj: {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":5,"offset":133},
+    "end":{"line":10,"column":5,"offset":134}
+  },
+  "path":"predicates.js",
+  "line":10,
+  "endline":10,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO == '') prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":7,"offset":135},
+    "end":{"line":10,"column":9,"offset":138}
+  },
+  "path":"predicates.js",
+  "line":10,
+  "endline":10,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO === '') obj: {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":5,"offset":153},
+    "end":{"line":11,"column":5,"offset":154}
+  },
+  "path":"predicates.js",
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO === '') prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":7,"offset":155},
+    "end":{"line":11,"column":9,"offset":158}
+  },
+  "path":"predicates.js",
+  "line":11,
+  "endline":11,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO == null) prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":7,"offset":176},
+    "end":{"line":12,"column":9,"offset":179}
+  },
+  "path":"predicates.js",
+  "line":12,
+  "endline":12,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO == undefined) prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":7,"offset":198},
+    "end":{"line":13,"column":9,"offset":201}
+  },
+  "path":"predicates.js",
+  "line":13,
+  "endline":13,
+  "start":7,
+  "end":9
+}
+predicates.js - if (Array.isArray(y.FOO)): {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":21,"offset":239},
+    "end":{"line":14,"column":23,"offset":242}
+  },
+  "path":"predicates.js",
+  "line":14,
+  "endline":14,
+  "start":21,
+  "end":23
+}
+refinement.js:7:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"refinement.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":24,"offset":74},
+    "end":{"line":7,"column":26,"offset":77}
+  },
+  "path":"refinement.js",
+  "line":7,
+  "endline":7,
+  "start":24,
+  "end":26
+}
+refinement.js:8:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"refinement.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":24,"offset":104},
+    "end":{"line":8,"column":26,"offset":107}
+  },
+  "path":"refinement.js",
+  "line":8,
+  "endline":8,
+  "start":24,
+  "end":26
+}

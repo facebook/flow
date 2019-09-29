@@ -1,0 +1,84 @@
+Error ------------------------------------------------------------------------------------------------------- b.js:17:12
+
+Property `x` is missing in object literal [1] but exists in `Data` [2].
+
+   b.js:17:12
+   17|   o['fun'](data);
+                  ^^^^
+
+References:
+   b.js:16:17
+   16|   if (b) data = { z: 0 };
+                       ^^^^^^^^ [1]
+   b.js:5:28
+    5| declare function foo(data: Data): void;
+                                  ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- b.js:17:12
+
+Property `z` is missing in `Data` [1] but exists in object literal [2] in the first argument.
+
+   b.js:17:12
+   17|   o['fun'](data);
+                  ^^^^
+
+References:
+   b.js:5:28
+    5| declare function foo(data: Data): void;
+                                  ^^^^ [1]
+   b.js:16:17
+   16|   if (b) data = { z: 0 };
+                       ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- b.js:22:12
+
+Property `x` is missing in object literal [1] but exists in `Data` [2].
+
+   b.js:22:12
+   22|   o['fun'](data);
+                  ^^^^
+
+References:
+   b.js:21:14
+   21|   var data = { z: 0 };
+                    ^^^^^^^^ [1]
+   b.js:5:28
+    5| declare function foo(data: Data): void;
+                                  ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- b.js:22:12
+
+Property `z` is missing in `Data` [1] but exists in object literal [2] in the first argument.
+
+   b.js:22:12
+   22|   o['fun'](data);
+                  ^^^^
+
+References:
+   b.js:5:28
+    5| declare function foo(data: Data): void;
+                                  ^^^^ [1]
+   b.js:21:14
+   21|   var data = { z: 0 };
+                    ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test2.js:6:16
+
+Cannot assign `5` to `t` because number [1] is incompatible with string [2].
+
+   test2.js:6:16
+   6| const t: arg = 5;
+                     ^ [1]
+
+References:
+   test2.js:4:17
+   4| type fn = (arg: string) => number;
+                      ^^^^^^ [2]
+
+
+
+Found 5 errors

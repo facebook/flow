@@ -1,0 +1,76 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":26}},
+      "message":"Illegal continue statement"
+    }
+  ],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":1}},
+  "range":[0,59],
+  "body":[
+    {
+      "type":"FunctionDeclaration",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":1}},
+      "range":[0,59],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":10}},
+        "range":[9,10],
+        "name":"f",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":4,"column":1}},
+        "range":[13,59],
+        "body":[
+          {
+            "type":"ContinueStatement",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":3,"column":11},"end":{"line":3,"column":25}},
+                "range":[42,56],
+                "value":" trailing "
+              }
+            ],
+            "leadingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":15}},
+                "range":[17,30],
+                "value":" leading "
+              }
+            ],
+            "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":26}},
+            "range":[33,57],
+            "label":null
+          }
+        ]
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false,
+      "returnType":null,
+      "typeParameters":null
+    }
+  ],
+  "comments":[
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":15}},
+      "range":[17,30],
+      "value":" leading "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":11},"end":{"line":3,"column":25}},
+      "range":[42,56],
+      "value":" trailing "
+    }
+  ]
+}

@@ -2,15 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":20}},
-      "message":"Unexpected token ..."
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":21}},
-      "message":"Unexpected identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
-      "message":"Unexpected token }"
+      "message":"Spreading a type is only allowed inside an object type"
     }
   ],
   "type":"Program",
@@ -35,32 +27,7 @@
         "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":22}},
         "range":[16,22],
         "exact":false,
-        "properties":[
-          {
-            "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":21}},
-            "range":[17,21],
-            "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":20}},
-              "range":[17,20],
-              "name":"",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
-              "range":[21,22]
-            },
-            "method":false,
-            "optional":false,
-            "static":false,
-            "proto":false,
-            "variance":null,
-            "kind":"init"
-          }
-        ],
+        "properties":[],
         "indexers":[],
         "callProperties":[],
         "internalSlots":[]

@@ -1,0 +1,7 @@
+(library
+  (name flow_common_utils_loc_utils)
+  (wrapped false)
+  (libraries
+    collections ; hack
+    flow_parser
+    flow_parser_utils_aloc))

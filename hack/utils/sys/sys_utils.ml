@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -9,37 +9,62 @@
 
 open Hh_core
 
-external realpath: string -> string option = "hh_realpath"
-external is_nfs: string -> bool = "hh_is_nfs"
+external realpath : string -> string option = "hh_realpath"
+
+external is_nfs : string -> bool = "hh_is_nfs"
+
 external is_apple_os : unit -> bool = "hh_sysinfo_is_apple_os"
 
 (** Option type intead of exception throwing. *)
-let get_env name =
-  try Some (Sys.getenv name) with
-  | Not_found -> None
+let get_env name = (try Some (Sys.getenv name) with Not_found -> None)
 
 let getenv_user () =
-  let user_var = if Sys.win32 then "USERNAME" else "USER" in
+  let user_var =
+    if Sys.win32 then
+      "USERNAME"
+    else
+      "USER"
+  in
   let logname_var = "LOGNAME" in
   let user = get_env user_var in
   let logname = get_env logname_var in
   Option.first_some user logname
 
 let getenv_home () =
-  let home_var = if Sys.win32 then "APPDATA" else "HOME" in
+  let home_var =
+    if Sys.win32 then
+      "APPDATA"
+    else
+      "HOME"
+  in
   get_env home_var
 
 let getenv_term () =
-  let term_var = "TERM" in (* This variable does not exist on windows. *)
+  let term_var = "TERM" in
+  (* This variable does not exist on windows. *)
   get_env term_var
 
-let path_sep = if Sys.win32 then ";" else ":"
-let null_path = if Sys.win32 then "nul" else "/dev/null"
+let path_sep =
+  if Sys.win32 then
+    ";"
+  else
+    ":"
+
+let null_path =
+  if Sys.win32 then
+    "nul"
+  else
+    "/dev/null"
+
 let temp_dir_name =
-  if Sys.win32 then Filename.get_temp_dir_name () else "/tmp"
+  if Sys.win32 then
+    Filename.get_temp_dir_name ()
+  else
+    "/tmp"
 
 let getenv_path () =
-  let path_var = "PATH" in (* Same variable on windows *)
+  let path_var = "PATH" in
+  (* Same variable on windows *)
   get_env path_var
 
 let open_in_no_fail fn =
@@ -57,7 +82,8 @@ let open_in_bin_no_fail fn =
     exit 3
 
 let close_in_no_fail fn ic =
-  try close_in ic with e ->
+  try close_in ic
+  with e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not close: '%s' (%s)\n" fn e;
     exit 3
@@ -77,7 +103,8 @@ let open_out_bin_no_fail fn =
     exit 3
 
 let close_out_no_fail fn oc =
-  try close_out oc with e ->
+  try close_out oc
+  with e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not close: '%s' (%s)\n" fn e;
     exit 3
@@ -100,13 +127,14 @@ let cat_no_fail filename =
   content
 
 let nl_regexp = Str.regexp "[\r\n]"
+
 let split_lines = Str.split nl_regexp
 
 (** Returns true if substring occurs somewhere inside str. *)
 let string_contains str substring =
-  (** regexp_string matches only this string and nothing else. *)
+  (* regexp_string matches only this string and nothing else. *)
   let re = Str.regexp_string substring in
-  try (Str.search_forward re str 0) >= 0 with Not_found -> false
+  (try Str.search_forward re str 0 >= 0 with Not_found -> false)
 
 let exec_read cmd =
   let ic = Unix.open_process_in cmd in
@@ -114,16 +142,19 @@ let exec_read cmd =
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   result
 
-let exec_read_lines ?(reverse=false) cmd =
+let exec_read_lines ?(reverse = false) cmd =
   let ic = Unix.open_process_in cmd in
   let result = ref [] in
   (try
-    while true do
-      result := input_line ic :: !result
-    done;
-  with End_of_file -> ());
+     while true do
+       result := input_line ic :: !result
+     done
+   with End_of_file -> ());
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
-  if not reverse then List.rev !result else !result
+  if not reverse then
+    List.rev !result
+  else
+    !result
 
 (**
  * Collects paths that satisfy a predicate, recursively traversing directories.
@@ -131,10 +162,10 @@ let exec_read_lines ?(reverse=false) cmd =
 let rec collect_paths path_predicate path =
   if Sys.is_directory path then
     path
-      |> Sys.readdir
-      |> Array.to_list
-      |> List.map ~f:(Filename.concat path)
-      |> List.concat_map ~f:(collect_paths path_predicate)
+    |> Sys.readdir
+    |> Array.to_list
+    |> List.map ~f:(Filename.concat path)
+    |> List.concat_map ~f:(collect_paths path_predicate)
   else
     Utils.singleton_if (path_predicate path) path
 
@@ -147,23 +178,23 @@ let rec collect_paths path_predicate path =
  * to get the necessary information (in this case, containing a list of files,
  * one per line).
  *)
-let parse_path_list (paths: string list): string list =
+let parse_path_list (paths : string list) : string list =
   List.concat_map paths ~f:(fun path ->
-    if String_utils.string_starts_with path "@"
-    then
-      let path = String_utils.lstrip path "@" in
-      cat path |> split_lines
-    else
-      [path]
-) |> List.map ~f:(fun path ->
-  match realpath path with
-  | Some path -> path
-  | None -> failwith (Printf.sprintf "Invalid path: %s" path)
-)
+      if String_utils.string_starts_with path "@" then
+        let path = String_utils.lstrip path "@" in
+        cat path |> split_lines
+      else
+        [path])
+  |> List.map ~f:(fun path ->
+         match realpath path with
+         | Some path -> path
+         | None -> failwith (Printf.sprintf "Invalid path: %s" path))
 
-let rm_dir_tree ?(skip_mocking=false) =
-  if skip_mocking then RealDisk.rm_dir_tree
-  else Disk.rm_dir_tree
+let rm_dir_tree ?(skip_mocking = false) =
+  if skip_mocking then
+    RealDisk.rm_dir_tree
+  else
+    Disk.rm_dir_tree
 
 let restart () =
   let cmd = Sys.argv.(0) in
@@ -172,22 +203,25 @@ let restart () =
 
 let logname_impl () =
   match getenv_user () with
-    | Some user -> user
-    | None ->
-      (* If this function is generally useful, it can be lifted to toplevel
+  | Some user -> user
+  | None ->
+    (* If this function is generally useful, it can be lifted to toplevel
          in this file, but this is the only place we need it for now. *)
-      let exec_try_read cmd =
-        let ic = Unix.open_process_in cmd in
-        let out = try Some (input_line ic) with End_of_file -> None in
-        let status = Unix.close_process_in ic in
-        match out, status with
-          | Some _, Unix.WEXITED 0 -> out
-          | _ -> None in
-      try Utils.unsafe_opt (exec_try_read "logname") with Invalid_argument _ ->
-      try Utils.unsafe_opt (exec_try_read "id -un") with Invalid_argument _ ->
-        "[unknown]"
+    let exec_try_read cmd =
+      let ic = Unix.open_process_in cmd in
+      let out = (try Some (input_line ic) with End_of_file -> None) in
+      let status = Unix.close_process_in ic in
+      match (out, status) with
+      | (Some _, Unix.WEXITED 0) -> out
+      | _ -> None
+    in
+    (try Utils.unsafe_opt (exec_try_read "logname")
+     with Invalid_argument _ ->
+       (try Utils.unsafe_opt (exec_try_read "id -un")
+        with Invalid_argument _ -> "[unknown]"))
 
 let logname_ref = ref None
+
 let logname () =
   if !logname_ref = None then logname_ref := Some (logname_impl ());
   Utils.unsafe_opt !logname_ref
@@ -196,10 +230,16 @@ let with_umask umask f =
   let old_umask = ref 0 in
   Utils.with_context
     ~enter:(fun () -> old_umask := Unix.umask umask)
-    ~exit:(fun () -> Unix.umask !old_umask)
+    ~exit:(fun () ->
+      let _ = Unix.umask !old_umask in
+      ())
     ~do_:f
+
 let with_umask umask f =
-  if Sys.win32 then f () else with_umask umask f
+  if Sys.win32 then
+    f ()
+  else
+    with_umask umask f
 
 let read_stdin_to_string () =
   let buf = Buffer.create 4096 in
@@ -209,19 +249,18 @@ let read_stdin_to_string () =
       Buffer.add_char buf '\n'
     done;
     assert false
-  with End_of_file ->
-    Buffer.contents buf
+  with End_of_file -> Buffer.contents buf
 
-let read_all ?(buf_size=4096) ic =
+let read_all ?(buf_size = 4096) ic =
   let buf = Buffer.create buf_size in
   (try
-    while true do
-      let data = Bytes.create buf_size in
-      let bytes_read = input ic data 0 buf_size in
-      if bytes_read = 0 then raise Exit;
-      Buffer.add_subbytes buf data 0 bytes_read;
-    done
-  with Exit -> ());
+     while true do
+       let data = Bytes.create buf_size in
+       let bytes_read = input ic data 0 buf_size in
+       if bytes_read = 0 then raise Exit;
+       Buffer.add_subbytes buf data 0 bytes_read
+     done
+   with Exit -> ());
   Buffer.contents buf
 
 (**
@@ -235,17 +274,19 @@ let read_all ?(buf_size=4096) ic =
 let expanduser path =
   Str.substitute_first
     (Str.regexp "^~\\([^/]*\\)")
-    begin fun s ->
+    begin
+      fun s ->
       match Str.matched_group 1 s with
-        | "" ->
-          begin
-            match getenv_home () with
-              | None -> (Unix.getpwuid (Unix.getuid())).Unix.pw_dir
-              | Some home -> home
-          end
-        | unixname ->
-          try (Unix.getpwnam unixname).Unix.pw_dir
-          with Not_found -> Str.matched_string s end
+      | "" ->
+        begin
+          match getenv_home () with
+          | None -> (Unix.getpwuid (Unix.getuid ())).Unix.pw_dir
+          | Some home -> home
+        end
+      | unixname ->
+        (try (Unix.getpwnam unixname).Unix.pw_dir
+         with Not_found -> Str.matched_string s)
+    end
     path
 
 (* Turns out it's surprisingly complex to figure out the path to the current
@@ -263,38 +304,46 @@ let executable_path : unit -> string =
   let search_path path =
     let paths =
       match getenv_path () with
-        | None -> failwith "Unable to determine executable path"
-        | Some paths ->
-          Str.split (Str.regexp_string path_sep) paths in
-    let path = List.fold_left paths ~f:begin fun acc p ->
-      match acc with
-      | Some _ -> acc
-      | None -> realpath (expanduser (Filename.concat p path))
-    end ~init:None
+      | None -> failwith "Unable to determine executable path"
+      | Some paths -> Str.split (Str.regexp_string path_sep) paths
+    in
+    let path =
+      List.fold_left
+        paths
+        ~f:
+          begin
+            fun acc p ->
+            match acc with
+            | Some _ -> acc
+            | None -> realpath (expanduser (Filename.concat p path))
+          end
+        ~init:None
     in
     match path with
     | Some path -> path
     | None -> failwith "Unable to determine executable path"
   in
-  fun () -> match !executable_path_ with
-  | Some path -> path
-  | None ->
+  fun () ->
+    match !executable_path_ with
+    | Some path -> path
+    | None ->
       let path = Sys.executable_name in
       let path =
         if String.contains path dir_sep then
           match realpath path with
           | Some path -> path
           | None -> failwith "Unable to determine executable path"
-        else search_path path
+        else
+          search_path path
       in
       executable_path_ := Some path;
       path
 
 let lines_of_in_channel ic =
   let rec loop accum =
-    match try Some(input_line ic) with _ -> None with
+    match (try Some (input_line ic) with _ -> None) with
     | None -> List.rev accum
-    | Some(line) -> loop (line::accum)
+    | Some line -> loop (line :: accum)
   in
   loop []
 
@@ -308,21 +357,20 @@ let lines_of_file filename =
     close_in ic;
     []
 
-
 let read_file file =
-  let ic = open_in_bin file  in
+  let ic = open_in_bin file in
   let size = in_channel_length ic in
   let buf = Bytes.create size in
   really_input ic buf 0 size;
   close_in ic;
   buf
 
-let write_file ~file s =
-  Disk.write_file ~file ~contents:s
+let write_file ~file s = Disk.write_file ~file ~contents:s
 
 let append_file ~file s =
   let chan = open_out_gen [Open_wronly; Open_append; Open_creat] 0o666 file in
-  (output_string chan s; close_out chan)
+  output_string chan s;
+  close_out chan
 
 let write_strings_to_file ~file ss =
   let chan = open_out_gen [Open_wronly; Open_creat] 0o666 file in
@@ -331,32 +379,33 @@ let write_strings_to_file ~file ss =
 
 (* could be in control section too *)
 
-let filemtime file =
-  (Unix.stat file).Unix.st_mtime
+let filemtime file = (Unix.stat file).Unix.st_mtime
 
 external lutimes : string -> unit = "hh_lutimes"
 
 let try_touch ~follow_symlinks file =
   try
-    if follow_symlinks then Unix.utimes file 0.0 0.0
-    else lutimes file
-  with _ ->
-    ()
+    if follow_symlinks then
+      Unix.utimes file 0.0 0.0
+    else
+      lutimes file
+  with _ -> ()
 
-let mkdir_p ?(skip_mocking=false) =
-  if skip_mocking then RealDisk.mkdir_p
-  else Disk.mkdir_p
+let mkdir_p ?(skip_mocking = false) =
+  if skip_mocking then
+    RealDisk.mkdir_p
+  else
+    Disk.mkdir_p
 
 (* Emulate "mkdir -p", i.e., no error if already exists. *)
 let mkdir_no_fail dir =
-  with_umask 0 begin fun () ->
-    (* Don't set sticky bit since the socket opening code wants to remove any
-     * old sockets it finds, which may be owned by a different user. *)
-    try Unix.mkdir dir 0o777 with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
-  end
+  with_umask 0 (fun () ->
+      (* Don't set sticky bit since the socket opening code wants to remove any
+       * old sockets it finds, which may be owned by a different user. *)
+      try Unix.mkdir dir 0o777 with Unix.Unix_error (Unix.EEXIST, _, _) -> ())
 
 let unlink_no_fail fn =
-  try Unix.unlink fn with Unix.Unix_error (Unix.ENOENT, _, _) -> ()
+  (try Unix.unlink fn with Unix.Unix_error (Unix.ENOENT, _, _) -> ())
 
 let readlink_no_fail fn =
   if Sys.win32 && Sys.file_exists fn then
@@ -370,7 +419,7 @@ let splitext filename =
   (* -1 because the extension includes the period, e.g. ".foo" *)
   let ext_length = String.length filename - root_length - 1 in
   let ext = String.sub filename (root_length + 1) ext_length in
-  root, ext
+  (root, ext)
 
 let is_test_mode () =
   try
@@ -378,8 +427,7 @@ let is_test_mode () =
     true
   with _ -> false
 
-let sleep ~seconds =
-  ignore @@ Unix.select [] [] [] seconds
+let sleep ~seconds = ignore @@ Unix.select [] [] [] seconds
 
 let symlink =
   (* Dummy implementation of `symlink` on Windows: we create a text
@@ -387,72 +435,102 @@ let symlink =
      on Windows since Vista, but until Seven (included), one should
      have administratrive rights in order to create symlink. *)
   let win32_symlink source dest = write_file ~file:dest source in
-  if Sys.win32
-  then win32_symlink
+  if Sys.win32 then
+    win32_symlink
   else
     (* 4.03 adds an optional argument to Unix.symlink that we want to ignore
      *)
-    fun source dest -> Unix.symlink source dest
+    fun source dest ->
+  Unix.symlink source dest
 
 (* Creates a symlink at <dir>/<linkname.ext> to
  * <dir>/<pluralized ext>/<linkname>-<timestamp>.<ext> *)
 let make_link_of_timestamped linkname =
-  let open Unix in
-  let dir = Filename.dirname linkname in
-  mkdir_no_fail dir;
-  let base = Filename.basename linkname in
-  let base, ext = splitext base in
-  let dir = Filename.concat dir (Printf.sprintf "%ss" ext) in
-  mkdir_no_fail dir;
-  let tm = localtime (time ()) in
-  let year = tm.tm_year + 1900 in
-  let time_str = Printf.sprintf "%d-%02d-%02d-%02d-%02d-%02d"
-    year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec in
-  let filename = Filename.concat dir
-    (Printf.sprintf "%s-%s.%s" base time_str ext) in
-  unlink_no_fail linkname;
-  symlink filename linkname;
-  filename
+  Unix.(
+    let dir = Filename.dirname linkname in
+    mkdir_no_fail dir;
+    let base = Filename.basename linkname in
+    let (base, ext) = splitext base in
+    let dir = Filename.concat dir (Printf.sprintf "%ss" ext) in
+    mkdir_no_fail dir;
+    let tm = localtime (time ()) in
+    let year = tm.tm_year + 1900 in
+    let time_str =
+      Printf.sprintf
+        "%d-%02d-%02d-%02d-%02d-%02d"
+        year
+        (tm.tm_mon + 1)
+        tm.tm_mday
+        tm.tm_hour
+        tm.tm_min
+        tm.tm_sec
+    in
+    let filename =
+      Filename.concat dir (Printf.sprintf "%s-%s.%s" base time_str ext)
+    in
+    unlink_no_fail linkname;
+    symlink filename linkname;
+    filename)
 
 let setsid =
   (* Not implemented on Windows. Let's just return the pid *)
-  if Sys.win32 then Unix.getpid else Unix.setsid
+  if Sys.win32 then
+    Unix.getpid
+  else
+    Unix.setsid
 
-let set_signal = if not Sys.win32 then Sys.set_signal else (fun _ _ -> ())
+let set_signal =
+  if not Sys.win32 then
+    Sys.set_signal
+  else
+    fun _ _ ->
+  ()
+
 let signal =
-  if not Sys.win32
-  then (fun a b -> ignore (Sys.signal a b))
-  else (fun _ _ -> ())
+  if not Sys.win32 then
+    fun a b ->
+  ignore (Sys.signal a b)
+  else
+    fun _ _ ->
+  ()
 
 external get_total_ram : unit -> int = "hh_sysinfo_totalram"
+
 external uptime : unit -> int = "hh_sysinfo_uptime"
-external nproc: unit -> int = "nproc"
+
+external nproc : unit -> int = "nproc"
 
 let total_ram = get_total_ram ()
+
 let nbr_procs = nproc ()
 
-external set_priorities : cpu_priority:int -> io_priority:int -> unit =
-  "hh_set_priorities"
+external set_priorities : cpu_priority:int -> io_priority:int -> unit
+  = "hh_set_priorities"
 
-external pid_of_handle: int -> int = "pid_of_handle"
-external handle_of_pid_for_termination: int -> int =
-  "handle_of_pid_for_termination"
+external pid_of_handle : int -> int = "pid_of_handle"
+
+external handle_of_pid_for_termination : int -> int
+  = "handle_of_pid_for_termination"
 
 let terminate_process pid = Unix.kill pid Sys.sigkill
 
 let lstat path =
   (* WTF, on Windows `lstat` fails if a directory path ends with an
      '/' (or a '\', whatever) *)
-  Unix.lstat @@
+  Unix.lstat
+  @@
   if Sys.win32 && String_utils.string_ends_with path Filename.dir_sep then
     String.sub path 0 (String.length path - 1)
   else
     path
 
 let normalize_filename_dir_sep =
-  let dir_sep_char = String.get Filename.dir_sep 0 in
-  String.map (fun c -> if c = dir_sep_char then '/' else c)
-
+  let dir_sep_char = Filename.dir_sep.[0] in
+  String.map (fun c ->
+      if c = dir_sep_char then
+        '/'
+      else
+        c)
 
 let name_of_signal = function
   | s when s = Sys.sigabrt -> "SIGABRT (Abnormal termination)"
@@ -473,7 +551,8 @@ let name_of_signal = function
   | s when s = Sys.sigstop -> "SIGSTOP (Stop)"
   | s when s = Sys.sigtstp -> "SIGTSTP (Interactive stop)"
   | s when s = Sys.sigttin -> "SIGTTIN (Terminal read from background process)"
-  | s when s = Sys.sigttou -> "SIGTTOU (Terminal write from background process)"
+  | s when s = Sys.sigttou ->
+    "SIGTTOU (Terminal write from background process)"
   | s when s = Sys.sigvtalrm -> "SIGVTALRM (Timeout in virtual time)"
   | s when s = Sys.sigprof -> "SIGPROF (Profiling interrupt)"
   | s when s = Sys.sigbus -> "SIGBUS (Bus error)"
@@ -494,12 +573,13 @@ type cpu_info = {
   cpu_system: float;
   cpu_idle: float;
 }
+
 type processor_info = {
   proc_totals: cpu_info;
   proc_per_cpu: cpu_info array;
 }
 
-external processor_info: unit -> processor_info = "hh_processor_info"
+external processor_info : unit -> processor_info = "hh_processor_info"
 
 (* We implement timers using sigalarm which means selects can be interrupted. This is a wrapper
  * around EINTR which continues the select if it gets interrupted by a signal *)
@@ -509,9 +589,11 @@ let rec select_non_intr read write exn timeout =
   with Unix.Unix_error (Unix.EINTR, _, _) ->
     (* Negative timeouts mean no timeout *)
     let timeout =
-      if timeout < 0.0
-      then timeout
-      else max 0.0 (timeout -. (Unix.gettimeofday () -. start_time)) in
+      if timeout < 0.0 then
+        timeout
+      else
+        max 0.0 (timeout -. (Unix.gettimeofday () -. start_time))
+    in
     select_non_intr read write exn timeout
 
 (* Flow uses lwt, which installs a sigchld handler. So the old pattern of fork & waitpid will hit
@@ -523,39 +605,56 @@ let rec waitpid_non_intr flags pid =
 
 (* Exposing this for a unit test *)
 let find_oom_in_dmesg_output pid name lines =
-  let re = Str.regexp (Printf.sprintf
-      "Out of memory: Kill process \\([0-9]+\\) (%s)" name) in
-  List.exists lines begin fun line ->
-    try
-      ignore @@ Str.search_forward re line 0;
-      let pid_s = Str.matched_group 1 line in
-      int_of_string pid_s = pid
-    with Not_found -> false
-  end
+  let re =
+    Str.regexp
+      (Printf.sprintf "Out of memory: Kill process \\([0-9]+\\) (%s)" name)
+  in
+  List.exists lines (fun line ->
+      try
+        ignore @@ Str.search_forward re line 0;
+        let pid_s = Str.matched_group 1 line in
+        int_of_string pid_s = pid
+      with Not_found -> false)
 
 let check_dmesg_for_oom pid name =
-    let dmesg = exec_read_lines ~reverse:true "dmesg" in
-    find_oom_in_dmesg_output pid name dmesg
+  let dmesg = exec_read_lines ~reverse:true "dmesg" in
+  find_oom_in_dmesg_output pid name dmesg
 
 (* Be careful modifying the rusage type! Like other types that interact with C, the order matters!
  * If you change things here you must update hh_getrusage too! *)
 type rusage = {
-  ru_maxrss: int;        (* maximum resident set size *)
-  ru_ixrss: int;         (* integral shared memory size *)
-  ru_idrss: int;         (* integral unshared data size *)
-  ru_isrss: int;         (* integral unshared stack size *)
-  ru_minflt: int;        (* page reclaims (soft page faults) *)
-  ru_majflt: int;        (* page faults (hard page faults) *)
-  ru_nswap: int;         (* swaps *)
-  ru_inblock: int;       (* block input operations *)
-  ru_oublock: int;       (* block output operations *)
-  ru_msgsnd: int;        (* IPC messages sent *)
-  ru_msgrcv: int;        (* IPC messages received *)
-  ru_nsignals: int;      (* signals received *)
-  ru_nvcsw: int;         (* voluntary context switches *)
-  ru_nivcsw: int;        (* involuntary context switches *)
+  ru_maxrss: int;
+  (* maximum resident set size *)
+  ru_ixrss: int;
+  (* integral shared memory size *)
+  ru_idrss: int;
+  (* integral unshared data size *)
+  ru_isrss: int;
+  (* integral unshared stack size *)
+  ru_minflt: int;
+  (* page reclaims (soft page faults) *)
+  ru_majflt: int;
+  (* page faults (hard page faults) *)
+  ru_nswap: int;
+  (* swaps *)
+  ru_inblock: int;
+  (* block input operations *)
+  ru_oublock: int;
+  (* block output operations *)
+  ru_msgsnd: int;
+  (* IPC messages sent *)
+  ru_msgrcv: int;
+  (* IPC messages received *)
+  ru_nsignals: int;
+  (* signals received *)
+  ru_nvcsw: int;
+  (* voluntary context switches *)
+  ru_nivcsw: int; (* involuntary context switches *)
 }
-external getrusage: unit -> rusage = "hh_getrusage"
 
-external start_gc_profiling: unit -> unit = "hh_start_gc_profiling" [@@noalloc]
-external get_gc_time: unit -> float * float = "hh_get_gc_time"
+external getrusage : unit -> rusage = "hh_getrusage"
+
+external start_gc_profiling : unit -> unit = "hh_start_gc_profiling"
+  [@@noalloc]
+
+external get_gc_time : unit -> float * float = "hh_get_gc_time"

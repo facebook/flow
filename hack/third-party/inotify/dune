@@ -1,0 +1,5 @@
+(library
+  (name inotify)
+  (wrapped false)
+  (c_names
+    inotify_stubs))

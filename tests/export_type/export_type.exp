@@ -102,6 +102,34 @@ References:
                                       ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- importer.js:41:5
+
+Cannot reference type `ClsType` [1] from a value position.
+
+   importer.js:41:5
+   41| new ClsType();
+           ^^^^^^^
+
+References:
+   importer.js:40:21
+   40| import type {Cls as ClsType} from './values_as_type_exports';
+                           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- importer.js:43:2
+
+Cannot cast `5` to `ClsType` because number [1] is incompatible with `Cls` [2].
+
+   importer.js:43:2
+   43| (5: ClsType);
+        ^ [1]
+
+References:
+   importer.js:43:5
+   43| (5: ClsType);
+           ^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- types_only.js:5:23
 
 Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
@@ -130,5 +158,21 @@ References:
             ^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:4:14
 
-Found 9 errors
+Cannot export the value `num` as a type.
+
+   4| export type {num};
+                   ^^^
+
+
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:7:14
+
+Cannot export the value `fun` as a type.
+
+   7| export type {fun}
+                   ^^^
+
+
+
+Found 13 errors

@@ -6,15 +6,15 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
-      "message":"Unexpected token ,"
+      "message":"Unexpected token `,`, expected the token `)`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":26}},
-      "message":"Unexpected token )"
+      "message":"Unexpected token `)`, expected the token `{`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",
@@ -106,6 +106,7 @@
                           },
                           "computed":false
                         },
+                        "typeArguments":null,
                         "arguments":[
                           {
                             "type":"Identifier",

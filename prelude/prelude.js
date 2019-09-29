@@ -1,3 +1,7 @@
+declare var undefined: void;
+
+type PropertyDescriptor<T> = any
+
 declare class Object {}
 
 declare class Function {}
@@ -17,6 +21,12 @@ declare class $ReadOnlyArray<+T> {
 }
 
 declare class Array<T> extends $ReadOnlyArray<T> {}
+
+type $ArrayLike<T> = {
+  [indexer: number]: T,
+  length: number,
+  ...
+}
 
 // Promise
 

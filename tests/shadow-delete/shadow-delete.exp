@@ -1,0 +1,63 @@
+Error ----------------------------------------------------------------------------------------------------- dir/A.js:3:2
+
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+
+   dir/A.js:3:2
+   3| (require('B'): string);
+       ^^^^^^^^^^^^
+
+References:
+   dir/node_modules/B.js:3:18
+   3| module.exports = 0;
+                       ^ [1]
+   dir/A.js:3:16
+   3| (require('B'): string);
+                     ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Delete dependency that was shadowing another dependency
+Expect shadowed dependency, now unshadowed, to trigger error
+Error ----------------------------------------------------------------------------------------------------- dir/A.js:3:2
+
+Cannot cast `require(...)` to string because boolean [1] is incompatible with string [2].
+
+   dir/A.js:3:2
+   3| (require('B'): string);
+       ^^^^^^^^^^^^
+
+References:
+   node_modules/B.js:3:18
+   3| module.exports = false;
+                       ^^^^^ [1]
+   dir/A.js:3:16
+   3| (require('B'): string);
+                     ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Undo delete to resurrect shadowing dependency
+Expect shadowing dependency to trigger error
+Error ----------------------------------------------------------------------------------------------------- dir/A.js:3:2
+
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+
+   dir/A.js:3:2
+   3| (require('B'): string);
+       ^^^^^^^^^^^^
+
+References:
+   dir/node_modules/B.js:3:18
+   3| module.exports = 0;
+                       ^ [1]
+   dir/A.js:3:16
+   3| (require('B'): string);
+                     ^^^^^^ [2]
+
+
+
+Found 1 error

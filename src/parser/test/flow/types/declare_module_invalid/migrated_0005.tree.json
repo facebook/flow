@@ -6,11 +6,11 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":29}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `(`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":35},"end":{"line":1,"column":39}},
-      "message":"Unexpected string"
+      "message":"Unexpected string, expected the token `)`"
     }
   ],
   "type":"Program",

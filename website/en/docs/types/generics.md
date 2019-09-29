@@ -149,6 +149,39 @@ interface Item<T> {
 }
 ```
 
+##### Supplying Type Arguments to Callables <a class="toc" id="toc-supplying-type-arguments-to-callables" href="#toc-supplying-type-arguments-to-callables"></a>
+
+You can give callable entities type arguments for their generics directly in the call:
+
+```js
+//@flow
+function doSomething<T>(param: T): T {
+  // ...
+  return param;
+}
+
+doSomething<number>(3);
+```
+
+You can also give generic classes type arguments directly in the `new` expression:
+```js
+//@flow
+class GenericClass<T> {}
+const c = new GenericClass<number>();
+```
+
+If you only want to specify some of the type arguments, you can use `_` to let flow infer a type for you:
+
+```js
+//@flow
+class GenericClass<T, U, V>{}
+const c = new GenericClass<_, number, _>()
+```
+
+> **Warning:** For performance purposes, we always recommend you annotate with
+concrete arguments when you can. `_` is not unsafe, but it is slower than explicitly
+specifying the type arguments.
+
 ## Behavior of generics <a class="toc" id="toc-behavior-of-generics" href="#toc-behavior-of-generics"></a>
 
 #### Generics act like variables <a class="toc" id="toc-generics-act-like-variables" href="#toc-generics-act-like-variables"></a>
@@ -157,7 +190,7 @@ Generic types work a lot like variables or function parameters except that they
 are used for types. You can use them whenever they are in scope.
 
 ```js
-function constant<T>(value: T) {
+function constant<T>(value: T): () => T {
   return function(): T {
     return value;
   };

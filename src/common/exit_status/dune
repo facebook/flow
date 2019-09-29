@@ -1,0 +1,11 @@
+(library
+  (name flow_exit_status)
+  (wrapped false)
+  (libraries
+    flow_common_utils
+    flow_logging_stubs
+    flow_version
+    hh_json ; hack
+    imported_core ; hack
+  )
+)

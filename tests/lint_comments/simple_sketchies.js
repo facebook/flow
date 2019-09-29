@@ -97,25 +97,25 @@ s(unknown_str); // possibly falsey, sketchy
 // PropExistsP sketchy checks
 
 // optional prop
-function l(o: { p?: number }) {
+function l(o: { p?: number, ... }) {
   if (o.p) {/* sketchy; suppressed */} //flowlint-line sketchy-null:off
 }
 
 // maybe prop
-function m(o: { p: ?number }) {
+function m(o: { p: ?number, ... }) {
   /* flowlint-next-line sketchy-null:off */
   if (o.p) {/* sketchy; suppressed */}
 }
 
 // union
-function n(o: { p: number|null|void }) {
+function n(o: { p: number|null|void, ... }) {
   /*flowlint sketchy-null:off*/ //Unused suppression
   // flowlint-next-line sketchy-null:error
   if (o.p) { /* sketchy */ }
   // flowlint sketchy-null:error
 }
 
-function q(o: { p: number }) {
+function q(o: { p: number, ... }) {
   if (o.p) { /* NOT sketchy */ }
 }
 

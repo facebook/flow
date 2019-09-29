@@ -1,22 +1,26 @@
-opam-version: "1.2"
+opam-version: "2.0"
 name: "flow_parser"
-version: "0.82.0"
+version: "0.108.0"
 maintainer: "flow@fb.com"
 authors: ["Flow Team <flow@fb.com>"]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"
 bug-reports: "https://github.com/facebook/flow/issues"
 license: "MIT"
 
-build: [ "sh" "-c" "cd src/parser && make ocamlfind-install" ]
-
-remove: ["ocamlfind" "remove" "flow_parser"]
+build: [ make "-C" "src/parser" "build-parser" ]
+install: [ make "-C" "src/parser" "ocamlfind-install"]
 depends: [
+  "ocaml" {>= "4.07.1"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
-  "sedlex"
+  "sedlex" {= "1.99.4"}
   "wtf8"
 ]
-available: [ocaml-version >= "4.03.0"]
-dev-repo: "https://github.com/facebook/flow.git"
+dev-repo: "git+https://github.com/facebook/flow.git"
+synopsis: "The Flow parser is a JavaScript parser written in OCaml"
+description: """
+It produces an AST that conforms to ESTree. The Flow Parser can be compiled to native code or can be compiled to JavaScript using js_of_ocaml.
+
+To find out more about Flow, check out <https://flow.org>."""

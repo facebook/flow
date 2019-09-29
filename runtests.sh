@@ -1,5 +1,6 @@
 #!/bin/bash
 
+THIS_DIR=$(cd -P "$(dirname "$(readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOURCE[0]}")")" && pwd)
 
 # Use the assert functions below to expect specific exit codes.
 
@@ -39,6 +40,17 @@ assert_errors() {
   assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_ERRS" "$@"
 }
 
+show_skipping_stats_classic() {
+  printf "\\n========Skipping stats========\\n"
+  grep -o "Merge skipped [0-9]\+ of [0-9]\+ modules" $1 | tail -n 1
+}
+
+show_skipping_stats_types_first() {
+  printf "\\n========Skipping stats========\\n"
+  grep -o "Merge skipped [0-9]\+ of [0-9]\+ modules" $1 | tail -n 1
+  grep -o "Check will skip [0-9]\+ of [0-9]\+ files" $1 | tail -n 1
+}
+
 show_help() {
   printf "Usage: runtests.sh [-hlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
@@ -66,13 +78,14 @@ show_help() {
 
 export IN_FLOW_TEST=1
 export FLOW_LOG_LEVEL=debug
+export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 
 OPTIND=1
 record=0
 saved_state=0
 verbose=0
 quiet=0
-relative="$(dirname "${BASH_SOURCE[0]}")"
+relative="$THIS_DIR"
 list_tests=0
 while getopts "b:d:f:lqrst:vh?" opt; do
   case "$opt" in
@@ -137,6 +150,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   FLOW=$(readlink -f "$FLOW")
 fi
+
+VERSION=$("$FLOW" version --semver)
+
 if [ -t 1 ]; then
   COLOR_RESET="\x1b[0m"
   COLOR_DEFAULT="\x1b[39;49;0m"
@@ -184,8 +200,11 @@ print_failure() {
     fi
 
     if [[ "$record" -eq 1 ]]; then
-      mv "${dir}${name}.out" "${dir}${name}.exp"
-      rm "$err_file"
+      # Copy .out to .exp, replacing the current version, if present, with
+      # <VERSION>, so that the .exp doesn't have to be updated on each release.
+      sed 's/'"${VERSION//./\\.}"'/<VERSION>/g' "${dir}${name}.out" > "${dir}${name}.exp"
+      rm "${dir}${name}.out"
+      rm -f "$err_file"
       rm "$diff_file"
     fi
 }
@@ -346,6 +365,7 @@ runtest() {
         # stop the server after the script exits.
         #
         all=" --all"
+        auto_start=true
         flowlib=" --no-flowlib"
         shell=""
         cmd="check"
@@ -355,12 +375,18 @@ runtest() {
         cwd=""
         start_args=""
         file_watcher="none"
+        wait_for_recheck="true"
         if [ -e ".testconfig" ]
         then
             # all
             if [ "$(awk '$1=="all:"{print $2}' .testconfig)" == "false" ]
             then
                 all=""
+            fi
+            # auto_start
+            if [ "$(awk '$1=="auto_start:"{print $2}' .testconfig)" == "false" ]
+            then
+                auto_start=false
             fi
             # cwd (current directory)
             cwd="$(awk '$1=="cwd:"{print $2}' .testconfig)"
@@ -393,6 +419,7 @@ runtest() {
             fi
             # cmd
             config_cmd="$(awk '$1=="cmd:"{$1="";print}' .testconfig)"
+            config_cmd="${config_cmd## }" # trim leading space
             if [ "$config_cmd" != "" ]
             then
                 cmd="$config_cmd"
@@ -409,6 +436,12 @@ runtest() {
             then
                 return $RUNTEST_SKIP
             fi
+
+            # wait_for_recheck
+            if [ "$(awk '$1=="wait_for_recheck:"{print $2}' .testconfig)" == "false" ]
+            then
+                wait_for_recheck="false"
+            fi
         fi
 
         if [ "$cwd" != "" ]; then
@@ -416,7 +449,7 @@ runtest() {
         fi
 
         # if .flowconfig sets no_flowlib, don't pass the cli flag
-        if grep -q "no_flowlib" .flowconfig; then
+        if [ -f .flowconfig ] && grep -q "no_flowlib" .flowconfig; then
             flowlib=""
         fi
 
@@ -429,7 +462,9 @@ runtest() {
             set -e
             # start lazy server and wait
             "$FLOW" start "$root" \
-              $all $flowlib --wait --lazy \
+              $all $flowlib --wait \
+              --wait-for-recheck "$wait_for_recheck" \
+              --lazy \
               --file-watcher "$file_watcher" \
               --flowconfig-name "$flowconfig_name" \
               --log-file "$abs_log_file" \
@@ -500,8 +535,10 @@ runtest() {
 
                 if create_saved_state "$root" "$flowconfig_name"
                 then
+                  PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                   "$FLOW" start "$root" \
                     $all $flowlib --wait \
+                    --wait-for-recheck "$wait_for_recheck" \
                     --saved-state-fetcher "local" \
                     --saved-state-no-fallback \
                     --file-watcher "$file_watcher" \
@@ -515,8 +552,9 @@ runtest() {
                 fi
               else
                 # start server and wait
+                PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                 "$FLOW" start "$root" \
-                  $all $flowlib --wait \
+                  $all $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
                   --file-watcher "$file_watcher" \
                   --log-file "$abs_log_file" \
                   --monitor-log-file "$abs_monitor_log_file" \
@@ -529,37 +567,46 @@ runtest() {
             start_flow () {
               assert_ok start_flow_unsafe "$@"
             }
-            start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
-            code=$?
-            if [ $code -ne 0 ]; then
-              # flow failed to start
-              printf "flow start exited code %s\\n" "$code" >> "$abs_out_file"
-              return_status=$RUNTEST_ERROR
-            elif [ "$shell" != "" ]; then
-              # run test script in subshell so it inherits functions
-              (
-                set -e # The script should probably use this option
-                source "$shell" "$FLOW"
-              ) 1> "$abs_out_file" 2> "$stderr_dest"
+
+            if [ $auto_start = true ]; then
+              start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
               code=$?
               if [ $code -ne 0 ]; then
-                printf "%s exited code %s\\n" "$shell" "$code" >> "$abs_out_file"
+                # flow failed to start
+                printf "flow start exited code %s\\n" "$code" >> "$abs_out_file"
                 return_status=$RUNTEST_ERROR
               fi
-            else
-            # If there's stdin, then direct that in
-            # cmd should NOT be double quoted...it may contain many commands
-            # and we do want word splitting
-                if [ "$stdin" != "" ]
-                then
-                    cmd="$FLOW $cmd < $stdin 1> $abs_out_file 2> $stderr_dest"
-                else
-                    cmd="$FLOW $cmd 1> $abs_out_file 2> $stderr_dest"
-                fi
-                eval "$cmd"
             fi
-            # stop server
-            "$FLOW" stop . 1> /dev/null 2>&1
+
+            if [ $return_status -ne $RUNTEST_ERROR ]; then
+              if [ "$shell" != "" ]; then
+                # run test script in subshell so it inherits functions
+                (
+                  set -e # The script should probably use this option
+                  export PATH="$THIS_DIR/scripts/tests_bin:$PATH"
+                  source "$shell" "$FLOW"
+                ) 1> "$abs_out_file" 2> "$stderr_dest"
+                code=$?
+                if [ $code -ne 0 ]; then
+                  printf "%s exited code %s\\n" "$shell" "$code" >> "$abs_out_file"
+                  return_status=$RUNTEST_ERROR
+                fi
+              else
+              # If there's stdin, then direct that in
+              # cmd should NOT be double quoted...it may contain many commands
+              # and we do want word splitting
+                  if [ "$stdin" != "" ]
+                  then
+                      cmd="$FLOW $cmd < $stdin 1> $abs_out_file 2> $stderr_dest"
+                  else
+                      cmd="$FLOW $cmd 1> $abs_out_file 2> $stderr_dest"
+                  fi
+                  eval "$cmd"
+              fi
+
+              # stop server, even if we didn't start it
+              "$FLOW" stop . 1> /dev/null 2>&1
+            fi
         fi
 
         if [ "$cwd" != "" ]; then
@@ -571,7 +618,15 @@ runtest() {
 
         if [ $return_status -eq $RUNTEST_SUCCESS ]; then
           pushd "$OUT_PARENT_DIR" >/dev/null
-          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file" 2>&1
+          # When diffing the .exp against the .out, replace <VERSION> in the
+          # .exp with the actual version, so the diff shows which version we
+          # were expecting, but the .exp doesn't need to be updated for each
+          # release.
+          diff -u --strip-trailing-cr \
+            --label "$exp_file" --label "$out_file" \
+            <(awk '{gsub(/<VERSION>/, "'"$VERSION"'"); print $0}' "$exp_file") \
+            "$out_file" \
+            > "$diff_file" 2>&1
           popd >/dev/null
         fi
 

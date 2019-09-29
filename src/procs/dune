@@ -1,0 +1,12 @@
+(library
+  (name flow_procs)
+  (wrapped false)
+  (libraries
+    core_kernel
+    flow_common_lwt
+    procs_procs
+    procs_bucket
+    lwt
+  )
+  (preprocess (pps lwt_ppx))
+)

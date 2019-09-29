@@ -1,7 +1,6 @@
 /**
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import type {StepEnvReadable} from '../stepEnv';
@@ -19,13 +18,13 @@ type AssertionMethod =
   | 'stderr'
   | 'sortedStdout'
   | 'exitCodes'
-  | 'ideStartAndConnect'
+  | 'lspStartAndConnect'
   | 'verifyServerStatus'
-  | 'verifyIDEStatus'
-  | 'verifyAllIDEMessagesInStep'
-  | 'waitAndVerifyAllIDEMessagesContentSinceStartOfStep'
-  | 'waitAndVerifyNoIDEMessagesSinceStartOfStep'
-  | 'ideStderr';
+  | 'verifyLSPStatus'
+  | 'verifyAllLSPMessagesInStep'
+  | 'waitAndVerifyAllLSPMessagesContentSinceStartOfStep'
+  | 'waitAndVerifyNoLSPMessagesSinceStartOfStep'
+  | 'lspStderr';
 
 export type Suggestion = {
   method: AssertionMethod,

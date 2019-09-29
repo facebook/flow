@@ -1,0 +1,8 @@
+(library
+  (name flow_server_files)
+  (wrapped false)
+  (libraries
+    opaque_digest ; hack
+    sys_utils ; hack
+  )
+)

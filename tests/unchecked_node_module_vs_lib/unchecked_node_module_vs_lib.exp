@@ -7,8 +7,8 @@ Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:119:34
-   119|   declare var INSPECT_MAX_BYTES: number;
+   <BUILTINS>/node.js:127:34
+   127|   declare var INSPECT_MAX_BYTES: number;
                                          ^^^^^^ [1]
    test.js:12:8
     12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean

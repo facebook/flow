@@ -1,0 +1,6 @@
+(env
+  (_
+    (flags (:standard -w @a-4-6-20-29-35-41-42-44-45-48-50 \ -strict-sequence))
+    (c_flags -DNO_HHVM -DNO_SQLITE3)
+  )
+)

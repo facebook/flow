@@ -56,7 +56,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- instanceof.js:85:5
 
-Cannot assign `123` to `x[0]` because an indexer property is missing in number [1].
+Cannot assign `123` to `x[0]` because an index signature declaring the expected key / value type is missing in
+number [1].
 
    instanceof.js:85:5
    85|     x[0] = 123; // error
@@ -66,6 +67,51 @@ References:
    instanceof.js:81:34
    81| function foo1(x: Array<number> | number) {
                                         ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- mixed.js:6:6
+
+Cannot cast `x` to number because `C` [1] is incompatible with number [2].
+
+   mixed.js:6:6
+   6|     (x: number);
+           ^
+
+References:
+   mixed.js:5:20
+   5|   if (x instanceof C) {
+                         ^ [1]
+   mixed.js:6:9
+   6|     (x: number);
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mixed.js:40:5
+
+Cannot get `x.p` because property `p` is missing in `Object` [1].
+
+   mixed.js:40:5
+   40|     x.p;
+           ^^^
+
+References:
+   mixed.js:39:20
+   39|   if (x instanceof Object) {
+                          ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- mixed.js:46:5
+
+Cannot call `x` because a call signature declaring the expected parameter / return type is missing in `Function` [1].
+
+   mixed.js:46:5
+   46|     x();
+           ^^^
+
+References:
+   mixed.js:45:20
+   45|   if (x instanceof Function) {
+                          ^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- objproto.js:4:4
@@ -86,4 +132,4 @@ References:
 
 
 
-Found 6 errors
+Found 9 errors

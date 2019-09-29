@@ -1,0 +1,136 @@
+Error --------------------------------------------------------------------------------------------------- apply.js:11:15
+
+Property `length` is missing in `$Iterable` [1] but exists in `$ArrayLike` [2].
+
+   apply.js:11:15
+    11| f.apply(null, it); // Error
+                      ^^
+
+References:
+   apply.js:3:11
+     3| const it: Iterable<number> = [7,8,9];
+                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:306:22
+                             v
+   306| type $ArrayLike<T> = {
+   307|   [indexer: number]: T,
+   308|   length: number,
+   309|   ...
+   310| }
+        ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- compose.js:7:6
+
+Cannot spread non-array iterable `$Iterable` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   compose.js:7:6
+   7|   ...fns1, // Error
+           ^^^^
+
+References:
+   compose.js:4:19
+   4| declare var fns1: Iterable<(number) => number>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- iterables.js:2:5
+
+Cannot spread non-array iterable `$Iterable` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   iterables.js:2:5
+   2| [...it]; // Error
+          ^^
+
+References:
+   iterables.js:1:11
+   1| const it: Iterable<number> = [7,8,9];
+                ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- iterables.js:3:6
+
+Cannot spread non-array iterable `$Iterable` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   iterables.js:3:6
+   3| f(...it); // Error
+           ^^
+
+References:
+   iterables.js:1:11
+   1| const it: Iterable<number> = [7,8,9];
+                ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ iterables.js:4:17
+
+Cannot spread non-array iterable `$Iterable` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   iterables.js:4:17
+   4| f.bind(null, ...it); // Error
+                      ^^
+
+References:
+   iterables.js:1:11
+   1| const it: Iterable<number> = [7,8,9];
+                ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ maps.js:4:6
+
+Cannot spread non-array iterable `Map` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   maps.js:4:6
+   4|   ...map1, // Error
+           ^^^^
+
+References:
+   maps.js:1:14
+   1| const map1 = new Map();
+                   ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ maps.js:5:6
+
+Cannot spread non-array iterable `Map` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   maps.js:5:6
+   5|   ...map2 // Error
+           ^^^^
+
+References:
+   maps.js:2:14
+   2| const map2 = new Map();
+                   ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ maps.js:9:6
+
+Cannot spread non-array iterable `Map` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   maps.js:9:6
+   9|   ...map1, // Error
+           ^^^^
+
+References:
+   maps.js:1:14
+   1| const map1 = new Map();
+                   ^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- maps.js:10:6
+
+Cannot spread non-array iterable `Map` [1]. Use `...Array.from(<iterable>)` instead. (`non-array-spread`)
+
+   maps.js:10:6
+   10|   ...map2 // Error
+            ^^^^
+
+References:
+   maps.js:2:14
+    2| const map2 = new Map();
+                    ^^^^^^^^^ [1]
+
+
+
+Found 9 errors

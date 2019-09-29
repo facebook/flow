@@ -8,7 +8,7 @@ Unexpected token ILLEGAL
 
 Error ---------------------------------------------------------------------------------------- incorrect_token_lt.js:3:4
 
-Unexpected token <
+Unexpected token `<`, expected an identifier
 
    3| <><</>; // Error: `<` is not a valid token here.
          ^

@@ -1,0 +1,10 @@
+
+Server should start in verbose mode
+No errors!
+
+A self-subtyping check in a downstream file for an object defined upstream should go through a fast path
+ObjT ~> ObjT fast path: yes
+
+An upstream edit that does not touch that object should preserve the fast path
+No errors!
+ObjT ~> ObjT fast path: yes

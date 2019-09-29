@@ -120,9 +120,9 @@ Cannot add `"foo"` and `undefined` because undefined [1] is incompatible with st
            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   Arith.js:60:13
+   60| str("foo" + undefined); // error
+                   ^^^^^^^^^ [1]
    Arith.js:60:5
    60| str("foo" + undefined); // error
            ^^^^^ [2]
@@ -137,9 +137,9 @@ Cannot add `undefined` and `"foo"` because undefined [1] is incompatible with st
            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   Arith.js:61:5
+   61| str(undefined + "foo"); // error
+           ^^^^^^^^^ [1]
    Arith.js:61:17
    61| str(undefined + "foo"); // error
                        ^^^^^ [2]
@@ -411,7 +411,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:40
 
-Cannot add `a` and `b` because `A` [1] could either behave like a string or like a number.
+Cannot add `a` and `b` because:
+ - `A` [1] could either behave like a string or like a number.
+ - `B` [2] could either behave like a string or like a number.
 
    generic.js:4:40
    4| function f<A,B>(a: A, b: B): A {return a + b; } // error
@@ -421,11 +423,16 @@ References:
    generic.js:4:20
    4| function f<A,B>(a: A, b: B): A {return a + b; } // error
                          ^ [1]
+   generic.js:4:26
+   4| function f<A,B>(a: A, b: B): A {return a + b; } // error
+                               ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:5:40
 
-Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number.
+Cannot add `b` and `a` because:
+ - `B` [1] could either behave like a string or like a number.
+ - `A` [2] could either behave like a string or like a number.
 
    generic.js:5:40
    5| function f<A,B>(a: A, b: B): A {return b + a; } // error
@@ -435,11 +442,16 @@ References:
    generic.js:5:26
    5| function f<A,B>(a: A, b: B): A {return b + a; } // error
                                ^ [1]
+   generic.js:5:20
+   5| function f<A,B>(a: A, b: B): A {return b + a; } // error
+                         ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:6:40
 
-Cannot add `a` and `b` because `A` [1] could either behave like a string or like a number.
+Cannot add `a` and `b` because:
+ - `A` [1] could either behave like a string or like a number.
+ - `B` [2] could either behave like a string or like a number.
 
    generic.js:6:40
    6| function f<A,B>(a: A, b: B): B {return a + b; } // error
@@ -449,11 +461,16 @@ References:
    generic.js:6:20
    6| function f<A,B>(a: A, b: B): B {return a + b; } // error
                          ^ [1]
+   generic.js:6:26
+   6| function f<A,B>(a: A, b: B): B {return a + b; } // error
+                               ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:7:40
 
-Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number.
+Cannot add `b` and `a` because:
+ - `B` [1] could either behave like a string or like a number.
+ - `A` [2] could either behave like a string or like a number.
 
    generic.js:7:40
    7| function f<A,B>(a: A, b: B): B {return b + a; } // error
@@ -463,6 +480,9 @@ References:
    generic.js:7:26
    7| function f<A,B>(a: A, b: B): B {return b + a; } // error
                                ^ [1]
+   generic.js:7:20
+   7| function f<A,B>(a: A, b: B): B {return b + a; } // error
+                         ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:5:5
@@ -658,12 +678,9 @@ Cannot compare undefined [1] to null [2].
 
    relational.js:18:2
    18| (undefined < null); // error
-        ^^^^^^^^^
+        ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
    relational.js:18:14
    18| (undefined < null); // error
                     ^^^^ [2]
@@ -678,24 +695,24 @@ Cannot compare null [1] to undefined [2].
         ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [2]
+   relational.js:19:9
+   19| (null < undefined); // error
+               ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- relational.js:20:2
 
-Cannot compare undefined [1] to undefined [1].
+Cannot compare undefined [1] to undefined [2].
 
    relational.js:20:2
    20| (undefined < undefined); // error
-        ^^^^^^^^^
+        ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   relational.js:20:14
+   20| (undefined < undefined); // error
+                    ^^^^^^^^^ [2]
 
 
 
-Found 48 errors
+Found 52 errors

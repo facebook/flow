@@ -1,0 +1,95 @@
+
+Server should start in fs lazy mode and in types-first mode
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 0/11 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Editing a file should cause checking its code against computed types of dependencies
+Error ----------------------------------------------------------------------------------------------------- test.js:3:19
+
+Cannot assign `require(...)` to `n` because number [1] is incompatible with string [2].
+
+   test.js:3:19
+   3| const n: string = require('./import-value1'); // error: number ~/~> string
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   import-value1.js:3:18
+   3| module.exports = 0;
+                       ^ [1]
+   test.js:3:10
+   3| const n: string = require('./import-value1'); // error: number ~/~> string
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:2
+
+Cannot cast `n` to `T` because string [1] is incompatible with number [2].
+
+   test.js:10:2
+   10| (n: T); // error: string ~/~> number
+        ^
+
+References:
+   test.js:3:10
+    3| const n: string = require('./import-value1'); // error: number ~/~> string
+                ^^^^^^ [1]
+   test.js:10:5
+   10| (n: T); // error: string ~/~> number
+           ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:2
+
+Cannot cast `f(...)` to `S` because string [1] is incompatible with number [2].
+
+   test.js:11:2
+   11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
+        ^^^^^
+
+References:
+   import-value2.js:3:31
+    3| export function f(x: number): string {
+                                     ^^^^^^ [1]
+   test.js:11:9
+   11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:4
+
+Cannot call `f` with empty string bound to `x` because string [1] is incompatible with number [2].
+
+   test.js:11:4
+   11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
+          ^^ [1]
+
+References:
+   import-value2.js:3:22
+    3| export function f(x: number): string {
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`.
+
+   test.js:12:2
+   12| (o: O); // error: number (property x) <~/~> string
+        ^
+
+References:
+   import-value3.js:5:6
+    5|   x: 0,
+            ^ [1]
+   import-type5.js:6:6
+    6|   x: string;
+            ^^^^^^ [2]
+
+
+
+Found 5 errors
+
+The Flow server is currently in filesystem lazy mode and is only checking 9/11 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

@@ -144,6 +144,14 @@ References:
                               ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- annot.js:25:31
+
+Unexpected prototype after call property.
+
+   25| type O_callable = { (): void, __proto__: {} }; // error: unexpected proto after call
+                                     ^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- annot.js:27:2
 
 Cannot get `o_callable.q` because property `q` is missing in `O_callable` [1].
@@ -160,18 +168,15 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:28:2
 
-Cannot cast `o_callable.__proto__` to empty because object type [1] is incompatible with empty [2].
+Cannot cast `o_callable.__proto__` to empty because function prototype [1] is incompatible with empty [2].
 
    annot.js:28:2
-   28| (o_callable.__proto__: empty); // error: object type ~> empty
-        ^^^^^^^^^^^^^^^^^^^^
+   28| (o_callable.__proto__: empty); // error: function proto ~> empty
+        ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   annot.js:25:42
-   25| type O_callable = { (): void, __proto__: {} };
-                                                ^^ [1]
    annot.js:28:24
-   28| (o_callable.__proto__: empty); // error: object type ~> empty
+   28| (o_callable.__proto__: empty); // error: function proto ~> empty
                               ^^^^^ [2]
 
 
@@ -215,6 +220,14 @@ Cannot use number [1] as a prototype. Expected an object or null.
 
    40| type O_invalid = { __proto__: number }; // error: number is not a valid proto
                                      ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- annot.js:44:3
+
+Multiple prototypes specified.
+
+   44|   __proto__: {}, // error: multiple protos
+         ^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- literal.js:2:2
@@ -445,4 +458,4 @@ References:
 
 
 
-Found 31 errors
+Found 33 errors

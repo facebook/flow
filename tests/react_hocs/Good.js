@@ -11,7 +11,7 @@ type Props = {
 
 const Good = (props: Props) => null;
 
-export default compose(
+export default (compose(
   mapProps(({ foo, buz, qux }) => ({
     foo: foo.toString(),
     buz: buz * 2,
@@ -20,4 +20,4 @@ export default compose(
   withProps(({ buz }) => ({
     bar: buz,
   })),
-)(Good);
+)(Good): React.ComponentType<{foo: number, buz: number, qux: number}>);

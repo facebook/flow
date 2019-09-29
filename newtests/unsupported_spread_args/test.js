@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -167,7 +166,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:17
            17: Object.assign({}, ...[1])
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ number [1] is not an object.
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ Incorrect arguments passed to call of method \`assign\` because number [1] is not an object.
             References:
              17: Object.assign({}, ...[1])
                                        ^ [1]

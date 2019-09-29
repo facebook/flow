@@ -277,7 +277,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
 
-Cannot get `y1?.["baz"]["foo"]` because an indexer property is missing in null or undefined [1].
+Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    computed_properties.js:22:2
    22| (y1?.["baz"]["foo"]: empty);
@@ -323,7 +324,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
 
-Cannot get `y2?.["baz"]["foo"]` because an indexer property is missing in null or undefined [1].
+Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    computed_properties.js:23:2
    23| (y2?.["baz"]["foo"]: empty);
@@ -337,7 +339,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
 
-Cannot get `y1["bar"]` because an indexer property is missing in null or undefined [1].
+Cannot get `y1["bar"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    computed_properties.js:25:2
    25| (y1["bar"]?.["foo"]: empty);
@@ -415,7 +418,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
 
-Cannot get `y1["baz"]` because an indexer property is missing in null or undefined [1].
+Cannot get `y1["baz"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    computed_properties.js:27:2
    27| (y1["baz"]?.["foo"]: empty);
@@ -490,7 +494,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:30:2
 
-Cannot get `y1?.["bar"]["foo"]` because an indexer property is missing in null or undefined [1].
+Cannot get `y1?.["bar"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    computed_properties.js:30:2
    30| ((y1?.["bar"])["foo"]: empty);
@@ -554,8 +559,8 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
 
 Cannot get `y1?.["baz"]["foo"]` because:
- - an indexer property is missing in null or undefined [1].
- - an indexer property is missing in null or undefined [2].
+ - an index signature declaring the expected key / value type is missing in null or undefined [1].
+ - an index signature declaring the expected key / value type is missing in null or undefined [2].
 
    computed_properties.js:32:2
    32| ((y1?.["baz"])["foo"]: empty);
@@ -589,7 +594,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:33:2
 
-Cannot get `y2?.["baz"]["foo"]` because an indexer property is missing in null or undefined [1].
+Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    computed_properties.js:33:2
    33| ((y2?.["baz"])["foo"]: empty);
@@ -1584,5 +1590,22 @@ References:
          ^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- typeof.js:6:25
 
-Found 121 errors
+undefined [1] is incompatible with read-only array type [2].
+
+   typeof.js:6:25
+   6|   type T = $ElementType<typeof y, 0>;
+                              ^^^^^^^^
+
+References:
+   typeof.js:4:17
+   4|   const x: {a?: {b: $ReadOnlyArray<{c: number}>}} = {};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:4:21
+   4|   const x: {a?: {b: $ReadOnlyArray<{c: number}>}} = {};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 122 errors

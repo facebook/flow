@@ -1,0 +1,15 @@
+(library
+  (name flow_parsing)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_monitor_rpc
+    flow_parser_utils
+    flow_procs
+    flow_shared_mem
+    flow_state_heaps_parsing
+    flow_state_readers
+    xx
+  )
+  (preprocess (pps lwt_ppx))
+)

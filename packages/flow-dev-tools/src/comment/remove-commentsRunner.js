@@ -56,6 +56,77 @@ async function removeUnusedErrorSuppressions(
   await writeFile(filename, contents);
 }
 
+const edible = /[\t ]/;
+/* This is the most confusing part of this command. A simple version of this
+ * code would just remove exact characters of a comment. This might leave
+ * extra whitespace and blank lines. So this code tries to expand the range
+ * we remove to cover the following cases
+ *
+ * /* Comment with nothing before or after it * /
+ * var foo; /* Comment with something before it * /
+ * /* Comment with something after it * / var foo;
+ * var foo; /* Comment with something before and after it * / var bar;
+ *
+ * The TL;DR is that we only want to expand the range and remove the newline
+ * in the case where there is nothing before or after it
+ */
+function expandComment(
+  contents: string,
+  startOffset: number,
+  endOffset: number,
+  context: Context,
+) {
+  const length = contents.length;
+
+  // ranges are [start, end). we're interested in the values of the characters
+  // within the range, so for origEnd, we subtract 1 from the end offset to
+  // make it inclusive.
+  let origStart = startOffset;
+  let origEnd = endOffset - 1;
+
+  if (context === JSX && contents[origStart-1] === '{' && contents[origEnd+1] === '}') {
+    origStart--;
+    origEnd++;
+  }
+
+  let start = origStart;
+  let end = origEnd;
+
+  while (start > 0) {
+    // Eat whitespace towards the start of the line
+    if (contents[start-1].match(edible)) {
+      start--;
+    } else if (contents[start-1] === "\n") {
+      // If we make it to the beginning of the line, awesome! Let's try and
+      // expand the end too!
+      while (end < length - 1) {
+        // Eat whitespace towards the end of the line
+        if (contents[end+1].match(edible)) {
+          end++;
+        } else if (contents[end+1] === "\n") {
+          // If we make it to both the beginning and the end of the line,
+          // then we can totally remove a newline!
+          end++;
+          break;
+        } else {
+          // Otherwise we can't, undo the expansion
+          start = origStart;
+          end = origEnd;
+          break;
+        }
+      }
+      break;
+    } else {
+      // If we hit something else, then undo the start expansion
+      start = origStart;
+      break;
+    }
+  }
+
+  // as above, ranges are [X, Y) but in this function, `end` is inclusive. so
+  // add 1 to make it exclusive again.
+  return [start, end + 1];
+}
 // Exported for testing
 export async function removeUnusedErrorSuppressionsFromText(
   contents: string,
@@ -69,20 +140,6 @@ export async function removeUnusedErrorSuppressionsFromText(
 
   const ast = await getAst(contents, flowBinPath)
 
-  /* This is the most confusing part of this command. A simple version of this
-   * code would just remove exact characters of a comment. This might leave
-   * extra whitespace and blank lines. So this code tries to expand the range
-   * we remove to cover the following cases
-   *
-   * /* Comment with nothing before or after it * /
-   * var foo; /* Comment with something before it * /
-   * /* Comment with something after it * / var foo;
-   * var foo; /* Comment with something before and after it * / var bar;
-   *
-   * The TL;DR is that we only want to expand the range and remove the newline
-   * in the case where there is nothing before or after it
-   */
-  const edible = /[\t ]/;
   for (const error of errors) {
     const path = getPathToLoc(error, ast);
     let context: Context;
@@ -92,49 +149,12 @@ export async function removeUnusedErrorSuppressionsFromText(
       [context] = getContext(error, path);
     }
 
-    const length = contents.length;
-    let origStart = error.start.offset;
-    let origEnd = error.end.offset - 1;
+    const origStart = error.start.offset;
+    const origEnd = error.end.offset;
 
-    if (context === JSX && contents[origStart-1] === '{' && contents[origEnd+1] === '}') {
-      origStart--;
-      origEnd++;
-    }
-
-    let start = origStart;
-    let end = origEnd;
-
-    while (start > 0) {
-      // Eat whitespace towards the start of the line
-      if (contents[start-1].match(edible)) {
-        start--;
-      } else if (contents[start-1] === "\n") {
-        // If we make it to the beginning of the line, awesome! Let's try and
-        // expand the end too!
-        while (end < length - 1) {
-          // Eat whitespace towards the end of the line
-          if (contents[end+1].match(edible)) {
-            end++;
-          } else if (contents[end+1] === "\n") {
-            // If we make it to both the beginning and the end of the line,
-            // then we can totally remove a newline!
-            end++;
-            break;
-          } else {
-            // Otherwise we can't, undo the expansion
-            start = origStart;
-            end = origEnd;
-            break;
-          }
-        }
-        break;
-      } else {
-        // If we hit something else, then undo the start expansion
-        start = origStart;
-        break;
-      }
-    }
-    contents = contents.slice(0, start) + contents.slice(end+1);
+    // remove the comment and surrounding whitespace
+    let [start, end] = expandComment(contents, origStart, origEnd, context);
+    contents = contents.slice(0, start) + contents.slice(end);
   }
   return contents;
 }

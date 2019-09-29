@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -34,7 +33,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dRWA);
-                ^^^^ Cannot cast \`droA\` to \`dRWA\` because an indexer property is read-only in \`dROA\` [1] but writable in \`dRWA\` [2].
+                ^^^^ Cannot cast \`droA\` to \`dRWA\` because an index signature declaring the expected key / value type is read-only in \`dROA\` [1] but writable in \`dRWA\` [2].
             References:
              34:     declare var droA: dROA;
                                        ^^^^ [1]
@@ -62,7 +61,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dRWA);
-                ^^^^ Cannot cast \`dwoA\` to \`dRWA\` because an indexer property is write-only in \`dWOA\` [1] but readable in \`dRWA\` [2].
+                ^^^^ Cannot cast \`dwoA\` to \`dRWA\` because an index signature declaring the expected key / value type is write-only in \`dWOA\` [1] but readable in \`dRWA\` [2].
             References:
              35:     declare var dwoA: dWOA;
                                        ^^^^ [1]
@@ -123,7 +122,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:68
            68: (droB: dRWA);
-                ^^^^ Cannot cast \`droB\` to \`dRWA\` because an indexer property is read-only in \`dROB\` [1] but writable in \`dRWA\` [2].
+                ^^^^ Cannot cast \`droB\` to \`dRWA\` because an index signature declaring the expected key / value type is read-only in \`dROB\` [1] but writable in \`dRWA\` [2].
             References:
              38:     declare var droB: dROB;
                                        ^^^^ [1]
@@ -160,7 +159,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:72
            72: (dwoB: dRWA);
-                ^^^^ Cannot cast \`dwoB\` to \`dRWA\` because an indexer property is write-only in \`dWOB\` [1] but readable in \`dRWA\` [2].
+                ^^^^ Cannot cast \`dwoB\` to \`dRWA\` because an index signature declaring the expected key / value type is write-only in \`dWOB\` [1] but readable in \`dRWA\` [2].
             References:
              39:     declare var dwoB: dWOB;
                                        ^^^^ [1]
@@ -211,7 +210,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dROA);
-                ^^^^ Cannot cast \`dwoA\` to \`dROA\` because an indexer property is write-only in \`dWOA\` [1] but read-only in \`dROA\` [2].
+                ^^^^ Cannot cast \`dwoA\` to \`dROA\` because an index signature declaring the expected key / value type is write-only in \`dWOA\` [1] but read-only in \`dROA\` [2].
             References:
              35:     declare var dwoA: dWOA;
                                        ^^^^ [1]
@@ -251,7 +250,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:72
            72: (dwoB: dROA);
-                ^^^^ Cannot cast \`dwoB\` to \`dROA\` because an indexer property is write-only in \`dWOB\` [1] but read-only in \`dROA\` [2].
+                ^^^^ Cannot cast \`dwoB\` to \`dROA\` because an index signature declaring the expected key / value type is write-only in \`dWOB\` [1] but read-only in \`dROA\` [2].
             References:
              39:     declare var dwoB: dWOB;
                                        ^^^^ [1]
@@ -289,7 +288,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dWOA);
-                ^^^^ Cannot cast \`droA\` to \`dWOA\` because an indexer property is read-only in \`dROA\` [1] but write-only in \`dWOA\` [2].
+                ^^^^ Cannot cast \`droA\` to \`dWOA\` because an index signature declaring the expected key / value type is read-only in \`dROA\` [1] but write-only in \`dWOA\` [2].
             References:
              34:     declare var droA: dROA;
                                        ^^^^ [1]
@@ -353,7 +352,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:68
            68: (droB: dWOA);
-                ^^^^ Cannot cast \`droB\` to \`dWOA\` because an indexer property is read-only in \`dROB\` [1] but write-only in \`dWOA\` [2].
+                ^^^^ Cannot cast \`droB\` to \`dWOA\` because an index signature declaring the expected key / value type is read-only in \`dROB\` [1] but write-only in \`dWOA\` [2].
             References:
              38:     declare var droB: dROB;
                                        ^^^^ [1]
@@ -476,7 +475,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dRWB);
-                ^^^^ Cannot cast \`droA\` to \`dRWB\` because an indexer property is read-only in \`dROA\` [1] but writable in \`dRWB\` [2].
+                ^^^^ Cannot cast \`droA\` to \`dRWB\` because an index signature declaring the expected key / value type is read-only in \`dROA\` [1] but writable in \`dRWB\` [2].
             References:
              34:     declare var droA: dROA;
                                        ^^^^ [1]
@@ -513,7 +512,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dRWB);
-                ^^^^ Cannot cast \`dwoA\` to \`dRWB\` because an indexer property is write-only in \`dWOA\` [1] but readable in \`dRWB\` [2].
+                ^^^^ Cannot cast \`dwoA\` to \`dRWB\` because an index signature declaring the expected key / value type is write-only in \`dWOA\` [1] but readable in \`dRWB\` [2].
             References:
              35:     declare var dwoA: dWOA;
                                        ^^^^ [1]
@@ -627,7 +626,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (dwoA: dROB);
-                ^^^^ Cannot cast \`dwoA\` to \`dROB\` because an indexer property is write-only in \`dWOA\` [1] but read-only in \`dROB\` [2].
+                ^^^^ Cannot cast \`dwoA\` to \`dROB\` because an index signature declaring the expected key / value type is write-only in \`dWOA\` [1] but read-only in \`dROB\` [2].
             References:
              35:     declare var dwoA: dWOA;
                                        ^^^^ [1]
@@ -665,7 +664,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (droA: dWOB);
-                ^^^^ Cannot cast \`droA\` to \`dWOB\` because an indexer property is read-only in \`dROA\` [1] but write-only in \`dWOB\` [2].
+                ^^^^ Cannot cast \`droA\` to \`dWOB\` because an index signature declaring the expected key / value type is read-only in \`dROA\` [1] but write-only in \`dWOB\` [2].
             References:
              34:     declare var droA: dROA;
                                        ^^^^ [1]

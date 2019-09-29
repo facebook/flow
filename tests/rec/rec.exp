@@ -1,3 +1,25 @@
+Error ----------------------------------------------------------------------------------------------- eval_union.js:9:18
+
+Cannot instantiate array type because:
+ - Either null or undefined [1] is incompatible with empty [2].
+ - Or null or undefined [1] is incompatible with number [3].
+
+   eval_union.js:9:18
+   9| arr.forEach(x => acc.push(x.f));
+                       ^^^
+
+References:
+   eval_union.js:7:30
+   7| declare var arr: Array<{ +f: ?number }>;
+                                   ^^^^^^^ [1]
+   eval_union.js:9:27
+   9| arr.forEach(x => acc.push(x.f));
+                                ^^^ [2]
+   eval_union.js:7:31
+   7| declare var arr: Array<{ +f: ?number }>;
+                                    ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:6:17
 
 Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
@@ -7,11 +29,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:493:11
-   493| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -24,11 +46,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:493:11
-   493| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -41,11 +63,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:493:11
-   493| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -58,11 +80,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:493:11
-   493| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -97,10 +119,7 @@ Cannot return function because:
  - property `v` is missing in `C` [1] but exists in `B` [3] in the first argument.
  - string literal `a` [4] is incompatible with string literal `b` [5] in property `kind` of the first argument.
  - string literal `a` [4] is incompatible with string literal `c` [6] in property `kind` of the first argument.
- - string literal `b` [5] is incompatible with string literal `a` [4] in property `kind` of the first argument.
  - string literal `b` [5] is incompatible with string literal `c` [6] in property `kind` of the first argument.
- - string literal `c` [6] is incompatible with string literal `a` [4] in property `kind` of the first argument.
- - string literal `c` [6] is incompatible with string literal `b` [5] in property `kind` of the first argument.
 
    issue6155.js:15:12
    15|     return (type) => cases[type.kind](type);
@@ -217,7 +236,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test3.js:13:10
 
-Cannot return `x` because a callable signature is missing in `Q` [1] but exists in `P` [2] in the return value.
+Cannot return `x` because a call signature declaring the expected parameter / return type is missing in `Q` [1] but
+exists in `P` [2] in the return value.
 
    test3.js:13:10
    13|   return x; // terminate despite expanding types, error
@@ -230,6 +250,40 @@ References:
    test3.js:12:35
    12| function bar(x: P<number>): () => P<number> {
                                          ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test9.js:13:2
+
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`.
+
+   test9.js:13:2
+   13| (o: O);
+        ^
+
+References:
+   test9.js:4:6
+    4|   x: number,
+            ^^^^^^ [1]
+   test9.js:9:6
+    9|   x: string;
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test9.js:14:2
+
+Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `x`.
+
+   test9.js:14:2
+   14| (o.y: O);
+        ^^^
+
+References:
+   test9.js:4:6
+    4|   x: number,
+            ^^^^^^ [1]
+   test9.js:9:6
+    9|   x: string;
+            ^^^^^^ [2]
 
 
 

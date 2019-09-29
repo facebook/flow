@@ -35,10 +35,10 @@ function UnwrappedFun(props: {foo: number, bar: number}) {
 myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
 myHOC(function Empty(props: {foo: string}) {}); // Error
 
-const Wrapped = myHOC(Unwrapped);
+const Wrapped: React$ComponentType<{foo: number}> = myHOC(Unwrapped);
 const WrappedFun = myHOC(UnwrappedFun);
 
-<Wrapped />; // Error: `foo` is required.
+<Wrapped nonsense="what" />; // Error: `foo` is required.
 <Wrapped foo={1} />; // OK
 <WrappedFun />; // Error: `foo` is required.
 <WrappedFun foo={1}/>; // OK

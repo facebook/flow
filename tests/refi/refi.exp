@@ -475,5 +475,47 @@ References:
                                    ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ undeclared.js:7:7
 
-Found 32 errors
+Cannot use variable `c` [1] because the declaration either comes later or was skipped.
+
+   undeclared.js:7:7
+    7|   if (c != null) { // error: declaration comes later
+             ^
+
+References:
+   undeclared.js:10:9
+   10|   const c: ?number = 0;
+               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ undeclared.js:7:7
+
+Cannot use variable `c` [1] because the declaration either comes later or was skipped.
+
+   undeclared.js:7:7
+    7|   if (c != null) { // error: declaration comes later
+             ^^^^^^^^^
+
+References:
+   undeclared.js:10:9
+   10|   const c: ?number = 0;
+               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ undeclared.js:8:5
+
+Cannot use variable `c` [1] because the declaration either comes later or was skipped.
+
+   undeclared.js:8:5
+    8|     c; // error: declaration comes later
+           ^
+
+References:
+   undeclared.js:10:9
+   10|   const c: ?number = 0;
+               ^ [1]
+
+
+
+Found 35 errors

@@ -10,6 +10,7 @@ module Buffer = Buffer
 module Callback = Callback
 module Char = Char
 module Complex = Complex
+
 (* module Digest = Digest *)
 module Filename = Filename
 module Format = Format
@@ -35,7 +36,6 @@ module Queue = Queue
 module Random = Random
 module Scanf = Scanf
 module Set = Set
-module Sort = Sort
 module Stack = Stack
 module StdLabels = StdLabels
 module Stream = Stream
@@ -43,5 +43,4 @@ module String = String
 module StringLabels = StringLabels
 module Sys = Sys
 module Weak = Weak
-
 include Pervasives

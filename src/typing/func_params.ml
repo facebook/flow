@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,90 +14,56 @@
    body of a function. These may not be the same due to default values and
    destructuring. *)
 
-module Flow = Flow_js
+include Func_params_intf
 
-open Reason
-open Type
-open Destructuring
+module Make (C : Config) = struct
+  type 'T ast = 'T C.ast
 
-type param = string option * Type.t
-type rest = string option * Loc.t * Type.t
-type default = (Loc.t, Loc.t) Flow_ast.Expression.t Default.t
-type binding = string * Loc.t * Type.t * default option
+  type 'T param_ast = 'T C.param_ast
 
-type t = {
-  params_rev: param list;
-  rest: rest option;
-  bindings_rev: binding list;
-}
+  type 'T rest_ast = 'T C.rest_ast
 
-let empty = {
-  params_rev = [];
-  rest = None;
-  bindings_rev = [];
-}
+  type param = C.param
 
-let add_simple cx ~optional ?default loc id t x =
-  let param_t = if optional || default <> None then Type.optional t else t in
-  let bound_t = if default <> None then t else param_t in
-  Type_table.set (Context.type_table cx) loc t;
-  let name = Option.map id ~f:(fun (id_loc, name) ->
-    let id_info = name, bound_t, Type_table.Other in
-    Type_table.set_info id_loc id_info (Context.type_table cx);
-    name
-  ) in
-  let params_rev = (name, param_t) :: x.params_rev in
-  let bindings_rev = match id with
-  | None -> x.bindings_rev
-  | Some (_, name) ->
-    let default = Option.map default Default.expr in
-    (name, loc, bound_t, default) :: x.bindings_rev
-  in
-  { x with params_rev; bindings_rev }
+  type rest = C.rest
 
-let add_complex cx ~expr ?default patt t x =
-  let default = Option.map default Default.expr in
-  let bindings_rev = ref x.bindings_rev in
-  let patt = destructuring cx ~expr t None default patt ~f:(fun ~use_op:_ loc name default t ->
-    let t = match type_of_pattern patt with
-    | None -> t
-    | Some _ ->
-      let reason = mk_reason (RIdentifier name) loc in
-      EvalT (t, DestructuringT (reason, Become), mk_id())
-    in
-    Type_table.set (Context.type_table cx) loc t;
-    bindings_rev := (name, loc, t, default) :: !bindings_rev
-  ) in
-  let t = if default <> None then Type.optional t else t in
-  let params_rev = (None, t) :: x.params_rev in
-  let bindings_rev = !bindings_rev in
-  { x with params_rev; bindings_rev }, patt
+  type reconstruct =
+    (ALoc.t * Type.t) param_ast list ->
+    (ALoc.t * Type.t) rest_ast option ->
+    (ALoc.t * Type.t) ast option
 
-let add_rest cx loc id t x =
-  let name = Option.map id ~f:(fun (id_loc, name) ->
-    let id_info = name, t, Type_table.Other in
-    Type_table.set_info id_loc id_info (Context.type_table cx);
-    name
-  ) in
-  let rest = Some (name, loc, t) in
-  let bindings_rev = match id with
-  | None -> x.bindings_rev
-  | Some (_, name) -> (name, loc, t, None) :: x.bindings_rev
-  in
-  { x with rest; bindings_rev }
+  type t = {
+    params_rev: param list;
+    rest: rest option;
+    reconstruct: reconstruct;
+  }
 
-let value {params_rev; _} = List.rev params_rev
+  let empty reconstruct = { params_rev = []; rest = None; reconstruct }
 
-let rest {rest; _} = rest
+  let add_param p x = { x with params_rev = p :: x.params_rev }
 
-let iter f {bindings_rev; _} = List.iter f (List.rev bindings_rev)
+  let add_rest r x = { x with rest = Some r }
 
-let subst_param cx map (name, t) = (name, Flow.subst cx map t)
-let subst_rest cx map (name, loc, t) = (name, loc, Flow.subst cx map t)
-let subst_binding cx map (name, loc, t, default) = (name, loc, Flow.subst cx map t, default)
+  let value { params_rev; _ } =
+    List.fold_left
+      (fun acc p ->
+        let t = C.param_type p in
+        t :: acc)
+      []
+      params_rev
 
-let subst cx map { params_rev; rest; bindings_rev } = {
-  params_rev = List.map (subst_param cx map) params_rev;
-  rest = Option.map ~f:(subst_rest cx map) rest;
-  bindings_rev = List.map (subst_binding cx map) bindings_rev;
-}
+  let rest { rest; _ } = Option.map ~f:C.rest_type rest
+
+  let subst cx map { params_rev; rest; reconstruct } =
+    {
+      params_rev = Core_list.map ~f:(C.subst_param cx map) params_rev;
+      rest = Option.map ~f:(C.subst_rest cx map) rest;
+      reconstruct;
+    }
+
+  let eval cx { params_rev; rest; reconstruct } =
+    let params = List.rev params_rev in
+    let param_tasts_rev = List.rev_map (C.eval_param cx) params in
+    let rest_tast = Option.map ~f:(C.eval_rest cx) rest in
+    reconstruct (List.rev param_tasts_rev) rest_tast
+end

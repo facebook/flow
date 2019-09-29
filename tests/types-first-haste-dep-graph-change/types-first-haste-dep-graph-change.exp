@@ -1,0 +1,93 @@
+
+Server should start in types-first mode
+
+Error should refer to test/node_modules/foo.js
+Error ------------------------------------------------------------------------------------------------------ foo2.js:1:1
+
+Duplicate module provider for `foo`. Change either this module provider or the current module provider [1].
+
+   foo2.js:1:1
+   1| // @flow
+      
+
+References:
+   foo1.js:1:1
+   1| // @flow
+       [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:2
+
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2].
+
+   test.js:5:2
+   5| (foo(): empty);
+       ^^^^^
+
+References:
+   foo1.js:4:24
+   4| export function foo(): number { return 0; }
+                             ^^^^^^ [1]
+   test.js:5:9
+   5| (foo(): empty);
+              ^^^^^ [2]
+
+
+
+Found 2 errors
+
+Removing foo1.js should make error refer to foo2.js
+Error ------------------------------------------------------------------------------------------------------ test.js:5:2
+
+Cannot cast `foo()` to empty because string [1] is incompatible with empty [2].
+
+   test.js:5:2
+   5| (foo(): empty);
+       ^^^^^
+
+References:
+   foo2.js:4:24
+   4| export function foo(): string { return ''; }
+                             ^^^^^^ [1]
+   test.js:5:9
+   5| (foo(): empty);
+              ^^^^^ [2]
+
+
+
+Found 1 error
+
+Adding foo1.js should make error refer to foo1.js
+Error ------------------------------------------------------------------------------------------------------ foo2.js:1:1
+
+Duplicate module provider for `foo`. Change either this module provider or the current module provider [1].
+
+   foo2.js:1:1
+   1| // @flow
+      
+
+References:
+   foo1.js:1:1
+   1| // @flow
+       [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:2
+
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2].
+
+   test.js:5:2
+   5| (foo(): empty);
+       ^^^^^
+
+References:
+   foo1.js:4:24
+   4| export function foo(): number { return 0; }
+                             ^^^^^^ [1]
+   test.js:5:9
+   5| (foo(): empty);
+              ^^^^^ [2]
+
+
+
+Found 2 errors

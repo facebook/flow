@@ -1,29 +1,28 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
   ({
-    ideStartAndConnect,
-    ideNotification,
-    ideRequestAndWaitUntilResponse,
+    lspStartAndConnect,
+    lspNotification,
+    lspRequestAndWaitUntilResponse,
     addFile,
     addFiles,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('invalid_method', [
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideNotification('barfoo', {})
-        .waitUntilIDEMessage(2000, 'barfoo')
-        .verifyAllIDEMessagesInStep(
+      lspNotification('barfoo', {})
+        .waitUntilLSPMessage(2000, 'barfoo')
+        .verifyAllLSPMessagesInStep(
           ['telemetry/event{not implemented}'],
           [...lspIgnoreStatusAndCancellation],
         ),
@@ -31,11 +30,11 @@ export default suite(
 
     test('textDocument/definition', [
       addFile('definition.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
         position: {line: 6, character: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           'textDocument/definition{definition.js,"start":{"line":2,"character":0}}',
         ],
@@ -45,11 +44,11 @@ export default suite(
 
     test('textDocument/definition', [
       addFile('definition.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
         position: {line: 7, character: 11}, // over a comment
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{[]}'],
         [...lspIgnoreStatusAndCancellation],
       ),
@@ -57,11 +56,11 @@ export default suite(
 
     test('textDocument/definition', [
       addFile('definition.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
         position: {line: 7, character: 1}, // over whitespace
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{[]}'],
         [...lspIgnoreStatusAndCancellation],
       ),
@@ -69,93 +68,79 @@ export default suite(
 
     test('textDocument/hover', [
       addFile('hover.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 6, character: 1}, // over a function use
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/hover{() => number}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 3, character: 1}, // over whitespace
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/hover{null}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 2, character: 1}, // over a keyword
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/hover{null}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 0, character: 1}, // over a comment
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/hover{null}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 6, character: 100}, // past the end of a line
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/hover{null}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 100, character: 0}, // past the end of the file
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/hover{null}'],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
-
-    test('textDocument/completion', [
-      addFile('completion.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
-        position: {line: 10, character: 15}, // statement position
-      }).verifyAllIDEMessagesInStep(
-        [
-          'textDocument/completion{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
-        ],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 
     test('textDocument/documentHighlight', [
       addFiles('references.js', 'references2.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 17}, // on an identifier
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/documentHighlight{"line":3,"line":9}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+      lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 1}, // on a keyword
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/documentHighlight{[]}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+      lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 6, character: 0}, // on whitespace
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/documentHighlight{[]}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+      lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 6, character: 100}, // off the right edge of the text
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/documentHighlight{[]}'],
         [...lspIgnoreStatusAndCancellation],
       ),
@@ -163,22 +148,22 @@ export default suite(
 
     test('textDocument/references', [
       addFiles('references.js', 'references2.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/references', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/references', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 17}, // on an identifier
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/references{line":3,"line":5,"line":9}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/references', {
+      lspRequestAndWaitUntilResponse('textDocument/references', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {
           line: 9,
           character: 17,
         }, // on an identifier
         context: {includeIndirectReferences: true},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/references{line":3,"line":5,"line":6,"line":9}'],
         [...lspIgnoreStatusAndCancellation],
       ),
@@ -186,12 +171,12 @@ export default suite(
 
     test('textDocument/rename', [
       addFiles('references.js', 'references2.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/rename', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/rename', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 17}, // on an identifier
         newName: 'foobar',
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/rename{"line":3,"line":5,"line":9}'],
         [...lspIgnoreStatusAndCancellation],
       ),
@@ -199,10 +184,10 @@ export default suite(
 
     test('textDocument/documentSymbol', [
       addFiles('outline.js', 'references.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/documentSymbol', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/documentSymbol', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>outline.js'},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
         ],
@@ -212,32 +197,32 @@ export default suite(
 
     test('textDocument/typeCoverage', [
       addFiles('coverage.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
-      }).verifyAllIDEMessagesInStep(
-        ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
-        [...lspIgnoreStatusAndCancellation],
+      }).verifyAllLSPMessagesInStep(
+        ['textDocument/typeCoverage'],
+        ['window/showStatus', '$/cancelRequest'],
       ),
     ]),
 
     test('textDocument/typeCoverage 2', [
       addFiles('coverage2.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/typeCoverage{Use @flow}'],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 
     test('telemetry/rage', [
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse(
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse(
         'telemetry/rage',
         {},
-      ).verifyAllIDEMessagesInStep(
+      ).verifyAllLSPMessagesInStep(
         [
           'telemetry/rage{Focused: 1,LSP adapter state: Connected,.monitor_log,.log}',
         ],

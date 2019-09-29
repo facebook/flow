@@ -2,31 +2,39 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":20}},
-      "message":"Unexpected token :"
+      "message":"Unexpected token `:`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":20}},
+      "message":"Unexpected token `:`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":23},"end":{"line":2,"column":24}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":18},"end":{"line":5,"column":19}},
-      "message":"Unexpected token ["
+      "message":"Unexpected token `[`, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":20},"end":{"line":5,"column":21}},
-      "message":"Unexpected token ]"
+      "message":"Unexpected token `]`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":5,"column":20},"end":{"line":5,"column":21}},
+      "message":"Unexpected token `]`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":8,"column":18},"end":{"line":8,"column":21}},
-      "message":"Unexpected token ..."
+      "message":"Unexpected token `...`, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":14,"column":18},"end":{"line":14,"column":24}},
@@ -34,15 +42,19 @@
     },
     {
       "loc":{"source":null,"start":{"line":14,"column":24},"end":{"line":14,"column":25}},
-      "message":"Unexpected token :"
+      "message":"Unexpected token `:`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":14,"column":24},"end":{"line":14,"column":25}},
+      "message":"Unexpected token `:`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":14,"column":26},"end":{"line":14,"column":27}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":14,"column":28},"end":{"line":14,"column":29}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`"
     },
     {
       "loc":{"source":null,"start":{"line":23,"column":18},"end":{"line":23,"column":24}},
@@ -50,7 +62,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":23,"column":26},"end":{"line":23,"column":27}},
-      "message":"Unexpected token :"
+      "message":"Unexpected token `:`, expected the token `=>`"
     },
     {
       "loc":{"source":null,"start":{"line":26,"column":18},"end":{"line":26,"column":24}},
@@ -58,7 +70,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":26,"column":29},"end":{"line":26,"column":30}},
-      "message":"Unexpected token :"
+      "message":"Unexpected token `:`, expected the token `=>`"
     }
   ],
   "type":"Program",
@@ -82,6 +94,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":24}},
         "range":[57,72],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -155,6 +168,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":26}},
         "range":[152,169],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -246,6 +260,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":8,"column":9},"end":{"line":8,"column":24}},
         "range":[247,262],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -304,6 +319,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":11,"column":9},"end":{"line":11,"column":22}},
         "range":[298,311],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -362,6 +378,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":14,"column":9},"end":{"line":14,"column":29}},
         "range":[357,377],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -435,6 +452,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":17,"column":9},"end":{"line":17,"column":24}},
         "range":[427,442],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -501,6 +519,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":20,"column":9},"end":{"line":20,"column":27}},
         "range":[497,515],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -582,6 +601,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":23,"column":9},"end":{"line":23,"column":31}},
         "range":[563,585],
+        "inexact":false,
         "exact":false,
         "properties":[
           {
@@ -648,6 +668,7 @@
         "type":"ObjectTypeAnnotation",
         "loc":{"source":null,"start":{"line":26,"column":9},"end":{"line":26,"column":34}},
         "range":[638,663],
+        "inexact":false,
         "exact":false,
         "properties":[
           {

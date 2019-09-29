@@ -1,15 +1,26 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 type t =
-  | T_NUMBER of { kind: number_type; raw: string }
+  | T_NUMBER of {
+      kind: number_type;
+      raw: string;
+    }
+  | T_BIGINT of {
+      kind: bigint_type;
+      raw: string;
+    }
   | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
   | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
-  | T_IDENTIFIER of { loc: Loc.t; value: string; raw: string }
+  | T_IDENTIFIER of {
+      loc: Loc.t;
+      value: string;
+      raw: string;
+    }
   | T_REGEXP of (Loc.t * string * string) (* /pattern/flags *)
   (* Syntax *)
   | T_LCURLY
@@ -136,7 +147,18 @@ type t =
   | T_EMPTY_TYPE
   | T_BOOLEAN_TYPE of bool_or_boolean
   | T_NUMBER_TYPE
-  | T_NUMBER_SINGLETON_TYPE of { kind: number_type; value: float; raw: string }
+  | T_BIGINT_TYPE
+  | T_NUMBER_SINGLETON_TYPE of {
+      kind: number_type;
+      value: float;
+      raw: string;
+    }
+  | T_BIGINT_SINGLETON_TYPE of {
+      kind: bigint_type;
+      approx_value: float;
+      (* Warning! Might lose precision! *)
+      raw: string;
+    }
   | T_STRING_TYPE
   | T_VOID_TYPE
 
@@ -151,12 +173,20 @@ and bool_or_boolean =
 and number_type =
   | BINARY
   | LEGACY_OCTAL
+  | LEGACY_NON_OCTAL (* NonOctalDecimalIntegerLiteral in Annex B *)
   | OCTAL
   | NORMAL
 
+and bigint_type =
+  | BIG_BINARY
+  | BIG_OCTAL
+  | BIG_NORMAL
+
 and template_part = {
-  cooked: string; (* string after processing special chars *)
-  raw: string; (* string as specified in source *)
+  cooked: string;
+  (* string after processing special chars *)
+  raw: string;
+  (* string as specified in source *)
   literal: string; (* same as raw, plus characters like ` and ${ *)
 }
 
@@ -165,6 +195,7 @@ and template_part = {
 (*****************************************************************************)
 let token_to_string = function
   | T_NUMBER _ -> "T_NUMBER"
+  | T_BIGINT _ -> "T_BIGINT"
   | T_STRING _ -> "T_STRING"
   | T_TEMPLATE_PART _ -> "T_TEMPLATE_PART"
   | T_IDENTIFIER _ -> "T_IDENTIFIER"
@@ -182,7 +213,7 @@ let token_to_string = function
   | T_WHILE -> "T_WHILE"
   | T_WITH -> "T_WITH"
   | T_CONST -> "T_CONST"
-  | T_LET  -> "T_LET"
+  | T_LET -> "T_LET"
   | T_NULL -> "T_NULL"
   | T_FALSE -> "T_FALSE"
   | T_TRUE -> "T_TRUE"
@@ -203,9 +234,9 @@ let token_to_string = function
   | T_TYPEOF -> "T_TYPEOF"
   | T_VOID -> "T_VOID"
   | T_ENUM -> "T_ENUM"
-  | T_EXPORT  -> "T_EXPORT"
+  | T_EXPORT -> "T_EXPORT"
   | T_IMPORT -> "T_IMPORT"
-  | T_SUPER  -> "T_SUPER"
+  | T_SUPER -> "T_SUPER"
   | T_IMPLEMENTS -> "T_IMPLEMENTS"
   | T_INTERFACE -> "T_INTERFACE"
   | T_PACKAGE -> "T_PACKAGE"
@@ -290,12 +321,15 @@ let token_to_string = function
   | T_EMPTY_TYPE -> "T_EMPTY_TYPE"
   | T_BOOLEAN_TYPE _ -> "T_BOOLEAN_TYPE"
   | T_NUMBER_TYPE -> "T_NUMBER_TYPE"
+  | T_BIGINT_TYPE -> "T_BIGINT_TYPE"
   | T_NUMBER_SINGLETON_TYPE _ -> "T_NUMBER_SINGLETON_TYPE"
+  | T_BIGINT_SINGLETON_TYPE _ -> "T_BIGINT_SINGLETON_TYPE"
   | T_STRING_TYPE -> "T_STRING_TYPE"
   | T_VOID_TYPE -> "T_VOID_TYPE"
 
 let value_of_token = function
   | T_NUMBER { raw; _ } -> raw
+  | T_BIGINT { raw; _ } -> raw
   | T_STRING (_, _, raw, _) -> raw
   | T_TEMPLATE_PART (_, { literal; _ }, _) -> literal
   | T_IDENTIFIER { raw; _ } -> raw
@@ -410,15 +444,51 @@ let value_of_token = function
   | T_BIT_NOT -> "~"
   | T_INCR -> "++"
   | T_DECR -> "--"
+  (* Extra tokens *)
   | T_ERROR raw -> raw
   | T_EOF -> ""
   | T_JSX_IDENTIFIER { raw } -> raw
   | T_JSX_TEXT (_, _, raw) -> raw
+  (* Type primitives *)
   | T_ANY_TYPE -> "any"
   | T_MIXED_TYPE -> "mixed"
   | T_EMPTY_TYPE -> "empty"
-  | T_BOOLEAN_TYPE kind -> begin match kind with BOOL -> "bool" | BOOLEAN -> "boolean" end
+  | T_BOOLEAN_TYPE kind ->
+    begin
+      match kind with
+      | BOOL -> "bool"
+      | BOOLEAN -> "boolean"
+    end
   | T_NUMBER_TYPE -> "number"
+  | T_BIGINT_TYPE -> "bigint"
   | T_NUMBER_SINGLETON_TYPE { raw; _ } -> raw
+  | T_BIGINT_SINGLETON_TYPE { raw; _ } -> raw
   | T_STRING_TYPE -> "string"
   | T_VOID_TYPE -> "void"
+
+let quote_token_value value = Printf.sprintf "token `%s`" value
+
+let explanation_of_token ?(use_article = false) token =
+  let (value, article) =
+    match token with
+    | T_NUMBER_SINGLETON_TYPE _
+    | T_NUMBER _ ->
+      ("number", "a")
+    | T_BIGINT_SINGLETON_TYPE _
+    | T_BIGINT _ ->
+      ("bigint", "a")
+    | T_JSX_TEXT _
+    | T_STRING _ ->
+      ("string", "a")
+    | T_TEMPLATE_PART _ -> ("template literal part", "a")
+    | T_JSX_IDENTIFIER _
+    | T_IDENTIFIER _ ->
+      ("identifier", "an")
+    | T_REGEXP _ -> ("regexp", "a")
+    | T_EOF -> ("end of input", "the")
+    | _ -> (quote_token_value (value_of_token token), "the")
+  in
+  if use_article then
+    article ^ " " ^ value
+  else
+    value

@@ -465,8 +465,8 @@ References:
    react.js:17:13
     17| (<Example a="bad" />); // error: number ~> string
                     ^^^^^ [1]
-   <BUILTINS>/react.js:326:36
-   326|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:470:36
+   470|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -482,8 +482,8 @@ References:
    react.js:18:20
     18| (<Example a={0} c={0} />); // error: number ~> string
                            ^ [1]
-   <BUILTINS>/react.js:328:36
-   328|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:472:36
+   472|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 

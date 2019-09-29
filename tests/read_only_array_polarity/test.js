@@ -33,3 +33,7 @@ class ContraBaz<-T> {
         return 0;
     }
 }
+
+declare var x: $ReadOnlyArray<number>;
+x[0] = 42;
+x[(0: any)] = 42;

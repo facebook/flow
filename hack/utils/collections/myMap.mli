@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -8,5 +8,5 @@
  *)
 
 module type S = MyMap_sig.S
-module Make (Ord : Map.OrderedType) : S with type key = Ord.t
 
+module Make (Ord : Map.OrderedType) : S with type key = Ord.t

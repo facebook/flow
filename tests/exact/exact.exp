@@ -38,7 +38,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ callable.js:17:26
 
-Cannot assign `f` to `g` because a callable signature is missing in object type [1] but exists in object type [2].
+Cannot assign `f` to `g` because a call signature declaring the expected parameter / return type is missing in object
+type [1] but exists in object type [2].
 
    callable.js:17:26
    17| var g: {| x: string |} = f; // error: callable signature in f missing in g

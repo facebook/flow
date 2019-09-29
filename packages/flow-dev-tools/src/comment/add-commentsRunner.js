@@ -14,7 +14,7 @@ import {
 } from '../flowResult';
 import getPathToLoc from './getPathToLoc';
 import getFlowErrors from './getFlowErrors';
-import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
+import getContext, {NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} from './getContext';
 import getAst from './getAst';
 
 import type {PathNode} from './getPathToLoc';
@@ -61,7 +61,7 @@ class BlessedError {
     if (this.selectedMessage != null) {
       return this.messages[this.selectedMessage].loc;
     } else {
-      return mainLocOfError(this.error);
+      return mainSourceLocOfError(this.error);
     }
   }
 
@@ -122,7 +122,50 @@ class BlessedError {
   }
 }
 
-export default async function(args: Args): Promise<void> {
+function mainSourceLocOfError(error: FlowError): ?FlowLoc {
+  const { operation, message } = error;
+  for (const msg of [operation, ...message]) {
+    if (msg && msg.loc && msg.loc.type === 'SourceFile') {
+      return msg.loc;
+    }
+  }
+  return null;
+}
+
+/**
+ * Filter out errors without a main location or a source file
+ */
+function filterErrors(errors: Array<FlowError>): Array<FlowError> {
+  return errors.filter(e => mainSourceLocOfError(e) != null);
+}
+
+/**
+ * Wrap errors with some extra functionality
+ */
+function blessErrors(errors: Array<FlowError>): Array<BlessedError> {
+  return errors.map(e => new BlessedError(e));
+}
+
+async function nonInteractive(args: Args): Promise<void> {
+  let flowResult = await getFlowErrors(
+    args.bin,
+    args.errorCheckCommand,
+    args.root,
+    args.flowconfigName,
+  );
+
+  if (flowResult.passed) {
+    console.log("No errors found. Nothing to do. Exiting");
+    return;
+  }
+
+  const errors = blessErrors(filterErrors(flowResult.errors));
+
+  await addComments(args, errors);
+  process.exit(0);
+}
+
+async function interactive(args: Args): Promise<void> {
   // Use blessed to select which comments to remove
 
   // Create a screen object.
@@ -217,9 +260,7 @@ export default async function(args: Args): Promise<void> {
   });
 
   // Filter out errors without a main location
-  const errors = flowResult.errors
-    .filter(e => mainLocOfError(e) != null)
-    .map(e => new BlessedError(e));
+  const errors = blessErrors(filterErrors(flowResult.errors));
 
   let locationToErrorsMap: Map<string, Array<BlessedError>>;
   let scrollToLocationMap;
@@ -537,13 +578,13 @@ export default async function(args: Args): Promise<void> {
           if (err == null && value != null) {
             args.comment = value;
             screen.destroy();
-            await addComments(args, selectedErrors)
+            await addComments(args, selectedErrors);
             process.exit(0);
           }
       });
     } else {
       screen.destroy();
-      await addComments(args, selectedErrors)
+      await addComments(args, selectedErrors);
       process.exit(0);
     }
   };
@@ -553,10 +594,13 @@ export default async function(args: Args): Promise<void> {
   showDetails(1);
   locations.focus();
   screen.render();
+}
 
+export default async function(args: Args): Promise<void> {
   if (args.all) {
-    errors.map(e => e.select());
-    await doAddComments();
+    await nonInteractive(args);
+  } else {
+    await interactive(args);
   }
 }
 
@@ -699,7 +743,7 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
       formatComment(comment, lines[loc.start.line-1]),
       lines.slice(loc.start.line-1),
     ).join("\n");
-  } else if (inside === JSX && ast.type === 'JSXElement') {
+  } else if ((inside === JSX_FRAGMENT || inside === JSX) && ast.type === 'JSXElement') {
     /* Ok, so we have something like
      * <jsx>
      *   <foo id={10*'hello'} />

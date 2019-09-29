@@ -78,7 +78,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:19:1
 
-Cannot call `fn1` because an indexer property is missing in null [1].
+Cannot call `fn1` because an index signature declaring the expected key / value type is missing in null [1].
 
    errors.js:19:1
    19| fn1(null); // We should get an error on this line.
@@ -106,7 +106,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:22:1
 
-Cannot call `fn2` because an indexer property is missing in null [1].
+Cannot call `fn2` because an index signature declaring the expected key / value type is missing in null [1].
 
    errors.js:22:1
    22| fn2(null)(); // We should get an error on this line.
@@ -287,32 +287,60 @@ References:
                              ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:5:15
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:4:15
 
 Cannot return `0` because number [1] is incompatible with string [2].
 
-   non_maybe_type.js:5:15
-   5|   else return 0; // this should be an error
+   non_maybe_type.js:4:15
+   4|   else return 0; // this should be an error
                     ^ [1]
 
 References:
-   non_maybe_type.js:3:42
-   3| function foo(x: ?string): $NonMaybeType<?string> {
+   non_maybe_type.js:2:42
+   2| function foo(x: ?string): $NonMaybeType<?string> {
                                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:10:2
+Error -------------------------------------------------------------------------------------------- non_maybe_type.js:9:2
 
 Cannot cast `0` to `$NonMaybeType` because number [1] is incompatible with empty [2].
 
-   non_maybe_type.js:10:2
-   10| (0: $NonMaybeType<null>); // error
-        ^ [1]
+   non_maybe_type.js:9:2
+   9| (0: $NonMaybeType<null>); // error
+       ^ [1]
 
 References:
-   non_maybe_type.js:10:19
-   10| (0: $NonMaybeType<null>); // error
-                         ^^^^ [2]
+   non_maybe_type.js:9:19
+   9| (0: $NonMaybeType<null>); // error
+                        ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:16:2
+
+Cannot cast `null` to `$NonMaybeType` because null [1] is incompatible with mixed [2].
+
+   non_maybe_type.js:16:2
+   16| (null: $NonMaybeType<mixed>);
+        ^^^^ [1]
+
+References:
+   non_maybe_type.js:16:22
+   16| (null: $NonMaybeType<mixed>);
+                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:2
+
+Cannot cast `undefined` to `$NonMaybeType` because undefined [1] is incompatible with mixed [2].
+
+   non_maybe_type.js:17:2
+   17| (undefined: $NonMaybeType<mixed>);
+        ^^^^^^^^^ [1]
+
+References:
+   non_maybe_type.js:17:27
+   17| (undefined: $NonMaybeType<mixed>);
+                                 ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- property_type.js:1:18
@@ -753,7 +781,7 @@ References:
 
 
 
-Found 50 errors
+Found 52 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

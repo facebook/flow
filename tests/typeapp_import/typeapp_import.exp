@@ -1,0 +1,19 @@
+Error ------------------------------------------------------------------------------------------------------ main.js:7:6
+
+Cannot cast `y` to number because string [1] is incompatible with number [2].
+
+   main.js:7:6
+   7|     (y: number); // error string ~> number
+           ^
+
+References:
+   main.js:5:19
+   5| (x: C<number> | C<string>) => {
+                        ^^^^^^ [1]
+   main.js:7:9
+   7|     (y: number); // error string ~> number
+              ^^^^^^ [2]
+
+
+
+Found 1 error

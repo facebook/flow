@@ -11,7 +11,7 @@
                     "name": "日本語",
                     "range": [
                         0,
-                        3
+                        9
                     ],
                     "loc": {
                         "start": {
@@ -28,8 +28,8 @@
                     "type": "ArrayExpression",
                     "elements": [],
                     "range": [
-                        6,
-                        8
+                        12,
+                        14
                     ],
                     "loc": {
                         "start": {
@@ -44,7 +44,7 @@
                 },
                 "range": [
                     0,
-                    8
+                    14
                 ],
                 "loc": {
                     "start": {
@@ -59,7 +59,7 @@
             },
             "range": [
                 0,
-                8
+                14
             ],
             "loc": {
                 "start": {
@@ -150,7 +150,7 @@
     ],
     "range": [
         0,
-        8
+        14
     ],
     "loc": {
         "start": {

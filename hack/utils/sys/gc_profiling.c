@@ -63,6 +63,8 @@ void major_end() {
 }
 
 void hh_start_gc_profiling() {
+  major_time = 0.0;
+  minor_time = 0.0;
   caml_minor_gc_begin_hook = minor_begin;
   caml_minor_gc_end_hook = minor_end;
   caml_major_slice_begin_hook = major_begin;
@@ -76,6 +78,10 @@ void hh_start_gc_profiling() {
  * definitely don't allocate anything during GC
  */
 value hh_get_gc_time() {
+  caml_minor_gc_begin_hook = NULL;
+  caml_minor_gc_end_hook = NULL;
+  caml_major_slice_begin_hook = NULL;
+  caml_major_slice_end_hook = NULL;
   CAMLparam0();
   CAMLlocal1(ret);
 

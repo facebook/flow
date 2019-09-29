@@ -23,14 +23,14 @@ Property `key` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:177:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   177| declare type React$Element<+ElementType: React$ElementType> = {|
+   178|   +type: ElementType,
+   179|   +props: React$ElementProps<ElementType>,
+   180|   +key: React$Key | null,
+   181|   +ref: any,
+   182| |};
         -^ [2]
 
 
@@ -43,14 +43,14 @@ Property `props` is missing in object literal [1] but exists in `React.Element` 
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:177:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   177| declare type React$Element<+ElementType: React$ElementType> = {|
+   178|   +type: ElementType,
+   179|   +props: React$ElementProps<ElementType>,
+   180|   +key: React$Key | null,
+   181|   +ref: any,
+   182| |};
         -^ [2]
 
 
@@ -63,14 +63,14 @@ Property `ref` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:177:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   177| declare type React$Element<+ElementType: React$ElementType> = {|
+   178|   +type: ElementType,
+   179|   +props: React$ElementProps<ElementType>,
+   180|   +key: React$Key | null,
+   181|   +ref: any,
+   182| |};
         -^ [2]
 
 
@@ -141,17 +141,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:40:1
 
-Cannot call `React.cloneElement` because property `bar` is missing in props [1] but exists in call of method
-`cloneElement` [2].
+Cannot call `React.cloneElement` because property `bar` is missing in call of method `cloneElement` [1] but exists in
+props [2].
 
    clone_element.js:40:1
    40| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    clone_element.js:40:23
    40| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-                             ^^^^^^^^^^^^^^^^ [1]
+                             ^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:41:1
@@ -847,12 +847,9 @@ Cannot call `React.createElement` because:
 
    create_element.js:86:1
    86| React.createElement(E, {}, ...(any: Array<number>)); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:86:37
-   86| React.createElement(E, {}, ...(any: Array<number>)); // Error
-                                           ^^^^^^^^^^^^^ [1]
    create_element.js:70:44
    70| class E extends React.Component<{children: number}> {}
                                                   ^^^^^^ [2]
@@ -1054,7 +1051,7 @@ Cannot call `React.createElement` because:
 
    create_element.js:107:1
    107| React.createElement(F, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    create_element.js:91:50
@@ -1063,9 +1060,6 @@ References:
    create_element.js:91:44
     91| class F extends React.Component<{children: Array<number>}> {}
                                                    ^^^^^^^^^^^^^ [2]
-   create_element.js:107:37
-   107| React.createElement(F, {}, ...(any: Array<number>)); // Error
-                                            ^^^^^^^^^^^^^ [3]
    create_element.js:107:43
    107| React.createElement(F, {}, ...(any: Array<number>)); // Error
                                                   ^^^^^^ [4]
@@ -1169,12 +1163,9 @@ Cannot call `React.createElement` because in property `children`:
 
    create_element.js:122:1
    122| React.createElement(G, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:122:37
-   122| React.createElement(G, {}, ...(any: Array<number>)); // Error
-                                            ^^^^^^^^^^^^^ [1]
    create_element.js:112:44
    112| class G extends React.Component<{children: number | Array<number>}> {}
                                                    ^^^^^^ [2]
@@ -1247,12 +1238,9 @@ Cannot call `React.createElement` because in property `children`:
 
    create_element.js:153:1
    153| React.createElement(H, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:153:37
-   153| React.createElement(H, {}, ...(any: Array<number>)); // Error
-                                            ^^^^^^^^^^^^^ [1]
    create_element.js:142:29
    142| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                     ^^^^^^ [2]
@@ -1313,12 +1301,9 @@ Cannot call `React.createElement` because children array or array [1] is incompa
 
    create_element.js:167:1
    167| React.createElement(I, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:167:37
-   167| React.createElement(I, {}, ...(any: Array<number>)); // Error
-                                            ^^^^^^^^^^^^^ [1]
    create_element.js:158:45
    158| class I extends React.Component<{children?: number}> {}
                                                     ^^^^^^ [2]
@@ -1422,12 +1407,9 @@ Cannot call `React.createElement` because children array or array [1] is incompa
 
    create_element.js:181:1
    181| React.createElement(J, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:181:37
-   181| React.createElement(J, {}, ...(any: Array<number>)); // Error
-                                            ^^^^^^^^^^^^^ [1]
    create_element.js:172:45
    172| class J extends React.Component<{children: ?number}> {}
                                                     ^^^^^^ [2]
@@ -2202,12 +2184,9 @@ Cannot call `eFactory` because:
 
    create_factory.js:90:1
    90| eFactory({}, ...(any: Array<number>)); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_factory.js:90:23
-   90| eFactory({}, ...(any: Array<number>)); // Error
-                             ^^^^^^^^^^^^^ [1]
    create_factory.js:73:44
    73| class E extends React.Component<{children: number}, void> {}
                                                   ^^^^^^ [2]
@@ -2408,7 +2387,7 @@ Cannot call `fFactory` because:
 
    create_factory.js:112:1
    112| fFactory({}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    create_factory.js:95:50
@@ -2417,9 +2396,6 @@ References:
    create_factory.js:95:44
     95| class F extends React.Component<{children: Array<number>}, void> {}
                                                    ^^^^^^^^^^^^^ [2]
-   create_factory.js:112:23
-   112| fFactory({}, ...(any: Array<number>)); // Error
-                              ^^^^^^^^^^^^^ [3]
    create_factory.js:112:29
    112| fFactory({}, ...(any: Array<number>)); // Error
                                     ^^^^^^ [4]
@@ -2523,12 +2499,9 @@ Cannot call `gFactory` because in property `children`:
 
    create_factory.js:128:1
    128| gFactory({}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_factory.js:128:23
-   128| gFactory({}, ...(any: Array<number>)); // Error
-                              ^^^^^^^^^^^^^ [1]
    create_factory.js:117:44
    117| class G extends React.Component<{children: number | Array<number>}, void> {}
                                                    ^^^^^^ [2]
@@ -2579,12 +2552,9 @@ Cannot call `hFactory` because in property `children`:
 
    create_factory.js:145:1
    145| hFactory({}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_factory.js:145:23
-   145| hFactory({}, ...(any: Array<number>)); // Error
-                              ^^^^^^^^^^^^^ [1]
    create_factory.js:133:29
    133| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                     ^^^^^^ [2]
@@ -2644,12 +2614,9 @@ Cannot call `iFactory` because children array or array [1] is incompatible with 
 
    create_factory.js:160:1
    160| iFactory({}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_factory.js:160:23
-   160| iFactory({}, ...(any: Array<number>)); // Error
-                              ^^^^^^^^^^^^^ [1]
    create_factory.js:150:45
    150| class I extends React.Component<{children?: number}, void> {}
                                                     ^^^^^^ [2]
@@ -2751,12 +2718,9 @@ Cannot call `jFactory` because children array or array [1] is incompatible with 
 
    create_factory.js:175:1
    175| jFactory({}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_factory.js:175:23
-   175| jFactory({}, ...(any: Array<number>)); // Error
-                              ^^^^^^^^^^^^^ [1]
    create_factory.js:165:45
    165| class J extends React.Component<{children: ?number}, void> {}
                                                     ^^^^^^ [2]

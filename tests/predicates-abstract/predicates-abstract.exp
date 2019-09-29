@@ -1,40 +1,31 @@
-Error -------------------------------------------------------------------------------------- sanity-filter-union.js:6:71
-
-object with property `kind` that matches string literal `A` [1] is incompatible with string literal `B` [2].
-
-   sanity-filter-union.js:6:71
-   6| declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                                                            ^^^^^^^^^^^^^^ [1]
-
-References:
-   sanity-filter-union.js:9:18
-   9| type B = { kind: 'B', v: string }
-                       ^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
 
 Cannot cast `my_filter(...)` to array type because:
- - property `v` is missing in `A` [1] but exists in `B` [2] in array element.
- - string literal `A` [3] is incompatible with string literal `B` [4] in property `kind` of array element.
+ - object with property `kind` that matches string literal `A` [1] is incompatible with string literal `B` [2] in array
+   element.
+ - property `v` is missing in `A` [3] but exists in `B` [4] in array element.
+ - string literal `A` [5] is incompatible with string literal `B` [2] in property `kind` of array element.
 
    sanity-filter-union.js:16:2
    16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   sanity-filter-union.js:14:23
-   14| declare var ab: Array<A|B|C>;
-                             ^ [1]
-   sanity-filter-union.js:16:55
-   16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                             ^ [2]
-   sanity-filter-union.js:8:18
-    8| type A = { kind: 'A', u: number }
-                        ^^^ [3]
+   sanity-filter-union.js:6:71
+    6| declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
+                                                                             ^^^^^^^^^^^^^^ [1]
    sanity-filter-union.js:9:18
     9| type B = { kind: 'B', v: string }
-                        ^^^ [4]
+                        ^^^ [2]
+   sanity-filter-union.js:14:23
+   14| declare var ab: Array<A|B|C>;
+                             ^ [3]
+   sanity-filter-union.js:16:55
+   16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                             ^ [4]
+   sanity-filter-union.js:8:18
+    8| type A = { kind: 'A', u: number }
+                        ^^^ [5]
 
 
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:17:2

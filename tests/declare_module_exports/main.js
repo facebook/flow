@@ -23,3 +23,9 @@ import declare_var_exports from "declare_var_exports";
 import declare_m_e_with_declare_var_e from "declare_m_e_with_declare_var_e";
 (declare_m_e_with_declare_var_e: number);
 (declare_m_e_with_declare_var_e: string); // Error: number ~> string
+
+import { foo } from "declare_overloaded_function";
+(foo(0): number);
+(foo(0): string); // Error: number ~> string
+(foo(""): string);
+(foo(""): number); // Error: string ~> number

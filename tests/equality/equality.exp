@@ -1,0 +1,155 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:7:7
+
+Cannot compare number literal `3` [1] to string literal `A` [2].
+
+   test.js:7:7
+   7|   if (o1 == o2) {
+            ^^
+
+References:
+   test.js:6:20
+   6| function foo (o1 : T, o2 : U) {
+                         ^ [1]
+   test.js:6:28
+   6| function foo (o1 : T, o2 : U) {
+                                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:7
+
+Cannot compare number literal `3` [1] to string literal `B` [2].
+
+   test.js:7:7
+   7|   if (o1 == o2) {
+            ^^
+
+References:
+   test.js:6:20
+   6| function foo (o1 : T, o2 : U) {
+                         ^ [1]
+   test.js:6:28
+   6| function foo (o1 : T, o2 : U) {
+                                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:7
+
+Cannot compare number literal `4` [1] to string literal `A` [2].
+
+   test.js:7:7
+   7|   if (o1 == o2) {
+            ^^
+
+References:
+   test.js:6:20
+   6| function foo (o1 : T, o2 : U) {
+                         ^ [1]
+   test.js:6:28
+   6| function foo (o1 : T, o2 : U) {
+                                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:7
+
+Cannot compare number literal `4` [1] to string literal `B` [2].
+
+   test.js:7:7
+   7|   if (o1 == o2) {
+            ^^
+
+References:
+   test.js:6:20
+   6| function foo (o1 : T, o2 : U) {
+                         ^ [1]
+   test.js:6:28
+   6| function foo (o1 : T, o2 : U) {
+                                 ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:7
+
+Cannot compare number literal `1` [1] to string literal `B` [2].
+
+   test.js:16:7
+   16|   if (o1 == o2) {
+             ^^
+
+References:
+   test.js:15:20
+   15| function foo (o1 : A, o2 : B) {
+                          ^ [1]
+   test.js:15:28
+   15| function foo (o1 : A, o2 : B) {
+                                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:7
+
+Cannot compare number literal `1` [1] to string literal `C` [2].
+
+   test.js:16:7
+   16|   if (o1 == o2) {
+             ^^
+
+References:
+   test.js:15:20
+   15| function foo (o1 : A, o2 : B) {
+                          ^ [1]
+   test.js:15:28
+   15| function foo (o1 : A, o2 : B) {
+                                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:7
+
+Cannot compare number literal `2` [1] to string literal `B` [2].
+
+   test.js:16:7
+   16|   if (o1 == o2) {
+             ^^
+
+References:
+   test.js:15:20
+   15| function foo (o1 : A, o2 : B) {
+                          ^ [1]
+   test.js:15:28
+   15| function foo (o1 : A, o2 : B) {
+                                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:7
+
+Cannot compare number literal `2` [1] to string literal `C` [2].
+
+   test.js:16:7
+   16|   if (o1 == o2) {
+             ^^
+
+References:
+   test.js:15:20
+   15| function foo (o1 : A, o2 : B) {
+                          ^ [1]
+   test.js:15:28
+   15| function foo (o1 : A, o2 : B) {
+                                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:7
+
+Cannot compare string literal `A` [1] to number literal `3` [2].
+
+   test.js:16:7
+   16|   if (o1 == o2) {
+             ^^
+
+References:
+   test.js:15:20
+   15| function foo (o1 : A, o2 : B) {
+                          ^ [1]
+   test.js:15:28
+   15| function foo (o1 : A, o2 : B) {
+                                  ^ [2]
+
+
+
+Found 9 errors

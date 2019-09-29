@@ -1,0 +1,88 @@
+
+Subtyping over type applications of the same polymorphic type unifies their type arguments.
+Error -------------------------------------------------------------------------------------------------------- a.js:4:48
+
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `X` [3].
+
+   a.js:4:48
+   4| function foo(x: T<string>): T<number> { return x; }
+                                                     ^
+
+References:
+   a.js:4:19
+   4| function foo(x: T<string>): T<number> { return x; }
+                        ^^^^^^ [1]
+   a.js:4:31
+   4| function foo(x: T<string>): T<number> { return x; }
+                                    ^^^^^^ [2]
+   a.js:3:15
+   3| export type T<X> = any;
+                    ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------------- d.js:5:48
+
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `X` [3].
+
+   d.js:5:48
+   5| function foo(x: B<string>): C<number> { return x; }
+                                                     ^
+
+References:
+   d.js:5:19
+   5| function foo(x: B<string>): C<number> { return x; }
+                        ^^^^^^ [1]
+   d.js:5:31
+   5| function foo(x: B<string>): C<number> { return x; }
+                                    ^^^^^^ [2]
+   a.js:3:15
+   3| export type T<X> = any;
+                    ^ [3]
+
+
+
+Found 2 errors
+
+An upstream edit that does not touch the polymorphic type should preserve this behavior.
+Error -------------------------------------------------------------------------------------------------------- a.js:4:48
+
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `X` [3].
+
+   a.js:4:48
+   4| function foo(x: T<string>): T<number> { return x; }
+                                                     ^
+
+References:
+   a.js:4:19
+   4| function foo(x: T<string>): T<number> { return x; }
+                        ^^^^^^ [1]
+   a.js:4:31
+   4| function foo(x: T<string>): T<number> { return x; }
+                                    ^^^^^^ [2]
+   a.js:3:15
+   3| export type T<X> = any;
+                    ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------------- d.js:5:48
+
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `X` [3].
+
+   d.js:5:48
+   5| function foo(x: B<string>): C<number> { return x; }
+                                                     ^
+
+References:
+   d.js:5:19
+   5| function foo(x: B<string>): C<number> { return x; }
+                        ^^^^^^ [1]
+   d.js:5:31
+   5| function foo(x: B<string>): C<number> { return x; }
+                                    ^^^^^^ [2]
+   a.js:3:15
+   3| export type T<X> = any;
+                    ^ [3]
+
+
+
+Found 2 errors

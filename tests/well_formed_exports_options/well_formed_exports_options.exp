@@ -1,0 +1,40 @@
+Error -------------------------------------------------------------------------------------------------------- a.js:4:18
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. (`signature-verification-failure`)
+
+   4| module.exports = foo();
+                       ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- dirA/a.js:4:16
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. (`signature-verification-failure`)
+
+   4| export default foo(); // sig. verification error - file is whitelisted
+                     ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- dirA/b.js:4:16
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. (`signature-verification-failure`)
+
+   4| export default foo(); // sig. verification error - dirA is whitelisted
+                     ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- parse-error.js:7:1
+
+Unexpected end of input, expected the token `}`
+
+   7|
+      
+
+
+
+Found 4 errors

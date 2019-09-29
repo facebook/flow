@@ -16,10 +16,12 @@ Table of contents:
 - [`$ElementType<T, K>`](#toc-elementtype)
 - [`$NonMaybeType<T>`](#toc-nonmaybe)
 - [`$ObjMap<T, F>`](#toc-objmap)
+- [`$ObjMapi<T, F>`](#toc-objmapi)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
-- [`$Call<F>`](#toc-call)
+- [`$Call<F, T...>`](#toc-call)
 - [`Class<T>`](#toc-class)
 - [`$Shape<T>`](#toc-shape)
+- [`$Exports<T>`](#toc-exports)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -57,7 +59,7 @@ function printSuitNumber(suit: Suit) {
   console.log(suitNumbers[suit]);
 }
 
-printSuitNumber('Diamonds'); // 2
+printSuitNumber('Diamonds'); // 1
 printSuitNumber('foo'); // 'foo' is not a Suit
 ```
 
@@ -83,7 +85,7 @@ In the example above, the type of `Country` is equivalent to `type Country = 'US
 
 ## `$Values<T>` <a class="toc" id="toc-values" href="#toc-values"></a>
 
-`$Values<T>` represents the union type of all the value types of the enumerable properties in an [Object Type](../objects/) `T`.
+`$Values<T>` represents the union type of all the value types (not the values, but their *types*!) of the enumerable properties in an [Object Type](../objects/) `T`.
 
 For example:
 ```js
@@ -237,9 +239,9 @@ type Person = {
   parent: Person
 };
 
-const newName: $PropertyType<Person, 'name'> = 'Michael Jackson';
-const newAge: $PropertyType<Person, 'age'> = 50;
-const newParent: $PropertyType<Person, 'parent'> = 'Joe Jackson';
+const newName: $PropertyType<Person, 'name'> = 'Toni Braxton';
+const newAge: $PropertyType<Person, 'age'> = 51;
+const newParent: $PropertyType<Person, 'parent'> = 'Evelyn Braxton';
 ```
 
 This can be especially useful for referring to the type of React props, or, even the entire `props` type itself.
@@ -393,11 +395,9 @@ This is where `ObjMap<T, F>` comes in handy.
 // @flow
 
 // let's write a function type that takes a `() => V` and returns a `V` (its return type)
-type ExtractReturnType = <V>(() => V) => V
+type ExtractReturnType = <V>(() => V) => V;
 
-function run<O: {[key: string]: Function}>(o: O): $ObjMap<O, ExtractReturnType> {
-  return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
-}
+declare function run<O: {[key: string]: Function}>(o: O): $ObjMap<O, ExtractReturnType>;
 
 const o = {
   a: () => true,
@@ -433,6 +433,33 @@ props(promises).then(o => {
 });
 ```
 
+## `$ObjMapi<T, F>` <a class="toc" id="toc-objmapi" href="#toc-objmapi"></a>
+
+`ObjMapi<T, F>` is similar to [`ObjMap<T, F>`](#toc-objmap). The difference is that function
+type `F` will be [called](#toc-call) with both the key and value types of the elements of
+the object type `T`, instead of just the value types. For example:
+
+```js
+// @flow
+const o = {
+  a: () => true,
+  b: () => 'foo'
+};
+
+type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
+
+declare function run<O: Object>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
+
+(run(o).a: { k: 'a', v: boolean }); // Ok
+(run(o).b: { k: 'b', v: string });  // Ok
+// $ExpectError
+(run(o).a: { k: 'b', v: boolean }); // Nope, a.k is "a"
+// $ExpectError
+(run(o).b: { k: 'b', v: number });  // Nope, b.v is a string
+// $ExpectError
+run(o).c;                           // Nope, c was not in the original object
+```
+
 ## `$TupleMap<T, F>` <a class="toc" id="toc-tuplemap" href="#toc-tuplemap"></a>
 
 `$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`, and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`. This is analogous to the Javascript function `map`.
@@ -455,9 +482,9 @@ const arr = [() => 'foo', () => 'bar'];
 (run(arr)[1]: boolean); // Error
 ```
 
-## `$Call<F>` <a class="toc" id="toc-call" href="#toc-call"></a>
+## `$Call<F, T...>` <a class="toc" id="toc-call" href="#toc-call"></a>
 
-`$Call<F>` is a type that represents the result of calling the given [function type](../functions) `F`. This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
+`$Call<F, T...>` is a type that represents the result of calling the given [function type](../functions) `F` with 0 or more arguments `T...`. This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
 
 Let's see a couple of examples:
 ```js
@@ -602,52 +629,38 @@ const person4: PersonDetails = {name: 'a'};  // OK
 const person5: PersonDetails = {age: 28, name: 'a'};  // OK
 ```
 
+## `$Exports<T>` <a class="toc" id="toc-exports" href="#toc-exports"></a>
+
+The following are functionally equivalent
+
+```js
+import typeof * as T from 'my-module';
+```
+
+```js
+type T = $Exports<'my-module'>;
+```
+
+The advantage of the `$Exports` syntax is that you can `export` the type on the same line
+```js
+export type T = $Exports<'my-module'>;
+```
+
+where as you would otherwise need to export an alias in the `import typeof` case
+```js
+import typeof * as T from 'my-module';
+export type MyModuleType = T;
+```
+
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
-Work in progress
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
 
 ## `$Subtype<T>` <a class="toc" id="toc-subtype" href="#toc-subtype"></a>
 
-Work in progress
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
 
 ## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
 
-`*` is known as the existential type.
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-type) for details.
 
-An existential type is used as a placeholder to tell Flow to infer the type.
-
-For example, in the `Class<ParamStore<T>>` example, we could have used an existential type for the return:
-
-```js
-// @flow
-function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): * {
-  return new storeClass(data);
-}
-(makeParamStore(ParamStore, 1): ParamStore<number>);
-(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
-```
-
-The `*` can be thought of as an "auto" instruction to Flow, telling it to fill in the type from context.
-
-In comparison to `any`, `*` may allow you to avoid losing type safety.
-
-The existential operator is also useful for automatically filling in types without unnecessary verbosity:
-
-```js
-// @flow
-class DataStore {
-  data: *; // If this property weren't defined, you'd get an error just trying to assign `data`
-  constructor() {
-    this.data = {
-      name: 'DataStore',
-      isOffline: true
-    };
-  }
-  goOnline() {
-    this.data.isOffline = false;
-  }
-  changeName() {
-    this.data.isOffline = 'SomeStore'; // oops, wrong key!
-  }
-}
-```

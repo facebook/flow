@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -8,9 +8,26 @@
  *)
 
 include Set.Make (IntKey)
-let to_string iset =
-  "{" ^ (String.concat "," (List.map string_of_int (elements iset))) ^ "}"
 
-(* temporary implementations to placate deriving show *)
-let show = to_string
-let pp : Format.formatter -> t -> unit = fun _ x -> Printf.printf "%s\n" (show x)
+let pp fmt iset =
+  Format.fprintf fmt "@[<2>{";
+  let elements = elements iset in
+  (match elements with
+  | [] -> ()
+  | _ -> Format.fprintf fmt " ");
+  ignore
+    (List.fold_left
+       (fun sep s ->
+         if sep then Format.fprintf fmt ";@ ";
+         Format.pp_print_int fmt s;
+         true)
+       false
+       elements);
+  (match elements with
+  | [] -> ()
+  | _ -> Format.fprintf fmt " ");
+  Format.fprintf fmt "@,}@]"
+
+let show iset = Format.asprintf "%a" pp iset
+
+let to_string = show

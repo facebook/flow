@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2018, Facebook, Inc.
  * All rights reserved.
  *
@@ -10,4 +10,5 @@
 (* See src/facebook/profile/statMemProfMemProfile.ml for the implementation we use for statmemprof. *)
 
 let start () = ()
+
 let stop () = ()

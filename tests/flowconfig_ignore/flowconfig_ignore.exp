@@ -1,0 +1,234 @@
+Error ------------------------------------------------------------------------------------------- control/control.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   control/control.js:4:1
+   4| x()
+      ^^^
+
+References:
+   control/control.js:3:9
+   3| var x = 42;
+              ^^ [1]
+
+
+Error ------------------------------------------------------------------------ my_declarations/actually_typecheck.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   my_declarations/actually_typecheck.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_declarations/actually_typecheck.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------- my_declarations/root_typecheck/checked.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   my_declarations/root_typecheck/checked.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_declarations/root_typecheck/checked.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------- my_declarations/typecheck_if_in_root.js:4:1
+
+Cannot call `x` because mixed [1] is not a function.
+
+   my_declarations/typecheck_if_in_root.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_declarations/typecheck_if_in_root.js:3:8
+   3| var x: mixed = 42;
+             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------- my_ignores/actually_typecheck.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   my_ignores/actually_typecheck.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_ignores/actually_typecheck.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------- my_ignores/root_typecheck/checked.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   my_ignores/root_typecheck/checked.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_ignores/root_typecheck/checked.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------- my_ignores/typecheck_if_in_root.js:4:1
+
+Cannot call `x` because mixed [1] is not a function.
+
+   my_ignores/typecheck_if_in_root.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_ignores/typecheck_if_in_root.js:3:8
+   3| var x: mixed = 42;
+             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------- my_untyped/actually_typecheck.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   my_untyped/actually_typecheck.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_untyped/actually_typecheck.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------- my_untyped/root_typecheck/checked.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   my_untyped/root_typecheck/checked.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_untyped/root_typecheck/checked.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------- my_untyped/typecheck_if_in_root.js:4:1
+
+Cannot call `x` because mixed [1] is not a function.
+
+   my_untyped/typecheck_if_in_root.js:4:1
+   4| x();
+      ^^^
+
+References:
+   my_untyped/typecheck_if_in_root.js:3:8
+   3| var x: mixed = 42;
+             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------- subdirectory/my_declarations/actually_typecheck.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   subdirectory/my_declarations/actually_typecheck.js:4:1
+   4| x();
+      ^^^
+
+References:
+   subdirectory/my_declarations/actually_typecheck.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------ subdirectory/my_declarations/typecheck/checked.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   subdirectory/my_declarations/typecheck/checked.js:4:1
+   4| x();
+      ^^^
+
+References:
+   subdirectory/my_declarations/typecheck/checked.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------- subdirectory/my_ignores/actually_typecheck.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   subdirectory/my_ignores/actually_typecheck.js:4:1
+   4| x();
+      ^^^
+
+References:
+   subdirectory/my_ignores/actually_typecheck.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------- subdirectory/my_ignores/typecheck/checked.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   subdirectory/my_ignores/typecheck/checked.js:4:1
+   4| x();
+      ^^^
+
+References:
+   subdirectory/my_ignores/typecheck/checked.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------- subdirectory/my_untyped/actually_typecheck.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   subdirectory/my_untyped/actually_typecheck.js:4:1
+   4| x();
+      ^^^
+
+References:
+   subdirectory/my_untyped/actually_typecheck.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------- subdirectory/my_untyped/typecheck/checked.js:4:1
+
+Cannot call `x` because number [1] is not a function.
+
+   subdirectory/my_untyped/typecheck/checked.js:4:1
+   4| x();
+      ^^^
+
+References:
+   subdirectory/my_untyped/typecheck/checked.js:3:8
+   3| var x: number = 42;
+             ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:24
+
+Cannot resolve module `./my_ignores/outer_bogus`.
+
+   6| import type { K } from "./my_ignores/outer_bogus" //should error
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 17 errors

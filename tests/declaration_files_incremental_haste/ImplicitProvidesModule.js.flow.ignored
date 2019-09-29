@@ -1,2 +1,3 @@
+// @providesModule ImplicitProvidesModule
 declare class Declaration {}
 declare export function fun(): Declaration;

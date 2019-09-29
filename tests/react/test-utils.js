@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -33,9 +33,10 @@ TestUtils.mockComponent(MyTestingComponent, 'span');
   tree,
   child => child.tagName === 'BUTTON',
 ): Array<React.Component<any, any>>);
-(TestUtils.scryRenderedDOMComponentsWithClass(tree, 'my-button'): Array<
-  Element,
->);
+(TestUtils.scryRenderedDOMComponentsWithClass(
+  tree,
+  'my-button',
+): Array<Element>);
 
 const buttonEl = TestUtils.findRenderedDOMComponentWithClass(tree, 'my-button');
 if (buttonEl != null) {
@@ -51,3 +52,21 @@ if (buttonEl != null) {
   tree,
   MyTestingComponent,
 ): ?React.Component<any, any>);
+TestUtils.act(() => {
+  Math.random();
+});
+TestUtils.act(() => ({count: 123})); // error
+async function runTest() {
+  await TestUtils.act(async () => {
+    // .. some test code
+    await Promise.resolve();
+  });
+  /* // wishlist -
+  act(async () => {
+    // some test code
+  }); // ideally this should error
+  await act(() => {
+    // ...
+  }); // ideally this should error
+  */
+}

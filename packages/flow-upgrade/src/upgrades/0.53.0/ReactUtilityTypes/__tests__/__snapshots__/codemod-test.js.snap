@@ -7,10 +7,10 @@ class Buz {}
 class Foo extends Bar<React$Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React$Element<any>> {}
+  (class extends Bar<React$Element<any>> {})
 "
 `;
 
@@ -21,10 +21,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -35,10 +35,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -49,10 +49,10 @@ class Buz {}
 class Foo extends Bar<CustomName.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<CustomName.Element<any>> {}
+  (class extends Bar<CustomName.Element<any>> {})
 "
 `;
 
@@ -63,10 +63,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -77,10 +77,10 @@ class Buz {}
 class Foo extends Bar<CustomName.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<CustomName.Element<any>> {}
+  (class extends Bar<CustomName.Element<any>> {})
 "
 `;
 
@@ -91,10 +91,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -105,10 +105,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -119,10 +119,10 @@ class Buz {}
 class Foo extends Bar<CustomName.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<CustomName.Element<any>> {}
+  (class extends Bar<CustomName.Element<any>> {})
 "
 `;
 
@@ -133,10 +133,10 @@ class Buz {}
 class Foo extends Bar<React$Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React$Element<any>> {}
+  (class extends Bar<React$Element<any>> {})
 "
 `;
 
@@ -148,10 +148,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -163,10 +163,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -178,10 +178,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 
@@ -193,10 +193,10 @@ class Buz {}
 class Foo extends Bar<React.Element<any>> {}
 
 const expression1 = () =>
-  class {}
+  (class {})
 
 const expression2 = () =>
-  class extends Bar<React.Element<any>> {}
+  (class extends Bar<React.Element<any>> {})
 "
 `;
 

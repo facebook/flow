@@ -52,38 +52,38 @@ References:
    collator.js:7:18
     7|   localeMatcher: 'look fit',
                         ^^^^^^^^^^ [1]
-   <BUILTINS>/intl.js:47:19
-   47|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:48:19
+   48|   localeMatcher?: 'lookup' | 'best fit',
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
    collator.js:8:10
     8|   usage: 'find',
                 ^^^^^^ [3]
-   <BUILTINS>/intl.js:48:11
-   48|   usage?: 'sort' | 'search',
+   <BUILTINS>/intl.js:49:11
+   49|   usage?: 'sort' | 'search',
                  ^^^^^^^^^^^^^^^^^ [4]
    collator.js:9:16
     9|   sensitivity: '',
                       ^^ [5]
-   <BUILTINS>/intl.js:49:17
-   49|   sensitivity?: 'base' | 'accent' | 'case' | 'variant',
+   <BUILTINS>/intl.js:50:17
+   50|   sensitivity?: 'base' | 'accent' | 'case' | 'variant',
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
    collator.js:10:22
    10|   ignorePunctuation: null,
                             ^^^^ [7]
-   <BUILTINS>/intl.js:50:23
-   50|   ignorePunctuation?: boolean,
+   <BUILTINS>/intl.js:51:23
+   51|   ignorePunctuation?: boolean,
                              ^^^^^^^ [8]
    collator.js:11:12
    11|   numeric: 1,
                   ^ [9]
-   <BUILTINS>/intl.js:51:13
-   51|   numeric?: boolean,
+   <BUILTINS>/intl.js:52:13
+   52|   numeric?: boolean,
                    ^^^^^^^ [10]
    collator.js:12:14
    12|   caseFirst: 'true'
                     ^^^^^^ [11]
-   <BUILTINS>/intl.js:52:15
-   52|   caseFirst?: 'upper' | 'lower' | 'false'
+   <BUILTINS>/intl.js:53:15
+   53|   caseFirst?: 'upper' | 'lower' | 'false',
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [12]
 
 
@@ -164,80 +164,80 @@ References:
    date_time_format.js:7:18
      7|   localeMatcher: 'look',
                          ^^^^^^ [1]
-   <BUILTINS>/intl.js:97:19
-    97|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:101:19
+   101|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
    date_time_format.js:8:13
      8|   timeZone: 1,
                     ^ [3]
-   <BUILTINS>/intl.js:98:14
-    98|   timeZone?: string,
+   <BUILTINS>/intl.js:102:14
+   102|   timeZone?: string,
                      ^^^^^^ [4]
    date_time_format.js:9:11
      9|   hour12: '',
                   ^^ [5]
-   <BUILTINS>/intl.js:99:12
-    99|   hour12?: boolean,
+   <BUILTINS>/intl.js:103:12
+   103|   hour12?: boolean,
                    ^^^^^^^ [6]
    date_time_format.js:10:18
     10|   formatMatcher: 'basic fit',
                          ^^^^^^^^^^^ [7]
-   <BUILTINS>/intl.js:100:19
-   100|   formatMatcher?: 'basic' | 'best fit',
+   <BUILTINS>/intl.js:104:19
+   104|   formatMatcher?: 'basic' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^ [8]
    date_time_format.js:11:12
     11|   weekday: '2-digit',
                    ^^^^^^^^^ [9]
-   <BUILTINS>/intl.js:101:13
-   101|   weekday?: 'narrow' | 'short' | 'long',
+   <BUILTINS>/intl.js:105:13
+   105|   weekday?: 'narrow' | 'short' | 'long',
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [10]
    date_time_format.js:12:8
     12|   era: '',
                ^^ [11]
-   <BUILTINS>/intl.js:102:9
-   102|   era?: 'narrow' | 'short' | 'long',
+   <BUILTINS>/intl.js:106:9
+   106|   era?: 'narrow' | 'short' | 'long',
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [12]
    date_time_format.js:13:9
     13|   year: '',
                 ^^ [13]
-   <BUILTINS>/intl.js:103:10
-   103|   year?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:107:10
+   107|   year?: 'numeric' | '2-digit',
                  ^^^^^^^^^^^^^^^^^^^^^ [14]
    date_time_format.js:14:10
     14|   month: '',
                  ^^ [15]
-   <BUILTINS>/intl.js:104:11
-   104|   month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long',
+   <BUILTINS>/intl.js:108:11
+   108|   month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long',
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [16]
    date_time_format.js:15:8
     15|   day: '',
                ^^ [17]
-   <BUILTINS>/intl.js:105:9
-   105|   day?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:109:9
+   109|   day?: 'numeric' | '2-digit',
                 ^^^^^^^^^^^^^^^^^^^^^ [18]
    date_time_format.js:16:9
     16|   hour: '',
                 ^^ [19]
-   <BUILTINS>/intl.js:106:10
-   106|   hour?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:110:10
+   110|   hour?: 'numeric' | '2-digit',
                  ^^^^^^^^^^^^^^^^^^^^^ [20]
    date_time_format.js:17:11
     17|   minute: 'long',
                   ^^^^^^ [21]
-   <BUILTINS>/intl.js:107:12
-   107|   minute?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:111:12
+   111|   minute?: 'numeric' | '2-digit',
                    ^^^^^^^^^^^^^^^^^^^^^ [22]
    date_time_format.js:18:11
     18|   second: 'short',
                   ^^^^^^^ [23]
-   <BUILTINS>/intl.js:108:12
-   108|   second?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:112:12
+   112|   second?: 'numeric' | '2-digit',
                    ^^^^^^^^^^^^^^^^^^^^^ [24]
    date_time_format.js:19:17
     19|   timeZoneName: 'narrow'
                         ^^^^^^^^ [25]
-   <BUILTINS>/intl.js:109:18
-   109|   timeZoneName?: 'short' | 'long'
+   <BUILTINS>/intl.js:113:18
+   113|   timeZoneName?: 'short' | 'long',
                          ^^^^^^^^^^^^^^^^ [26]
 
 
@@ -258,8 +258,8 @@ Cannot assign `Intl.getCanonicalLocales()` to `a` because array type [1] is inco
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:14:53
-   14|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[]
+   <BUILTINS>/intl.js:13:53
+   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
                                                            ^^^^^^^^^^^^^ [1]
    intl.js:2:10
     2| const a: string = Intl.getCanonicalLocales(); // incorrect
@@ -275,8 +275,8 @@ Cannot call `Intl.getCanonicalLocales` because undefined [1] is not a function.
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:14:25
-   14|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[]
+   <BUILTINS>/intl.js:13:25
+   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -289,8 +289,8 @@ Cannot assign `getCanonicalLocales()` to `b` because array type [1] is incompati
                            ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:14:53
-   14|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[]
+   <BUILTINS>/intl.js:13:53
+   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
                                                            ^^^^^^^^^^^^^ [1]
    intl.js:5:12
     5|   const b: string = getCanonicalLocales(); // incorrect
@@ -354,8 +354,8 @@ References:
    10|   DateTimeFormat: Class<Intl$DateTimeFormat>,
    11|   NumberFormat: Class<Intl$NumberFormat>,
    12|   PluralRules: ?Class<Intl$PluralRules>,
-   13|
-   14|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[]
+   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
+   14|   ...
    15| }
        ^ [1]
 
@@ -423,62 +423,62 @@ References:
    number_format.js:7:18
      7|   localeMatcher: 'best',
                          ^^^^^^ [1]
-   <BUILTINS>/intl.js:143:19
-   143|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:149:19
+   149|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
    number_format.js:8:10
      8|   style: 'octal',
                  ^^^^^^^ [3]
-   <BUILTINS>/intl.js:144:11
-   144|   style?: 'decimal' | 'currency' | 'percent',
+   <BUILTINS>/intl.js:150:11
+   150|   style?: 'decimal' | 'currency' | 'percent',
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    number_format.js:9:13
      9|   currency: 123,
                     ^^^ [5]
-   <BUILTINS>/intl.js:145:14
-   145|   currency?: string,
+   <BUILTINS>/intl.js:151:14
+   151|   currency?: string,
                      ^^^^^^ [6]
    number_format.js:10:20
     10|   currencyDisplay: 'sym',
                            ^^^^^ [7]
-   <BUILTINS>/intl.js:146:21
-   146|   currencyDisplay?: 'symbol' | 'code' | 'name',
+   <BUILTINS>/intl.js:152:21
+   152|   currencyDisplay?: 'symbol' | 'code' | 'name',
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [8]
    number_format.js:11:16
     11|   useGrouping: 5,
                        ^ [9]
-   <BUILTINS>/intl.js:147:17
-   147|   useGrouping?: boolean,
+   <BUILTINS>/intl.js:153:17
+   153|   useGrouping?: boolean,
                         ^^^^^^^ [10]
    number_format.js:12:25
     12|   minimumIntegerDigits: {},
                                 ^^ [11]
-   <BUILTINS>/intl.js:148:26
-   148|   minimumIntegerDigits?: number,
+   <BUILTINS>/intl.js:154:26
+   154|   minimumIntegerDigits?: number,
                                  ^^^^^^ [12]
    number_format.js:13:26
     13|   minimumFractionDigits: '',
                                  ^^ [13]
-   <BUILTINS>/intl.js:149:27
-   149|   minimumFractionDigits?: number,
+   <BUILTINS>/intl.js:155:27
+   155|   minimumFractionDigits?: number,
                                   ^^^^^^ [14]
    number_format.js:14:26
     14|   maximumFractionDigits: null,
                                  ^^^^ [15]
-   <BUILTINS>/intl.js:150:27
-   150|   maximumFractionDigits?: number,
+   <BUILTINS>/intl.js:156:27
+   156|   maximumFractionDigits?: number,
                                   ^^^^^^ [16]
    number_format.js:15:29
     15|   minimumSignificantDigits: '',
                                     ^^ [17]
-   <BUILTINS>/intl.js:151:30
-   151|   minimumSignificantDigits?: number,
+   <BUILTINS>/intl.js:157:30
+   157|   minimumSignificantDigits?: number,
                                      ^^^^^^ [18]
    number_format.js:16:29
     16|   maximumSignificantDigits: null
                                     ^^^^ [19]
-   <BUILTINS>/intl.js:152:30
-   152|   maximumSignificantDigits?: number
+   <BUILTINS>/intl.js:158:30
+   158|   maximumSignificantDigits?: number,
                                      ^^^^^^ [20]
 
 
@@ -494,7 +494,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Intl.PluralRules` because:
  - null or undefined [1] is not a function.
- - a callable signature is missing in statics of `Intl$PluralRules` [2].
+ - a call signature declaring the expected parameter / return type is missing in statics of `Intl$PluralRules` [2].
 
    plural_rules.js:3:11
      3| const a = Intl.PluralRules(); // incorrect
@@ -504,22 +504,23 @@ References:
    <BUILTINS>/intl.js:12:16
     12|   PluralRules: ?Class<Intl$PluralRules>,
                        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/intl.js:155:15
-   155| declare class Intl$PluralRules {
+   <BUILTINS>/intl.js:162:15
+   162| declare class Intl$PluralRules {
                       ^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:6:13
 
-Cannot call `PluralRules` because a callable signature is missing in statics of `Intl$PluralRules` [1].
+Cannot call `PluralRules` because a call signature declaring the expected parameter / return type is missing in statics
+of `Intl$PluralRules` [1].
 
    plural_rules.js:6:13
      6|   const b = PluralRules(); // incorrect
                     ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:155:15
-   155| declare class Intl$PluralRules {
+   <BUILTINS>/intl.js:162:15
+   162| declare class Intl$PluralRules {
                       ^^^^^^^^^^^^^^^^ [1]
 
 
@@ -563,32 +564,32 @@ References:
    plural_rules.js:12:20
     12|     localeMatcher: 'best one',
                            ^^^^^^^^^^ [1]
-   <BUILTINS>/intl.js:180:19
-   180|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:188:19
+   188|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
    plural_rules.js:13:11
     13|     type: 'count',
                   ^^^^^^^ [3]
-   <BUILTINS>/intl.js:181:10
-   181|   type?: 'cardinal' | 'ordinal',
+   <BUILTINS>/intl.js:189:10
+   189|   type?: 'cardinal' | 'ordinal',
                  ^^^^^^^^^^^^^^^^^^^^^^ [4]
    plural_rules.js:14:27
     14|     minimumIntegerDigits: '',
                                   ^^ [5]
-   <BUILTINS>/intl.js:182:26
-   182|   minimumIntegerDigits?: number,
+   <BUILTINS>/intl.js:190:26
+   190|   minimumIntegerDigits?: number,
                                  ^^^^^^ [6]
    plural_rules.js:7:13
      7|   const c = new PluralRules(); // correct
                     ^^^^^^^^^^^^^^^^^ [7]
-   <BUILTINS>/intl.js:185:30
-   185|   minimumSignificantDigits?: number,
+   <BUILTINS>/intl.js:193:30
+   193|   minimumSignificantDigits?: number,
                                      ^^^^^^ [8]
    plural_rules.js:18:31
     18|     maximumSignificantDigits: ''
                                       ^^ [9]
-   <BUILTINS>/intl.js:186:30
-   186|   maximumSignificantDigits?: number
+   <BUILTINS>/intl.js:194:30
+   194|   maximumSignificantDigits?: number,
                                      ^^^^^^ [10]
 
 
@@ -615,8 +616,8 @@ Cannot call `new PluralRules().select` because function [1] requires another arg
           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:161:3
-   161|   select (number): Intl$PluralRule;
+   <BUILTINS>/intl.js:168:3
+   168|   select (number): Intl$PluralRule;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -630,8 +631,8 @@ Cannot call `PluralRules.getCanonicalLocales` because property `getCanonicalLoca
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:155:15
-   155| declare class Intl$PluralRules {
+   <BUILTINS>/intl.js:162:15
+   162| declare class Intl$PluralRules {
                       ^^^^^^^^^^^^^^^^ [1]
 
 

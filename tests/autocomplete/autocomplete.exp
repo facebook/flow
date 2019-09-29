@@ -1,7 +1,7 @@
-foo_parse_fail.js = hasOwnProperty (prop: any) => boolean
-isPrototypeOf (o: any) => boolean
+foo_parse_fail.js = hasOwnProperty (prop: mixed) => boolean
+isPrototypeOf (o: mixed) => boolean
 num number
-propertyIsEnumerable (prop: any) => boolean
+propertyIsEnumerable (prop: mixed) => boolean
 str string
 toLocaleString () => string
 toString () => string
@@ -10,23 +10,23 @@ foo.js = {
   "result":[
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
+      "line":80,
+      "endline":80,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
+      "line":81,
+      "endline":81,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"num",
@@ -40,13 +40,13 @@ foo.js = {
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
+      "line":82,
+      "endline":82,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"str",
@@ -63,8 +63,8 @@ foo.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":83,
+      "endline":83,
       "start":5,
       "end":28
     },
@@ -73,8 +73,8 @@ foo.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":84,
+      "endline":84,
       "start":5,
       "end":22
     },
@@ -83,8 +83,8 @@ foo.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":85,
+      "endline":85,
       "start":5,
       "end":20
     }
@@ -112,8 +112,8 @@ str.js = {
       "type":"() => Iterator<string>",
       "func_details":{"return_type":"Iterator<string>","params":[]},
       "path":"[LIB] core.js",
-      "line":291,
-      "endline":291,
+      "line":321,
+      "endline":321,
       "start":5,
       "end":34
     },
@@ -122,8 +122,8 @@ str.js = {
       "type":"(name: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":292,
-      "endline":292,
+      "line":322,
+      "endline":322,
       "start":5,
       "end":32
     },
@@ -132,8 +132,8 @@ str.js = {
       "type":"(pos: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":293,
-      "endline":293,
+      "line":323,
+      "endline":323,
       "start":5,
       "end":31
     },
@@ -142,8 +142,8 @@ str.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":294,
-      "endline":294,
+      "line":324,
+      "endline":324,
       "start":5,
       "end":37
     },
@@ -152,8 +152,8 @@ str.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":295,
-      "endline":295,
+      "line":325,
+      "endline":325,
       "start":5,
       "end":38
     },
@@ -165,8 +165,8 @@ str.js = {
         "params":[{"name":"...strings","type":"Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":296,
-      "endline":296,
+      "line":326,
+      "endline":326,
       "start":5,
       "end":45
     },
@@ -178,8 +178,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":298,
-      "endline":298,
+      "line":328,
+      "endline":328,
       "start":5,
       "end":62
     },
@@ -191,8 +191,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":299,
-      "endline":299,
+      "line":329,
+      "endline":329,
       "start":5,
       "end":62
     },
@@ -204,8 +204,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":300,
-      "endline":300,
+      "line":330,
+      "endline":330,
       "start":5,
       "end":60
     },
@@ -217,8 +217,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":301,
-      "endline":301,
+      "line":331,
+      "endline":331,
       "start":5,
       "end":64
     },
@@ -227,8 +227,8 @@ str.js = {
       "type":"number",
       "func_details":null,
       "path":"[LIB] core.js",
-      "line":325,
-      "endline":325,
+      "line":358,
+      "endline":358,
       "start":13,
       "end":18
     },
@@ -237,8 +237,8 @@ str.js = {
       "type":"(href: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":302,
-      "endline":302,
+      "line":332,
+      "endline":332,
       "start":5,
       "end":30
     },
@@ -254,8 +254,8 @@ str.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":303,
-      "endline":303,
+      "line":333,
+      "endline":333,
       "start":5,
       "end":105
     },
@@ -267,18 +267,31 @@ str.js = {
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
-      "line":304,
-      "endline":304,
+      "line":334,
+      "endline":334,
       "start":5,
       "end":61
+    },
+    {
+      "name":"matchAll",
+      "type":"(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>",
+      "func_details":{
+        "return_type":"Iterator<RegExp$matchResult>",
+        "params":[{"name":"regexp","type":"string | RegExp"}]
+      },
+      "path":"[LIB] core.js",
+      "line":335,
+      "endline":335,
+      "start":5,
+      "end":67
     },
     {
       "name":"normalize",
       "type":"(format?: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":305,
-      "endline":305,
+      "line":336,
+      "endline":336,
       "start":5,
       "end":38
     },
@@ -290,8 +303,8 @@ str.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":306,
-      "endline":306,
+      "line":337,
+      "endline":337,
       "start":5,
       "end":60
     },
@@ -303,8 +316,8 @@ str.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":307,
-      "endline":307,
+      "line":338,
+      "endline":338,
       "start":5,
       "end":62
     },
@@ -313,8 +326,8 @@ str.js = {
       "type":"(count: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":308,
-      "endline":308,
+      "line":339,
+      "endline":339,
       "start":5,
       "end":33
     },
@@ -332,8 +345,8 @@ str.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":309,
-      "endline":309,
+      "line":340,
+      "endline":340,
       "start":5,
       "end":124
     },
@@ -342,8 +355,8 @@ str.js = {
       "type":"(regexp: (string | RegExp)) => number",
       "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
       "path":"[LIB] core.js",
-      "line":310,
-      "endline":310,
+      "line":341,
+      "endline":341,
       "start":5,
       "end":43
     },
@@ -355,8 +368,8 @@ str.js = {
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":311,
-      "endline":311,
+      "line":342,
+      "endline":342,
       "start":5,
       "end":47
     },
@@ -371,8 +384,8 @@ str.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":312,
-      "endline":312,
+      "line":343,
+      "endline":343,
       "start":5,
       "end":69
     },
@@ -384,8 +397,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":313,
-      "endline":313,
+      "line":344,
+      "endline":344,
       "start":5,
       "end":64
     },
@@ -397,8 +410,8 @@ str.js = {
         "params":[{"name":"from","type":"number"},{"name":"length?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":314,
-      "endline":314,
+      "line":345,
+      "endline":345,
       "start":5,
       "end":49
     },
@@ -410,8 +423,8 @@ str.js = {
         "params":[{"name":"start","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":315,
-      "endline":315,
+      "line":346,
+      "endline":346,
       "start":5,
       "end":50
     },
@@ -423,8 +436,8 @@ str.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":316,
-      "endline":316,
+      "line":347,
+      "endline":347,
       "start":5,
       "end":62
     },
@@ -436,8 +449,8 @@ str.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":317,
-      "endline":317,
+      "line":348,
+      "endline":348,
       "start":5,
       "end":62
     },
@@ -446,8 +459,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":318,
-      "endline":318,
+      "line":349,
+      "endline":349,
       "start":5,
       "end":25
     },
@@ -456,8 +469,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":324,
-      "endline":324,
+      "line":357,
+      "endline":357,
       "start":5,
       "end":22
     },
@@ -466,8 +479,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":319,
-      "endline":319,
+      "line":350,
+      "endline":350,
       "start":5,
       "end":25
     },
@@ -476,18 +489,28 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":320,
-      "endline":320,
+      "line":351,
+      "endline":351,
       "start":5,
       "end":18
+    },
+    {
+      "name":"trimEnd",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":352,
+      "endline":352,
+      "start":5,
+      "end":21
     },
     {
       "name":"trimLeft",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":321,
-      "endline":321,
+      "line":353,
+      "endline":353,
       "start":5,
       "end":22
     },
@@ -496,8 +519,18 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":322,
-      "endline":322,
+      "line":354,
+      "endline":354,
+      "start":5,
+      "end":23
+    },
+    {
+      "name":"trimStart",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":355,
+      "endline":355,
       "start":5,
       "end":23
     },
@@ -506,8 +539,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":323,
-      "endline":323,
+      "line":356,
+      "endline":356,
       "start":5,
       "end":21
     }
@@ -520,8 +553,8 @@ num.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":140,
-      "endline":140,
+      "line":160,
+      "endline":160,
       "start":5,
       "end":50
     },
@@ -530,8 +563,8 @@ num.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":141,
-      "endline":141,
+      "line":161,
+      "endline":161,
       "start":5,
       "end":44
     },
@@ -546,8 +579,8 @@ num.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":142,
-      "endline":142,
+      "line":162,
+      "endline":162,
       "start":5,
       "end":96
     },
@@ -556,8 +589,8 @@ num.js = {
       "type":"(precision?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":143,
-      "endline":143,
+      "line":163,
+      "endline":163,
       "start":5,
       "end":43
     },
@@ -566,8 +599,8 @@ num.js = {
       "type":"(radix?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":144,
-      "endline":144,
+      "line":164,
+      "endline":164,
       "start":5,
       "end":36
     },
@@ -576,8 +609,8 @@ num.js = {
       "type":"() => number",
       "func_details":{"return_type":"number","params":[]},
       "path":"[LIB] core.js",
-      "line":145,
-      "endline":145,
+      "line":165,
+      "endline":165,
       "start":5,
       "end":21
     }
@@ -590,8 +623,8 @@ bool.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":120,
-      "endline":120,
+      "line":140,
+      "endline":140,
       "start":5,
       "end":22
     },
@@ -600,8 +633,8 @@ bool.js = {
       "type":"() => boolean",
       "func_details":{"return_type":"boolean","params":[]},
       "path":"[LIB] core.js",
-      "line":119,
-      "endline":119,
+      "line":139,
+      "endline":139,
       "start":5,
       "end":22
     }
@@ -621,41 +654,41 @@ union.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
+      "line":80,
+      "endline":80,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
+      "line":81,
+      "endline":81,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
+      "line":82,
+      "endline":82,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":83,
+      "endline":83,
       "start":5,
       "end":28
     },
@@ -664,8 +697,8 @@ union.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":84,
+      "endline":84,
       "start":5,
       "end":22
     },
@@ -674,338 +707,54 @@ union.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":85,
+      "endline":85,
       "start":5,
       "end":20
     }
   ]
 }
-object_builtins.js = {
-  "result":[
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
-      "start":5,
-      "end":38
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
-      "start":5,
-      "end":34
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
-      "start":5,
-      "end":44
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
-      "start":5,
-      "end":20
-    }
-  ]
-}
-function_builtins.js = {
-  "result":[
-    {
-      "name":"apply",
-      "type":"(thisArg: any, argArray?: any) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
-      },
-      "path":"[LIB] core.js",
-      "line":106,
-      "endline":106,
-      "start":18,
-      "end":41
-    },
-    {
-      "name":"arguments",
-      "type":"any",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":110,
-      "endline":110,
-      "start":16,
-      "end":18
-    },
-    {
-      "name":"bind",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":107,
-      "endline":107,
-      "start":17,
-      "end":39
-    },
-    {
-      "name":"call",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":108,
-      "endline":108,
-      "start":17,
-      "end":39
-    },
-    {
-      "name":"caller",
-      "type":"Function | null",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":111,
-      "endline":111,
-      "start":13,
-      "end":27
-    },
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
-      "start":5,
-      "end":38
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
-      "start":5,
-      "end":34
-    },
-    {
-      "name":"length",
-      "type":"number",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":112,
-      "endline":112,
-      "start":13,
-      "end":18
-    },
-    {
-      "name":"name",
-      "type":"string",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":113,
-      "endline":113,
-      "start":11,
-      "end":16
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
-      "start":5,
-      "end":44
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
-      "start":5,
-      "end":20
-    }
-  ]
-}
+object_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
+function_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
 fun.js = {
   "result":[
     {
-      "name":"apply",
-      "type":"(thisArg: any, argArray?: any) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
-      },
-      "path":"[LIB] core.js",
-      "line":106,
-      "endline":106,
-      "start":18,
-      "end":41
-    },
-    {
-      "name":"arguments",
-      "type":"any",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":110,
-      "endline":110,
-      "start":16,
-      "end":18
-    },
-    {
-      "name":"bind",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":107,
-      "endline":107,
-      "start":17,
-      "end":39
-    },
-    {
-      "name":"call",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":108,
-      "endline":108,
-      "start":17,
-      "end":39
-    },
-    {
-      "name":"caller",
-      "type":"Function | null",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":111,
-      "endline":111,
-      "start":13,
-      "end":27
-    },
-    {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
+      "line":80,
+      "endline":80,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
+      "line":81,
+      "endline":81,
       "start":5,
-      "end":34
-    },
-    {
-      "name":"length",
-      "type":"number",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":112,
-      "endline":112,
-      "start":13,
-      "end":18
-    },
-    {
-      "name":"name",
-      "type":"string",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":113,
-      "endline":113,
-      "start":11,
-      "end":16
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
+      "line":82,
+      "endline":82,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":83,
+      "endline":83,
       "start":5,
       "end":28
     },
@@ -1014,8 +763,8 @@ fun.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":84,
+      "endline":84,
       "start":5,
       "end":22
     },
@@ -1024,8 +773,8 @@ fun.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":85,
+      "endline":85,
       "start":5,
       "end":20
     }
@@ -1072,8 +821,8 @@ typeparams.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":140,
-      "endline":140,
+      "line":160,
+      "endline":160,
       "start":5,
       "end":50
     },
@@ -1082,8 +831,8 @@ typeparams.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":141,
-      "endline":141,
+      "line":161,
+      "endline":161,
       "start":5,
       "end":44
     },
@@ -1098,8 +847,8 @@ typeparams.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":142,
-      "endline":142,
+      "line":162,
+      "endline":162,
       "start":5,
       "end":96
     },
@@ -1108,8 +857,8 @@ typeparams.js = {
       "type":"(precision?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":143,
-      "endline":143,
+      "line":163,
+      "endline":163,
       "start":5,
       "end":43
     },
@@ -1118,8 +867,8 @@ typeparams.js = {
       "type":"(radix?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":144,
-      "endline":144,
+      "line":164,
+      "endline":164,
       "start":5,
       "end":36
     },
@@ -1128,8 +877,8 @@ typeparams.js = {
       "type":"() => number",
       "func_details":{"return_type":"number","params":[]},
       "path":"[LIB] core.js",
-      "line":145,
-      "endline":145,
+      "line":165,
+      "endline":165,
       "start":5,
       "end":21
     }
@@ -1149,41 +898,41 @@ generics.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
+      "line":80,
+      "endline":80,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
+      "line":81,
+      "endline":81,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
+      "line":82,
+      "endline":82,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":83,
+      "endline":83,
       "start":5,
       "end":28
     },
@@ -1192,8 +941,8 @@ generics.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":84,
+      "endline":84,
       "start":5,
       "end":22
     },
@@ -1202,8 +951,8 @@ generics.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":85,
+      "endline":85,
       "start":5,
       "end":20
     }
@@ -1223,23 +972,23 @@ optional.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
+      "line":80,
+      "endline":80,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
+      "line":81,
+      "endline":81,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"o",
@@ -1253,21 +1002,21 @@ optional.js = {
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
+      "line":82,
+      "endline":82,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":83,
+      "endline":83,
       "start":5,
       "end":28
     },
@@ -1276,8 +1025,8 @@ optional.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":84,
+      "endline":84,
       "start":5,
       "end":22
     },
@@ -1286,8 +1035,8 @@ optional.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":85,
+      "endline":85,
       "start":5,
       "end":20
     },
@@ -1306,66 +1055,6 @@ optional.js = {
 jsx1.js = {
   "result":[
     {
-      "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
-      "start":5,
-      "end":38
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
-      "start":5,
-      "end":34
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
-      "start":5,
-      "end":44
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
-      "start":5,
-      "end":20
-    },
-    {
       "name":"x",
       "type":"number",
       "func_details":null,
@@ -1379,66 +1068,6 @@ jsx1.js = {
 }
 jsx2.js = {
   "result":[
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
-      "start":5,
-      "end":38
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
-      "start":5,
-      "end":34
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
-      "start":5,
-      "end":44
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
-      "start":5,
-      "end":20
-    },
     {
       "name":"x",
       "type":"number",
@@ -1458,6 +1087,30 @@ jsx2.js = {
       "endline":6,
       "start":26,
       "end":31
+    }
+  ]
+}
+jsx3.js = {
+  "result":[
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"jsx3.js",
+      "line":5,
+      "endline":5,
+      "start":29,
+      "end":34
+    },
+    {
+      "name":"y",
+      "type":"string",
+      "func_details":null,
+      "path":"jsx3.js",
+      "line":5,
+      "endline":5,
+      "start":40,
+      "end":45
     }
   ]
 }
@@ -1488,7 +1141,7 @@ customfun.js = {
     },
     {
       "name":"idx",
-      "type":"<IdxObject: Object, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
+      "type":"<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
       "func_details":{
         "return_type":"?IdxResult",
         "params":[
@@ -1506,7 +1159,7 @@ customfun.js = {
       "name":"exports",
       "type":"{||}",
       "func_details":null,
-      "path":"",
+      "path":"customfun.js",
       "line":0,
       "endline":0,
       "start":1,
@@ -1555,8 +1208,8 @@ if.js = {
       "type":"() => Iterator<string>",
       "func_details":{"return_type":"Iterator<string>","params":[]},
       "path":"[LIB] core.js",
-      "line":291,
-      "endline":291,
+      "line":321,
+      "endline":321,
       "start":5,
       "end":34
     },
@@ -1565,8 +1218,8 @@ if.js = {
       "type":"(name: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":292,
-      "endline":292,
+      "line":322,
+      "endline":322,
       "start":5,
       "end":32
     },
@@ -1575,8 +1228,8 @@ if.js = {
       "type":"(pos: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":293,
-      "endline":293,
+      "line":323,
+      "endline":323,
       "start":5,
       "end":31
     },
@@ -1585,8 +1238,8 @@ if.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":294,
-      "endline":294,
+      "line":324,
+      "endline":324,
       "start":5,
       "end":37
     },
@@ -1595,8 +1248,8 @@ if.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":295,
-      "endline":295,
+      "line":325,
+      "endline":325,
       "start":5,
       "end":38
     },
@@ -1608,8 +1261,8 @@ if.js = {
         "params":[{"name":"...strings","type":"Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":296,
-      "endline":296,
+      "line":326,
+      "endline":326,
       "start":5,
       "end":45
     },
@@ -1621,8 +1274,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":298,
-      "endline":298,
+      "line":328,
+      "endline":328,
       "start":5,
       "end":62
     },
@@ -1634,8 +1287,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":299,
-      "endline":299,
+      "line":329,
+      "endline":329,
       "start":5,
       "end":62
     },
@@ -1647,8 +1300,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":300,
-      "endline":300,
+      "line":330,
+      "endline":330,
       "start":5,
       "end":60
     },
@@ -1660,8 +1313,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":301,
-      "endline":301,
+      "line":331,
+      "endline":331,
       "start":5,
       "end":64
     },
@@ -1670,8 +1323,8 @@ if.js = {
       "type":"number",
       "func_details":null,
       "path":"[LIB] core.js",
-      "line":325,
-      "endline":325,
+      "line":358,
+      "endline":358,
       "start":13,
       "end":18
     },
@@ -1680,8 +1333,8 @@ if.js = {
       "type":"(href: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":302,
-      "endline":302,
+      "line":332,
+      "endline":332,
       "start":5,
       "end":30
     },
@@ -1697,8 +1350,8 @@ if.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":303,
-      "endline":303,
+      "line":333,
+      "endline":333,
       "start":5,
       "end":105
     },
@@ -1710,18 +1363,31 @@ if.js = {
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
-      "line":304,
-      "endline":304,
+      "line":334,
+      "endline":334,
       "start":5,
       "end":61
+    },
+    {
+      "name":"matchAll",
+      "type":"(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>",
+      "func_details":{
+        "return_type":"Iterator<RegExp$matchResult>",
+        "params":[{"name":"regexp","type":"string | RegExp"}]
+      },
+      "path":"[LIB] core.js",
+      "line":335,
+      "endline":335,
+      "start":5,
+      "end":67
     },
     {
       "name":"normalize",
       "type":"(format?: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":305,
-      "endline":305,
+      "line":336,
+      "endline":336,
       "start":5,
       "end":38
     },
@@ -1733,8 +1399,8 @@ if.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":306,
-      "endline":306,
+      "line":337,
+      "endline":337,
       "start":5,
       "end":60
     },
@@ -1746,8 +1412,8 @@ if.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":307,
-      "endline":307,
+      "line":338,
+      "endline":338,
       "start":5,
       "end":62
     },
@@ -1756,8 +1422,8 @@ if.js = {
       "type":"(count: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":308,
-      "endline":308,
+      "line":339,
+      "endline":339,
       "start":5,
       "end":33
     },
@@ -1775,8 +1441,8 @@ if.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":309,
-      "endline":309,
+      "line":340,
+      "endline":340,
       "start":5,
       "end":124
     },
@@ -1785,8 +1451,8 @@ if.js = {
       "type":"(regexp: (string | RegExp)) => number",
       "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
       "path":"[LIB] core.js",
-      "line":310,
-      "endline":310,
+      "line":341,
+      "endline":341,
       "start":5,
       "end":43
     },
@@ -1798,8 +1464,8 @@ if.js = {
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":311,
-      "endline":311,
+      "line":342,
+      "endline":342,
       "start":5,
       "end":47
     },
@@ -1814,8 +1480,8 @@ if.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":312,
-      "endline":312,
+      "line":343,
+      "endline":343,
       "start":5,
       "end":69
     },
@@ -1827,8 +1493,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":313,
-      "endline":313,
+      "line":344,
+      "endline":344,
       "start":5,
       "end":64
     },
@@ -1840,8 +1506,8 @@ if.js = {
         "params":[{"name":"from","type":"number"},{"name":"length?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":314,
-      "endline":314,
+      "line":345,
+      "endline":345,
       "start":5,
       "end":49
     },
@@ -1853,8 +1519,8 @@ if.js = {
         "params":[{"name":"start","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":315,
-      "endline":315,
+      "line":346,
+      "endline":346,
       "start":5,
       "end":50
     },
@@ -1866,8 +1532,8 @@ if.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":316,
-      "endline":316,
+      "line":347,
+      "endline":347,
       "start":5,
       "end":62
     },
@@ -1879,8 +1545,8 @@ if.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":317,
-      "endline":317,
+      "line":348,
+      "endline":348,
       "start":5,
       "end":62
     },
@@ -1889,8 +1555,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":318,
-      "endline":318,
+      "line":349,
+      "endline":349,
       "start":5,
       "end":25
     },
@@ -1899,8 +1565,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":324,
-      "endline":324,
+      "line":357,
+      "endline":357,
       "start":5,
       "end":22
     },
@@ -1909,8 +1575,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":319,
-      "endline":319,
+      "line":350,
+      "endline":350,
       "start":5,
       "end":25
     },
@@ -1919,18 +1585,28 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":320,
-      "endline":320,
+      "line":351,
+      "endline":351,
       "start":5,
       "end":18
+    },
+    {
+      "name":"trimEnd",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":352,
+      "endline":352,
+      "start":5,
+      "end":21
     },
     {
       "name":"trimLeft",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":321,
-      "endline":321,
+      "line":353,
+      "endline":353,
       "start":5,
       "end":22
     },
@@ -1939,8 +1615,18 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":322,
-      "endline":322,
+      "line":354,
+      "endline":354,
+      "start":5,
+      "end":23
+    },
+    {
+      "name":"trimStart",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":355,
+      "endline":355,
       "start":5,
       "end":23
     },
@@ -1949,8 +1635,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":323,
-      "endline":323,
+      "line":356,
+      "endline":356,
       "start":5,
       "end":21
     }
@@ -2004,23 +1690,23 @@ class.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
+      "line":80,
+      "endline":80,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
+      "line":81,
+      "endline":81,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"name",
@@ -2034,21 +1720,21 @@ class.js = {
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
+      "line":82,
+      "endline":82,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":83,
+      "endline":83,
       "start":5,
       "end":28
     },
@@ -2057,8 +1743,8 @@ class.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":84,
+      "endline":84,
       "start":5,
       "end":22
     },
@@ -2067,8 +1753,8 @@ class.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":85,
+      "endline":85,
       "start":5,
       "end":20
     }
@@ -2116,41 +1802,41 @@ idx.js = {
     },
     {
       "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
+      "line":80,
+      "endline":80,
       "start":5,
-      "end":38
+      "end":40
     },
     {
       "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
+      "line":81,
+      "endline":81,
       "start":5,
-      "end":34
+      "end":36
     },
     {
       "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
       "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
+      "line":82,
+      "endline":82,
       "start":5,
-      "end":44
+      "end":46
     },
     {
       "name":"toLocaleString",
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":83,
+      "endline":83,
       "start":5,
       "end":28
     },
@@ -2159,8 +1845,8 @@ idx.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":84,
+      "endline":84,
       "start":5,
       "end":22
     },
@@ -2169,10 +1855,1372 @@ idx.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":85,
+      "endline":85,
       "start":5,
       "end":20
+    }
+  ]
+}
+generic_alias.js = {
+  "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"name",
+      "type":"string",
+      "func_details":null,
+      "path":"generic_alias.js",
+      "line":5,
+      "endline":5,
+      "start":25,
+      "end":30
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
+object_literal.js:5:16 = {"result":[]}
+object_literal.js:7:17 = {"result":[]}
+optional_object.js = {
+  "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    },
+    {
+      "name":"z",
+      "type":"number",
+      "func_details":null,
+      "path":"optional_object.js",
+      "line":2,
+      "endline":2,
+      "start":25,
+      "end":30
+    }
+  ]
+}
+indirect_array.js:5:3 = {
+  "result":[
+    {
+      "name":"@@iterator",
+      "type":"() => Iterator<number>",
+      "func_details":{"return_type":"Iterator<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":218,
+      "endline":218,
+      "start":5,
+      "end":29
+    },
+    {
+      "name":"concat",
+      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(number | S)>",
+      "func_details":{
+        "return_type":"Array<(number | S)>",
+        "params":[{"name":"...items","type":"Array<Item>"}]
+      },
+      "path":"[LIB] core.js",
+      "line":221,
+      "endline":221,
+      "start":5,
+      "end":79
+    },
+    {
+      "name":"copyWithin",
+      "type":"(target: number, start: number, end?: number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[
+          {"name":"target","type":"number"},
+          {"name":"start","type":"number"},
+          {"name":"end?","type":"number"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":259,
+      "endline":259,
+      "start":5,
+      "end":64
+    },
+    {
+      "name":"entries",
+      "type":"() => Iterator<[number, number]>",
+      "func_details":{"return_type":"Iterator<[number, number]>","params":[]},
+      "path":"[LIB] core.js",
+      "line":222,
+      "endline":222,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"every",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "func_details":{
+        "return_type":"boolean",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":260,
+      "endline":260,
+      "start":5,
+      "end":98
+    },
+    {
+      "name":"fill",
+      "type":"(value: number, begin?: number, end?: number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[
+          {"name":"value","type":"number"},
+          {"name":"begin?","type":"number"},
+          {"name":"end?","type":"number"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":261,
+      "endline":261,
+      "start":5,
+      "end":58
+    },
+    {
+      "name":"filter",
+      "type":"((callbackfn: class Boolean) => Array<$NonMaybeType<number>>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":262,
+      "endline":262,
+      "start":5,
+      "end":63
+    },
+    {
+      "name":"find",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => (number | void)",
+      "func_details":{
+        "return_type":"number | void",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":264,
+      "endline":264,
+      "start":5,
+      "end":98
+    },
+    {
+      "name":"findIndex",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => number",
+      "func_details":{
+        "return_type":"number",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":265,
+      "endline":265,
+      "start":5,
+      "end":101
+    },
+    {
+      "name":"flatMap",
+      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
+      "func_details":{
+        "return_type":"Array<U>",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U)"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":268,
+      "endline":268,
+      "start":5,
+      "end":120
+    },
+    {
+      "name":"forEach",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => void",
+      "func_details":{
+        "return_type":"void",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":266,
+      "endline":266,
+      "start":5,
+      "end":97
+    },
+    {
+      "name":"includes",
+      "type":"(searchElement: mixed, fromIndex?: number) => boolean",
+      "func_details":{
+        "return_type":"boolean",
+        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":229,
+      "endline":229,
+      "start":5,
+      "end":63
+    },
+    {
+      "name":"indexOf",
+      "type":"(searchElement: mixed, fromIndex?: number) => number",
+      "func_details":{
+        "return_type":"number",
+        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":230,
+      "endline":230,
+      "start":5,
+      "end":61
+    },
+    {
+      "name":"join",
+      "type":"(separator?: string) => string",
+      "func_details":{"return_type":"string","params":[{"name":"separator?","type":"string"}]},
+      "path":"[LIB] core.js",
+      "line":231,
+      "endline":231,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"keys",
+      "type":"() => Iterator<number>",
+      "func_details":{"return_type":"Iterator<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":232,
+      "endline":232,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"lastIndexOf",
+      "type":"(searchElement: mixed, fromIndex?: number) => number",
+      "func_details":{
+        "return_type":"number",
+        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":233,
+      "endline":233,
+      "start":5,
+      "end":65
+    },
+    {
+      "name":"length",
+      "type":"number",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":294,
+      "endline":294,
+      "start":13,
+      "end":18
+    },
+    {
+      "name":"map",
+      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => U, thisArg?: any) => Array<U>",
+      "func_details":{
+        "return_type":"Array<U>",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => U"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":267,
+      "endline":267,
+      "start":5,
+      "end":96
+    },
+    {
+      "name":"pop",
+      "type":"() => number",
+      "func_details":{"return_type":"number","params":[]},
+      "path":"[LIB] core.js",
+      "line":269,
+      "endline":269,
+      "start":5,
+      "end":12
+    },
+    {
+      "name":"push",
+      "type":"(...items: Array<number>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
+      "path":"[LIB] core.js",
+      "line":270,
+      "endline":270,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"reduce",
+      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":271,
+      "endline":273,
+      "start":5,
+      "end":8
+    },
+    {
+      "name":"reduceRight",
+      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":278,
+      "endline":280,
+      "start":5,
+      "end":8
+    },
+    {
+      "name":"reverse",
+      "type":"() => Array<number>",
+      "func_details":{"return_type":"Array<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":285,
+      "endline":285,
+      "start":5,
+      "end":23
+    },
+    {
+      "name":"shift",
+      "type":"() => number",
+      "func_details":{"return_type":"number","params":[]},
+      "path":"[LIB] core.js",
+      "line":286,
+      "endline":286,
+      "start":5,
+      "end":14
+    },
+    {
+      "name":"slice",
+      "type":"(start?: number, end?: number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":251,
+      "endline":251,
+      "start":5,
+      "end":49
+    },
+    {
+      "name":"some",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "func_details":{
+        "return_type":"boolean",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":287,
+      "endline":287,
+      "start":5,
+      "end":97
+    },
+    {
+      "name":"sort",
+      "type":"(compareFn?: (a: number, b: number) => number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[{"name":"compareFn?","type":"(a: number, b: number) => number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":288,
+      "endline":288,
+      "start":5,
+      "end":54
+    },
+    {
+      "name":"splice",
+      "type":"(start: number, deleteCount?: number, ...items: Array<number>) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[
+          {"name":"start","type":"number"},
+          {"name":"deleteCount?","type":"number"},
+          {"name":"...items","type":"Array<number>"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":289,
+      "endline":289,
+      "start":5,
+      "end":77
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":219,
+      "endline":219,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"unshift",
+      "type":"(...items: Array<number>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
+      "path":"[LIB] core.js",
+      "line":290,
+      "endline":290,
+      "start":5,
+      "end":39
+    },
+    {
+      "name":"values",
+      "type":"() => Iterator<number>",
+      "func_details":{"return_type":"Iterator<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":253,
+      "endline":253,
+      "start":5,
+      "end":25
+    }
+  ]
+}
+indirect_array.js:10:3 = {
+  "result":[
+    {
+      "name":"@@iterator",
+      "type":"() => Iterator<number>",
+      "func_details":{"return_type":"Iterator<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":218,
+      "endline":218,
+      "start":5,
+      "end":29
+    },
+    {
+      "name":"concat",
+      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(number | S)>",
+      "func_details":{
+        "return_type":"Array<(number | S)>",
+        "params":[{"name":"...items","type":"Array<Item>"}]
+      },
+      "path":"[LIB] core.js",
+      "line":221,
+      "endline":221,
+      "start":5,
+      "end":79
+    },
+    {
+      "name":"copyWithin",
+      "type":"(target: number, start: number, end?: number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[
+          {"name":"target","type":"number"},
+          {"name":"start","type":"number"},
+          {"name":"end?","type":"number"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":259,
+      "endline":259,
+      "start":5,
+      "end":64
+    },
+    {
+      "name":"entries",
+      "type":"() => Iterator<[number, number]>",
+      "func_details":{"return_type":"Iterator<[number, number]>","params":[]},
+      "path":"[LIB] core.js",
+      "line":222,
+      "endline":222,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"every",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "func_details":{
+        "return_type":"boolean",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":260,
+      "endline":260,
+      "start":5,
+      "end":98
+    },
+    {
+      "name":"fill",
+      "type":"(value: number, begin?: number, end?: number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[
+          {"name":"value","type":"number"},
+          {"name":"begin?","type":"number"},
+          {"name":"end?","type":"number"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":261,
+      "endline":261,
+      "start":5,
+      "end":58
+    },
+    {
+      "name":"filter",
+      "type":"((callbackfn: class Boolean) => Array<$NonMaybeType<number>>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":262,
+      "endline":262,
+      "start":5,
+      "end":63
+    },
+    {
+      "name":"find",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => (number | void)",
+      "func_details":{
+        "return_type":"number | void",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":264,
+      "endline":264,
+      "start":5,
+      "end":98
+    },
+    {
+      "name":"findIndex",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => number",
+      "func_details":{
+        "return_type":"number",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":265,
+      "endline":265,
+      "start":5,
+      "end":101
+    },
+    {
+      "name":"flatMap",
+      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U), thisArg?: any) => Array<U>",
+      "func_details":{
+        "return_type":"Array<U>",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => ($ReadOnlyArray<U> | U)"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":268,
+      "endline":268,
+      "start":5,
+      "end":120
+    },
+    {
+      "name":"forEach",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => void",
+      "func_details":{
+        "return_type":"void",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":266,
+      "endline":266,
+      "start":5,
+      "end":97
+    },
+    {
+      "name":"includes",
+      "type":"(searchElement: mixed, fromIndex?: number) => boolean",
+      "func_details":{
+        "return_type":"boolean",
+        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":229,
+      "endline":229,
+      "start":5,
+      "end":63
+    },
+    {
+      "name":"indexOf",
+      "type":"(searchElement: mixed, fromIndex?: number) => number",
+      "func_details":{
+        "return_type":"number",
+        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":230,
+      "endline":230,
+      "start":5,
+      "end":61
+    },
+    {
+      "name":"join",
+      "type":"(separator?: string) => string",
+      "func_details":{"return_type":"string","params":[{"name":"separator?","type":"string"}]},
+      "path":"[LIB] core.js",
+      "line":231,
+      "endline":231,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"keys",
+      "type":"() => Iterator<number>",
+      "func_details":{"return_type":"Iterator<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":232,
+      "endline":232,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"lastIndexOf",
+      "type":"(searchElement: mixed, fromIndex?: number) => number",
+      "func_details":{
+        "return_type":"number",
+        "params":[{"name":"searchElement","type":"mixed"},{"name":"fromIndex?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":233,
+      "endline":233,
+      "start":5,
+      "end":65
+    },
+    {
+      "name":"length",
+      "type":"number",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":294,
+      "endline":294,
+      "start":13,
+      "end":18
+    },
+    {
+      "name":"map",
+      "type":"<U>(callbackfn: (value: number, index: number, array: Array<number>) => U, thisArg?: any) => Array<U>",
+      "func_details":{
+        "return_type":"Array<U>",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => U"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":267,
+      "endline":267,
+      "start":5,
+      "end":96
+    },
+    {
+      "name":"pop",
+      "type":"() => number",
+      "func_details":{"return_type":"number","params":[]},
+      "path":"[LIB] core.js",
+      "line":269,
+      "endline":269,
+      "start":5,
+      "end":12
+    },
+    {
+      "name":"push",
+      "type":"(...items: Array<number>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
+      "path":"[LIB] core.js",
+      "line":270,
+      "endline":270,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"reduce",
+      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":271,
+      "endline":273,
+      "start":5,
+      "end":8
+    },
+    {
+      "name":"reduceRight",
+      "type":"((callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Array<number>) => number) => number) & (<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Array<number>) => U, initialValue: U) => U)",
+      "func_details":null,
+      "path":"[LIB] core.js",
+      "line":278,
+      "endline":280,
+      "start":5,
+      "end":8
+    },
+    {
+      "name":"reverse",
+      "type":"() => Array<number>",
+      "func_details":{"return_type":"Array<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":285,
+      "endline":285,
+      "start":5,
+      "end":23
+    },
+    {
+      "name":"shift",
+      "type":"() => number",
+      "func_details":{"return_type":"number","params":[]},
+      "path":"[LIB] core.js",
+      "line":286,
+      "endline":286,
+      "start":5,
+      "end":14
+    },
+    {
+      "name":"slice",
+      "type":"(start?: number, end?: number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":251,
+      "endline":251,
+      "start":5,
+      "end":49
+    },
+    {
+      "name":"some",
+      "type":"(callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => boolean",
+      "func_details":{
+        "return_type":"boolean",
+        "params":[
+          {
+            "name":"callbackfn",
+            "type":"(value: number, index: number, array: Array<number>) => mixed"
+          },
+          {"name":"thisArg?","type":"any"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":287,
+      "endline":287,
+      "start":5,
+      "end":97
+    },
+    {
+      "name":"sort",
+      "type":"(compareFn?: (a: number, b: number) => number) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[{"name":"compareFn?","type":"(a: number, b: number) => number"}]
+      },
+      "path":"[LIB] core.js",
+      "line":288,
+      "endline":288,
+      "start":5,
+      "end":54
+    },
+    {
+      "name":"splice",
+      "type":"(start: number, deleteCount?: number, ...items: Array<number>) => Array<number>",
+      "func_details":{
+        "return_type":"Array<number>",
+        "params":[
+          {"name":"start","type":"number"},
+          {"name":"deleteCount?","type":"number"},
+          {"name":"...items","type":"Array<number>"}
+        ]
+      },
+      "path":"[LIB] core.js",
+      "line":289,
+      "endline":289,
+      "start":5,
+      "end":77
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":219,
+      "endline":219,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"unshift",
+      "type":"(...items: Array<number>) => number",
+      "func_details":{"return_type":"number","params":[{"name":"...items","type":"Array<number>"}]},
+      "path":"[LIB] core.js",
+      "line":290,
+      "endline":290,
+      "start":5,
+      "end":39
+    },
+    {
+      "name":"values",
+      "type":"() => Iterator<number>",
+      "func_details":{"return_type":"Iterator<number>","params":[]},
+      "path":"[LIB] core.js",
+      "line":253,
+      "endline":253,
+      "start":5,
+      "end":25
+    }
+  ]
+}
+infer.js = {
+  "result":[
+    {
+      "name":"b",
+      "type":"number",
+      "func_details":null,
+      "path":"infer.js",
+      "line":3,
+      "endline":3,
+      "start":26,
+      "end":27
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
+eval_predicate.js = {
+  "result":[
+    {
+      "name":"a",
+      "type":"number",
+      "func_details":null,
+      "path":"eval_predicate.js",
+      "line":3,
+      "endline":3,
+      "start":23,
+      "end":28
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
+eval_destructor.js = {
+  "result":[
+    {
+      "name":"a",
+      "type":"number",
+      "func_details":null,
+      "path":"eval_destructor.js",
+      "line":3,
+      "endline":3,
+      "start":24,
+      "end":29
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
+poly.js = {
+  "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    },
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"poly.js",
+      "line":4,
+      "endline":4,
+      "start":18,
+      "end":23
+    },
+    {
+      "name":"y",
+      "type":"number",
+      "func_details":null,
+      "path":"poly.js",
+      "line":4,
+      "endline":4,
+      "start":18,
+      "end":23
+    }
+  ]
+}
+poly_no_args.js = {
+  "result":[
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    },
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"poly_no_args.js",
+      "line":3,
+      "endline":3,
+      "start":10,
+      "end":15
     }
   ]
 }

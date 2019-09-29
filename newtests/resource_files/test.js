@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -29,18 +28,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     addFile('foo.css')
       .addCode("const css = require('./foo.css');")
       .addCode("(css: string)")
-      .newErrors(
-        `
-          test.js:5
-            5: (css: string)
-                ^^^ Cannot cast \`css\` to string because object type [1] is incompatible with string [2].
-            References:
-              3: const css = require('./foo.css');
-                                     ^^^^^^^^^^^ [1]
-              5: (css: string)
-                       ^^^^^^ [2]
-        `,
-      ),
+      .noNewErrors(),
   ]),
 
   test('Typical use of a .css file', [

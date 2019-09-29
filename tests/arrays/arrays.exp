@@ -15,22 +15,98 @@ References:
                       ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- isarray.js:4:31
+
+Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+
+   isarray.js:4:31
+   4|     const problem: Array<Z> = array; // error
+                                    ^^^^^
+
+References:
+   isarray.js:2:24
+   2| function hmm<Z>(array: Z) {
+                             ^ [1]
+   isarray.js:4:20
+   4|     const problem: Array<Z> = array; // error
+                         ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- isarray.js:11:31
+
+Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+
+   isarray.js:11:31
+   11|     const problem: Array<Z> = array; // error
+                                     ^^^^^
+
+References:
+   isarray.js:9:26
+    9|   function hmm<Z>(array: Z): Z  {
+                                ^ [1]
+   isarray.js:11:20
+   11|     const problem: Array<Z> = array; // error
+                          ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- isarray.js:24:35
+
+Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+
+   isarray.js:24:35
+   24|     const problem: Array<mixed> = array; // error
+                                         ^^^^^
+
+References:
+   isarray.js:22:21
+   22| function hmm(array: mixed) {
+                           ^^^^^ [1]
+   isarray.js:24:20
+   24|     const problem: Array<mixed> = array; // error
+                          ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- numeric_elem.js:6:1
+
+Cannot assign `0` to `arr[day]` because `Date` [1] is not an array index.
+
+   numeric_elem.js:6:1
+   6| arr[day] = 0;
+      ^^^^^^^^
+
+References:
+   numeric_elem.js:2:11
+   2| var day = new Date;
+                ^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- numeric_elem.js:7:2
 
-Cannot cast `arr[day]` to string because number [1] is incompatible with string [2].
+Cannot get `arr[day]` because `Date` [1] is not an array index.
 
    numeric_elem.js:7:2
    7| (arr[day]: string); // error: number ~> string
        ^^^^^^^^
 
 References:
-   numeric_elem.js:6:12
-   6| arr[day] = 0;
-                 ^ [1]
-   numeric_elem.js:7:12
-   7| (arr[day]: string); // error: number ~> string
-                 ^^^^^^ [2]
+   numeric_elem.js:2:11
+   2| var day = new Date;
+                ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:64:22
+
+Cannot assign array literal to `t2s` because array literal [1] has an arity of 3 but tuple type [2] has an arity of 4.
+
+   spread.js:64:22
+   64| let t2s: [1,2,3,4] = [...[t, t, t]]; // error tuple is only 3 long
+                            ^^^^^^^^^^^^^^ [1]
+
+References:
+   spread.js:64:10
+   64| let t2s: [1,2,3,4] = [...[t, t, t]]; // error tuple is only 3 long
+                ^^^^^^^^^ [2]
 
 
 
-Found 2 errors
+Found 7 errors

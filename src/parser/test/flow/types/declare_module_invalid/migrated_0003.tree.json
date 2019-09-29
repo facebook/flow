@@ -2,43 +2,51 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":25}},
-      "message":"Unexpected token export"
+      "message":"Unexpected token `export`, expected the token `declare`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":33}},
-      "message":"Unexpected token default"
+      "message":"Unexpected token `default`, expected the token `var`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":42}},
-      "message":"Unexpected token function"
+      "message":"Unexpected token `function`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":46}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `;`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":46}},
+      "message":"Unexpected identifier, expected the token `declare`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
-      "message":"Unexpected token ("
+      "message":"Unexpected token `(`, expected the token `var`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":47},"end":{"line":1,"column":48}},
-      "message":"Unexpected token )"
+      "message":"Unexpected token `)`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":50}},
-      "message":"Unexpected token {"
+      "message":"Unexpected token `{`, expected the token `;`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":50}},
+      "message":"Unexpected token `{`, expected the token `declare`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":50},"end":{"line":1,"column":51}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`, expected the token `var`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":52},"end":{"line":1,"column":53}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",

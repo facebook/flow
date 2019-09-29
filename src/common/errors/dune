@@ -1,0 +1,8 @@
+(library
+  (name flow_common_errors)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_common_lints
+  )
+)

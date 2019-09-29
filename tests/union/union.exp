@@ -7,8 +7,8 @@ Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:141:39
-   141|     toFixed(fractionDigits?: number): string;
+   <BUILTINS>/core.js:161:39
+   161|     toFixed(fractionDigits?: number): string;
                                               ^^^^^^ [1]
 
 
@@ -27,6 +27,23 @@ References:
    issue-324.js:5:13
    5| var foostr: Foo | string = new Foo();
                   ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-7322.js:22:2
+
+Cannot cast `x.noReturn()` to number because undefined [1] is incompatible with number [2].
+
+   issue-7322.js:22:2
+   22| (x.noReturn(): number);
+        ^^^^^^^^^^^^
+
+References:
+   issue-7322.js:4:13
+    4|   noReturn() { }
+                   ^ [1]
+   issue-7322.js:22:16
+   22| (x.noReturn(): number);
+                      ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:2:5
@@ -75,7 +92,7 @@ References:
 
 
 
-Found 5 errors
+Found 6 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

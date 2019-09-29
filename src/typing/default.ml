@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -38,14 +38,20 @@ type 'a t =
   | Cons of 'a * 'a t
   | Selector of reason * 'a t * TypeTerm.selector
 
-let expr ?default e = match default with
-| Some default -> Cons (e, default)
-| None -> Expr e
+let expr ?default e =
+  match default with
+  | Some default -> Cons (e, default)
+  | None -> Expr e
 
 let elem key reason default = Selector (reason, default, Elem key)
-let prop x reason default = Selector (reason, default, Prop x)
+
+let prop x reason has_default default = Selector (reason, default, Prop (x, has_default))
+
 let arr_rest i reason default = Selector (reason, default, ArrRest i)
+
 let obj_rest xs reason default = Selector (reason, default, ObjRest xs)
+
+let default reason d = Selector (reason, d, Default)
 
 let rec fold ~expr ~cons ~selector = function
   | Expr e -> expr e

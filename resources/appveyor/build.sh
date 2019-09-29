@@ -9,14 +9,11 @@ pwd
 # print opam config
 opam config list
 
-eval $(opam config env)
+eval $(opam env)
 
 # print ocaml config
 ocamlc -config
 
 cd "${APPVEYOR_BUILD_FOLDER}"
-opam pin add flowtype-ci . -n
-opam depext -u flowtype-ci
-opam install flowtype-ci --deps-only
 make all
 make -C src/parser/ ../../_build/src/parser/test/run_tests.native

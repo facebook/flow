@@ -1,0 +1,5 @@
+[options]
+no_flowlib=false
+
+[lints]
+implicit-inexact-object=error

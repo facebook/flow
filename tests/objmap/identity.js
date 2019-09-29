@@ -26,7 +26,7 @@ declare var foo: Foo;
   b: string, // Error: string ~> number
 }): Foo);
 
-({}: Foo); // Error: `a` and `b` are not defined.
+(({}: {}): Foo); // Error: `a` and `b` are not defined.
 
 ((any: {}): Foo); // Error: `a` and `b` are not defined.
 

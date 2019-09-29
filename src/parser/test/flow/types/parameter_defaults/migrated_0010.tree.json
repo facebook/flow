@@ -25,7 +25,6 @@
           "range":[33,35],
           "body":[]
         },
-        "superClass":null,
         "typeParameters":{
           "type":"TypeParameterDeclaration",
           "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":32}},
@@ -42,8 +41,8 @@
             },
             {
               "type":"TypeParameter",
-              "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":22}},
-              "range":[12,22],
+              "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":31}},
+              "range":[12,31],
               "name":"T",
               "bound":{
                 "type":"TypeAnnotation",
@@ -69,6 +68,7 @@
             }
           ]
         },
+        "superClass":null,
         "superTypeParameters":null,
         "implements":[],
         "decorators":[]

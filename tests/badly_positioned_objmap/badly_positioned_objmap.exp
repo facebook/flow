@@ -1,0 +1,53 @@
+Error ---------------------------------------------------------------------------------------------------- objmap.js:5:1
+
+Cannot call `c` because string [1] is not a valid argument of `$ObjMap` [2].
+
+   objmap.js:5:1
+   5| c('string')();
+      ^^^^^^^^^^^
+
+References:
+   objmap.js:5:3
+   5| c('string')();
+        ^^^^^^^^ [1]
+   objmap.js:3:20
+   3| type C = <H>(H) => $ObjMap<H, <X>(X)=>X>;
+                         ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- objmapi.js:22:12
+
+Cannot instantiate `PickKeysFromObject` because property `q` is missing in `MySpec` [1] in the first argument.
+
+   objmapi.js:22:12
+   22|   type A = PickKeysFromObject<MySpec, typeof keys>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   objmapi.js:22:31
+   22|   type A = PickKeysFromObject<MySpec, typeof keys>;
+                                     ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objmapi.js:25:17
+
+Cannot assign `_a` to `_b` because property `q` is missing in object type [1] but exists in object type [2].
+
+   objmapi.js:25:17
+   25|   const _b: A = _a;
+                       ^^
+
+References:
+   objmapi.js:23:19
+   23|   declare var _a: {|x: number|};
+                         ^^^^^^^^^^^^^ [1]
+   objmapi.js:25:13
+   25|   const _b: A = _a;
+                   ^ [2]
+
+
+
+Found 3 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

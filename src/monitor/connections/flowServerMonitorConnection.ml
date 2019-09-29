@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,44 +27,56 @@ module Logger = FlowServerMonitorLogger
 
 module type CONNECTION_PROCESSOR = sig
   type in_message
+
   type out_message
 end
 
 type 'out_message command =
-| Write of 'out_message
-| WriteAndClose of 'out_message
+  | Write of 'out_message
+  | WriteAndClose of 'out_message
 
 module type CONNECTION = sig
   type t
+
   type in_message
+
   type out_message
 
-  val create:
-    (* A name for this connection for debugging messages *)
-    name: string ->
-    (* The fd from which we should read *)
-    in_fd:Lwt_unix.file_descr ->
-    (* The fd to which we should write *)
-    out_fd:Lwt_unix.file_descr ->
-    (* A function that closes the in and out fds *)
-    close:(unit -> unit Lwt.t) ->
-    (* A callback for when we read a message from the in_fd *)
-    on_read:(msg:in_message -> connection:t -> unit Lwt.t) ->
+  val create :
+    name:(* A name for this connection for debugging messages *)
+         string ->
+    in_fd:(* The fd from which we should read *)
+          Lwt_unix.file_descr ->
+    out_fd:(* The fd to which we should write *)
+           Lwt_unix.file_descr ->
+    close:((* A function that closes the in and out fds *)
+           unit -> unit Lwt.t) ->
+    on_read:
+      (msg:(* A callback for when we read a message from the in_fd *)
+           in_message ->
+      connection:t ->
+      unit Lwt.t) ->
     (* Returns the tuple (start, conn), where conn is the connection and `start ()` tells the
      * connection to reading from and writing to the fds *)
     ((unit -> unit) * t) Lwt.t
-  val write: msg:out_message -> t -> unit
-  val write_and_close: msg:out_message -> t -> unit
-  val close_immediately: t -> unit Lwt.t
-  val flush_and_close: t -> unit Lwt.t
-  val is_closed: t -> bool
-  val wait_for_closed: t -> unit Lwt.t
+
+  val write : msg:out_message -> t -> unit
+
+  val write_and_close : msg:out_message -> t -> unit
+
+  val close_immediately : t -> unit Lwt.t
+
+  val flush_and_close : t -> unit Lwt.t
+
+  val is_closed : t -> bool
+
+  val wait_for_closed : t -> unit Lwt.t
 end
 
-module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
-  with type in_message := ConnectionProcessor.in_message
-  and type out_message := ConnectionProcessor.out_message = struct
-
+module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
+  CONNECTION
+    with type in_message := ConnectionProcessor.in_message
+     and type out_message := ConnectionProcessor.out_message = struct
   type t = {
     name: string;
     in_fd: Lwt_unix.file_descr;
@@ -78,15 +90,11 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
     wait_for_closed_thread: unit Lwt.t;
   }
 
-  let send_command conn command =
-    conn.push_to_stream (Some command)
+  let send_command conn command = conn.push_to_stream (Some command)
 
-  let close_stream conn =
-    try conn.push_to_stream None
-    with Lwt_stream.Closed -> ()
+  let close_stream conn = (try conn.push_to_stream None with Lwt_stream.Closed -> ())
 
-  let write ~msg conn =
-    send_command conn (Write msg)
+  let write ~msg conn = send_command conn (Write msg)
 
   let write_and_close ~msg conn =
     send_command conn (WriteAndClose msg);
@@ -103,12 +111,13 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
     conn.close ()
 
   let handle_command conn = function
-  | Write msg ->
-    let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in Lwt.return_unit
-  | WriteAndClose msg ->
-    Lwt.cancel conn.command_thread;
-    let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
-    close_immediately conn
+    | Write msg ->
+      let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
+      Lwt.return_unit
+    | WriteAndClose msg ->
+      Lwt.cancel conn.command_thread;
+      let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
+      close_immediately conn
 
   (* Write everything available in the stream and then close the connection *)
   let flush_and_close conn =
@@ -134,15 +143,13 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
     let catch conn exn =
       match exn with
       (* The command stream has been closed. This means the command loop should gracefully exit *)
-      | Lwt_stream.Empty ->
-        Lwt.return_unit
-      | exn -> begin
+      | Lwt_stream.Empty -> Lwt.return_unit
+      | exn ->
         Logger.error
           ~exn
           "Closing connection '%s' due to uncaught exception in command loop"
           conn.name;
         close_immediately conn
-      end
   end)
 
   module ReadLoop = LwtLoop.Make (struct
@@ -150,49 +157,59 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
 
     let main connection =
       let%lwt msg =
-        (Marshal_tools_lwt.from_fd_with_preamble connection.in_fd
-          : ConnectionProcessor.in_message Lwt.t)
+        ( Marshal_tools_lwt.from_fd_with_preamble connection.in_fd
+          : ConnectionProcessor.in_message Lwt.t )
       in
       let%lwt () = connection.on_read ~msg ~connection in
       Lwt.return connection
 
     let catch connection exn =
-      Logger.error
-        ~exn
-        "Closing connection '%s' due to uncaught exception in read loop"
-        connection.name;
+      (match exn with
+      | End_of_file ->
+        Logger.error "Connection '%s' was closed from the other side" connection.name
+      | _ ->
+        Logger.error
+          ~exn
+          "Closing connection '%s' due to uncaught exception in read loop"
+          connection.name);
       close_immediately connection
   end)
 
   let create ~name ~in_fd ~out_fd ~close ~on_read =
-    let wait_for_closed_thread, close =
+    let (wait_for_closed_thread, close) =
       (* Lwt.wait creates a thread that can't be canceled *)
       let (wait_for_closed_thread, wakener) = Lwt.wait () in
       (* If we've already woken the thread, then do nothing *)
-      let wakeup () = try Lwt.wakeup wakener () with Invalid_argument _ -> () in
+      let wakeup () = (try Lwt.wakeup wakener () with Invalid_argument _ -> ()) in
       (* On close, wake wait_for_closed_thread *)
       let close () =
         let%lwt () = close () in
         wakeup ();
         Lwt.return_unit
       in
-      wait_for_closed_thread, close
+      (wait_for_closed_thread, close)
     in
-    let command_stream, push_to_stream = Lwt_stream.create () in
+    let (command_stream, push_to_stream) = Lwt_stream.create () in
     (* Lwt.task creates a thread that can be canceled *)
     let (paused_thread, wakener) = Lwt.task () in
-    let conn = {
-      name;
-      in_fd;
-      out_fd;
-      command_stream;
-      push_to_stream;
-      close;
-      on_read;
-      command_thread = (let%lwt conn = paused_thread in CommandLoop.run conn);
-      read_thread = (let%lwt conn = paused_thread in ReadLoop.run conn);
-      wait_for_closed_thread;
-    } in
+    let conn =
+      {
+        name;
+        in_fd;
+        out_fd;
+        command_stream;
+        push_to_stream;
+        close;
+        on_read;
+        command_thread =
+          (let%lwt conn = paused_thread in
+           CommandLoop.run conn);
+        read_thread =
+          (let%lwt conn = paused_thread in
+           ReadLoop.run conn);
+        wait_for_closed_thread;
+      }
+    in
     let start () = Lwt.wakeup wakener conn in
     Lwt.return (start, conn)
 end

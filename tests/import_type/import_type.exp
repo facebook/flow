@@ -152,7 +152,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:71:14
 
-Cannot import the value `numValue` as a type. `import type` only works on type exports. Like type aliases, interfaces,
+Cannot import the value `numValue` as a type. `import type` only works on type exports like type aliases, interfaces,
 and classes. If you intended to import the type of a value use `import typeof` instead.
 
    71| import type {numValue} from "./ExportsANumber"; // Error: Cannot import-type a number value
@@ -173,5 +173,14 @@ References:
                    ^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- import_type.js:100:13
 
-Found 12 errors
+Cannot import the default export as a type. `import type` only works on type exports like type aliases, interfaces, and
+classes. If you intended to import the type of a value use `import typeof` instead.
+
+   100| import type x from './ExportDefaultNonType';
+                    ^
+
+
+
+Found 13 errors

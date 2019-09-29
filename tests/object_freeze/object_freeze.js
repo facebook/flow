@@ -23,5 +23,5 @@ function f(x: Object) {
   (Object.freeze({...x}): Object); // ok
 
   let y = Object.freeze({...x});
-  y.foo = "bar"; // there is no frozen form of AnyObjT so this is "allowed"
+  y.foo = "bar"; // there is no frozen form of AnyT so this is "allowed"
 }

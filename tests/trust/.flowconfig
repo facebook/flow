@@ -1,0 +1,5 @@
+[ignore]
+.*/_failing/.*
+
+[options]
+trust_mode=check

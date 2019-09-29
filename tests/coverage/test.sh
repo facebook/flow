@@ -19,3 +19,27 @@ assert_ok "$FLOW" coverage --respect-pragma no_pragma.js
 
 # --all wins (and assumes @flow weak)
 assert_ok "$FLOW" coverage --respect-pragma --all no_pragma.js
+
+echo "-----------------------------"
+echo "coverage.js"
+echo "-----------------------------"
+echo
+# some more detailed tests:
+assert_ok "$FLOW" coverage --strip-root --pretty coverage.js
+
+echo "-----------------------------"
+echo "unicode.js"
+echo "-----------------------------"
+echo
+# tests for
+assert_ok "$FLOW" coverage --strip-root --pretty unicode.js
+assert_ok "$FLOW" coverage --color unicode.js
+
+"$FLOW" stop
+"$FLOW" start --trust-mode=check
+echo "-----------------------------"
+echo "trust.js"
+echo "-----------------------------"
+echo
+assert_ok "$FLOW" coverage --show-trust --strip-root --pretty trust.js
+assert_ok "$FLOW" coverage --show-trust trust.js

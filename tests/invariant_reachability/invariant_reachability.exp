@@ -1,0 +1,43 @@
+Error ---------------------------------------------------------------------------------------------------- index.js:19:3
+
+Unreachable code.
+
+   19|   return "default string";
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:31:3
+
+Unreachable code.
+
+   31|   return "default string";
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:37:3
+
+Unreachable code.
+
+   37|   return "default string";
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- index.js:50:10
+
+Cannot return `c ? 1 : invariant()` because number [1] is incompatible with string [2].
+
+   index.js:50:10
+   50|   return c ? 1 : invariant();
+                ^^^^^^^^^^^^^^^^^^^
+
+References:
+   index.js:50:14
+   50|   return c ? 1 : invariant();
+                    ^ [1]
+   index.js:49:23
+   49| function foo(c: bool):string {
+                             ^^^^^^ [2]
+
+
+
+Found 4 errors

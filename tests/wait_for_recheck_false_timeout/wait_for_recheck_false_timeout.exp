@@ -1,0 +1,46 @@
+
+
+Trigger a 1000s recheck
+
+
+autocomplete with --wait-for-recheck true times out:
+{
+  "flowVersion":"<VERSION>",
+  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
+}
+
+
+check-contents with --wait-for-recheck true times out:
+
+
+coverage with --wait-for-recheck true times out:
+
+
+dump-types with --wait-for-recheck true times out:
+
+
+find-module with --wait-for-recheck true times out:
+
+
+get-def with --wait-for-recheck true times out:
+{
+  "flowVersion":"<VERSION>",
+  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
+}
+
+
+get-imports with --wait-for-recheck true times out:
+{
+  "flowVersion":"<VERSION>",
+  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
+}
+
+
+suggest with --wait-for-recheck true times out:
+
+
+type-at-pos with --wait-for-recheck true times out:
+{
+  "flowVersion":"<VERSION>",
+  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
+}

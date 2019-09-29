@@ -45,8 +45,8 @@ References:
    arrows.js:7:36
      7|     images = images.sort((a, b) => (a.width - b.width) + "");
                                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:269:38
-   269|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+   <BUILTINS>/core.js:288:38
+   288|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
                                              ^^^^^^ [2]
 
 

@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -61,36 +60,14 @@ export default suite(({addFile, addFiles, addCode}) => [
     addFile('flow-typed/lib.js')
       .addCode('import obj from "object";')
       .addCode('(obj: string);')
-      .newErrors(
-        `
-          test.js:5
-            5: (obj: string);
-                ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
-            References:
-              6:   declare module.exports: Object;
-                                           ^^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:6
-              5: (obj: string);
-                       ^^^^^^ [2]
-        `,
-      )
+      .noNewErrors()
       .because('obj should have the type Object'),
   ]),
   test('The cjs require for the object module should be Object', [
     addFile('flow-typed/lib.js')
       .addCode('const obj = require("object");')
       .addCode('(obj: string);')
-      .newErrors(
-        `
-          test.js:5
-            5: (obj: string);
-                ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
-            References:
-              6:   declare module.exports: Object;
-                                           ^^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:6
-              5: (obj: string);
-                       ^^^^^^ [2]
-        `,
-      )
+      .noNewErrors()
       .because('obj should have the type Object'),
   ]),
   test('The namespace import for the object module should be object', [

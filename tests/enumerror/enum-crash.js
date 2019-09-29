@@ -1,14 +1,12 @@
 /**
- * Copyright 2004-present Facebook. All Rights Reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * @flow
  * @format
  */
 import type {Enum} from 'somewhere';
 
-function bar(
-  e: Enum,
-) {
+function bar(e: Enum) {
   switch (e) {
     case Enum.FOO:
       return 0;

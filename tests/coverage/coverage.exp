@@ -1,35 +1,35 @@
-// check coverage of declare module
+[0m// check coverage of declare module
 
-declare module foo {
-}
-
+[0m[0mdeclare module foo {
+}[0m[0m
+[0m
 Covered: 100.00% (1 of 1 expressions)
 
-// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+[0m// This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
 // particular, when unchecked it causes a crash with coverage --color.
 
-declare module foo {
-}
+[0m[0mdeclare module foo {
+}[0m[0m
 
-declare module bar {
-}
-
+[0m[0mdeclare module bar {
+}[0m[0m
+[0m
 Covered: 100.00% (2 of 2 expressions)
 
-// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+[0m// This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
 // particular, when unchecked it causes non-termination with coverage --color.
 
-declare module foo {
-}
+[0m[0mdeclare module foo {
+}[0m[0m
 
-declare module bar {
-}
+[0m[0mdeclare module bar {
+}[0m[0m
 
-declare class qux {
-}
-
+[0m[0mdeclare class qux {
+}[0m[0m
+[0m
 Covered: 100.00% (3 of 3 expressions)
 
 Covered: 75.00% (3 of 4 expressions)
@@ -39,4 +39,668 @@ Covered: 75.00% (3 of 4 expressions)
 Covered: 0.00% (0 of 4 expressions)
 
 Covered: 75.00% (3 of 4 expressions)
+
+-----------------------------
+coverage.js
+-----------------------------
+
+{
+  "expressions":{
+    "covered_count":10,
+    "covered_locs":[
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":7,"offset":16},
+        "end":{"line":3,"column":8,"offset":18}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":12,"offset":21},
+        "end":{"line":3,"column":12,"offset":22}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":4,"column":17,"offset":40},
+        "end":{"line":4,"column":18,"offset":42}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":4,"column":17,"offset":40},
+        "end":{"line":4,"column":22,"offset":46}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":4,"column":22,"offset":45},
+        "end":{"line":4,"column":22,"offset":46}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":17,"offset":64},
+        "end":{"line":5,"column":17,"offset":65}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":11,"column":1,"offset":134},
+        "end":{"line":11,"column":25,"offset":159}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":12,"column":1,"offset":160},
+        "end":{"line":12,"column":25,"offset":185}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":15,"column":1,"offset":232},
+        "end":{"line":15,"column":26,"offset":258}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":23,"column":1,"offset":406},
+        "end":{"line":23,"column":26,"offset":432}
+      }
+    ],
+    "uncovered_count":31,
+    "uncovered_locs":[
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":4,"column":7,"offset":30},
+        "end":{"line":4,"column":8,"offset":32}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":7,"offset":54},
+        "end":{"line":5,"column":8,"offset":56}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":12,"offset":59},
+        "end":{"line":5,"column":13,"offset":61}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":12,"offset":59},
+        "end":{"line":5,"column":17,"offset":65}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":1,"offset":68},
+        "end":{"line":7,"column":16,"offset":84}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":9,"column":1,"offset":86},
+        "end":{"line":9,"column":23,"offset":109}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":1,"offset":110},
+        "end":{"line":10,"column":23,"offset":133}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":13,"column":1,"offset":186},
+        "end":{"line":13,"column":22,"offset":208}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":14,"column":1,"offset":209},
+        "end":{"line":14,"column":22,"offset":231}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":17,"column":1,"offset":260},
+        "end":{"line":17,"column":23,"offset":283}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":18,"column":1,"offset":284},
+        "end":{"line":18,"column":23,"offset":307}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":19,"column":1,"offset":308},
+        "end":{"line":19,"column":25,"offset":333}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":20,"column":1,"offset":334},
+        "end":{"line":20,"column":25,"offset":359}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":21,"column":1,"offset":360},
+        "end":{"line":21,"column":22,"offset":382}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":22,"column":1,"offset":383},
+        "end":{"line":22,"column":22,"offset":405}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":25,"column":1,"offset":434},
+        "end":{"line":25,"column":11,"offset":445}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":27,"column":1,"offset":447},
+        "end":{"line":27,"column":21,"offset":468}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":28,"column":1,"offset":469},
+        "end":{"line":28,"column":23,"offset":492}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":29,"column":1,"offset":493},
+        "end":{"line":29,"column":21,"offset":514}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":30,"column":1,"offset":515},
+        "end":{"line":30,"column":23,"offset":538}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":31,"column":1,"offset":539},
+        "end":{"line":31,"column":15,"offset":554}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":32,"column":1,"offset":555},
+        "end":{"line":32,"column":24,"offset":579}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":33,"column":1,"offset":580},
+        "end":{"line":33,"column":24,"offset":604}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":34,"column":1,"offset":605},
+        "end":{"line":34,"column":21,"offset":626}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":36,"column":1,"offset":628},
+        "end":{"line":36,"column":21,"offset":649}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":37,"column":1,"offset":650},
+        "end":{"line":37,"column":23,"offset":673}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":38,"column":1,"offset":674},
+        "end":{"line":38,"column":21,"offset":695}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":39,"column":1,"offset":696},
+        "end":{"line":39,"column":23,"offset":719}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":40,"column":1,"offset":720},
+        "end":{"line":40,"column":24,"offset":744}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":41,"column":1,"offset":745},
+        "end":{"line":41,"column":24,"offset":769}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":42,"column":1,"offset":770},
+        "end":{"line":42,"column":21,"offset":791}
+      }
+    ],
+    "empty_count":3,
+    "empty_locs":[
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":1,"offset":68},
+        "end":{"line":7,"column":16,"offset":84}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":19,"column":1,"offset":308},
+        "end":{"line":19,"column":25,"offset":333}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":20,"column":1,"offset":334},
+        "end":{"line":20,"column":25,"offset":359}
+      }
+    ]
+  }
+}
+-----------------------------
+unicode.js
+-----------------------------
+
+{
+  "expressions":{
+    "covered_count":5,
+    "covered_locs":[
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":2,"offset":11},
+        "end":{"line":3,"column":5,"offset":15}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":7,"offset":30},
+        "end":{"line":5,"column":11,"offset":35}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":15,"offset":38},
+        "end":{"line":5,"column":17,"offset":44}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":21,"offset":47},
+        "end":{"line":5,"column":24,"offset":51}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":2,"offset":61},
+        "end":{"line":7,"column":5,"offset":65}
+      }
+    ],
+    "uncovered_count":3,
+    "uncovered_locs":[
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":2,"offset":11},
+        "end":{"line":3,"column":10,"offset":20}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":21,"offset":47},
+        "end":{"line":5,"column":29,"offset":56}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":2,"offset":61},
+        "end":{"line":7,"column":10,"offset":70}
+      }
+    ],
+    "empty_count":0,
+    "empty_locs":[]
+  }
+}
+[0m// @flow
+
+([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
+
+const [0m[0memoji[0m[0m = [0m[0m"💩"[0m[0m; ([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
+
+([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
+[0m
+Covered: 62.50% (5 of 8 expressions)
+
+-----------------------------
+trust.js
+-----------------------------
+
+{
+  "expressions":{
+    "untainted_count":22,
+    "untainted_locs":[
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":1,"offset":9},
+        "end":{"line":3,"column":16,"offset":25}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":4,"column":1,"offset":39},
+        "end":{"line":4,"column":26,"offset":65}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":9,"column":1,"offset":160},
+        "end":{"line":9,"column":16,"offset":176}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":1,"offset":190},
+        "end":{"line":10,"column":16,"offset":206}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":12,"column":1,"offset":244},
+        "end":{"line":12,"column":16,"offset":260}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":15,"column":1,"offset":325},
+        "end":{"line":15,"column":17,"offset":342}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":17,"column":1,"offset":379},
+        "end":{"line":17,"column":17,"offset":396}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":19,"column":1,"offset":411},
+        "end":{"line":19,"column":16,"offset":427}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":29,"column":1,"offset":650},
+        "end":{"line":29,"column":27,"offset":677}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":30,"column":1,"offset":678},
+        "end":{"line":30,"column":27,"offset":705}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":31,"column":1,"offset":706},
+        "end":{"line":31,"column":27,"offset":733}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":32,"column":1,"offset":734},
+        "end":{"line":32,"column":27,"offset":761}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":34,"column":13,"offset":775},
+        "end":{"line":34,"column":14,"offset":777}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":35,"column":13,"offset":796},
+        "end":{"line":35,"column":14,"offset":798}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":36,"column":13,"offset":817},
+        "end":{"line":36,"column":14,"offset":819}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":37,"column":13,"offset":838},
+        "end":{"line":37,"column":14,"offset":840}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":39,"column":1,"offset":848},
+        "end":{"line":39,"column":2,"offset":850}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":39,"column":1,"offset":848},
+        "end":{"line":39,"column":4,"offset":852}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":40,"column":1,"offset":854},
+        "end":{"line":40,"column":2,"offset":856}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":41,"column":1,"offset":860},
+        "end":{"line":41,"column":2,"offset":862}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":41,"column":1,"offset":860},
+        "end":{"line":41,"column":4,"offset":864}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":42,"column":1,"offset":866},
+        "end":{"line":42,"column":2,"offset":868}
+      }
+    ],
+    "tainted_count":0,
+    "tainted_locs":[],
+    "uncovered_count":17,
+    "uncovered_locs":[
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":1,"offset":77},
+        "end":{"line":5,"column":26,"offset":103}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":6,"column":1,"offset":113},
+        "end":{"line":6,"column":15,"offset":128}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":1,"offset":138},
+        "end":{"line":7,"column":13,"offset":151}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":11,"column":1,"offset":220},
+        "end":{"line":11,"column":16,"offset":236}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":13,"column":1,"offset":274},
+        "end":{"line":13,"column":16,"offset":290}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":14,"column":1,"offset":298},
+        "end":{"line":14,"column":17,"offset":315}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":16,"column":1,"offset":354},
+        "end":{"line":16,"column":17,"offset":371}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":20,"column":1,"offset":439},
+        "end":{"line":20,"column":16,"offset":455}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":21,"column":1,"offset":465},
+        "end":{"line":21,"column":16,"offset":481}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":22,"column":1,"offset":489},
+        "end":{"line":22,"column":16,"offset":505}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":23,"column":1,"offset":519},
+        "end":{"line":23,"column":16,"offset":535}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":24,"column":1,"offset":543},
+        "end":{"line":24,"column":17,"offset":560}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":25,"column":1,"offset":570},
+        "end":{"line":25,"column":17,"offset":587}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":26,"column":1,"offset":597},
+        "end":{"line":26,"column":17,"offset":614}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":27,"column":1,"offset":622},
+        "end":{"line":27,"column":17,"offset":639}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":40,"column":1,"offset":854},
+        "end":{"line":40,"column":4,"offset":858}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":42,"column":1,"offset":866},
+        "end":{"line":42,"column":4,"offset":870}
+      }
+    ],
+    "empty_count":9,
+    "empty_locs":[
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":1,"offset":77},
+        "end":{"line":5,"column":26,"offset":103}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":6,"column":1,"offset":113},
+        "end":{"line":6,"column":15,"offset":128}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":14,"column":1,"offset":298},
+        "end":{"line":14,"column":17,"offset":315}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":20,"column":1,"offset":439},
+        "end":{"line":20,"column":16,"offset":455}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":22,"column":1,"offset":489},
+        "end":{"line":22,"column":16,"offset":505}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":24,"column":1,"offset":543},
+        "end":{"line":24,"column":17,"offset":560}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":25,"column":1,"offset":570},
+        "end":{"line":25,"column":17,"offset":587}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":27,"column":1,"offset":622},
+        "end":{"line":27,"column":17,"offset":639}
+      },
+      {
+        "source":"trust.js",
+        "type":"SourceFile",
+        "start":{"line":42,"column":1,"offset":866},
+        "end":{"line":42,"column":4,"offset":870}
+      }
+    ]
+  }
+}
+Covered: 56.41% (22 of 39 expressions)
 

@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -9,13 +8,13 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
 export default suite(
   ({
     startFlowServer,
-    ideStart,
-    ideStartAndConnect,
-    ideRequest,
-    ideNotification,
-    ideResponse,
-    ideRequestAndWaitUntilResponse,
-    waitUntilIDEStatus,
+    lspStart,
+    lspStartAndConnect,
+    lspRequest,
+    lspNotification,
+    lspResponse,
+    lspRequestAndWaitUntilResponse,
+    waitUntilLSPStatus,
     waitUntilServerStatus,
     flowCmd,
     modifyFile,
@@ -23,30 +22,30 @@ export default suite(
     lspIgnoreStatusAndCancellation,
   }) => [
     test('Warm flow starts up, and server remains running after shutdown', [
-      ideStart({mode: 'lsp', needsFlowServer: true}),
-      ideRequest('initialize', lspInitializeParams)
-        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
-        .verifyAllIDEMessagesInStep(
+      lspStart({needsFlowServer: true}),
+      lspRequest('initialize', lspInitializeParams)
+        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
+        .verifyAllLSPMessagesInStep(
           ['initialize', 'telemetry/connectionStatus{true}'],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideRequest('shutdown')
-        .waitUntilIDEMessage(20000, 'shutdown')
-        .verifyAllIDEMessagesInStep(
+      lspRequest('shutdown')
+        .waitUntilLSPMessage(20000, 'shutdown')
+        .verifyAllLSPMessagesInStep(
           ['shutdown'],
           ['telemetry/connectionStatus', ...lspIgnoreStatusAndCancellation],
         ),
-      ideNotification('exit')
-        .waitUntilIDEStatus(20000, 'stopped')
-        .verifyIDEStatus('stopped')
+      lspNotification('exit')
+        .waitUntilLSPStatus(20000, 'stopped')
+        .verifyLSPStatus('stopped')
         .verifyServerStatus('running'),
     ]),
 
     test('Cold flow starts up with progress, and shuts down', [
-      ideStart({mode: 'lsp', needsFlowServer: false}),
-      ideRequest('initialize', lspInitializeParams)
-        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
-        .verifyAllIDEMessagesInStep(
+      lspStart({needsFlowServer: false}),
+      lspRequest('initialize', lspInitializeParams)
+        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
+        .verifyAllLSPMessagesInStep(
           [
             'initialize',
             'window/logMessage{Starting Flow server}',
@@ -54,25 +53,25 @@ export default suite(
           ],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideRequest('shutdown')
-        .waitUntilIDEMessage(20000, 'shutdown')
-        .verifyAllIDEMessagesInStep(
+      lspRequest('shutdown')
+        .waitUntilLSPMessage(20000, 'shutdown')
+        .verifyAllLSPMessagesInStep(
           ['shutdown'],
           ['telemetry/connectionStatus', ...lspIgnoreStatusAndCancellation],
         ),
-      ideNotification('exit')
-        .waitUntilIDEStatus(20000, 'stopped')
+      lspNotification('exit')
+        .waitUntilLSPStatus(20000, 'stopped')
         .waitUntilServerStatus(20000, 'stopped')
-        .verifyIDEStatus('stopped')
+        .verifyLSPStatus('stopped')
         .verifyServerStatus('stopped'),
     ]),
 
     test('Termination in-flight, and external restart', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       flowCmd(['stop'])
         .waitUntilServerStatus(20000, 'stopped')
-        .waitUntilIDEMessage(20000, 'window/showStatus{stopped}')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(20000, 'window/showStatus{stopped}')
+        .verifyAllLSPMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
             'telemetry/event{End_of_file}',
@@ -86,20 +85,20 @@ export default suite(
           ],
         ),
       startFlowServer()
-        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
+        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
         // it really can take a while for flow to be ready to connect
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           ['telemetry/connectionStatus{true}'],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]),
 
     test('Termination in-flight, and internal restart', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       flowCmd(['stop'])
         .waitUntilServerStatus(20000, 'stopped')
-        .waitUntilIDEMessage(20000, 'window/showStatus{stopped}')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(20000, 'window/showStatus{stopped}')
+        .verifyAllLSPMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
             'telemetry/event{End_of_file}',
@@ -107,18 +106,18 @@ export default suite(
           ],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideResponse('mostRecent', {title: 'Restart'})
+      lspResponse('mostRecent', {title: 'Restart'})
         // .waitUntilServerStatus(60000, 'running') -- commented out because
         // the method currently only waits for servers that the test infrastructure
         // launched; not ones that lspCommand launched.
-        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
+        .verifyAllLSPMessagesInStep(
           ['window/logMessage{Starting}', 'telemetry/connectionStatus{true}'],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]),
 
-/*
+    /*
     TODO(ljw): fix race. The following test is fine in theory...
     But on AppVeyor, what happens 1 in 50 runs is that 'flow force-recheck --no-auto-start .flowconfig'
     sends a message to the monitor and thence the server telling it to force-recheck,
@@ -132,16 +131,16 @@ export default suite(
     In any case, it won't have a bad user experience - the retry behavior of
     forceRecheckCommand doesn't correspond to any real watchman behavior; and if
     the user does happen to do forceRecheckCommand in a way that stops flow,
-    then the worst that will happen is that Nuclide pops up a box saying
+    then the worst that will happen is that Nucllsp pops up a box saying
     "flow is stopped [restart]".
 
     test('Restarts a lost server in response to flowconfig benign change', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       modifyFile('.flowconfig', '#placeholder', '#replaced')
-        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus{false}')
+        .waitUntilLSPMessage(20000, 'telemetry/connectionStatus{false}')
         .dontMindServerDeath()
-        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus{true}')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus{true}')
+        .verifyAllLSPMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
             'telemetry/event{Server fatal exception}',
@@ -154,11 +153,11 @@ export default suite(
 */
 
     test('Terminates in response to flowconfig version change', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       modifyFile('.flowconfig', '>0.60.0', '>0.61.0')
         .waitUntilServerStatus(20000, 'stopped')
-        .waitUntilIDEStatus(20000, 'stopped')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPStatus(20000, 'stopped')
+        .verifyAllLSPMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
             'telemetry/event{Server fatal exception}',
@@ -171,8 +170,8 @@ export default suite(
     ]),
 
     test('Editor open files outlive server', [
-      ideStartAndConnect(),
-      ideNotification('textDocument/didOpen', {
+      lspStartAndConnect(),
+      lspNotification('textDocument/didOpen', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
           languageId: 'javascript',
@@ -183,45 +182,45 @@ jones();
 `,
         },
       })
-        .ideRequestAndWaitUntilResponse('textDocument/definition', {
+        .lspRequestAndWaitUntilResponse('textDocument/definition', {
           textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
           position: {line: 2, character: 1},
         })
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           ['textDocument/definition{open.js,"line":1}'],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 2, character: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{open.js,"line":1}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 2, character: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{open.js,"line":1}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       flowCmd(['stop'])
         .waitUntilServerStatus(20000, 'stopped')
-        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus{false}')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(20000, 'telemetry/connectionStatus{false}')
+        .verifyAllLSPMessagesInStep(
           ['telemetry/connectionStatus{false}'],
           ['telemetry/event{End_of_file}', ...lspIgnoreStatusAndCancellation],
         ),
       startFlowServer()
-        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
+        .verifyAllLSPMessagesInStep(
           ['telemetry/connectionStatus{true}'],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 2, character: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         ['textDocument/definition{open.js,line":1}'],
         [...lspIgnoreStatusAndCancellation],
       ),

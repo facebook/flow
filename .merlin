@@ -3,4 +3,15 @@ S src/**
 
 B _build/**
 
-PKG sedlex oUnit lwt lwt.ppx js_of_ocaml
+PKG compiler-libs
+PKG dtoa
+PKG js_of_ocaml
+PKG lwt
+PKG lwt_ppx
+PKG lwt.log
+PKG lwt.unix
+PKG ocaml-migrate-parsetree
+PKG oUnit
+PKG ppx_gen_rec
+PKG sedlex
+PKG wtf8

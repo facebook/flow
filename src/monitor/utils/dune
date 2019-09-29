@@ -1,0 +1,9 @@
+(library
+  (name flow_monitor_utils)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_exit_status
+    lwt
+  )
+)

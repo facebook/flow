@@ -1,0 +1,2 @@
+[lints]
+uninitialized-instance-property=error

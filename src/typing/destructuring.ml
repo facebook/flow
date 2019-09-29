@@ -1,252 +1,323 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
-
-(* AST handling for destructuring exprs *)
-
-
-open Utils_js
-open Reason
-open Type
-
 (* Destructuring visitor for tree-shaped patterns, parameteric over an action f
    to perform at the leaves. A type for the pattern is passed, which is taken
    apart as the visitor goes deeper. *)
-
-(** NOTE: Since the type of the pattern may contain (unsubstituted) type
-    parameters, it is important that this visitor does not emit constraints:
-    otherwise, we may end up with (unsubstituted) type parameters appearing as
-    lower or upper bounds of constraints, which would violate a core
-    invariant. So, instead we model the operation of destructuring with a
-    wrapper constructor, `DestructuringT` (with lazy evaluation rules that
-    trigger whenever a result is needed, e.g., to interact in flows with other
-    lower and upper bounds). **)
 
 (** TODO currently type annotations internal to patterns get parsed but not
   * checked. We should either update this to give users a warning that internal
   * annotations aren't checked, or update this to check internal annotations.
   *)
 
-let destructuring cx ~expr ~f = Ast.Pattern.(
-  let rec recurse ?parent_pattern_t curr_t init default = function
-  | top_loc, Array { Array.elements; _; } -> Array.(
-      let elements = elements |> List.mapi (fun i -> function
-        | Some (Element ((loc, _) as p)) ->
-            let key = DefT (mk_reason RNumber loc, NumT (
-              Literal (None, (float i, string_of_int i))
-            )) in
-            let reason = mk_reason (RCustom (spf "element %d" i)) loc in
-            let init = Option.map init (fun init ->
-              loc, Ast.Expression.(Member Member.({
-                _object = init;
-                property = PropertyExpression (
-                  loc,
-                  Ast.Expression.Literal { Ast.Literal.
-                    value = Ast.Literal.Number (float i);
-                    raw = string_of_int i;
-                  }
-                );
-                computed = true;
-              }))
-            ) in
-            let refinement = Option.bind init (fun init ->
-              Refinement.get cx init loc
-            ) in
-            let parent_pattern_t, tvar = (match refinement with
-            | Some refined_t -> refined_t, refined_t
-            | None ->
-                curr_t,
-                EvalT (curr_t, DestructuringT (reason, Elem key), mk_id())
-            ) in
-            let default = Option.map default (Default.elem key reason) in
-            Some (Element (recurse ~parent_pattern_t tvar init default p))
-        | Some (RestElement (loc, { RestElement.argument = p })) ->
-            let reason = mk_reason RArrayPatternRestProp loc in
-            let tvar =
-              EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id())
-            in
-            let default = Option.map default (Default.arr_rest i reason) in
-            Some (RestElement (loc, {
-              RestElement.argument = recurse ~parent_pattern_t:curr_t tvar init default p
-            }))
-        | None -> None
-      )
-      in
-      (* Type annotations in patterns are currently ignored *)
-      let annot = None in
-      (top_loc, curr_t), Array { elements; annot; }
-    )
+module Ast = Flow_ast
+module Tast_utils = Typed_ast_utils
+open Reason
+open Type
 
-  | top_loc, Object { Object.properties; _; } -> Object.(
-      let _, rev_props = List.fold_left (fun (xs, rev_props) -> function
-        | Property (loc, prop) ->
-            begin match prop with
-            | { Property.
-                key = Property.Identifier (loc, name);
-                pattern = p; _;
-              }
-            | { Property.key =
-                  Property.Literal (loc, { Ast.Literal.
-                    value = Ast.Literal.String name; _ });
-                pattern = p; _; }
-              ->
-                let reason = mk_reason (RProperty (Some name)) loc in
-                let init = Option.map init (fun init ->
-                  loc, Ast.Expression.(Member Member.({
-                    _object = init;
-                    property = PropertyIdentifier (loc, name);
-                    computed = false;
-                  }))
-                ) in
-                let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init loc
-                ) in
-                let parent_pattern_t, tvar = (match refinement with
-                | Some refined_t -> refined_t, refined_t
-                | None ->
-                  (* use the same reason for the prop name and the lookup.
-                     given `var {foo} = ...`, `foo` is both. compare to `a.foo`
-                     where `foo` is the name and `a.foo` is the lookup. *)
-                    curr_t,
-                    EvalT (curr_t, DestructuringT (reason, Prop name), mk_id())
-                ) in
-                let default = Option.map default (Default.prop name reason) in
-                (**
-                 * We are within a destructuring pattern and a `get-def` on this identifier should
-                 * point at the "def" of the original property. To accompish this, we emit the type
-                 * of the parent pattern so that get-def can dive in to that type and extract the
-                 * location of the "def" of this property.
-                 *)
-                Type_inference_hooks_js.dispatch_lval_hook
-                  cx
-                  name
-                  loc
-                  (Type_inference_hooks_js.Parent parent_pattern_t);
-                let pattern = recurse ~parent_pattern_t tvar init default p in
-                let key = match prop.Property.key with
-                  | (Property.Literal _ | Property.Identifier _) as key -> key
-                  | Property.Computed _ -> assert_false "precondition not met"
-                in
-                name :: xs,
-                Property (loc, { prop with Property.key; pattern; }) :: rev_props
-            | { Property.key = Property.Computed key; pattern = p; _; } ->
-                let (_, key_t), _ as key_ast = expr cx key in
-                let loc = fst key in
-                let reason = mk_reason (RProperty None) loc in
-                let init = Option.map init (fun init ->
-                  loc, Ast.Expression.(Member Member.({
-                    _object = init;
-                    property = PropertyExpression key;
-                    computed = true;
-                  }))
-                ) in
-                let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init loc
-                ) in
-                let parent_pattern_t, tvar = (match refinement with
-                | Some refined_t -> refined_t, refined_t
-                | None ->
-                    curr_t,
-                    EvalT (curr_t, DestructuringT (reason, Elem key_t), mk_id ())
-                ) in
-                let default = Option.map default (Default.elem key_t reason) in
-                let pattern = recurse ~parent_pattern_t tvar init default p in
-                xs, Property (loc, {
-                  prop with Property.key = Property.Computed key_ast; pattern;
-                }) :: rev_props
-            | { Property.key = Property.Literal _; _ } ->
-                Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
-                  (loc, DestructuringObjectPropertyLiteralNonString));
-                xs, rev_props
-            end
+type state = {
+  parent: Type.t option;
+  current: Type.t;
+  init: (ALoc.t, ALoc.t) Flow_ast.Expression.t option;
+  default: Type.t Default.t option;
+  annot: bool;
+}
 
-        | RestProperty (loc, { RestProperty.argument = p }) ->
-            let reason = mk_reason RObjectPatternRestProp loc in
-            let tvar =
-              EvalT (curr_t, DestructuringT (reason, ObjRest xs), mk_id())
-            in
-            let default = Option.map default (Default.obj_rest xs reason) in
-            let argument = recurse ~parent_pattern_t:curr_t tvar init default p in
-            xs, RestProperty (loc, { RestProperty.argument }) :: rev_props
-      ) ([], []) properties
-      in
-      let properties = List.rev rev_props in
-      (* Type annotations in patterns are currently ignored *)
-      let annot = None in
-      (top_loc, curr_t), Object { Object.properties; annot }
-    )
+type expr =
+  Context.t ->
+  (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
-  | loc, Identifier { Identifier.name = (id_loc, name); optional; _ } ->
-      begin match parent_pattern_t with
-      (* If there was a parent pattern, we already dispatched the hook if relevant. *)
-      | Some _ -> ()
-      (**
-       * If there was no parent_pattern, we must not be within a destructuring
-       * pattern and a `get-def` on this identifier should point at the
-       * location where the binding is introduced.
+type callback = use_op:Type.use_op -> ALoc.t -> string -> Type.t Default.t option -> Type.t -> unit
+
+let empty ?init ?default ~annot current = { parent = None; current; init; default; annot }
+
+let destruct cx reason ~annot selector t =
+  let kind =
+    if annot then
+      DestructAnnot
+    else
+      DestructInfer
+  in
+  Tvar.mk_where cx reason (fun tout ->
+      Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout)))
+
+let pattern_default cx ~expr acc = function
+  | None -> (acc, None)
+  | Some e ->
+    let { current; default; annot; _ } = acc in
+    let (((loc, t), _) as e) = expr cx e in
+    let default = Some (Default.expr ?default t) in
+    let reason = mk_reason RDefaultValue loc in
+    let current = destruct cx reason ~annot Default current in
+    let acc = { acc with current; default } in
+    (acc, Some e)
+
+let array_element cx acc i loc =
+  let { current; init; default; annot; _ } = acc in
+  let key =
+    DefT (mk_reason RNumber loc, bogus_trust (), NumT (Literal (None, (float i, string_of_int i))))
+  in
+  let reason = mk_reason (RCustom (Utils_js.spf "element %d" i)) loc in
+  let init =
+    Option.map init (fun init ->
+        ( loc,
+          Ast.Expression.(
+            Member
+              Member.
+                {
+                  _object = init;
+                  property =
+                    PropertyExpression
+                      ( loc,
+                        Ast.Expression.Literal
+                          {
+                            Ast.Literal.value = Ast.Literal.Number (float i);
+                            raw = string_of_int i;
+                            comments = Flow_ast_utils.mk_comments_opt ();
+                          } );
+                }) ))
+  in
+  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let (parent, current) =
+    match refinement with
+    | Some t -> (None, t)
+    | None -> (Some current, destruct cx reason ~annot (Elem key) current)
+  in
+  let default = Option.map default (Default.elem key reason) in
+  { acc with parent; current; init; default }
+
+let array_rest_element cx acc i loc =
+  let { current; default; annot; _ } = acc in
+  let reason = mk_reason RArrayPatternRestProp loc in
+  let (parent, current) = (Some current, destruct cx reason ~annot (ArrRest i) current) in
+  let default = Option.map default (Default.arr_rest i reason) in
+  { acc with parent; current; default }
+
+let object_named_property ~has_default cx acc loc x comments =
+  let { current; init; default; annot; _ } = acc in
+  let reason = mk_reason (RProperty (Some x)) loc in
+  let init =
+    Option.map init (fun init ->
+        ( loc,
+          Ast.Expression.(
+            Member
+              Member.
+                {
+                  _object = init;
+                  property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
+                }) ))
+  in
+  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let default =
+    Option.map default (fun default ->
+        let d = Default.prop x reason has_default default in
+        if has_default then
+          Default.default reason d
+        else
+          d)
+  in
+  let (parent, current) =
+    match refinement with
+    | Some t -> (None, t)
+    | None ->
+      (* use the same reason for the prop name and the lookup.
+       given `var {foo} = ...`, `foo` is both. compare to `a.foo`
+       where `foo` is the name and `a.foo` is the lookup. *)
+      (Some current, destruct cx reason ~annot (Prop (x, has_default)) current)
+  in
+  let () =
+    match parent with
+    | None -> () (* TODO: get-def when object property is refined *)
+    | Some t ->
+      (*
+       * We are within a destructuring pattern and a `get-def` on this identifier should
+       * point at the "def" of the original property. To accompish this, we emit the type
+       * of the parent pattern so that get-def can dive in to that type and extract the
+       * location of the "def" of this property.
        *)
-      | None ->
-        Type_inference_hooks_js.dispatch_lval_hook cx name loc Type_inference_hooks_js.Id
-      end;
-      let curr_t = mod_reason_of_t (replace_reason (function
-      | RDefaultValue
-      | RArrayPatternRestProp
-      | RObjectPatternRestProp
-        -> RIdentifier name
-      | desc -> desc
-      )) curr_t in
-      let id_info = name, curr_t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
-      let use_op = Op (AssignVar {
-        var = Some (mk_reason (RIdentifier name) loc);
-        init = (match init with
-        | Some init -> mk_expression_reason init
-        | None -> reason_of_t curr_t);
-      }) in
-      f ~use_op loc name default curr_t;
-      (* Type annotations in patterns are currently ignored *)
-      let annot = None in
-      (loc, curr_t), Identifier { Identifier.name = ((id_loc, curr_t), name); optional; annot; }
+      Type_inference_hooks_js.dispatch_lval_hook cx x loc (Type_inference_hooks_js.Parent t)
+  in
+  { acc with parent; current; init; default }
 
-  | loc, Assignment { Assignment.left; right } ->
-      let default = Some (Default.expr ?default right) in
-      let reason = mk_reason RDefaultValue loc in
-      let tvar =
-        EvalT (curr_t, DestructuringT (reason, Default), mk_id())
-      in
-      let left = recurse ?parent_pattern_t tvar init default left in
-      (loc, curr_t), Assignment { Assignment.
-        left;
-        right = Typed_ast.error_annot, Typed_ast.Expression.unimplemented
-      }
+let object_computed_property cx ~expr acc e =
+  let { current; init; default; annot; _ } = acc in
+  let (((loc, t), _) as e') = expr cx e in
+  let reason = mk_reason (RProperty None) loc in
+  let init =
+    Option.map init (fun init ->
+        (loc, Ast.Expression.(Member Member.{ _object = init; property = PropertyExpression e })))
+  in
+  let refinement = Option.bind init (fun init -> Refinement.get cx init loc) in
+  let (parent, current) =
+    match refinement with
+    | Some t -> (None, t)
+    | None -> (Some current, destruct cx reason ~annot (Elem t) current)
+  in
+  let default = Option.map default (Default.elem t reason) in
+  ({ acc with parent; current; init; default }, e')
 
-  | loc, Expression _ ->
-      Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
-        (loc, DestructuringExpressionPattern));
-      (loc, curr_t), Expression (Typed_ast.error_annot, Typed_ast.Expression.error)
+let object_rest_property cx acc xs loc =
+  let { current; default; annot; _ } = acc in
+  let reason = mk_reason RObjectPatternRestProp loc in
+  let (parent, current) = (Some current, destruct cx reason ~annot (ObjRest xs) current) in
+  let default = Option.map default (Default.obj_rest xs reason) in
+  { acc with parent; current; default }
 
-  in fun t init default pattern -> recurse t init default pattern
-)
+let object_property
+    cx ~expr ~has_default (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key)
+    : state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
+  Ast.Pattern.Object.(
+    match key with
+    | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
+      let acc = object_named_property ~has_default cx acc loc x comments in
+      ( acc,
+        x :: xs,
+        Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }) )
+    | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
+      let acc = object_named_property ~has_default cx acc loc x None in
+      (acc, x :: xs, Property.Literal (loc, lit))
+    | Property.Computed e ->
+      let (acc, e) = object_computed_property cx ~expr acc e in
+      (acc, xs, Property.Computed e)
+    | Property.Literal (loc, _) ->
+      Flow_js.add_output
+        cx
+        Error_message.(EUnsupportedSyntax (loc, DestructuringObjectPropertyLiteralNonString));
+      (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key))
 
+let identifier cx ~f acc loc name =
+  let { parent; current; init; default; annot } = acc in
+  let () =
+    match parent with
+    (* If there was a parent pattern, we already dispatched the hook if relevant. *)
+    | Some _ -> ()
+    (*
+     * If there was no parent_pattern, we must not be within a destructuring
+     * pattern and a `get-def` on this identifier should point at the
+     * location where the binding is introduced.
+     *)
+    | None -> Type_inference_hooks_js.dispatch_lval_hook cx name loc Type_inference_hooks_js.Id
+  in
+  let current =
+    mod_reason_of_t
+      (update_desc_reason (function
+          | RDefaultValue
+          | RArrayPatternRestProp
+          | RObjectPatternRestProp ->
+            RIdentifier name
+          | desc -> desc))
+      current
+  in
+  let reason = mk_reason (RIdentifier name) loc in
+  let current =
+    (* If we are destructuring an annotation, the chain of constraints leading
+     * to here will preserve the 0->1 constraint. The mk_typeof_annotation
+     * helper will wrap the destructured type in an AnnotT, to ensure it is
+     * resolved before it is used as an upper bound. The helper also enforces
+     * the destructured type is 0->1 via BecomeT.
+     *
+     * The BecomeT part should not be necessary, but for now it is. Ideally an
+     * annotation would recursively be 0->1, but it's possible for them to
+     * contain inferred parts. For example, a class's instance type where one of
+     * the fields is unannotated. *)
+    if annot then
+      Flow_js.mk_typeof_annotation cx reason current
+    else
+      current
+  in
+  let use_op =
+    Op
+      (AssignVar
+         {
+           var = Some reason;
+           init =
+             (match init with
+             | Some init -> mk_expression_reason init
+             | None -> reason_of_t current);
+         })
+  in
+  f ~use_op loc name default current
 
-let type_of_pattern = Ast.Pattern.(function
-  | _, Array { Array.annot; _; } -> annot
+let rec pattern cx ~expr ~f acc (loc, p) =
+  Ast.Pattern.
+    ( (loc, acc.current),
+      match p with
+      | Array { Array.elements; annot; comments } ->
+        let elements = array_elements cx ~expr ~f acc elements in
+        let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
+        Array { Array.elements; annot; comments }
+      | Object { Object.properties; annot } ->
+        let properties = object_properties cx ~expr ~f acc properties in
+        let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
+        Object { Object.properties; annot }
+      | Identifier { Identifier.name = id; optional; annot } ->
+        let (id_loc, { Ast.Identifier.name; comments }) = id in
+        let id = ((id_loc, acc.current), { Ast.Identifier.name; comments }) in
+        let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
+        identifier cx ~f acc id_loc name;
+        Identifier { Identifier.name = id; optional; annot }
+      | Expression e ->
+        Flow_js.add_output
+          cx
+          Error_message.(EUnsupportedSyntax (loc, DestructuringExpressionPattern));
+        Expression (Tast_utils.error_mapper#expression e) )
 
-  | _, Object { Object.annot; _; } -> annot
+and array_elements cx ~expr ~f acc =
+  Ast.Pattern.Array.(
+    List.mapi (fun i ->
+        Option.map ~f:(function
+            | Element (loc, { Element.argument = p; default = d }) ->
+              let acc = array_element cx acc i loc in
+              let (acc, d) = pattern_default cx ~expr acc d in
+              let p = pattern cx ~expr ~f acc p in
+              Element (loc, { Element.argument = p; default = d })
+            | RestElement (loc, { RestElement.argument = p }) ->
+              let acc = array_rest_element cx acc i loc in
+              let p = pattern cx ~expr ~f acc p in
+              RestElement (loc, { RestElement.argument = p }))))
 
-  | _, Identifier { Identifier.annot; _; } -> annot
+and object_properties =
+  Ast.Pattern.Object.(
+    let prop cx ~expr ~f acc xs p =
+      match p with
+      | Property (loc, { Property.key; pattern = p; default = d; shorthand }) ->
+        let has_default = d <> None in
+        let (acc, xs, key) = object_property cx ~expr ~has_default acc xs key in
+        let (acc, d) = pattern_default cx ~expr acc d in
+        let p = pattern cx ~expr ~f acc p in
+        (xs, Property (loc, { Property.key; pattern = p; default = d; shorthand }))
+      | RestProperty (loc, { RestProperty.argument = p }) ->
+        let acc = object_rest_property cx acc xs loc in
+        let p = pattern cx ~expr ~f acc p in
+        (xs, RestProperty (loc, { RestProperty.argument = p }))
+    in
+    let rec loop cx ~expr ~f acc xs rev_ps = function
+      | [] -> List.rev rev_ps
+      | p :: ps ->
+        let (xs, p) = prop cx ~expr ~f acc xs p in
+        loop cx ~expr ~f acc xs (p :: rev_ps) ps
+    in
+    (fun cx ~expr ~f acc ps -> loop cx ~expr ~f acc [] [] ps))
 
-  | _, _ -> None
-)
+let type_of_pattern (_, p) =
+  Ast.Pattern.(
+    match p with
+    | Array { Array.annot; _ }
+    | Object { Object.annot; _ }
+    | Identifier { Identifier.annot; _ } ->
+      annot
+    | _ -> Ast.Type.Missing ALoc.none)
+
 (* instantiate pattern visitor for assignments *)
-let destructuring_assignment cx ~expr rhs_t init =
+let assignment cx ~expr rhs_t init =
+  let acc = empty ~init ~annot:false rhs_t in
   let f ~use_op loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
     ignore Env.(set_var cx ~use_op name t loc)
   in
-  destructuring cx ~expr rhs_t (Some init) None ~f
+  pattern cx ~expr ~f acc

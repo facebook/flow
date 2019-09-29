@@ -177,9 +177,9 @@ Cannot use `D` [1] with fewer than 1 type argument.
                            ^^^
 
 References:
-   classes.js:36:9
+   classes.js:36:8
    36| class D<S, T = string> extends A<T> {}
-               ^^^^ [1]
+              ^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:41:17
@@ -191,9 +191,9 @@ Cannot use `D` [1] with more than 2 type arguments.
                        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   classes.js:36:9
+   classes.js:36:8
    36| class D<S, T = string> extends A<T> {}
-               ^^^^ [1]
+              ^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:42:20

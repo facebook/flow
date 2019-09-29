@@ -1,0 +1,11 @@
+Error ------------------------------------------------------------------------------------------------- uses_fun.js:3:14
+
+Cannot import the value `fun` as a type. `import type` only works on type exports like type aliases, interfaces, and
+classes. If you intended to import the type of a value use `import typeof` instead.
+
+   3| import type {fun} from './fun';
+                   ^^^
+
+
+
+Found 1 error

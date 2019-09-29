@@ -18,6 +18,7 @@ The `.flowconfig` consists of 7 sections:
 * [`[declarations]`](declarations)
 * [`[include]`](include)
 * [`[ignore]`](ignore)
+* [`[untyped]`](untyped)
 * [`[libs]`](libs)
 * [`[lints]`](lints)
 * [`[options]`](options)

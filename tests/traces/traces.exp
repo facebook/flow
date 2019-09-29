@@ -18,24 +18,24 @@ Trace:
 * path 1:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
-  2: function g0(y:string) { }
-                   ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 2)
-* path 2:
   3: function f0(x) { g0(x) }
-                         ^ NumT [number]
-  3: function f0(x) { g0(x) }
-                         ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+                         ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
   3: function f0(x) { g0(x) }
                          ^ OpenT [`x`]
-  3: function f0(x) { g0(x) }
-                         ^ ~> ReposLowerT [`x`] (from [not shown])
-* path 3:
+  2: function g0(y:string) { }
+                   ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
+* path 2:
   4: f0(0);
         ^ NumT [number]
   3: function f0(x) { g0(x) }
-                 ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
+                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [`x`]
+* path 3:
+  4: f0(0);
+     ^^ FunT [function]
+  4: f0(0);
+     ^^^^^ ~> CallT [call of `f0`] (from [not shown])
 
 
 Error --------------------------------------------------------------------------------------------------- Traces.js:8:27
@@ -58,24 +58,24 @@ Trace:
 * path 1:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
-  7: function g1(a:string, b:string) { }
-                             ^^^^^^ ~> UseT(FunParam, StrT) [string] (from path 2)
-* path 2:
   8: function f1(x, y) { g1(x, y) }
-                               ^ NumT [number]
-  8: function f1(x, y) { g1(x, y) }
-                               ^ ~> UseT(FunParam, OpenT) [`y`] (from path 3)
+                               ^ ~> UseT(FunParam, OpenT) [`y`] (from path 2)
   8: function f1(x, y) { g1(x, y) }
                                ^ OpenT [`y`]
-  8: function f1(x, y) { g1(x, y) }
-                               ^ ~> ReposLowerT [`y`] (from [not shown])
-* path 3:
+  7: function g1(a:string, b:string) { }
+                             ^^^^^^ ~> UseT(FunParam, StrT) [string] (from [not shown])
+* path 2:
   9: f1("hey", 0);
                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
-                    ^ ~> UseT(FunParam, OpenT) [`y`] (from [not shown])
+                    ^ ~> UseT(FunParam, OpenT) [`y`] (from path 3)
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [`y`]
+* path 3:
+  9: f1("hey", 0);
+     ^^ FunT [function]
+  9: f1("hey", 0);
+     ^^^^^^^^^^^^ ~> CallT [call of `f1`] (from [not shown])
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
@@ -109,10 +109,14 @@ Trace:
  14: f2(function(x) { return x * x });
                              ^ ~> ReposLowerT [`x`]
 * path 3:
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ FunT [function]
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from [not shown])
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ OpenT [`xlam`]
  12: function g2(ylam: (s:string) => number) { }
-                          ^^^^^^ StrT [string]
- 12: function g2(ylam: (s:string) => number) { }
-                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
+                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
@@ -146,10 +150,14 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ ~> ReposLowerT [`x`]
 * path 3:
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ FunT [function]
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from [not shown])
+ 13: function f2(xlam) { g2(xlam) }
+                            ^^^^ OpenT [`xlam`]
  12: function g2(ylam: (s:string) => number) { }
-                          ^^^^^^ StrT [string]
- 12: function g2(ylam: (s:string) => number) { }
-                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
+                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:29
@@ -183,10 +191,14 @@ Trace:
  19: function double(n) { return n * 2 }
                                  ^ ~> ReposLowerT [`n`]
 * path 3:
+ 18: function f3(xlam) { g3(xlam) }
+                            ^^^^ FunT [function]
+ 18: function f3(xlam) { g3(xlam) }
+                            ^^^^ ~> UseT(FunParam, OpenT) [`xlam`] (from [not shown])
+ 18: function f3(xlam) { g3(xlam) }
+                            ^^^^ OpenT [`xlam`]
  17: function g3(ylam: (s:string) => number) { }
-                          ^^^^^^ StrT [string]
- 17: function g3(ylam: (s:string) => number) { }
-                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
+                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
 
 
 

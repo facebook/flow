@@ -2,23 +2,35 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
-      "message":"Unexpected token :"
+      "message":"Unexpected token `:`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":3,"column":20}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `(`"
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":1}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
       "message":"Rest parameter must be final parameter of an argument list"
+    },
+    {
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
+      "message":"Unexpected end of input, expected the token `)`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
+      "message":"Unexpected end of input, expected the token `{`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":0}},
+      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",
@@ -127,8 +139,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

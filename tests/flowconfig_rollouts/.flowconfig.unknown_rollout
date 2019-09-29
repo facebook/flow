@@ -1,0 +1,2 @@
+[options]
+(verify_sig=on) experimental.well_formed_exports=true

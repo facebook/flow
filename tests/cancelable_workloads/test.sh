@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Workloads can't be canceled anymore by files changing. But in this test
+# find-refs starts a recheck which is cancelable. So this test still works.
+# So I'm leaving it here.
+
 assert_ok "$FLOW" stop
 
 # Introduce a file which will cause stuff to hang

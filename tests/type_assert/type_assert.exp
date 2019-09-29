@@ -48,7 +48,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:23:1
 
-Cannot use TypeAssert library function [1] with any [1] argument
+Cannot use TypeAssert library function [1] with explicit 'any' [1] argument
 
    23| TypeAssertIs<any>(8);
        ^^^^^^^^^^^^^^^^^^^^ [1]
@@ -96,7 +96,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:43:1
 
-Cannot use TypeAssert library function [1] with any [1] argument
+Cannot use TypeAssert library function [1] with explicit 'any' [1] argument
 
    43| TypeAssertThrows<{[number]: Array<{A: number, B: any}>}>(9);
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]

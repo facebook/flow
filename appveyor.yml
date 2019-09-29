@@ -4,10 +4,11 @@ os: Visual Studio 2015
 platform: x64
 environment:
   matrix:
-    - OPAM_SWITCH: 4.05.0+mingw64c
+    - OPAM_SWITCH: 4.07.1+mingw64c
       FORK_USER: ocaml
       FORK_BRANCH: master
       CYG_ROOT: C:\cygwin64
+      PACKAGE: flowtype-ci
       TESTS: false
       INSTALL: false
       DEPOPTS: false
@@ -41,4 +42,4 @@ deploy:
     secure: f1YgYz9csZ8QokY6+aXF10toZtXlFxicbm7uTcylqq+ILoRE6y5GUaf1TfoUalx5
   artifact: /.*\.zip/
   on:
-    appveyor_repo_tag: true
+    APPVEYOR_REPO_TAG: true

@@ -20,6 +20,66 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
+      "start":{"line":2,"column":5,"offset":13},
+      "end":{"line":2,"column":7,"offset":16}
+    },
+    "path":"test.js",
+    "line":2,
+    "endline":2,
+    "start":5,
+    "end":7
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":8,"offset":16},
+      "end":{"line":2,"column":7,"offset":16}
+    },
+    "path":"test.js",
+    "line":2,
+    "endline":2,
+    "start":8,
+    "end":7
+  },
+  {
+    "type":"mixed",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":11,"offset":19},
+      "end":{"line":2,"column":17,"offset":26}
+    },
+    "path":"test.js",
+    "line":2,
+    "endline":2,
+    "start":11,
+    "end":17
+  },
+  {
+    "type":"mixed",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":11,"offset":19},
+      "end":{"line":2,"column":17,"offset":26}
+    },
+    "path":"test.js",
+    "line":2,
+    "endline":2,
+    "start":11,
+    "end":17
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
       "start":{"line":2,"column":11,"offset":19},
       "end":{"line":2,"column":29,"offset":38}
     },
@@ -75,6 +135,66 @@
     "end":14
   },
   {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":14,"offset":53},
+      "end":{"line":3,"column":14,"offset":54}
+    },
+    "path":"test.js",
+    "line":3,
+    "endline":3,
+    "start":14,
+    "end":14
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":15,"offset":54},
+      "end":{"line":3,"column":14,"offset":54}
+    },
+    "path":"test.js",
+    "line":3,
+    "endline":3,
+    "start":15,
+    "end":14
+  },
+  {
+    "type":"void",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":16,"offset":55},
+      "end":{"line":3,"column":15,"offset":55}
+    },
+    "path":"test.js",
+    "line":3,
+    "endline":3,
+    "start":16,
+    "end":15
+  },
+  {
+    "type":"(x: number) => void",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":1,"offset":60},
+      "end":{"line":4,"column":3,"offset":63}
+    },
+    "path":"test.js",
+    "line":4,
+    "endline":4,
+    "start":1,
+    "end":3
+  },
+  {
     "type":"(x: number) => void",
     "reasons":[],
     "loc":{
@@ -126,6 +246,21 @@
       "source":"test.js",
       "type":"SourceFile",
       "start":{"line":5,"column":5,"offset":72},
+      "end":{"line":5,"column":5,"offset":73}
+    },
+    "path":"test.js",
+    "line":5,
+    "endline":5,
+    "start":5,
+    "end":5
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":5,"offset":72},
       "end":{"line":5,"column":12,"offset":80}
     },
     "path":"test.js",
@@ -133,6 +268,36 @@
     "endline":5,
     "start":5,
     "end":12
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":7,"offset":74},
+      "end":{"line":5,"column":12,"offset":80}
+    },
+    "path":"test.js",
+    "line":5,
+    "endline":5,
+    "start":7,
+    "end":12
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":16,"offset":83},
+      "end":{"line":5,"column":18,"offset":86}
+    },
+    "path":"test.js",
+    "line":5,
+    "endline":5,
+    "start":16,
+    "end":18
   },
   {
     "type":"number",
@@ -185,6 +350,51 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
+      "start":{"line":7,"column":22,"offset":110},
+      "end":{"line":7,"column":22,"offset":111}
+    },
+    "path":"test.js",
+    "line":7,
+    "endline":7,
+    "start":22,
+    "end":22
+  },
+  {
+    "type":"empty",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":23,"offset":111},
+      "end":{"line":7,"column":22,"offset":111}
+    },
+    "path":"test.js",
+    "line":7,
+    "endline":7,
+    "start":23,
+    "end":22
+  },
+  {
+    "type":"empty",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":24,"offset":112},
+      "end":{"line":7,"column":23,"offset":112}
+    },
+    "path":"test.js",
+    "line":7,
+    "endline":7,
+    "start":24,
+    "end":23
+  },
+  {
+    "type":"empty",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
       "start":{"line":8,"column":10,"offset":124},
       "end":{"line":8,"column":10,"offset":125}
     },
@@ -195,7 +405,22 @@
     "end":10
   },
   {
-    "type":"(val: ?(string | Object)) => (string | void | Object)",
+    "type":"empty",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":10,"offset":124},
+      "end":{"line":8,"column":10,"offset":125}
+    },
+    "path":"test.js",
+    "line":8,
+    "endline":8,
+    "start":10,
+    "end":10
+  },
+  {
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -210,7 +435,37 @@
     "end":21
   },
   {
-    "type":"?string | Object",
+    "type":"(val: ?(any | string)) => (any | void | string)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":7,"offset":171},
+      "end":{"line":12,"column":21,"offset":186}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":7,
+    "end":21
+  },
+  {
+    "type":"(val: ?(any | string)) => (any | void | string)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":22,"offset":186},
+      "end":{"line":12,"column":21,"offset":186}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":22,
+    "end":21
+  },
+  {
+    "type":"?any | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -225,7 +480,22 @@
     "end":27
   },
   {
-    "type":"(val: ?(string | Object)) => (string | void | Object)",
+    "type":"?any | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":25,"offset":189},
+      "end":{"line":12,"column":27,"offset":192}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":25,
+    "end":27
+  },
+  {
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -240,7 +510,37 @@
     "end":61
   },
   {
-    "type":"?string | Object",
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":28,"offset":192},
+      "end":{"line":12,"column":27,"offset":192}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":28,
+    "end":27
+  },
+  {
+    "type":"?any | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":28,"offset":192},
+      "end":{"line":12,"column":27,"offset":192}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":28,
+    "end":27
+  },
+  {
+    "type":"?any | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -255,7 +555,37 @@
     "end":34
   },
   {
-    "type":"string | void | Object",
+    "type":"?any | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":32,"offset":196},
+      "end":{"line":12,"column":34,"offset":199}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":32,
+    "end":34
+  },
+  {
+    "type":"boolean",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":32,"offset":196},
+      "end":{"line":12,"column":43,"offset":208}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":32,
+    "end":43
+  },
+  {
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -300,7 +630,22 @@
     "end":55
   },
   {
-    "type":"string | void | Object",
+    "type":"void",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":47,"offset":211},
+      "end":{"line":12,"column":55,"offset":220}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":47,
+    "end":55
+  },
+  {
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -315,7 +660,22 @@
     "end":61
   },
   {
-    "type":"(x: ?Object) => (string | void | Object)",
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":59,"offset":223},
+      "end":{"line":12,"column":61,"offset":226}
+    },
+    "path":"test.js",
+    "line":12,
+    "endline":12,
+    "start":59,
+    "end":61
+  },
+  {
+    "type":"(x: ?any) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -330,7 +690,22 @@
     "end":11
   },
   {
-    "type":"?Object",
+    "type":"?any",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":13,"offset":241},
+      "end":{"line":14,"column":13,"offset":242}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":13,
+    "end":13
+  },
+  {
+    "type":"?any",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -345,7 +720,67 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | Object)) => (string | void | Object)",
+    "type":"?any",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":16,"offset":244},
+      "end":{"line":14,"column":22,"offset":251}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":16,
+    "end":22
+  },
+  {
+    "type":"any (explicit)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":17,"offset":245},
+      "end":{"line":14,"column":22,"offset":251}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":17,
+    "end":22
+  },
+  {
+    "type":"any (explicit)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":17,"offset":245},
+      "end":{"line":14,"column":22,"offset":251}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":17,
+    "end":22
+  },
+  {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":24,"offset":252},
+      "end":{"line":14,"column":23,"offset":252}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":24,
+    "end":23
+  },
+  {
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -360,7 +795,22 @@
     "end":48
   },
   {
-    "type":"string | void | Object",
+    "type":"(val: ?(any | string)) => (any | void | string)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":34,"offset":262},
+      "end":{"line":14,"column":48,"offset":277}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":34,
+    "end":48
+  },
+  {
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -375,7 +825,7 @@
     "end":51
   },
   {
-    "type":"?Object",
+    "type":"?any",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -390,7 +840,22 @@
     "end":50
   },
   {
-    "type":"(x: ?Object) => (string | void | Object)",
+    "type":"?any",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":50,"offset":278},
+      "end":{"line":14,"column":50,"offset":279}
+    },
+    "path":"test.js",
+    "line":14,
+    "endline":14,
+    "start":50,
+    "end":50
+  },
+  {
+    "type":"(x: ?any) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -405,7 +870,22 @@
     "end":11
   },
   {
-    "type":"?Object",
+    "type":"?any",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":13,"offset":296},
+      "end":{"line":15,"column":13,"offset":297}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":13,
+    "end":13
+  },
+  {
+    "type":"?any",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -420,7 +900,67 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | Object)) => (string | void | Object)",
+    "type":"?any",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":16,"offset":299},
+      "end":{"line":15,"column":22,"offset":306}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":16,
+    "end":22
+  },
+  {
+    "type":"any (explicit)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":17,"offset":300},
+      "end":{"line":15,"column":22,"offset":306}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":17,
+    "end":22
+  },
+  {
+    "type":"any (explicit)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":17,"offset":300},
+      "end":{"line":15,"column":22,"offset":306}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":17,
+    "end":22
+  },
+  {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":24,"offset":307},
+      "end":{"line":15,"column":23,"offset":307}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":24,
+    "end":23
+  },
+  {
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -435,7 +975,22 @@
     "end":48
   },
   {
-    "type":"string | void | Object",
+    "type":"(val: ?(any | string)) => (any | void | string)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":34,"offset":317},
+      "end":{"line":15,"column":48,"offset":332}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":34,
+    "end":48
+  },
+  {
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -450,7 +1005,7 @@
     "end":51
   },
   {
-    "type":"?Object",
+    "type":"?any",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -465,7 +1020,22 @@
     "end":50
   },
   {
-    "type":"(x: ?string) => (string | void | Object)",
+    "type":"?any",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":50,"offset":333},
+      "end":{"line":15,"column":50,"offset":334}
+    },
+    "path":"test.js",
+    "line":15,
+    "endline":15,
+    "start":50,
+    "end":50
+  },
+  {
+    "type":"(x: ?string) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -486,6 +1056,21 @@
       "source":"test.js",
       "type":"SourceFile",
       "start":{"line":16,"column":13,"offset":351},
+      "end":{"line":16,"column":13,"offset":352}
+    },
+    "path":"test.js",
+    "line":16,
+    "endline":16,
+    "start":13,
+    "end":13
+  },
+  {
+    "type":"?string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":13,"offset":351},
       "end":{"line":16,"column":22,"offset":361}
     },
     "path":"test.js",
@@ -495,7 +1080,52 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | Object)) => (string | void | Object)",
+    "type":"?string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":16,"offset":354},
+      "end":{"line":16,"column":22,"offset":361}
+    },
+    "path":"test.js",
+    "line":16,
+    "endline":16,
+    "start":16,
+    "end":22
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":17,"offset":355},
+      "end":{"line":16,"column":22,"offset":361}
+    },
+    "path":"test.js",
+    "line":16,
+    "endline":16,
+    "start":17,
+    "end":22
+  },
+  {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":24,"offset":362},
+      "end":{"line":16,"column":23,"offset":362}
+    },
+    "path":"test.js",
+    "line":16,
+    "endline":16,
+    "start":24,
+    "end":23
+  },
+  {
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -510,7 +1140,22 @@
     "end":48
   },
   {
-    "type":"string | void | Object",
+    "type":"(val: ?(any | string)) => (any | void | string)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":34,"offset":372},
+      "end":{"line":16,"column":48,"offset":387}
+    },
+    "path":"test.js",
+    "line":16,
+    "endline":16,
+    "start":34,
+    "end":48
+  },
+  {
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -540,7 +1185,22 @@
     "end":50
   },
   {
-    "type":"(x: ?string) => (string | void | Object)",
+    "type":"?string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":50,"offset":388},
+      "end":{"line":16,"column":50,"offset":389}
+    },
+    "path":"test.js",
+    "line":16,
+    "endline":16,
+    "start":50,
+    "end":50
+  },
+  {
+    "type":"(x: ?string) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -561,6 +1221,21 @@
       "source":"test.js",
       "type":"SourceFile",
       "start":{"line":17,"column":13,"offset":406},
+      "end":{"line":17,"column":13,"offset":407}
+    },
+    "path":"test.js",
+    "line":17,
+    "endline":17,
+    "start":13,
+    "end":13
+  },
+  {
+    "type":"?string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":13,"offset":406},
       "end":{"line":17,"column":22,"offset":416}
     },
     "path":"test.js",
@@ -570,7 +1245,52 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | Object)) => (string | void | Object)",
+    "type":"?string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":16,"offset":409},
+      "end":{"line":17,"column":22,"offset":416}
+    },
+    "path":"test.js",
+    "line":17,
+    "endline":17,
+    "start":16,
+    "end":22
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":17,"offset":410},
+      "end":{"line":17,"column":22,"offset":416}
+    },
+    "path":"test.js",
+    "line":17,
+    "endline":17,
+    "start":17,
+    "end":22
+  },
+  {
+    "type":"any | void | string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":24,"offset":417},
+      "end":{"line":17,"column":23,"offset":417}
+    },
+    "path":"test.js",
+    "line":17,
+    "endline":17,
+    "start":24,
+    "end":23
+  },
+  {
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -585,7 +1305,22 @@
     "end":48
   },
   {
-    "type":"string | void | Object",
+    "type":"(val: ?(any | string)) => (any | void | string)",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":34,"offset":427},
+      "end":{"line":17,"column":48,"offset":442}
+    },
+    "path":"test.js",
+    "line":17,
+    "endline":17,
+    "start":34,
+    "end":48
+  },
+  {
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -598,6 +1333,21 @@
     "endline":17,
     "start":34,
     "end":51
+  },
+  {
+    "type":"?string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":50,"offset":443},
+      "end":{"line":17,"column":50,"offset":444}
+    },
+    "path":"test.js",
+    "line":17,
+    "endline":17,
+    "start":50,
+    "end":50
   },
   {
     "type":"?string",
@@ -630,6 +1380,36 @@
     "end":15
   },
   {
+    "type":"$Facebookism$Idx",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":18,"offset":467},
+      "end":{"line":19,"column":33,"offset":483}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":18,
+    "end":33
+  },
+  {
+    "type":"$Facebookism$Idx",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":18,"offset":467},
+      "end":{"line":19,"column":33,"offset":483}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":18,
+    "end":33
+  },
+  {
     "type":"{a?: {b: ?{c: (null | {d: number})}}}",
     "reasons":[],
     "loc":{
@@ -642,6 +1422,201 @@
     "line":20,
     "endline":20,
     "start":13,
+    "end":15
+  },
+  {
+    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":18,"offset":502},
+      "end":{"line":20,"column":52,"offset":537}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":18,
+    "end":52
+  },
+  {
+    "type":"void | {b: ?{c: (null | {d: number})}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":19,"offset":503},
+      "end":{"line":20,"column":19,"offset":504}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":19,
+    "end":19
+  },
+  {
+    "type":"{b: ?{c: (null | {d: number})}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":23,"offset":507},
+      "end":{"line":20,"column":51,"offset":536}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":23,
+    "end":51
+  },
+  {
+    "type":"?{c: (null | {d: number})}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":24,"offset":508},
+      "end":{"line":20,"column":24,"offset":509}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":24,
+    "end":24
+  },
+  {
+    "type":"?{c: (null | {d: number})}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":27,"offset":511},
+      "end":{"line":20,"column":50,"offset":535}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":27,
+    "end":50
+  },
+  {
+    "type":"{c: (null | {d: number})}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":28,"offset":512},
+      "end":{"line":20,"column":50,"offset":535}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":28,
+    "end":50
+  },
+  {
+    "type":"null | {d: number}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":29,"offset":513},
+      "end":{"line":20,"column":29,"offset":514}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":29,
+    "end":29
+  },
+  {
+    "type":"null",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":32,"offset":516},
+      "end":{"line":20,"column":35,"offset":520}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":32,
+    "end":35
+  },
+  {
+    "type":"null | {d: number}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":32,"offset":516},
+      "end":{"line":20,"column":49,"offset":534}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":32,
+    "end":49
+  },
+  {
+    "type":"{d: number}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":39,"offset":523},
+      "end":{"line":20,"column":49,"offset":534}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":39,
+    "end":49
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":40,"offset":524},
+      "end":{"line":20,"column":40,"offset":525}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":40,
+    "end":40
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":43,"offset":527},
+      "end":{"line":20,"column":48,"offset":533}
+    },
+    "path":"test.js",
+    "line":20,
+    "endline":20,
+    "start":43,
+    "end":48
+  },
+  {
+    "type":"?number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":7,"offset":545},
+      "end":{"line":21,"column":15,"offset":554}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":7,
     "end":15
   },
   {
@@ -658,6 +1633,36 @@
     "endline":21,
     "start":7,
     "end":15
+  },
+  {
+    "type":"?number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":16,"offset":554},
+      "end":{"line":21,"column":15,"offset":554}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":16,
+    "end":15
+  },
+  {
+    "type":"$Facebookism$Idx",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":19,"offset":557},
+      "end":{"line":21,"column":21,"offset":560}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":19,
+    "end":21
   },
   {
     "type":"$Facebookism$Idx",
@@ -710,6 +1715,36 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
+      "start":{"line":21,"column":23,"offset":561},
+      "end":{"line":21,"column":25,"offset":564}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":23,
+    "end":25
+  },
+  {
+    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":28,"offset":566},
+      "end":{"line":21,"column":30,"offset":569}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":28,
+    "end":30
+  },
+  {
+    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
       "start":{"line":21,"column":28,"offset":566},
       "end":{"line":21,"column":30,"offset":569}
     },
@@ -733,6 +1768,51 @@
     "endline":21,
     "start":28,
     "end":45
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":31,"offset":569},
+      "end":{"line":21,"column":30,"offset":569}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":31,
+    "end":30
+  },
+  {
+    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":31,"offset":569},
+      "end":{"line":21,"column":30,"offset":569}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":31,
+    "end":30
+  },
+  {
+    "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":35,"offset":573},
+      "end":{"line":21,"column":37,"offset":576}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":35,
+    "end":37
   },
   {
     "type":"{a?: {b: ?{c: (null | {d: number})}}}",
@@ -808,6 +1888,66 @@
     "endline":21,
     "start":35,
     "end":45
+  },
+  {
+    "type":"void | {b: ?{c: (null | {d: number})}}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":39,"offset":577},
+      "end":{"line":21,"column":39,"offset":578}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":39,
+    "end":39
+  },
+  {
+    "type":"?{c: (null | {d: number})}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":41,"offset":579},
+      "end":{"line":21,"column":41,"offset":580}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":41,
+    "end":41
+  },
+  {
+    "type":"null | {d: number}",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":43,"offset":581},
+      "end":{"line":21,"column":43,"offset":582}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":43,
+    "end":43
+  },
+  {
+    "type":"number",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":45,"offset":583},
+      "end":{"line":21,"column":45,"offset":584}
+    },
+    "path":"test.js",
+    "line":21,
+    "endline":21,
+    "start":45,
+    "end":45
   }
 ]
 === predicates.js ===
@@ -833,6 +1973,36 @@
     "loc":{
       "source":"predicates.js",
       "type":"SourceFile",
+      "start":{"line":3,"column":5,"offset":14},
+      "end":{"line":3,"column":5,"offset":15}
+    },
+    "path":"predicates.js",
+    "line":3,
+    "endline":3,
+    "start":5,
+    "end":5
+  },
+  {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":6,"offset":15},
+      "end":{"line":3,"column":5,"offset":15}
+    },
+    "path":"predicates.js",
+    "line":3,
+    "endline":3,
+    "start":6,
+    "end":5
+  },
+  {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
       "start":{"line":3,"column":9,"offset":18},
       "end":{"line":3,"column":22,"offset":32}
     },
@@ -841,6 +2011,21 @@
     "endline":3,
     "start":9,
     "end":22
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":11,"offset":20},
+      "end":{"line":3,"column":13,"offset":23}
+    },
+    "path":"predicates.js",
+    "line":3,
+    "endline":3,
+    "start":11,
+    "end":13
   },
   {
     "type":"string",
@@ -873,6 +2058,21 @@
     "end":5
   },
   {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":5,"offset":38},
+      "end":{"line":4,"column":5,"offset":39}
+    },
+    "path":"predicates.js",
+    "line":4,
+    "endline":4,
+    "start":5,
+    "end":5
+  },
+  {
     "type":"string",
     "reasons":[],
     "loc":{
@@ -886,6 +2086,36 @@
     "endline":4,
     "start":5,
     "end":9
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":7,"offset":40},
+      "end":{"line":4,"column":9,"offset":43}
+    },
+    "path":"predicates.js",
+    "line":4,
+    "endline":4,
+    "start":7,
+    "end":9
+  },
+  {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":5,"offset":52},
+      "end":{"line":5,"column":5,"offset":53}
+    },
+    "path":"predicates.js",
+    "line":5,
+    "endline":5,
+    "start":5,
+    "end":5
   },
   {
     "type":"{|FOO: string|}",
@@ -915,6 +2145,36 @@
     "line":5,
     "endline":5,
     "start":5,
+    "end":9
+  },
+  {
+    "type":"boolean",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":5,"offset":52},
+      "end":{"line":5,"column":15,"offset":63}
+    },
+    "path":"predicates.js",
+    "line":5,
+    "endline":5,
+    "start":5,
+    "end":15
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":7,"offset":54},
+      "end":{"line":5,"column":9,"offset":57}
+    },
+    "path":"predicates.js",
+    "line":5,
+    "endline":5,
+    "start":7,
     "end":9
   },
   {
@@ -948,6 +2208,21 @@
     "end":5
   },
   {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":5,"offset":72},
+      "end":{"line":6,"column":5,"offset":73}
+    },
+    "path":"predicates.js",
+    "line":6,
+    "endline":6,
+    "start":5,
+    "end":5
+  },
+  {
     "type":"string",
     "reasons":[],
     "loc":{
@@ -960,6 +2235,36 @@
     "line":6,
     "endline":6,
     "start":5,
+    "end":9
+  },
+  {
+    "type":"boolean",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":5,"offset":72},
+      "end":{"line":6,"column":16,"offset":84}
+    },
+    "path":"predicates.js",
+    "line":6,
+    "endline":6,
+    "start":5,
+    "end":16
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":7,"offset":74},
+      "end":{"line":6,"column":9,"offset":77}
+    },
+    "path":"predicates.js",
+    "line":6,
+    "endline":6,
+    "start":7,
     "end":9
   },
   {
@@ -993,6 +2298,21 @@
     "end":5
   },
   {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":5,"offset":93},
+      "end":{"line":7,"column":5,"offset":94}
+    },
+    "path":"predicates.js",
+    "line":7,
+    "endline":7,
+    "start":5,
+    "end":5
+  },
+  {
     "type":"string",
     "reasons":[],
     "loc":{
@@ -1005,6 +2325,36 @@
     "line":7,
     "endline":7,
     "start":5,
+    "end":9
+  },
+  {
+    "type":"boolean",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":5,"offset":93},
+      "end":{"line":7,"column":17,"offset":106}
+    },
+    "path":"predicates.js",
+    "line":7,
+    "endline":7,
+    "start":5,
+    "end":17
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":7,"offset":95},
+      "end":{"line":7,"column":9,"offset":98}
+    },
+    "path":"predicates.js",
+    "line":7,
+    "endline":7,
+    "start":7,
     "end":9
   },
   {
@@ -1038,6 +2388,21 @@
     "end":5
   },
   {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":5,"offset":115},
+      "end":{"line":8,"column":5,"offset":116}
+    },
+    "path":"predicates.js",
+    "line":8,
+    "endline":8,
+    "start":5,
+    "end":5
+  },
+  {
     "type":"string",
     "reasons":[],
     "loc":{
@@ -1051,6 +2416,51 @@
     "endline":8,
     "start":5,
     "end":9
+  },
+  {
+    "type":"boolean",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":5,"offset":115},
+      "end":{"line":8,"column":22,"offset":133}
+    },
+    "path":"predicates.js",
+    "line":8,
+    "endline":8,
+    "start":5,
+    "end":22
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":7,"offset":117},
+      "end":{"line":8,"column":9,"offset":120}
+    },
+    "path":"predicates.js",
+    "line":8,
+    "endline":8,
+    "start":7,
+    "end":9
+  },
+  {
+    "type":"void",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":14,"offset":124},
+      "end":{"line":8,"column":22,"offset":133}
+    },
+    "path":"predicates.js",
+    "line":8,
+    "endline":8,
+    "start":14,
+    "end":22
   },
   {
     "type":"void",
@@ -1083,7 +2493,52 @@
     "end":9
   },
   {
-    "type":"(obj: any) => boolean",
+    "type":"class Array<T>",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":5,"offset":142},
+      "end":{"line":9,"column":9,"offset":147}
+    },
+    "path":"predicates.js",
+    "line":9,
+    "endline":9,
+    "start":5,
+    "end":9
+  },
+  {
+    "type":"(obj: mixed) => boolean",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":5,"offset":142},
+      "end":{"line":9,"column":17,"offset":155}
+    },
+    "path":"predicates.js",
+    "line":9,
+    "endline":9,
+    "start":5,
+    "end":17
+  },
+  {
+    "type":"boolean",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":5,"offset":142},
+      "end":{"line":9,"column":24,"offset":162}
+    },
+    "path":"predicates.js",
+    "line":9,
+    "endline":9,
+    "start":5,
+    "end":24
+  },
+  {
+    "type":"(obj: mixed) => boolean",
     "reasons":[],
     "loc":{
       "source":"predicates.js",
@@ -1113,6 +2568,21 @@
     "end":19
   },
   {
+    "type":"{|FOO: string|}",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":19,"offset":156},
+      "end":{"line":9,"column":19,"offset":157}
+    },
+    "path":"predicates.js",
+    "line":9,
+    "endline":9,
+    "start":19,
+    "end":19
+  },
+  {
     "type":"string",
     "reasons":[],
     "loc":{
@@ -1125,6 +2595,21 @@
     "line":9,
     "endline":9,
     "start":19,
+    "end":23
+  },
+  {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"predicates.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":21,"offset":158},
+      "end":{"line":9,"column":23,"offset":161}
+    },
+    "path":"predicates.js",
+    "line":9,
+    "endline":9,
+    "start":21,
     "end":23
   }
 ]

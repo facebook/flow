@@ -1,0 +1,75 @@
+interface.js:3:12 = {
+  "type":"interface IA",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":11,"offset":20},
+    "end":{"line":3,"column":12,"offset":22}
+  },
+  "path":"interface.js",
+  "line":3,
+  "endline":3,
+  "start":11,
+  "end":12
+}
+interface.js:9:15 = {
+  "type":"IA",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":13,"offset":148},
+    "end":{"line":9,"column":15,"offset":151}
+  },
+  "path":"interface.js",
+  "line":9,
+  "endline":9,
+  "start":13,
+  "end":15
+}
+interface.js:9:19 = {
+  "type":"interface IA",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":18,"offset":153},
+    "end":{"line":9,"column":19,"offset":155}
+  },
+  "path":"interface.js",
+  "line":9,
+  "endline":9,
+  "start":18,
+  "end":19
+}
+interface.js:17:7 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":7,"offset":227},
+    "end":{"line":17,"column":7,"offset":228}
+  },
+  "path":"interface.js",
+  "line":17,
+  "endline":17,
+  "start":7,
+  "end":7
+}
+interface.js:18:7 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":7,"offset":246},
+    "end":{"line":18,"column":7,"offset":247}
+  },
+  "path":"interface.js",
+  "line":18,
+  "endline":18,
+  "start":7,
+  "end":7
+}

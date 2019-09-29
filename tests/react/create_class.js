@@ -172,3 +172,10 @@ const L = React.createClass({
 
 React.createClass({}); // error: spec must be [x] exact and [ ] sealed
 React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
+
+const M = React.createClass({
+  propTypes: {
+    foo: React.PropTypes.string,
+  },
+});
+M.defaultProps.bar = 1; // error cannot update void property

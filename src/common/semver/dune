@@ -1,0 +1,7 @@
+(library
+  (name semver)
+  (wrapped false)
+)
+
+(ocamlyacc semver_parser)
+(ocamllex semver_lexer)

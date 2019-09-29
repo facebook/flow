@@ -22,8 +22,8 @@
         "params":[
           {
             "type":"TypeParameter",
-            "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":17}},
-            "range":[16,17],
+            "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":26}},
+            "range":[16,26],
             "name":"S",
             "bound":null,
             "variance":null,
@@ -35,8 +35,8 @@
           },
           {
             "type":"TypeParameter",
-            "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":38}},
-            "range":[28,38],
+            "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":47}},
+            "range":[28,47],
             "name":"T",
             "bound":{
               "type":"TypeAnnotation",

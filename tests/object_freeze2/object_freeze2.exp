@@ -1,0 +1,22 @@
+Error ------------------------------------------------------------------------------------------------ downstream.js:6:2
+
+Cannot cast `o.a` to number because frozen object type [1] is incompatible with number [2].
+
+   downstream.js:6:2
+   6| (o.a: number);
+       ^^^
+
+References:
+   nested_frozen_object.js:4:20
+                         v
+   4|   a: Object.freeze({
+   5|     b: 'c',
+   6|   }),
+        ^ [1]
+   downstream.js:6:7
+   6| (o.a: number);
+            ^^^^^^ [2]
+
+
+
+Found 1 error

@@ -1,0 +1,261 @@
+#!/usr/bin/env node
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var fs = require('fs');
+var path = require('path');
+
+var flowRemoveTypes = require('./index');
+
+var usage = 'Usage: flow-remove-types [options] [sources] \n' +
+
+'\nOptions:\n' +
+'  -h, --help        Show this message\n' +
+'  -v, --version     Prints the current version of flow-remove-types\n' +
+'  -i, --ignore      Paths to ignore, Regular Expression\n' +
+'  -x, --extensions  File extensions to transform\n' +
+'  -o, --out-file    The file path to write transformed file to\n' +
+'  -d, --out-dir     The directory path to write transformed files within\n' +
+'  -a, --all         Transform all files, not just those with a @flow comment\n' +
+'  -p, --pretty      Remove flow types without replacing with spaces, \n' +
+'                    producing prettier output but may require using source maps\n' +
+'  -m, --sourcemaps  Also output source map files. Optionally pass "inline"\n' +
+'  -q, --quiet       Does not produce any output concerning successful progress.\n' +
+
+'\nExamples:\n' +
+
+'\nTransform one file:\n' +
+'  flow-remove-types --out-file output.js input.js\n' +
+
+'\nTransform many files:\n' +
+'  flow-remove-types --out-dir out/ input1.js input2.js\n' +
+
+'\nTransform files in directory:\n' +
+'  flow-remove-types --out-dir out/ indir/\n' +
+
+'\nTransform files with source maps:\n' +
+'  flow-remove-types --out-dir out/ indir/ --sourcemaps\n' +
+
+'\nTransform files with inline source maps:\n' +
+'  flow-remove-types --out-dir out/ indir/ --sourcemaps inline\n' +
+
+'\nTransform stdin:\n' +
+'  cat input.js | flow-remove-types > output.js\n';
+
+var _memo = {};
+
+function mkdirp(dirpath) {
+  if (_memo[dirpath]) {
+    return;
+  }
+  _memo[dirpath] = true;
+  try {
+    fs.mkdirSync(dirpath);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      mkdirp(path.dirname(dirpath));
+      fs.mkdirSync(dirpath);
+    } else {
+      try {
+        stat = fs.statSync(dirpath);
+      } catch (ignored) {
+        throw err;
+      }
+      if (!stat.isDirectory()) {
+        throw err;
+      }
+    }
+  }
+}
+
+// Collect arguments
+var ignore = /node_modules/;
+var extensions = [ '.js', '.mjs', '.jsx', '.flow', '.es6' ];
+var outDir;
+var outFile;
+var all;
+var pretty;
+var sourceMaps;
+var inlineSourceMaps;
+var quiet;
+var sources = [];
+var i = 2;
+while (i < process.argv.length) {
+  var arg = process.argv[i++];
+  if (arg === '-h' || arg === '--help') {
+    process.stdout.write(usage);
+    process.exit(0);
+  } else if (arg === '-v' || arg === '--version') {
+    process.stdout.write('v' + require('./package').version);
+    process.exit(0);
+  } else if (arg === '-i' || arg === '--ignore') {
+    ignore = new RegExp(process.argv[i++]);
+  } else if (arg === '-x' || arg === '--extensions') {
+    extensions = process.argv[i++].split(',');
+  } else if (arg === '-o' || arg === '--out-file') {
+    outFile = process.argv[i++];
+  } else if (arg === '-d' || arg === '--out-dir') {
+    outDir = process.argv[i++];
+  } else if (arg === '-a' || arg === '--all') {
+    all = true;
+  } else if (arg === '-p' || arg === '--pretty') {
+    pretty = true;
+  } else if (arg === '-m' || arg === '--sourcemaps') {
+    sourceMaps = true;
+    if (process.argv[i] === 'inline') {
+      inlineSourceMaps = true;
+      i++;
+    }
+  } else if (arg === '-q' || arg === '--quiet') {
+    quiet = true;
+  } else {
+    sources.push(arg);
+  }
+}
+
+function info(msg) {
+  if (!quiet) {
+    process.stderr.write(msg);
+  }
+}
+
+function error(msg) {
+  process.stderr.write('\n\033[31m  ' + msg + '\033[0m\n\n');
+  process.exit(1);
+}
+
+// Validate arguments
+if (outDir && outFile) {
+  error('Only specify one of --out-dir or --out-file');
+}
+
+if (outDir && sources.length === 0) {
+  error('Must specify files when providing --out-dir');
+}
+
+if (!outDir && !outFile && sourceMaps && !inlineSourceMaps) {
+  error('Must specify either an output path or inline source maps');
+}
+
+// Ensure all sources exist
+for (var i = 0; i < sources.length; i++) {
+  try {
+    var stat = fs.lstatSync(sources[i]);
+    if (sources.length > 1 && !stat.isFile()) {
+      error('Source "' + sources[i] + '" is not a file.');
+    }
+  } catch (err) {
+    error('Source "' + sources[i] + '" does not exist.');
+  }
+}
+
+// Process stdin if no sources were provided
+if (sources.length === 0) {
+  var content = '';
+  process.stdin.setEncoding('utf-8');
+  process.stdin.resume();
+  process.stdin.on('data', function (str) { content += str; });
+  process.stdin.on('end', function () {
+    transformAndOutput(content, outFile);
+  });
+  return;
+}
+
+var isDirSource = sources.length === 1 && fs.statSync(sources[0]).isDirectory();
+
+if ((sources.length > 1 || isDirSource) && !outDir) {
+  error('Multiple files require providing --out-dir');
+}
+
+// Process multiple files
+for (var i = 0; i < sources.length; i++) {
+  var source = sources[i];
+  var stat = fs.lstatSync(source);
+  if (stat.isDirectory()) {
+    var files = fs.readdirSync(source);
+    for (var j = 0; j < files.length; j++) {
+      var subSource = path.join(source, files[j]);
+      if (!ignore || !ignore.test(subSource)) {
+        sources.push(subSource);
+      }
+    }
+  } else if (stat.isFile() && extensions.indexOf(path.extname(source)) !== -1) {
+    if (outDir) {
+      outFile = path.join(outDir, isDirSource ? path.relative(sources[0], source) : source);
+      mkdirp(path.dirname(outFile));
+    }
+    var content = fs.readFileSync(source, 'utf8');
+    transformAndOutput(content, outFile, source);
+  }
+}
+
+function transformAndOutput(content, outFile, source) {
+  var fileName = source || '<stdin>';
+  var result = transformSource(content, fileName);
+  var code = result.toString();
+
+  if (sourceMaps) {
+    var map = result.generateMap();
+    delete map.file;
+    map.sources[0] = fileName;
+
+    if (source) {
+      delete map.sourcesContent;
+      if (outFile) {
+        map.sources[0] = path.join(path.relative(path.dirname(outFile), path.dirname(source)), path.basename(source));
+      }
+    } else {
+      map.sourcesContent = [content];
+    }
+
+    code += '\n//# sourceMappingURL=' + (inlineSourceMaps ?
+      'data:application/json;charset=utf-8;base64,' + btoa(JSON.stringify(map)) :
+      path.basename(outFile) + '.map'
+    ) + '\n';
+  }
+
+  if (outFile) {
+    fs.writeFileSync(outFile, code);
+    info(fileName + '\n \u21B3 \033[32m' + outFile + '\033[0m\n');
+    if (sourceMaps && !inlineSourceMaps) {
+      var mapOutFile = outFile + '.map';
+      fs.writeFileSync(mapOutFile, JSON.stringify(map) + '\n');
+      info('\033[2m \u21B3 \033[32m' + mapOutFile + '\033[0m\n');
+    }
+  } else {
+    process.stdout.write(code);
+  }
+}
+
+function btoa(str) {
+  // There are 5.x versions of Node that have `Buffer.from` but don't have the
+  // `Buffer.from(string)` overload, so check for other new methods to be sure.
+  return (Buffer.from && Buffer.alloc && Buffer.allocUnsafe
+    ? Buffer.from(str)
+    : new Buffer(str)
+  ).toString('base64');
+}
+
+function transformSource(content, filepath) {
+  try {
+    return flowRemoveTypes(content, { all: all, pretty: pretty });
+  } catch (error) {
+    if (error.loc) {
+      var line = error.loc.line - 1;
+      var col = error.loc.column;
+      var text = content.split(/\r\n?|\n|\u2028|\u2029/)[line];
+      process.stderr.write(
+        filepath + '\n' +
+        ' \u21B3 \033[31mSyntax Error: ' + error.message + '\033[0m\n' +
+        '   \033[90m' + line + ':  \033[0m' +
+        text.slice(0, col) + '\033[7;31m' + text[col] + '\033[0m' + text.slice(col + 1) + '\n'
+      );
+      process.exit(1);
+    }
+    throw error;
+  }
+}

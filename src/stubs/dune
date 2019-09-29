@@ -1,0 +1,32 @@
+(library
+  (name flow_logging_stubs)
+  (wrapped false)
+  (modules flowEventLogger flow_server_profile flowInteractionLogger)
+  (libraries
+    lwt
+  )
+)
+
+(library
+  (name flow_logging_lwt_stubs)
+  (wrapped false)
+  (modules eventLoggerLwt)
+  (libraries
+    lwt
+  )
+)
+
+(library
+  (name flow_saved_state_stubs)
+  (wrapped false)
+  (modules saved_state_fb_fetcher)
+  (libraries
+    flow_service_saved_state_fetcher
+  )
+)
+
+(library
+  (name flow_extra_commands)
+  (wrapped false)
+  (modules extra_commands)
+)

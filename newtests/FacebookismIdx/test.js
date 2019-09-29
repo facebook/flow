@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
@@ -291,13 +290,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     // Using an annotation obscures the type wrapper mechanism that idx() uses
     // around the parameter it passes to the callback
     addCode('(idx({}, (obj: Object) => obj.a.b.c): ?number);\n')
-      .newErrors(
-        `
-          test.js:6
-            6: (idx({}, (obj: Object) => obj.a.b.c): ?number);
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback argument must not be annotated.
-        `,
-      ),
+      .noNewErrors(),
 
     // Can't do anything with the callback parameter other than get elements and
     // properties off of it

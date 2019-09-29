@@ -1,26 +1,22 @@
 array.js
 // @flow
+
 function foo(): Array<number> {
   return [1, 2];
 }
-
 arrow-0.js
 // @flow
-const a = ((x: number): number => x + 1);
-a(1);
 
+const a = (x: number): number => x + 1;
+a(1);
 arrow-1.js
 // @flow
-const b = (
-  (x: (k: string, l: number) => string, y: string, z: {|f: number|}): string => x(
-    y,
-    z.f,
-  )
-);
-b((k: string, l: number): string => l + k, "a", { f: 2 });
 
+const b = (x: ((k: string, l: number) => string), y: string, z: {|f: number|}): string => x(y, z.f);
+b((k: string, l: number): string => (l + k), "a", { f: 2 });
 class-0.js
 // @flow
+
 class A {
   f = 1;
   m(x: string): number {
@@ -28,63 +24,109 @@ class A {
   }
 }
 
-new A().m("");
-
+(new A).m("");
 class-1.js
 // @flow
+
 class A {
   f = 1;
-  m(): string {
-    return "a";
-  }
+  m(): string { return "a"; }
 }
 
-var a = new A();
-function foo(x: Class<A>): Class<A> {
-  return x;
-}
+var a = new A;
+function foo(x: typeof A): typeof A { return x; }
 foo(A);
-
 class-2.js
 // @flow
+
 class A {
   m(): this {
     return this;
   }
 }
-
 comments-0.js
 // @flow
+
 // BEFORE FUNCTION
-export function test(x: number): string {
+export function test (x: number): string {
   // ONE
-const a = 4 + x;
-  
-  // END OF a = 4...
-// TWO
-return /* BETWEEEN */`${a}`;// END OF return ...
+  const a = 4 + x; // END OF a = 4...
+  // TWO
+  return /* BETWEEEN */ `${a}` // END OF return ...
+} // END
+dictionary.js
+// @flow
 
-}// END
+(): {|
+  "": null,
+  " ": null,
+  "'": null,
+  "1": null,
+  _: null,
+  "a b": null,
+  "a'b": null,
+  ab: null,
+  get x(): null,
+  set y(string): void,
+|} => ({
+  ab: null,
+  "a b": null,
+  "a'b": null,
+  "1": null,
+  "'": null,
+  " ": null,
+  "_": null,
+  "": null,
+  get "x"() {
+    return null;
+  },
+  set "y"(z: string) {}
+});
 
-
+(): {|
+  "": null,
+  " ": null,
+  '"': null,
+  "1": null,
+  _: null,
+  "a b": null,
+  'a"b': null,
+  ab: null,
+  get x(): null,
+  set y(string): void,
+|} => ({
+  ab: null,
+  'a b': null,
+  'a"b': null,
+  '1': null,
+  '"': null,
+  ' ': null,
+  '_': null,
+  '': null,
+  get 'x'() {
+    return null;
+  },
+  set 'y'(z: string) {}
+});
 func-0.js
 // @flow
+
 function foo(x: number, y: string): string {
   return x + y;
 }
 
 foo(1, "");
-
 func-1.js
 // @flow
-function foo(x: number, y: (z: number) => number): number {
+
+function foo(x: number, y: ((z: number) => number)): number {
   return x + y(x);
 }
 
 foo(1, (z: number): number => z + 1);
-
 func-2.js
 // @flow
+
 function foo(x: number, y: number): void {
   function bar(z: number, w: number): number {
     return x + z + y + w;
@@ -93,69 +135,88 @@ function foo(x: number, y: number): void {
 }
 
 foo(1, 1);
-
+func-3.js
+// @flow
+function throws_arg(): empty {
+  throw 42;
+}
+func-4.js
+// @flow
+function throws_arg(): empty {
+  if (Math.random() < 0.5) {
+    throw 42;
+  } else {
+    throw 42;
+  }
+}
+func-5.js
+// @flow
+function throws_arg(): number {
+  if (Math.random() < 0.5) {
+    return 42;
+  } else {
+    throw 42;
+  }
+}
 func-poly-0.js
 // @flow
+
 function outer<T>(y: T): void {
   function inner<T>(x: T, z: T): void {
     inner(x, x);
   }
 }
-
 object-0.js
 // @flow
+
 var obj = {
   n(y: number): string {
     return this.m(y);
   },
   m(x: number): string {
     return "";
-  },
-};
-
-obj.n(0);
-
-object-1.js
-// @flow
-var obj = {
-  "n"(y: number): string {
-    return this.m(y);
-  },
-  "m"(x: number): string {
-    return "";
-  },
-};
-
-obj["n"](0);
-
-object-2.js
-// @flow
-function foo(x: {|l: () => void, m: () => number, n: () => number|}): void {}
-
-foo(
-  {
-    m(): number {
-      return 1;
-    },
-    
-    n: (): number => 2,
-    
-    l: function bar(): void {},
-  },
-);
-
-poly-0.js
-// @flow
-function foo<T>(x: T): {|f: T|} {
-  return { f: x };
+  }
 }
 
+obj.n(0)
+object-1.js
+// @flow
+
+var obj = {
+  'n'(y: number): string {
+    return this.m(y);
+  },
+  'm'(x: number): string {
+    return "";
+  }
+}
+
+obj['n'](0)
+object-2.js
+// @flow
+
+function foo(x: {|l: () => void, m: () => number, n: () => number|}): void {}
+
+foo({
+  m(): number { return 1; },
+  n: (): number => 2,
+  l: function bar(): void {}
+});
+poly-0.js
+// @flow
+
+function foo<T>(x: T): {|f: T|} {
+  return {
+    f: x
+  }
+}
 react-0.js
 // @flow
+
 import React from "react";
 import ReactDOM from "react-dom";
 
-function Clock(props): any {
+function Clock(props: any): any {
   return (
     <div>
       <h1>Hello, world!</h1>
@@ -165,37 +226,55 @@ function Clock(props): any {
 }
 
 function tick(): void {
-  const element = document.getElementById("root");
+  const element = document.getElementById('root');
   if (element) {
-    ReactDOM.render(<Clock date={new Date()} />, element);
+    ReactDOM.render(
+      <Clock date={new Date()} />,
+      element
+    );
   }
 }
 
 setInterval(tick, 1000);
+spread.js
+// @flow
 
+declare opaque type O;
+type C = { f: O; }
+type D = { g: O; }
+
+(): {w: O, x: O, y: O, z: O} => { declare var x: {w: O, ...{| x: O, y: O |}, z: O}; return x; };
+(): {|w: O, x: O, y: O, z: O|} => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
+(): {f: O, o: O} => { declare var x: {...C, o: O}; return x; };
+(): {...C} & {...D} => { declare var x: {...C} & {...D}; return x; };
+<T: {}, S: { f: O}>(): T | S | {f: O, o: O} => { declare var x: {...T, ...S, o: O}; return x; };
+<T: {}>(): T | {o: O} => { declare var x: {...T, o: O}; return x; };
 string-literal.js
 // @flow
+
 declare var a: "a";
 declare var single_quote: "'";
 declare var double_quote: '""';
 declare var backslash: '\\';
 
-function f1(): "a" {
-  return a;
-}
-function f2(): "'" {
-  return single_quote;
-}
-function f3(): '""' {
-  return double_quote;
-}
-function f4(): "\\" {
-  return backslash;
-}
+function f1(): "a" { return a; }
+function f2(): "'" { return single_quote; }
+function f3(): '""' { return double_quote; }
+function f4(): "\\" { return backslash; }
+type-utils.js
+// @flow
 
+declare class C<P> {};
+
+declare var typeof_C: typeof C;
+(): typeof C => typeof_C;
+
+declare var class_of_C_number: Class<C<number>>;
+(): Class<C<number>> => class_of_C_number;
 union-0.js
 // @flow
-function foo(x: (() => void) | string | number | void): void {}
+
+function foo(x: void | number | string | (() => void)): void { }
 
 foo(1);
 foo("1");
@@ -203,12 +282,104 @@ foo(1);
 foo(2);
 foo((): void => foo());
 foo();
+replacement-array.js
+// @flow
 
+// preserve spacing
+
+function foo(): Array<number> {return [1, 2];}
+replacement-arrow.js
+// @flow
+
+const a = (x: number): number =>
+                  x + 1;
+
+
+a(1);
+replacement-class.js
+// @flow
+
+class A { // end of line comment
+                                f = 1;
+  m(x: string): number { return this.f + 1; }
+} (new A).m(""); // weird spacing
+replacement-dictionary.js
+// @flow
+
+(): {|
+  "": null,
+  " ": null,
+  "'": null,
+  "1": null,
+  _: null,
+  "a b": null,
+  "a'b": null,
+  ab: null,
+  get x(): null,
+  set y(string): void,
+|} => ({
+  ab: null, "a b": null, "a'b": null,
+  "1": null, "'": null, " ": null,
+  "_": null, "": null,
+  get "x"() {return null; },
+  set "y"(z: string) {}});
+
+(): {|
+  "": null,
+  " ": null,
+  '"': null,
+  "1": null,
+  _: null,
+  "a b": null,
+  'a"b': null,
+  ab: null,
+  get x(): null,
+  set y(string): void,
+|} => ({
+  ab: null, 'a b': null, 'a"b': null, '1': null, '"': null, ' ': null, '_': null, '': null,
+  get 'x'() {return null;}, set 'y'(z: string) {} } );
+replacement-function.js
+// @flow
+
+// Spaced out comments /* non-comments
+
+// BEFORE FUNCTION
+export //too many comments
+function /*Random*/ test /*weird*/ (x: number): string /*Comments*/ {
+// ONE
+/* Two */  const a = 4 + x;    // END OF a = 4...
+
+
+
+  // Three
+
+  return /* BETWEEEN */ `${a}` // END OF return ...
+} // END */
+replacement-object.js
+// @flow
+var obj = {n(y: number): string {return this.m(y);},m(x: number): string {return "";}}
+obj.n(0)
+
+
+
+
+
+
+
+// This is kinda trailing whitespace
+func-arg-only.js
+// @flow
+
+function foo(x: number) : number {
+  return x + 2;
+}
+
+foo(1);
 Found 0 errors
 err-infer-0.js
 // @flow
-"" + ((): number => 1);
 
+"" + ((): number => 1);
 err-infer-0.js (--fail-on-tc-errors)
 
 Error ----------------------------------------------------------------------------------------------- err-infer-0.js:3:1
@@ -233,7 +404,7 @@ err-parse-0.js
 
 Error ----------------------------------------------------------------------------------------------- err-parse-0.js:3:4
 
-Unexpected identifier
+Unexpected identifier, expected the end of an expression statement (`;`)
 
    3| va r x = 1;   // InferError
          ^
@@ -244,7 +415,7 @@ err-parse-1.js
 
 Error ----------------------------------------------------------------------------------------------- err-parse-1.js:3:2
 
-Unexpected token @
+Unexpected token `@`
 
    3| @@@1`   +\   aaa
        ^
@@ -253,22 +424,19 @@ Unexpected token @
 Found 1 error
 warn-empty-0.js
 // @flow
-function foo(x: number, y) {
+
+function foo(x: number, y): empty {
   return x + y;
 }
-
+func-6.js
+// @flow
+function error(wrong: number): number {
+  return wrong;
+}
+function throws_arg(): number {
+  return error("42");
+}
 warn-empty-0.js (--fail-on-suggest-warnings)
-
-Warning -------------------------------------------------------------------------------------------- warn-empty-0.js:3:1
-
-Inferred type is empty.
-
-      v---------------------------
-   3| function foo(x: number, y) {
-   4|   return x + y;
-   5| }
-      ^
-
 
 Warning ------------------------------------------------------------------------------------------- warn-empty-0.js:3:25
 
@@ -278,26 +446,14 @@ Inferred type is empty.
                               ^
 
 
-Found 2 warnings
+Found 1 warning
 warn-empty-0.js (--fail-on-tc-errors)
 // @flow
-function foo(x: number, y) {
+
+function foo(x: number, y): empty {
   return x + y;
 }
-
 warn-func-poly-0.js
-
-Warning ---------------------------------------------------------------------------------------- warn-func-poly-0.js:4:3
-
-Normalizer error:
-[Shadowed type parameters] Raised on type: MixedT
-
-        v---------------------------
-   4|   function inner<T>(x: T, z) {
-   5|     inner(x, y);
-   6|   }
-        ^
-
 
 Warning --------------------------------------------------------------------------------------- warn-func-poly-0.js:4:27
 
@@ -308,4 +464,16 @@ Normalizer error:
                                 ^
 
 
-Found 2 warnings
+Found 1 warning
+warn-anonymous-class.js
+
+Warning ------------------------------------------------------------------------------------ warn-anonymous-class.js:3:1
+
+Type serializer failed with:
+Cannot output anonymous elements.
+
+   3| () => class {};
+      ^^^^^^^^^^^^^^
+
+
+Found 1 warning

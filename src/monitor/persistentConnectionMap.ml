@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,16 +11,12 @@
 
 let map = ref IMap.empty
 
-let add ~client_id ~client =
-  map := IMap.add client_id client !map
+let add ~client_id ~client = map := IMap.add client_id client !map
 
-let get ~client_id =
-  IMap.get client_id !map
+let get ~client_id = IMap.get client_id !map
 
-let remove ~client_id =
-  map := IMap.remove client_id !map
+let remove ~client_id = map := IMap.remove client_id !map
 
-let cardinal () =
-  IMap.cardinal !map
+let cardinal () = IMap.cardinal !map
 
-let get_all_clients () = IMap.bindings !map |> List.map snd
+let get_all_clients () = IMap.bindings !map |> Core_list.map ~f:snd

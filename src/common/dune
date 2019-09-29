@@ -1,0 +1,38 @@
+(library
+  (name flow_version)
+  (wrapped false)
+  (preprocess (pps ppx_deriving.eq)) ; See T41851208
+  (modules flow_version))
+
+(library
+  (name flow_common)
+  (wrapped false)
+  (modules (:standard \ flow_version flow_lsp_conversions))
+  (flags -w +a-4-6-29-35-44-48-50)
+  (libraries
+    flow_common_lints
+    flow_common_span
+    flow_common_utils
+    flow_logging
+    flow_parser_utils_aloc
+    flow_version
+    logging_common ; hack
+    heap_ident ; hack
+    hh_json ; hack
+    sys_utils ; hack
+    )
+  (preprocess (pps ppx_deriving.eq))
+)
+
+(library
+  (name flow_common_lsp_conversions)
+  (wrapped false)
+  (modules flow_lsp_conversions)
+  (libraries
+    flow_parser
+    flow_server_persistent_connection
+    flow_server_protocol
+    lsp
+  )
+  (preprocess (pps ppx_deriving.eq)) ; See T41851208
+)

@@ -21,11 +21,11 @@ declare var o_variance: O_variance;
 (o_variance.q: empty); // error: property `q` not found
 (o_variance.__proto__: empty); // error: object type ~> empty
 
-// __proto__ for callable objects treated like a normal property
-type O_callable = { (): void, __proto__: {} };
+// __proto__ for callable objects is an error
+type O_callable = { (): void, __proto__: {} }; // error: unexpected proto after call
 declare var o_callable: O_callable;
 (o_callable.q: empty); // error: property `q` not found
-(o_callable.__proto__: empty); // error: object type ~> empty
+(o_callable.__proto__: empty); // error: function proto ~> empty
 
 // __proto__() treated like a normal (function-valued) property
 type O_method = { __proto__(): void };
@@ -38,3 +38,8 @@ declare var o_loop: O_loop;
 (o_loop.q: empty); // TODO: error (pruned at constraint cache)
 
 type O_invalid = { __proto__: number }; // error: number is not a valid proto
+
+type O_multi = {
+  __proto__: {},
+  __proto__: {}, // error: multiple protos
+}

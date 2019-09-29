@@ -2327,7 +2327,9 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:55:1
 
-Cannot call `f` because property `p` is missing in `Z` [1] but exists in object type [2].
+Cannot call `f` because:
+ - Either property `p` is missing in `Z` [1] but exists in object type [2].
+ - Or `Z` [1] is incompatible with `$ReadOnlyArray` [3].
 
    intersection-function.js:55:1
    55| f(new Z());
@@ -2340,6 +2342,9 @@ References:
    intersection-function.js:48:23
    48| declare function f(x: {p: string}): void;
                              ^^^^^^^^^^^ [2]
+   intersection-function.js:49:23
+   49| declare function f(x: $ReadOnlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:56:1
@@ -2975,7 +2980,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:45:2
 
-Cannot cast `new Z()` to `F` because property `p` is missing in `Z` [1] but exists in object type [2].
+Cannot cast `new Z()` to `F` because:
+ - Either property `p` is missing in `Z` [1] but exists in object type [2].
+ - Or `Z` [1] is incompatible with `$ReadOnlyArray` [3].
 
    union.js:45:2
    45| (new Z(): F);
@@ -2985,6 +2992,9 @@ References:
    union.js:40:10
    40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^ [2]
+   union.js:40:24
+   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                              ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:46:3

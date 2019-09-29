@@ -1,0 +1,15 @@
+(library
+  (name flow_server_protocol)
+  (wrapped false)
+  (libraries
+    flow_autofix_options
+    flow_common
+    flow_common_profiling
+    flow_exit_status
+    flow_parser_utils_replacement_printer
+    flow_server_status
+    flow_server_utils
+    flow_typing
+    lsp ; hack
+  )
+)

@@ -1,0 +1,7 @@
+[ignore]
+<PROJECT_ROOT>/tmp
+
+[options]
+experimental.types_first=false
+module.system=haste
+experimental.allow_skip_direct_dependents=true

@@ -1,22 +1,22 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
   ({
-    ideStartAndConnect,
-    ideRequestAndWaitUntilResponse,
-    ideNotification,
+    lspStartAndConnect,
+    lspRequestAndWaitUntilResponse,
+    lspNotification,
     addFile,
+    addFiles,
     modifyFile,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/publishDiagnostics #1', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       addFile('witherrors1.js')
         // Flow may send multiple publishDiagnostics when reporting partial
         // progress and then complete results, e.g. an empty publishDiagnostics
@@ -28,11 +28,11 @@ export default suite(
         // To be robust against races: we'll wait up to 9s to get the
         // expected publishDiagnostic, then verify that this expected publishDiagnostic
         // was sent at least once, and ignore any additional publishDiagnostics.
-        .waitUntilIDEMessage(
+        .waitUntilLSPMessage(
           9000,
           'textDocument/publishDiagnostics{Cannot return}',
         )
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           [
             'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
           ],
@@ -44,13 +44,13 @@ export default suite(
     ]),
 
     test('textDocument/publishDiagnostics #2', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       addFile('witherrors2.js')
-        .waitUntilIDEMessage(
+        .waitUntilLSPMessage(
           9000,
           'textDocument/publishDiagnostics{Cannot extend}',
         )
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           [
             'textDocument/publishDiagnostics{"Cannot extend  `H` [1] with `I` because  `H` [1] is not inheritable.","message":"[1] `H`"}',
           ],
@@ -62,13 +62,13 @@ export default suite(
     ]),
 
     test('textDocument/publishDiagnostics clears errors', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       addFile('witherrors1.js')
-        .waitUntilIDEMessage(
+        .waitUntilLSPMessage(
           9000,
           'textDocument/publishDiagnostics{Cannot return}',
         )
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           [
             'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
           ],
@@ -78,11 +78,11 @@ export default suite(
           ],
         ),
       modifyFile('witherrors1.js', 'return 23;', 'return "";')
-        .waitUntilIDEMessage(
+        .waitUntilLSPMessage(
           9000,
           'textDocument/publishDiagnostics{"diagnostics":[]}',
         )
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [
             'textDocument/publishDiagnostics',
@@ -92,9 +92,9 @@ export default suite(
     ]),
 
     test('live diagnostics', [
-      ideStartAndConnect(),
+      lspStartAndConnect(),
       // Open a document with errors. We should get a live syntax error immediately.
-      ideNotification('textDocument/didOpen', {
+      lspNotification('textDocument/didOpen', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           languageId: 'javascript',
@@ -104,13 +104,13 @@ function fred(): number {return 1+;}
 `,
         },
       })
-        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{Unexpected token}'],
           ['window/showStatus'],
         ),
       // Edit it fix the problem. The live syntax error should be dismissed immediately.
-      ideNotification('textDocument/didChange', {
+      lspNotification('textDocument/didChange', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 2,
@@ -123,13 +123,13 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [],
         ),
       // Make another change that doesn't introduce errors. We should get no reports.
-      ideNotification('textDocument/didChange', {
+      lspNotification('textDocument/didChange', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 2,
@@ -143,9 +143,9 @@ function fred(): number {return 1+2;}
         ],
       })
         .sleep(1000)
-        .verifyAllIDEMessagesInStep([], []),
+        .verifyAllLSPMessagesInStep([], []),
       // Make a change that introduces the error. We should get a report immediately.
-      ideNotification('textDocument/didChange', {
+      lspNotification('textDocument/didChange', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 3,
@@ -158,23 +158,136 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{Unexpected token}'],
           [],
         ),
       // Close the file. The live error should go away.
-      ideNotification('textDocument/didClose', {
+      lspNotification('textDocument/didClose', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 3,
         },
       })
-        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
-        .verifyAllIDEMessagesInStep(
+        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [],
         ),
+    ]),
+    test('pseudo parse errors', [
+      lspStartAndConnect(),
+      addFile('pseudo_parse_error.js')
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot return}',
+        )
+        .verifyAllLSPMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        )
+        .newErrors(
+          `
+                pseudo_parse_error.js:6
+                  6: obj?.foo(); // Error
+                     ^^^^^^^^^^ Flow does not yet support method or property calls in optional chains.
+              `,
+        ),
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>pseudo_parse_error.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+
+const obj = {};
+// Flow does not yet support method or property calls in optional chains, so
+// this will produce a pseudo parse error
+obj?.foo(); // Error
+`,
+        },
+      })
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot return}',
+        )
+        .verifyAllLSPMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+    ]),
+    test('Errors with Loc.none', [
+      lspStartAndConnect(),
+      addFiles('empty.js', 'importsFakeSymbol.js').waitUntilLSPMessage(
+        9000,
+        (() => {
+          const expectedMessage = {
+            uri: '<PLACEHOLDER_PROJECT_URL_SLASH>importsFakeSymbol.js',
+            diagnostics: [
+              {
+                range: {
+                  start: {
+                    line: 2,
+                    character: 7,
+                  },
+                  end: {
+                    line: 2,
+                    character: 10,
+                  },
+                },
+                severity: 1,
+                code: 'InferError',
+                source: 'Flow',
+                message: 'property `foo` is missing in  exports [1].',
+                relatedInformation: [
+                  {
+                    location: {
+                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      range: {
+                        start: {
+                          line: 0,
+                          character: 0,
+                        },
+                        end: {
+                          line: 0,
+                          character: 0,
+                        },
+                      },
+                    },
+                    message: '[1] exports',
+                  },
+                ],
+                relatedLocations: [
+                  {
+                    location: {
+                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      range: {
+                        start: {line: 0, character: 0},
+                        end: {line: 0, character: 0},
+                      },
+                    },
+                    message: '[1] exports',
+                  },
+                ],
+              },
+            ],
+          };
+          return `textDocument/publishDiagnostics${JSON.stringify(
+            expectedMessage,
+          )}`;
+        })(),
+      ),
     ]),
   ],
 );

@@ -102,7 +102,7 @@ file-sized chunks that can be assembled later.
 Fortunately, JavaScript is already written using files as modules, so we
 modularize our analysis simply by asking that modules have explicitly typed
 signatures. (We still infer types for the vast majority of code "local" to
-modules.)  Coincidentally, developers consider this good software engineering
+modules.) Coincidentally, developers consider this good software engineering
 practice anyway.
 
 With modularity, we can aggressively parallelize our analysis. Furthermore,

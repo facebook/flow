@@ -1,6 +1,20 @@
 #ifndef HH_SHARED_H
 #define HH_SHARED_H
 
+#ifndef NO_SQLITE3
+#include <sqlite3.h>
+
+#define assert_sql(db, x, y) (assert_sql_with_line((db), (x), (y), __LINE__))
+
+void assert_sql_with_line(
+  sqlite3 *db,
+  int result,
+  int correct_result,
+  int line_number);
+
+void make_all_tables(sqlite3 *db);
+#endif // NO_SQLITE3
+
 #define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 
@@ -9,20 +23,22 @@
 /*****************************************************************************/
 /* Initializes the shared heap. */
 /* Must be called by the master BEFORE forking the workers! */
-CAMLprim value hh_shared_init( value config_val, value shm_dir_val);
-/* Must be called after the program is done initializing. We keep the original
- * size of the heap to estimate how often we should garbage collect.
- */
-void hh_call_after_init(void);
+CAMLprim value hh_shared_init(
+    value config_val,
+    value shm_dir_val,
+    value num_workers_val
+);
 value hh_check_heap_overflow(void);
 /* Must be called by every worker before any operation is performed. */
-value hh_connect(value connector, value is_master);
+value hh_connect(value connector, value worker_id_val);
 
 /*****************************************************************************/
 /* Heap diagnostics. */
 /*****************************************************************************/
-CAMLprim value hh_heap_size(void);
+CAMLprim value hh_used_heap_size(void);
+CAMLprim value hh_wasted_heap_size(void);
 CAMLprim value hh_log_level(void);
+CAMLprim value hh_sample_rate(void);
 CAMLprim value hh_hash_used_slots(void);
 CAMLprim value hh_hash_slots(void);
 
@@ -51,14 +67,11 @@ void hh_shared_clear(void);
 /*****************************************************************************/
 /* Garbage collection. */
 /*****************************************************************************/
-CAMLprim value hh_should_collect(value aggressive_val);
-CAMLprim value hh_collect(value aggressive_val);
+CAMLprim value hh_collect(void);
 
 /*****************************************************************************/
 /* Deserialization. */
 /*****************************************************************************/
-/* Deserializes the value pointed by src. */
-CAMLprim value hh_deserialize(char *src);
 /* Returns the value associated to a given key, and deserialize it. */
 /* The key MUST be present. */
 CAMLprim value hh_get_and_deserialize(value key);
@@ -106,22 +119,18 @@ void hh_cleanup_sqlite(void);
 /* Dependency table. */
 CAMLprim value hh_save_dep_table_sqlite(
         value out_filename,
-        value build_revision
+        value build_revision,
+        value replace_state_after_saving
+);
+CAMLprim value hh_update_dep_table_sqlite(
+    value out_filename,
+    value build_revision,
+    value replace_state_after_saving
 );
 CAMLprim value hh_load_dep_table_sqlite(
         value in_filename,
         value ignore_hh_version
 );
 CAMLprim value hh_get_dep_sqlite(value ocaml_key);
-
-/* File information. */
-CAMLprim value hh_save_file_info_init(value ml_path);
-CAMLprim value hh_save_file_info_free(value ml_unit);
-CAMLprim value hh_save_file_info_sqlite(
-        value ml_hash,
-        value ml_name,
-        value ml_kind,
-        value ml_filespec
-);
 
 #endif

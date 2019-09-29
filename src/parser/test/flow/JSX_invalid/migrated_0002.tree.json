@@ -10,17 +10,17 @@
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":65}},
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
   "range":[0,65],
   "body":[
     {
       "type":"VariableDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":65}},
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
       "range":[0,65],
       "declarations":[
         {
           "type":"VariableDeclarator",
-          "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":65}},
+          "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":2,"column":0}},
           "range":[4,65],
           "id":{
             "type":"Identifier",
@@ -32,7 +32,7 @@
           },
           "init":{
             "type":"BinaryExpression",
-            "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":65}},
+            "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":2,"column":0}},
             "range":[8,65],
             "operator":"<",
             "left":{
@@ -103,7 +103,7 @@
             },
             "right":{
               "type":"Literal",
-              "loc":{"source":null,"start":{"line":1,"column":58},"end":{"line":1,"column":65}},
+              "loc":{"source":null,"start":{"line":1,"column":58},"end":{"line":2,"column":0}},
               "range":[58,65],
               "value":null,
               "raw":"/div>;/",

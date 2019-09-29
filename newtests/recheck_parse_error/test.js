@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -15,7 +14,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: I am a parse error
-                 ^^ Unexpected identifier
+                 ^^ Unexpected identifier, expected the end of an expression statement (\`;\`)
         `,
       ),
   ]),

@@ -6,6 +6,9 @@
       additional_reading:
         - guide: types
         - guide: lang
+- id: faq
+  pages:
+    - path: "/docs/faq/"
 
 - id: types
   pages:
@@ -86,8 +89,10 @@
 - id: config
   pages:
     - path: "/docs/config/"
+    - path: "/docs/config/declarations/"
     - path: "/docs/config/include/"
     - path: "/docs/config/ignore/"
+    - path: "/docs/config/untyped/"
     - path: "/docs/config/libs/"
     - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
@@ -98,6 +103,14 @@
     - path: "/docs/libdefs/"
     # - path: "/docs/libdefs/usage/"
     - path: "/docs/libdefs/creation/"
+      additional_reading:
+        - guide: declarations
+
+- id: declarations
+  pages:
+    - path: "/docs/declarations/"
+      additional_reading:
+        - guide: libdefs
 
 # - id: errors
 #   pages:

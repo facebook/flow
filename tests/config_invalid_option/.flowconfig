@@ -1,0 +1,4 @@
+[options]
+invalid_option1=foo
+invalid_option2=bar
+invalid_option2=baz

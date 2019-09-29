@@ -7,7 +7,8 @@
       "loc": {
         "start": { "line": 1, "column": 10 },
         "end": { "line": 1, "column": 11 }
-      }
+      },
+      "message":"Unexpected token `;`, expected the token `,`"
     }
   }
 }

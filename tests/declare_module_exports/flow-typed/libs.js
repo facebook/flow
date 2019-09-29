@@ -28,3 +28,11 @@ declare module "declare_m_e_with_declare_var_e" {
   declare module.exports: number;
   declare var exports: string;
 }
+
+/**
+ * Ensure that the intersection of the two declarations is exported.
+ */
+declare module "declare_overloaded_function" {
+  declare function foo(x: string): string;
+  declare function foo(x: number): number;
+}

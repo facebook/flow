@@ -44,7 +44,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test1.js:39:24
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to return [3].
 
    test1.js:39:24
@@ -65,7 +65,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test1.js:57:6
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
 the array element type) [3].
 
@@ -84,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test10.js:38:11
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to return [3] or to `x` [4].
 
    test10.js:38:11
@@ -108,7 +108,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test10.js:50:11
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to call of `id` [3].
 
    test10.js:50:11
@@ -129,7 +129,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test10.js:59:11
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
 the array element type) [3].
 
@@ -148,7 +148,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test10.js:62:11
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
 the array element type) [3].
 
@@ -196,7 +196,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test14.js:12:9
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to call of method `get` [3].
 
    test14.js:12:9
@@ -217,7 +217,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test16.js:11:5
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to return [3].
 
    test16.js:11:5
@@ -238,7 +238,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test16.js:14:5
 
-Could not decide which case to select. Since case 2 [1] may work but if it doesn't case 3 [2] looks promising too. To
+Could not decide which case to select, since case 2 [1] may work but if it doesn't case 3 [2] looks promising too. To
 fix add a type annotation to return [3].
 
    test16.js:14:5
@@ -309,7 +309,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test21.js:11:2
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to call of `bar` [3] or to call of `str` [4].
 
    test21.js:11:2
@@ -372,7 +372,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test33.js:7:5
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to return [3].
 
    test33.js:7:5
@@ -444,7 +444,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:14:5
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to return [3] or to `x` [4].
 
    test5.js:14:5
@@ -468,7 +468,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:25:5
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to unknown element type of empty array [3].
 
    test5.js:25:5

@@ -1,0 +1,61 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:5:19
+
+Cannot assign `identity<...>(...)` to `y` because number [1] is incompatible with string [2].
+
+   test.js:5:19
+   5| const y: string = identity<_>(3); // Error, string incompatible with number.
+                        ^^^^^^^^^^^^^^
+
+References:
+   test.js:5:31
+   5| const y: string = identity<_>(3); // Error, string incompatible with number.
+                                    ^ [1]
+   test.js:5:10
+   5| const y: string = identity<_>(3); // Error, string incompatible with number.
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:2
+
+Cannot cast `a` to object type because string [1] is incompatible with number [2] in property `x`.
+
+   test.js:14:2
+   14| (a: {x: number}); // Not ok, number incompatible with string
+        ^
+
+References:
+   test.js:12:12
+   12| var b: {x: string} = a; // Concretize to string.
+                  ^^^^^^ [1]
+   test.js:14:9
+   14| (a: {x: number}); // Not ok, number incompatible with string
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:2
+
+Cannot cast `z` to string because number [1] is incompatible with string [2].
+
+   test.js:17:2
+   17| (z: string); // Error, number lower bound string upper bound
+        ^
+
+References:
+   test.js:16:23
+   16| const z = identity<_>(3); // Give z a lower bound.
+                             ^ [1]
+   test.js:17:5
+   17| (z: string); // Error, number lower bound string upper bound
+           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:22:22
+
+Please use a concrete type annotation instead of `_` in this position.
+
+   22|   x: unimplementable<_>(), // Error, requires concrete annot
+                            ^
+
+
+
+Found 4 errors

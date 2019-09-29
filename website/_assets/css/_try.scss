@@ -4,6 +4,10 @@ html.site-fullscreen .content {
   height: 100%;
 }
 
+.CodeMirror-lint-tooltip {
+  z-index: 1040 !important;
+}
+
 .try-editor {
   position: relative;
   height: 100%;

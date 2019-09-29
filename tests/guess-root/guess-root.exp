@@ -1,0 +1,30 @@
+nothing
+with file
+with file and config
+number
+no-config/d2.js:3:5,3:5
+with bad root directory
+number
+-:3:5,3:5
+with bad root directory, and file
+number
+no-config/d2.js:3:5,3:5
+with bad root directory, and file
+number
+no-config/d2.js:3:5,3:5
+with file batch coverage
+
+Coverage results from 1 file(s):
+
+no-config/d2.js: 88.89% (8 of 9 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 1
+Expressions          :
+  Covered            : 8
+  Total              : 9
+  Covered Percentage : 88.89%
+
+with bad root directory, and file batch coverage

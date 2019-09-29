@@ -7,7 +7,15 @@
       "loc": {
         "start": { "line": 2, "column": 0 },
         "end": { "line": 2, "column": 0 }
-      }
+      },
+      "message":"Unexpected end of input, expected the token `)`"
+    },
+    "1": {
+      "loc": {
+        "start": { "line": 2, "column": 0 },
+        "end": { "line": 2, "column": 0 }
+      },
+      "message":"Unexpected end of input, expected the start of a statement"
     }
   }
 }

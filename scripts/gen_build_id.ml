@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,9 +24,9 @@ let () =
     try read_process_stdout "git" [|"git"; "rev-parse"; "HEAD"|]
     with Failure msg -> (
       Printf.eprintf "Failed git rev-parse: %s\n%!" msg;
-      try read_process_stdout "hg" [|"hg"; "id"; "-i"|]
+      try read_process_stdout "hg" [|"hg"; "log"; "-r"; "."; "-T"; "{node}\\n"|]
       with Failure msg -> (
-        Printf.eprintf "Failed hg id: %s\n%!" msg;
+        Printf.eprintf "Failed hg log: %s\n%!" msg;
         ""
       )
     )
@@ -47,8 +47,8 @@ let () =
     )
   in
   let content = Printf.sprintf
-    "const char* const BuildInfo_kRevision = %S;\nconst unsigned long BuildInfo_kRevisionCommitTimeUnix = %sul;\n"
-    rev time in
+    "const char* const BuildInfo_kRevision = %S;\nconst unsigned long BuildInfo_kRevisionCommitTimeUnix = %sul;\nconst char* const BuildInfo_kBuildMode = %S;\n"
+    rev time "" (* not implemented *) in
   let do_dump =
     not (Sys.file_exists out_file) || string_of_file out_file <> content in
   if do_dump then

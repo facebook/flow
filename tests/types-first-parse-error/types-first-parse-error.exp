@@ -1,0 +1,110 @@
+
+Server should start in types-first mode
+Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
+
+Cannot cast `foo` to string because number [1] is incompatible with string [2].
+
+   bar.js:4:2
+   4| (foo: string);
+       ^^^
+
+References:
+   foo.js:4:18
+   4| module.exports = x;
+                       ^ [1]
+   bar.js:4:7
+   4| (foo: string);
+            ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Introducing a parse error should invalidate errors in dependents
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:13
+
+Unexpected token `;`
+
+   3| const x = 0?;
+                  ^
+
+
+
+Found 1 error
+
+Fixing a type error in a previously unparsed file should make the error go away
+No errors!
+
+Revert to initial state
+Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
+
+Cannot cast `foo` to string because number [1] is incompatible with string [2].
+
+   bar.js:4:2
+   4| (foo: string);
+       ^^^
+
+References:
+   foo.js:4:18
+   4| module.exports = x;
+                       ^ [1]
+   bar.js:4:7
+   4| (foo: string);
+            ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Add a recursive dependent
+Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
+
+Cannot cast `foo` to string because number [1] is incompatible with string [2].
+
+   bar.js:4:2
+   4| (foo: string);
+       ^^^
+
+References:
+   foo.js:4:18
+   4| module.exports = x;
+                       ^ [1]
+   bar.js:4:7
+   4| (foo: string);
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- qux.js:3:2
+
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+
+   qux.js:3:2
+   3| (require('./bar'): string);
+       ^^^^^^^^^^^^^^^^
+
+References:
+   bar.js:6:18
+   6| module.exports = foo;
+                       ^^^ [1]
+   qux.js:3:20
+   3| (require('./bar'): string);
+                         ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+Introducing a parse error should invalidate errors in dependents
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:13
+
+Unexpected token `;`
+
+   3| const x = 0?;
+                  ^
+
+
+
+Found 1 error
+
+Fixing a type error in a previously unparsed file should make the error go away
+No errors!

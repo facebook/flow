@@ -1,0 +1,16 @@
+Error -------------------------------------------------------------------------------------------- error-reassign.js:4:1
+
+Cannot reassign enum `E` [1].
+
+   error-reassign.js:4:1
+   4| E = 0;
+      ^
+
+References:
+   error-reassign.js:3:6
+   3| enum E {}
+           ^ [1]
+
+
+
+Found 1 error

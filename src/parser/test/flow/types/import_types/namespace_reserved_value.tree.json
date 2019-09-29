@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":13}},
-      "message":"Unexpected token *"
+      "message":"Unexpected token `*`"
     }
   ],
   "type":"Program",

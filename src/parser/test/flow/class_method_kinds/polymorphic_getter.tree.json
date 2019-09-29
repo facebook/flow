@@ -2,15 +2,15 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":20}},
-      "message":"Unexpected token <"
+      "message":"Unexpected token `<`, expected the token `(`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
-      "message":"Unexpected token >"
+      "message":"Unexpected token `>`, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
-      "message":"Unexpected token ("
+      "message":"Unexpected token `(`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":19}},
@@ -93,8 +93,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

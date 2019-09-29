@@ -64,7 +64,7 @@ def("DeclareOpaqueType")
 
 def("PrivateName")
   .bases("Expression")
-  .field("name", def("Identifier"))
+  .field("id", def("Identifier"))
 
 def("ClassPrivateProperty")
   .bases("ClassProperty")
@@ -96,6 +96,7 @@ def("ExportDefaultDeclaration")
       def("FunctionDeclaration"), // TODO: should be NullableFunctionDeclaration
       def("VariableDeclaration"),
       def("InterfaceDeclaration"),
+      def("EnumDeclaration"),
       def("TypeAlias"),
       def("OpaqueType"),
       def("Expression")))
@@ -178,6 +179,7 @@ def("Function")
 
 def("ObjectTypeAnnotation")
     .field("exact", Boolean)
+    .field("inexact", or(Boolean, void 0), defaults["undefined"])
     .field("properties", [or(
       def("ObjectTypeProperty"),
       def("ObjectTypeSpreadProperty"))])
@@ -267,3 +269,64 @@ def("CatchClause")
     .field("param", or(def("Pattern"), null), defaults["null"])
     .field("guard", or(def("Expression"), null), defaults["null"])
     .field("body", def("BlockStatement"));
+
+def("BigIntLiteral")
+  .bases("Literal")
+  .build("value", "bigint")
+  .field("value", or(def("BigInt"), null))
+  .field("bigint", String);
+
+def("BigIntLiteralTypeAnnotation")
+  .bases("Type")
+  .build("value", "raw")
+  .field("value", or(def("BigInt"), null))
+  .field("raw", String);
+
+// Enums
+def("EnumDeclaration")
+  .bases("Declaration")
+  .build("id", "body")
+  .field("id", def("Identifier"))
+  .field("body", or(
+    def("EnumBooleanBody"),
+    def("EnumNumberBody"),
+    def("EnumStringBody"),
+    def("EnumSymbolBody")))
+
+def("EnumBooleanBody")
+  .build("members", "explicitType")
+  .field("members", [def("EnumBooleanMember")])
+  .field("explicitType", Boolean)
+
+def("EnumNumberBody")
+  .build("members", "explicitType")
+  .field("members", [def("EnumNumberMember")])
+  .field("explicitType", Boolean)
+
+def("EnumStringBody")
+  .build("members", "explicitType")
+  .field("members", [or(def("EnumStringMember"), def("EnumDefaultedMember"))])
+  .field("explicitType", Boolean)
+
+def("EnumSymbolBody")
+  .build("members")
+  .field("members", [def("EnumDefaultedMember")])
+
+def("EnumBooleanMember")
+  .build("id", "init")
+  .field("id", def("Identifier"))
+  .field("init", Boolean)
+
+def("EnumNumberMember")
+  .build("id", "init")
+  .field("id", def("Identifier"))
+  .field("init", def("Literal"))
+
+def("EnumStringMember")
+  .build("id", "init")
+  .field("id", def("Identifier"))
+  .field("init", def("Literal"))
+
+def("EnumDefaultedMember")
+  .build("id")
+  .field("id", def("Identifier"))

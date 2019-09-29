@@ -26,5 +26,21 @@ References:
                         ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:38:1
 
-Found 2 errors
+Cannot assign `42` to `x[0]` because read-only arrays cannot be written to.
+
+   38| x[0] = 42;
+       ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:39:1
+
+Cannot assign `42` to `x[0]` because read-only arrays cannot be written to.
+
+   39| x[(0: any)] = 42;
+       ^^^^^^^^^^^
+
+
+
+Found 4 errors

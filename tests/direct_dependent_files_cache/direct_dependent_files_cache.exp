@@ -1,0 +1,283 @@
+== Initial there should be 2 errors ==
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+
+   src/dependent.js:4:2
+   4| (dependency: string);
+       ^^^^^^^^^^
+
+References:
+   src/node_modules/dependency.js:3:16
+   3| export default true;
+                     ^^^^ [1]
+   src/dependent.js:4:14
+   4| (dependency: string);
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   src/unrelated.js:3:19
+   3| const x: string = 123;
+                        ^^^ [1]
+
+References:
+   src/unrelated.js:3:10
+   3| const x: string = 123;
+               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+== Delete unrelated.js and now there is 1 error ==
+ Resolved requires are unchanged
+ Resolved requires are unchanged
+
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+
+   src/dependent.js:4:2
+   4| (dependency: string);
+       ^^^^^^^^^^
+
+References:
+   src/node_modules/dependency.js:3:16
+   3| export default true;
+                     ^^^^ [1]
+   src/dependent.js:4:14
+   4| (dependency: string);
+                   ^^^^^^ [2]
+
+
+
+Found 1 error
+
+== Restore unrelated.js and back to 2 errors ==
+ Resolved requires are unchanged
+ Resolved requires are unchanged
+
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+
+   src/dependent.js:4:2
+   4| (dependency: string);
+       ^^^^^^^^^^
+
+References:
+   src/node_modules/dependency.js:3:16
+   3| export default true;
+                     ^^^^ [1]
+   src/dependent.js:4:14
+   4| (dependency: string);
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   src/unrelated.js:3:19
+   3| const x: string = 123;
+                        ^^^ [1]
+
+References:
+   src/unrelated.js:3:10
+   3| const x: string = 123;
+               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+== Delete src/node_modules/dependency.js changes an error ==
+ Resolved requires are unchanged
+ Resolved requires changed
+
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+
+Cannot cast `dependency` to string because number [1] is incompatible with string [2].
+
+   src/dependent.js:4:2
+   4| (dependency: string);
+       ^^^^^^^^^^
+
+References:
+   node_modules/dependency.js:3:16
+   3| export default 123;
+                     ^^^ [1]
+   src/dependent.js:4:14
+   4| (dependency: string);
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   src/unrelated.js:3:19
+   3| const x: string = 123;
+                        ^^^ [1]
+
+References:
+   src/unrelated.js:3:10
+   3| const x: string = 123;
+               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+== Restore src/node_modules/dependency.js change it back ==
+ Resolved requires are unchanged
+ Resolved requires changed
+
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+
+   src/dependent.js:4:2
+   4| (dependency: string);
+       ^^^^^^^^^^
+
+References:
+   src/node_modules/dependency.js:3:16
+   3| export default true;
+                     ^^^^ [1]
+   src/dependent.js:4:14
+   4| (dependency: string);
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   src/unrelated.js:3:19
+   3| const x: string = 123;
+                        ^^^ [1]
+
+References:
+   src/unrelated.js:3:10
+   3| const x: string = 123;
+               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+== Remove the import from dependent.js ==
+ Resolved requires changed
+ Resolved requires are unchanged
+
+Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   src/unrelated.js:3:19
+   3| const x: string = 123;
+                        ^^^ [1]
+
+References:
+   src/unrelated.js:3:10
+   3| const x: string = 123;
+               ^^^^^^ [2]
+
+
+
+Found 1 error
+
+== Add the import back to dependent.js ==
+ Resolved requires changed
+ Resolved requires are unchanged
+
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+
+   src/dependent.js:4:2
+   4| (dependency: string);
+       ^^^^^^^^^^
+
+References:
+   src/node_modules/dependency.js:3:16
+   3| export default true;
+                     ^^^^ [1]
+   src/dependent.js:4:14
+   4| (dependency: string);
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   src/unrelated.js:3:19
+   3| const x: string = 123;
+                        ^^^ [1]
+
+References:
+   src/unrelated.js:3:10
+   3| const x: string = 123;
+               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+== Adding code that doesn't import has no effect on dep graph ==
+ Resolved requires are unchanged
+ Resolved requires are unchanged
+
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+
+   src/dependent.js:4:2
+   4| (dependency: string);
+       ^^^^^^^^^^
+
+References:
+   src/node_modules/dependency.js:3:16
+   3| export default true;
+                     ^^^^ [1]
+   src/dependent.js:4:14
+   4| (dependency: string);
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ src/node_modules/dependency.js:4:24
+
+Cannot assign `123` to `foo` because number [1] is incompatible with boolean [2].
+
+   src/node_modules/dependency.js:4:24
+   4| export var foo: bool = 123
+                             ^^^ [1]
+
+References:
+   src/node_modules/dependency.js:4:17
+   4| export var foo: bool = 123
+                      ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   src/unrelated.js:3:19
+   3| const x: string = 123;
+                        ^^^ [1]
+
+References:
+   src/unrelated.js:3:10
+   3| const x: string = 123;
+               ^^^^^^ [2]
+
+
+
+Found 3 errors

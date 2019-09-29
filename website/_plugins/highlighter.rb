@@ -200,7 +200,7 @@ module Jekyll
             printed += before[index]
           end
 
-          printed += char
+          printed += CGI.escapeHTML(char)
 
           if after[index + 1] != nil
             printed += after[index + 1]

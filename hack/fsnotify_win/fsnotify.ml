@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -30,7 +30,7 @@ type fsenv
 (* Abstract data type for a watching thread. *)
 type watcher_id
 
-module SSet = Set.Make(String)
+module SSet = Set.Make (String)
 
 type env = {
   fsenv: fsenv;
@@ -40,14 +40,14 @@ type env = {
 }
 
 type event = {
-  path: string;  (* The full path for the file/directory that changed *)
+  path: string;
+  (* The full path for the file/directory that changed *)
   wpath: string; (* The watched path that triggered this event *)
 }
 
 (** Stubs *)
 
-external raw_init:
-  Unix.file_descr -> fsenv = "caml_fsnotify_init"
+external raw_init : Unix.file_descr -> fsenv = "caml_fsnotify_init"
 
 (* [raw_add_watch out_fd dir] creates a thread that monitor [dir] and
    push a single charactes into the pipe 'out_fd' whenever a events is
@@ -55,22 +55,20 @@ external raw_init:
 
    The return value is an opaque `watcher_id`, currently it contains
    the corresponding thread id. *)
-external raw_add_watch: fsenv -> string -> watcher_id = "caml_fsnotify_add_watch"
+external raw_add_watch : fsenv -> string -> watcher_id
+  = "caml_fsnotify_add_watch"
 
-external raw_read_events:
-  fsenv -> event list = "caml_fsnotify_read_events"
-
+external raw_read_events : fsenv -> event list = "caml_fsnotify_read_events"
 
 (** Init *)
 
 let init roots =
-  let in_fd, out_fd = Unix.pipe () in
+  let (in_fd, out_fd) = Unix.pipe () in
   Unix.set_close_on_exec in_fd;
   Unix.set_close_on_exec out_fd;
   let fsenv = raw_init out_fd in
   let watchers = List.map roots ~f:(raw_add_watch fsenv) in
   { fsenv; fd = in_fd; watchers; wpaths = SSet.empty }
-
 
 (** Faked add_watch, as for `fsnotify_darwin`. *)
 
@@ -80,47 +78,53 @@ let add_watch env path =
    * the whole directory. No need to register every files in it. *)
   if SSet.mem path env.wpaths then
     None
-  else begin
+  else (
     env.wpaths <- SSet.add path env.wpaths;
     Some ()
-  end
+  )
 
 (** Select *)
 
-module FDMap = Map.Make(struct
-    type t = Unix.file_descr
-    let compare = compare
-  end)
+module FDMap = Map.Make (struct
+  type t = Unix.file_descr
+
+  let compare = compare
+end)
+
 type fd_select = Unix.file_descr * (unit -> unit)
+
 let make_callback fdmap (fd, callback) = FDMap.add fd callback fdmap
-let invoke_callback fdmap fd  =
-  let callback =
-    try FDMap.find fd fdmap
-    with _ -> assert false in
+
+let invoke_callback fdmap fd =
+  let callback = (try FDMap.find fd fdmap with _ -> assert false) in
   callback ()
 
 let read_events env =
   (* read pop only one char from pipe, in order never to block. *)
-  ignore (Unix.read env.fd " " 0 1 : int);
-  (* prefix the root path *)
-  List.map (raw_read_events env.fsenv)
-    ~f:(fun ev -> { ev with path = Filename.concat ev.wpath ev.path })
+  let buf = Bytes.create 1 in
+  ignore (Unix.read env.fd buf 0 1 : int);
 
-let select env ?(read_fdl=[]) ?(write_fdl=[]) ~timeout callback =
+  (* prefix the root path *)
+  List.map (raw_read_events env.fsenv) ~f:(fun ev ->
+      { ev with path = Filename.concat ev.wpath ev.path })
+
+let select env ?(read_fdl = []) ?(write_fdl = []) ~timeout callback =
   let callback () = callback (read_events env) in
   let read_fdl = (env.fd, callback) :: read_fdl in
   let read_callbacks =
-    List.fold_left ~f:make_callback ~init:FDMap.empty read_fdl in
+    List.fold_left ~f:make_callback ~init:FDMap.empty read_fdl
+  in
   let write_callbacks =
-    List.fold_left ~f:make_callback ~init:FDMap.empty write_fdl in
-  let read_ready, write_ready, _ =
+    List.fold_left ~f:make_callback ~init:FDMap.empty write_fdl
+  in
+  let (read_ready, write_ready, _) =
     Unix.select (List.map read_fdl fst) (List.map write_fdl fst) [] timeout
   in
   List.iter write_ready (invoke_callback write_callbacks);
   List.iter read_ready (invoke_callback read_callbacks)
 
-
 (** Unused, for compatibility with `fsnotify_linux/fsnotify.mli` only. *)
 
 type watch = unit
+
 exception Error of string * Unix.error

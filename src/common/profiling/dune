@@ -1,0 +1,10 @@
+(library
+  (name flow_common_profiling)
+  (wrapped false)
+  (libraries
+    dtoa
+    hh_json ; hack
+    lwt
+    sys_utils ; hack
+    )
+  (preprocess (pps lwt_ppx)))

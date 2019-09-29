@@ -119,3 +119,54 @@ let tests = [
     }
   },
 ];
+
+let negtests = [
+  function(x: number) {
+    if (x === -1) {
+      (x: void); // error
+    }
+    (x: -1); // error
+  },
+
+  function(x: number) {
+    if (x !== -1) {
+      (x: -1); // error
+    }
+    (x: -1); // error
+  },
+
+  function(x: -1): -1 {
+    if (x === -1) {
+      return x;
+    }
+    return -1;
+  },
+
+  function(x: 0): number {
+    if (x === -1) { // error
+      return x;
+    }
+    return x;
+  },
+
+  function(x: -1) {
+    if (x === 0) { //error
+      (x: 0);
+    }
+    (x: -1);
+  },
+
+  function(x: -1 | 0): -1 {
+    if (x === 0) {
+      return -1;
+    }
+    return x;
+  },
+
+  function(x: -1 | 0): -1 {
+    if (x === -1) {
+      return x;
+    }
+    return x;
+  },
+]

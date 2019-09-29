@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -37,86 +37,95 @@ type timer = {
 
 module TimerKey = struct
   type t = timer
+
   let compare a b = compare a.target_time b.target_time
 end
 
 (* Mutable priority queue with O(log(n)) pushes and pops *)
-module TimerQueue = PriorityQueue.Make(TimerKey)
+module TimerQueue = PriorityQueue.Make (TimerKey)
 
 let next_id = ref 1
+
 let queue = TimerQueue.make_empty 8
+
 let current_timer = ref None
 
 let cancelled = ref ISet.empty
 
 (* Get's the next timer. Any expired timers have their callbacks invoked *)
 let rec get_next_timer ~exns =
-  if TimerQueue.is_empty queue
-  then None, List.rev exns
+  if TimerQueue.is_empty queue then
+    (None, List.rev exns)
   else
     let timer = TimerQueue.pop queue in
-
     (* Skip cancelled timers *)
-    if ISet.mem timer.id !cancelled
-    then get_next_timer ~exns
+    if ISet.mem timer.id !cancelled then
+      get_next_timer ~exns
     else
       let interval = timer.target_time -. Unix.gettimeofday () in
-      if interval <= 0.0
-      then begin
-        let exns = try
-          timer.callback ();
-          exns
-        with exn -> exn::exns in
+      if interval <= 0.0 then
+        let exns =
+          try
+            timer.callback ();
+            exns
+          with exn -> exn :: exns
+        in
         get_next_timer ~exns
-      end else
-        (Some timer), List.rev exns
+      else
+        (Some timer, List.rev exns)
 
 (* Schedules an alarm for interval seconds *)
 let schedule_non_recurring interval =
-  let open Unix in
-  let interval_timer = {
-    it_interval = 0.0; (* Don't restart timer when it finishes *)
-    it_value = interval; (* How long to wait *)
-  } in
-  ignore (setitimer ITIMER_REAL interval_timer)
+  Unix.(
+    let interval_timer =
+      {
+        it_interval = 0.0;
+        (* Don't restart timer when it finishes *)
+        it_value = interval (* How long to wait *);
+      }
+    in
+    ignore (setitimer ITIMER_REAL interval_timer))
 
 external reraise : exn -> 'a = "%reraise"
 
 let rec ding_fries_are_done _ =
-  let exns = try
-    Option.iter !current_timer ~f:(fun timer -> timer.callback ());
-    []
-  with exn -> [exn] in
+  let exns =
+    try
+      Option.iter !current_timer ~f:(fun timer -> timer.callback ());
+      []
+    with exn -> [exn]
+  in
   current_timer := None;
   schedule ~exns ()
 
-and schedule ?(exns=[]) () =
+and schedule ?(exns = []) () =
   (* Stop the current timer, if there is one, to avoid races *)
   schedule_non_recurring 0.0;
 
   (* If there's a current timer, requeue it *)
   Option.iter !current_timer ~f:(TimerQueue.push queue);
 
-  let timer, exns = get_next_timer ~exns in
+  let (timer, exns) = get_next_timer ~exns in
   current_timer := timer;
 
   ignore (Sys.signal Sys.sigalrm (Sys.Signal_handle ding_fries_are_done));
 
   (* Start the timer back up *)
-  Option.iter timer ~f:(fun t -> schedule_non_recurring (t.target_time -. (Unix.gettimeofday ())));
+  Option.iter timer ~f:(fun t ->
+      schedule_non_recurring (t.target_time -. Unix.gettimeofday ()));
 
   (* If we executed more than one callback this time and more than one callback threw an
    * exception, then we just arbitrarily choose one to throw. Oh well :/ *)
-  (match exns with
-  | exn::_ -> reraise exn
-  | _ -> ())
+  match exns with
+  | exn :: _ -> reraise exn
+  | _ -> ()
 
 (* Will invoke callback () after interval seconds *)
 let set_timer ~interval ~callback =
   let target_time = Unix.gettimeofday () +. interval in
   let id = !next_id in
   incr next_id;
-  TimerQueue.push queue { target_time; callback; id; };
+  TimerQueue.push queue { target_time; callback; id };
   (match !current_timer with
   | Some current_timer when target_time >= current_timer.target_time ->
     (* There's currently a timer and the new timer will fire after it. As an optimization we can

@@ -41,8 +41,8 @@ Cannot cast `x` to number because string [1] is incompatible with number [2].
              ^
 
 References:
-   <BUILTINS>/core.js:291:28
-   291|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:321:28
+   321|     @@iterator(): Iterator<string>;
                                    ^^^^^^ [1]
    forof.js:25:9
     25|     (x: number); // Error - string ~> number
@@ -58,8 +58,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
              ^^^^
 
 References:
-   <BUILTINS>/core.js:532:28
-   532|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:593:28
+   593|     @@iterator(): Iterator<[K, V]>;
                                    ^^^^^^ [1]
    forof.js:32:12
     32|     (elem: number); // Error - tuple ~> number
@@ -75,8 +75,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
              ^^^^
 
 References:
-   <BUILTINS>/core.js:532:28
-   532|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:593:28
+   593|     @@iterator(): Iterator<[K, V]>;
                                    ^^^^^^ [1]
    forof.js:39:12
     39|     (elem: number); // Error - tuple ~> number
@@ -100,5 +100,89 @@ References:
                ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- forof.js:66:7
 
-Found 6 errors
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   forof.js:66:7
+   66|   x = x * 3; // error
+             ^
+
+References:
+   forof.js:55:48
+   55| declare var funky1 : { @@iterator(): $Iterator<string, number, boolean> };
+                                                      ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:85:4
+
+Cannot cast `x` to number because boolean [1] is incompatible with number [2].
+
+   forof.js:85:4
+   85|   (x : number); // error
+          ^
+
+References:
+   forof.js:61:9
+   61|   yield true;
+               ^^^^ [1]
+   forof.js:85:8
+   85|   (x : number); // error
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:86:4
+
+Cannot cast `x` to boolean because number [1] is incompatible with boolean [2].
+
+   forof.js:86:4
+   86|   (x : boolean); // error
+          ^
+
+References:
+   forof.js:60:9
+   60|   yield 0;
+               ^ [1]
+   forof.js:86:8
+   86|   (x : boolean); // error
+              ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:87:4
+
+Cannot cast `x` to string because:
+ - number [1] is incompatible with string [2].
+ - boolean [3] is incompatible with string [2].
+
+   forof.js:87:4
+   87|   (x : string) //error
+          ^
+
+References:
+   forof.js:60:9
+   60|   yield 0;
+               ^ [1]
+   forof.js:87:8
+   87|   (x : string) //error
+              ^^^^^^ [2]
+   forof.js:61:9
+   61|   yield true;
+               ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- scope.js:2:17
+
+Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+
+   scope.js:2:17
+   2| for (const x of x) { // error: can not reference undeclared x in right-hand expr
+                      ^
+
+References:
+   scope.js:2:12
+   2| for (const x of x) { // error: can not reference undeclared x in right-hand expr
+                 ^ [1]
+
+
+
+Found 12 errors

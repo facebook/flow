@@ -66,7 +66,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- strings.js:11:2
 
-Cannot create string element because an indexer property is missing in `$JSXIntrinsics` [1].
+Cannot create string element because an index signature declaring the expected key / value type is missing in
+`$JSXIntrinsics` [1].
 
    strings.js:11:2
    11| <Str />; // Error: string ~> keys of JSXIntrinsics
@@ -119,7 +120,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- strings.js:15:21
 
-Cannot create string element because an indexer property is missing in `$JSXIntrinsics` [1].
+Cannot create string element because an index signature declaring the expected key / value type is missing in
+`$JSXIntrinsics` [1].
 
    strings.js:15:21
    15| React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics

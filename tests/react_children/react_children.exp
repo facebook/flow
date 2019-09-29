@@ -68,8 +68,8 @@ References:
    api.js:14:25
     14| Children.forEach(a, (x: number) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:254:38
-   254|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:282:38
+   282|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
 
 
@@ -90,8 +90,8 @@ References:
    api.js:16:25
     16| Children.forEach(a, (x: string) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:254:38
-   254|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:282:38
+   282|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
    api.js:5:25
      5| const a: ChildrenArray<?number> = [
@@ -107,8 +107,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:266:42
-   266|     count(children: ChildrenArray<any>): number;
+   <BUILTINS>/react.js:294:42
+   294|     count(children: ChildrenArray<any>): number,
                                                  ^^^^^^ [1]
    api.js:29:15
     29| function s(x: string) {}
@@ -409,9 +409,9 @@ Cannot create `Fun` element because undefined [1] is incompatible with `Fn` [2] 
        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   fun.js:48:7
+   48| <Fun>{undefined}</Fun>; // Error: `undefined` is not allowed.
+             ^^^^^^^^^ [1]
    fun.js:16:46
    16| class Fun extends React.Component<{children: Fn}, void> {}
                                                     ^^ [2]
@@ -504,8 +504,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:54:1
 
-Cannot create `Fun` element because a callable signature is missing in `React.Element` [1] but exists in `Fn` [2] in
-property `children`.
+Cannot create `Fun` element because a call signature declaring the expected parameter / return type is missing in
+`React.Element` [1] but exists in `Fn` [2] in property `children`.
 
    fun.js:54:1
    54| <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
@@ -766,9 +766,9 @@ Cannot create `FunArray` element because in property `children`:
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-    13| declare var undefined: void;
-                               ^^^^ [1]
+   fun.js:136:12
+   136| <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
+                   ^^^^^^^^^ [1]
    fun.js:21:51
     21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                           ^^ [2]
@@ -889,8 +889,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:142:1
 
-Cannot create `FunArray` element because a callable signature is missing in `React.Element` [1] but exists in `Fn` [2]
-in property `children`.
+Cannot create `FunArray` element because a call signature declaring the expected parameter / return type is missing in
+`React.Element` [1] but exists in `Fn` [2] in property `children`.
 
    fun.js:142:1
    142| <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
@@ -1142,9 +1142,9 @@ Cannot create `Text` element because undefined [1] is incompatible with string [
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   text.js:20:8
+   20| <Text>{undefined}</Text>; // Error: `undefined` is not allowed.
+              ^^^^^^^^^ [1]
    text.js:5:47
     5| class Text extends React.Component<{children: string}, void> {}
                                                      ^^^^^^ [2]

@@ -1,0 +1,3 @@
+(library
+  (name opaque_digest)
+  (wrapped false))

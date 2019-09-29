@@ -69,8 +69,8 @@ Cannot cast `o.toString()` to boolean because string [1] is incompatible with bo
           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:67:17
-   67|     toString(): string;
+   <BUILTINS>/core.js:84:17
+   84|     toString(): string;
                        ^^^^^^ [1]
    dictionary.js:94:18
    94|   (o.toString(): boolean); // error: string ~> boolean
@@ -502,8 +502,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:227:10
 
-Cannot return `x` because an indexer property is missing in object type [1] but exists in object type [2] in array
-element.
+Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
+exists in object type [2] in array element.
 
    dictionary.js:227:10
    227|   return x; // error: if allowed, could write {p:X,q:Y} into `x`
@@ -520,8 +520,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:233:10
 
-Cannot return `x` because an indexer property is missing in object type [1] but exists in object type [2] in array
-element.
+Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
+exists in object type [2] in array element.
 
    dictionary.js:233:10
    233|   return x; // error: if allowed, could write {p:X,q:Y} into returned array
@@ -946,8 +946,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:42:10
 
-Cannot return `x` because an indexer property is missing in object type [1] but exists in object type [2] in array
-element.
+Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
+exists in object type [2] in array element.
 
    incompatible.js:42:10
    42|   return x;
@@ -964,8 +964,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
 
-Cannot return `x` because an indexer property is missing in object type [1] but exists in object type [2] in array
-element.
+Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
+exists in object type [2] in array element.
 
    incompatible.js:47:10
    47|   return x;

@@ -1,0 +1,3 @@
+a.js
+folder/d.js
+folder/subfolder/j.js

@@ -1,0 +1,5 @@
+[lints]
+sketchy-null-mixed=warn
+
+[options]
+suppress_type=$FlowFixMe

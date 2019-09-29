@@ -9,8 +9,78 @@ Cannot reassign constant `x` [1].
 References:
    test.js:16:26
    16| function cannot_reassign(x: string) {
-                                ^^^^^^^^^ [1]
+                                ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:32:3
+
+Cannot reassign constant `x` [1].
+
+   test.js:32:3
+   32|   x = 0; // error, const param cannot be reeassigned
+         ^
+
+References:
+   test.js:31:33
+   31| function const_rest_reassign(...x) {
+                                       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:36:3
+
+Cannot reassign constant `x` [1].
+
+   test.js:36:3
+   36|   x = 0; // error, const param cannot be reeassigned
+         ^
+
+References:
+   test.js:35:35
+   35| function const_obj_patt_reassign({x, ...o}) {
+                                         ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:37:3
+
+Cannot reassign constant `o` [1].
+
+   test.js:37:3
+   37|   o = 0; // error, const param cannot be reeassigned
+         ^
+
+References:
+   test.js:35:41
+   35| function const_obj_patt_reassign({x, ...o}) {
+                                               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:3
+
+Cannot reassign constant `x` [1].
+
+   test.js:41:3
+   41|   x = 0; // error, const param cannot be reeassigned
+         ^
+
+References:
+   test.js:40:35
+   40| function const_arr_patt_reassign([x, ...a]) {
+                                         ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:3
+
+Cannot reassign constant `a` [1].
+
+   test.js:42:3
+   42|   a = 0; // error, const param cannot be reeassigned
+         ^
+
+References:
+   test.js:40:41
+   40| function const_arr_patt_reassign([x, ...a]) {
+                                               ^ [1]
 
 
 
-Found 1 error
+Found 6 errors

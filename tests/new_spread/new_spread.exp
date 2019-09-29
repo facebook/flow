@@ -16,39 +16,215 @@ References:
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- cross_module/app.js:8:19
+Error ------------------------------------------------------------------------------------------ cross_module/use.js:5:5
 
-Cannot call `fn` with function bound to `arg` because number [1] is incompatible with string [2] in property `a` of the
-first argument.
+Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
+property `a`.
 
-   cross_module/app.js:8:19
-   8| export default fn((o: {a: number, b: number}) => {});
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   cross_module/use.js:5:5
+   5| app({a: 'foo', b: 2});
+          ^^^^^^^^^^^^^^^^
 
 References:
-   cross_module/app.js:8:27
-   8| export default fn((o: {a: number, b: number}) => {});
-                                ^^^^^^ [1]
    cross_module/use.js:5:9
    5| app({a: 'foo', b: 2});
-              ^^^^^ [2]
+              ^^^^^ [1]
+   cross_module/app.js:8:60
+   8| export default (fn((o: {a: number, b: number}) => {}): {|a:number, b:number|} => void);
+                                                                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:13:2
+Error ------------------------------------------------------------------------------------------- error_messages.js:3:62
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `c` with a type that
+conflicts with `c`'s definition in object type [1]. Can you make object type [2] exact?
 
-   type.js:13:2
-   13| (o1: {p:T}); // error: o1.p is optional
+   error_messages.js:3:62
+   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
+                                                                   ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:3:16
+   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- error_messages.js:7:16
+
+Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [2]. Can you make object type [1] exact?
+
+   error_messages.js:7:16
+   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:7:58
+   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
+                                                               ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:13:49
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts with
+`c`'s definition in object type [1]. Can you make `B` [2] exact?
+
+   error_messages.js:13:49
+   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                                                       ^ [2]
+
+References:
+   error_messages.js:13:17
+   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:19:17
+
+Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in `D` [2]. Can you make object type [1] exact?
+
+   error_messages.js:19:17
+   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:19:49
+   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                                                       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- error_messages.js:26:6
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
+conflicts with `d`'s definition in object type [1]. Can you make object type [2] exact?
+
+   error_messages.js:26:6
+   26|   ...{b: number},
+            ^^^^^^^^^^^ [2]
+
+References:
+   error_messages.js:23:17
+                       v---------------------------------------------
+   23| declare var x3: { // Error, but message could use improvement.
+   24|   ...{a: number},
+   25|   d: number,
+   26|   ...{b: number},
+   27|   e: number,
+   28|   ...{c: number},
+   29|   f: number,
+   30| };
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:33:27
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts with
+`b`'s definition in `A` [3]. Can you make `B` [2] exact?
+
+   error_messages.js:33:27
+   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                                 ^ [2]
+
+References:
+   error_messages.js:33:17
+   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:33:21
+   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                           ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:36:47
+
+Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts with
+`foo`'s definition in object type [1]. Can you make `B` [2] exact?
+
+   error_messages.js:36:47
+   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                                                     ^ [2]
+
+References:
+   error_messages.js:36:17
+   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:16:11
+
+Cannot determine a type for object type [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of
+their properties. Can you use an object type instead?
+
+   no_interfaces.js:16:11
+   16| spread<A, B>(a, b); // Error, can't spread interface
+                 ^ [2]
+
+References:
+   no_interfaces.js:9:4
+    9| ): {...A, ...B} {
+          ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:18:20
+
+Cannot determine a type for `X` [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Can you use an object type instead?
+
+   no_interfaces.js:18:20
+   18| type X = {...A, ...B}; // Error, can't spread interface
+                          ^ [2]
+
+References:
+   no_interfaces.js:18:10
+   18| type X = {...A, ...B}; // Error, can't spread interface
+                ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:23:14
+
+Cannot determine a type for `Y` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Can you use an object type instead?
+
+   no_interfaces.js:23:14
+   23| type Y = {...A, foo: number}; // Error, can't spread interface
+                    ^ [2]
+
+References:
+   no_interfaces.js:23:10
+   23| type Y = {...A, foo: number}; // Error, can't spread interface
+                ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:27:27
+
+Cannot determine a type for `Z` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Can you use an object type instead?
+
+   no_interfaces.js:27:27
+   27| type Z = {foo: number, ...A}; // Error, can't spread interface
+                                 ^ [2]
+
+References:
+   no_interfaces.js:27:10
+   27| type Z = {foo: number, ...A}; // Error, can't spread interface
+                ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- type.js:12:2
+
+Cannot cast `o1` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+
+   type.js:12:2
+   12| (o1: {p?:T}); // ok
         ^^
 
 References:
    type.js:10:18
    10| type O1 = {...{p:T}};
                         ^ [1]
-   type.js:13:9
-   13| (o1: {p:T}); // error: o1.p is optional
-               ^ [2]
+   type.js:12:10
+   12| (o1: {p?:T}); // ok
+                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:16:2
@@ -133,18 +309,21 @@ References:
             ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:37:2
+Error ----------------------------------------------------------------------------------------------------- type.js:37:3
 
-Cannot cast object literal to `O4` because property `p` is missing in object literal [1] but exists in object type [2].
+Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object type [2].
 
-   type.js:37:2
-   37| ({}: O4); // error: property `p` not found
-        ^^ [1]
+   type.js:37:3
+   37| (({}:{}): O4); // error: property `p` not found
+         ^^^^^
 
 References:
    type.js:37:6
-   37| ({}: O4); // error: property `p` not found
-            ^^ [2]
+   37| (({}:{}): O4); // error: property `p` not found
+            ^^ [1]
+   type.js:37:11
+   37| (({}:{}): O4); // error: property `p` not found
+                 ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:39:2
@@ -212,18 +391,21 @@ References:
                    ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:56:2
+Error ----------------------------------------------------------------------------------------------------- type.js:56:3
 
-Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in `O6` [2].
+Cannot cast object literal to `O6` because property `p` is missing in object type [1] but exists in `O6` [2].
 
-   type.js:56:2
-   56| ({}: O6); // error: property `p` not found
-        ^^ [1]
+   type.js:56:3
+   56| (({}:{}): O6); // error: property `p` not found
+         ^^^^^
 
 References:
    type.js:56:6
-   56| ({}: O6); // error: property `p` not found
-            ^^ [2]
+   56| (({}:{}): O6); // error: property `p` not found
+            ^^ [1]
+   type.js:56:11
+   56| (({}:{}): O6); // error: property `p` not found
+                 ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:57:2
@@ -274,55 +456,74 @@ References:
               ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:69:2
+Error ----------------------------------------------------------------------------------------------------- type.js:74:2
 
-Cannot cast `o8.p` to `U` because `T` [1] is incompatible with `U` [2].
+Cannot cast `o9` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type.js:69:2
-   69| (o8.p: U); // error: T ~> U
-        ^^^^
-
-References:
-   type.js:65:19
-   65| type O8 = {...{|p:T|},...{p:U}};
-                         ^ [1]
-   type.js:69:8
-   69| (o8.p: U); // error: T ~> U
-              ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- type.js:75:2
-
-Cannot cast `o9.p` to `T` because undefined [1] is incompatible with `T` [2].
-
-   type.js:75:2
-   75| (o9.p: T); // error: o9.p is optional
-        ^^^^
+   type.js:74:2
+   74| (o9: {p?:T,q:U});
+        ^^
 
 References:
    type.js:72:18
    72| type O9 = {...{p:T},...{|q:U|}};
                         ^ [1]
-   type.js:75:8
-   75| (o9.p: T); // error: o9.p is optional
-              ^ [2]
+   type.js:74:10
+   74| (o9: {p?:T,q:U});
+                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:101:2
+Error ---------------------------------------------------------------------------------------------------- type.js:79:27
 
-Cannot cast `o14` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in object type [3]. Can you make object type [2] exact?
 
-   type.js:101:2
-   101| (o14: {p:T}); // error: `p` is optional
+   type.js:79:27
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
+                                 ^^^^^ [2]
+
+References:
+   type.js:79:12
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
+                  ^^^^^^^^^^^^^^^^^^^^^ [1]
+   type.js:79:16
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
+                      ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- type.js:84:25
+
+Cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in object type [3]. Can you make object type [2] exact?
+
+   type.js:84:25
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
+                               ^^^^^ [2]
+
+References:
+   type.js:84:12
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
+                  ^^^^^^^^^^^^^^^^^^^ [1]
+   type.js:84:16
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
+                      ^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- type.js:102:2
+
+Cannot cast `o14` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+
+   type.js:102:2
+   102| (o14: {p?:T}); // ok
          ^^^
 
 References:
    type.js:99:24
     99| type O14 = {...{...{|p:T|}}};
                                ^ [1]
-   type.js:101:10
-   101| (o14: {p:T}); // error: `p` is optional
-                 ^ [2]
+   type.js:102:11
+   102| (o14: {p?:T}); // ok
+                  ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- type.js:105:2
@@ -361,9 +562,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:7:2
 
-Cannot cast `o1.p` to `T` because:
- - property `p` of unknown type [1] is incompatible with `T` [2].
- - undefined [1] is incompatible with `T` [2].
+Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2].
 
    type_contra.js:7:2
    7| (o1.p: T); // errors: undefined ~> T, unknown ~> T
@@ -411,6 +610,61 @@ References:
    type_contra.js:13:8
    13| (o2.p: T); // errors: unknown ~> T
               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- type_contra.js:18:2
+
+Cannot cast `o3` to object type because property `p` of unknown type [1] is incompatible with `T` [2] in property `p`.
+
+   type_contra.js:18:2
+   18| (o3: {p:T}); // error: unknown ~> T
+        ^^
+
+References:
+   type_contra.js:15:11
+   15| type O3 = {...{||}, -p: T};
+                 ^^^^^^^^^^^^^^^^ [1]
+   type_contra.js:18:9
+   18| (o3: {p:T}); // error: unknown ~> T
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- type_contra.js:19:2
+
+Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2].
+
+   type_contra.js:19:2
+   19| (o3.p: T); // errors: unknown ~> T
+        ^^^^
+
+References:
+   type_contra.js:15:11
+   15| type O3 = {...{||}, -p: T};
+                 ^^^^^^^^^^^^^^^^ [1]
+   type_contra.js:19:8
+   19| (o3.p: T); // errors: unknown ~> T
+              ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_dict.js:4:37
+
+Cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts with
+string [3] or a property value that conflicts with `T` [4]. Can you make object type [2] exact?
+
+   type_dict.js:4:37
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                                          ^^^^^ [2]
+
+References:
+   type_dict.js:4:17
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:4:23
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                            ^^^^^^ [3]
+   type_dict.js:4:31
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                                    ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:5:2
@@ -484,6 +738,80 @@ References:
                                           ^^^^^ [4]
 
 
+Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
+
+Cannot cast `o1` to object type because:
+ - number [1] is incompatible with undefined [2] in property `p`.
+ - in property `p`:
+    - Either undefined [2] is incompatible with string [3].
+    - Or undefined [2] is incompatible with number [4].
+
+   type_instance.js:6:2
+   6| (o1: {p?:number}); // Error
+       ^^
+
+References:
+   type_instance.js:2:23
+   2| class B extends A {p: number}
+                            ^^^^^^ [1]
+   type_instance.js:6:10
+   6| (o1: {p?:number}); // Error
+               ^^^^^^ [2]
+   type_instance.js:1:14
+   1| class A {+p: string|number}
+                   ^^^^^^ [3]
+   type_instance.js:1:21
+   1| class A {+p: string|number}
+                          ^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------- type_intersection.js:9:2
+
+Cannot cast `o1` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [4] in property `q`.
+
+   type_intersection.js:9:2
+   9| (o1: {p?:T,q?:U}); // ok
+       ^^
+
+References:
+   type_intersection.js:7:18
+   7| type O1 = {...{p:T}&{q:U}};
+                       ^ [1]
+   type_intersection.js:9:10
+   9| (o1: {p?:T,q?:U}); // ok
+               ^ [2]
+   type_intersection.js:7:24
+   7| type O1 = {...{p:T}&{q:U}};
+                             ^ [3]
+   type_intersection.js:9:15
+   9| (o1: {p?:T,q?:U}); // ok
+                    ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
+
+Cannot cast `o2` to object type because:
+ - `A` [1] is incompatible with undefined [2] in property `p`.
+ - `B` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection.js:13:2
+   13| (o2: {p?:B}); // ok
+        ^^
+
+References:
+   type_intersection.js:11:18
+   11| type O2 = {...{p:A}&{p:B}};
+                        ^ [1]
+   type_intersection.js:13:10
+   13| (o2: {p?:B}); // ok
+                ^ [2]
+   type_intersection.js:11:24
+   11| type O2 = {...{p:A}&{p:B}};
+                              ^ [3]
+
+
 Error ---------------------------------------------------------------------------------------- type_intersection.js:15:2
 
 Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`.
@@ -501,38 +829,174 @@ References:
                               ^ [2]
 
 
+Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:2
+
+Cannot cast `o1` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:5:2
+   5| (o1: {p?:T&U}); // ok
+       ^^
+
+References:
+   type_intersection_optional.js:4:24
+   4| declare var o1: {...{p:T}&{p:U}};
+                             ^ [1]
+   type_intersection_optional.js:5:10
+   5| (o1: {p?:T&U}); // ok
+               ^^^ [2]
+   type_intersection_optional.js:4:30
+   4| declare var o1: {...{p:T}&{p:U}};
+                                   ^ [3]
+
+
+Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:2
+
+Cannot cast `o2` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:8:2
+   8| (o2: {p?:T&U}); // ok
+       ^^
+
+References:
+   type_intersection_optional.js:7:25
+   7| declare var o2: {...{p?:T}&{p:U}};
+                              ^ [1]
+   type_intersection_optional.js:8:10
+   8| (o2: {p?:T&U}); // ok
+               ^^^ [2]
+   type_intersection_optional.js:7:31
+   7| declare var o2: {...{p?:T}&{p:U}};
+                                    ^ [3]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:2
+
+Cannot cast `o3` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:11:2
+   11| (o3: {p?:T&U}); // ok
+        ^^
+
+References:
+   type_intersection_optional.js:10:24
+   10| declare var o3: {...{p:T}&{p?:U}};
+                              ^ [1]
+   type_intersection_optional.js:11:10
+   11| (o3: {p?:T&U}); // ok
+                ^^^ [2]
+   type_intersection_optional.js:10:31
+   10| declare var o3: {...{p:T}&{p?:U}};
+                                     ^ [3]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:53:2
+
+Cannot cast `o17` to object type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [4] in property `q`.
+
+   type_intersection_optional.js:53:2
+   53| (o17: {p?:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:52:25
+   52| declare var o17: {...{p:T}&{q:U}};
+                               ^ [1]
+   type_intersection_optional.js:53:11
+   53| (o17: {p?:T,q?:U}); // ok
+                 ^ [2]
+   type_intersection_optional.js:52:31
+   52| declare var o17: {...{p:T}&{q:U}};
+                                     ^ [3]
+   type_intersection_optional.js:53:16
+   53| (o17: {p?:T,q?:U}); // ok
+                      ^ [4]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:2
+
+Cannot cast `o18` to object type because `U` [1] is incompatible with undefined [2] in property `q`.
+
+   type_intersection_optional.js:56:2
+   56| (o18: {p?:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:55:32
+   55| declare var o18: {...{p?:T}&{q:U}};
+                                      ^ [1]
+   type_intersection_optional.js:56:16
+   56| (o18: {p?:T,q?:U}); // ok
+                      ^ [2]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:59:2
+
+Cannot cast `o19` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+
+   type_intersection_optional.js:59:2
+   59| (o19: {p?:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:58:25
+   58| declare var o19: {...{p:T}&{q?:U}};
+                               ^ [1]
+   type_intersection_optional.js:59:11
+   59| (o19: {p?:T,q?:U}); // ok
+                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:65:2
+
+Cannot cast `o21` to object type because `U` [1] is incompatible with undefined [2] in property `q`.
+
+   type_intersection_optional.js:65:2
+   65| (o21: {p:T,q?:U}); // ok
+        ^^^
+
+References:
+   type_intersection_optional.js:64:33
+   64| declare var o21: {...{|p:T|}&{q:U}};
+                                       ^ [1]
+   type_intersection_optional.js:65:15
+   65| (o21: {p:T,q?:U}); // ok
+                     ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:2
 
-Cannot cast `o1.someProp` to empty because mixed [1] is incompatible with empty [2].
+Cannot get `o1.someProp` because property `someProp` is missing in `O1` [1].
 
    type_mixed.js:5:2
-   5| (o1.someProp: empty); // Error: mixed ~> empty
+   5| (o1.someProp: empty); // Error someProp does not exist
        ^^^^^^^^^^^
 
 References:
-   type_mixed.js:3:15
-   3| type O1 = {...mixed};
-                    ^^^^^ [1]
-   type_mixed.js:5:15
-   5| (o1.someProp: empty); // Error: mixed ~> empty
-                    ^^^^^ [2]
+   type_mixed.js:4:17
+   4| declare var o1: O1;
+                      ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:2
 
-Cannot cast `o2.someProp` to empty because mixed [1] is incompatible with empty [2].
+Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1].
 
    type_mixed.js:9:2
-   9| (o2.someProp: empty); // Error: mixed ~> empty
+   9| (o2.someProp: empty); // Error someProp does not exist
        ^^^^^^^^^^^
 
 References:
-   type_mixed.js:7:16
-   7| type O2 = {|...mixed|};
-                     ^^^^^ [1]
-   type_mixed.js:9:15
-   9| (o2.someProp: empty); // Error: mixed ~> empty
-                    ^^^^^ [2]
+   type_mixed.js:8:17
+   8| declare var o2: O2;
+                      ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:13:2
@@ -555,61 +1019,65 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:14:2
 
 Cannot cast `o3.b` to empty because:
+ - number [1] is incompatible with empty [2].
  - undefined [1] is incompatible with empty [2].
- - mixed [3] is incompatible with empty [2].
- - number [4] is incompatible with empty [2].
 
    type_mixed.js:14:2
    14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
         ^^^^
 
 References:
-   type_mixed.js:11:11
+   type_mixed.js:11:42
    11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^ [1]
    type_mixed.js:14:8
    14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
               ^^^^^ [2]
-   type_mixed.js:11:15
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                     ^^^^^ [3]
-   type_mixed.js:11:42
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                                                ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:15:2
 
-Cannot cast `o3.c` to empty because mixed [1] is incompatible with empty [2].
+Cannot get `o3.c` because property `c` is missing in `O3` [1].
 
    type_mixed.js:15:2
-   15| (o3.c: empty); // Error: mixed ~> empty
+   15| (o3.c: empty); // Error c does not exist
         ^^^^
 
 References:
-   type_mixed.js:11:15
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
-                     ^^^^^ [1]
-   type_mixed.js:15:8
-   15| (o3.c: empty); // Error: mixed ~> empty
-              ^^^^^ [2]
+   type_mixed.js:12:17
+   12| declare var o3: O3;
+                       ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:18:4
 
-Cannot cast `obj.someProp` to empty because `O` [1] is incompatible with empty [2].
+Cannot get `obj.someProp` because property `someProp` is missing in object type [1].
 
    type_mixed.js:18:4
-   18|   (obj.someProp: empty); // Error: mixed ~> empty
+   18|   (obj.someProp: empty); // Error someProp does not exist
           ^^^^^^^^^^^^
 
 References:
-   type_mixed.js:17:25
+   type_mixed.js:17:21
    17| function fn<O>(obj: {...O}) {
-                               ^ [1]
-   type_mixed.js:18:18
-   18|   (obj.someProp: empty); // Error: mixed ~> empty
-                        ^^^^^ [2]
+                           ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- type_statics.js:5:2
+
+Cannot cast `o1` to object type because number [1] is incompatible with undefined [2] in property `p`.
+
+   type_statics.js:5:2
+   5| (o1: {p?:number}); // ok
+       ^^
+
+References:
+   type_statics.js:1:20
+   1| class A {static p: number}
+                         ^^^^^^ [1]
+   type_statics.js:5:10
+   5| (o1: {p?:number}); // ok
+               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- type_string.js:1:15
@@ -618,6 +1086,97 @@ string literal `foo` [1] is not an object.
 
    1| type O1 = {..."foo"}; // error
                     ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
+
+Cannot cast `o1` to union type because:
+ - `T` [1] is incompatible with undefined [2] in property `p`.
+ - `U` [3] is incompatible with undefined [4] in property `q`.
+
+   type_union.js:9:2
+   9| (o1: {p?:T}|{q?:U}); // ok
+       ^^
+
+References:
+   type_union.js:7:18
+   7| type O1 = {...{p:T}|{q:U}};
+                       ^ [1]
+   type_union.js:9:10
+   9| (o1: {p?:T}|{q?:U}); // ok
+               ^ [2]
+   type_union.js:7:24
+   7| type O1 = {...{p:T}|{q:U}};
+                             ^ [3]
+   type_union.js:9:17
+   9| (o1: {p?:T}|{q?:U}); // ok
+                      ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- type_union.js:14:32
+
+Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
+the indexer?
+
+   type_union.js:14:32
+   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
+                                      ^^^^^^ [2]
+
+References:
+   type_union.js:14:17
+   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
+                       ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_union.js:12:39
+   12| type Union2 = {| bar: number |} | {| [number]: string |};
+                                             ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- type_union.js:17:32
+
+Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
+conflicts with `foo`'s definition in object type [3]. Can you make object type [2] exact?
+
+   type_union.js:17:32
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                                      ^^ [2]
+
+References:
+   type_union.js:17:17
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                       ^^^^^^^^^^^^^^^^^^ [1]
+   type_union.js:17:21
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                           ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- type_union.js:20:9
+
+Cannot assign object literal to `y` because object literal [1] is incompatible with `U` [2].
+
+   type_union.js:20:9
+   20| var y = {}; // unsealed
+               ^^ [1]
+
+References:
+   type_union.js:5:16
+    5| declare var y: U;
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- type_union.js:37:21
+
+Cannot determine a type for object type [1]. `I1` [2] cannot be spread because interfaces do not track the own-ness of
+their properties. Can you use an object type instead?
+
+   type_union.js:37:21
+   37| declare var x4: {...Union5};  // Error, cannot spread interface
+                           ^^^^^^ [2]
+
+References:
+   type_union.js:37:17
+   37| declare var x4: {...Union5};  // Error, cannot spread interface
+                       ^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:12:2
@@ -778,21 +1337,21 @@ References:
                ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:44:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
-Cannot cast `o5` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot cast `o5` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type_void.js:44:2
-   44| (o5: {p:T}); // error: o5.p is optional
+   type_void.js:43:2
+   43| (o5: {p?:T}); // ok
         ^^
 
 References:
    type_void.js:41:27
    41| type O5 = {...void, ...{p:T}};
                                  ^ [1]
-   type_void.js:44:9
-   44| (o5: {p:T}); // error: o5.p is optional
-               ^ [2]
+   type_void.js:43:10
+   43| (o5: {p?:T}); // ok
+                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:47:2
@@ -812,21 +1371,21 @@ References:
                                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:53:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:52:2
 
-Cannot cast `o6` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot cast `o6` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
 
-   type_void.js:53:2
-   53| (o6: {p:T}); // error: o6.p is optional
+   type_void.js:52:2
+   52| (o6: {p?:T}); // error, void doesn't overwrite p
         ^^
 
 References:
    type_void.js:50:18
    50| type O6 = {...{p:T}, ...void};
                         ^ [1]
-   type_void.js:53:9
-   53| (o6: {p:T}); // error: o6.p is optional
-               ^ [2]
+   type_void.js:52:10
+   52| (o6: {p?:T}); // error, void doesn't overwrite p
+                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:56:2
@@ -847,4 +1406,7 @@ References:
 
 
 
-Found 55 errors
+Found 92 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

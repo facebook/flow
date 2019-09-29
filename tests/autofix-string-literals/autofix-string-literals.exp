@@ -1,0 +1,13 @@
+> cat a.js
+// @flow
+
+declare var cond: boolean;
+
+module.exports = {
+  f1: (): string => (cond ? "0" : "1"),
+  f2: (): string => (cond ? "A0" : "A1"),
+  f3: (): string => (cond ? "Aa" : "Bb"),
+  f4: (): string => (cond ? "A_" : "B_"),
+}
+> flow status
+No errors!

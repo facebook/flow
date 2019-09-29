@@ -1,0 +1,74 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:3:10
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   3| type T = {}; // need ... in type alias
+               ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:17
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   5| opaque type U = {}; // need ... in opaque type alias
+                      ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:19
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   7| function test1(x: {}) {} // need ... in function param
+                        ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:19
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   9| function test2(): {} { return {}; } // need ... in function return
+                        ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:7
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   12| test3<{}>(); // need ... in generic function type parameter
+             ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:12
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   14| class A<T: {}> {} // need ... in upper bound of generic
+                  ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:7
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   17| new B<{}>(); // need ... in generic class type parameter
+             ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:6
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   19| ({}: {}); // need ... in cast
+            ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:10
+
+Please add `...` to the end of the list of properties to express an inexact object type. (`implicit-inexact-object`)
+
+   21| const x: {} = {}; // need ... in annotation
+                ^^
+
+
+
+Found 9 errors

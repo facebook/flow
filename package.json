@@ -3,8 +3,14 @@
   "workspaces": [
     "newtests",
     "packages/flow-dev-tools",
-    "packages/flow-parser"
+    "packages/flow-parser",
+    "packages/flow-remove-types"
   ],
+  "resolutions": {
+    "handlebars": ">=4.0.14",
+    "lodash": ">=4.17.14",
+    "sshpk": ">=1.13.2"
+  },
   "scripts": {
     "prepublish": "yarn workspace flow-parser run prepublish"
   }

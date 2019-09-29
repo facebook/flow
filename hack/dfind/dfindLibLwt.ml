@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -7,26 +7,38 @@
  *
  *)
 
-module MarshalToolsLwt: DfindLib.MARSHAL_TOOLS
-  with type 'a result = 'a Lwt.t and type fd = Lwt_unix.file_descr =
-struct
+module MarshalToolsLwt :
+  DfindLib.MARSHAL_TOOLS
+    with type 'a result = 'a Lwt.t
+     and type fd = Lwt_unix.file_descr = struct
   type 'a result = 'a Lwt.t
+
   type fd = Lwt_unix.file_descr
 
   let return = Lwt.return
-  let (>>=) = Lwt.(>>=)
 
-  let descr_of_in_channel ic = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_in_channel ic)
-  let descr_of_out_channel oc = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_out_channel oc)
+  let ( >>= ) = Lwt.( >>= )
+
+  let descr_of_in_channel ic =
+    Lwt_unix.of_unix_file_descr
+      ~blocking:false
+      ~set_flags:true
+      (Daemon.descr_of_in_channel ic)
+
+  let descr_of_out_channel oc =
+    Lwt_unix.of_unix_file_descr
+      ~blocking:false
+      ~set_flags:true
+      (Daemon.descr_of_out_channel oc)
 
   let to_fd_with_preamble ?timeout ?flags fd v =
-    if timeout <> None
-    then raise (Invalid_argument "Use lwt timeouts directly");
+    if timeout <> None then
+      raise (Invalid_argument "Use lwt timeouts directly");
     Marshal_tools_lwt.to_fd_with_preamble ?flags fd v
 
   let from_fd_with_preamble ?timeout fd =
-    if timeout <> None
-    then raise (Invalid_argument "Use lwt timeouts directly");
+    if timeout <> None then
+      raise (Invalid_argument "Use lwt timeouts directly");
     Marshal_tools_lwt.from_fd_with_preamble fd
 end
 

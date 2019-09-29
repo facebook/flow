@@ -1,37 +1,36 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
   ({
-    ideStart,
-    ideRequest,
-    ideNotification,
+    lspStart,
+    lspRequest,
+    lspNotification,
     lspInitializeParams,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('initialize error for wrong version', [
-      ideStart({mode: 'lsp', needsFlowServer: false}),
-      ideRequest('initialize', lspInitializeParams)
-        .waitUntilIDEMessage(10000, 'initialize')
-        .verifyAllIDEMessagesInStep(
+      lspStart({needsFlowServer: false}),
+      lspRequest('initialize', lspInitializeParams)
+        .waitUntilLSPMessage(30000, 'initialize')
+        .verifyAllLSPMessagesInStep(
           ['initialize{Wrong version of Flow. The config specifies}'],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideRequest('shutdown')
-        .waitUntilIDEMessage(3000, 'shutdown')
-        .verifyAllIDEMessagesInStep(
+      lspRequest('shutdown')
+        .waitUntilLSPMessage(10000, 'shutdown')
+        .verifyAllLSPMessagesInStep(
           ['shutdown'],
           [...lspIgnoreStatusAndCancellation],
         ),
-      ideNotification('exit')
-        .waitUntilIDEStatus(3000, 'stopped')
-        .waitUntilServerStatus(3000, 'stopped')
-        .verifyIDEStatus('stopped')
+      lspNotification('exit')
+        .waitUntilLSPStatus(10000, 'stopped')
+        .waitUntilServerStatus(10000, 'stopped')
+        .verifyLSPStatus('stopped')
         .verifyServerStatus('stopped'),
     ]),
   ],

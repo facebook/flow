@@ -1,0 +1,97 @@
+Error -------------------------------------------------------------------------------------------- array-pattern.js:3:19
+
+Missing type annotation for destructuring.
+
+   3| module.exports = ([x, y]) => {};
+                        ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- array-pattern.js:3:19
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+annotation at array pattern: (`signature-verification-failure`)
+
+   3| module.exports = ([x, y]) => {};
+                        ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- class.js:5:3
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+annotation at property `x`: (`signature-verification-failure`)
+
+   5|   x = 1;
+        ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- class.js:8:3
+
+Literal properties not yet supported.
+
+   8|   'b' = 5;
+        ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- class.js:8:3
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+annotation at literal property 'b': (`signature-verification-failure`)
+
+   8|   'b' = 5;
+        ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:11:3
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+annotation at private field `#m`: (`signature-verification-failure`)
+
+   11|   #m = 2;
+         ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:14:3
+
+Computed property keys not supported.
+
+   14|   ['a'] = 3;
+         ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:14:3
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+annotation at computed property `['a']`: (`signature-verification-failure`)
+
+   14|   ['a'] = 3;
+         ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:15:3
+
+Computed property keys not supported.
+
+   15|   ['a' + 'b'] = 4;
+         ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:15:3
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+annotation at computed property `['a' + 'b']`: (`signature-verification-failure`)
+
+   15|   ['a' + 'b'] = 4;
+         ^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- variable-decl.js:3:5
+
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+annotation at declaration of variable `x`: (`signature-verification-failure`)
+
+   3| var x = 0;
+          ^
+
+
+
+Found 11 errors

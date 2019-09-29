@@ -1,68 +1,73 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 module Ast = Flow_ast
-
 open Token
 open Parser_common
 open Parser_env
 open Flow_ast
 
-module Pattern
-  (Parse: Parser_common.PARSER)
-  (Type: Type_parser.TYPE)
- = struct
+let missing_annot env = Ast.Type.Missing (Peek.loc_skip_lookahead env)
+
+module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
   (* Reinterpret various expressions as patterns.
    * This is not the correct thing to do and is only used for assignment
    * expressions. This should be removed and replaced ASAP.
    *)
   let rec object_from_expr =
-    let rec properties env acc = Ast.Expression.Object.(function
-      | [] -> List.rev acc
-      | Property (loc, prop)::remaining ->
-          let key, pattern, shorthand = match prop with
-          | Property.Init { key; value; shorthand } ->
-            key, from_expr env value, shorthand
-          | Property.Method { key; value = (loc, f) } ->
-            error_at env (loc, Parse_error.MethodInDestructuring);
-            key, (loc, Pattern.Expression (loc, Ast.Expression.Function f)), false
-          | Property.Get { key; value = (loc, f) }
-          | Property.Set { key; value = (loc, f) } ->
-            (* these should never happen *)
-            error_at env (loc, Parse_error.UnexpectedIdentifier);
-            key, (loc, Pattern.Expression (loc, Ast.Expression.Function f)), false
+    let rec properties env acc =
+      Ast.Expression.Object.(
+        function
+        | [] -> List.rev acc
+        | Property (loc, prop) :: remaining ->
+          let acc =
+            match prop with
+            | Property.Init { key; value; shorthand } ->
+              Ast.Expression.(
+                let key =
+                  match key with
+                  | Property.Literal lit -> Pattern.Object.Property.Literal lit
+                  | Property.Identifier id -> Pattern.Object.Property.Identifier id
+                  | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
+                  | Property.Computed expr -> Pattern.Object.Property.Computed expr
+                in
+                let (pattern, default) =
+                  match value with
+                  | (_loc, Assignment { Assignment.operator = None; left; right }) ->
+                    (left, Some right)
+                  | _ -> (from_expr env value, None)
+                in
+                Pattern.Object.Property
+                  (loc, { Pattern.Object.Property.key; pattern; default; shorthand })
+                :: acc)
+            | Property.Method { key = _; value = (loc, _) } ->
+              error_at env (loc, Parse_error.MethodInDestructuring);
+              acc
+            | Property.Get { key = _; value = (loc, _) }
+            | Property.Set { key = _; value = (loc, _) } ->
+              (* these should never happen *)
+              error_at env (loc, Parse_error.Unexpected "identifier");
+              acc
           in
-          let key = match key with
-          | Property.Literal lit -> Pattern.Object.Property.Literal lit
-          | Property.Identifier id -> Pattern.Object.Property.Identifier id
-          | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
-          | Property.Computed expr -> Pattern.Object.Property.Computed expr
-          in
-          let acc = Pattern.(Object.Property (loc, { Object.Property.
-            key;
-            pattern;
-            shorthand;
-          })) :: acc in
           properties env acc remaining
-      | SpreadProperty (loc, { SpreadProperty.argument; })::[] ->
-          let acc = Pattern.Object.(RestProperty (loc, { RestProperty.
-            argument = from_expr env argument;
-          })) :: acc in
+        | [SpreadProperty (loc, { SpreadProperty.argument })] ->
+          let acc =
+            Pattern.Object.(RestProperty (loc, { RestProperty.argument = from_expr env argument }))
+            :: acc
+          in
           properties env acc []
-      | SpreadProperty (loc, _)::remaining ->
+        | SpreadProperty (loc, _) :: remaining ->
           error_at env (loc, Parse_error.PropertyAfterRestProperty);
-          properties env acc remaining
-    ) in
-
-    fun env (loc, { Ast.Expression.Object.properties = props }) ->
-      loc, Pattern.(Object { Object.
-        properties = properties env [] props;
-        annot = None;
-      })
+          properties env acc remaining)
+    in
+    fun env (loc, { Ast.Expression.Object.properties = props; comments = _ (* TODO *) }) ->
+      ( loc,
+        Pattern.(Object { Object.properties = properties env [] props; annot = missing_annot env })
+      )
 
   and array_from_expr =
     (* Convert an Expression to a Pattern if it is a valid
@@ -72,58 +77,67 @@ module Pattern
     let assignment_target env ((loc, _) as expr) =
       if Parse.is_assignable_lhs expr then
         Some (from_expr env expr)
-      else begin
+      else (
         error_at env (loc, Parse_error.InvalidLHSInAssignment);
         None
-      end
+      )
     in
-
-    let rec elements env acc = Ast.Expression.(function
-      | [] -> List.rev acc
-      | Some (Spread (loc, { SpreadElement.argument }))::[] ->
+    let rec elements env acc =
+      Ast.Expression.(
+        function
+        | [] -> List.rev acc
+        | [Some (Spread (loc, { SpreadElement.argument }))] ->
           (* AssignmentRestElement is a DestructuringAssignmentTarget, see
              #prod-AssignmentRestElement *)
-          let acc = match assignment_target env argument with
-          | Some argument ->
-            (Some Pattern.Array.(RestElement (loc, { RestElement.argument; }))) :: acc
-          | None ->
-            acc
+          let acc =
+            match assignment_target env argument with
+            | Some argument ->
+              Some Pattern.Array.(RestElement (loc, { RestElement.argument })) :: acc
+            | None -> acc
           in
           elements env acc []
-      | Some (Spread (loc, _))::remaining ->
+        | Some (Spread (loc, _)) :: remaining ->
           error_at env (loc, Parse_error.ElementAfterRestElement);
           elements env acc remaining
-      | Some (Expression (_, Assignment { Assignment.
-          operator = Assignment.Assign; _
-        } as expr))::remaining ->
+        | Some (Expression (loc, Assignment { Assignment.operator = None; left; right }))
+          :: remaining ->
           (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
              #prod-AssignmentElement *)
-          let acc = Some (Pattern.Array.Element (from_expr env expr)) :: acc in
-          elements env acc remaining
-      | Some (Expression expr)::remaining ->
-          (* AssignmentElement is a DestructuringAssignmentTarget, see
-             #prod-AssignmentElement *)
-          let acc = match assignment_target env expr with
-          | Some expr -> (Some (Pattern.Array.Element expr)) :: acc
-          | None -> acc
+          let acc =
+            Some
+              (Pattern.Array.Element
+                 (loc, { Pattern.Array.Element.argument = left; default = Some right }))
+            :: acc
           in
           elements env acc remaining
-      | None::remaining ->
-          elements env (None::acc) remaining
-    )
+        | Some (Expression expr) :: remaining ->
+          (* AssignmentElement is a DestructuringAssignmentTarget, see
+             #prod-AssignmentElement *)
+          let acc =
+            match assignment_target env expr with
+            | Some ((loc, _) as expr) ->
+              let element =
+                Pattern.Array.Element
+                  (loc, { Pattern.Array.Element.argument = expr; default = None })
+              in
+              Some element :: acc
+            | None -> acc
+          in
+          elements env acc remaining
+        | None :: remaining -> elements env (None :: acc) remaining)
     in
-
-    fun env (loc, { Ast.Expression.Array.elements = elems }) ->
-      loc, Pattern.Array { Pattern.Array.
-        elements = elements env [] elems;
-        annot = None;
-      }
+    fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
+      ( loc,
+        Pattern.Array
+          { Pattern.Array.elements = elements env [] elems; annot = missing_annot env; comments }
+      )
 
   and from_expr env (loc, expr) =
-    Ast.Expression.(match expr with
-    | Object obj -> object_from_expr env (loc, obj)
-    | Array arr ->  array_from_expr env (loc, arr)
-    | Identifier ((id_loc, string_val) as name) ->
+    Ast.Expression.(
+      match expr with
+      | Object obj -> object_from_expr env (loc, obj)
+      | Array arr -> array_from_expr env (loc, arr)
+      | Identifier ((id_loc, { Identifier.name = string_val; comments = _ }) as name) ->
         (* per #sec-destructuring-assignment-static-semantics-early-errors,
            it is a syntax error if IsValidSimpleAssignmentTarget of this
            IdentifierReference is false. That happens when `string_val` is
@@ -136,109 +150,99 @@ module Pattern
            they are already invalid in strict mode, which we should have
            already errored about when parsing the expression that we're now
            converting into a pattern. *)
-        else if not (in_strict_mode env) then begin
+        else if not (in_strict_mode env) then
           if allow_yield env && string_val = "yield" then
             error_at env (id_loc, Parse_error.YieldAsIdentifierReference)
           else if allow_await env && string_val = "await" then
-            error_at env (id_loc, Parse_error.AwaitAsIdentifierReference)
-        end;
-        loc, Pattern.Identifier { Pattern.Identifier.
-          name;
-          annot = None;
-          optional = false;
-        }
-    | Assignment { Assignment.operator = Assignment.Assign; left; right } ->
-        loc, Pattern.Assignment { Pattern.Assignment.left; right }
-    | expr -> loc, Pattern.Expression (loc, expr))
+            error_at env (id_loc, Parse_error.AwaitAsIdentifierReference);
+        ( loc,
+          Pattern.Identifier
+            { Pattern.Identifier.name; annot = missing_annot env; optional = false } )
+      | expr -> (loc, Pattern.Expression (loc, expr)))
 
   (* Parse object destructuring pattern *)
   let rec object_ restricted_error =
     let rest_property env =
-      let loc, argument = with_loc (fun env ->
-        Expect.token env T_ELLIPSIS;
-        pattern env restricted_error
-      ) env in
-      Pattern.Object.(RestProperty (loc, { RestProperty.
-        argument
-      }))
+      let (loc, argument) =
+        with_loc
+          (fun env ->
+            Expect.token env T_ELLIPSIS;
+            pattern env restricted_error)
+          env
+      in
+      Pattern.Object.(RestProperty (loc, { RestProperty.argument }))
     in
-
     let property_default env =
       match Peek.token env with
       | T_ASSIGN ->
         Expect.token env T_ASSIGN;
         Some (Parse.assignment env)
-      | _ ->
-        None
+      | _ -> None
     in
-
-    let property_with_default env prop =
-      match property_default env with
-      | Some default ->
-        let loc = Loc.btwn (fst prop) (fst default) in
-        loc, Pattern.(Assignment Assignment.({
-          left = prop;
-          right = default;
-        }));
-      | None -> prop
-    in
-
     let rec property env =
-      if Peek.token env = T_ELLIPSIS then begin
+      if Peek.token env = T_ELLIPSIS then
         Some (rest_property env)
-      end else begin
+      else
         let start_loc = Peek.loc env in
         let raw_key = Parse.object_key env in
         match Peek.token env with
         | T_COLON ->
           Expect.token env T_COLON;
-          let pattern = pattern env restricted_error in
-          let pattern = property_with_default env pattern in
-          let loc = Loc.btwn start_loc (fst pattern) in
-          let key = Ast.Expression.Object.Property.(
-            match raw_key with
-            | _, Literal lit -> Pattern.Object.Property.Literal lit
-            | _, Identifier id -> Pattern.Object.Property.Identifier id
-            | _, PrivateName _ -> failwith "Internal Error: Found object private prop"
-            | _, Computed expr -> Pattern.Object.Property.Computed expr
-          ) in
-          Some Pattern.Object.(Property (loc, Property.({
-            key;
-            pattern;
-            shorthand = false;
-          })))
-
+          let (loc, (pattern, default)) =
+            with_loc
+              ~start_loc
+              (fun env ->
+                let pattern = pattern env restricted_error in
+                let default = property_default env in
+                (pattern, default))
+              env
+          in
+          let key =
+            Ast.Expression.Object.Property.(
+              match raw_key with
+              | (_, Literal lit) -> Pattern.Object.Property.Literal lit
+              | (_, Identifier id) -> Pattern.Object.Property.Identifier id
+              | (_, PrivateName _) -> failwith "Internal Error: Found object private prop"
+              | (_, Computed expr) -> Pattern.Object.Property.Computed expr)
+          in
+          Some
+            Pattern.Object.(Property (loc, Property.{ key; pattern; default; shorthand = false }))
         | _ ->
           (match raw_key with
-          | _, Ast.Expression.Object.Property.Identifier ((id_loc, string_val) as name) ->
+          | ( _,
+              Ast.Expression.Object.Property.Identifier
+                ((id_loc, { Identifier.name = string_val; comments = _ }) as name) ) ->
             (* #sec-identifiers-static-semantics-early-errors *)
-            begin
-              if is_reserved string_val && string_val <> "yield" && string_val <> "await" then
-                (* it is a syntax error if `name` is a reserved word other than await or yield *)
-                error_at env (id_loc, Parse_error.UnexpectedReserved)
-              else if is_strict_reserved string_val then
-                (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
-                strict_error_at env (id_loc, Parse_error.StrictReservedWord)
-            end;
-            let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
-              name;
-              annot = None;
-              optional = false;
-            }) in
-            let pattern = property_with_default env pattern in
-            let loc = Loc.btwn start_loc (fst pattern) in
-            Some Pattern.Object.(Property (loc, { Property.
-              key = Property.Identifier name;
-              pattern;
-              shorthand = true;
-            }))
-
+            if is_reserved string_val && string_val <> "yield" && string_val <> "await" then
+              (* it is a syntax error if `name` is a reserved word other than await or yield *)
+              error_at env (id_loc, Parse_error.UnexpectedReserved)
+            else if is_strict_reserved string_val then
+              (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
+              strict_error_at env (id_loc, Parse_error.StrictReservedWord);
+            let (loc, (pattern, default)) =
+              with_loc
+                ~start_loc
+                (fun env ->
+                  let pattern =
+                    ( id_loc,
+                      Pattern.Identifier
+                        { Pattern.Identifier.name; annot = missing_annot env; optional = false } )
+                  in
+                  let default = property_default env in
+                  (pattern, default))
+                env
+            in
+            Some
+              Pattern.Object.(
+                Property
+                  ( loc,
+                    { Property.key = Property.Identifier name; pattern; default; shorthand = true }
+                  ))
           | _ ->
-            error_unexpected env; (* invalid shorthand destructuring *)
-            None
-          )
-      end
+            error_unexpected ~expected:"an identifier" env;
 
+            (* invalid shorthand destructuring *)
+            None)
     (* seen_rest is true when we've seen a rest element. rest_trailing_comma is the location of
      * the rest element's trailing command
      * Trailing comma: `let { ...rest, } = obj`
@@ -247,102 +251,115 @@ module Pattern
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
-        begin match rest_trailing_comma with
-        | Some loc -> error_at env (loc, Parse_error.TrailingCommaAfterRestElement)
-        | None -> ()
+        begin
+          match rest_trailing_comma with
+          | Some loc -> error_at env (loc, Parse_error.TrailingCommaAfterRestElement)
+          | None -> ()
         end;
         List.rev acc
       | _ ->
         (match property env with
-        | Some (Pattern.Object.Property (loc, _) | Pattern.Object.RestProperty (loc, _) as prop) ->
+        | Some ((Pattern.Object.Property (loc, _) | Pattern.Object.RestProperty (loc, _)) as prop)
+          ->
           let rest_trailing_comma =
-            if seen_rest
-            then begin
+            if seen_rest then (
               error_at env (loc, Parse_error.PropertyAfterRestProperty);
               None
-            end
-            else rest_trailing_comma
+            ) else
+              rest_trailing_comma
           in
-          let seen_rest, rest_trailing_comma = begin match prop with
-          | Pattern.Object.RestProperty _ ->
-            true, if Peek.token env = T_COMMA then Some (Peek.loc env) else None
-          | _ -> seen_rest, rest_trailing_comma end in
-          if Peek.token env <> T_RCURLY
-          then Expect.token env T_COMMA;
-          properties env ~seen_rest ~rest_trailing_comma (prop::acc)
+          let (seen_rest, rest_trailing_comma) =
+            match prop with
+            | Pattern.Object.RestProperty _ ->
+              ( true,
+                if Peek.token env = T_COMMA then
+                  Some (Peek.loc env)
+                else
+                  None )
+            | _ -> (seen_rest, rest_trailing_comma)
+          in
+          if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
+          properties env ~seen_rest ~rest_trailing_comma (prop :: acc)
         | None -> properties env ~seen_rest ~rest_trailing_comma acc)
     in
     with_loc (fun env ->
-      Expect.token env T_LCURLY;
-      let properties = properties env ~seen_rest:false ~rest_trailing_comma:None [] in
-      Expect.token env T_RCURLY;
-      let annot =
-        if Peek.token env = T_COLON then Some (Type.annotation env)
-        else None
-      in
-      Pattern.Object { Pattern.Object.properties; annot; }
-    )
+        Expect.token env T_LCURLY;
+        let properties = properties env ~seen_rest:false ~rest_trailing_comma:None [] in
+        Expect.token env T_RCURLY;
+        let annot =
+          if Peek.token env = T_COLON then
+            Ast.Type.Available (Type.annotation env)
+          else
+            missing_annot env
+        in
+        Pattern.Object { Pattern.Object.properties; annot })
 
   (* Parse array destructuring pattern *)
   and array_ restricted_error =
     let rec elements env acc =
       match Peek.token env with
       | T_EOF
-      | T_RBRACKET -> List.rev acc
+      | T_RBRACKET ->
+        List.rev acc
       | T_COMMA ->
         Expect.token env T_COMMA;
-        elements env (None::acc)
+        elements env (None :: acc)
       | T_ELLIPSIS ->
-        let loc, argument = with_loc (fun env ->
-          Expect.token env T_ELLIPSIS;
-          pattern env restricted_error
-        ) env in
-        let element = Pattern.Array.(RestElement (loc, { RestElement.
-          argument;
-        })) in
+        let (loc, argument) =
+          with_loc
+            (fun env ->
+              Expect.token env T_ELLIPSIS;
+              pattern env restricted_error)
+            env
+        in
+        let element = Pattern.Array.(RestElement (loc, { RestElement.argument })) in
         (* rest elements are always last, the closing ] should be next. but if not,
            error and keep going so we recover gracefully by parsing the rest of the
            elements. *)
-        if Peek.token env <> T_RBRACKET then begin
+        if Peek.token env <> T_RBRACKET then (
           error_at env (loc, Parse_error.ElementAfterRestElement);
           if Peek.token env = T_COMMA then Eat.token env
-        end;
-        elements env ((Some element)::acc)
+        );
+        elements env (Some element :: acc)
       | _ ->
-        let pattern = pattern env restricted_error in
-        let pattern = match Peek.token env with
-          | T_ASSIGN ->
-            Expect.token env T_ASSIGN;
-            let default = Parse.assignment env in
-            let loc = Loc.btwn (fst pattern) (fst default) in
-            loc, Pattern.(Assignment Assignment.({
-              left = pattern;
-              right = default;
-            }))
-          | _ -> pattern
+        let (loc, (pattern, default)) =
+          with_loc
+            (fun env ->
+              let pattern = pattern env restricted_error in
+              let default =
+                match Peek.token env with
+                | T_ASSIGN ->
+                  Expect.token env T_ASSIGN;
+                  Some (Parse.assignment env)
+                | _ -> None
+              in
+              (pattern, default))
+            env
         in
-        let element = Pattern.Array.(Element pattern) in
+        let element = Pattern.Array.(Element (loc, { Element.argument = pattern; default })) in
         if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-        elements env ((Some element)::acc)
+        elements env (Some element :: acc)
     in
     with_loc (fun env ->
-      Expect.token env T_LBRACKET;
-      let elements = elements env [] in
-      Expect.token env T_RBRACKET;
-      let annot =
-        if Peek.token env = T_COLON then Some (Type.annotation env)
-        else None
-      in
-      Pattern.Array { Pattern.Array.elements; annot; }
-    )
+        let leading = Peek.comments env in
+        Expect.token env T_LBRACKET;
+        let elements = elements env [] in
+        Expect.token env T_RBRACKET;
+        let annot =
+          if Peek.token env = T_COLON then
+            Ast.Type.Available (Type.annotation env)
+          else
+            missing_annot env
+        in
+        let trailing = Peek.comments env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        Pattern.Array { Pattern.Array.elements; annot; comments })
 
   and pattern env restricted_error =
     match Peek.token env with
-    | T_LCURLY ->
-        object_ restricted_error env
-    | T_LBRACKET ->
-        array_ restricted_error env
+    | T_LCURLY -> object_ restricted_error env
+    | T_LBRACKET -> array_ restricted_error env
     | _ ->
-        let loc, id = Parse.identifier_with_type env restricted_error in
-        loc, Pattern.Identifier id
+      let (loc, id) = Parse.identifier_with_type env restricted_error in
+      (loc, Pattern.Identifier id)
 end

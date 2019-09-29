@@ -1,0 +1,11 @@
+(library
+  (name flow_server_env)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_parser
+    flow_procs
+    flow_server_persistent_connection
+    flow_typing
+  )
+)

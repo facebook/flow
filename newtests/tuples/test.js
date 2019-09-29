@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -78,8 +77,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            3: function foo(x: [1,2]): string { return x.length; }
                                                       ^^^^^^^^ Cannot return \`x.length\` because number [1] is incompatible with string [2].
            References:
-           235:     +length: number;
-                             ^^^^^^ [1]. See lib: [LIB] core.js:235
+           255:     +length: number;
+                             ^^^^^^ [1]. See lib: [LIB] core.js:255
              3: function foo(x: [1,2]): string { return x.length; }
                                         ^^^^^^ [2]
        `,
@@ -103,8 +102,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             6:           readOnlyRef.push(123);
                                      ^^^^ Cannot call \`readOnlyRef.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1].
             References:
-            207:     forEach(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => any, thisArg?: any): void;
-                                                                          ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:207
+            228:     forEach(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg?: any): void;
+                                                                          ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:228
 
           test.js:7
             7:           (readOnlyRef[0]: 1);
@@ -184,18 +183,9 @@ export default suite(({addFile, addFiles, addCode}) => [
             References:
               3: function foo(x: [1,2]): number { return x[2]; }
                                  ^^^^^ [1]
-
-          test.js:3
-            3: function foo(x: [1,2]): number { return x[2]; }
-                                                       ^^^^ Cannot return \`x[2]\` because undefined (out of bounds tuple access) [1] is incompatible with number [2].
-            References:
-              3: function foo(x: [1,2]): number { return x[2]; }
-                                                         ^^^^ [1]
-              3: function foo(x: [1,2]): number { return x[2]; }
-                                         ^^^^^^ [2]
         `,
       )
-      .because('Out of bounds access causes an error and results in void'),
+      .because('Out of bounds access causes an error'),
     addCode('function foo(x: [1,2]): number { return x[-1]; }')
       .newErrors(
         `
@@ -205,37 +195,6 @@ export default suite(({addFile, addFiles, addCode}) => [
             References:
               5: function foo(x: [1,2]): number { return x[-1]; }
                                  ^^^^^ [1]
-
-          test.js:5
-            5: function foo(x: [1,2]): number { return x[-1]; }
-                                                       ^^^^^ Cannot return \`x[-1]\` because undefined (out of bounds tuple access) [1] is incompatible with number [2].
-            References:
-              5: function foo(x: [1,2]): number { return x[-1]; }
-                                                         ^^^^^ [1]
-              5: function foo(x: [1,2]): number { return x[-1]; }
-                                         ^^^^^^ [2]
-        `,
-      ),
-  ]),
-  test('Out of bounds access returns void', [
-    addCode('function foo(x: [1]): string { return x[2]; }')
-      .newErrors(
-        `
-          test.js:3
-            3: function foo(x: [1]): string { return x[2]; }
-                                                     ^^^^ Cannot get \`x[2]\` because tuple type [1] only has 1 element, so index 2 is out of bounds.
-            References:
-              3: function foo(x: [1]): string { return x[2]; }
-                                 ^^^ [1]
-
-          test.js:3
-            3: function foo(x: [1]): string { return x[2]; }
-                                                     ^^^^ Cannot return \`x[2]\` because undefined (out of bounds tuple access) [1] is incompatible with string [2].
-            References:
-              3: function foo(x: [1]): string { return x[2]; }
-                                                       ^^^^ [1]
-              3: function foo(x: [1]): string { return x[2]; }
-                                       ^^^^^^ [2]
         `,
       ),
   ]),
@@ -458,15 +417,6 @@ export default suite(({addFile, addFiles, addCode}) => [
             References:
               4:       function foo(tup: ?[number, number]): number {
                                           ^^^^^^^^^^^^^^^^ [1]
-
-          test.js:6
-            6:           return tup[3];
-                                ^^^^^^ Cannot return \`tup[3]\` because undefined (out of bounds tuple access) [1] is incompatible with number [2].
-            References:
-              6:           return tup[3];
-                                  ^^^^^^ [1]
-              4:       function foo(tup: ?[number, number]): number {
-                                                             ^^^^^^ [2]
         `,
       ),
   ]),

@@ -32,6 +32,10 @@ const VERSION_UPGRADES: Array<{|
       require('./upgrades/0.53.0/ReactUtilityTypes'),
     ],
   },
+  {
+    version: '0.84.0',
+    upgrades: [require('./upgrades/0.84.0/ExplicitInexactObjectSyntax')],
+  },
 ];
 
 /**

@@ -1,0 +1,10 @@
+(library
+  (name flow_common_lints)
+  (wrapped false)
+  (libraries
+    collections ; hack
+    flow_common_span
+    flow_common_utils
+    flow_common_utils_loc_utils
+    imported_core ; hack
+    ))
