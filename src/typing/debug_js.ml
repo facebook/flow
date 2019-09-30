@@ -2868,7 +2868,8 @@ let dump_error_message =
           (dump_reason cx spread_reason)
           (dump_reason cx key_reason)
           (dump_reason cx value_reason)
-          (dump_reason cx object2_reason))
+          (dump_reason cx object2_reason)
+      | EExponentialSpread { reason } -> spf "EExponentialSpread (%s)" (dump_reason cx reason))
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

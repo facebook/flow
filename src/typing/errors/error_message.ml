@@ -290,6 +290,7 @@ and 'loc t' =
       value_reason: 'loc virtual_reason;
       object2_reason: 'loc virtual_reason;
     }
+  | EExponentialSpread of { reason: 'loc virtual_reason }
 
 and spread_error_kind =
   | Indexer
@@ -686,6 +687,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         value_reason = map_reason value_reason;
         object2_reason = map_reason object2_reason;
       }
+  | EExponentialSpread { reason } -> EExponentialSpread { reason = map_reason reason }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -843,7 +845,8 @@ let util_use_op_of_msg nope util = function
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
   | EUnableToSpread _
-  | EInexactMayOverwriteIndexer _ ->
+  | EInexactMayOverwriteIndexer _
+  | EExponentialSpread _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -886,7 +889,8 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | EDebugPrint (reason, _)
-  | ENonArraySpread reason ->
+  | ENonArraySpread reason
+  | EExponentialSpread { reason } ->
     Some (aloc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
@@ -2418,6 +2422,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text ". Can you make ";
           ref object2_reason;
           text " exact?";
+        ]
+    | EExponentialSpread { reason } ->
+      Normal
+        [
+          text "Spreading ";
+          ref reason;
+          text " may lead to exponentially large type checking times.";
         ])
 
 let is_lint_error = function
