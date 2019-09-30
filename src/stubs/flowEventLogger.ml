@@ -97,6 +97,8 @@ let recheck
     ~estimated_files_to_recheck:_
     ~estimated_files_to_init:_
     ~first_internal_error:_
+    ~slowest_file:_
+    ~num_slow_files:_
     ~scm_update_distance:_
     ~scm_changed_mergebase:_ =
   ()

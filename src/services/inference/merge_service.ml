@@ -18,6 +18,7 @@ type acc =
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
   * Coverage_response.file_coverage FilenameMap.t
+  * float
 
 type 'a merge_job_results = 'a file_keyed_result list
 
@@ -245,6 +246,7 @@ let merge_contents_context ~reader options file ast info file_sig =
 
 (* Entry point for merging a component *)
 let merge_component ~worker_mutator ~options ~reader component =
+  let start_merge_time = Unix.gettimeofday () in
   let file = Nel.hd component in
   (* We choose file as the leader, and other_files are followers. It is always
      OK to choose file as leader, as explained below.
@@ -293,16 +295,17 @@ let merge_component ~worker_mutator ~options ~reader component =
       cx
       component
       md5;
-
-    Ok (errors, warnings, suppressions, coverage_map)
+    let merge_time = Unix.gettimeofday () -. start_merge_time in
+    Ok (errors, warnings, suppressions, coverage_map, merge_time)
   ) else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
     let coverage = FilenameMap.empty in
-    Ok (errors, warnings, suppressions, coverage)
+    Ok (errors, warnings, suppressions, coverage, 0.0)
 
 let check_file options ~reader file =
+  let start_check_time = Unix.gettimeofday () in
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then
     let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -335,13 +338,14 @@ let check_file options ~reader file =
         aloc_tables
         severity_cover
     in
-    (errors, warnings, suppressions, coverage_map)
+    let check_time = Unix.gettimeofday () -. start_check_time in
+    (errors, warnings, suppressions, coverage_map, check_time)
   else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
     let coverage = FilenameMap.empty in
-    (errors, warnings, suppressions, coverage)
+    (errors, warnings, suppressions, coverage, 0.0)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
