@@ -119,11 +119,44 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       (*****************)
       let object_spread =
         Object.Spread.(
-          (* Compute spread result: slice * slice -> slice *)
+          (* Compute spread result
+           * We keep around a few pieces of extra information in addition to the slices:
+           * 1. Whether or not the slice was declared in line
+           * 2. The most recent reason that the accumulator (object on the left) is inexact
+           *
+           * 1. Lets us infer types in spreads that are more inline with user expectations
+           * by allowing inline declarations to overwrite properties on the left that
+           * would cause an error if they were not inline. For example:
+           * {...{| foo: number |}}, [string]: string}. If we did not account
+           * for inline declarations, this spread would be an error even though there
+           * is a reasonable way to interpret the type.
+           *
+           * 2. Lets us write better error messages when we spread an object with an optional
+           * property after an inexact object. The accumulator may be inexact because we encountered
+           * an inexact object earlier in the spread, but the reason for the accumulator refers to
+           * the entire spread. Instead of pointing to that reason as the inexact object, we
+           * can keep track of the most recently seen inexact object and point to that instead.
+           *
+           * We still have room for improvement for the error messages here. When we spread
+           * an inexact object on the right, we may overwrite keys that came before, so
+           * we error. Unfortunately, we point to the accumulator (the entire sperad) and say that
+           * a key in the accumulator may be overwritten by the inexact object spread. That
+           * is a little confusing when you have types like these:
+           *
+           * type A = {| foo: number |};
+           * type B = {| bar: number |};
+           * type C = {baz: number};
+           * [1] type D = {...A, ...B, ...C} // Error, C is inexact and may overwrite foo in [1]
+           *              ^^^^^^^^^^^^^^^^^
+           *)
           let spread2
               reason
-              (_inline1, { Object.reason = r1; props = props1; dict = dict1; flags = flags1 })
-              (inline2, { Object.reason = r2; props = props2; dict = dict2; flags = flags2 }) =
+              ( _inline1,
+                inexact_reason1,
+                { Object.reason = r1; props = props1; dict = dict1; flags = flags1 } )
+              ( inline2,
+                _inexact_reason2,
+                { Object.reason = r2; props = props2; dict = dict2; flags = flags2 } ) =
             let dict =
               match (dict1, dict2) with
               | (None, Some _) when inline2 -> Ok dict2
@@ -212,6 +245,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                else
                                  Error_message.Inexact
                              in
+                             let inexact_reason =
+                               match inexact_reason1 with
+                               | None -> r1
+                               | Some r -> r
+                             in
                              raise
                                (CannotSpreadError
                                   (Error_message.EUnableToSpread
@@ -219,9 +257,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                        spread_reason = reason;
                                        (* in this case, the object on the left is inexact. the error will say
                                         * that object2_reason is inexact and may contain propname, so
-                                        * we should assign r2 to object1_reason and r1 to object2_reason *)
+                                        * we should assign r2 to object1_reason and inexact_reason to object2_reason *)
                                        object1_reason = r2;
-                                       object2_reason = r1;
+                                       object2_reason = inexact_reason;
                                        propname = x;
                                        error_kind;
                                      }))
@@ -242,16 +280,32 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     && Obj_type.sealed_in_op reason flags2.sealed;
                 }
               in
+              let inexact_reason =
+                match (flags1.exact, flags2.exact) with
+                (* If the inexact reason is None, that means we still haven't hit an inexact object yet, so we can
+                 * take that reason to propagate as the reason for the accumulator's inexactness.
+                 *
+                 * If it's already Some r, then the reason the object on the left is inexact
+                 * is because of an earlier inexact object. We would have already encountered that inexact
+                 * object on the right in a previous iteration of spread2, so the next case in the
+                 * match would have already updated the inexact reason to the most recent inexact object.
+                 * The only exception to this rule is if the first object is inexact, in which case
+                 * inexact_reason1 is already None anyway.
+                 *)
+                | (false, true) when inexact_reason1 = None -> Some r1
+                | (_, false) -> Some r2
+                | _ -> inexact_reason1
+              in
               (match props with
-              | Ok props -> Ok (false, { Object.reason; props; dict; flags })
+              | Ok props -> Ok (false, inexact_reason, { Object.reason; props; dict; flags })
               | Error e -> Error e)
           in
           let resolved_of_acc_element = function
-            | Object.Spread.ResolvedSlice resolved -> Nel.map (fun x -> (false, x)) resolved
+            | Object.Spread.ResolvedSlice resolved -> Nel.map (fun x -> (false, None, x)) resolved
             | Object.Spread.InlineSlice { Object.Spread.reason; prop_map; dict } ->
               let flags = { exact = true; frozen = false; sealed = Sealed } in
               let props = SMap.mapi (read_prop reason flags) prop_map in
-              Nel.one (true, { Object.reason; props; dict; flags })
+              Nel.one (true, None, { Object.reason; props; dict; flags })
           in
           let spread reason = function
             | (x, []) -> Ok (resolved_of_acc_element x)
@@ -295,9 +349,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               | [] ->
                 let t =
                   match spread reason (x, acc) with
-                  | Ok ((_, x), []) -> mk_object cx reason options x
-                  | Ok ((_, x0), (_, x1) :: xs) ->
-                    let xs = List.map snd xs in
+                  | Ok ((_, _, x), []) -> mk_object cx reason options x
+                  | Ok ((_, _, x0), (_, _, x1) :: xs) ->
+                    let xs = List.map (fun (_, _, x) -> x) xs in
                     UnionT
                       ( reason,
                         UnionRep.make
