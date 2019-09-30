@@ -198,335 +198,9 @@ let lookup_module cx m = Context.find_module cx m
 (* The builtins reference is accessed just like references to other modules. *)
 let builtins cx = lookup_module cx Files.lib_module_ref
 
-(***********************)
-(* instantiation utils *)
-(***********************)
-
-module ImplicitTypeArgument = struct
-  (* Make a type argument for a given type parameter, given a reason. Note that
-     not all type arguments are tvars; the following function is used only when
-     polymorphic types need to be implicitly instantiated, because there was no
-     explicit instantiation (via a type application), or when we want to cache a
-     unique instantiation and unify it with other explicit instantiations. *)
-  let mk_targ cx typeparam reason_op reason_tapp =
-    (* Create a reason that is positioned at reason_op, but has a def_loc at
-     * typeparam.reason. *)
-    let loc_op = aloc_of_reason reason_op in
-    let desc =
-      RTypeParam
-        ( typeparam.name,
-          (desc_of_reason reason_op, loc_op),
-          (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp) )
-    in
-    let reason = mk_reason desc (def_aloc_of_reason typeparam.reason) in
-    let reason = repos_reason loc_op reason in
-    Tvar.mk cx reason
-
-  (* Abstract a type argument that is created by implicit instantiation
-     above. Sometimes, these type arguments are involved in type expansion
-     loops, so we abstract them to detect such loops. *)
-  let abstract_targ tvar =
-    let (reason, _) = open_tvar tvar in
-    let desc = desc_of_reason reason in
-    match desc with
-    | RTypeParam _ -> Some (OpenT (locationless_reason desc, 0))
-    | _ -> None
-end
-
-(* We maintain a stack of entries representing type applications processed
-   during calls to flow, for the purpose of terminating unbounded expansion of
-   type applications. Intuitively, we may have a potential infinite loop when
-   processing a type application leads to another type application with the same
-   root, but expanding type arguments. The entries in a stack contain
-   approximate measurements that allow us to detect such expansion.
-
-   An entry representing a type application with root C and type args T1,...,Tn
-   is of the form (C, [A1,...,An]), where each Ai is a list of the roots of type
-   applications nested in Ti. We consider a stack to indicate a potential
-   infinite loop when the top of the stack is (C, [A1,...,An]) and there is
-   another entry (C, [B1,...,Bn]) in the stack, such that each Bi is non-empty
-   and is contained in Ai. *)
-
-module TypeAppExpansion : sig
-  type entry
-
-  val push_unless_loop : Context.t -> Type.t * Type.t list -> bool
-
-  val pop : unit -> unit
-
-  val get : unit -> entry list
-
-  val set : entry list -> unit
-end = struct
-  type entry = Type.t * TypeSet.t list
-
-  let stack = ref ([] : entry list)
-
-  (* visitor to collect roots of type applications nested in a type *)
-  let roots_collector =
-    object
-      inherit [TypeSet.t] Type_visitor.t as super
-
-      method! type_ cx pole acc t =
-        match t with
-        | TypeAppT (_, _, c, _) -> super#type_ cx pole (TypeSet.add c acc) t
-        | OpenT _ ->
-          (match ImplicitTypeArgument.abstract_targ t with
-          | None -> acc
-          | Some t -> TypeSet.add t acc)
-        | _ -> super#type_ cx pole acc t
-    end
-
-  let collect_roots cx = roots_collector#type_ cx Polarity.Neutral TypeSet.empty
-
-  (* Util to stringify a list, given a separator string and a function that maps
-     elements of the list to strings. Should probably be moved somewhere else
-     for general reuse. *)
-  let string_of_list list sep f = list |> Core_list.map ~f |> String.concat sep
-
-  let string_of_desc_of_t t = DescFormat.name_of_instance_reason (reason_of_t t)
-
-  (* show entries in the stack *)
-  let show_entry (c, tss) =
-    spf
-      "%s<%s>"
-      (string_of_desc_of_t c)
-      (string_of_list tss "," (fun ts ->
-           let ts = TypeSet.elements ts in
-           spf "[%s]" (string_of_list ts ";" string_of_desc_of_t)))
-
-  let _dump_stack () = string_of_list !stack "\n" show_entry
-
-  (* Detect whether pushing would cause a loop. Push only if no loop is
-     detected, and return whether push happened. *)
-
-  let push_unless_loop =
-    (* Say that targs are possibly expanding when, given previous targs and
-       current targs, each previously non-empty targ is contained in the
-       corresponding current targ. *)
-    let possibly_expanding_targs prev_tss tss =
-      (* The following helper carries around a bit that indicates whether
-         prev_tss contains at least one non-empty set. *)
-      let rec loop seen_nonempty_prev_ts = function
-        | (prev_ts :: prev_tss, ts :: tss) ->
-          (* if prev_ts is not a subset of ts, we have found a counterexample
-             and we can bail out *)
-          TypeSet.subset prev_ts ts
-          && (* otherwise, we recurse on the remaining targs, updating the bit *)
-             loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts)) (prev_tss, tss)
-        | ([], []) ->
-          (* we have found no counterexamples, so it comes down to whether we've
-             seen any non-empty prev_ts *)
-          seen_nonempty_prev_ts
-        | ([], _)
-        | (_, []) ->
-          (* something's wrong around arities, but that's not our problem, so
-             bail out *)
-          false
-      in
-      loop false (prev_tss, tss)
-    in
-    fun cx (c, ts) ->
-      let tss = Core_list.map ~f:(collect_roots cx) ts in
-      let loop =
-        !stack
-        |> List.exists (fun (prev_c, prev_tss) ->
-               c = prev_c && possibly_expanding_targs prev_tss tss)
-      in
-      if loop then
-        false
-      else (
-        stack := (c, tss) :: !stack;
-        if Context.is_verbose cx then
-          prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
-        true
-      )
-
-  let pop () = stack := List.tl !stack
-
-  let get () = !stack
-
-  let set _stack = stack := _stack
-end
-
-module Cache = struct
-  module FlowSet = struct
-    let empty = TypeMap.empty
-
-    let add_not_found l us setr =
-      setr := TypeMap.add l us !setr;
-      false
-
-    let cache (l, u) setr =
-      match TypeMap.get l !setr with
-      | None -> add_not_found l (UseTypeSet.singleton u) setr
-      | Some us ->
-        (* add returns ref eq set if found *)
-        let us' = UseTypeSet.add u us in
-        us' == us || add_not_found l us' setr
-
-    let fold f = TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
-  end
-
-  (* Cache that remembers pairs of types that are passed to __flow. *)
-  module FlowConstraint = struct
-    let cache = ref FlowSet.empty
-
-    let rec toplevel_use_op = function
-      | Frame (_frame, use_op) -> toplevel_use_op use_op
-      | Op (Speculation use_op) -> toplevel_use_op use_op
-      | use_op -> use_op
-
-    (* attempt to read LB/UB pair from cache, add if absent *)
-    let get cx (l, u) =
-      match (l, u) with
-      (* Don't cache constraints involving type variables, since the
-         corresponding typing rules are already sufficiently robust. *)
-      | (OpenT _, _)
-      | (_, UseT (_, OpenT _)) ->
-        false
-      | _ ->
-        (* Use ops are purely for better error messages: they should have no
-           effect on type checking. However, recursively nested use ops can pose
-           non-termination problems. To ensure proper caching, we hash use ops
-           to just their toplevel structure. *)
-        let u = mod_use_op_of_use_t toplevel_use_op u in
-        let found = FlowSet.cache (l, u) cache in
-        if found && Context.is_verbose cx then
-          prerr_endlinef
-            "%sFlowConstraint cache hit on (%s, %s)"
-            (Context.pid_prefix cx)
-            (string_of_ctor l)
-            (string_of_use_ctor u);
-        found
-  end
-
-  (* Cache that maps TypeApp(Poly (...id), ts) to its result. *)
-  module Subst = struct
-    let cache = Hashtbl.create 0
-
-    let find = Hashtbl.find_opt cache
-
-    let add = Hashtbl.add cache
-  end
-
-  (* Cache that limits instantiation of polymorphic definitions. Intuitively,
-     for each operation on a polymorphic definition, we remember the type
-     arguments we use to specialize the type parameters. An operation is
-     identified by its reason, and possibly the reasons of its arguments. We
-     don't use the entire operation for caching since it may contain the very
-     type variables we are trying to limit the creation of with the cache (e.g.,
-     those representing the result): the cache would be useless if we considered
-     those type variables as part of the identity of the operation. *)
-  module PolyInstantiation = struct
-    type cache_key = ALoc.t * reason * op_reason
-
-    and op_reason = reason Nel.t
-
-    let cache : (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
-
-    let find cx reason_tapp typeparam op_reason =
-      let loc = def_aloc_of_reason reason_tapp in
-      try Hashtbl.find cache (loc, typeparam.reason, op_reason)
-      with _ ->
-        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
-        Hashtbl.add cache (loc, typeparam.reason, op_reason) t;
-        t
-  end
-
-  let repos_cache = ref Repos_cache.empty
-
-  module Eval = struct
-    type id_cache_key = Type.t * Type.defer_use_t
-
-    type repos_cache_key = Type.t * Type.defer_use_t * int
-
-    let eval_id_cache : (int, Type.t) Hashtbl.t = Hashtbl.create 0
-
-    let id_cache : (id_cache_key, int) Hashtbl.t = Hashtbl.create 0
-
-    let repos_cache : (repos_cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
-
-    let id t defer_use =
-      match t with
-      | EvalT (_, d, i) when d = defer_use ->
-        (match Hashtbl.find_opt eval_id_cache i with
-        | Some t -> t
-        | None ->
-          let i = mk_id () in
-          Hashtbl.add eval_id_cache i t;
-          EvalT (t, defer_use, i))
-      | _ ->
-        let cache_key = (t, defer_use) in
-        let id =
-          match Hashtbl.find_opt id_cache cache_key with
-          | Some i -> i
-          | None ->
-            let i = mk_id () in
-            Hashtbl.add id_cache cache_key i;
-            i
-        in
-        EvalT (t, defer_use, id)
-
-    let find_repos t defer_use id =
-      let cache_key = (t, defer_use, id) in
-      Hashtbl.find_opt repos_cache cache_key
-
-    let add_repos t defer_use id tvar =
-      let cache_key = (t, defer_use, id) in
-      Hashtbl.add repos_cache cache_key tvar
-  end
-
-  module Fix = struct
-    type cache_key = reason * Type.t
-
-    let cache : (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
-
-    let find reason i =
-      let cache_key = (reason, i) in
-      Hashtbl.find_opt cache cache_key
-
-    let add reason i tvar =
-      let cache_key = (reason, i) in
-      Hashtbl.add cache cache_key tvar
-  end
-
-  let clear () =
-    FlowConstraint.cache := FlowSet.empty;
-    Hashtbl.clear Subst.cache;
-    Hashtbl.clear PolyInstantiation.cache;
-    repos_cache := Repos_cache.empty;
-    Hashtbl.clear Eval.eval_id_cache;
-    Hashtbl.clear Eval.id_cache;
-    Hashtbl.clear Eval.repos_cache;
-    Hashtbl.clear Fix.cache;
-    ()
-
-  let stats_poly_instantiation () = Hashtbl.stats PolyInstantiation.cache
-
-  (* debug util: please don't dead-code-eliminate *)
-  (* Summarize flow constraints in cache as ctor/reason pairs, and return counts
-     for each group. *)
-  let summarize_flow_constraint () =
-    let group_counts =
-      FlowSet.fold
-        (fun (l, u) map ->
-          let key =
-            spf
-              "[%s] %s => [%s] %s"
-              (string_of_ctor l)
-              (string_of_reason (reason_of_t l))
-              (string_of_use_ctor u)
-              (string_of_reason (reason_of_use_t u))
-          in
-          match SMap.get key map with
-          | None -> SMap.add key 0 map
-          | Some i -> SMap.add key (i + 1) map)
-        !FlowConstraint.cache
-        SMap.empty
-    in
-    SMap.elements group_counts |> List.sort (fun (_, i1) (_, i2) -> Pervasives.compare i1 i2)
-end
+module ImplicitTypeArgument = Instantiation_utils.ImplicitTypeArgument
+module TypeAppExpansion = Instantiation_utils.TypeAppExpansion
+module Cache = Flow_cache
 
 (*********************************************************************)
 
@@ -8064,7 +7738,7 @@ struct
         ~trace
         (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       Option.iter errs_ref ~f:(fun errs_ref ->
-          errs_ref := `ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref)
+          errs_ref := Cache.Subst.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref)
     );
     let (map, _) =
       Nel.fold_left
@@ -8081,7 +7755,8 @@ struct
                 ~trace
                 (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
               Option.iter errs_ref ~f:(fun errs_ref ->
-                  errs_ref := `ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
+                  errs_ref :=
+                    Cache.Subst.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
               (AnyT (reason_op, AnyError), [])
             | (_, t :: ts) -> (t, ts)
           in
@@ -11194,12 +10869,12 @@ struct
       | Some (errs, t) ->
         errs
         |> List.iter (function
-               | `ETooManyTypeArgs (reason_arity, maximum_arity) ->
+               | Cache.Subst.ETooManyTypeArgs (reason_arity, maximum_arity) ->
                  let msg =
                    Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity)
                  in
                  add_output cx ~trace msg
-               | `ETooFewTypeArgs (reason_arity, maximum_arity) ->
+               | Cache.Subst.ETooFewTypeArgs (reason_arity, maximum_arity) ->
                  let msg =
                    Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, maximum_arity)
                  in
