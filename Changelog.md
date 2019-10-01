@@ -1,3 +1,29 @@
+### 0.109.0
+
+Likely to cause new Flow errors:
+    - Flow was previously not typechecking `delete`, but now does
+    - `Object.defineProperty` and similar methods now adhere more closely to the spec
+    - Allow defaults for properties that may not exist in React components
+
+Notable bug fixes:
+   - `$NonMaybeType<mixed>` no longer includes null and undefined (Thanks @goodmind)
+
+Misc:
+   - Deprecated `$Supertype` and `$Subtype` utilities are now removed entirely
+   - flow-upgrade should now use https over git (Thanks @lukeapage)
+   - Autocomplete now fires on spaces in JSX
+   - Better error messages when a value is used as a type
+
+Performance:
+   - Reduced memory usage by using a more compact representation for code locations
+   - Types-first should no longer check direct dependents of files where the signature has not changed
+
+Library Definitions
+   - Add a number of CSSOM interfaces + fix `HTMLStyleElement.sheet` type (Thanks @kof)
+   - Add `AsyncIterator` to `node.js` (Thanks @goodmind)
+   - Add `undefined` to prelude (Thanks @goodmind)
+   - Add String.prototype.matchAll (Thanks @goodmind)
+
 ### 0.108.0
 
 Notable bug fixes:
