@@ -9,8 +9,8 @@ open Utils_js
 module File_sig = File_sig.With_Loc
 
 type denormalized_file_data = {
-  package: Package_json.t option;
   (* Only package.json files have this *)
+  package: Package_json.t option;
   file_sig: File_sig.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
