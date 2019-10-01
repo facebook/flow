@@ -23,7 +23,10 @@ let next () =
 
 let to_string x = snd x
 
-let pp fmt x = Format.pp_print_string fmt (to_string x)
+let pp_ref : (Format.formatter -> int * string -> unit) ref =
+  ref (fun fmt x -> Format.pp_print_string fmt (to_string x))
+
+let pp fmt x = !pp_ref fmt x
 
 let to_int x = fst x
 

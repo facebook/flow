@@ -19,6 +19,8 @@ type t = S.t
 
 val pp : Format.formatter -> t -> unit
 
+val pp_ref : (Format.formatter -> t -> unit) ref
+
 val compare : t -> t -> int
 
 val to_string : t -> string
