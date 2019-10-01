@@ -336,7 +336,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           in
           fun options state cx trace use_op reason tout x ->
             let reason = update_desc_reason invalidate_rtype_alias reason in
-            let { todo_rev; acc } = state in
+            let { todo_rev; acc; spread_id; union_reason; curr_resolve_idx } = state in
             Nel.iter
               (fun { Object.reason = r; props = _; dict = _; flags = { exact; _ } } ->
                 match options with
@@ -344,11 +344,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   add_output cx ~trace (Error_message.EIncompatibleWithExact ((r, reason), use_op))
                 | _ -> ())
               x;
-            let x = Object.Spread.ResolvedSlice x in
-            let rec continue acc (x : Object.Spread.acc_element) = function
+            let resolved = Object.Spread.ResolvedSlice x in
+            let rec continue acc (resolved : Object.Spread.acc_element) curr_resolve_idx = function
               | [] ->
                 let t =
-                  match spread reason (x, acc) with
+                  match spread reason (resolved, acc) with
                   | Ok ((_, _, x), []) -> mk_object cx reason options x
                   | Ok ((_, _, x0), (_, _, x1) :: xs) ->
                     let xs = List.map (fun (_, _, x) -> x) xs in
@@ -366,13 +366,61 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 rec_flow_t cx ~use_op trace (t, tout)
               | Type t :: todo_rev ->
                 let tool = Resolve Next in
-                let state = { todo_rev; acc = x :: acc } in
+                let state =
+                  {
+                    todo_rev;
+                    acc = resolved :: acc;
+                    spread_id;
+                    union_reason = None;
+                    curr_resolve_idx;
+                  }
+                in
                 rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Spread (options, state), tout))
               | Slice operand_slice :: todo_rev ->
-                let acc = x :: acc in
-                continue acc (InlineSlice operand_slice) todo_rev
+                let acc = resolved :: acc in
+                continue acc (InlineSlice operand_slice) (curr_resolve_idx + 1) todo_rev
             in
-            continue acc x todo_rev)
+            (* Before proceeding to the next spread step, we need to ensure that we aren't going to hit
+             * exponential blowup due to multiple spread operands having multiple lower bounds. To do
+             * that, we increment the amount of lower bounds found at this resolution index by
+             * the amount of lower bounds found at this index. If multiple indices have multiple lower
+             * bounds, Cache.Spread.can_spread will return false and we can error instead of proceeding.
+             *
+             * Any other latent constraints involving this spread_id will also stop when they hit this
+             * logic.
+             *)
+            let prev_can_spread = Flow_cache.Spread.can_spread spread_id in
+            if not prev_can_spread then
+              ()
+            else (
+              begin
+                match (union_reason, x) with
+                | (None, x) ->
+                  Nel.iter
+                    (fun ({ Object.reason; _ } as slice) ->
+                      Flow_cache.Spread.add_lower_bound
+                        spread_id
+                        curr_resolve_idx
+                        reason
+                        (Nel.one slice))
+                    x
+                | (Some reason, _) ->
+                  Flow_cache.Spread.add_lower_bound spread_id curr_resolve_idx reason x
+              end;
+              let can_spread = Flow_cache.Spread.can_spread spread_id in
+              if prev_can_spread && not can_spread then (
+                let (reasons_for_operand1, reasons_for_operand2) =
+                  Flow_cache.Spread.get_error_groups spread_id
+                in
+                add_output
+                  cx
+                  ~trace
+                  (Error_message.EExponentialSpread
+                     { reason; reasons_for_operand1; reasons_for_operand2 });
+                rec_flow_t cx trace ~use_op (AnyT.why AnyError reason, tout)
+              ) else
+                continue acc resolved (curr_resolve_idx + 1) todo_rev
+            ))
       in
       (***************)
       (* Object Rest *)
@@ -975,6 +1023,12 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let union_loc = aloc_of_reason union_reason in
           let (t, todo) = UnionRep.members_nel rep in
           let resolve_tool = Resolve (List0 (todo, (union_loc, Or))) in
+          let tool =
+            match tool with
+            | Spread (options, state) ->
+              Spread (options, { state with Spread.union_reason = Some union_reason })
+            | _ -> tool
+          in
           rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
         (* Resolve each member of an intersection. *)
         | IntersectionT (intersection_reason, rep) ->

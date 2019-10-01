@@ -470,7 +470,15 @@ class ['a] t =
             | ObjectRep -> acc
             | Spread (_, state) ->
               Object.Spread.(
-                let { todo_rev; acc = object_spread_acc } = state in
+                let {
+                  todo_rev;
+                  acc = object_spread_acc;
+                  spread_id = _;
+                  union_reason = _;
+                  curr_resolve_idx = _;
+                } =
+                  state
+                in
                 let acc = List.fold_left (self#object_kit_spread_operand cx) acc todo_rev in
                 let acc = List.fold_left (self#object_kit_acc_element cx) acc object_spread_acc in
                 acc)

@@ -1973,11 +1973,14 @@ and dump_use_t_ (depth, tvars) cx t =
             | Type t -> kid t
           in
           let state =
-            let { todo_rev; acc } = state in
+            let { todo_rev; acc; spread_id; union_reason; curr_resolve_idx } = state in
             spf
-              "{todo_rev=[%s]; acc=[%s]}"
+              "{todo_rev=[%s]; acc=[%s]; spread_id=%s; curr_resolve_idx=%s; union_reason=%s}"
               (String.concat "; " (Core_list.map ~f:spread_operand todo_rev))
               (String.concat "; " (Core_list.map ~f:acc_element acc))
+              (string_of_int spread_id)
+              (string_of_int curr_resolve_idx)
+              (Option.value_map union_reason ~default:"None" ~f:(dump_reason cx))
           in
           spf "Spread (%s, %s)" target state)
       in
@@ -2869,7 +2872,15 @@ let dump_error_message =
           (dump_reason cx key_reason)
           (dump_reason cx value_reason)
           (dump_reason cx object2_reason)
-      | EExponentialSpread { reason } -> spf "EExponentialSpread (%s)" (dump_reason cx reason))
+      | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
+        let format_reason_list reasons =
+          String.concat "; " (Nel.to_list reasons |> List.map (fun r -> dump_reason cx r))
+        in
+        spf
+          "EExponentialSpread %s ([%s]) ([%s])"
+          (dump_reason cx reason)
+          (format_reason_list reasons_for_operand1)
+          (format_reason_list reasons_for_operand2))
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

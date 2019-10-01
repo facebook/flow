@@ -7528,6 +7528,9 @@ struct
                   {
                     todo_rev;
                     acc = Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
+                    spread_id = Reason.mk_id ();
+                    union_reason = None;
+                    curr_resolve_idx = 0;
                   }
                 in
                 ObjKitT (use_op, reason, tool, Spread (options, state), tout)))

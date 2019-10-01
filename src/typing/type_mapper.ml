@@ -1776,16 +1776,25 @@ class virtual ['a] t_with_uses =
         match tool with
         | ReadOnly -> tool
         | ObjectRep -> tool
-        | Spread (options, state) ->
-          Object.Spread.(
-            let todo_rev' =
-              ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) state.todo_rev
-            in
-            let acc' = ListUtils.ident_map (self#object_kit_acc_element cx map_cx) state.acc in
-            if todo_rev' == state.todo_rev && acc' == state.acc then
-              tool
-            else
-              Spread (options, { todo_rev = todo_rev'; acc = acc' }))
+        | Spread
+            (options, { Object.Spread.todo_rev; acc; spread_id; union_reason; curr_resolve_idx })
+          ->
+          let todo_rev' =
+            ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) todo_rev
+          in
+          let acc' = ListUtils.ident_map (self#object_kit_acc_element cx map_cx) acc in
+          if todo_rev' == todo_rev && acc' == acc then
+            tool
+          else
+            Spread
+              ( options,
+                {
+                  Object.Spread.todo_rev = todo_rev';
+                  acc = acc';
+                  spread_id;
+                  union_reason;
+                  curr_resolve_idx;
+                } )
         | Rest (options, state) ->
           Object.Rest.(
             let state' =

@@ -290,7 +290,11 @@ and 'loc t' =
       value_reason: 'loc virtual_reason;
       object2_reason: 'loc virtual_reason;
     }
-  | EExponentialSpread of { reason: 'loc virtual_reason }
+  | EExponentialSpread of {
+      reason: 'loc virtual_reason;
+      reasons_for_operand1: 'loc virtual_reason Nel.t;
+      reasons_for_operand2: 'loc virtual_reason Nel.t;
+    }
 
 and spread_error_kind =
   | Indexer
@@ -687,7 +691,13 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         value_reason = map_reason value_reason;
         object2_reason = map_reason object2_reason;
       }
-  | EExponentialSpread { reason } -> EExponentialSpread { reason = map_reason reason }
+  | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
+    EExponentialSpread
+      {
+        reason = map_reason reason;
+        reasons_for_operand1 = Nel.map map_reason reasons_for_operand1;
+        reasons_for_operand2 = Nel.map map_reason reasons_for_operand2;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -889,8 +899,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | EDebugPrint (reason, _)
-  | ENonArraySpread reason
-  | EExponentialSpread { reason } ->
+  | ENonArraySpread reason ->
     Some (aloc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
@@ -908,6 +917,26 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EInexactMayOverwriteIndexer
       { spread_reason = _; key_reason = _; value_reason = _; object2_reason = reason } ->
     Some (aloc_of_reason reason)
+  | EExponentialSpread { reason = _; reasons_for_operand1; reasons_for_operand2 } ->
+    (* Ideally, we have an actual annotated union in here somewhere. This function tries to find
+     * it, otherwise our primary location will be around the first reason in the list of reasons
+     * for the first spread operand.
+     *
+     * It's important that we don't position around the location of the spread because that
+     * may be a polymorphic type variable.
+     *
+     * TODO (jmbrown): Maybe we should have two separate errors here-- one for type spread and
+     * one for value spread. It's always safe to position the error around the value spread.
+     * The same is true for all of the other spread errors.
+     *)
+    let union_reason =
+      match (reasons_for_operand1, reasons_for_operand2) with
+      | ((r, []), _)
+      | (_, (r, [])) ->
+        r
+      | ((r, _), _) -> r
+    in
+    Some (aloc_of_reason union_reason)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
   | ENonstrictImport loc
@@ -2423,13 +2452,33 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref object2_reason;
           text " exact?";
         ]
-    | EExponentialSpread { reason } ->
+    | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
+      let format_reason_group reasons =
+        match reasons with
+        | (r, []) -> [ref r]
+        | (r, rs) ->
+          text "inferred union from "
+          :: (rs |> List.map (fun r -> [ref r; text " | "]) |> List.flatten)
+          @ [ref r]
+      in
+      let union_refs =
+        let reasons_for_operand1 = format_reason_group reasons_for_operand1 in
+        let reasons_for_operand2 = format_reason_group reasons_for_operand2 in
+        reasons_for_operand1 @ [text " and "] @ reasons_for_operand2
+      in
       Normal
-        [
-          text "Spreading ";
-          ref reason;
-          text " may lead to exponentially large type checking times.";
-        ])
+        ( [
+            text "Computing ";
+            ref reason;
+            text " may lead to exponentially large type checking because ";
+          ]
+        @ union_refs
+        @ [
+            text
+              " are both unions. Please use at most one union type per spread to avoid performance issues.";
+            text
+              " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
+          ] ))
 
 let is_lint_error = function
   | EUntypedTypeImport _

@@ -2202,9 +2202,12 @@ and Object : sig
     type state = {
       todo_rev: operand list;
       acc: acc_element list;
+      spread_id: int;
+      union_reason: reason option;
+      curr_resolve_idx: int;
     }
 
-    and target =
+    type target =
       (* When spreading values, the result is exact if all of the input types are
          also exact. If any input type is inexact, the output is inexact. *)
       | Value

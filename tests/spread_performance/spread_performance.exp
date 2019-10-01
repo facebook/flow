@@ -1,0 +1,235 @@
+Error ------------------------------------------------------------------------------------- large_type_spread.js:1007:22
+
+Computing object type [1] may lead to exponentially large type checking because `A` [2] and `A` [3] are both unions.
+Please use at most one union type per spread to avoid performance issues. You may be able to get rid of a union by
+specifying a more general type that captures all of the branches of the union.
+
+   large_type_spread.js:1007:22
+   1007| declare var a: {| ...A, ...A, ...{||}|};
+                              ^ [2]
+
+References:
+   large_type_spread.js:1007:16
+   1007| declare var a: {| ...A, ...A, ...{||}|};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   large_type_spread.js:1007:28
+   1007| declare var a: {| ...A, ...A, ...{||}|};
+                                    ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- type_spread.js:9:20
+
+Computing object type [1] may lead to exponentially large type checking because `A` [2] and `A` [3] are both unions.
+Please use at most one union type per spread to avoid performance issues. You may be able to get rid of a union by
+specifying a more general type that captures all of the branches of the union.
+
+   type_spread.js:9:20
+   9| declare var a: {...A, ...A, ...{| baz: number |}} // Error
+                         ^ [2]
+
+References:
+   type_spread.js:9:16
+   9| declare var a: {...A, ...A, ...{| baz: number |}} // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:9:26
+   9| declare var a: {...A, ...A, ...{| baz: number |}} // Error
+                               ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:16:20
+
+Computing object type [1] may lead to exponentially large type checking because inferred union from object type [1] |
+object literal [2] and `A` [3] are both unions. Please use at most one union type per spread to avoid performance
+issues. You may be able to get rid of a union by specifying a more general type that captures all of the branches of the
+union.
+
+   type_spread.js:16:20
+   16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
+                          ^ [3]
+
+References:
+   type_spread.js:16:16
+   16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:25:9
+   25|   x.a = {baz: 3}
+               ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- type_spread.js:20:2
+
+Cannot cast `b` to null because object type [1] is incompatible with null [2].
+
+   type_spread.js:20:2
+   20| (b: null);
+        ^
+
+References:
+   type_spread.js:16:16
+   16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:20:5
+   20| (b: null);
+           ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:32:14
+
+Computing object type [1] may lead to exponentially large type checking because `A` [2] and `A` [3] are both unions.
+Please use at most one union type per spread to avoid performance issues. You may be able to get rid of a union by
+specifying a more general type that captures all of the branches of the union.
+
+   type_spread.js:32:14
+   32| var c = Poly<A,A>();
+                    ^ [2]
+
+References:
+   type_spread.js:30:32
+   30| declare function Poly<T, U>(): {| ...T, ...U, ...{| baz: number|} |};
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:32:16
+   32| var c = Poly<A,A>();
+                      ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:44:20
+
+Computing object type [1] may lead to exponentially large type checking because `A` [2] and `A` [3] are both unions.
+Please use at most one union type per spread to avoid performance issues. You may be able to get rid of a union by
+specifying a more general type that captures all of the branches of the union.
+
+   type_spread.js:44:20
+   44| declare var g: {...A, foo: number, bar: number, ...A, baz: number, ...A, qux: number}; // Error
+                          ^ [2]
+
+References:
+   type_spread.js:44:16
+   44| declare var g: {...A, foo: number, bar: number, ...A, baz: number, ...A, qux: number}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:44:52
+   44| declare var g: {...A, foo: number, bar: number, ...A, baz: number, ...A, qux: number}; // Error
+                                                          ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:48:20
+
+Computing object type [1] may lead to exponentially large type checking because union type [2] and union type [3] are
+both unions. Please use at most one union type per spread to avoid performance issues. You may be able to get rid of a
+union by specifying a more general type that captures all of the branches of the union.
+
+   type_spread.js:48:20
+   48| declare var h: {...{| foo: number |} | {| bar: number |}, ...{| foo: number |} | {| bar: number |}, ...{| baz: number |}}; // Error
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   type_spread.js:48:16
+   48| declare var h: {...{| foo: number |} | {| bar: number |}, ...{| foo: number |} | {| bar: number |}, ...{| baz: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:48:62
+   48| declare var h: {...{| foo: number |} | {| bar: number |}, ...{| foo: number |} | {| bar: number |}, ...{| baz: number |}}; // Error
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:53:26
+
+Computing object type [1] may lead to exponentially large type checking because inferred union from object literal [2] |
+object literal [3] and inferred union from object literal [2] | object literal [3] are both unions. Please use at most
+one union type per spread to avoid performance issues. You may be able to get rid of a union by specifying a more
+general type that captures all of the branches of the union.
+
+   type_spread.js:53:26
+   53| const i = poly({foo: 3}, {bar: 3}); // Error, T has multiple lower bounds
+                                ^^^^^^^^ [3]
+
+References:
+   type_spread.js:51:39
+   51| declare function poly<T>(x: T, y: T): {...T, ...T, ...T, ...T, ...T};
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:53:16
+   53| const i = poly({foo: 3}, {bar: 3}); // Error, T has multiple lower bounds
+                      ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:58:20
+
+Computing object type [1] may lead to exponentially large type checking because `U` [2] and `U` [3] are both unions.
+Please use at most one union type per spread to avoid performance issues. You may be able to get rid of a union by
+specifying a more general type that captures all of the branches of the union.
+
+   type_spread.js:58:20
+   58| declare var j: {...U, ...U, ...U};
+                          ^ [2]
+
+References:
+   type_spread.js:58:16
+   58| declare var j: {...U, ...U, ...U};
+                      ^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:58:26
+   58| declare var j: {...U, ...U, ...U};
+                                ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:61:44
+
+Computing object type [1] may lead to exponentially large type checking because `U` [2] and `U` [3] are both unions.
+Please use at most one union type per spread to avoid performance issues. You may be able to get rid of a union by
+specifying a more general type that captures all of the branches of the union.
+
+   type_spread.js:61:44
+   61| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
+                                                  ^ [2]
+
+References:
+   type_spread.js:61:16
+   61| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:61:50
+   61| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
+                                                        ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:65:38
+
+Computing object type [1] may lead to exponentially large type checking because inferred union from object literal [2] |
+object literal [3] and `U` [4] are both unions. Please use at most one union type per spread to avoid performance
+issues. You may be able to get rid of a union by specifying a more general type that captures all of the branches of the
+union.
+
+   type_spread.js:65:38
+   65| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
+                                            ^ [4]
+
+References:
+   type_spread.js:64:49
+   64| declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
+                                                       ^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:65:17
+   65| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
+                       ^^^^^^^^ [2]
+   type_spread.js:65:42
+   65| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
+                                                ^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- type_spread.js:80:58
+
+Computing `N` [1] may lead to exponentially large type checking because inferred union from object type [2] | object
+type [2] and inferred union from object type [3] | object type [3] are both unions. Please use at most one union type
+per spread to avoid performance issues. You may be able to get rid of a union by specifying a more general type that
+captures all of the branches of the union.
+
+   type_spread.js:80:58
+   80| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
+                                                                ^^^^^ [2]
+
+References:
+   type_spread.js:80:10
+   80| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:80:23
+   80| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
+                             ^^^^^ [3]
+
+
+
+Found 12 errors
