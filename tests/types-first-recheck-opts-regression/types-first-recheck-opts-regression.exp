@@ -1,0 +1,21 @@
+No errors!
+
+Adding whitespace to a.js
+No errors!
+
+========Skipping stats========
+Merge skipped 1 of 3 modules
+Check will skip 2 of 3 files
+
+Reverting change to a.js
+No errors!
+
+Adding an export to c.js, causing it to sig-depend on b.js
+No errors!
+
+Adding whitespace to a.js
+No errors!
+
+========Skipping stats========
+Merge skipped 2 of 3 modules
+Check will skip 2 of 3 files
