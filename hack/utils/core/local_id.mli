@@ -36,6 +36,8 @@ val make_unscoped : string -> t
 (** Make an id for an unscoped variable. Two calls with the same input
  * string will return the same id. *)
 
+val make : int -> string -> t
+
 val tmp : unit -> t
 
 module Set : module type of Set.Make (S)

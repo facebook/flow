@@ -33,6 +33,8 @@ let make_scoped x = (next (), x)
 
 let make_unscoped x = (0, x)
 
+let make i x = (i, x)
+
 let tmp () =
   let res = next () in
   (res, "__tmp" ^ string_of_int res)
