@@ -18,6 +18,16 @@ let exe_name = Filename.basename Sys.executable_name
 module FilenameSet = Set.Make (File_key)
 module FilenameMap = MyMap.Make (File_key)
 
+let debug_string_of_filename_set set =
+  set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
+
+let debug_string_of_filename_map value_to_string map =
+  map
+  |> FilenameMap.map value_to_string
+  |> FilenameMap.elements
+  |> List.map (fun (file, value) -> spf "  %s: %s" (File_key.to_string file) value)
+  |> String.concat "\n"
+
 let assert_false s =
   let callstack = Exception.get_current_callstack_string 10 in
   prerr_endline
