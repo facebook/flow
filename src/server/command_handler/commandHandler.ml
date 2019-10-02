@@ -1071,21 +1071,59 @@ let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) 
     let extra_data = metadata.extra_data @ keyvals_of_json extra_data in
     { metadata with extra_data })
 
-type 'a persistent_handling_result =
-  ('a * LspProt.response * LspProt.metadata, 'a * LspProt.metadata) result
+type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
+
+let (mk_lsp_error_response, mk_lsp_unexpected_error_response) =
+  let mk_error_response ~ret ~id metadata =
+    let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.LspProt.error_info in
+    let e = Lsp_fmt.error_of_exn (Failure reason) in
+    match id with
+    | Some id ->
+      let friendly_message =
+        "Flow encountered an unexpected error while handling this request. "
+        ^ "See the Flow logs for more details."
+      in
+      let e = { e with Lsp.Error.message = friendly_message } in
+      Lwt.return
+        (ret, LspProt.LspFromServer (Some (ResponseMessage (id, ErrorResult (e, stack)))), metadata)
+    | None ->
+      LogMessage.(
+        let text = Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack in
+        Lwt.return
+          ( ret,
+            LspProt.LspFromServer
+              (Some
+                 (NotificationMessage
+                    (TelemetryNotification { type_ = MessageType.ErrorMessage; message = text }))),
+            metadata ))
+  in
+  (* This is commonly called by persistent handlers when something goes wrong and we need to return
+   * an error response *)
+  let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
+    with_error ?stack ~reason metadata |> mk_error_response ~ret ~id
+  in
+  (* This is called when a persistent handler throws an exception and we catch it *)
+  let mk_lsp_unexpected_error_response ~ret ~id ~e metadata =
+    LspProt.(
+      let stack = Utils.Callstack (Exception.get_backtrace_string e) in
+      let reason = Exception.get_ctor_string e in
+      let error_info = (UnexpectedError, reason, stack) in
+      { metadata with error_info = Some error_info } |> mk_error_response ~ret ~id)
+  in
+  (mk_lsp_error_response, mk_lsp_unexpected_error_response)
 
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
   let response = ResponseMessage (id, ErrorResult (e, "")) in
   let metadata = with_error metadata ~reason:"cancelled" in
-  Lwt.return (Ok (ret, LspProt.LspFromServer (Some response), metadata))
+  Lwt.return (ret, LspProt.LspFromServer (Some response), metadata)
 
 let handle_persistent_subscribe ~reader ~options ~metadata ~client ~profiling:_ ~env =
   let (current_errors, current_warnings, _) =
     ErrorCollator.get_with_separate_warnings ~reader ~options env
   in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
-  Lwt.return (Ok (env, LspProt.LspFromServer None, metadata))
+  Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 (* A did_open notification can come in about N files, which is great. But sometimes we'll get
  * N did_open notifications in quick succession. Let's batch them up and run them all at once!
@@ -1107,12 +1145,12 @@ let (enqueue_did_open_files, handle_persistent_did_open_notification) =
       | [] -> Lwt.return env
       | first :: rest -> did_open ~reader genv env client (first, rest)
     in
-    Lwt.return (Ok (env, LspProt.LspFromServer None, metadata))
+    Lwt.return (env, LspProt.LspFromServer None, metadata)
   in
   (enqueue_did_open_files, handle_persistent_did_open_notification)
 
 let handle_persistent_did_open_notification_no_op ~metadata ~client:_ ~profiling:_ =
-  Lwt.return (Ok ((), LspProt.LspFromServer None, metadata))
+  Lwt.return ((), LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_change_notification ~params ~metadata ~client ~profiling:_ =
   Lsp.DidChange.(
@@ -1120,18 +1158,18 @@ let handle_persistent_did_change_notification ~params ~metadata ~client ~profili
       Persistent_connection.(
         let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
         match client_did_change client fn params.contentChanges with
-        | Ok () -> Lwt.return (Ok ((), LspProt.LspFromServer None, metadata))
-        | Error (reason, stack) -> Lwt.return (Error ((), with_error metadata ~reason ~stack)))))
+        | Ok () -> Lwt.return ((), LspProt.LspFromServer None, metadata)
+        | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:None ~reason ~stack metadata)))
 
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
-  Lwt.return (Ok ((), LspProt.LspFromServer None, metadata))
+  Lwt.return ((), LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification ~reader ~genv ~metadata ~client ~profiling:_ ~env =
   let%lwt env = did_close ~reader genv env client in
-  Lwt.return (Ok (env, LspProt.LspFromServer None, metadata))
+  Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
-  Lwt.return (Ok ((), LspProt.LspFromServer None, metadata))
+  Lwt.return ((), LspProt.LspFromServer None, metadata)
 
 let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling:_ ~env =
   let id = params.CancelRequest.id in
@@ -1139,7 +1177,7 @@ let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling
   (* have had its effect if any on messages earlier in the queue, and so can be  *)
   (* removed. *)
   ServerMonitorListenerState.(cancellation_requests := IdSet.remove id !cancellation_requests);
-  Lwt.return (Ok (env, LspProt.LspFromServer None, metadata))
+  Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   TextDocumentPositionParams.(
@@ -1156,14 +1194,14 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
     match result with
     | Ok loc when loc = Loc.none ->
       let response = ResponseMessage (id, DefinitionResult []) in
-      Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
+      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
     | Ok loc ->
       let default_uri = params.textDocument.TextDocumentIdentifier.uri in
       let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
       let definition_location = { Lsp.DefinitionLocation.location; title = None } in
       let response = ResponseMessage (id, DefinitionResult [definition_location]) in
-      Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
-    | Error reason -> Lwt.return (Error ((), with_error metadata ~reason)))
+      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
 
 let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   TextDocumentPositionParams.(
@@ -1204,21 +1242,18 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
         | (_, _) -> Some { Lsp.Hover.contents; range }
       in
       let response = ResponseMessage (id, HoverResult r) in
-      Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
-    | Error reason -> Lwt.return (Error ((), with_error metadata ~reason)))
+      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
 
 let handle_persistent_code_action_request ~options ~id ~params ~metadata ~client ~profiling ~env =
   let%lwt result = find_code_actions ~options ~profiling ~env ~client ~params in
-  let response =
-    match result with
-    | Ok code_actions ->
-      Ok
-        ( (),
-          LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))),
-          metadata )
-    | Error reason -> Error ((), with_error metadata ~reason)
-  in
-  Lwt.return response
+  match result with
+  | Ok code_actions ->
+    Lwt.return
+      ( (),
+        LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))),
+        metadata )
+  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_autocomplete_lsp
     ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
@@ -1248,7 +1283,7 @@ let handle_persistent_autocomplete_lsp
            Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
     in
     match fn_content with
-    | Error (reason, stack) -> Lwt.return (Error ((), with_error metadata ~reason ~stack))
+    | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
     | Ok (fn, content) ->
       let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
       let file_with_token = File_input.FileContent (fn, content_with_token) in
@@ -1266,8 +1301,8 @@ let handle_persistent_autocomplete_lsp
           in
           let r = CompletionResult { Lsp.Completion.isIncomplete = false; items } in
           let response = ResponseMessage (id, r) in
-          Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
-        | Error reason -> Lwt.return (Error ((), with_error metadata ~reason))
+          Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+        | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
       end)
 
 let handle_persistent_document_highlight
@@ -1297,13 +1332,13 @@ let handle_persistent_document_highlight
     in
     let r = DocumentHighlightResult (Core_list.map ~f:loc_to_highlight locs) in
     let response = ResponseMessage (id, r) in
-    Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
+    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Ok None ->
     (* e.g. if it was requested on a place that's not even an identifier *)
     let r = DocumentHighlightResult [] in
     let response = ResponseMessage (id, r) in
-    Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
-  | Error reason -> Lwt.return (Error ((), with_error metadata ~reason))
+    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
@@ -1345,7 +1380,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
         }
     in
     let response = ResponseMessage (id, r) in
-    Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
+    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | (true, Ok all_locs) ->
     (* Figure out the percentages *)
     let accum_coverage (covered, total) (_loc, cov) =
@@ -1412,8 +1447,8 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
         }
     in
     let response = ResponseMessage (id, r) in
-    Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
-  | (true, Error reason) -> Lwt.return (Error ((), with_error metadata ~reason))
+    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+  | (true, Error reason) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~profiling ~env =
   FindReferences.(
@@ -1451,15 +1486,15 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
         match lsp_locs with
         | Ok lsp_locs ->
           let response = ResponseMessage (id, FindReferencesResult lsp_locs) in
-          Lwt.return (Ok (env, LspProt.LspFromServer (Some response), metadata))
-        | Error reason -> Lwt.return (Error (env, with_error metadata ~reason))
+          Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
+        | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
       end
     | Ok None ->
       (* e.g. if it was requested on a place that's not even an identifier *)
       let r = FindReferencesResult [] in
       let response = ResponseMessage (id, r) in
-      Lwt.return (Ok (env, LspProt.LspFromServer (Some response), metadata))
-    | Error reason -> Lwt.return (Error (env, with_error metadata ~reason)))
+      Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
+    | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata)
 
 let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profiling ~env =
   let { Rename.textDocument; position; newName } = params in
@@ -1502,16 +1537,13 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
     match workspace_edit with
     | Ok x ->
       let response = ResponseMessage (id, RenameResult x) in
-      Ok (env, LspProt.LspFromServer (Some response), metadata)
-    | Error reason -> Error (env, with_error metadata ~reason)
+      Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
+    | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
   in
-  Lwt.return
-    begin
-      match result with
-      | Ok (Some edits) -> edits_to_response edits
-      | Ok None -> edits_to_response []
-      | Error reason -> Error (env, with_error metadata ~reason)
-    end
+  match result with
+  | Ok (Some edits) -> edits_to_response edits
+  | Ok None -> edits_to_response []
+  | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
 
 let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
   let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
@@ -1520,11 +1552,11 @@ let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling:_ ~e
     |> List.map (fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data })
   in
   let response = ResponseMessage (id, RageResult items) in
-  Lwt.return (Ok ((), LspProt.LspFromServer (Some response), metadata))
+  Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
 
-let handle_persistent_unsupported ~unhandled ~metadata ~client:_ ~profiling:_ =
+let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ =
   let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
-  Lwt.return (Error ((), with_error metadata ~reason))
+  mk_lsp_error_response ~ret:() ~id ~reason metadata
 
 type persistent_command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.
@@ -1563,13 +1595,8 @@ let mk_parallelizable_persistent ~options f =
   if wait_for_recheck then
     Handle_nonparallelizable_persistent
       (fun ~client ~profiling ~env ->
-        let%lwt result = f ~client ~profiling ~env in
-        let result =
-          match result with
-          | Ok ((), msg, metadata) -> Ok (env, msg, metadata)
-          | Error ((), metadata) -> Error (env, metadata)
-        in
-        Lwt.return result)
+        let%lwt ((), msg, metadata) = f ~client ~profiling ~env in
+        Lwt.return (env, msg, metadata))
   else
     Handle_parallelizable_persistent f
 
@@ -1710,8 +1737,13 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
       (* Whoever is waiting for the rage results probably doesn't want to wait for a recheck *)
       mk_parallelizable_persistent ~options (handle_persistent_rage ~reader ~genv ~id ~metadata)
     | (LspToServer unhandled, metadata) ->
+      let id =
+        match unhandled with
+        | RequestMessage (id, _) -> Some id
+        | _ -> None
+      in
       (* We can reject unsupported stuff immediately *)
-      Handle_persistent_immediately (handle_persistent_unsupported ~unhandled ~metadata))
+      Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata))
 
 let wrap_persistent_handler
     (type a b c)
@@ -1757,15 +1789,12 @@ let wrap_persistent_handler
                 Exception.reraise e
               | e ->
                 let e = Exception.wrap e in
-                let stack = Utils.Callstack (Exception.get_backtrace_string e) in
-                let reason = Exception.get_ctor_string e in
-                let error_info = (UnexpectedError, reason, stack) in
-                begin
+                let (id, metadata) =
                   match request with
-                  | (_, metadata) ->
-                    Lwt.return
-                      (Error (default_ret, { metadata with error_info = Some error_info }))
-                end))
+                  | (LspToServer (RequestMessage (id, _)), metadata) -> (Some id, metadata)
+                  | (_, metadata) -> (None, metadata)
+                in
+                mk_lsp_unexpected_error_response ~ret:default_ret ~id ~e metadata))
       in
       (* we'll send this "Finishing_up" event only after sending the LSP response *)
       let event =
@@ -1778,42 +1807,13 @@ let wrap_persistent_handler
       in
       let server_profiling = Some profiling in
       let server_logging_context = Some (FlowEventLogger.get_context ()) in
-      (match result with
-      | Ok (ret, lsp_response, metadata) ->
-        let metadata = { metadata with server_profiling; server_logging_context } in
-        let response = (lsp_response, metadata) in
-        Persistent_connection.send_response response client;
-        Hh_logger.info "Persistent response: Ok %s" (LspProt.string_of_response lsp_response);
-        MonitorRPC.status_update ~event;
-        Lwt.return ret
-      | Error (ret, metadata) ->
-        let metadata = { metadata with server_profiling; server_logging_context } in
-        let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.error_info in
-        let e = Lsp_fmt.error_of_exn (Failure reason) in
-        let lsp_response =
-          match request with
-          | (LspToServer (RequestMessage (id, _)), _) ->
-            let friendly_message =
-              "Flow encountered an unexpected error while handling this request. "
-              ^ "See the Flow logs for more details."
-            in
-            let e = { e with Lsp.Error.message = friendly_message } in
-            Some (ResponseMessage (id, ErrorResult (e, stack)))
-          | (LspToServer _, _) ->
-            LogMessage.(
-              let text = Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack in
-              Some
-                (NotificationMessage
-                   (TelemetryNotification { type_ = MessageType.ErrorMessage; message = text })))
-          | _ -> None
-        in
-        let response = (LspProt.LspFromServer lsp_response, metadata) in
-        Persistent_connection.send_response response client;
-        Hh_logger.info
-          "Persistent response: Error lspFromServer %s"
-          (Option.value_map lsp_response ~default:"None" ~f:Lsp_fmt.message_name_to_string);
-        MonitorRPC.status_update ~event;
-        Lwt.return ret))
+      let (ret, lsp_response, metadata) = result in
+      let metadata = { metadata with server_profiling; server_logging_context } in
+      let response = (lsp_response, metadata) in
+      Persistent_connection.send_response response client;
+      Hh_logger.info "Persistent response: %s" (LspProt.string_of_response lsp_response);
+      MonitorRPC.status_update ~event;
+      Lwt.return ret)
 
 let handle_persistent_immediately_unsafe ~genv:_ ~workload ~client ~profiling () =
   workload ~client ~profiling
