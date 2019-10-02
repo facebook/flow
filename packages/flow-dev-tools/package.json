@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "dependencies": {
     "babel-core": "^6.8.0",
-    "babel-jest": "^21.0.2",
+    "babel-jest": "^23.0.0",
     "babel-plugin-syntax-flow": "^6.8.0",
     "babel-plugin-transform-class-properties": "^6.8.0",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",
@@ -18,7 +18,7 @@
     "diff": "^3.5.0",
     "flow-parser": "~0.21.0",
     "glob": "^7.0.3",
-    "jest": "^21.1.0",
+    "jest": "^23.0.0",
     "minimist": "~1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
