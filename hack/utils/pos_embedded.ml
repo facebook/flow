@@ -27,11 +27,11 @@ type 'a pos =
       pos_start: File_pos_large.t;
       pos_end: File_pos_large.t;
     }
-[@@deriving show]
+[@@deriving eq, show]
 
-type t = Relative_path.t pos [@@deriving show]
+type t = Relative_path.t pos [@@deriving eq, show]
 
-type absolute = string pos [@@deriving show]
+type absolute = string pos [@@deriving eq, show]
 
 [@@@warning "+32"]
 

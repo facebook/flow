@@ -36,7 +36,7 @@ module type S = sig
 
   val compare : ?cmp:('a -> 'a -> int) -> 'a t -> 'a t -> int
 
-  val equal : 'a t -> 'a t -> bool
+  val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
 
   val keys : 'a t -> key list
 

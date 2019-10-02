@@ -17,7 +17,7 @@ type comment =
   | CmtLine of string
   | CmtBlock of string
   | CmtMarkup of string
-[@@deriving show]
+[@@deriving eq, show]
 
 let is_line_comment = function
   | CmtLine _ -> true

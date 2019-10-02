@@ -9,7 +9,7 @@
 
 external hh_counter_next : unit -> int = "hh_counter_next"
 
-type t = int
+type t = int [@@deriving eq]
 
 let compare x y = x - y
 

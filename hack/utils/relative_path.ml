@@ -17,7 +17,7 @@ type prefix =
   | Hhi
   | Dummy
   | Tmp
-[@@deriving show, enum]
+[@@deriving eq, show, enum]
 
 let root = ref None
 
@@ -61,7 +61,7 @@ let set_path_prefix prefix v =
   | Dummy -> raise (Failure "Dummy is always represented by an empty string")
   | _ -> path_ref_of_prefix prefix := Some v
 
-type t = prefix * string [@@deriving show]
+type t = prefix * string [@@deriving eq, show]
 
 type relative_path = t
 

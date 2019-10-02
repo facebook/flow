@@ -83,8 +83,6 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
 
   let compare ?(cmp = Pervasives.compare) x y = compare cmp x y
 
-  let equal x y = compare x y = 0
-
   let keys m = fold (fun k _ acc -> k :: acc) m []
 
   let ordered_keys m = List.map fst (bindings m)

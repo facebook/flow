@@ -19,7 +19,8 @@
     ident)
   (libraries
     collections
-    heap_libc))
+    heap_libc)
+  (preprocess (pps ppx_deriving.std visitors.ppx)))
 
 (library
   (name heap_shared_mem)

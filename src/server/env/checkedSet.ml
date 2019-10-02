@@ -30,9 +30,8 @@ type kind =
 
 type t = kind FilenameMap.t
 
-(* This uses polymorphic compare under the hood. Use caution if `kind` becomes a more complex
- * type. *)
-let debug_equal = FilenameMap.equal
+(* This uses polymorphic compare. Use caution if `kind` becomes a more complex type. *)
+let debug_equal = FilenameMap.equal ( = )
 
 let combine a b =
   match (a, b) with

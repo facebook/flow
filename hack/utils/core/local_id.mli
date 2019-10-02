@@ -10,12 +10,12 @@
 (** Used to represent local variables in the named AST. *)
 
 module S : sig
-  type t
+  type t [@@deriving eq]
 
   val compare : t -> t -> int
 end
 
-type t = S.t
+type t = S.t [@@deriving eq]
 
 val pp : Format.formatter -> t -> unit
 

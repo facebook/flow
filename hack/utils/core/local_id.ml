@@ -8,7 +8,7 @@
  *)
 
 module S = struct
-  type t = int * string
+  type t = int * string [@@deriving eq]
 
   let compare = Pervasives.compare
 end

@@ -7,7 +7,7 @@
  *
  *)
 
-type t = int
+type t = int [@@deriving eq]
 (**
  * Three values packed into one 64-bit integer:
  *
