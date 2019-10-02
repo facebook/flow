@@ -1815,6 +1815,54 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     in
     Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
     Ok (state, LogNeeded metadata)
+  | ( Connected _,
+      Server_message
+        LspProt.(
+          RequestResponse (UncaughtException { request; exception_constructor; stack }, metadata))
+    ) ->
+    (* The Flow server hit an uncaught exception while processing request *)
+    let metadata =
+      LspProt.
+        {
+          metadata with
+          error_info = Some (UnexpectedError, exception_constructor, Utils.Callstack stack);
+        }
+    in
+    let outgoing =
+      LspProt.(
+        match request with
+        | LspToServer (RequestMessage (id, _)) ->
+          (* We need to tell the client that this request hit an unexpected error *)
+          let e =
+            Lsp.Error.
+              {
+                code = Code.unknownErrorCode;
+                message =
+                  "Flow encountered an unexpected error while handling this request. "
+                  ^ "See the Flow logs for more details.";
+                data = None;
+              }
+          in
+          ResponseMessage (id, ErrorResult (e, stack))
+        | Subscribe
+        | LspToServer _ ->
+          (* We'll just send a telemetry notification, since the client wasn't expecting a response *)
+          let text =
+            Printf.sprintf
+              "%s [%i]\n%s"
+              exception_constructor
+              Lsp.Error.Code.unknownErrorCode
+              stack
+          in
+          NotificationMessage
+            (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message = text }))
+    in
+    let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
+    to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
+    Option.iter
+      metadata.LspProt.interaction_tracking_id
+      ~f:(log_interaction ~ux:LspInteraction.Errored state);
+    Ok (state, LogNeeded metadata)
   | ( Connected cenv,
       Server_message LspProt.(NotificationFromServer (Errors { errors; warnings; errors_reason }))
     ) ->

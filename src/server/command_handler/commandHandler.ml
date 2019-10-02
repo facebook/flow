@@ -1073,44 +1073,31 @@ let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) 
 
 type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
 
-let (mk_lsp_error_response, mk_lsp_unexpected_error_response) =
-  let mk_error_response ~ret ~id metadata =
-    let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.LspProt.error_info in
-    let e = Lsp_fmt.error_of_exn (Failure reason) in
-    match id with
-    | Some id ->
-      let friendly_message =
-        "Flow encountered an unexpected error while handling this request. "
-        ^ "See the Flow logs for more details."
-      in
-      let e = { e with Lsp.Error.message = friendly_message } in
+(* This is commonly called by persistent handlers when something goes wrong and we need to return
+  * an error response *)
+let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
+  let metadata = with_error ?stack ~reason metadata in
+  let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.LspProt.error_info in
+  let e = Lsp_fmt.error_of_exn (Failure reason) in
+  match id with
+  | Some id ->
+    let friendly_message =
+      "Flow encountered an unexpected error while handling this request. "
+      ^ "See the Flow logs for more details."
+    in
+    let e = { e with Lsp.Error.message = friendly_message } in
+    Lwt.return
+      (ret, LspProt.LspFromServer (Some (ResponseMessage (id, ErrorResult (e, stack)))), metadata)
+  | None ->
+    LogMessage.(
+      let text = Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack in
       Lwt.return
-        (ret, LspProt.LspFromServer (Some (ResponseMessage (id, ErrorResult (e, stack)))), metadata)
-    | None ->
-      LogMessage.(
-        let text = Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack in
-        Lwt.return
-          ( ret,
-            LspProt.LspFromServer
-              (Some
-                 (NotificationMessage
-                    (TelemetryNotification { type_ = MessageType.ErrorMessage; message = text }))),
-            metadata ))
-  in
-  (* This is commonly called by persistent handlers when something goes wrong and we need to return
-   * an error response *)
-  let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
-    with_error ?stack ~reason metadata |> mk_error_response ~ret ~id
-  in
-  (* This is called when a persistent handler throws an exception and we catch it *)
-  let mk_lsp_unexpected_error_response ~ret ~id ~e metadata =
-    LspProt.(
-      let stack = Utils.Callstack (Exception.get_backtrace_string e) in
-      let reason = Exception.get_ctor_string e in
-      let error_info = (UnexpectedError, reason, stack) in
-      { metadata with error_info = Some error_info } |> mk_error_response ~ret ~id)
-  in
-  (mk_lsp_error_response, mk_lsp_unexpected_error_response)
+        ( ret,
+          LspProt.LspFromServer
+            (Some
+               (NotificationMessage
+                  (TelemetryNotification { type_ = MessageType.ErrorMessage; message = text }))),
+          metadata ))
 
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
@@ -1761,6 +1748,7 @@ let wrap_persistent_handler
     ~(default_ret : c)
     (arg : b) : c Lwt.t =
   LspProt.(
+    let (request, metadata) = request in
     match Persistent_connection.get_client client_id with
     | None ->
       Hh_logger.error "Unknown persistent client %d. Maybe connection went away?" client_id;
@@ -1773,7 +1761,7 @@ let wrap_persistent_handler
       let%lwt (profiling, result) =
         Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
             match request with
-            | (LspToServer (RequestMessage (id, _)), metadata)
+            | LspToServer (RequestMessage (id, _))
               when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
               Hh_logger.info "Skipping canceled persistent request: %s" (string_of_request request);
 
@@ -1789,12 +1777,12 @@ let wrap_persistent_handler
                 Exception.reraise e
               | e ->
                 let e = Exception.wrap e in
-                let (id, metadata) =
-                  match request with
-                  | (LspToServer (RequestMessage (id, _)), metadata) -> (Some id, metadata)
-                  | (_, metadata) -> (None, metadata)
-                in
-                mk_lsp_unexpected_error_response ~ret:default_ret ~id ~e metadata))
+                let exception_constructor = Exception.get_ctor_string e in
+                let stack = Exception.get_backtrace_string e in
+                Lwt.return
+                  ( default_ret,
+                    LspProt.UncaughtException { request; exception_constructor; stack },
+                    metadata )))
       in
       (* we'll send this "Finishing_up" event only after sending the LSP response *)
       let event =

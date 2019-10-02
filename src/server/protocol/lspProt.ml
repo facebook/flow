@@ -114,8 +114,10 @@ type request_with_metadata = request * metadata
 (* requests, notifications, responses from client *)
 
 let string_of_request = function
-  | (Subscribe, _) -> "subscribe"
-  | (LspToServer msg, _) -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
+  | Subscribe -> "subscribe"
+  | LspToServer msg -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
+
+let string_of_request_with_metadata (request, _) = string_of_request request
 
 let json_of_request =
   Hh_json.(
@@ -136,7 +138,13 @@ type errors_reason =
   (* The persistent client just subscribed to errors, so was sent the initial error list *)
   | New_subscription
 
-type response = LspFromServer of Lsp.lsp_message option
+type response =
+  | LspFromServer of Lsp.lsp_message option
+  | UncaughtException of {
+      request: request;
+      exception_constructor: string;
+      stack: string;
+    }
 
 type response_with_metadata = response * metadata
 
@@ -162,6 +170,12 @@ let string_of_response = function
   | LspFromServer None -> "lspFromServer None"
   | LspFromServer (Some msg) ->
     Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
+  | UncaughtException { request; exception_constructor; stack } ->
+    Printf.sprintf
+      "UncaughtException %s in handling `%s`: %s"
+      exception_constructor
+      (string_of_request request)
+      stack
 
 let string_of_message_from_server = function
   | RequestResponse (response, _) -> string_of_response response
