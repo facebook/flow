@@ -469,9 +469,7 @@ let live_non_parse_errors_override_finalized_errors ctxt =
   in
   let errors =
     LspErrors.empty
-    |> LspErrors.set_live_non_parse_errors_and_send
-         (assert_no_send ~reason)
-         (SMap.add path_to_foo [] SMap.empty)
+    |> LspErrors.set_live_non_parse_errors_and_send (assert_no_send ~reason) path_to_foo []
   in
   let reason =
     "Setting finalized server errors when there were no errors before should send all the "
@@ -490,7 +488,11 @@ let live_non_parse_errors_override_finalized_errors ctxt =
   let expected = [foo_infer_error_2] in
   let errors =
     with_assert_errors_match ~ctxt ~reason ~expected (fun send ->
-        errors |> LspErrors.set_live_non_parse_errors_and_send send (smap_of_error_list to_send))
+        errors
+        |> LspErrors.set_live_non_parse_errors_and_send
+             send
+             path_to_foo
+             (List.map mk_diagnostic to_send))
   in
   let reason =
     "Setting finalized server errors will still use the live errors for foo.js and the server "
@@ -534,7 +536,11 @@ let live_non_parse_errors_override_streamed_errors ctxt =
   let expected = [foo_parse_error_1; foo_infer_error_2] in
   let errors =
     with_assert_errors_match ~ctxt ~reason ~expected (fun send ->
-        errors |> LspErrors.set_live_non_parse_errors_and_send send (smap_of_error_list to_send))
+        errors
+        |> LspErrors.set_live_non_parse_errors_and_send
+             send
+             path_to_foo
+             (List.map mk_diagnostic to_send))
   in
   let reason = "Streaming in more non_parse errors for foo.js will not trigger a send" in
   let to_send = [foo_infer_error_1] in
@@ -575,7 +581,10 @@ let live_parse_errors_and_live_non_parse_errors ctxt =
   let errors =
     with_assert_errors_match ~ctxt ~reason ~expected (fun send ->
         LspErrors.empty
-        |> LspErrors.set_live_non_parse_errors_and_send send (smap_of_error_list to_send))
+        |> LspErrors.set_live_non_parse_errors_and_send
+             send
+             path_to_foo
+             (List.map mk_diagnostic to_send))
   in
   let reason =
     "Setting live parse errors for foo.js will add to the live non-parse errors and filter out "
@@ -604,7 +613,11 @@ let live_parse_errors_and_live_non_parse_errors ctxt =
   let expected = [foo_infer_error_2] in
   let errors =
     with_assert_errors_match ~ctxt ~reason ~expected (fun send ->
-        errors |> LspErrors.set_live_non_parse_errors_and_send send (smap_of_error_list to_send))
+        errors
+        |> LspErrors.set_live_non_parse_errors_and_send
+             send
+             path_to_foo
+             (List.map mk_diagnostic to_send))
   in
   let reason =
     "Setting live errors for foo.js with ONLY parse errors when there are 0 live parse errors "
@@ -614,7 +627,11 @@ let live_parse_errors_and_live_non_parse_errors ctxt =
   let expected = [mk_clear_error path_to_foo] in
   let errors =
     with_assert_errors_match ~ctxt ~reason ~expected (fun send ->
-        errors |> LspErrors.set_live_non_parse_errors_and_send send (smap_of_error_list to_send))
+        errors
+        |> LspErrors.set_live_non_parse_errors_and_send
+             send
+             path_to_foo
+             (List.map mk_diagnostic to_send))
   in
   let reason =
     "Setting live errors for foo.js with ONLY parse errors should NOT trigger a send if modulo "
@@ -625,7 +642,8 @@ let live_parse_errors_and_live_non_parse_errors ctxt =
     errors
     |> LspErrors.set_live_non_parse_errors_and_send
          (assert_no_send ~reason)
-         (smap_of_error_list to_send)
+         path_to_foo
+         (List.map mk_diagnostic to_send)
   in
   ignore errors
 
