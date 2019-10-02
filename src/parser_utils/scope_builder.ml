@@ -269,7 +269,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! catch_clause loc (clause : (L.t, L.t) Ast.Statement.Try.CatchClause.t') =
         Ast.Statement.Try.CatchClause.(
-          let { param; body = _ } = clause in
+          let { param; body = _; comments = _ } = clause in
           (* hoisting *)
           let lexical_bindings =
             match param with

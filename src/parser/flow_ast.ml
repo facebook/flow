@@ -432,6 +432,7 @@ and Statement : sig
       and ('M, 'T) t' = {
         param: ('M, 'T) Pattern.t option;
         body: 'M * ('M, 'T) Block.t;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end

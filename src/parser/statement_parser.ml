@@ -441,7 +441,9 @@ module Statement
             let catch =
               with_loc
                 (fun env ->
+                  let leading = Peek.comments env in
                   Expect.token env T_CATCH;
+                  let trailing = Peek.comments env in
                   let param =
                     if Peek.token env = T_LPAREN then (
                       Expect.token env T_LPAREN;
@@ -452,7 +454,11 @@ module Statement
                       None
                   in
                   let body = Parse.block_body env in
-                  { Ast.Statement.Try.CatchClause.param; body })
+                  {
+                    Ast.Statement.Try.CatchClause.param;
+                    body;
+                    comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                  })
                 env
             in
             Some catch
@@ -1080,12 +1086,12 @@ module Statement
         | T_VAR
         (* not using Peek.is_class here because it would guard all of the
       * cases *)
-        
+
         | T_AT
         | T_CLASS
         (* not using Peek.is_function here because it would guard all of the
       * cases *)
-        
+
         | T_ASYNC
         | T_FUNCTION
         | T_ENUM ->
@@ -1556,7 +1562,7 @@ module Statement
               | T_COMMA
               (* Importing the exported value named "type." This is not a type-import.
                * `import type from "ModuleName";` *)
-              
+
               | T_IDENTIFIER { raw = "from"; _ } ->
                 with_default ImportValue env
               | T_MULT ->

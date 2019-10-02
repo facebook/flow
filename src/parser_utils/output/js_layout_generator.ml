@@ -625,8 +625,9 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                pretty_space;
                block b;
                (match handler with
-               | Some (loc, { S.Try.CatchClause.param; body }) ->
+               | Some (loc, { S.Try.CatchClause.param; body; comments }) ->
                  source_location_with_comments
+                   ?comments
                    ( loc,
                      match param with
                      | Some p ->

@@ -178,10 +178,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method catch_clause (clause : ('M, 'T) Ast.Statement.Try.CatchClause.t')
         : ('N, 'U) Ast.Statement.Try.CatchClause.t' =
       Ast.Statement.Try.CatchClause.(
-        let { param; body } = clause in
+        let { param; body; comments } = clause in
         let param' = Option.map ~f:this#catch_clause_pattern param in
         let body' = (this#on_loc_annot * this#block) body in
-        { param = param'; body = body' })
+        let comments' = Option.map ~f:this#syntax comments in
+        { param = param'; body = body'; comments = comments' })
 
     method class_ (cls : ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
       Ast.Class.(

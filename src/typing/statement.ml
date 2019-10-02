@@ -644,7 +644,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           toplevels cx b.Block.body)
     in
     let catch_clause cx catch_clause =
-      let { Try.CatchClause.param; body = (b_loc, b) } = catch_clause in
+      let { Try.CatchClause.param; body = (b_loc, b); comments } = catch_clause in
       Ast.Pattern.(
         match param with
         | Some p ->
@@ -682,6 +682,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                           optional;
                         } );
                 body = (b_loc, { Block.body = stmts });
+                comments;
               },
               abnormal_opt )
           | (loc, Identifier _) ->
@@ -692,7 +693,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             (Tast_utils.error_mapper#catch_clause catch_clause, None))
         | None ->
           let (stmts, abnormal_opt) = Env.in_lex_scope cx (fun () -> check cx b) in
-          ({ Try.CatchClause.param = None; body = (b_loc, { Block.body = stmts }) }, abnormal_opt))
+          ( { Try.CatchClause.param = None; body = (b_loc, { Block.body = stmts }); comments },
+            abnormal_opt ))
     in
     function
     | (_, Empty) as stmt -> stmt

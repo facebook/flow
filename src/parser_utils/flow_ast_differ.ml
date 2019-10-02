@@ -812,11 +812,12 @@ let program
       (hand1 : (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t)
       (hand2 : (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t) =
     Ast.Statement.Try.CatchClause.(
-      let (_, { body = (_, block1); param = param1 }) = hand1 in
-      let (_, { body = (_, block2); param = param2 }) = hand2 in
+      let (old_loc, { body = (_, block1); param = param1; comments = comments1 }) = hand1 in
+      let (_new_loc, { body = (_, block2); param = param2; comments = comments2 }) = hand2 in
+      let comments = syntax_opt old_loc comments1 comments2 in
       let body_diff = diff_if_changed_ret_opt block block1 block2 in
       let param_diff = diff_if_changed_nonopt_fn pattern param1 param2 in
-      join_diff_list [body_diff; param_diff])
+      join_diff_list [comments; body_diff; param_diff])
   and class_ (class1 : (Loc.t, Loc.t) Ast.Class.t) (class2 : (Loc.t, Loc.t) Ast.Class.t) =
     Ast.Class.(
       let {

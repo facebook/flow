@@ -674,8 +674,8 @@ with type t = Impl.t = struct
         "SwitchCase"
         loc
         [("test", option expression test); ("consequent", array_of_list statement consequent)]
-    and catch (loc, { Statement.Try.CatchClause.param; body }) =
-      node "CatchClause" loc [("param", option pattern param); ("body", block body)]
+    and catch (loc, { Statement.Try.CatchClause.param; body; comments }) =
+      node ?comments "CatchClause" loc [("param", option pattern param); ("body", block body)]
     and block (loc, { Statement.Block.body }) =
       node "BlockStatement" loc [("body", statement_list body)]
     and declare_variable (loc, { Statement.DeclareVariable.id; annot }) =

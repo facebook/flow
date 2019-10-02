@@ -273,13 +273,14 @@ class ['loc] mapper =
 
     method catch_clause _loc (clause : ('loc, 'loc) Ast.Statement.Try.CatchClause.t') =
       Ast.Statement.Try.CatchClause.(
-        let { param; body } = clause in
+        let { param; body; comments } = clause in
         let param' = map_opt this#catch_clause_pattern param in
         let body' = this#catch_body body in
-        if param == param' && body == body' then
+        let comments' = this#syntax_opt comments in
+        if param == param' && body == body' && comments == comments' then
           clause
         else
-          { param = param'; body = body' })
+          { param = param'; body = body'; comments = comments' })
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       Ast.Class.(
