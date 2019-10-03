@@ -467,9 +467,10 @@ module Initialize = struct
     renameProvider: bool;
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
+    implementationProvider: bool;
+    (* Nuclide-specific features below *)
     typeCoverageProvider: bool;
-    (* Nuclide-specific feature *)
-    rageProvider: bool; (* omitted: experimental *)
+    rageProvider: bool;
   }
 
   and completionOptions = {

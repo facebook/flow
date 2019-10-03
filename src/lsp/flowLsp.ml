@@ -498,6 +498,7 @@ let do_initialize () : Initialize.result =
           renameProvider = true;
           documentLinkProvider = None;
           executeCommandProvider = None;
+          implementationProvider = false;
           typeCoverageProvider = true;
           rageProvider = true;
         };

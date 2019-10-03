@@ -288,6 +288,7 @@ module Initialize : sig
     renameProvider: bool;
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
+    implementationProvider: bool;
     typeCoverageProvider: bool;
     rageProvider: bool;
   }

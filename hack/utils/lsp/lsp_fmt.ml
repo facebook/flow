@@ -1139,6 +1139,8 @@ let print_initialize (r : Initialize.result) : json =
                 Option.map cap.executeCommandProvider ~f:(fun p ->
                     JSON_Object [("commands", Jprint.string_array p.commands)])
               );
+              ( "implementationProvider",
+                Some (JSON_Bool cap.implementationProvider) );
               ( "typeCoverageProvider",
                 Some (JSON_Bool cap.typeCoverageProvider) );
               ("rageProvider", Some (JSON_Bool cap.rageProvider));
