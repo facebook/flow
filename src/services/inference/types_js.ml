@@ -2904,3 +2904,5 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, first_internal_error))
 
 let debug_determine_what_to_recheck = Recheck.determine_what_to_recheck
+
+let debug_include_dependencies_and_dependents = include_dependencies_and_dependents

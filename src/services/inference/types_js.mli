@@ -83,7 +83,8 @@ val ensure_checked_dependencies :
   File_sig.With_Loc.t ->
   unit Lwt.t
 
-(* Exposed only for testing purposes. Not meant for general consumption. *)
+(* The following are exposed only for testing purposes. Not meant for general consumption. *)
+
 val debug_determine_what_to_recheck :
   profiling:Profiling_js.running ->
   options:Options.t ->
@@ -100,3 +101,13 @@ val debug_determine_what_to_recheck :
   unchanged_files_to_force:CheckedSet.t ->
   direct_dependent_files:FilenameSet.t ->
   (CheckedSet.t * File_key.t Nel.t list * FilenameSet.t * FilenameSet.t) Lwt.t
+
+val debug_include_dependencies_and_dependents :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  unchanged_checked:CheckedSet.t ->
+  input:CheckedSet.t ->
+  all_dependency_graph:FilenameSet.t FilenameMap.t ->
+  dependency_graph:FilenameSet.t FilenameMap.t ->
+  all_dependent_files:FilenameSet.t ->
+  (CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t

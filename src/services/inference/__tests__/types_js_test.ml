@@ -146,6 +146,41 @@ let determine_what_to_recheck ~profiling ~dependency_graph ~all_dependency_graph
     ~unchanged_files_to_force:CheckedSet.empty
     ~direct_dependent_files
 
+let include_dependencies_and_dependents
+    ~profiling
+    ~dependency_graph
+    ~all_dependency_graph
+    ~input_focused
+    ~input_dependents
+    ~input_dependencies =
+  let input =
+    CheckedSet.add
+      ~focused:(make_filename_set input_focused)
+      ~dependents:(make_filename_set input_dependents)
+      ~dependencies:(make_filename_set input_dependencies)
+      CheckedSet.empty
+  in
+  let changed_files = CheckedSet.focused input in
+  let dependency_graph = make_dependency_graph dependency_graph in
+  let all_dependency_graph = make_dependency_graph all_dependency_graph in
+  let checked_files = make_checked_files ~all_dependency_graph in
+  let unchanged_checked = make_unchanged_checked checked_files changed_files in
+  let options = make_options () in
+  let all_dependent_files =
+    Pure_dep_graph_operations.calc_all_dependents
+      ~dependency_graph
+      ~all_dependency_graph
+      changed_files
+  in
+  Types_js.debug_include_dependencies_and_dependents
+    ~options
+    ~profiling
+    ~unchanged_checked
+    ~input
+    ~all_dependency_graph
+    ~dependency_graph
+    ~all_dependent_files
+
 (* There is memory sampling embedded throughout the code under test. It polls the shared memory
  * system to get information about its usage. If the shared memory system is not initialized, we get
  * crashes, so we have to initialize it before running tests. *)
@@ -284,6 +319,53 @@ let tests =
                            (* See the comment in the long_chain_no_sig_dependencies test (above) for
                             * an explanation. *)
                            make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
+                         in
+                         assert_checked_sets_equal ~ctxt expected to_merge;
+                         Lwt.return_unit);
+              ];
+         "include_dependencies_and_dependents"
+         >::: [
+                "simple"
+                %>:: test_with_profiling (fun ctxt profiling ->
+                         let dependency_graph =
+                           [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
+                         in
+                         let all_dependency_graph =
+                           [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
+                         in
+                         let%lwt (to_merge, _components, _recheck_set) =
+                           include_dependencies_and_dependents
+                             ~profiling
+                             ~dependency_graph
+                             ~all_dependency_graph
+                             ~input_focused:["b"]
+                             ~input_dependents:[]
+                             ~input_dependencies:[]
+                         in
+                         let expected =
+                           make_checked_set ~focused:["b"] ~dependents:["a"] ~dependencies:[]
+                         in
+                         assert_checked_sets_equal ~ctxt expected to_merge;
+                         Lwt.return_unit);
+                "long_chain_no_sig_dependencies"
+                %>:: test_with_profiling (fun ctxt profiling ->
+                         let dependency_graph =
+                           [("a", []); ("b", []); ("c", []); ("d", []); ("e", [])]
+                         in
+                         let all_dependency_graph =
+                           [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
+                         in
+                         let%lwt (to_merge, _components, _recheck_set) =
+                           include_dependencies_and_dependents
+                             ~profiling
+                             ~dependency_graph
+                             ~all_dependency_graph
+                             ~input_focused:["a"]
+                             ~input_dependents:[]
+                             ~input_dependencies:[]
+                         in
+                         let expected =
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
                          in
                          assert_checked_sets_equal ~ctxt expected to_merge;
                          Lwt.return_unit);
