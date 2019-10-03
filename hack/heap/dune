@@ -9,6 +9,7 @@
     (:include config/c_flags.sexp)))
   (c_library_flags (:standard
     (:include config/c_library_flags.sexp)))
+  (preprocess (pps ppx_deriving.std visitors.ppx))
   (libraries
     utils_core))
 
@@ -29,6 +30,7 @@
     prefix
     sharedMem
     value)
+  (preprocess (pps ppx_deriving.std visitors.ppx))
   (libraries
     heap_libc
     logging_common
@@ -40,6 +42,7 @@
   (wrapped false)
   (modules
     workerCancel)
+  (preprocess (pps ppx_deriving.std visitors.ppx))
   (libraries
     heap_libc
     utils_core))
@@ -49,5 +52,6 @@
   (wrapped false)
   (modules
     globalStorage)
+  (preprocess (pps ppx_deriving.std visitors.ppx))
   (libraries
     heap_libc))
