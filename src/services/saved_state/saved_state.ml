@@ -51,7 +51,7 @@ type saved_state_data = {
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
-  node_modules_containers: SSet.t; (* TODO - Figure out what to do about module.resolver *)
+  node_modules_containers: SSet.t;
 }
 
 let modulename_map_fn ~f = function

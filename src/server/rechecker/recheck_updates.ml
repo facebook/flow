@@ -87,23 +87,6 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
       else
         Ok ()
         >>= fun () ->
-        Option.value_map
-          (Options.module_resolver options)
-          ~default:(Ok ())
-          ~f:(fun module_resolver ->
-            let str_module_resolver = Path.to_string module_resolver in
-            if (not skip_incompatible) && SSet.mem str_module_resolver updates then
-              Error
-                {
-                  msg =
-                    Printf.sprintf
-                      "Module resolver %s changed in an incompatible way. Exiting.\n%!"
-                      str_module_resolver;
-                  exit_status = FlowExitStatus.Server_out_of_date;
-                }
-            else
-              Ok ())
-        >>= fun () ->
         let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
         let is_changed_lib filename =
           let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in

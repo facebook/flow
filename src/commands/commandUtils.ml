@@ -1174,13 +1174,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       | timeout -> timeout)
       |> Option.map ~f:float_of_int
     in
-    let expand_project_root_token path root =
-      let str_root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
-      Path.to_string path
-      |> Str.split_delim Files.project_root_token
-      |> String.concat str_root
-      |> Path.make
-    in
     (* The CLI flag overrides the .flowconfig *)
     let opt_saved_state_fetcher =
       Option.value
@@ -1223,11 +1216,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_profile = options_flags.profile;
       opt_strip_root = options_flags.strip_root;
       opt_module = FlowConfig.module_system flowconfig;
-      opt_module_resolver =
-        Option.value_map
-          (FlowConfig.module_resolver flowconfig)
-          ~default:None
-          ~f:(fun module_resolver -> Some (expand_project_root_token module_resolver root));
       opt_munge_underscores =
         options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
       opt_temp_dir = temp_dir;

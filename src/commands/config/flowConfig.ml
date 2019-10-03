@@ -84,7 +84,6 @@ module Opts = struct
     merge_timeout: int option;
     module_file_exts: SSet.t;
     module_name_mappers: (Str.regexp * string) list;
-    module_resolver: Path.t option;
     module_resource_exts: SSet.t;
     module_system: Options.module_system;
     modules_are_use_strict: bool;
@@ -180,7 +179,6 @@ module Opts = struct
       merge_timeout = Some 100;
       module_file_exts;
       module_name_mappers = [];
-      module_resolver = None;
       module_resource_exts;
       module_system = Options.Node;
       modules_are_use_strict = false;
@@ -448,7 +446,6 @@ module Opts = struct
           (fun opts v ->
             let module_name_mappers = v :: opts.module_name_mappers in
             Ok { opts with module_name_mappers }) );
-      ("module.resolver", filepath (fun opts v -> Ok { opts with module_resolver = Some v }));
       ( "module.system",
         enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
             Ok { opts with module_system = v }) );
@@ -1156,8 +1153,6 @@ let merge_timeout c = c.options.Opts.merge_timeout
 let module_file_exts c = c.options.Opts.module_file_exts
 
 let module_name_mappers c = c.options.Opts.module_name_mappers
-
-let module_resolver c = c.options.Opts.module_resolver
 
 let module_resource_exts c = c.options.Opts.module_resource_exts
 
