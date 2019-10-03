@@ -309,7 +309,7 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         | Some { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
         | Some { client_type = Persistent { lsp_init_params }; _ } ->
           create_persistent_connection ~client_fd ~close ~lsp_init_params
-        | None -> Lwt.return_unit)
+        | None -> close_without_autostop ())
     with exn -> catch close_without_autostop exn
 
   (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
