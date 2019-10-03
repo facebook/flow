@@ -84,39 +84,38 @@ let make_dependency_graph lst =
     FilenameMap.empty
     lst
 
-let determine_what_to_recheck ~profiling ~dependency_graph ~all_dependency_graph ~freshparsed =
-  (* Get all the files from the all_dependency_graph and consider them focused *)
-  let checked_files =
-    let focused_set =
-      List.fold_left
-        (fun set (file, dependencies) ->
-          let file = make_fake_file_key file in
-          let dependencies = make_filename_set dependencies in
-          set |> FilenameSet.add file |> FilenameSet.union dependencies)
-        FilenameSet.empty
-        all_dependency_graph
-    in
-    CheckedSet.add ~focused:focused_set CheckedSet.empty
-  in
-  let dependency_graph = make_dependency_graph dependency_graph in
-  let all_dependency_graph = make_dependency_graph all_dependency_graph in
-  let freshparsed = freshparsed |> List.map make_fake_file_key |> FilenameSet.of_list in
+let make_unchanged_checked checked_files freshparsed =
+  CheckedSet.add
+    ~focused:(FilenameSet.diff (CheckedSet.all checked_files) freshparsed)
+    CheckedSet.empty
+
+let make_options () =
   let flowconfig = FlowConfig.empty_config in
   let root = Path.dummy_path in
-  let options =
-    CommandUtils.make_options
-      ~flowconfig_name:".flowconfig"
-      ~flowconfig
-      ~lazy_mode:None
-      ~root
-      dummy_options_flags
-  in
+  CommandUtils.make_options
+    ~flowconfig_name:".flowconfig"
+    ~flowconfig
+    ~lazy_mode:None
+    ~root
+    dummy_options_flags
+
+let prepare_freshparsed freshparsed =
+  freshparsed |> List.map make_fake_file_key |> FilenameSet.of_list
+
+let make_checked_files ~all_dependency_graph =
+  (* Get all the files from the all_dependency_graph and consider them focused *)
+  (* All files must be present as keys, even if they have no values. *)
+  let focused_set = all_dependency_graph |> FilenameMap.keys |> FilenameSet.of_list in
+  CheckedSet.add ~focused:focused_set CheckedSet.empty
+
+let determine_what_to_recheck ~profiling ~dependency_graph ~all_dependency_graph ~freshparsed =
+  let dependency_graph = make_dependency_graph dependency_graph in
+  let all_dependency_graph = make_dependency_graph all_dependency_graph in
+  let checked_files = make_checked_files ~all_dependency_graph in
+  let freshparsed = prepare_freshparsed freshparsed in
+  let options = make_options () in
   let is_file_checked _ = true in
-  let unchanged_checked =
-    CheckedSet.add
-      ~focused:(FilenameSet.diff (CheckedSet.all checked_files) freshparsed)
-      CheckedSet.empty
-  in
+  let unchanged_checked = make_unchanged_checked checked_files freshparsed in
   (* This approximates the behavior of Dep_service.calc_direct_dependents. As of October 2019, it
    * includes all direct dependents, not just sig direct dependents. If
    * Dep_service.calc_direct_dependents changes, this should change too so that these tests more
