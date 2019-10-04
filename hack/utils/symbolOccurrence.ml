@@ -17,6 +17,7 @@ type kind =
   | ClassConst of string * string
   | Typeconst of string * string
   | GConst
+  | Attribute
 
 type 'a t = {
   name: string;
@@ -38,6 +39,7 @@ let kind_to_string = function
   | ClassConst _ -> "member_const"
   | Typeconst _ -> "typeconst"
   | GConst -> "global_const"
+  | Attribute -> "attribute"
 
 let enclosing_class occurrence =
   match occurrence.type_ with

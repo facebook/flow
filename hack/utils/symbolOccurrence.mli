@@ -23,6 +23,7 @@ type kind =
   | ClassConst of string * string
   | Typeconst of string * string
   | GConst
+  | Attribute
 
 type 'a t = {
   name: string;
