@@ -379,6 +379,7 @@ let infer_type filename content line col =
           ~expand_aliases:false
           ~omit_targ_defaults:false
           ~typed_ast
+          ~evaluate_type_destructors:false
           loc
       in
       (match result with

@@ -44,14 +44,14 @@ type options = {
   (* Makes the normalizer more aggressive in preserving inferred literal types *)
   preserve_inferred_literal_types: bool;
   (* If this flag is set to `true` then the normalizer will attempt to reuse the
-     cached results of evaluated type-destructors. If this is set to `false`, then
-     instread it will try to use:
-      - a potentially attendant type-alias annotation, or
-      - reuse the utility type that corresponds to this the specific type-destructor.
-
-     Choosing 'false' will typically result in smaller produced types, which makes
-     it a more appropriate option for codemods.
-  *)
+   * cached results of evaluated type-destructors. If this is set to `false`, then
+   * instread it will try to use:
+   *  - a potentially attendant type-alias annotation, or
+   *  - reuse the utility type that corresponds to this the specific type-destructor.
+   *
+   * Choosing 'false' will typically result in smaller produced types, which makes
+   * it a more appropriate option for codemods.
+   *)
   evaluate_type_destructors: bool;
   (* Run an optimization pass that removes duplicates from unions and intersections.
    *

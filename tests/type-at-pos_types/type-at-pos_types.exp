@@ -2644,3 +2644,9 @@ tparam_defaults.js:25:7,25:12
 utility.js:3:6:
 type T<X> = $Shape<{f: X}>
 utility.js:3:6,3:6
+utility.js:7:13:
+$Diff<Props, DefaultProps>
+utility.js:7:13,7:16
+utility.js:7:13: (evaluate-type-destructors)
+{name: string}
+utility.js:7:13,7:16

@@ -87,6 +87,7 @@ module Request = struct
         verbose: Verbose.t option;
         expand_aliases: bool;
         omit_targ_defaults: bool;
+        evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
       }
     | INSERT_TYPE of {
@@ -159,6 +160,7 @@ module Request = struct
           verbose = _;
           expand_aliases = _;
           omit_targ_defaults = _;
+          evaluate_type_destructors = _;
           wait_for_recheck = _;
         } ->
       Printf.sprintf "type-at-pos %s:%d:%d" (File_input.filename_of_file_input input) line char

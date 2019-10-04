@@ -116,8 +116,8 @@ let infer_type
     ~(options : Options.t)
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
-    ((file_input, line, col, verbose, expand_aliases, omit_targ_defaults) :
-      File_input.t * int * int * Verbose.t option * bool * bool) :
+    ((file_input, line, col, verbose, expand_aliases, omit_targ_defaults, evaluate_type_destructors) :
+      File_input.t * int * int * Verbose.t option * bool * bool * bool) :
     ((Loc.t * Ty.t option, string) Core_result.t * Hh_json.json option) Lwt.t =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
@@ -133,6 +133,7 @@ let infer_type
             ~profiling
             ~expand_aliases
             ~omit_targ_defaults
+            ~evaluate_type_destructors
             file
             content
             line
@@ -579,13 +580,22 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
 let handle_infer_type
-    ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults ~profiling ~env =
+    ~options
+    ~input
+    ~line
+    ~char
+    ~verbose
+    ~expand_aliases
+    ~omit_targ_defaults
+    ~evaluate_type_destructors
+    ~profiling
+    ~env =
   let%lwt (result, json_data) =
     infer_type
       ~options
       ~env
       ~profiling
-      (input, line, char, verbose, expand_aliases, omit_targ_defaults)
+      (input, line, char, verbose, expand_aliases, omit_targ_defaults, evaluate_type_destructors)
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
@@ -772,11 +782,28 @@ let get_ephemeral_handler genv command =
     (* The user preference is to make this wait for up-to-date data *)
     Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~types_only ~outfile)
   | ServerProt.Request.INFER_TYPE
-      { input; line; char; verbose; expand_aliases; omit_targ_defaults; wait_for_recheck } ->
+      {
+        input;
+        line;
+        char;
+        verbose;
+        expand_aliases;
+        omit_targ_defaults;
+        evaluate_type_destructors;
+        wait_for_recheck;
+      } ->
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults)
+      (handle_infer_type
+         ~options
+         ~input
+         ~line
+         ~char
+         ~verbose
+         ~expand_aliases
+         ~omit_targ_defaults
+         ~evaluate_type_destructors)
   | ServerProt.Request.RAGE { files } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE
@@ -1203,7 +1230,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
     let verbose = None in
     (* if Some, would write to server logs *)
     let%lwt (result, extra_data) =
-      infer_type ~options ~env ~profiling (file, line, char, verbose, false, false)
+      infer_type ~options ~env ~profiling (file, line, char, verbose, false, false, false)
     in
     let metadata = with_data ~extra_data metadata in
     match result with

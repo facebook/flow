@@ -42,6 +42,10 @@ let spec =
              "--omit-typearg-defaults"
              no_arg
              ~doc:"Omit type arguments when defaults exist and match the provided type argument"
+        |> flag
+             "--evaluate-type-destructors"
+             no_arg
+             ~doc:"Use the result of type destructor evaluation if available"
         |> anon "args" (required (list_of string)));
   }
 
@@ -103,6 +107,7 @@ let main
     expanded
     expand_aliases
     omit_targ_defaults
+    evaluate_type_destructors
     args
     () =
   let json = json || pretty || expanded in
@@ -127,6 +132,7 @@ let main
         verbose;
         expand_aliases;
         omit_targ_defaults;
+        evaluate_type_destructors;
         wait_for_recheck;
       }
   in

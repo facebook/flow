@@ -11,6 +11,7 @@ val type_at_pos :
   profiling:Profiling_js.running ->
   expand_aliases:bool ->
   omit_targ_defaults:bool ->
+  evaluate_type_destructors:bool ->
   File_key.t ->
   string ->
   int ->

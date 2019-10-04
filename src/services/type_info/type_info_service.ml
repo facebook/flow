@@ -9,8 +9,17 @@ open Core_result
 
 let ( >|= ) = Lwt.( >|= )
 
-let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults file content line col
-    =
+let type_at_pos
+    ~options
+    ~env
+    ~profiling
+    ~expand_aliases
+    ~omit_targ_defaults
+    ~evaluate_type_destructors
+    file
+    content
+    line
+    col =
   Types_js.basic_check_contents ~options ~env ~profiling content file
   >|= function
   | Error str -> Error (str, None)
@@ -34,6 +43,7 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
             ~file_sig:(File_sig.abstractify_locs file_sig)
             ~expand_aliases
             ~omit_targ_defaults
+            ~evaluate_type_destructors
             ~typed_ast
             loc
         in

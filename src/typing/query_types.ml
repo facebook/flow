@@ -53,7 +53,15 @@ let type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme =
     let msg = Ty_normalizer.error_to_string err in
     FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
 
-let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_defaults ~typed_ast loc =
+let type_at_pos_type
+    ~full_cx
+    ~file
+    ~file_sig
+    ~expand_aliases
+    ~omit_targ_defaults
+    ~evaluate_type_destructors
+    ~typed_ast
+    loc =
   let options =
     {
       Ty_normalizer_env.fall_through_merged = false;
@@ -61,7 +69,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
       expand_type_aliases = expand_aliases;
       flag_shadowed_type_params = false;
       preserve_inferred_literal_types = false;
-      evaluate_type_destructors = false;
+      evaluate_type_destructors;
       optimize_types = true;
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
