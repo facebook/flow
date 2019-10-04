@@ -914,10 +914,12 @@ module Eat = struct
 end
 
 module Expect = struct
+  let error env t =
+    let expected = Token.explanation_of_token ~use_article:true t in
+    error_unexpected ~expected env
+
   let token env t =
-    ( if Peek.token env <> t then
-      let expected = Token.explanation_of_token ~use_article:true t in
-      error_unexpected ~expected env );
+    if Peek.token env <> t then error env t;
     Eat.token env
 
   let identifier env name =

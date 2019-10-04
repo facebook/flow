@@ -204,8 +204,8 @@ module Object
                     let params =
                       let (yield, await) =
                         match (async, generator) with
-                        | (true, true) -> (true, true)
-                        (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+                        | (true, true) ->
+                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
                         | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
                         | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
                         | (false, false) -> (false, false)
@@ -553,12 +553,16 @@ module Object
     fun env ->
       with_loc
         (fun env ->
-          Expect.token env T_LCURLY;
-          enter_class env;
-          let body = elements env false SMap.empty [] in
-          exit_class env;
-          Expect.token env T_RCURLY;
-          { Ast.Class.Body.body })
+          if Expect.maybe env T_LCURLY then (
+            enter_class env;
+            let body = elements env false SMap.empty [] in
+            exit_class env;
+            Expect.token env T_RCURLY;
+            { Ast.Class.Body.body }
+          ) else (
+            Expect.error env T_LCURLY;
+            { Ast.Class.Body.body = [] }
+          ))
         env
 
   (* In the ES6 draft, all elements are methods. No properties (though there
@@ -654,8 +658,8 @@ module Object
                     let params =
                       let (yield, await) =
                         match (async, generator) with
-                        | (true, true) -> (true, true)
-                        (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+                        | (true, true) ->
+                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
                         | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
                         | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
                         | (false, false) -> (false, false)
