@@ -23,11 +23,30 @@ type t = {
  *    my_fun e; (* If this code throws internally it will overwrite the global backtrace *)
  *    Exception.reraise e
  *)
+
 let wrap exn =
   let backtrace = Printexc.get_raw_backtrace () in
   { exn; backtrace }
 
+(* The inverse of `wrap`, returns the wrapped `exn`. You might use this to pattern
+   match on the raw exception or print it, but should not reraise it since it
+   will not include the correct backtrace; use `reraise` instead. *)
+let unwrap { exn; backtrace = _ } = exn
+
 let reraise { exn; backtrace } = Printexc.raise_with_backtrace exn backtrace
+
+(* Like `wrap`, but for the unusual case where you want to create an `Exception`
+   for an un-raised `exn`, capturing its stack trace. If you've caught an exception,
+   you should use `wrap` instead, since it already has a stack trace. *)
+let wrap_unraised ?(frames = 100) exn =
+  let frames =
+    if Printexc.backtrace_status () then
+      frames
+    else
+      0
+  in
+  let backtrace = Printexc.get_callstack frames in
+  { exn; backtrace }
 
 let get_ctor_string { exn; backtrace = _ } = Printexc.to_string exn
 

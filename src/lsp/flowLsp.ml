@@ -1549,24 +1549,20 @@ and main_loop flowconfig_name (client : Jsonrpc.queue) (state : state) : unit Lw
       Lwt.return_ok event
     with e ->
       let exn = Exception.wrap e in
-      let stack = Exception.get_backtrace_string exn in
-      Lwt.return_error (state, e, Utils.Callstack stack)
+      Lwt.return_error (state, exn)
   in
   let result =
     match event with
-    | Error (state, e, stack) -> Error (state, e, stack, None)
+    | Error (state, exn) -> Error (state, exn, None)
     | Ok event ->
       let (client_duration, result) =
         with_timer (fun () ->
             try main_handle_unsafe flowconfig_name state event
-            with e ->
-              let exn = Exception.wrap e in
-              let stack = Exception.get_backtrace_string exn in
-              Error (state, e, Utils.Callstack stack))
+            with e -> Error (state, Exception.wrap e))
       in
       (match result with
       | Ok (state, logneeded) -> Ok (state, logneeded, client_duration)
-      | Error (state, e, stack) -> Error (state, e, stack, Some event))
+      | Error (state, exn) -> Error (state, exn, Some event))
   in
   let state =
     match result with
@@ -1582,12 +1578,12 @@ and main_loop flowconfig_name (client : Jsonrpc.queue) (state : state) : unit Lw
         main_log_command state metadata;
         state)
     | Ok (state, _, _) -> state
-    | Error (state, e, stack, event) -> main_handle_error e stack state event
+    | Error (state, exn, event) -> main_handle_error exn state event
   in
   main_loop flowconfig_name client state
 
 and main_handle_unsafe flowconfig_name (state : state) (event : event) :
-    (state * log_needed, state * exn * Utils.callstack) result =
+    (state * log_needed, state * Exception.t) result =
   match (state, event) with
   | ( Pre_init i_connect_params,
       Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata) ) ->
@@ -1774,8 +1770,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let method_ = Lsp_fmt.denorm_message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
     Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Errored state);
-    let stack = Exception.get_current_callstack_string 100 in
-    Error (state, e, Utils.Callstack stack)
+    Error (state, Exception.wrap_unraised e)
   | (Post_shutdown, Client_message (_, _metadata)) ->
     raise (Error.RequestCancelled "Server shutting down")
   | (Connected cenv, Server_message LspProt.(NotificationFromServer (ServerExit exit_code))) ->
@@ -2033,10 +2028,10 @@ and main_log_error ~(expected : bool) (msg : string) (stack : string) (event : e
   | true -> FlowEventLogger.persistent_expected_error ~request ~client_context ~error
   | false -> FlowEventLogger.persistent_unexpected_error ~request ~client_context ~error
 
-and main_handle_error (e : exn) (Utils.Callstack stack) (state : state) (event : event option) :
-    state =
+and main_handle_error (exn : Exception.t) (state : state) (event : event option) : state =
   Marshal_tools.(
-    match e with
+    let stack = Exception.get_backtrace_string exn in
+    match Exception.unwrap exn with
     | Server_fatal_connection_exception _edata when state = Post_shutdown -> state
     | Server_fatal_connection_exception edata ->
       (* log the error *)
