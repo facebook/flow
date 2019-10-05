@@ -64,7 +64,6 @@ let load_lib_files ~sig_cx ~options ~reader files =
          (fun (exclude_syms, results) file ->
            let lib_file = File_key.LibFile file in
            let lint_severities = options.Options.opt_lint_severities in
-           let file_options = Options.file_options options in
            let%lwt result = parse_lib_file ~reader options file in
            Lwt.return
              (match result with
@@ -95,7 +94,6 @@ let load_lib_files ~sig_cx ~options ~reader files =
                    ast
                    ~exclude_syms
                    ~lint_severities
-                   ~file_options:(Some file_options)
                    ~file_sig
                in
                let errors = Context.errors cx in

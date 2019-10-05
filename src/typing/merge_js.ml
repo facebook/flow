@@ -347,7 +347,6 @@ let detect_non_voidable_properties cx =
 let merge_component
     ~metadata
     ~lint_severities
-    ~file_options
     ~strict_mode
     ~file_sigs
     ~get_ast_unsafe
@@ -416,7 +415,6 @@ let merge_component
             comments
             ast
             ~lint_severities
-            ~file_options
             ~file_sig
         in
         (cx :: cxs, tast :: tasts, FilenameMap.add filename cx impl_cxs))

@@ -26,7 +26,6 @@ end
 val merge_component :
   metadata:Context.metadata ->
   lint_severities:Severity.severity LintSettings.t ->
-  file_options:Files.options option ->
   strict_mode:StrictModeSettings.t ->
   file_sigs:File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   get_ast_unsafe:(File_key.t -> get_ast_return) ->

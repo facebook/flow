@@ -125,7 +125,6 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~reader component required in
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
-  let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
@@ -134,7 +133,6 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
     Merge_js.merge_component
       ~metadata
       ~lint_severities
-      ~file_options
       ~strict_mode
       ~file_sigs
       ~phase
@@ -221,7 +219,6 @@ let merge_contents_context ~reader options file ast info file_sig =
   in
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
-  let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
@@ -230,7 +227,6 @@ let merge_contents_context ~reader options file ast info file_sig =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
-      ~file_options
       ~strict_mode
       ~file_sigs
       ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))

@@ -333,23 +333,9 @@ let scan_for_lint_suppressions =
     Context.add_severity_cover cx (Context.file cx) severity_cover;
     Context.add_lint_suppressions cx suppression_locs
 
-let scan_for_suppressions cx lint_severities file_options comments =
-  let filename = File_key.to_string (Context.file cx) in
-  let declaration =
-    match file_options with
-    | Some file_options -> Files.is_declaration file_options filename
-    | None -> false
-  in
-  if declaration then
-    (* Declaration mode.
-     * We don't report any warnings or errors. *)
-    Context.remove_all_errors cx
-  else
-    (* Scan comments for line suppressions. *)
-    scan_for_error_suppressions cx comments;
-  scan_for_lint_suppressions cx lint_severities comments;
-
-  ()
+let scan_for_suppressions cx lint_severities comments =
+  scan_for_error_suppressions cx comments;
+  scan_for_lint_suppressions cx lint_severities comments
 
 let add_require_tvars =
   let add cx desc loc =
@@ -385,7 +371,7 @@ let add_require_tvars =
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc_ast =
+let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   assert (Context.is_checked cx);
 
   Flow_js.Cache.clear ();
@@ -432,7 +418,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
   (* infer *)
   Flow_js.flow_t cx (init_exports, local_exports_var);
   let typed_statements = infer_core cx aloc_statements in
-  scan_for_suppressions cx lint_severities file_options comments;
+  scan_for_suppressions cx lint_severities comments;
 
   let module_t = Import_export.mk_module_t cx reason in
   Context.add_module cx module_ref module_t;
@@ -471,7 +457,7 @@ let with_libdef_builtins cx f =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast =
+let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_, _, comments) = ast in
   let (_, aloc_statements, _) = aloc_ast in
@@ -487,7 +473,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast
 
   with_libdef_builtins cx (fun () ->
       ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
-      scan_for_suppressions cx lint_severities file_options comments);
+      scan_for_suppressions cx lint_severities comments);
 
   ( module_scope
   |> Scope.(
