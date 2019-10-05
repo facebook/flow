@@ -86,6 +86,10 @@ val strip_both_ns : string -> string
 val strip_all_ns : string -> string
 
 val add_ns : string -> string
+(** A\B\C -> \A\B\C *)
+
+val add_xhp_ns : string -> string
+(** A:B:C -> :A:B:C *)
 
 val split_ns_from_name : string -> string * string
 
