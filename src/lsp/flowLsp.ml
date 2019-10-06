@@ -1547,40 +1547,35 @@ and main_loop flowconfig_name (client : Jsonrpc.queue) (state : state) : unit Lw
     try%lwt
       let%lwt event = get_next_event state client (parse_json state) in
       Lwt.return_ok event
-    with e ->
-      let exn = Exception.wrap e in
-      Lwt.return_error (state, exn)
-  in
-  let result =
-    match event with
-    | Error (state, exn) -> Error (state, exn, None)
-    | Ok event ->
-      let (client_duration, result) =
-        with_timer (fun () ->
-            try main_handle_unsafe flowconfig_name state event
-            with e -> Error (state, Exception.wrap e))
-      in
-      (match result with
-      | Ok (state, logneeded) -> Ok (state, logneeded, client_duration)
-      | Error (state, exn) -> Error (state, exn, Some event))
+    with e -> Lwt.return_error (Exception.wrap e)
   in
   let state =
-    match result with
-    | Ok (state, LogNeeded metadata, client_duration) ->
-      LspProt.(
-        let client_duration =
-          if metadata.client_duration = None then
-            Some client_duration
-          else
-            metadata.client_duration
-        in
-        let metadata = { metadata with client_duration } in
-        main_log_command state metadata;
-        state)
-    | Ok (state, _, _) -> state
-    | Error (state, exn, event) -> main_handle_error exn state event
+    match event with
+    | Ok event -> main_handle flowconfig_name state event
+    | Error exn -> main_handle_error exn state None
   in
   main_loop flowconfig_name client state
+
+and main_handle flowconfig_name (state : state) (event : event) : state =
+  let (client_duration, result) =
+    with_timer (fun () ->
+        try main_handle_unsafe flowconfig_name state event
+        with e -> Error (state, Exception.wrap e))
+  in
+  match result with
+  | Ok (state, LogNeeded metadata) ->
+    let open LspProt in
+    let client_duration =
+      if metadata.client_duration = None then
+        Some client_duration
+      else
+        metadata.client_duration
+    in
+    let metadata = { metadata with client_duration } in
+    main_log_command state metadata;
+    state
+  | Ok (state, _) -> state
+  | Error (state, exn) -> main_handle_error exn state (Some event)
 
 and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (state * log_needed, state * Exception.t) result =
