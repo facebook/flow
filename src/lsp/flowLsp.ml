@@ -1291,6 +1291,15 @@ let log_interaction ~ux state id =
   let end_state = collect_interaction_state state in
   LspInteraction.log ~end_state ~ux ~id
 
+let group_errors_by_uri ~default_uri ~errors ~warnings =
+  let add severity error acc =
+    let (uri, diagnostic) = error_to_lsp ~severity:(Some severity) ~default_uri error in
+    SMap.add ~combine:List.append uri [diagnostic] acc
+  in
+  SMap.empty
+  |> Errors.ConcreteLocPrintableErrorSet.fold (add PublishDiagnostics.Error) errors
+  |> Errors.ConcreteLocPrintableErrorSet.fold (add PublishDiagnostics.Warning) warnings
+
 let do_live_diagnostics
     flowconfig_name
     (state : state)
@@ -1300,6 +1309,16 @@ let do_live_diagnostics
   (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
    * diagnostics and want to log what triggered it regardless of whether it's known or not *)
   let trigger = Option.value trigger ~default:LspInteraction.UnknownTrigger in
+  let () =
+    (* Only ask the server for live errors if we're connected *)
+    match state with
+    | Connected cenv ->
+      let metadata =
+        { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
+      in
+      send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata
+    | _ -> ()
+  in
   let interaction_id = start_interaction ~trigger state in
   (* reparse the file and write it into the state's editor_open_files as needed *)
   let (state, (_, live_parse_errors)) = parse_and_cache flowconfig_name state uri in
@@ -1704,31 +1723,27 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)
   | (Connected cenv, Client_message (c, metadata)) ->
-    let trigger = LspInteraction.trigger_of_lsp_msg c in
-    let interaction_tracking_id =
-      Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state)
-    in
     (* We'll track what's being sent to the server. This might involve some client *)
     (* computation work, which we'll profile, and send it over in metadata. *)
     (* Note: in the case where c is a cancel-notification for a request that *)
     (* was already handled in lspCommand like ShutdownRequest or DocSymbolsRequest *)
     (* we'll still forward it; that's okay since server already has to be *)
     (* hardened against unrecognized ids in cancel requests. *)
-    let (client_duration, state) =
-      with_timer (fun () ->
-          let (state, { changed_live_uri }) = track_to_server state c in
-          let state =
-            Option.value_map
-              changed_live_uri
-              ~default:state
-              ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
-          in
-          state)
+    let (state, { changed_live_uri }) = track_to_server state c in
+    let trigger = LspInteraction.trigger_of_lsp_msg c in
+    (* Forward the message to the server immediately *)
+    let () =
+      let interaction_tracking_id =
+        Option.map trigger ~f:(fun trigger -> start_interaction ~trigger state)
+      in
+      send_lsp_to_server cenv { metadata with LspProt.interaction_tracking_id } c
     in
-    let metadata =
-      { metadata with LspProt.client_duration = Some client_duration; interaction_tracking_id }
+    let state =
+      Option.value_map
+        changed_live_uri
+        ~default:state
+        ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
     in
-    send_lsp_to_server cenv metadata c;
     Ok (state, LogDeferred)
   | (_, Client_message (RequestMessage (id, RageRequest), metadata)) ->
     (* How to handle a rage request? If we're connected to a server, then the *)
@@ -1844,7 +1859,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
                 data = None;
               }
           in
-          ResponseMessage (id, ErrorResult (e, stack))
+          Some (ResponseMessage (id, ErrorResult (e, stack)))
         | Subscribe
         | LspToServer _ ->
           (* We'll just send a telemetry notification, since the client wasn't expecting a response *)
@@ -1855,11 +1870,18 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
               Lsp.Error.Code.unknownErrorCode
               stack
           in
-          NotificationMessage
-            (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message = text }))
+          Some
+            (NotificationMessage
+               (TelemetryNotification
+                  { LogMessage.type_ = MessageType.ErrorMessage; message = text }))
+        | LiveErrorsRequest _ ->
+          (* LiveErrorsRequest are internal-only requests. If it fails we will log, but we don't
+           * need to notify the client *)
+          None)
     in
-    let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
-    to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
+    Option.iter outgoing ~f:(fun outgoing ->
+        let outgoing = selectively_omit_errors LspProt.(metadata.lsp_method_name) outgoing in
+        to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing));
     Option.iter
       metadata.LspProt.interaction_tracking_id
       ~f:(log_interaction ~ux:LspInteraction.Errored state);
@@ -1880,18 +1902,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (* I hope that flow won't produce errors with an empty path. But such errors are *)
     (* fatal to Nuclide, so if it does, then we'll at least use a fall-back path.    *)
     let default_uri = cenv.c_ienv.i_root |> Path.to_string |> File_url.create in
-    (* 'all' is an SMap from uri to diagnostic list, and 'add' appends the error within the map *)
-    let add severity error all =
-      let (uri, diagnostic) = error_to_lsp ~severity ~default_uri error in
-      SMap.add ~combine:List.append uri [diagnostic] all
-    in
     (* First construct an SMap from uri to diagnostic list, which gathers together *)
     (* all the errors and warnings per uri *)
-    let all =
-      SMap.empty
-      |> Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Error)) errors
-      |> Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings
-    in
+    let all = group_errors_by_uri ~default_uri ~errors ~warnings in
     let () =
       let end_state = collect_interaction_state state in
       LspInteraction.log_pushed_errors ~end_state ~errors_reason
@@ -1904,6 +1917,85 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
            else
              LspErrors.set_finalized_server_errors_and_send to_stdout all )
     in
+    Ok (state, LogNotNeeded)
+  | ( Connected _,
+      Server_message
+        LspProt.(
+          RequestResponse
+            ( LiveErrorsResponse
+                (Ok { live_errors = errors; live_warnings = warnings; live_errors_uri = uri }),
+              metadata )) ) ->
+    let file_is_still_open =
+      get_open_files state |> Option.value_map ~default:false ~f:(SMap.mem uri)
+    in
+    let state =
+      if file_is_still_open then (
+        (* Only set the live non-parse errors if the file is still open. If it's been closed since
+         * the request was sent, then we will just ignore the response *)
+        let all = group_errors_by_uri ~default_uri:uri ~errors ~warnings in
+        let errors_for_uri = SMap.get uri all |> Option.value ~default:[] in
+        Option.iter
+          metadata.LspProt.interaction_tracking_id
+          ~f:(log_interaction ~ux:LspInteraction.PushedLiveNonParseErrors state);
+        FlowEventLogger.live_non_parse_errors
+          ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
+          ~data:
+            Hh_json.(
+              JSON_Object
+                [
+                  ("uri", JSON_String uri);
+                  ("error_count", JSON_Number (List.length errors_for_uri |> string_of_int));
+                ]
+              |> json_to_string)
+          ~wall_start:metadata.LspProt.start_wall_time;
+
+        update_errors
+          (LspErrors.set_live_non_parse_errors_and_send to_stdout uri errors_for_uri)
+          state
+      ) else (
+        Option.iter
+          metadata.LspProt.interaction_tracking_id
+          ~f:(log_interaction ~ux:LspInteraction.ErroredPushingLiveNonParseErrors state);
+        FlowEventLogger.live_non_parse_errors_failed
+          ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
+          ~data:
+            Hh_json.(
+              JSON_Object [("uri", JSON_String uri); ("reason", JSON_String "File no longer open")]
+              |> json_to_string)
+          ~wall_start:metadata.LspProt.start_wall_time;
+        state
+      )
+    in
+    Ok (state, LogNotNeeded)
+  | ( Connected _,
+      Server_message
+        LspProt.(
+          RequestResponse
+            ( LiveErrorsResponse
+                (Error
+                  {
+                    LspProt.live_errors_failure_kind;
+                    live_errors_failure_reason;
+                    live_errors_failure_uri;
+                  }),
+              metadata )) ) ->
+    let ux =
+      match live_errors_failure_kind with
+      | LspProt.Canceled_error_response -> LspInteraction.CanceledPushingLiveNonParseErrors
+      | LspProt.Errored_error_response -> LspInteraction.ErroredPushingLiveNonParseErrors
+    in
+    Option.iter metadata.LspProt.interaction_tracking_id ~f:(log_interaction ~ux state);
+    FlowEventLogger.live_non_parse_errors_failed
+      ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
+      ~data:
+        Hh_json.(
+          JSON_Object
+            [
+              ("uri", JSON_String live_errors_failure_uri);
+              ("reason", JSON_String live_errors_failure_reason);
+            ]
+          |> json_to_string)
+      ~wall_start:metadata.LspProt.start_wall_time;
     Ok (state, LogNotNeeded)
   | (Connected cenv, Server_message LspProt.(NotificationFromServer StartRecheck)) ->
     let start_state = collect_interaction_state state in
