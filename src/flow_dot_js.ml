@@ -116,7 +116,6 @@ let load_lib_files
                  ~exclude_syms
                  ~file_sig:(File_sig.abstractify_locs file_sig)
                  ~lint_severities:LintSettings.empty_severities
-                 ~file_options:None
              in
              Context.merge_into (Context.sig_cx master_cx) sig_cx;
 
@@ -268,7 +267,6 @@ let infer_and_merge ~root filename ast file_sig =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
-      ~file_options:None
       ~strict_mode
       ~file_sigs
       ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
