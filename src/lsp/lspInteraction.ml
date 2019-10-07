@@ -42,9 +42,12 @@ type source =
 (* What was the result of this interaction. *)
 type ux =
   | Canceled
+  | CanceledPushingLiveNonParseErrors
   | Errored
+  | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveNonParseErrors
   | PushedLiveParseErrors
   | Responded
   | Timeout
@@ -95,9 +98,12 @@ let string_of_trigger = function
 
 let string_of_ux = function
   | Canceled -> "Canceled"
+  | CanceledPushingLiveNonParseErrors -> "CanceledPushingLiveNonParseErrors"
   | Errored -> "Errored"
+  | ErroredPushingLiveNonParseErrors -> "ErroredPushingLiveNonParseErrors"
   | ErroredPushingLiveParseErrors -> "ErroredPushingLiveParseErrors"
   | PushedErrors -> "PushedErrors"
+  | PushedLiveNonParseErrors -> "PushedLiveNonParseErrors"
   | PushedLiveParseErrors -> "PushedLiveParseErrors"
   | Responded -> "Responded"
   | Timeout -> "Timeout"

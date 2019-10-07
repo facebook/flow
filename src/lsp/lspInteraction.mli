@@ -30,9 +30,12 @@ type trigger =
 
 type ux =
   | Canceled
+  | CanceledPushingLiveNonParseErrors
   | Errored
+  | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveNonParseErrors
   | PushedLiveParseErrors
   | Responded
   | Timeout
