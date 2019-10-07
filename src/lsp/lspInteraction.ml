@@ -30,6 +30,7 @@ type trigger =
   | PushedErrorsRecheckStreaming of recheck_reason
   | Rage
   | Rename
+  | ServerConnected
   | TypeCoverage
   | UnknownTrigger
 
@@ -93,6 +94,7 @@ let string_of_trigger = function
   | PushedErrorsNewSubscription -> "newSubscription"
   | Rage -> "Rage"
   | Rename -> "Rename"
+  | ServerConnected -> "ServerConnected"
   | TypeCoverage -> "TypeCoverage"
   | UnknownTrigger -> "UnknownTrigger"
 
@@ -138,7 +140,8 @@ let source_of_trigger = function
   | PushedErrorsEndOfRecheck _
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
-  | PushedErrorsRecheckStreaming _ ->
+  | PushedErrorsRecheckStreaming _
+  | ServerConnected ->
     Server
   | UnknownTrigger -> UnknownSource
 

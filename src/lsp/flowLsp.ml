@@ -604,186 +604,6 @@ let show_disconnected
           env.d_ienv;
     }
 
-let try_connect flowconfig_name (env : disconnected_env) : state =
-  (* If the version in .flowconfig has changed under our feet then we mustn't *)
-  (* connect. We'll terminate and trust the editor to relaunch an ok version. *)
-  let current_version = get_current_version flowconfig_name env.d_ienv.i_root in
-  if env.d_ienv.i_version <> current_version then (
-    let prev_version_str = Option.value env.d_ienv.i_version ~default:"[None]" in
-    let current_version_str = Option.value current_version ~default:"[None]" in
-    let message =
-      "\nVersion in flowconfig that spawned the existing flow server: "
-      ^ prev_version_str
-      ^ "\nVersion in flowconfig currently: "
-      ^ current_version_str
-      ^ "\n"
-    in
-    Lsp_helpers.telemetry_log to_stdout message;
-    lsp_exit_bad ()
-  );
-  let start_env =
-    let connect_params =
-      (* If the .flowconfig has explicitly set lazy_mode, then we don't want to override that if we
-       * start a new server *)
-      if is_lazy_mode_set_in_flowconfig flowconfig_name env.d_ienv.i_root then
-        { env.d_ienv.i_connect_params with lazy_mode = None }
-      else
-        env.d_ienv.i_connect_params
-    in
-    CommandUtils.make_env flowconfig_name connect_params env.d_ienv.i_root
-  in
-  let client_handshake =
-    SocketHandshake.
-      ( {
-          client_build_id = build_revision;
-          client_version = Flow_version.version;
-          is_stop_request = false;
-          server_should_hangup_if_still_initializing = true;
-          (* only exit if we'll restart it *)
-          version_mismatch_strategy =
-            ( if env.d_autostart then
-              Stop_server_if_older
-            else
-              SocketHandshake.Error_client );
-        },
-        { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } } )
-  in
-  let conn =
-    CommandConnectSimple.connect_once
-      ~flowconfig_name
-      ~client_handshake
-      ~tmp_dir:start_env.CommandConnect.tmp_dir
-      start_env.CommandConnect.root
-  in
-  match conn with
-  | Ok (ic, oc) ->
-    let i_server_id = env.d_ienv.i_server_id + 1 in
-    let new_env =
-      {
-        c_ienv = { env.d_ienv with i_server_id };
-        c_conn = { ic; oc };
-        c_server_status = (ServerStatus.initial_status, None);
-        c_about_to_exit_code = None;
-        c_is_rechecking = false;
-        c_lazy_stats = None;
-        c_outstanding_requests_to_server = Lsp.IdSet.empty;
-        c_recent_summaries = [];
-      }
-    in
-    (* send the initial messages to the server *)
-    let () =
-      let metadata =
-        let method_name = "synthetic/subscribe" in
-        Hh_json.
-          {
-            LspProt.empty_metadata with
-            LspProt.start_wall_time = Unix.gettimeofday ();
-            start_server_status = Some (fst new_env.c_server_status);
-            start_watcher_status = snd new_env.c_server_status;
-            start_json_truncated = JSON_Object [("method", JSON_String method_name)];
-            lsp_method_name = method_name;
-          }
-      in
-      send_to_server new_env LspProt.Subscribe metadata
-    in
-    let make_open_message (textDocument : TextDocumentItem.t) : lsp_message =
-      NotificationMessage (DidOpenNotification { DidOpen.textDocument })
-    in
-    let open_messages =
-      env.d_ienv.i_open_files
-      |> SMap.bindings
-      |> List.map ~f:(fun (_, { o_open_doc; _ }) -> make_open_message o_open_doc)
-    in
-    Hh_json.(
-      let method_name = "synthetic/open" in
-      let metadata =
-        {
-          LspProt.empty_metadata with
-          LspProt.start_wall_time = Unix.gettimeofday ();
-          start_server_status = Some (fst new_env.c_server_status);
-          start_watcher_status = snd new_env.c_server_status;
-          start_json_truncated = JSON_Object [("method", JSON_String method_name)];
-          lsp_method_name = method_name;
-        }
-      in
-      List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
-
-      (* close the old UI and bring up the new *)
-      let new_state = show_connected new_env in
-      new_state)
-  (* Server_missing means the lock file is absent, because the server isn't running *)
-  | Error (CommandConnectSimple.Server_missing as reason) ->
-    let new_env = { env with d_autostart = false; d_server_status = None } in
-    if env.d_autostart then
-      let start_result = CommandConnect.start_flow_server start_env in
-      match start_result with
-      | Ok () -> show_connecting reason new_env
-      | Error (msg, code) -> show_disconnected (Some code) (Some msg) new_env
-    else
-      show_disconnected None None new_env
-  (* Server_socket_missing means the server is present but lacks its sock *)
-  (* file. There's a tiny race possibility that the server has created a  *)
-  (* lock but not yet created a sock file. More likely is that the server *)
-  (* is an old version of the server which doesn't even create the right  *)
-  (* sock file. We'll kill the server now so we can start a new one next. *)
-  (* And if it was in that race? bad luck... *)
-  | Error (CommandConnectSimple.Server_socket_missing as reason) ->
-    begin
-      try
-        let tmp_dir = start_env.CommandConnect.tmp_dir in
-        let root = start_env.CommandConnect.root in
-        CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
-        show_connecting reason { env with d_server_status = None }
-      with CommandMeanKill.FailedToKill _ ->
-        let msg = "An old version of the Flow server is running. Please stop it." in
-        show_disconnected None (Some msg) { env with d_server_status = None }
-    end
-  (* The server exited due to a version mismatch between the lsp and the server. *)
-  | Error (CommandConnectSimple.(Build_id_mismatch Server_exited) as reason) ->
-    if env.d_autostart then
-      show_connecting reason { env with d_server_status = None }
-    else
-      (* We shouldn't hit this case. When `env.d_autostart` is `false`, we ask the server NOT to
-       * die on a version mismatch. *)
-      let msg = "Flow: the server was the wrong version" in
-      show_disconnected None (Some msg) { env with d_server_status = None }
-  (* The server and the lsp are different binaries and can't talk to each other. The server is not
-   * stopping (either because we asked it not to stop or because it is newer than this client). In
-   * this case, our best option is to stop the lsp and let the IDE start a new lsp with a newer
-   * binary *)
-  | Error CommandConnectSimple.(Build_id_mismatch (Client_should_error { server_version; _ })) ->
-    (match Semver.compare server_version Flow_version.version with
-    | n when n < 0 ->
-      Printf.eprintf
-        "Flow: the running server is an older version of Flow (%s) than the LSP (%s), but we're not allowed to stop it"
-        server_version
-        Flow_version.version
-    | 0 ->
-      Printf.eprintf
-        "Flow: the running server is a different binary with the same version (%s)"
-        Flow_version.version
-    | _ ->
-      Printf.eprintf
-        "Flow: the running server is a newer version of Flow (%s) than the LSP (%s)"
-        server_version
-        Flow_version.version);
-    Printf.eprintf
-      "LSP is exiting. Hopefully the IDE will start an LSP with the same binary as the server";
-    lsp_exit_bad ()
-  (* While the server is busy initializing, sometimes we get Server_busy.Fail_on_init *)
-  (* with a server-status telling us how far it is through init. And sometimes we get *)
-  (* just ServerStatus.Not_responding if the server was just too busy to give us a    *)
-  (* status update. These are cases where the right version of the server is running  *)
-  (* but it's not speaking to us just now. So we'll keep trying until it's ready.     *)
-  | Error (CommandConnectSimple.Server_busy (CommandConnectSimple.Fail_on_init st) as reason) ->
-    show_connecting reason { env with d_server_status = Some st }
-  (* The following codes mean the right version of the server is running so   *)
-  (* we'll retry. They provide no information about the d_server_status of    *)
-  (* the server, so we'll leave it as it was before.                          *)
-  | Error (CommandConnectSimple.Server_busy CommandConnectSimple.Not_responding as reason)
-  | Error (CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients as reason) ->
-    show_connecting reason env
-
 let close_conn (env : connected_env) : unit =
   try Timeout.shutdown_connection env.c_conn.ic
   with _ ->
@@ -1507,6 +1327,196 @@ let do_live_diagnostics
     ~wall_start:metadata.LspProt.start_wall_time;
 
   state
+
+let try_connect flowconfig_name (env : disconnected_env) : state =
+  (* If the version in .flowconfig has changed under our feet then we mustn't *)
+  (* connect. We'll terminate and trust the editor to relaunch an ok version. *)
+  let current_version = get_current_version flowconfig_name env.d_ienv.i_root in
+  if env.d_ienv.i_version <> current_version then (
+    let prev_version_str = Option.value env.d_ienv.i_version ~default:"[None]" in
+    let current_version_str = Option.value current_version ~default:"[None]" in
+    let message =
+      "\nVersion in flowconfig that spawned the existing flow server: "
+      ^ prev_version_str
+      ^ "\nVersion in flowconfig currently: "
+      ^ current_version_str
+      ^ "\n"
+    in
+    Lsp_helpers.telemetry_log to_stdout message;
+    lsp_exit_bad ()
+  );
+  let start_env =
+    let connect_params =
+      (* If the .flowconfig has explicitly set lazy_mode, then we don't want to override that if we
+       * start a new server *)
+      if is_lazy_mode_set_in_flowconfig flowconfig_name env.d_ienv.i_root then
+        { env.d_ienv.i_connect_params with lazy_mode = None }
+      else
+        env.d_ienv.i_connect_params
+    in
+    CommandUtils.make_env flowconfig_name connect_params env.d_ienv.i_root
+  in
+  let client_handshake =
+    SocketHandshake.
+      ( {
+          client_build_id = build_revision;
+          client_version = Flow_version.version;
+          is_stop_request = false;
+          server_should_hangup_if_still_initializing = true;
+          (* only exit if we'll restart it *)
+          version_mismatch_strategy =
+            ( if env.d_autostart then
+              Stop_server_if_older
+            else
+              SocketHandshake.Error_client );
+        },
+        { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } } )
+  in
+  let conn =
+    CommandConnectSimple.connect_once
+      ~flowconfig_name
+      ~client_handshake
+      ~tmp_dir:start_env.CommandConnect.tmp_dir
+      start_env.CommandConnect.root
+  in
+  match conn with
+  | Ok (ic, oc) ->
+    let i_server_id = env.d_ienv.i_server_id + 1 in
+    let new_env =
+      {
+        c_ienv = { env.d_ienv with i_server_id };
+        c_conn = { ic; oc };
+        c_server_status = (ServerStatus.initial_status, None);
+        c_about_to_exit_code = None;
+        c_is_rechecking = false;
+        c_lazy_stats = None;
+        c_outstanding_requests_to_server = Lsp.IdSet.empty;
+        c_recent_summaries = [];
+      }
+    in
+    (* send the initial messages to the server *)
+    let () =
+      let metadata =
+        let method_name = "synthetic/subscribe" in
+        Hh_json.
+          {
+            LspProt.empty_metadata with
+            LspProt.start_wall_time = Unix.gettimeofday ();
+            start_server_status = Some (fst new_env.c_server_status);
+            start_watcher_status = snd new_env.c_server_status;
+            start_json_truncated = JSON_Object [("method", JSON_String method_name)];
+            lsp_method_name = method_name;
+          }
+      in
+      send_to_server new_env LspProt.Subscribe metadata
+    in
+    let make_open_message (textDocument : TextDocumentItem.t) : lsp_message =
+      NotificationMessage (DidOpenNotification { DidOpen.textDocument })
+    in
+    let open_messages =
+      env.d_ienv.i_open_files
+      |> SMap.bindings
+      |> List.map ~f:(fun (_, { o_open_doc; _ }) -> make_open_message o_open_doc)
+    in
+    Hh_json.(
+      let method_name = "synthetic/open" in
+      let metadata =
+        {
+          LspProt.empty_metadata with
+          LspProt.start_wall_time = Unix.gettimeofday ();
+          start_server_status = Some (fst new_env.c_server_status);
+          start_watcher_status = snd new_env.c_server_status;
+          start_json_truncated = JSON_Object [("method", JSON_String method_name)];
+          lsp_method_name = method_name;
+        }
+      in
+      List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
+
+      (* close the old UI and bring up the new *)
+      let new_state = show_connected new_env in
+      (* Generate live errors for the newly opened files *)
+      SMap.fold
+        (fun uri _ state ->
+          do_live_diagnostics
+            flowconfig_name
+            state
+            (Some LspInteraction.ServerConnected)
+            metadata
+            uri)
+        env.d_ienv.i_open_files
+        new_state)
+  (* Server_missing means the lock file is absent, because the server isn't running *)
+  | Error (CommandConnectSimple.Server_missing as reason) ->
+    let new_env = { env with d_autostart = false; d_server_status = None } in
+    if env.d_autostart then
+      let start_result = CommandConnect.start_flow_server start_env in
+      match start_result with
+      | Ok () -> show_connecting reason new_env
+      | Error (msg, code) -> show_disconnected (Some code) (Some msg) new_env
+    else
+      show_disconnected None None new_env
+  (* Server_socket_missing means the server is present but lacks its sock *)
+  (* file. There's a tiny race possibility that the server has created a  *)
+  (* lock but not yet created a sock file. More likely is that the server *)
+  (* is an old version of the server which doesn't even create the right  *)
+  (* sock file. We'll kill the server now so we can start a new one next. *)
+  (* And if it was in that race? bad luck... *)
+  | Error (CommandConnectSimple.Server_socket_missing as reason) ->
+    begin
+      try
+        let tmp_dir = start_env.CommandConnect.tmp_dir in
+        let root = start_env.CommandConnect.root in
+        CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
+        show_connecting reason { env with d_server_status = None }
+      with CommandMeanKill.FailedToKill _ ->
+        let msg = "An old version of the Flow server is running. Please stop it." in
+        show_disconnected None (Some msg) { env with d_server_status = None }
+    end
+  (* The server exited due to a version mismatch between the lsp and the server. *)
+  | Error (CommandConnectSimple.(Build_id_mismatch Server_exited) as reason) ->
+    if env.d_autostart then
+      show_connecting reason { env with d_server_status = None }
+    else
+      (* We shouldn't hit this case. When `env.d_autostart` is `false`, we ask the server NOT to
+       * die on a version mismatch. *)
+      let msg = "Flow: the server was the wrong version" in
+      show_disconnected None (Some msg) { env with d_server_status = None }
+  (* The server and the lsp are different binaries and can't talk to each other. The server is not
+   * stopping (either because we asked it not to stop or because it is newer than this client). In
+   * this case, our best option is to stop the lsp and let the IDE start a new lsp with a newer
+   * binary *)
+  | Error CommandConnectSimple.(Build_id_mismatch (Client_should_error { server_version; _ })) ->
+    (match Semver.compare server_version Flow_version.version with
+    | n when n < 0 ->
+      Printf.eprintf
+        "Flow: the running server is an older version of Flow (%s) than the LSP (%s), but we're not allowed to stop it"
+        server_version
+        Flow_version.version
+    | 0 ->
+      Printf.eprintf
+        "Flow: the running server is a different binary with the same version (%s)"
+        Flow_version.version
+    | _ ->
+      Printf.eprintf
+        "Flow: the running server is a newer version of Flow (%s) than the LSP (%s)"
+        server_version
+        Flow_version.version);
+    Printf.eprintf
+      "LSP is exiting. Hopefully the IDE will start an LSP with the same binary as the server";
+    lsp_exit_bad ()
+  (* While the server is busy initializing, sometimes we get Server_busy.Fail_on_init *)
+  (* with a server-status telling us how far it is through init. And sometimes we get *)
+  (* just ServerStatus.Not_responding if the server was just too busy to give us a    *)
+  (* status update. These are cases where the right version of the server is running  *)
+  (* but it's not speaking to us just now. So we'll keep trying until it's ready.     *)
+  | Error (CommandConnectSimple.Server_busy (CommandConnectSimple.Fail_on_init st) as reason) ->
+    show_connecting reason { env with d_server_status = Some st }
+  (* The following codes mean the right version of the server is running so   *)
+  (* we'll retry. They provide no information about the d_server_status of    *)
+  (* the server, so we'll leave it as it was before.                          *)
+  | Error (CommandConnectSimple.Server_busy CommandConnectSimple.Not_responding as reason)
+  | Error (CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients as reason) ->
+    show_connecting reason env
 
 (************************************************************************)
 (** Main loop                                                          **)

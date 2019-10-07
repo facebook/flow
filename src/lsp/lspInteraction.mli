@@ -25,6 +25,7 @@ type trigger =
   | PushedErrorsRecheckStreaming of LspProt.recheck_reason
   | Rage
   | Rename
+  | ServerConnected
   | TypeCoverage
   | UnknownTrigger
 
