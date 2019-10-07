@@ -2712,8 +2712,17 @@ struct
                | PredicateT (NotP (RightP (SentinelProp _, _)), _) ->
                  false
                | _ -> true ->
+          ( if Context.is_verbose cx then
+            match u with
+            | UseT (_, UnionT _) -> prerr_endline "UnionT ~> UnionT slow case"
+            | UseT (_, IntersectionT _) -> prerr_endline "UnionT ~> IntersectionT slow case"
+            | _ -> () );
           UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
         | (_, UseT (use_op, IntersectionT (_, rep))) ->
+          ( if Context.is_verbose cx then
+            match l with
+            | UnionT _ -> prerr_endline "IntersectionT ~> UnionT slow case"
+            | _ -> () );
           InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (l, UseT (use_op, t)))
         (* When a subtyping question involves a union appearing on the right or an
        intersection appearing on the left, the simplification rules are
