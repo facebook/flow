@@ -86,8 +86,11 @@ type open_file_info = {
   o_unsaved: bool;
 }
 
+type custom_initialize_params = { liveNonParseErrors: bool }
+
 type initialized_env = {
   i_initialize_params: Lsp.Initialize.params;
+  i_custom_initialize_params: custom_initialize_params;
   i_connect_params: connect_params;
   i_root: Path.t;
   i_version: string option;
@@ -1312,7 +1315,7 @@ let do_live_diagnostics
   let () =
     (* Only ask the server for live errors if we're connected *)
     match state with
-    | Connected cenv ->
+    | Connected cenv when cenv.c_ienv.i_custom_initialize_params.liveNonParseErrors ->
       let metadata =
         { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
       in
@@ -1615,9 +1618,13 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let flowconfig =
       Server_files_js.config_file flowconfig_name i_root |> read_config_or_exit ~allow_cache:false
     in
+    let i_custom_initialize_params =
+      { liveNonParseErrors = not (FlowConfig.disable_live_non_parse_errors flowconfig) }
+    in
     let d_ienv =
       {
         i_initialize_params;
+        i_custom_initialize_params;
         i_connect_params;
         i_root;
         i_version = FlowConfig.required_version flowconfig;
