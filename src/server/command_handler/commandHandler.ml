@@ -268,12 +268,20 @@ let collect_rage ~options ~reader ~env ~files =
   in
   items
 
-let dump_types ~options ~env ~profiling file_input =
+let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content ->
-  try_with (fun () -> Type_info_service.dump_types ~options ~env ~profiling file content)
+  try_with (fun () ->
+      Type_info_service.dump_types
+        ~options
+        ~env
+        ~profiling
+        ~expand_aliases
+        ~evaluate_type_destructors
+        file
+        content)
 
 let coverage ~options ~env ~profiling ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -503,8 +511,10 @@ let handle_cycle ~fn ~types_only ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
-let handle_dump_types ~options ~input ~profiling ~env =
-  let%lwt response = dump_types ~options ~env ~profiling input in
+let handle_dump_types ~options ~input ~expand_aliases ~evaluate_type_destructors ~profiling ~env =
+  let%lwt response =
+    dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors input
+  in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
 let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
@@ -754,8 +764,12 @@ let get_ephemeral_handler genv command =
     let file_options = Options.file_options options in
     let fn = Files.filename_from_string ~options:file_options filename in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
-  | ServerProt.Request.DUMP_TYPES { input; wait_for_recheck } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_dump_types ~options ~input)
+  | ServerProt.Request.DUMP_TYPES
+      { input; expand_aliases; evaluate_type_destructors; wait_for_recheck } ->
+    mk_parallelizable
+      ~wait_for_recheck
+      ~options
+      (handle_dump_types ~options ~input ~expand_aliases ~evaluate_type_destructors)
   | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck } ->
     mk_parallelizable
       ~wait_for_recheck

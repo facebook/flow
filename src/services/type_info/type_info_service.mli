@@ -22,6 +22,8 @@ val dump_types :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
+  expand_aliases:bool ->
+  evaluate_type_destructors:bool ->
   File_key.t ->
   string ->
   ((Loc.t * string) list, string) Core_result.t Lwt.t
