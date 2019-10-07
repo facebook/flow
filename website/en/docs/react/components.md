@@ -167,18 +167,11 @@ don't have to add any type annotations to use default props.
 If you would like to add a type annotation to `defaultProps` you can define the
 type as
 ```js
-type DefaultProps = {|
+type DefaultProps: $Shape<Props> = {
   foo: number,
-|}
-```
-and spread that into the `Props` type:
-```js
-type Props = {
-  ...DefaultProps,
-  bar: string,
 }
 ```
-This way you avoid duplicating the properties that happen to have a default value.
+This declares the defaults as a [subset shape](../types/utilities/#toc-shape) of the props, avoiding duplication of the properties that happen to have a default value.
 
 ## Stateless Functional Components <a class="toc" id="toc-stateless-functional-components" href="#toc-stateless-functional-components"></a>
 
