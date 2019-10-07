@@ -1035,6 +1035,24 @@ let tests =
            ~source
            ~expected:"new foo<GOT_RENAMED>()"
            ~mapper:(new useless_mapper) );
+         ( "new_type_param_2"
+         >:: fun ctxt ->
+         let source = "new rename<RENAME>(rename)" in
+         assert_edits_equal
+           ctxt
+           ~edits:[((4, 10), "gotRenamed"); ((11, 17), "GOT_RENAMED"); ((19, 25), "gotRenamed")]
+           ~source
+           ~expected:"new gotRenamed<GOT_RENAMED>(gotRenamed)"
+           ~mapper:(new useless_mapper) );
+         ( "new_type_param_3"
+         >:: fun ctxt ->
+         let source = "new foo<FOO>(rename)" in
+         assert_edits_equal
+           ctxt
+           ~edits:[((13, 19), "gotRenamed")]
+           ~source
+           ~expected:"new foo<FOO>(gotRenamed)"
+           ~mapper:(new useless_mapper) );
          ( "new_type_param_multiple"
          >:: fun ctxt ->
          let source = "new foo<RENAME, RENAME>()" in
@@ -1317,9 +1335,9 @@ let tests =
          let source = "rename<RENAME>()" in
          assert_edits_equal
            ctxt
-           ~edits:[((7, 13), "GOT_RENAMED")]
+           ~edits:[((0, 6), "gotRenamed"); ((7, 13), "GOT_RENAMED")]
            ~source
-           ~expected:"rename<GOT_RENAMED>()"
+           ~expected:"gotRenamed<GOT_RENAMED>()"
            ~mapper:(new useless_mapper) );
          ( "variable_declaration_kind"
          >:: fun ctxt ->

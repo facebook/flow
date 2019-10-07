@@ -1317,18 +1317,15 @@ let program
         new2
       in
       let comments = syntax_opt loc comments1 comments2 in
-      let args_diff_list =
-        if targs1 != targs2 then
-          let targs =
-            diff_if_changed_opt type_parameter_instantiation_with_implicit targs1 targs2
-          in
-          [targs]
-        else
-          let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
-          let callee = Some (diff_if_changed expression callee1 callee2) in
-          [args; callee]
+      let targs =
+        diff_if_changed_ret_opt
+          (diff_if_changed_opt type_parameter_instantiation_with_implicit)
+          targs1
+          targs2
       in
-      join_diff_list ([comments] @ args_diff_list))
+      let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+      let callee = Some (diff_if_changed expression callee1 callee2) in
+      join_diff_list [comments; targs; args; callee])
   and member
       (member1 : (Loc.t, Loc.t) Ast.Expression.Member.t)
       (member2 : (Loc.t, Loc.t) Ast.Expression.Member.t) : node change list option =
@@ -1355,12 +1352,15 @@ let program
     Ast.Expression.Call.(
       let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
       let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
-      if targs1 != targs2 then
-        diff_if_changed_opt type_parameter_instantiation_with_implicit targs1 targs2
-      else
-        let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
-        let callee = Some (diff_if_changed expression callee1 callee2) in
-        join_diff_list [args; callee])
+      let targs =
+        diff_if_changed_ret_opt
+          (diff_if_changed_opt type_parameter_instantiation_with_implicit)
+          targs1
+          targs2
+      in
+      let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+      let callee = Some (diff_if_changed expression callee1 callee2) in
+      join_diff_list [targs; args; callee])
   and expression_or_spread
       (expr1 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
       (expr2 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread) : node change list option =
