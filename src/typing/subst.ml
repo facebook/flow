@@ -68,19 +68,20 @@ let substituter =
         let t_out =
           match t with
           | BoundT (tp_reason, name, _) ->
+            let annot_loc = aloc_of_reason tp_reason in
             begin
               match SMap.get name map with
               | None -> t
               | Some (ReposT (_, param_t)) when name = "this" ->
-                ReposT (annot_reason tp_reason, param_t)
-              | Some param_t when name = "this" -> ReposT (annot_reason tp_reason, param_t)
+                ReposT (annot_reason ~annot_loc tp_reason, param_t)
+              | Some param_t when name = "this" ->
+                ReposT (annot_reason ~annot_loc tp_reason, param_t)
               | Some param_t ->
                 (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
                 | RPolyTest _ ->
                   mod_reason_of_t
-                    (fun reason ->
-                      let loc = aloc_of_reason tp_reason in
-                      repos_reason loc ~annot_loc:loc reason)
+                    (fun param_reason ->
+                      annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
                     param_t
                 | _ -> param_t)
             end
@@ -163,8 +164,7 @@ let substituter =
               EvalT (t'', dt', Reason.mk_id ())
           | ModuleT _
           | InternalT (ExtendsT _) ->
-            failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t))
-          (* TODO *)
+            failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
           | t -> super#type_ cx map_cx t
         in
         if t == t_out then

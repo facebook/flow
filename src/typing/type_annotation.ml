@@ -154,14 +154,14 @@ let rec convert cx tparams_map =
     | (loc, (Null as t_ast)) -> ((loc, NullT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Number as t_ast)) -> ((loc, NumT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (BigInt as t_ast)) ->
-      let reason = annot_reason (mk_reason RBigInt loc) in
+      let reason = mk_annot_reason RBigInt loc in
       Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
       ((loc, AnyT.why AnyError reason), t_ast)
     | (loc, (String as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Boolean as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
     | (loc, Nullable t) ->
       let (((_, t), _) as t_ast) = convert cx tparams_map t in
-      let reason = annot_reason (mk_reason (RMaybe (desc_of_t t)) loc) in
+      let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in
       ((loc, MaybeT (reason, t)), Nullable t_ast)
     | (loc, Union (t0, t1, ts)) ->
       let (((_, t0), _) as t0_ast) = convert cx tparams_map t0 in
@@ -191,7 +191,7 @@ let rec convert cx tparams_map =
       end
     | (loc, Tuple ts) ->
       let (tuple_types, ts_ast) = convert_list cx tparams_map ts in
-      let reason = annot_reason (mk_reason RTupleType loc) in
+      let reason = mk_annot_reason RTupleType loc in
       let element_reason = mk_reason RTupleElement loc in
       let elemt =
         match tuple_types with
@@ -224,7 +224,7 @@ let rec convert cx tparams_map =
     | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw } as t_ast)) ->
       ((loc, mk_singleton_number cx loc value raw), t_ast)
     | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
-      let reason = annot_reason (mk_reason (RBigIntLit bigint) loc) in
+      let reason = mk_annot_reason (RBigIntLit bigint) loc in
       Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
       ((loc, AnyT.why AnyError reason), t_ast)
     | (loc, (BooleanLiteral value as t_ast)) -> ((loc, mk_singleton_boolean cx loc value), t_ast)
@@ -564,10 +564,7 @@ let rec convert cx tparams_map =
               let (elemts, targs) = convert_type_params () in
               let elemt = List.hd elemts in
               reconstruct_ast
-                (DefT
-                   ( annot_reason (mk_reason RROArrayType loc),
-                     infer_trust cx,
-                     ArrT (ROArrayAT elemt) ))
+                (DefT (mk_annot_reason RROArrayType loc, infer_trust cx, ArrT (ROArrayAT elemt)))
                 targs)
         (* These utilities are no longer supported *)
         (* $Supertype<T> acts as any over supertypes of T *)
@@ -990,7 +987,7 @@ let rec convert cx tparams_map =
               | ([DefT (rs, trust, ty)], targs) ->
                 let trust = make_trusted cx trust (Error_message.ETrustedAnnot loc) in
                 reconstruct_ast
-                  (DefT (annot_reason (mk_reason (RTrusted (desc_of_reason rs)) loc), trust, ty))
+                  (DefT (mk_annot_reason (RTrusted (desc_of_reason rs)) loc, trust, ty))
                   targs
               | _ -> error_type cx loc (Error_message.ETrustedAnnot loc) t_ast)
         | "$Private" ->
@@ -1000,7 +997,7 @@ let rec convert cx tparams_map =
               | ([DefT (rs, trust, ty)], targs) ->
                 let trust = make_private cx trust (Error_message.EPrivateAnnot loc) in
                 reconstruct_ast
-                  (DefT (annot_reason (mk_reason (RPrivate (desc_of_reason rs)) loc), trust, ty))
+                  (DefT (mk_annot_reason (RPrivate (desc_of_reason rs)) loc, trust, ty))
                   targs
               | _ -> error_type cx loc (Error_message.EPrivateAnnot loc) t_ast)
         (* other applications with id as head expr *)
@@ -1633,11 +1630,12 @@ and mk_singleton_boolean cx loc b =
 (* Given the type of expression C and type arguments T1...Tn, return the type of
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
 and mk_nominal_type cx reason tparams_map (c, targs) =
-  let reason = annot_reason reason in
+  let annot_loc = aloc_of_reason reason in
   match targs with
-  | None -> (Flow.mk_instance cx reason c, None)
+  | None ->
+    let reason = annot_reason ~annot_loc reason in
+    (Flow.mk_instance cx reason c, None)
   | Some (loc, targs) ->
-    let annot_loc = aloc_of_reason reason in
     let (targs, targs_ast) = convert_list cx tparams_map targs in
     (typeapp ~annot_loc c targs, Some (loc, targs_ast))
 
