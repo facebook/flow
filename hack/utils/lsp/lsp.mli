@@ -626,6 +626,14 @@ module FindReferences : sig
   }
 end
 
+module GoToImplementation : sig
+  type params = implementationParams
+
+  and result = Location.t list
+
+  and implementationParams = { loc: TextDocumentPositionParams.t }
+end
+
 module DocumentHighlight : sig
   type params = TextDocumentPositionParams.t
 
@@ -944,6 +952,7 @@ type lsp_result =
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
   | FindReferencesResult of FindReferences.result
+  | GoToImplementationResult of GoToImplementation.result
   | DocumentHighlightResult of DocumentHighlight.result
   | TypeCoverageResult of TypeCoverage.result
   | DocumentFormattingResult of DocumentFormatting.result

@@ -304,6 +304,7 @@ let trigger_of_lsp_msg =
     | ResponseMessage (_, WorkspaceSymbolResult _)
     | ResponseMessage (_, DocumentSymbolResult _)
     | ResponseMessage (_, FindReferencesResult _)
+    | ResponseMessage (_, GoToImplementationResult _)
     | ResponseMessage (_, DocumentHighlightResult _)
     | ResponseMessage (_, DocumentCodeLensResult _)
     | ResponseMessage (_, TypeCoverageResult _)
