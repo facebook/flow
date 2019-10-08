@@ -844,8 +844,8 @@ let parse_findReferences (params : json option) : FindReferences.params =
 (* textDocument/implementation request                                  *)
 (************************************************************************)
 
-let parse_findImplementations (params : json option) :
-    GoToImplementation.params =
+let parse_goToImplementation (params : json option) : GoToImplementation.params
+    =
   { GoToImplementation.loc = parse_textDocumentPositionParams params }
 
 (************************************************************************)
