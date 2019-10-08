@@ -1139,7 +1139,7 @@ let rec convert cx tparams_map =
      ensures that existential type variables under a polymorphic type remain
      unevaluated until the polymorphic type is applied. *)
       let force = SMap.is_empty tparams_map in
-      let reason = derivable_reason (mk_reason RExistential loc) in
+      let reason = derivable_reason (mk_annot_reason RExistential loc) in
       if force then
         let tvar = Tvar.mk cx reason in
         ((loc, tvar), Exists)
