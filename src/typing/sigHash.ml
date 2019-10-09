@@ -63,6 +63,7 @@ type hash =
   | ArrATH
   | ArrTupleATH
   | ArrROArrayATH
+  | ArrROTupleATH
   | ClassH
   | OptionalH
   | EvalH
@@ -216,8 +217,9 @@ let hash_of_def_ctor =
     | PolyT _ -> failwith "undefined hash of PolyT"
     | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
     | ArrT (ArrayAT _) -> ArrATH
-    | ArrT (TupleAT _) -> ArrTupleATH
     | ArrT (ROArrayAT _) -> ArrROArrayATH
+    | ArrT (TupleAT _) -> ArrTupleATH
+    | ArrT (ROTupleAT _) -> ArrROTupleATH
     | BoolT _ -> BoolH
     | CharSetT _ -> CharSetH
     | ClassT _ -> ClassH

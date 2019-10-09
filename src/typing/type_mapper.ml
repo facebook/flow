@@ -644,6 +644,13 @@ class virtual ['a] t =
           t
         else
           TupleAT (t'', tlist')
+      | ROTupleAT (t', tlist) ->
+        let t'' = self#type_ cx map_cx t' in
+        let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+        if t'' == t' && tlist' == tlist then
+          t
+        else
+          ROTupleAT (t'', tlist')
       | ROArrayAT t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

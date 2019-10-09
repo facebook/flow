@@ -230,6 +230,14 @@ let rec merge_type cx =
         ArrT
           (TupleAT (merge_type cx (t1, t2), Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2))
       )
+  | (DefT (_, _, ArrT (ROTupleAT (t1, ts1))), DefT (_, _, ArrT (ROTupleAT (t2, ts2))))
+    when List.length ts1 = List.length ts2 ->
+    DefT
+      ( locationless_reason (RCustom "read only tuple"),
+        bogus_trust (),
+        ArrT
+          (ROTupleAT (merge_type cx (t1, t2), Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2))
+      )
   | (DefT (_, _, ArrT (ROArrayAT elemt1)), DefT (_, _, ArrT (ROArrayAT elemt2))) ->
     DefT
       ( locationless_reason (RCustom "read only array"),
@@ -450,8 +458,10 @@ let rec extract_type cx this_t =
   | DefT (reason, _, ArrT arrtype) ->
     let (builtin, elemt) =
       match arrtype with
-      | ArrayAT (elemt, _) -> (get_builtin cx "Array" reason, elemt)
-      | TupleAT (elemt, _)
+      | ArrayAT (elemt, _)
+      | TupleAT (elemt, _) ->
+        (get_builtin cx "Array" reason, elemt)
+      | ROTupleAT (elemt, _)
       | ROArrayAT elemt ->
         (get_builtin cx "$ReadOnlyArray" reason, elemt)
     in
@@ -500,7 +510,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
             | Get (loc, t)
             | Set (loc, t)
             (* arbitrarily use the location for the getter. maybe we can send both in the future *)
-            
+
             | GetSet (loc, t, _, _)
             | Method (loc, t) ->
               (loc, t)
