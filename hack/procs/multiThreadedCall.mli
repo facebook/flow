@@ -7,7 +7,6 @@
  *
  *)
 
-exception Coalesced_failures of WorkerController.worker_failure list
 (** If a worker process fails, this is raised.
  *
  * Note: When one worker process fails, the remaining in-progress workers are checked
@@ -17,6 +16,7 @@ exception Coalesced_failures of WorkerController.worker_failure list
  * No further buckets are distributed to workers.
  *
  * Still-in-progress workers are left to their own accord. *)
+exception Coalesced_failures of WorkerController.worker_failure list
 
 val coalesced_failures_to_string :
   WorkerController.worker_failure list -> string
@@ -36,6 +36,7 @@ type worker_id = int
 
 val no_interrupt : 'a -> 'a interrupt_config
 
+(** Can raise Coalesced_failures exception. *)
 val call :
   WorkerController.worker list ->
   ('c -> 'a -> 'b) ->
@@ -43,8 +44,9 @@ val call :
   'c ->
   'a Bucket.next ->
   'c
-(** Can raise Coalesced_failures exception. *)
 
+(** Invokes merge with a unique worker id.
+    Can raise Coalesced_failures exception. *)
 val call_with_worker_id :
   WorkerController.worker list ->
   (worker_id * 'c -> 'a -> 'b) ->
@@ -52,8 +54,6 @@ val call_with_worker_id :
   'c ->
   'a Bucket.next ->
   'c
-(** Invokes merge with a unique worker id.
-    Can raise Coalesced_failures exception. *)
 
 val call_with_interrupt :
   WorkerController.worker list ->

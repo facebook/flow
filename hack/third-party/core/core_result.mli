@@ -17,8 +17,8 @@ include Monad.S2 with type ('a, 'err) t := ('a, 'err) t
 
 val fail : 'err -> (_, 'err) t
 
-val failf : ('a, unit, string, (_, string) t) format4 -> 'a
 (** e.g. [failf "Couldn't find bloogle %s" (Bloogle.to_string b)] *)
+val failf : ('a, unit, string, (_, string) t) format4 -> 'a
 
 val is_ok : (_, _) t -> bool
 
@@ -46,25 +46,25 @@ val combine :
   err:('err -> 'err -> 'err) ->
   ('ok3, 'err) t
 
-val ok_fst : ('ok, 'err) t -> [ `Fst of 'ok | `Snd of 'err ]
 (** [ok_fst] is useful with [List.partition_map].  Continuing the above example:
 {[
     let rics, errors = List.partition_map ~f:Core_result.ok_fst
       (List.map ~f:ric_of_ticker ["AA"; "F"; "CSCO"; "AAPL"]) ]} *)
+val ok_fst : ('ok, 'err) t -> [ `Fst of 'ok | `Snd of 'err ]
 
 (* [ok_if_true] returns [Ok ()] if [bool] is true, and [Error error] if it is false *)
 val ok_if_true : bool -> error:'err -> (unit, 'err) t
 
 val try_with : (unit -> 'a) -> ('a, exn) t
 
-val ok_exn : ('ok, exn) t -> 'ok
 (** [ok_exn t] returns [x] if [t = Ok x], and raises [exn] if [t = Error exn] *)
+val ok_exn : ('ok, exn) t -> 'ok
 
 (* raises Failure in the Error case *)
 val ok_or_failwith : ('ok, string) t -> 'ok
 
-val ok_unit : (unit, _) t
 (** [ok_unit = Ok ()], used to avoid allocation as a performance hack *)
+val ok_unit : (unit, _) t
 
 module Export : sig
   type ('ok, 'err) _result = ('ok, 'err) t =

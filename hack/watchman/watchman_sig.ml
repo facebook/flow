@@ -44,8 +44,8 @@ module Types = struct
     subscription_prefix: string;
   }
 
-  type clock = string
   (** The message's clock. *)
+  type clock = string
 
   type pushed_changes =
     (*

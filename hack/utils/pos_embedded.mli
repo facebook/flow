@@ -12,10 +12,10 @@
  * character *after* the last character of the relevant lexeme.) *)
 type 'a pos [@@deriving eq]
 
-type b = Pos_source.t
 (** The underlying type used to construct Pos instances.
  *
  * See "val make: 'a -> b -> 'a pos" *)
+type b = Pos_source.t
 
 type t = Relative_path.t pos [@@deriving eq]
 
