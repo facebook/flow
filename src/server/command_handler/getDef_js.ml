@@ -12,48 +12,19 @@ open Parsing_heaps_utils
 (* The result of a get-def is either a final location or an intermediate
    location that is fed into a subsequent get-def. *)
 type result =
-  | Done of Loc.t
+  | Done of (Loc.t, string) Pervasives.result
   | Chain of Get_def_request.t
 
 let extract_member_def ~reader cx this name =
   let member_result = Members.extract cx this in
-  let (result_str, t) =
-    Members.(
-      match member_result with
-      | Success _ -> ("SUCCESS", this)
-      | SuccessModule _ -> ("SUCCESS", this)
-      | FailureNullishType -> ("FAILURE_NULLABLE", this)
-      | FailureAnyType -> ("FAILURE_NO_COVERAGE", this)
-      | FailureUnhandledType t -> ("FAILURE_UNHANDLED_TYPE", t)
-      | FailureUnhandledMembers t -> ("FAILURE_UNHANDLED_MEMBERS", t))
-  in
-  let json_data_to_log =
-    Hh_json.(
-      JSON_Object
-        [
-          ("type", Debug_js.json_of_t ~depth:3 cx t);
-          ("gd_name", JSON_String name);
-          ("result", JSON_String result_str);
-        ])
-  in
   let command_result = Members.to_command_result member_result in
-  ( Done
-      begin
-        match command_result with
-        | Error _ -> Loc.none
-        | Ok result_map ->
-          begin
-            match SMap.get name result_map with
-            | Some (loc, t) ->
-              begin
-                match loc with
-                | None -> Type.loc_of_t t |> loc_of_aloc ~reader
-                | Some x -> loc_of_aloc ~reader x
-              end
-            | None -> Loc.none
-          end
-      end,
-    Some json_data_to_log )
+  Done
+    ( command_result
+    >>= fun result_map ->
+    match SMap.get name result_map with
+    | Some (None, t) -> Ok (Type.loc_of_t t |> loc_of_aloc ~reader)
+    | Some (Some x, _) -> Ok (loc_of_aloc ~reader x)
+    | None -> Error (spf "failed to find member %s in members map" name) )
 
 (* turns typed AST into normal AST so we can run Scope_builder on it *)
 (* TODO(vijayramamurthy): make scope builder polymorphic *)
@@ -122,7 +93,7 @@ class special_caser (reader : Parsing_heaps.Reader.reader) (target_loc : Loc.t) 
       | Flow_ast.Statement.ImportDeclaration.
           { specifiers = Some (ImportNamespaceSpecifier (id_loc, _)); _ }
         when this#covers_target id_loc ->
-        raise (SpecialCase (Done (loc_of_aloc ~reader stmt_loc)))
+        raise (SpecialCase (Done (Ok (loc_of_aloc ~reader stmt_loc))))
       | _ -> super#import_declaration stmt_loc decl
 
     (*
@@ -137,27 +108,30 @@ class special_caser (reader : Parsing_heaps.Reader.reader) (target_loc : Loc.t) 
       match stmt' with
       | Flow_ast.(Statement.FunctionDeclaration { Function.id = Some ((id_loc, _), _); _ })
         when this#covers_target id_loc ->
-        raise (SpecialCase (Done (loc_of_aloc ~reader stmt_loc)))
+        raise (SpecialCase (Done (Ok (loc_of_aloc ~reader stmt_loc))))
       | _ -> super#statement stmt
   end
 
 let resolve_special_cases reader typed_ast def_loc =
   try
     Pervasives.ignore ((new special_caser reader def_loc)#program typed_ast);
-    Done def_loc
+    Done (Ok def_loc)
   with SpecialCase res -> res
 
 let getdef_from_typed_ast ~options ~reader cx typed_ast = function
   | Get_def_request.Location loc ->
-    Option.map (Get_def_process_location.process_location ~typed_ast loc) (fun req ->
-        (Chain req, None))
+    begin
+      match Get_def_process_location.process_location ~typed_ast loc with
+      | Some req -> Chain req
+      | None -> Done (Error "Typed_ast_utils.find_get_def_info failed")
+    end
   | Get_def_request.(Member { prop_name = name; object_source }) ->
     let obj_t =
       match object_source with
       | Get_def_request.ObjectType t -> t
       | Get_def_request.ObjectRequireLoc loc -> Context.find_require cx loc
     in
-    Some (extract_member_def ~reader cx obj_t name)
+    extract_member_def ~reader cx obj_t name
   | Get_def_request.Identifier (_, aloc) ->
     let loc = loc_of_aloc ~reader aloc in
     let ast = (new type_killer reader)#program typed_ast in
@@ -170,16 +144,15 @@ let getdef_from_typed_ast ~options ~reader cx typed_ast = function
         | [use] ->
           let def = Scope_api.With_Loc.def_of_use scope_info use in
           let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
-          let result = resolve_special_cases reader typed_ast def_loc in
-          Some (result, None)
-        | [] -> None
-        | _ :: _ :: _ -> failwith "Multiple identifiers were unexpectedly matched"
+          resolve_special_cases reader typed_ast def_loc
+        | [] -> Done (Error "Scope builder found no matching identifiers")
+        | _ :: _ :: _ -> Done (Error "Scope builder found multiple matching identifiers")
       end)
   | Get_def_request.Type v ->
     begin
       match Flow_js.possible_types_of_type cx v with
-      | [t] -> Some (Done (Type.def_loc_of_t t |> loc_of_aloc ~reader), None)
-      | _ -> None
+      | [t] -> Done (Ok (Type.def_loc_of_t t |> loc_of_aloc ~reader))
+      | _ -> Done (Error "Flow_js.possible_types_of_type failed")
     end
   | Get_def_request.Require ((source_loc, name), require_loc) ->
     let module_t = Context.find_require cx source_loc |> Members.resolve_type cx in
@@ -198,48 +171,88 @@ let getdef_from_typed_ast ~options ~reader cx typed_ast = function
              name)
       in
       match filename with
-      | Some file -> Loc.{ none with source = Some file }
-      | None -> Loc.none
+      | Some file -> Ok Loc.{ none with source = Some file }
+      | None -> Error (spf "Failed to find imported file %s" name)
     in
-    Some
-      ( Done
-          Type.(
-            match module_t with
-            | ModuleT (_, { cjs_export; _ }, _) ->
-              (* If we have a location for the cjs export, go there. Otherwise
-               * fall back to just the top of the file *)
-              let loc =
-                match cjs_export with
-                | Some t -> loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
-                | None -> Loc.none
-              in
-              if loc = Loc.none then
-                get_imported_file ()
-              else
-                loc
-            | AnyT _ -> get_imported_file ()
-            | _ ->
-              failwith
-                (spf
-                   "Internal Flow Error: Expected ModuleT for %S, but got %S!"
-                   name
-                   (string_of_ctor module_t))),
-        None )
+    Done
+      Type.(
+        match module_t with
+        | ModuleT (_, { cjs_export; _ }, _) ->
+          (* If we have a location for the cjs export, go there. Otherwise
+           * fall back to just the top of the file *)
+          let loc =
+            match cjs_export with
+            | Some t -> loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
+            | None -> Loc.none
+          in
+          if loc = Loc.none then
+            get_imported_file ()
+          else
+            Ok loc
+        | AnyT _ -> get_imported_file ()
+        | _ ->
+          Error
+            (spf
+               "Internal Flow Error: Expected ModuleT for %S, but got %S!"
+               name
+               (string_of_ctor module_t)))
 
-let recover_intermediate_loc = function
-  | Get_def_request.Location loc -> loc
-  | _ -> Loc.none
+let rec recover_intermediate_result = function
+  | []
+  | [_] ->
+    (* don't try to recover from the very first request because that was the
+      original request so it's not helpful to return it *)
+    (* report Loc.none as success in this case just to preserve existing behavior. *)
+    Some Loc.none
+  | Get_def_request.Location loc :: _ -> Some loc
+  | _ :: reqs -> recover_intermediate_result reqs
 
-let rec getdef_get_result ~options ~reader cx typed_ast req =
-  match getdef_from_typed_ast ~options ~reader cx typed_ast req with
-  | Some (Done loc, json) -> (loc, json)
-  | Some (Chain req', json) ->
-    let (loc, json') = getdef_get_result ~options ~reader cx typed_ast req' in
-    if loc = Loc.none then
-      (recover_intermediate_loc req', json)
-    else
-      (loc, json')
-  | None -> (Loc.none, None)
+let gdr_to_string = function
+  | Get_def_request.Location _ -> "Location"
+  | Get_def_request.Identifier _ -> "Identifier"
+  | Get_def_request.Type _ -> "Type"
+  | Get_def_request.Member _ -> "Member"
+  | Get_def_request.Require _ -> "Require"
+
+let getdef_get_result ~options ~reader cx typed_ast requested_loc =
+  let rec loop rev_req_history req =
+    match getdef_from_typed_ast ~options ~reader cx typed_ast req with
+    | Done res ->
+      let request_history =
+        ( "request_history",
+          Hh_json.JSON_Array
+            (List.rev_map (fun req -> Hh_json.JSON_String (gdr_to_string req)) rev_req_history) )
+      in
+      begin
+        match res with
+        | Ok _ ->
+          (res, Hh_json.JSON_Object [request_history; ("result", Hh_json.JSON_String "SUCCESS")])
+        | Error msg ->
+          ( (match recover_intermediate_result rev_req_history with
+            | Some recovered_loc -> Ok recovered_loc
+            | None -> res),
+            Hh_json.JSON_Object
+              [
+                ("error", Hh_json.JSON_String msg);
+                request_history;
+                ("result", Hh_json.JSON_String "FAILURE");
+              ] )
+      end
+    | Chain req -> loop (req :: rev_req_history) req
+  in
+  let initial_request = Get_def_request.Location requested_loc in
+  loop [initial_request] initial_request
+  |> Utils_js.map_fst (fun res ->
+         res
+         >>= Loc.(
+               fun result_loc ->
+                 if
+                   result_loc.source = requested_loc.source
+                   && Reason.in_range requested_loc result_loc
+                 then
+                   return Loc.none
+                 else
+                   return result_loc))
 
 let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
@@ -249,18 +262,11 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
     File_input.content_of_file_input file_input
     %>>= (fun content -> Types_js.basic_check_contents ~options ~env ~profiling content file)
   in
-  let%lwt getdef_result =
-    map_error ~f:(fun str -> (str, None)) check_result
-    %>>= fun (cx, _, _, typed_ast) ->
+  match check_result with
+  | Error msg ->
+    Lwt.return (Error msg, Some (Hh_json.JSON_Object [("error", Hh_json.JSON_String msg)]))
+  | Ok (cx, _, _, typed_ast) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
-        try_with_json (fun () ->
-            let (res_loc, res_json) =
-              getdef_get_result ~reader ~options cx typed_ast (Get_def_request.Location loc)
-            in
-            (* If the result covers the requested location then we didn't find anything helpful *)
-            if Loc.(res_loc.source = loc.source) && Reason.in_range loc res_loc then
-              Lwt.return (Ok (Loc.none, res_json))
-            else
-              Lwt.return (Ok (res_loc, res_json))))
-  in
-  Lwt.return (split_result getdef_result)
+        try_with_json2 (fun () ->
+            Lwt.return
+              (getdef_get_result ~reader ~options cx typed_ast loc |> (fun (a, b) -> (a, Some b)))))
