@@ -52,3 +52,12 @@ assert_ok "$FLOW" get-def --strip-root declare.js 4 1
 assert_ok "$FLOW" get-def --strip-root declare.js 7 1
 assert_ok "$FLOW" get-def --strip-root declare.js 10 1
 assert_ok "$FLOW" get-def --strip-root declare.js 13 5
+
+printf "\nShadowing \`require\`\n"
+assert_ok "$FLOW" get-def --strip-root main.js 28 20
+assert_ok "$FLOW" get-def --strip-root main.js 29 6
+assert_ok "$FLOW" get-def --strip-root main.js 33 3
+
+printf "\nChaining \`require\`s through multiple files\n"
+assert_ok "$FLOW" get-def --strip-root main.js 33 10
+assert_ok "$FLOW" get-def --strip-root main.js 33 17

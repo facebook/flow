@@ -39,7 +39,8 @@ class type_killer (reader : Parsing_heaps.Reader.reader) =
 
 exception SpecialCase of result
 
-class special_caser (reader : Parsing_heaps.Reader.reader) (target_loc : Loc.t) =
+class special_caser
+  (reader : Parsing_heaps.Reader.reader) (is_legit_require : ALoc.t -> bool) (target_loc : Loc.t) =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -72,9 +73,10 @@ class special_caser (reader : Parsing_heaps.Reader.reader) (target_loc : Loc.t) 
               Call
                 {
                   Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
+                  arguments = Expression ((source_loc, _), _) :: _;
                   _;
                 } )
-        when this#covers_target id_loc ->
+        when is_legit_require source_loc && this#covers_target id_loc ->
         raise (SpecialCase (Chain (Get_def_request.Location target_loc)))
       | _ -> super#variable_declarator ~kind x
 
@@ -112,26 +114,19 @@ class special_caser (reader : Parsing_heaps.Reader.reader) (target_loc : Loc.t) 
       | _ -> super#statement stmt
   end
 
-let resolve_special_cases reader typed_ast def_loc =
+let resolve_special_cases ~reader ~is_legit_require ~typed_ast def_loc =
   try
-    Pervasives.ignore ((new special_caser reader def_loc)#program typed_ast);
+    Pervasives.ignore ((new special_caser reader is_legit_require def_loc)#program typed_ast);
     Done (Ok def_loc)
   with SpecialCase res -> res
 
-let getdef_from_typed_ast ~options ~reader cx typed_ast = function
+let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = function
   | Get_def_request.Location loc ->
     begin
-      match Get_def_process_location.process_location ~typed_ast loc with
+      match Get_def_process_location.process_location ~is_legit_require ~typed_ast loc with
       | Some req -> Chain req
       | None -> Done (Error "Typed_ast_utils.find_get_def_info failed")
     end
-  | Get_def_request.(Member { prop_name = name; object_source }) ->
-    let obj_t =
-      match object_source with
-      | Get_def_request.ObjectType t -> t
-      | Get_def_request.ObjectRequireLoc loc -> Context.find_require cx loc
-    in
-    extract_member_def ~reader cx obj_t name
   | Get_def_request.Identifier (_, aloc) ->
     let loc = loc_of_aloc ~reader aloc in
     let ast = (new type_killer reader)#program typed_ast in
@@ -144,10 +139,25 @@ let getdef_from_typed_ast ~options ~reader cx typed_ast = function
         | [use] ->
           let def = Scope_api.With_Loc.def_of_use scope_info use in
           let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
-          resolve_special_cases reader typed_ast def_loc
+          resolve_special_cases ~reader ~is_legit_require ~typed_ast def_loc
         | [] -> Done (Error "Scope builder found no matching identifiers")
         | _ :: _ :: _ -> Done (Error "Scope builder found multiple matching identifiers")
       end)
+  (*
+    NOTE:
+    The Member, Type, and Require cases could take us to a different file.
+    Since none of these will ever return Chain, we do not need to call
+    basic_check_contents again to get info about the new file.
+    If you break this serendipitous invariant, you'll probably need to add logic
+    to deal with updating what file we're looking at.
+  *)
+  | Get_def_request.(Member { prop_name = name; object_source }) ->
+    let obj_t =
+      match object_source with
+      | Get_def_request.ObjectType t -> t
+      | Get_def_request.ObjectRequireLoc loc -> Context.find_require cx loc
+    in
+    extract_member_def ~reader cx obj_t name
   | Get_def_request.Type v ->
     begin
       match Flow_js.possible_types_of_type cx v with
@@ -214,9 +224,14 @@ let gdr_to_string = function
   | Get_def_request.Member _ -> "Member"
   | Get_def_request.Require _ -> "Require"
 
-let getdef_get_result ~options ~reader cx typed_ast requested_loc =
+let getdef_get_result ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
+  let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
+  let is_legit_require source_aloc =
+    let source_loc = loc_of_aloc ~reader source_aloc in
+    SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
+  in
   let rec loop rev_req_history req =
-    match getdef_from_typed_ast ~options ~reader cx typed_ast req with
+    match getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast req with
     | Done res ->
       let request_history =
         ( "request_history",
@@ -265,8 +280,9 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
   match check_result with
   | Error msg ->
     Lwt.return (Error msg, Some (Hh_json.JSON_Object [("error", Hh_json.JSON_String msg)]))
-  | Ok (cx, _, _, typed_ast) ->
+  | Ok (cx, _, file_sig, typed_ast) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
         try_with_json2 (fun () ->
             Lwt.return
-              (getdef_get_result ~reader ~options cx typed_ast loc |> (fun (a, b) -> (a, Some b)))))
+              ( getdef_get_result ~reader ~options ~cx ~file_sig ~typed_ast loc
+              |> (fun (a, b) -> (a, Some b)) )))
