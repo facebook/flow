@@ -429,8 +429,7 @@ let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let get_def ~options ~env ~profiling position =
-  GetDef_js.get_def ~options ~env ~profiling ~depth:0 position
+let get_def ~options ~env ~profiling position = GetDef_js.get_def ~options ~env ~profiling position
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
