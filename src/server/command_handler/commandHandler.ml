@@ -1121,26 +1121,21 @@ type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
 let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
   let metadata = with_error ?stack ~reason metadata in
   let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.LspProt.error_info in
-  let e = Lsp_fmt.error_of_exn (Failure reason) in
-  match id with
-  | Some id ->
-    let friendly_message =
-      "Flow encountered an unexpected error while handling this request. "
-      ^ "See the Flow logs for more details."
-    in
-    let e = { e with Lsp.Error.message = friendly_message } in
-    Lwt.return
-      (ret, LspProt.LspFromServer (Some (ResponseMessage (id, ErrorResult (e, stack)))), metadata)
-  | None ->
-    LogMessage.(
-      let text = Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack in
-      Lwt.return
-        ( ret,
-          LspProt.LspFromServer
-            (Some
-               (NotificationMessage
-                  (TelemetryNotification { type_ = MessageType.ErrorMessage; message = text }))),
-          metadata ))
+  let message =
+    match id with
+    | Some id ->
+      let friendly_message =
+        "Flow encountered an unexpected error while handling this request. "
+        ^ "See the Flow logs for more details."
+      in
+      let e = Lsp_fmt.error_of_exn (Error.Unknown friendly_message) in
+      ResponseMessage (id, ErrorResult (e, stack))
+    | None ->
+      let text = Printf.sprintf "%s [%i]\n%s" reason Error.Code.unknownErrorCode stack in
+      NotificationMessage
+        (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message = text })
+  in
+  Lwt.return (ret, LspProt.LspFromServer (Some message), metadata)
 
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
