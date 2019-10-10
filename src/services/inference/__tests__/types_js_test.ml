@@ -7,6 +7,7 @@
 
 open OUnit2
 open Utils_js
+open Dep_graph_test_utils
 
 (* Like `>::` except it expects the function to return `unit Lwt.t` rather than `unit` *)
 let ( %>:: ) name f = name >:: (fun ctxt -> LwtInit.run_lwt (fun () -> f ctxt))
@@ -64,25 +65,11 @@ let test_with_profiling test_fun ctxt =
   in
   Lwt.return result
 
-let make_fake_file_key filename = File_key.SourceFile ("/tmp/fake/path/" ^ filename ^ ".js")
-
-let make_filename_set filenames = filenames |> List.map make_fake_file_key |> FilenameSet.of_list
-
 let make_checked_set ~focused ~dependents ~dependencies =
   let focused = make_filename_set focused in
   let dependents = make_filename_set dependents in
   let dependencies = make_filename_set dependencies in
   CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
-
-let make_dependency_graph lst =
-  List.fold_left
-    (fun map (file, dependencies) ->
-      let file = make_fake_file_key file in
-      if FilenameMap.mem file map then failwith "Duplicate key when constructing map";
-      let dependency_set = make_filename_set dependencies in
-      FilenameMap.add file dependency_set map)
-    FilenameMap.empty
-    lst
 
 let make_unchanged_checked checked_files freshparsed =
   CheckedSet.add
