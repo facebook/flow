@@ -1094,11 +1094,14 @@ let did_close ~reader genv env client : ServerEnv.env Lwt.t =
 
 let with_error ?(stack : Utils.callstack option) ~(reason : string) (metadata : LspProt.metadata) :
     LspProt.metadata =
-  LspProt.(
-    let local_stack = Exception.get_current_callstack_string 100 in
-    let stack = Option.value stack ~default:(Utils.Callstack local_stack) in
-    let error_info = Some (ExpectedError, reason, stack) in
-    { metadata with error_info })
+  let open LspProt in
+  let stack =
+    match stack with
+    | Some stack -> stack
+    | None -> Utils.Callstack (Exception.get_current_callstack_string 100)
+  in
+  let error_info = Some (ExpectedError, reason, stack) in
+  { metadata with error_info }
 
 let keyvals_of_json (json : Hh_json.json option) : (string * Hh_json.json) list =
   match json with
