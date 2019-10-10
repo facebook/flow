@@ -3698,6 +3698,19 @@ and extract_getter_type = function
   | DefT (_, _, FunT (_, _, { return_t; _ })) -> return_t
   | _ -> failwith "Getter property with unexpected type"
 
+and tuple_length reason trust ts =
+  let r =
+    let desc = RTupleLength (List.length ts) in
+    replace_desc_reason desc reason
+  in
+  let t =
+    let n = List.length ts in
+    let float = Pervasives.float_of_int n in
+    let string = Pervasives.string_of_int n in
+    SingletonNumT (float, string)
+  in
+  DefT (r, trust, t)
+
 and elemt_of_arrtype = function
   | ArrayAT (elemt, _)
   | ROArrayAT elemt
