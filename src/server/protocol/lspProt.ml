@@ -108,6 +108,7 @@ let normalized_string_of_recheck_reason = function
 type request =
   | Subscribe
   | LspToServer of Lsp.lsp_message
+  | LiveErrorsRequest of Lsp.documentUri
 
 type request_with_metadata = request * metadata
 
@@ -116,6 +117,7 @@ type request_with_metadata = request * metadata
 let string_of_request = function
   | Subscribe -> "subscribe"
   | LspToServer msg -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
+  | LiveErrorsRequest uri -> Printf.sprintf "liveErrorsRequest %s" uri
 
 let string_of_request_with_metadata (request, _) = string_of_request request
 
@@ -123,7 +125,14 @@ let json_of_request =
   Hh_json.(
     function
     | (Subscribe, _) -> JSON_Object [("method", JSON_String "subscribe")]
-    | (LspToServer _, metadata) -> metadata.start_json_truncated)
+    | (LspToServer _, metadata) -> metadata.start_json_truncated
+    | (LiveErrorsRequest uri, metadata) ->
+      JSON_Object
+        [
+          ("method", JSON_String "liveErrorsRequest");
+          ("params", JSON_Object [("uri", JSON_String uri)]);
+          ("trigger", metadata.start_json_truncated);
+        ])
 
 (* Why is the server sending us a list of errors *)
 type errors_reason =
@@ -138,8 +147,25 @@ type errors_reason =
   (* The persistent client just subscribed to errors, so was sent the initial error list *)
   | New_subscription
 
+type error_response_kind =
+  | Canceled_error_response
+  | Errored_error_response
+
+type live_errors_failure = {
+  live_errors_failure_kind: error_response_kind;
+  live_errors_failure_reason: string;
+  live_errors_failure_uri: string;
+}
+
+type live_errors_response = {
+  live_errors: Errors.ConcreteLocPrintableErrorSet.t;
+  live_warnings: Errors.ConcreteLocPrintableErrorSet.t;
+  live_errors_uri: Lsp.documentUri;
+}
+
 type response =
   | LspFromServer of Lsp.lsp_message option
+  | LiveErrorsResponse of (live_errors_response, live_errors_failure) result
   | UncaughtException of {
       request: request;
       exception_constructor: string;
@@ -170,6 +196,21 @@ let string_of_response = function
   | LspFromServer None -> "lspFromServer None"
   | LspFromServer (Some msg) ->
     Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
+  | LiveErrorsResponse (Ok { live_errors; live_warnings; live_errors_uri; _ }) ->
+    Printf.sprintf
+      "liveErrorsResponse OK (%d errors, %d warnings) %s"
+      (Errors.ConcreteLocPrintableErrorSet.cardinal live_errors)
+      (Errors.ConcreteLocPrintableErrorSet.cardinal live_warnings)
+      live_errors_uri
+  | LiveErrorsResponse
+      (Error { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri }) ->
+    Printf.sprintf
+      "liveErrorsResponse %s %s %s"
+      (match live_errors_failure_kind with
+      | Canceled_error_response -> "CANCELED"
+      | Errored_error_response -> "ERRORED")
+      live_errors_failure_reason
+      live_errors_failure_uri
   | UncaughtException { request; exception_constructor; stack } ->
     Printf.sprintf
       "UncaughtException %s in handling `%s`: %s"

@@ -51,6 +51,7 @@ module Opts = struct
     all: bool;
     allow_skip_direct_dependents: bool;
     cache_direct_dependents: bool;
+    disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
@@ -146,6 +147,7 @@ module Opts = struct
       all = false;
       allow_skip_direct_dependents = false;
       cache_direct_dependents = true;
+      disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
       enforce_strict_call_arity = true;
@@ -543,6 +545,8 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.cache_direct_dependents",
         boolean (fun opts v -> Ok { opts with cache_direct_dependents = v }) );
+      ( "experimental.disable_live_non_parse_errors",
+        boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v }) );
       ( "experimental.allow_skip_direct_dependents",
         boolean (fun opts v -> Ok { opts with allow_skip_direct_dependents = v }) );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
@@ -1096,6 +1100,8 @@ let all c = c.options.Opts.all
 let allow_skip_direct_dependents c = c.options.Opts.allow_skip_direct_dependents
 
 let cache_direct_dependents c = c.options.Opts.cache_direct_dependents
+
+let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
 let emoji c = c.options.Opts.emoji
 

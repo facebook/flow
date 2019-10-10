@@ -575,11 +575,12 @@ module Make (F : Func_sig.S) = struct
       | Interface { inline = _; extends; callable } ->
         let extends =
           Core_list.map
-            ~f:(function
-              | (loc, c, None) ->
-                let reason = repos_reason loc ~annot_loc:loc (reason_of_t c) in
+            ~f:(fun (annot_loc, c, targs_opt) ->
+              match targs_opt with
+              | None ->
+                let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
                 Flow.mk_instance cx reason c
-              | (annot_loc, c, Some targs) -> typeapp ~annot_loc c targs)
+              | Some targs -> typeapp ~annot_loc c targs)
             extends
         in
         (* If the interface definition includes a callable property, add the
@@ -661,11 +662,14 @@ module Make (F : Func_sig.S) = struct
       | Interface _ -> []
       | Class { implements; _ } ->
         Core_list.map
-          ~f:(function
-            | (loc, c, None) ->
-              let reason = repos_reason loc ~annot_loc:loc (Type.reason_of_t c) in
+          ~f:(fun (annot_loc, c, targs_opt) ->
+            match targs_opt with
+            | None ->
+              let reason =
+                annot_reason ~annot_loc @@ repos_reason annot_loc (Type.reason_of_t c)
+              in
               Flow.mk_instance cx reason c
-            | (annot_loc, c, Some targs) -> Type.typeapp ~annot_loc c targs)
+            | Some targs -> Type.typeapp ~annot_loc c targs)
           implements
     in
     let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
@@ -682,13 +686,13 @@ module Make (F : Func_sig.S) = struct
       let reason = x.instance.reason in
       Type.(
         List.iter
-          (fun (loc, c, targs_opt) ->
+          (fun (annot_loc, c, targs_opt) ->
             let i =
               match targs_opt with
               | None ->
-                let reason = repos_reason loc ~annot_loc:loc (reason_of_t c) in
+                let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
                 Flow.mk_instance cx reason c
-              | Some targs -> typeapp ~annot_loc:loc c targs
+              | Some targs -> typeapp ~annot_loc c targs
             in
             let use_op =
               Op

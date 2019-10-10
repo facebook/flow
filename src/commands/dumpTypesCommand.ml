@@ -33,6 +33,11 @@ let spec =
         |> from_flag
         |> path_flag
         |> wait_for_recheck_flag
+        |> flag "--expand-type-aliases" no_arg ~doc:"Replace type aliases with their bodies"
+        |> flag
+             "--evaluate-type-destructors"
+             no_arg
+             ~doc:"Use the result of type destructor evaluation if available"
         |> anon "file" (optional string));
   }
 
@@ -77,7 +82,19 @@ let handle_error err ~file_content ~json ~pretty ~strip_root =
   ) else
     prerr_endline err
 
-let main base_flags option_values json pretty root strip_root path wait_for_recheck filename () =
+let main
+    base_flags
+    option_values
+    json
+    pretty
+    root
+    strip_root
+    path
+    wait_for_recheck
+    expand_aliases
+    evaluate_type_destructors
+    filename
+    () =
   let json = json || pretty in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path filename in
   let file_content = File_input.content_of_file_input file |> Core_result.ok in
@@ -95,7 +112,10 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
     else
       None
   in
-  let request = ServerProt.Request.DUMP_TYPES { input = file; wait_for_recheck } in
+  let request =
+    ServerProt.Request.DUMP_TYPES
+      { input = file; expand_aliases; evaluate_type_destructors; wait_for_recheck }
+  in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.DUMP_TYPES (Error err) ->
     handle_error err ~file_content ~json ~pretty ~strip_root

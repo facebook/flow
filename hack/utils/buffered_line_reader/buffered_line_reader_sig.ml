@@ -36,12 +36,12 @@ module type S = sig
 
   val has_buffered_content : t -> bool
 
-  val is_readable : t -> bool
   (**
     * Returns true if and only if there is content to be read (does not know if
     * the incoming content is newline-terminated. So we can't actually know
     * if get_next_line will be non-blocking.
     *)
+  val is_readable : t -> bool
 
   val get_fd : t -> fd
 

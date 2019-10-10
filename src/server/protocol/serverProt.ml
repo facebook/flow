@@ -45,6 +45,8 @@ module Request = struct
       }
     | DUMP_TYPES of {
         input: File_input.t;
+        expand_aliases: bool;
+        evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
       }
     | FIND_MODULE of {
@@ -134,7 +136,8 @@ module Request = struct
     | CYCLE { filename; types_only } ->
       Printf.sprintf "cycle (types_only: %b) %s" types_only filename
     | GRAPH_DEP_GRAPH _ -> Printf.sprintf "dep-graph"
-    | DUMP_TYPES { input; wait_for_recheck = _ } ->
+    | DUMP_TYPES { input; expand_aliases = _; evaluate_type_destructors = _; wait_for_recheck = _ }
+      ->
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
     | FIND_MODULE { moduleref; filename; wait_for_recheck = _ } ->
       Printf.sprintf "find-module %s %s" moduleref filename

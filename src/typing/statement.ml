@@ -3425,7 +3425,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           let import_reason = mk_reason (RModule module_name) loc in
           Import_export.import_ns cx import_reason (source_loc, module_name) loc
         in
-        let reason = annot_reason (mk_reason (RCustom "async import") loc) in
+        let reason = mk_annot_reason (RCustom "async import") loc in
         let t = Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t] in
         ( (loc, t),
           Import
@@ -4393,18 +4393,17 @@ and literal cx loc lit =
             else
               (AnyLiteral, RLongStringLit max_literal_length)
           in
-          DefT (annot_reason (mk_reason r_desc loc), make_trust (), StrT lit)
+          DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit)
       end
-    | Boolean b -> DefT (annot_reason (mk_reason RBoolean loc), make_trust (), BoolT (Some b))
+    | Boolean b -> DefT (mk_annot_reason RBoolean loc, make_trust (), BoolT (Some b))
     | Null -> NullT.at loc |> with_trust make_trust
     | Number f ->
-      DefT
-        (annot_reason (mk_reason RNumber loc), make_trust (), NumT (Literal (None, (f, lit.raw))))
+      DefT (mk_annot_reason RNumber loc, make_trust (), NumT (Literal (None, (f, lit.raw))))
     | BigInt _ ->
-      let reason = annot_reason (mk_reason (RBigIntLit lit.raw) loc) in
+      let reason = mk_annot_reason (RBigIntLit lit.raw) loc in
       Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
       AnyT.why AnyError reason
-    | RegExp _ -> Flow.get_builtin_type cx (annot_reason (mk_reason RRegExp loc)) "RegExp")
+    | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) "RegExp")
 
 (* traverse a unary expression, return result type *)
 and unary cx loc =
@@ -4427,7 +4426,8 @@ and unary cx loc =
            having a tvar allows other special cases that match concrete lower bounds to proceed
            (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
            make a negative number not look like a literal.) *)
-            let reason = repos_reason loc ~annot_loc:loc reason in
+            let annot_loc = loc in
+            let reason = annot_reason ~annot_loc @@ repos_reason annot_loc reason in
             let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
             DefT (reason, trust, NumT (Literal (sense, (value, raw))))
           | arg ->

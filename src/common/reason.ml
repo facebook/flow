@@ -872,7 +872,7 @@ let replace_desc_reason desc r =
 let replace_desc_new_reason desc r = mk_reason_with_test_id r.test_id desc r.loc None None
 
 (* returns reason with new location and description of original *)
-let repos_reason loc ?(annot_loc : 'loc option) reason =
+let repos_reason loc reason =
   let def_aloc_opt =
     let def_loc = def_poly_loc_of_reason reason in
     if loc = def_loc then
@@ -880,14 +880,16 @@ let repos_reason loc ?(annot_loc : 'loc option) reason =
     else
       Some def_loc
   in
-  let annot_aloc_opt =
-    match annot_loc with
-    | Some annot_loc -> Some annot_loc
-    | None -> reason.annot_loc_opt
-  in
-  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt annot_aloc_opt
+  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt reason.annot_loc_opt
 
-let annot_reason reason = { reason with annot_loc_opt = Some reason.loc }
+let annot_reason ~annot_loc reason = { reason with annot_loc_opt = Some annot_loc }
+
+let opt_annot_reason ?annot_loc reason =
+  match annot_loc with
+  | None -> reason
+  | Some annot_loc -> annot_reason ~annot_loc reason
+
+let mk_annot_reason desc annot_loc = annot_reason ~annot_loc (mk_reason desc annot_loc)
 
 module ReasonMap = MyMap.Make (struct
   type t = reason

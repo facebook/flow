@@ -130,7 +130,10 @@ val print_documentSymbol : Lsp.DocumentSymbol.result -> Hh_json.json
 
 val parse_findReferences : Hh_json.json option -> Lsp.FindReferences.params
 
-val print_findReferences : Lsp.Location.t list -> Hh_json.json
+val parse_goToImplementation :
+  Hh_json.json option -> Lsp.GoToImplementation.params
+
+val print_Locations : Lsp.Location.t list -> Hh_json.json
 
 val parse_documentHighlight :
   Hh_json.json option -> Lsp.DocumentHighlight.params

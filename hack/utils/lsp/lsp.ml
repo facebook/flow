@@ -872,6 +872,15 @@ module FindReferences = struct
   }
 end
 
+(* Go To Implementation request, method="textDocument/implementation" *)
+module GoToImplementation = struct
+  type params = implementationParams
+
+  and result = Location.t list
+
+  and implementationParams = { loc: TextDocumentPositionParams.t }
+end
+
 (* Document Highlights request, method="textDocument/documentHighlight" *)
 module DocumentHighlight = struct
   type params = TextDocumentPositionParams.t
@@ -1243,6 +1252,7 @@ type lsp_result =
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
   | FindReferencesResult of FindReferences.result
+  | GoToImplementationResult of GoToImplementation.result
   | DocumentHighlightResult of DocumentHighlight.result
   | TypeCoverageResult of TypeCoverage.result
   | DocumentFormattingResult of DocumentFormatting.result

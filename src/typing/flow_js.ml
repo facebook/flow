@@ -676,7 +676,7 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
         let param_loc = Reason.aloc_of_reason param_reason in
         let annot_loc = annot_aloc_of_reason bound_reason in
         let desc = desc_of_reason ~unwrap:false bound_reason in
-        repos_reason param_loc ?annot_loc (mk_reason (RPolyTest (name, desc)) param_loc))
+        opt_annot_reason ?annot_loc @@ mk_reason (RPolyTest (name, desc)) param_loc)
       (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)
@@ -1048,8 +1048,9 @@ struct
        lower bound. *)
         | (UnionT (r, rep), ReposUseT (reason, use_desc, use_op, l)) ->
           let rep = UnionRep.ident_map (annot use_desc) rep in
+          let loc = aloc_of_reason reason in
           let annot_loc = annot_aloc_of_reason reason in
-          let r = repos_reason (aloc_of_reason reason) ?annot_loc r in
+          let r = opt_annot_reason ?annot_loc @@ repos_reason loc r in
           let r =
             if use_desc then
               replace_desc_reason (desc_of_reason reason) r
@@ -1058,8 +1059,9 @@ struct
           in
           rec_flow cx trace (l, UseT (use_op, UnionT (r, rep)))
         | (MaybeT (r, u), ReposUseT (reason, use_desc, use_op, l)) ->
+          let loc = aloc_of_reason reason in
           let annot_loc = annot_aloc_of_reason reason in
-          let r = repos_reason (aloc_of_reason reason) ?annot_loc r in
+          let r = opt_annot_reason ?annot_loc @@ repos_reason loc r in
           let r =
             if use_desc then
               replace_desc_reason (desc_of_reason reason) r
@@ -1068,8 +1070,9 @@ struct
           in
           rec_flow cx trace (l, UseT (use_op, MaybeT (r, annot use_desc u)))
         | (OptionalT (r, u), ReposUseT (reason, use_desc, use_op, l)) ->
+          let loc = aloc_of_reason reason in
           let annot_loc = annot_aloc_of_reason reason in
-          let r = repos_reason (aloc_of_reason reason) ?annot_loc r in
+          let r = opt_annot_reason ?annot_loc @@ repos_reason loc r in
           let r =
             if use_desc then
               replace_desc_reason (desc_of_reason reason) r
@@ -2712,8 +2715,17 @@ struct
                | PredicateT (NotP (RightP (SentinelProp _, _)), _) ->
                  false
                | _ -> true ->
+          ( if Context.is_verbose cx then
+            match u with
+            | UseT (_, UnionT _) -> prerr_endline "UnionT ~> UnionT slow case"
+            | UseT (_, IntersectionT _) -> prerr_endline "UnionT ~> IntersectionT slow case"
+            | _ -> () );
           UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
         | (_, UseT (use_op, IntersectionT (_, rep))) ->
+          ( if Context.is_verbose cx then
+            match l with
+            | UnionT _ -> prerr_endline "IntersectionT ~> UnionT slow case"
+            | _ -> () );
           InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (l, UseT (use_op, t)))
         (* When a subtyping question involves a union appearing on the right or an
        intersection appearing on the left, the simplification rules are
@@ -4468,6 +4480,7 @@ struct
         (*********************************************************)
         | (DefT (reason, _, ClassT this), ConstructorT (use_op, reason_op, targs, args, t)) ->
           let reason_o = replace_desc_reason RConstructorReturn reason in
+          let annot_loc = aloc_of_reason reason_op in
           (* early error if type args passed to non-polymorphic class *)
           Option.iter targs ~f:(fun _ ->
               add_output
@@ -4476,7 +4489,7 @@ struct
                 Error_message.(
                   ECallTypeArity
                     {
-                      call_loc = aloc_of_reason reason_op;
+                      call_loc = annot_loc;
                       is_new = true;
                       reason_arity = reason_of_t this;
                       expected_arity = 0;
@@ -4493,7 +4506,7 @@ struct
                   (this, MethodT (use_op, reason_op, reason_o, propref, funtype, None)))
           in
           (* return this *)
-          rec_flow cx trace (ret, ObjTestT (annot_reason reason_op, this, t))
+          rec_flow cx trace (ret, ObjTestT (annot_reason ~annot_loc reason_op, this, t))
         (****************************************************************)
         (* function types derive objects through explicit instantiation *)
         (****************************************************************)
@@ -10950,7 +10963,7 @@ struct
   (* set the position of the given def type from a reason *)
   and reposition cx ?trace (loc : ALoc.t) ?desc ?annot_loc t =
     let mod_reason reason =
-      let reason = repos_reason loc ?annot_loc reason in
+      let reason = opt_annot_reason ?annot_loc @@ repos_reason loc reason in
       match desc with
       | Some d -> replace_desc_new_reason d reason
       | None -> reason
@@ -11089,7 +11102,8 @@ struct
        allows them to widen unexpectedly and may cause unpreditable behavior. *)
         t
     in
-    AnnotT (annot_reason reason, source, use_desc)
+    let annot_loc = aloc_of_reason reason in
+    AnnotT (annot_reason ~annot_loc reason, source, use_desc)
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
     let t = get_builtin cx ?trace x reason in

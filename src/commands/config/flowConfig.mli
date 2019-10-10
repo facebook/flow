@@ -58,6 +58,8 @@ val allow_skip_direct_dependents : config -> bool
 
 val cache_direct_dependents : config -> bool
 
+val disable_live_non_parse_errors : config -> bool
+
 val emoji : config -> bool
 
 val enable_const_params : config -> bool

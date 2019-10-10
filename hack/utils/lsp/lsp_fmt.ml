@@ -840,7 +840,19 @@ let parse_findReferences (params : json option) : FindReferences.params =
       };
   }
 
-let print_findReferences (r : Location.t list) : json =
+(************************************************************************)
+(* textDocument/implementation request                                  *)
+(************************************************************************)
+
+let parse_goToImplementation (params : json option) : GoToImplementation.params
+    =
+  { GoToImplementation.loc = parse_textDocumentPositionParams params }
+
+(************************************************************************)
+(* shared by textDocument/references and textDocument/implementation    *)
+(************************************************************************)
+
+let print_Locations (r : Location.t list) : json =
   JSON_Array (List.map r ~f:print_location)
 
 (************************************************************************)
@@ -1327,6 +1339,7 @@ let result_name_to_string (result : lsp_result) : string =
   | WorkspaceSymbolResult _ -> "workspace/symbol"
   | DocumentSymbolResult _ -> "textDocument/documentSymbol"
   | FindReferencesResult _ -> "textDocument/references"
+  | GoToImplementationResult _ -> "textDocument/implementation"
   | DocumentHighlightResult _ -> "textDocument/documentHighlight"
   | TypeCoverageResult _ -> "textDocument/typeCoverage"
   | DocumentFormattingResult _ -> "textDocument/formatting"
@@ -1543,7 +1556,8 @@ let print_lsp_response
     | TypeDefinitionResult r -> print_definition r
     | WorkspaceSymbolResult r -> print_workspaceSymbol r
     | DocumentSymbolResult r -> print_documentSymbol r
-    | FindReferencesResult r -> print_findReferences r
+    | FindReferencesResult r -> print_Locations r
+    | GoToImplementationResult r -> print_Locations r
     | DocumentHighlightResult r -> print_documentHighlight r
     | TypeCoverageResult r -> print_typeCoverage r
     | DocumentFormattingResult r -> print_documentFormatting r

@@ -7,7 +7,6 @@
  *
  *)
 
-type t = int [@@deriving eq]
 (**
  * Three values packed into one 64-bit integer:
  *
@@ -26,6 +25,7 @@ type t = int [@@deriving eq]
  *
  *
  *)
+type t = int [@@deriving eq]
 
 let column_bits = 9
 

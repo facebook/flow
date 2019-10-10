@@ -3073,7 +3073,7 @@ end
 module Primitive (P : PrimitiveType) = struct
   let desc = P.desc
 
-  let at tok = P.make (annot_reason (mk_reason desc tok))
+  let at tok = P.make (mk_annot_reason desc tok)
 
   let why reason = P.make (replace_desc_reason desc reason)
 
@@ -3117,7 +3117,7 @@ module AnyT = struct
 
   let make source r = AnyT (r, source)
 
-  let at source = mk_reason (desc source) %> annot_reason %> make source
+  let at source = mk_annot_reason (desc source) %> make source
 
   let why source = replace_desc_reason (desc source) %> make source
 
@@ -3708,7 +3708,7 @@ let optional ?annot_loc t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
   let reason =
     match annot_loc with
-    | Some loc -> repos_reason loc ~annot_loc:loc reason
+    | Some annot_loc -> annot_reason ~annot_loc @@ repos_reason annot_loc reason
     | None -> reason
   in
   OptionalT (reason, t)
@@ -3728,7 +3728,7 @@ let class_type ?(structural = false) ?annot_loc t =
   in
   let reason =
     match annot_loc with
-    | Some loc -> repos_reason loc ~annot_loc:loc reason
+    | Some annot_loc -> annot_reason ~annot_loc @@ repos_reason annot_loc reason
     | None -> reason
   in
   DefT (reason, bogus_trust (), ClassT t)
@@ -3747,6 +3747,7 @@ let extends_use_type use_op l u =
 
 let poly_type id tparams_loc (tparams : typeparam Nel.t) t =
   let reason = update_desc_new_reason (fun desc -> RPolyType desc) (reason_of_t t) in
+  let reason = annot_reason ~annot_loc:(aloc_of_reason reason) reason in
   DefT (reason, bogus_trust (), PolyT (tparams_loc, tparams, t, id))
 
 let poly_type_of_tparam_list id tparams_loc tparams t =
@@ -3776,7 +3777,7 @@ let typeapp ?(implicit = false) ?annot_loc t targs =
   in
   let reason =
     match annot_loc with
-    | Some loc -> repos_reason loc ~annot_loc:loc reason
+    | Some annot_loc -> annot_reason ~annot_loc @@ repos_reason annot_loc reason
     | None -> reason
   in
   let use_op = Op (TypeApplication { type' = reason }) in
@@ -3790,7 +3791,7 @@ let this_typeapp ?annot_loc t this targs =
   in
   let reason =
     match annot_loc with
-    | Some loc -> repos_reason loc ~annot_loc:loc reason
+    | Some annot_loc -> annot_reason ~annot_loc @@ repos_reason annot_loc reason
     | None -> reason
   in
   ThisTypeAppT (reason, t, this, targs)

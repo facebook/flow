@@ -268,12 +268,20 @@ let collect_rage ~options ~reader ~env ~files =
   in
   items
 
-let dump_types ~options ~env ~profiling file_input =
+let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content ->
-  try_with (fun () -> Type_info_service.dump_types ~options ~env ~profiling file content)
+  try_with (fun () ->
+      Type_info_service.dump_types
+        ~options
+        ~env
+        ~profiling
+        ~expand_aliases
+        ~evaluate_type_destructors
+        file
+        content)
 
 let coverage ~options ~env ~profiling ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -503,8 +511,10 @@ let handle_cycle ~fn ~types_only ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
-let handle_dump_types ~options ~input ~profiling ~env =
-  let%lwt response = dump_types ~options ~env ~profiling input in
+let handle_dump_types ~options ~input ~expand_aliases ~evaluate_type_destructors ~profiling ~env =
+  let%lwt response =
+    dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors input
+  in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
 let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
@@ -754,8 +764,12 @@ let get_ephemeral_handler genv command =
     let file_options = Options.file_options options in
     let fn = Files.filename_from_string ~options:file_options filename in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
-  | ServerProt.Request.DUMP_TYPES { input; wait_for_recheck } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_dump_types ~options ~input)
+  | ServerProt.Request.DUMP_TYPES
+      { input; expand_aliases; evaluate_type_destructors; wait_for_recheck } ->
+    mk_parallelizable
+      ~wait_for_recheck
+      ~options
+      (handle_dump_types ~options ~input ~expand_aliases ~evaluate_type_destructors)
   | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck } ->
     mk_parallelizable
       ~wait_for_recheck
@@ -1572,6 +1586,80 @@ let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:
   let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
   mk_lsp_error_response ~ret:() ~id ~reason metadata
 
+(* What should we do if we get multiple requests for the same URI? Each request wants the most
+ * up-to-date live errors, so if we have 10 pending requests then we would want to send the same
+ * response to each. And we could do that, but it might have some weird side effects:
+ *
+ * 1. Logging would make this look faster than it is, since we're doing a single check to respond
+ *    to N requests
+ * 2. The LSP process would have to integrate N responses into its store of errors
+ *
+ * So instead we just respond that the first N-1 requests were canceled and send a response to the
+ * Nth request. Since it's very cheap to cancel a request, this shouldn't delay the LSP process
+ * getting a response *)
+let handle_live_errors_request =
+  (* How do we know that we're responding to the latest request for a URI? Keep track of the
+   * latest metadata object *)
+  let uri_to_latest_metadata_map = ref SMap.empty in
+  fun ~options ~uri ~metadata ->
+    (* Immediately store the latest metadata *)
+    uri_to_latest_metadata_map := SMap.add uri metadata !uri_to_latest_metadata_map;
+    fun ~client ~profiling ~env ->
+      let latest_metadata = SMap.find_unsafe uri !uri_to_latest_metadata_map in
+      if latest_metadata <> metadata then
+        (* A more recent request for live errors has come in for this file. So let's cancel
+         * this one and let the later one handle it *)
+        Lwt.return
+          ( (),
+            LspProt.(
+              LiveErrorsResponse
+                (Error
+                   {
+                     live_errors_failure_kind = Canceled_error_response;
+                     live_errors_failure_reason = "Subsumed by a later request";
+                     live_errors_failure_uri = uri;
+                   })),
+            metadata )
+      else
+        (* This is the most recent live errors request we've received for this file. All the
+         * older ones have already been responded to or canceled *)
+        let file_path = Lsp_helpers.lsp_uri_to_path uri in
+        let%lwt ret =
+          match Persistent_connection.get_file client file_path with
+          | File_input.FileName _ ->
+            (* Maybe we've received a didClose for this file? Or maybe we got a request for a file
+             * that wasn't open in the first place (that would be a bug). *)
+            Lwt.return
+              ( (),
+                LspProt.(
+                  LiveErrorsResponse
+                    (Error
+                       {
+                         live_errors_failure_kind = Errored_error_response;
+                         live_errors_failure_reason =
+                           spf "Cannot get live errors for %s: File not open" file_path;
+                         live_errors_failure_uri = uri;
+                       })),
+                metadata )
+          | File_input.FileContent (_, content) ->
+            let file = File_key.SourceFile file_path in
+            let%lwt (_, live_errors, live_warnings) =
+              Types_js.typecheck_contents ~options ~env ~profiling content file
+            in
+            Lwt.return
+              ( (),
+                LspProt.LiveErrorsResponse
+                  (Ok { LspProt.live_errors; live_warnings; live_errors_uri = uri }),
+                metadata )
+        in
+        (* If we've successfully run and there isn't a more recent request for this URI,
+         * then remove the entry from the map *)
+        (match SMap.get uri !uri_to_latest_metadata_map with
+        | Some latest_metadata when latest_metadata = metadata ->
+          uri_to_latest_metadata_map := SMap.remove uri !uri_to_latest_metadata_map
+        | _ -> ());
+        Lwt.return ret
+
 type persistent_command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.
    * These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
@@ -1757,7 +1845,10 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
         | _ -> None
       in
       (* We can reject unsupported stuff immediately *)
-      Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata))
+      Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata)
+    | (LiveErrorsRequest uri, metadata) ->
+      (* We can handle live errors even during a recheck *)
+      mk_parallelizable_persistent ~options (handle_live_errors_request ~options ~uri ~metadata))
 
 let wrap_persistent_handler
     (type a b c)

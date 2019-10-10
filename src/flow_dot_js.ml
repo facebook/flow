@@ -116,7 +116,6 @@ let load_lib_files
                  ~exclude_syms
                  ~file_sig:(File_sig.abstractify_locs file_sig)
                  ~lint_severities:LintSettings.empty_severities
-                 ~file_options:None
              in
              Context.merge_into (Context.sig_cx master_cx) sig_cx;
 
@@ -268,7 +267,6 @@ let infer_and_merge ~root filename ast file_sig =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
-      ~file_options:None
       ~strict_mode
       ~file_sigs
       ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
@@ -413,7 +411,15 @@ let dump_types js_file js_content =
     let file_sig = File_sig.abstractify_locs file_sig in
     let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
     let printer = Ty_printer.string_of_t in
-    let types = Query_types.dump_types ~printer cx file_sig typed_ast in
+    let types =
+      Query_types.dump_types
+        ~printer
+        ~evaluate_type_destructors:false
+        ~expand_aliases:false
+        cx
+        file_sig
+        typed_ast
+    in
     let strip_root = None in
     let types_json = types_to_json types ~strip_root in
     js_of_json types_json

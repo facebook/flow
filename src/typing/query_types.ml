@@ -79,15 +79,15 @@ let type_at_pos_type
   | None -> FailureNoMatch
   | Some (loc, scheme) -> type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme
 
-let dump_types ~printer cx file_sig typed_ast =
+let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig typed_ast =
   let options =
     {
       Ty_normalizer_env.fall_through_merged = false;
       expand_internal_types = false;
-      expand_type_aliases = false;
+      expand_type_aliases = expand_aliases;
       flag_shadowed_type_params = false;
       preserve_inferred_literal_types = false;
-      evaluate_type_destructors = false;
+      evaluate_type_destructors;
       optimize_types = true;
       omit_targ_defaults = false;
       merge_bot_and_any_kinds = true;
