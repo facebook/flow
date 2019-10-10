@@ -580,11 +580,18 @@ let include_dependencies_and_dependents
        rechecked. *)
       let definitely_to_merge = CheckedSet.add ~dependencies input in
       let to_merge = CheckedSet.add ~dependents:all_dependent_files definitely_to_merge in
+      (* TODO these should not be the same *)
+      let to_check = to_merge in
+      (* This contains all of the files which may be merged or checked. Conveniently, this is
+       * currently the same as to_check, so we can avoid doing a costly union, but if we change how
+       * to_check is computed we should be sure to change this as well. *)
+      let to_merge_or_check = to_check in
       (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with to_merge on
        dependency_graph, we would get exactly the same components. Later, we will filter
        dependency_graph to just to_merge, and correspondingly filter components as well. This will
        work out because every component is either entirely inside to_merge or entirely outside. *)
-      Lwt.return (to_merge, components, CheckedSet.all definitely_to_merge))
+      Lwt.return
+        (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
 let remove_old_results (errors, warnings, suppressions, coverage, first_internal_error) file =
   ( FilenameMap.remove file errors,
@@ -913,7 +920,7 @@ let check_files
     ~errors
     ~updated_errors
     ~coverage
-    ~merged_files
+    ~to_check
     ~direct_dependent_files
     ~sig_new_or_changed
     ~dependency_info
@@ -926,8 +933,8 @@ let check_files
     with_timer_lwt ~options "Check" profiling (fun () ->
         Hh_logger.info "Check prep";
         Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
-        let focused_to_check = CheckedSet.focused merged_files in
-        let merged_dependents = CheckedSet.dependents merged_files in
+        let focused_to_check = CheckedSet.focused to_check in
+        let merged_dependents = CheckedSet.dependents to_check in
         let skipped_count = ref 0 in
         let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
         let record_slow_file file time =
@@ -1393,7 +1400,7 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~
           ~input_dependencies:None
           ~all_dependent_files:FilenameSet.empty)
 
-let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
+let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
   match Options.lazy_mode options with
   | Options.NON_LAZY_MODE
   | Options.LAZY_MODE_FILESYSTEM
@@ -1423,7 +1430,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
        *    a little to compute the fanout
        *)
       let files_already_checked = CheckedSet.cardinal env.ServerEnv.checked_files in
-      let files_about_to_recheck = CheckedSet.cardinal to_merge in
+      let files_about_to_recheck = CheckedSet.cardinal to_merge_or_check in
       Hh_logger.info
         "We've already checked %d files. We're about to recheck %d files"
         files_already_checked
@@ -1525,8 +1532,15 @@ module Recheck : sig
     files_to_force:CheckedSet.t ->
     unchanged_files_to_force:CheckedSet.t ->
     direct_dependent_files:FilenameSet.t ->
-    (* to_merge, components, recheck_set, all_dependent_files *)
-    (CheckedSet.t * File_key.t Nel.t list * FilenameSet.t * FilenameSet.t) Lwt.t
+    (* to_merge, to_check, to_merge_or_check (union of to_merge and to_check), components,
+     * recheck_set, all_dependent_files *)
+    ( CheckedSet.t
+    * CheckedSet.t
+    * CheckedSet.t
+    * File_key.t Nel.t list
+    * FilenameSet.t
+    * FilenameSet.t )
+    Lwt.t
 end = struct
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
@@ -2030,7 +2044,7 @@ end = struct
       CheckedSet.filter updated_checked_files ~f:(fun fn ->
           FilenameSet.mem fn acceptable_files_to_focus)
     in
-    let%lwt (to_merge, components, recheck_set) =
+    let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set) =
       include_dependencies_and_dependents
         ~options
         ~profiling
@@ -2040,7 +2054,7 @@ end = struct
         ~dependency_graph
         ~all_dependent_files
     in
-    Lwt.return (to_merge, components, recheck_set, all_dependent_files)
+    Lwt.return (to_merge, to_check, to_merge_or_check, components, recheck_set, all_dependent_files)
 
   (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
    * of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
@@ -2074,7 +2088,7 @@ end = struct
     let is_file_checked =
       is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
     in
-    let%lwt (to_merge, components, recheck_set, all_dependent_files) =
+    let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set, all_dependent_files) =
       determine_what_to_recheck
         ~profiling
         ~options
@@ -2093,12 +2107,12 @@ end = struct
     in
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
      * include the dependencies and dependents that are being implicitly included in the recheck. *)
-    will_be_checked_files := CheckedSet.union env.ServerEnv.checked_files to_merge;
+    will_be_checked_files := CheckedSet.union env.ServerEnv.checked_files to_merge_or_check;
 
     let%lwt estimates =
-      restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata
+      restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata
     in
-    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
+    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge_or_check in
     (* recheck *)
     let%lwt ( updated_errors,
               coverage,
@@ -2141,7 +2155,6 @@ end = struct
     in
     Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
-    let merged_files = to_merge in
     let%lwt ( errors,
               coverage,
               time_to_check_merged,
@@ -2157,7 +2170,7 @@ end = struct
         ~errors
         ~updated_errors
         ~coverage
-        ~merged_files
+        ~to_check
         ~direct_dependent_files
         ~sig_new_or_changed
         ~dependency_info
@@ -2171,9 +2184,9 @@ end = struct
       Recheck_stats.record_recheck_time
         ~options
         ~total_time:(time_to_merge +. time_to_check_merged)
-        ~rechecked_files:(CheckedSet.cardinal merged_files)
+        ~rechecked_files:(CheckedSet.cardinal to_merge_or_check)
     in
-    let checked_files = CheckedSet.union unchanged_checked merged_files in
+    let checked_files = CheckedSet.union unchanged_checked to_merge_or_check in
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
 
     (* NOTE: unused fields are left in their initial empty state *)
@@ -2841,7 +2854,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       in
       let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
       let dependency_graph = Dependency_info.dependency_graph dependency_info in
-      let%lwt (to_merge, components, recheck_set) =
+      let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set) =
         include_dependencies_and_dependents
           ~options
           ~profiling
@@ -2854,7 +2867,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
        of calling include_dependencies_and_dependents is to compute components. *)
-      let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
+      let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge_or_check in
       let dependency_graph = Dependency_info.dependency_graph dependency_info in
       let recheck_reasons = [LspProt.Full_init] in
       let%lwt (updated_errors, coverage, _, sig_new_or_changed, _, _, merge_internal_error) =
@@ -2878,7 +2891,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       in
       Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
-      let merged_files = to_merge in
       let%lwt (errors, coverage, _, _, _, _, check_internal_error) =
         check_files
           ~reader
@@ -2888,7 +2900,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~errors
           ~updated_errors
           ~coverage
-          ~merged_files
+          ~to_check
           ~direct_dependent_files:FilenameSet.empty
           ~sig_new_or_changed
           ~dependency_info
@@ -2899,7 +2911,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
       let first_internal_error = Option.first_some merge_internal_error check_internal_error in
-      let checked_files = merged_files in
+      let checked_files = to_merge_or_check in
       Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
       Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, first_internal_error))
 
