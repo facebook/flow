@@ -470,7 +470,8 @@ let send_lsp_to_server (cenv : connected_env) (metadata : LspProt.metadata) (mes
 
 (************************************************************************)
 
-let do_initialize () : Initialize.result =
+let do_initialize flowconfig : Initialize.result =
+  let code_action_provider = FlowConfig.lsp_code_actions flowconfig in
   Initialize.
     {
       server_capabilities =
@@ -493,7 +494,7 @@ let do_initialize () : Initialize.result =
           documentHighlightProvider = true;
           documentSymbolProvider = true;
           workspaceSymbolProvider = false;
-          codeActionProvider = true;
+          codeActionProvider = code_action_provider;
           codeLensProvider = None;
           documentFormattingProvider = false;
           documentRangeFormattingProvider = false;
@@ -1648,7 +1649,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       | Ok () -> ()
       | Error msg -> raise (Error.ServerErrorStart (msg, { Initialize.retry = false }))
     end;
-    let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
+    let response = ResponseMessage (id, InitializeResult (do_initialize flowconfig)) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = { d_ienv; d_autostart = true; d_server_status = None } in
