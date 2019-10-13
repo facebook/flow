@@ -821,17 +821,27 @@ module T = struct
           { Ast.Statement.VariableDeclaration.kind; declarations = [(decl_loc, declaration)] } )
 
   and object_type_property_of_class_element outlined = function
-    | (loc, CMethod (object_key, _kind, static, f)) ->
+    | (loc, CMethod (object_key, kind, static, f)) ->
+      let (value, _method) =
+        match kind with
+        | Ast.Class.Method.Constructor
+        | Ast.Class.Method.Method ->
+          (Ast.Type.Object.Property.Init (type_of_function outlined f), true)
+        | Ast.Class.Method.Get ->
+          (Ast.Type.Object.Property.Get (type_of_function_t outlined f), false)
+        | Ast.Class.Method.Set ->
+          (Ast.Type.Object.Property.Set (type_of_function_t outlined f), false)
+      in
       Ast.Type.Object.(
         Property
           ( loc,
             {
               Property.key = object_key;
-              value = Property.Init (type_of_function outlined f);
+              value;
               optional = false;
               static;
               proto = false;
-              _method = true;
+              _method;
               variance = None;
             } ))
     | (loc, CProperty (object_key, static, variance, t)) ->

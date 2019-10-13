@@ -780,6 +780,10 @@ let tests =
          >:: mk_signature_generator_test
                ["class C { async m() {} };"; "module.exports = C"]
                ["declare class C {m(): Promise<void>}"; "declare module.exports: typeof C;"];
+         "getter"
+         >:: mk_signature_generator_test
+               ["class C { get x(): string { return \"\" } };"; "module.exports = C"]
+               ["declare class C {get x(): string}"; "declare module.exports: typeof C;"];
        ]
        @ verified_signature_generator_tests
        @ generated_signature_file_sig_tests
