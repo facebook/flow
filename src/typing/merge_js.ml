@@ -409,13 +409,7 @@ let merge_component
         in
         let file_sig = FilenameMap.find_unsafe filename file_sigs in
         let tast =
-          Type_inference_js.infer_ast
-            cx
-            filename
-            comments
-            ast
-            ~lint_severities
-            ~file_sig
+          Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
         in
         (cx :: cxs, tast :: tasts, FilenameMap.add filename cx impl_cxs))
       ([], [], FilenameMap.empty)
@@ -454,7 +448,6 @@ let merge_component
            let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs);
 
-    let coverages = Query_types.component_coverage ~full_cx:cx tasts in
     (* Post-merge errors.
      *
      * At this point, all dependencies have been merged and the component has been
@@ -471,7 +464,7 @@ let merge_component
 
     force_annotations cx other_cxs;
 
-    match ListUtils.combine3 (cxs, tasts, coverages) with
+    match Core_list.zip_exn cxs tasts with
     | [] -> failwith "there is at least one cx"
     | x :: xs -> (x, xs))
 

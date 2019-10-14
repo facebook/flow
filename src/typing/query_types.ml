@@ -126,8 +126,8 @@ let covered_types ~should_check ~check_trust cx tast =
 
 let component_coverage :
     full_cx:Context.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program list ->
-    Coverage_response.file_coverage list =
+    (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
+    Coverage_response.file_coverage =
   Coverage_response.(
     Coverage.(
       let coverage_computer = new visitor in
@@ -139,9 +139,9 @@ let component_coverage :
         | Tainted -> { acc with tainted = acc.tainted + 1 }
         | Empty -> { acc with empty = acc.empty + 1 }
       in
-      fun ~full_cx tasts ->
+      fun ~full_cx ->
         let step = step full_cx in
-        Core_list.map ~f:(Typed_ast_utils.coverage_fold_tast ~f:step ~init:initial_coverage) tasts))
+        Typed_ast_utils.coverage_fold_tast ~f:step ~init:initial_coverage))
 
 let suggest_types cx file_sig typed_ast loc =
   let options =
