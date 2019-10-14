@@ -1575,16 +1575,10 @@ and main_loop flowconfig_name (client : Jsonrpc.queue) (state : state) : unit Lw
    * just yields *)
   let%lwt () = Lwt.pause () in
   gc_pending_interactions state;
-  let%lwt event =
-    try%lwt
-      let%lwt event = get_next_event state client (parse_json state) in
-      Lwt.return_ok event
-    with e -> Lwt.return_error (Exception.wrap e)
-  in
-  let state =
-    match event with
-    | Ok event -> main_handle flowconfig_name state event
-    | Error exn -> main_handle_error exn state None
+  let%lwt state =
+    match%lwt get_next_event state client (parse_json state) with
+    | event -> Lwt.return (main_handle flowconfig_name state event)
+    | exception e -> Lwt.return (main_handle_error (Exception.wrap e) state None)
   in
   main_loop flowconfig_name client state
 
