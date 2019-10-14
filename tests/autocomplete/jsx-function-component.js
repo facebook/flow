@@ -4,6 +4,6 @@ var React = require('react');
 
 type Props = $ReadOnly<{x: number, y: string}>;
 
-class C extends React.Component<Props> {
+function C(props: Props) {
 }
 <C // space
