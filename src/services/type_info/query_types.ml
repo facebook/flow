@@ -7,7 +7,6 @@
 
 module Ast = Flow_ast
 open Typed_ast_utils
-open Utils_js
 
 (*****************)
 (* Query/Suggest *)
@@ -103,45 +102,6 @@ let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig t
     | _ -> None
   in
   Core_list.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
-
-let covered_types ~should_check ~check_trust cx tast =
-  let check_trust =
-    if check_trust then
-      fun x ->
-    x
-    else
-      function
-    | Coverage_response.Tainted -> Coverage_response.Untainted
-    | x -> x
-  in
-  let compute_cov =
-    if should_check then
-      (new Coverage.visitor)#type_ cx %> Coverage.result_of_coverage %> check_trust
-    else
-      fun _ ->
-    Coverage_response.Empty
-  in
-  let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t) :: acc in
-  coverage_fold_tast ~f:step ~init:[] tast |> sort_loc_pairs
-
-let component_coverage :
-    full_cx:Context.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
-    Coverage_response.file_coverage =
-  Coverage_response.(
-    Coverage.(
-      let coverage_computer = new visitor in
-      let step cx _ t acc =
-        let coverage = coverage_computer#type_ cx t in
-        match result_of_coverage coverage with
-        | Uncovered -> { acc with uncovered = acc.uncovered + 1 }
-        | Untainted -> { acc with untainted = acc.untainted + 1 }
-        | Tainted -> { acc with tainted = acc.tainted + 1 }
-        | Empty -> { acc with empty = acc.empty + 1 }
-      in
-      fun ~full_cx ->
-        let step = step full_cx in
-        Typed_ast_utils.coverage_fold_tast ~f:step ~init:initial_coverage))
 
 let suggest_types cx file_sig typed_ast loc =
   let options =

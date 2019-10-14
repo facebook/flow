@@ -144,7 +144,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       dep_cxs
       master_cx
   in
-  let coverage_of_tast = Query_types.component_coverage ~full_cx in
+  let coverage_of_tast = Coverage.component_coverage ~full_cx in
   let (typed_asts, coverage_map) =
     Nel.fold_left
       (fun (typed_asts, cov_map) (ctx, typed_ast) ->

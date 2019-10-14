@@ -38,12 +38,6 @@ val typed_ast_to_list :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   (ALoc.t * Type.TypeScheme.t) list
 
-val coverage_fold_tast :
-  f:('l -> 't -> 'acc -> 'acc) ->
-  init:'acc ->
-  ('l, 'l * 't) Flow_polymorphic_ast_mapper.Ast.program ->
-  'acc
-
 val error_mapper : (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
 
 val unimplemented_mapper :
