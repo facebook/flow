@@ -1696,9 +1696,9 @@ end = struct
 
   type finally_optimized_rep =
     | UnionEnum of UnionEnumSet.t
-    | PartiallyOptimizedUnionEnum of UnionEnumSet.t * TypeTerm.t Nel.t
+    | PartiallyOptimizedUnionEnum of UnionEnumSet.t
     | DisjointUnion of TypeTerm.t UnionEnumMap.t SMap.t
-    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t SMap.t * TypeTerm.t Nel.t
+    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t SMap.t
     | Empty
     | Singleton of TypeTerm.t
     | Unoptimized
@@ -1786,24 +1786,24 @@ end = struct
   let enum_optimize =
     let split_enum =
       List.fold_left
-        (fun (tset, others) t ->
+        (fun (tset, partial) t ->
           match canon t with
-          | Some tcanon when is_base t -> (UnionEnumSet.add tcanon tset, others)
-          | _ -> (tset, t :: others))
-        (UnionEnumSet.empty, [])
+          | Some tcanon when is_base t -> (UnionEnumSet.add tcanon tset, partial)
+          | _ -> (tset, true))
+        (UnionEnumSet.empty, false)
     in
     function
     | [] -> Empty
     | [t] -> Singleton t
     | ts ->
-      let (tset, others) = split_enum ts in
-      (match others with
-      | [] -> UnionEnum tset
-      | x :: xs ->
+      let (tset, partial) = split_enum ts in
+      if partial then
         if UnionEnumSet.is_empty tset then
           Unoptimized
         else
-          PartiallyOptimizedUnionEnum (tset, Nel.rev (x, xs)))
+          PartiallyOptimizedUnionEnum tset
+      else
+        UnionEnum tset
 
   let canon_prop find_resolved p = Option.(Property.read_t p >>= find_resolved >>= canon)
 
@@ -1835,11 +1835,11 @@ end = struct
     in
     let split_disjoint_union find_resolved find_props ts =
       List.fold_left
-        (fun (candidates, others) t ->
+        (fun (candidates, partial) t ->
           match base_props_of find_resolved find_props t with
-          | None -> (candidates, t :: others)
-          | Some base_props -> (base_props :: candidates, others))
-        ([], [])
+          | None -> (candidates, true)
+          | Some base_props -> (base_props :: candidates, partial))
+        ([], false)
         ts
     in
     let unique_values =
@@ -1892,21 +1892,14 @@ end = struct
       | [] -> Empty
       | [t] -> Singleton t
       | ts ->
-        let (candidates, others) = split_disjoint_union find_resolved find_props ts in
+        let (candidates, partial) = split_disjoint_union find_resolved find_props ts in
         let map = index candidates in
-        let others =
-          if SMap.is_empty map then
-            ts
-          else
-            List.rev others
-        in
-        (match others with
-        | [] -> DisjointUnion map
-        | x :: xs ->
-          if SMap.is_empty map then
-            Unoptimized
-          else
-            PartiallyOptimizedDisjointUnion (map, (x, xs)))
+        if SMap.is_empty map then
+          Unoptimized
+        else if partial then
+          PartiallyOptimizedDisjointUnion map
+        else
+          DisjointUnion map
 
   let optimize rep ~flatten ~find_resolved ~find_props =
     let ts = flatten (members rep) in
@@ -1955,20 +1948,14 @@ end = struct
           else
             Conditional t
         | Some (DisjointUnion _) -> No
-        | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
-          if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then
-            Yes
-          else
-            Unknown
+        | Some (PartiallyOptimizedDisjointUnion _) -> Unknown
         | Some (UnionEnum tset) ->
           if UnionEnumSet.mem tcanon tset then
             Yes
           else
             No
-        | Some (PartiallyOptimizedUnionEnum (tset, others)) ->
+        | Some (PartiallyOptimizedUnionEnum tset) ->
           if UnionEnumSet.mem tcanon tset then
-            Yes
-          else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then
             Yes
           else
             Unknown
@@ -2022,20 +2009,10 @@ end = struct
             Conditional t
         | Some (DisjointUnion map) ->
           lookup_disjoint_union find_resolved prop_map ~partial:false map
-        | Some (PartiallyOptimizedDisjointUnion (map, others)) ->
-          let result = lookup_disjoint_union find_resolved prop_map ~partial:true map in
-          if result <> Unknown then
-            result
-          else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then
-            Yes
-          else
-            Unknown
+        | Some (PartiallyOptimizedDisjointUnion map) ->
+          lookup_disjoint_union find_resolved prop_map ~partial:true map
         | Some (UnionEnum _) -> No
-        | Some (PartiallyOptimizedUnionEnum (_, others)) ->
-          if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then
-            Yes
-          else
-            Unknown
+        | Some (PartiallyOptimizedUnionEnum _) -> Unknown
       end
     | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
 
