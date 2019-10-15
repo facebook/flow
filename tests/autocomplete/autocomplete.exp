@@ -1162,6 +1162,20 @@ jsx-abstract-component.js = {
     }
   ]
 }
+jsx-with-children.js = {
+  "result":[
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"jsx-with-children.js",
+      "line":5,
+      "endline":5,
+      "start":28,
+      "end":33
+    }
+  ]
+}
 customfun.js = {
   "result":[
     {

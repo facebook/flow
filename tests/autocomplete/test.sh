@@ -81,6 +81,10 @@ printf "jsx-abstract-component.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty jsx-abstract-component.js 8 4 < jsx-abstract-component.js
 
+printf "jsx-with-children.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-with-children.js 10 4 < jsx-with-children.js
+
 printf "customfun.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty customfun.js 6 1 < customfun.js
