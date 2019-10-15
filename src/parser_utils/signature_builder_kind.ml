@@ -140,6 +140,35 @@ type t =
     }
   | SketchyToplevelDef
 
+type ctor =
+  | VariableDefKind
+  | FunctionDefKind
+  | DeclareFunctionDefKind
+  | ClassDefKind
+  | DeclareClassDefKind
+  | TypeDefKind
+  | OpaqueTypeDefKind
+  | InterfaceDefKind
+  | ImportNamedDefKind
+  | ImportStarDefKind
+  | RequireDefKind
+  | SketchyToplevelDefKind
+
+let rec kind_to_ctor = function
+  | WithPropertiesDef { base; _ } -> kind_to_ctor base
+  | VariableDef _ -> VariableDefKind
+  | FunctionDef _ -> FunctionDefKind
+  | DeclareFunctionDef _ -> DeclareFunctionDefKind
+  | ClassDef _ -> ClassDefKind
+  | DeclareClassDef _ -> DeclareClassDefKind
+  | TypeDef _ -> TypeDefKind
+  | OpaqueTypeDef _ -> OpaqueTypeDefKind
+  | InterfaceDef _ -> InterfaceDefKind
+  | ImportNamedDef _ -> ImportNamedDefKind
+  | ImportStarDef _ -> ImportStarDefKind
+  | RequireDef _ -> RequireDefKind
+  | SketchyToplevelDef -> SketchyToplevelDefKind
+
 let rec to_string = function
   | WithPropertiesDef { base; _ } -> Printf.sprintf "WithPropertiesDef(%s)" (to_string base)
   | VariableDef _ -> "VariableDef"

@@ -1611,19 +1611,45 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     | Kind.RequireDef { source; name } -> T.Require { source; name }
     | Kind.SketchyToplevelDef -> T.FixMe.mk_decl loc
 
-  let make_env outlined env =
-    SMap.fold
-      (fun n entries acc ->
-        Loc_collections.LocMap.fold
-          (fun loc kind acc ->
-            let id = (loc, n) in
-            let dt = eval kind in
-            let decl_loc = fst kind in
-            T.stmt_of_decl outlined decl_loc id dt :: acc)
-          entries
-          acc)
-      env
-      []
+  let make_env_entry outlined n entries acc =
+    let entries =
+      Loc_collections.LocMap.bindings entries
+      |> Core_list.sort ~cmp:(fun (l1, _) (l2, _) -> Loc.compare l1 l2)
+    in
+    let (acc, _) =
+      List.fold_left
+        (fun (acc_stmt, acc_ctor) (loc, kind) ->
+          let ctor = Signature_builder_kind.kind_to_ctor (snd kind) in
+          let (add_entry, acc_ctor) =
+            match acc_ctor with
+            | None ->
+              (* Include the first occurrence, and set the kind of the entries *)
+              (true, Some ctor)
+            | Some Signature_builder_kind.DeclareFunctionDefKind
+              when ctor = Signature_builder_kind.DeclareFunctionDefKind ->
+              (* Multiple function declarations correspond to function overloads.
+               * Only allow these if this is a "function declaration" kind. *)
+              (true, acc_ctor)
+            | Some _ ->
+              (* Ignore any other entry *)
+              (false, acc_ctor)
+          in
+          let acc_stmt =
+            if add_entry then
+              let id = (loc, n) in
+              let dt = eval kind in
+              let decl_loc = fst kind in
+              T.stmt_of_decl outlined decl_loc id dt :: acc_stmt
+            else
+              acc_stmt
+          in
+          (acc_stmt, acc_ctor))
+        (acc, None)
+        entries
+    in
+    acc
+
+  let make_env outlined env = SMap.fold (make_env_entry outlined) env []
 
   let cjs_exports =
     let declare_module_exports mod_exp_loc loc t =
