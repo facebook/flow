@@ -470,7 +470,8 @@ let send_lsp_to_server (cenv : connected_env) (metadata : LspProt.metadata) (mes
 
 (************************************************************************)
 
-let do_initialize () : Initialize.result =
+let do_initialize flowconfig : Initialize.result =
+  let code_action_provider = FlowConfig.lsp_code_actions flowconfig in
   Initialize.
     {
       server_capabilities =
@@ -493,7 +494,7 @@ let do_initialize () : Initialize.result =
           documentHighlightProvider = true;
           documentSymbolProvider = true;
           workspaceSymbolProvider = false;
-          codeActionProvider = true;
+          codeActionProvider = code_action_provider;
           codeLensProvider = None;
           documentFormattingProvider = false;
           documentRangeFormattingProvider = false;
@@ -1575,16 +1576,10 @@ and main_loop flowconfig_name (client : Jsonrpc.queue) (state : state) : unit Lw
    * just yields *)
   let%lwt () = Lwt.pause () in
   gc_pending_interactions state;
-  let%lwt event =
-    try%lwt
-      let%lwt event = get_next_event state client (parse_json state) in
-      Lwt.return_ok event
-    with e -> Lwt.return_error (Exception.wrap e)
-  in
-  let state =
-    match event with
-    | Ok event -> main_handle flowconfig_name state event
-    | Error exn -> main_handle_error exn state None
+  let%lwt state =
+    match%lwt get_next_event state client (parse_json state) with
+    | event -> Lwt.return (main_handle flowconfig_name state event)
+    | exception e -> Lwt.return (main_handle_error (Exception.wrap e) state None)
   in
   main_loop flowconfig_name client state
 
@@ -1654,7 +1649,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       | Ok () -> ()
       | Error msg -> raise (Error.ServerErrorStart (msg, { Initialize.retry = false }))
     end;
-    let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
+    let response = ResponseMessage (id, InitializeResult (do_initialize flowconfig)) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = { d_ienv; d_autostart = true; d_server_status = None } in
@@ -1788,16 +1783,28 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | (_, Client_message (NotificationMessage (CancelRequestNotification _), _metadata)) ->
     (* let's just not bother reporting any error in this case *)
     Ok (state, LogNotNeeded)
-  | (Disconnected _, Client_message (c, _metadata)) ->
+  | (Disconnected _, Client_message (c, metadata)) ->
     let interaction_id =
       LspInteraction.trigger_of_lsp_msg c
       |> Option.map ~f:(fun trigger -> start_interaction ~trigger state)
     in
     let (state, _) = track_to_server state c in
-    let method_ = Lsp_fmt.denorm_message_to_string c in
-    let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
+    let exn =
+      let method_ = Lsp_fmt.denorm_message_to_string c in
+      Error.RequestCancelled ("Server not connected; can't handle " ^ method_)
+    in
     Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Errored state);
-    Error (state, Exception.wrap_unraised e)
+    (match c with
+    | RequestMessage (id, _request) ->
+      let e = Lsp_fmt.error_of_exn exn in
+      let outgoing = ResponseMessage (id, ErrorResult (e, "")) in
+      to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
+      let metadata =
+        let error_info = Some (LspProt.ExpectedError, e.Error.message, Utils.Callstack "") in
+        { metadata with LspProt.error_info }
+      in
+      Ok (state, LogNeeded metadata)
+    | _ -> Error (state, Exception.wrap_unraised exn))
   | (Post_shutdown, Client_message (_, _metadata)) ->
     raise (Error.RequestCancelled "Server shutting down")
   | (Connected cenv, Server_message LspProt.(NotificationFromServer (ServerExit exit_code))) ->

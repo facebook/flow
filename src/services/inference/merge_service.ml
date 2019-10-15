@@ -129,7 +129,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let (((cx, _, _), other_cxs) as cx_nel) =
+  let (((full_cx, _), other_cxs) as cx_nel) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities
@@ -144,16 +144,18 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       dep_cxs
       master_cx
   in
+  let coverage_of_tast = Coverage.component_coverage ~full_cx in
   let (typed_asts, coverage_map) =
     Nel.fold_left
-      (fun (typed_asts, cov_map) (ctx, typed_ast, cov) ->
+      (fun (typed_asts, cov_map) (ctx, typed_ast) ->
         let file = Context.file ctx in
+        let cov = coverage_of_tast typed_ast in
         (FilenameMap.add file typed_ast typed_asts, FilenameMap.add file cov cov_map))
       (FilenameMap.empty, FilenameMap.empty)
       cx_nel
   in
-  let other_cxs = Core_list.map ~f:(fun (cx, _, _) -> cx) other_cxs in
-  { cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
+  let other_cxs = Core_list.map ~f:(fun (cx, _) -> cx) other_cxs in
+  { cx = full_cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
 
 let merge_context ~options ~reader component =
   merge_context_generic
@@ -223,7 +225,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let ((cx, tast, _), _) =
+  let ((cx, tast), _) =
     Merge_js.merge_component
       ~metadata
       ~lint_severities

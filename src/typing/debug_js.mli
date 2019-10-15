@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val json_of_aloc :
+  ?strip_root:Path.t option ->
+  ?catch_offset_errors:bool ->
+  offset_table:Offset_utils.t option ->
+  ALoc.t ->
+  Hh_json.json
+
 val json_of_t :
   ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Type.t -> Hh_json.json
 

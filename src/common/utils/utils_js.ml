@@ -281,6 +281,15 @@ let try_with_json f =
     let exn = Exception.wrap exn in
     Lwt.return (Error (Exception.to_string exn, None))
 
+let try_with_json2 f =
+  try%lwt f () with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn), None)
+
 let try_with f =
   try%lwt f () with
   | Lwt.Canceled as exn ->

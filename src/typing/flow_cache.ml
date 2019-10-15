@@ -13,17 +13,19 @@ module ImplicitTypeArgument = Instantiation_utils.ImplicitTypeArgument
 module FlowSet = struct
   let empty = TypeMap.empty
 
-  let add_not_found l us setr =
-    setr := TypeMap.add l us !setr;
-    false
+  let add_not_found u = function
+    | None -> UseTypeSet.singleton u
+    | Some us -> UseTypeSet.add u us
 
   let cache (l, u) setr =
-    match TypeMap.get l !setr with
-    | None -> add_not_found l (UseTypeSet.singleton u) setr
-    | Some us ->
-      (* add returns ref eq set if found *)
-      let us' = UseTypeSet.add u us in
-      us' == us || add_not_found l us' setr
+    (* update returns ref eq map if no change *)
+    let setr' = TypeMap.update l (add_not_found u %> Option.return) !setr in
+    if setr' == !setr then
+      true
+    else (
+      setr := setr';
+      false
+    )
 
   let fold f = TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
 end
@@ -43,7 +45,8 @@ module FlowConstraint = struct
     (* Don't cache constraints involving type variables, since the
        corresponding typing rules are already sufficiently robust. *)
     | (OpenT _, _)
-    | (_, UseT (_, OpenT _)) ->
+    | (_, UseT (_, OpenT _))
+    | (_, ReposUseT _) ->
       false
     | _ ->
       (* Use ops are purely for better error messages: they should have no

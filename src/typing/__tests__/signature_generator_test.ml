@@ -512,7 +512,6 @@ let tests =
                [
                  "declare function foo<T>(x: T): void;";
                  "declare function foo<T, S>(x: T): void;";
-                 "declare function foo<T, S, R>(x: T): void;";
                  "export {foo};";
                ];
          "function_overloading2"
@@ -780,6 +779,28 @@ let tests =
          >:: mk_signature_generator_test
                ["class C { async m() {} };"; "module.exports = C"]
                ["declare class C {m(): Promise<void>}"; "declare module.exports: typeof C;"];
+         "getter"
+         >:: mk_signature_generator_test
+               ["class C { get x(): string { return \"\" } };"; "module.exports = C"]
+               ["declare class C {get x(): string}"; "declare module.exports: typeof C;"];
+         "declarations_with_implementation"
+         >:: mk_signature_generator_test
+               [
+                 "declare function foo(x: string): void;";
+                 "declare function foo(x: number): void;";
+                 "function foo(x: any): any {};";
+                 "module.exports = foo";
+               ]
+               [
+                 "declare function foo(x: string): void;";
+                 "declare function foo(x: number): void;";
+                 "";
+                 "declare module.exports: typeof foo;";
+               ];
+         "declarations_with_exported_implementation"
+         >:: mk_signature_generator_test
+               ["declare function foo(x: string): void;"; "export function foo(x: any): any {};"]
+               ["declare function foo(x: string): void;"; "export {foo};"];
        ]
        @ verified_signature_generator_tests
        @ generated_signature_file_sig_tests

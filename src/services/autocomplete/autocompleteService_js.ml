@@ -169,6 +169,7 @@ let autocomplete_is_valid_member key =
 let autocomplete_member
     ~reader
     ~exclude_proto_members
+    ?(exclude_keys = SSet.empty)
     ~ac_type
     cx
     file_sig
@@ -226,7 +227,7 @@ let autocomplete_member
       let rev_result =
         SMap.fold
           (fun name (_id_loc, t) acc ->
-            if not (autocomplete_is_valid_member name) then
+            if (not (autocomplete_is_valid_member name)) || SSet.mem name exclude_keys then
               acc
             else
               let loc = Type.loc_of_t t |> loc_of_aloc ~reader in
@@ -319,18 +320,20 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
 let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger docblock =
   Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
-    let component_instance = mk_instance cx reason cls in
     let props_object =
       Tvar.mk_where cx reason (fun tvar ->
           let use_op = Type.Op Type.UnknownUse in
-          flow
-            cx
-            (component_instance, Type.GetPropT (use_op, reason, Type.Named (reason, "props"), tvar)))
+          flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
     in
+    (* The `children` prop (if it exists) is set with the contents between the opening and closing
+     * elements, rather than through an explicit `children={...}` attribute, so we should exclude
+     * it from the autocomplete results. *)
+    let exclude_keys = SSet.singleton "children" in
     (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
     autocomplete_member
       ~reader
       ~exclude_proto_members:true
+      ~exclude_keys
       ~ac_type:"Acjsx"
       cx
       file_sig

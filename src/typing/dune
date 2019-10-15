@@ -62,7 +62,6 @@
     flow_common_tarjan
     flow_parser_utils
     flow_state_heaps_parsing_exceptions
-    flow_typing_coverage_response
     flow_typing_errors
     flow_typing_polarity
     flow_typing_ty

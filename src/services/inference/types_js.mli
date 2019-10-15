@@ -100,7 +100,13 @@ val debug_determine_what_to_recheck :
   files_to_force:CheckedSet.t ->
   unchanged_files_to_force:CheckedSet.t ->
   direct_dependent_files:FilenameSet.t ->
-  (CheckedSet.t * File_key.t Nel.t list * FilenameSet.t * FilenameSet.t) Lwt.t
+  ( CheckedSet.t
+  * CheckedSet.t
+  * CheckedSet.t
+  * File_key.t Nel.t list
+  * FilenameSet.t
+  * FilenameSet.t )
+  Lwt.t
 
 val debug_include_dependencies_and_dependents :
   options:Options.t ->
@@ -110,4 +116,4 @@ val debug_include_dependencies_and_dependents :
   all_dependency_graph:FilenameSet.t FilenameMap.t ->
   dependency_graph:FilenameSet.t FilenameMap.t ->
   all_dependent_files:FilenameSet.t ->
-  (CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t
+  (CheckedSet.t * CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t

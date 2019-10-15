@@ -429,8 +429,7 @@ let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let get_def ~options ~env ~profiling position =
-  GetDef_js.get_def ~options ~env ~profiling ~depth:0 position
+let get_def ~options ~env ~profiling position = GetDef_js.get_def ~options ~env ~profiling position
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
@@ -1094,11 +1093,14 @@ let did_close ~reader genv env client : ServerEnv.env Lwt.t =
 
 let with_error ?(stack : Utils.callstack option) ~(reason : string) (metadata : LspProt.metadata) :
     LspProt.metadata =
-  LspProt.(
-    let local_stack = Exception.get_current_callstack_string 100 in
-    let stack = Option.value stack ~default:(Utils.Callstack local_stack) in
-    let error_info = Some (ExpectedError, reason, stack) in
-    { metadata with error_info })
+  let open LspProt in
+  let stack =
+    match stack with
+    | Some stack -> stack
+    | None -> Utils.Callstack (Exception.get_current_callstack_string 100)
+  in
+  let error_info = Some (ExpectedError, reason, stack) in
+  { metadata with error_info }
 
 let keyvals_of_json (json : Hh_json.json option) : (string * Hh_json.json) list =
   match json with
@@ -1119,26 +1121,21 @@ type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
 let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
   let metadata = with_error ?stack ~reason metadata in
   let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.LspProt.error_info in
-  let e = Lsp_fmt.error_of_exn (Failure reason) in
-  match id with
-  | Some id ->
-    let friendly_message =
-      "Flow encountered an unexpected error while handling this request. "
-      ^ "See the Flow logs for more details."
-    in
-    let e = { e with Lsp.Error.message = friendly_message } in
-    Lwt.return
-      (ret, LspProt.LspFromServer (Some (ResponseMessage (id, ErrorResult (e, stack)))), metadata)
-  | None ->
-    LogMessage.(
-      let text = Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack in
-      Lwt.return
-        ( ret,
-          LspProt.LspFromServer
-            (Some
-               (NotificationMessage
-                  (TelemetryNotification { type_ = MessageType.ErrorMessage; message = text }))),
-          metadata ))
+  let message =
+    match id with
+    | Some id ->
+      let friendly_message =
+        "Flow encountered an unexpected error while handling this request. "
+        ^ "See the Flow logs for more details."
+      in
+      let e = Lsp_fmt.error_of_exn (Error.Unknown friendly_message) in
+      ResponseMessage (id, ErrorResult (e, stack))
+    | None ->
+      let text = Printf.sprintf "%s [%i]\n%s" reason Error.Code.unknownErrorCode stack in
+      NotificationMessage
+        (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message = text })
+  in
+  Lwt.return (ret, LspProt.LspFromServer (Some message), metadata)
 
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in

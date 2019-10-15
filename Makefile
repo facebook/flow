@@ -122,6 +122,7 @@ MODULES=\
   src/server/shmem\
   src/server/watchman_expression_terms\
   src/services/autocomplete\
+  src/services/coverage\
   src/services/get_def\
   src/services/inference\
   src/services/inference/module\

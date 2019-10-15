@@ -41,6 +41,7 @@ type 'loc virtual_reason_desc =
   | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleLength of int
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType

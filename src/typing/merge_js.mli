@@ -41,7 +41,7 @@ val merge_component :
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader, along with a coverage summary for each file *)
-  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program * Coverage_response.file_coverage) Nel.t
+  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program) Nel.t
 
 val merge_tvar : Context.t -> Reason.t -> Constraint.ident -> Type.t
 

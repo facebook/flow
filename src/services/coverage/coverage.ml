@@ -26,6 +26,7 @@
 
 open Type
 open Utils_js
+module Ast = Flow_ast
 
 type op_mode =
   | OpAnd
@@ -279,6 +280,103 @@ class visitor =
         self#types_ cx op (init_kind, init_trust) ts
   end
 
+class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
+  object (this)
+    inherit ['l, 'l * 't, 'l, 'l * 't] Flow_polymorphic_ast_mapper.mapper as super
+
+    val mutable acc : 'a = init
+
+    method on_loc_annot x = x
+
+    method on_type_annot x = x
+
+    method! expression exp =
+      let ((loc, t), _) = exp in
+      acc <- f loc t acc;
+      super#expression exp
+
+    method! object_property prop =
+      let prop = super#object_property prop in
+      Ast.Expression.Object.(
+        match prop with
+        | ( loc,
+            Property.Method
+              { key = Property.Literal ((_, t), _) | Property.Identifier ((_, t), _); _ } ) ->
+          acc <- f loc t acc;
+          prop
+        | _ -> prop)
+
+    method! statement stmt =
+      let stmt = super#statement stmt in
+      match stmt with
+      | (loc, Ast.Statement.ClassDeclaration { Ast.Class.id = Some ((_, t), _); _ })
+      | (loc, Ast.Statement.DeclareClass { Ast.Statement.DeclareClass.id = ((_, t), _); _ })
+      | ( _,
+          Ast.Statement.DeclareExportDeclaration
+            {
+              Ast.Statement.DeclareExportDeclaration.declaration =
+                Some
+                  ( Ast.Statement.DeclareExportDeclaration.NamedOpaqueType
+                      (loc, { Ast.Statement.OpaqueType.id = ((_, t), _); _ })
+                  | Ast.Statement.DeclareExportDeclaration.Class
+                      (loc, { Ast.Statement.DeclareClass.id = ((_, t), _); _ }) );
+              _;
+            } )
+      | (loc, Ast.Statement.DeclareInterface { Ast.Statement.Interface.id = ((_, t), _); _ })
+      | ( loc,
+          Ast.Statement.DeclareModule
+            {
+              Ast.Statement.DeclareModule.id =
+                ( Ast.Statement.DeclareModule.Identifier ((_, t), _)
+                | Ast.Statement.DeclareModule.Literal ((_, t), _) );
+              _;
+            } )
+      | (loc, Ast.Statement.DeclareTypeAlias { Ast.Statement.TypeAlias.id = ((_, t), _); _ })
+      | (loc, Ast.Statement.DeclareOpaqueType { Ast.Statement.OpaqueType.id = ((_, t), _); _ })
+      | (loc, Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id = ((_, t), _); _ })
+      | (loc, Ast.Statement.OpaqueType { Ast.Statement.OpaqueType.id = ((_, t), _); _ })
+      | (loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id = ((_, t), _); _ }) ->
+        acc <- f loc t acc;
+        stmt
+      | _ -> stmt
+
+    method! class_identifier i = i
+
+    (* skip this *)
+    method! jsx_name name =
+      Ast.JSX.(
+        let name = super#jsx_name name in
+        match name with
+        | MemberExpression (loc, { MemberExpression.property = ((_, t), _); _ }) ->
+          acc <- f loc t acc;
+          name
+        | Identifier _
+        | NamespacedName _ ->
+          name)
+
+    method! jsx_member_expression_object _object =
+      Ast.JSX.MemberExpression.(
+        match _object with
+        | Identifier ((loc, t), _) ->
+          acc <- f loc t acc;
+          _object
+        | MemberExpression _ -> super#jsx_member_expression_object _object)
+
+    method! t_pattern_identifier ?kind i =
+      let ((loc, t), _) = i in
+      acc <- f loc t acc;
+      super#t_pattern_identifier ?kind i
+
+    method top_level_program prog =
+      acc <- init;
+      ignore (this#program prog);
+      acc
+  end
+
+let coverage_fold_tast ~(f : 'l -> 't -> 'acc -> 'acc) ~(init : 'acc) tast =
+  let folder = new coverage_folder ~f ~init in
+  folder#top_level_program tast
+
 open Coverage_response
 
 let result_of_coverage = function
@@ -310,3 +408,40 @@ let m_or = function
   | (Tainted, Tainted) -> Tainted
 
 let initial_coverage = { untainted = 0; tainted = 0; uncovered = 0; empty = 0 }
+
+let covered_types ~should_check ~check_trust cx tast =
+  let check_trust =
+    if check_trust then
+      fun x ->
+    x
+    else
+      function
+    | Coverage_response.Tainted -> Coverage_response.Untainted
+    | x -> x
+  in
+  let compute_cov =
+    if should_check then
+      (new visitor)#type_ cx %> result_of_coverage %> check_trust
+    else
+      fun _ ->
+    Coverage_response.Empty
+  in
+  let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t) :: acc in
+  coverage_fold_tast ~f:step ~init:[] tast |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
+
+let component_coverage :
+    full_cx:Context.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
+    Coverage_response.file_coverage =
+  let coverage_computer = new visitor in
+  let step cx _ t acc =
+    let coverage = coverage_computer#type_ cx t in
+    match result_of_coverage coverage with
+    | Uncovered -> { acc with uncovered = acc.uncovered + 1 }
+    | Untainted -> { acc with untainted = acc.untainted + 1 }
+    | Tainted -> { acc with tainted = acc.tainted + 1 }
+    | Empty -> { acc with empty = acc.empty + 1 }
+  in
+  fun ~full_cx ->
+    let step = step full_cx in
+    coverage_fold_tast ~f:step ~init:initial_coverage
