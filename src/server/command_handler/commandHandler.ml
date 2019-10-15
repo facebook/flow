@@ -118,7 +118,7 @@ let infer_type
     ~(profiling : Profiling_js.running)
     ((file_input, line, col, verbose, expand_aliases, omit_targ_defaults, evaluate_type_destructors) :
       File_input.t * int * int * Verbose.t option * bool * bool * bool) :
-    ((Loc.t * Ty.t option, string) Core_result.t * Hh_json.json option) Lwt.t =
+    ((Loc.t * Ty.t option, string) result * Hh_json.json option) Lwt.t =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   let options = { options with Options.opt_verbose = verbose } in

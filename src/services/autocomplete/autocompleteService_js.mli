@@ -15,7 +15,7 @@ val autocomplete_get_results :
   Docblock.t ->
   ( ServerProt.Response.complete_autocomplete_result list * Hh_json.json option,
     string * Hh_json.json option )
-  Core_result.t
+  result
 
 val add_autocomplete_token : string -> int -> int -> string
 

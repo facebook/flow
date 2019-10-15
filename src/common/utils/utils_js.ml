@@ -254,14 +254,13 @@ module AugmentableSMap = Augmentable (SMap)
 
 (* The problem with Core_result's >>= is that the function second argument cannot return
  * an Lwt.t. This helper infix operator handles that case *)
-let ( %>>= ) (result : ('ok, 'err) Core_result.t) (f : 'ok -> ('a, 'err) Core_result.t Lwt.t) :
-    ('a, 'err) Core_result.t Lwt.t =
+let ( %>>= ) (result : ('ok, 'err) result) (f : 'ok -> ('a, 'err) result Lwt.t) :
+    ('a, 'err) result Lwt.t =
   match result with
   | Error e -> Lwt.return (Error e)
   | Ok x -> f x
 
-let ( %>>| ) (result : ('ok, 'err) Core_result.t) (f : 'ok -> 'a Lwt.t) :
-    ('a, 'err) Core_result.t Lwt.t =
+let ( %>>| ) (result : ('ok, 'err) result) (f : 'ok -> 'a Lwt.t) : ('a, 'err) result Lwt.t =
   match result with
   | Error e -> Lwt.return (Error e)
   | Ok x ->

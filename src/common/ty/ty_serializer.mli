@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val type_ : Ty.t -> ((Loc.t, Loc.t) Flow_ast.Type.t, string) Core_result.t
+val type_ : Ty.t -> ((Loc.t, Loc.t) Flow_ast.Type.t, string) result
