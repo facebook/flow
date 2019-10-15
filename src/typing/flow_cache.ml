@@ -45,7 +45,8 @@ module FlowConstraint = struct
     (* Don't cache constraints involving type variables, since the
        corresponding typing rules are already sufficiently robust. *)
     | (OpenT _, _)
-    | (_, UseT (_, OpenT _)) ->
+    | (_, UseT (_, OpenT _))
+    | (_, ReposUseT _) ->
       false
     | _ ->
       (* Use ops are purely for better error messages: they should have no
