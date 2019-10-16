@@ -1612,10 +1612,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     | Kind.SketchyToplevelDef -> T.FixMe.mk_decl loc
 
   let make_env_entry outlined n entries acc =
-    let entries =
-      Loc_collections.LocMap.bindings entries
-      |> Core_list.sort ~cmp:(fun (l1, _) (l2, _) -> Loc.compare l1 l2)
-    in
+    let entries = Loc_collections.LocMap.bindings entries in
     let (acc, _) =
       List.fold_left
         (fun (acc_stmt, acc_ctor) (loc, kind) ->
