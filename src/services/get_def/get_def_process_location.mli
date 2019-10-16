@@ -6,4 +6,7 @@
  *)
 
 val process_location :
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program -> Loc.t -> Get_def_request.t option
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  is_legit_require:(ALoc.t -> bool) ->
+  Loc.t ->
+  Get_def_request.t option

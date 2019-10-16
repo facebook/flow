@@ -7,7 +7,7 @@
 
 exception Found of Get_def_request.t
 
-class searcher (target_loc : Loc.t) =
+class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -143,14 +143,15 @@ class searcher (target_loc : Loc.t) =
                       ((source_loc, _), Literal Flow_ast.Literal.{ value = String module_name; _ });
                   ];
                 _;
-              }) ->
+              })
+          when is_legit_require source_loc ->
           this#find_loc (Get_def_request.Require ((source_loc, module_name), loc))
         | _ -> () );
       super#expression ((loc, t), expr)
   end
 
-let process_location ~typed_ast loc =
-  let searcher = new searcher loc in
+let process_location ~typed_ast ~is_legit_require loc =
+  let searcher = new searcher loc is_legit_require in
   try
     ignore (searcher#program typed_ast);
     None
