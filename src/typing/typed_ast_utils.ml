@@ -243,8 +243,12 @@ type get_def_member_info = {
   get_def_object_source: get_def_object_source;
 }
 
+type get_def_result =
+  | GetDefMember of get_def_member_info
+  | GetDefIdentifier
+
 module Get_def = struct
-  exception Found of get_def_member_info
+  exception Found of get_def_result
 
   class searcher (target_loc : Loc.t) =
     object (this)
@@ -277,28 +281,29 @@ module Get_def = struct
         Ast.Statement.ImportDeclaration.(
           let { kind = _; local; remote } = specifier in
           let ((remote_name_loc, _), { Ast.Identifier.name = remote_name; _ }) = remote in
-          let member_info =
-            {
-              get_def_prop_name = remote_name;
-              get_def_object_source = GetDefRequireLoc source_loc;
-            }
+          let result =
+            GetDefMember
+              {
+                get_def_prop_name = remote_name;
+                get_def_object_source = GetDefRequireLoc source_loc;
+              }
           in
-          if this#covers_target remote_name_loc then this#find_loc member_info;
+          if this#covers_target remote_name_loc then this#find_loc result;
           Option.iter
             ~f:(fun local ->
               let ((local_name_loc, _), _) = local in
               if this#covers_target local_name_loc then
-                let member_info =
-                  {
-                    get_def_prop_name = remote_name;
-                    get_def_object_source = GetDefRequireLoc source_loc;
-                  }
+                let result =
+                  GetDefMember
+                    {
+                      get_def_prop_name = remote_name;
+                      get_def_object_source = GetDefRequireLoc source_loc;
+                    }
                 in
-                this#find_loc member_info)
+                this#find_loc result)
             local)
 
       method! member expr =
-        let expr = super#member expr in
         Ast.Expression.Member.(
           let { _object; property } = expr in
           begin
@@ -306,25 +311,40 @@ module Get_def = struct
             | PropertyIdentifier ((loc, _), { Ast.Identifier.name; _ }) when this#covers_target loc
               ->
               let ((_, t), _) = _object in
-              let member_info =
-                { get_def_prop_name = name; get_def_object_source = GetDefType t }
+              let result =
+                GetDefMember { get_def_prop_name = name; get_def_object_source = GetDefType t }
               in
-              this#find_loc member_info
+              this#find_loc result
             | _ -> ()
           end;
-          expr)
+          super#member expr)
 
       method import_default_specifier_with_loc ~source_loc default =
         let ((remote_name_loc, _), _) = default in
         if this#covers_target remote_name_loc then
-          let member_info =
-            {
-              get_def_prop_name = "default";
-              (* see members.ml *)
-              get_def_object_source = GetDefRequireLoc source_loc;
-            }
+          let result =
+            GetDefMember
+              {
+                get_def_prop_name = "default";
+                (* see members.ml *)
+                get_def_object_source = GetDefRequireLoc source_loc;
+              }
           in
-          this#find_loc member_info
+          this#find_loc result
+
+      method! t_identifier (((loc, _t), _) as id) =
+        if this#covers_target loc then this#find_loc GetDefIdentifier;
+        super#t_identifier id
+
+      method! jsx_identifier (((loc, _t), _) as id) =
+        if this#covers_target loc then this#find_loc GetDefIdentifier;
+        super#jsx_identifier id
+
+      (* If we found target_loc in a pattern, for now we throw it out and
+        let the hooks take care of it because get-def for lvals hasn't been
+        refactored onto the typed AST yet. TODO(vijayramamurthy) *)
+      method! t_pattern_identifier ?kind id =
+        (try super#t_pattern_identifier ?kind id with Found _ -> id)
     end
 
   let find_get_def_info typed_ast loc =

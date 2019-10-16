@@ -43,11 +43,6 @@ let id ~reader state name =
     | Some entry -> state.getdef_type <- Some (Gdloc (entry_loc entry |> loc_of_aloc ~reader))
     | None -> ())
 
-let getdef_id ~reader (state, loc1) _cx name loc2 =
-  let loc2 = loc_of_aloc ~reader loc2 in
-  if Reason.in_range loc1 loc2 then id ~reader state name;
-  false
-
 let getdef_lval ~reader (state, loc1) _cx name loc2 rhs =
   let loc2 = loc_of_aloc ~reader loc2 in
   if Reason.in_range loc1 loc2 then
@@ -106,16 +101,139 @@ let extract_member_def ~reader cx this name =
       end,
     Some json_data_to_log )
 
+(* turns typed AST into normal AST so we can run Scope_builder on it *)
+(* TODO(vijayramamurthy): make scope builder polymorphic *)
+class type_killer (reader : Parsing_heaps.Reader.reader) =
+  object
+    inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot x = loc_of_aloc ~reader x
+
+    method on_type_annot (x, _) = loc_of_aloc ~reader x
+  end
+
+exception SpecialCase of result
+
+class special_caser (reader : Parsing_heaps.Reader.reader) (cx : Context.t) (target_loc : Loc.t) =
+  object (this)
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+    method on_loc_annot x = x
+
+    method on_type_annot x = x
+
+    method covers_target aloc = Loc.contains (loc_of_aloc ~reader aloc) target_loc
+
+    (* Following ES6 imports through to their sources *)
+    method! import_default_specifier (((aloc, v), _) as x) =
+      if this#covers_target aloc then
+        raise
+          (SpecialCase
+             begin
+               match Flow_js.possible_types_of_type cx v with
+               | [t] -> Done (Type.def_loc_of_t t |> loc_of_aloc ~reader)
+               | _ -> Done Loc.none
+             end);
+      super#import_default_specifier x
+
+    method! import_named_specifier
+        ({ Flow_ast.Statement.ImportDeclaration.local; remote; kind = _ } as x) =
+      let ((aloc, v), _) = Option.value ~default:remote local in
+      if this#covers_target aloc then
+        raise
+          (SpecialCase
+             begin
+               match Flow_js.possible_types_of_type cx v with
+               | [t] -> Done (Type.def_loc_of_t t |> loc_of_aloc ~reader)
+               | _ -> Done Loc.none
+             end);
+      super#import_named_specifier x
+
+    (* Following "require" imports through to their sources *)
+    method! variable_declarator
+        ~kind ((_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init }) as x) =
+      let ((id_loc, _), _) = id in
+      match init with
+      | Some
+          Flow_ast.Expression.
+            ( _,
+              Call
+                {
+                  Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
+                  _;
+                } )
+        when this#covers_target id_loc ->
+        let Loc.{ start = { Loc.line; column; _ }; _ } = target_loc in
+        raise (SpecialCase (Chain (line, column)))
+      | _ -> super#variable_declarator ~kind x
+
+    (* Minor "repositioning" of get_def results *)
+
+    (*
+    Scope_api reports the definition of a namespaced import as:
+      import * as foo from "bar"
+                  ^^^
+    But to keep consistent with previous behavior, we instead report it as:
+      import * as foo from "bar"
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  *)
+    method! import_declaration stmt_loc decl =
+      match decl with
+      | Flow_ast.Statement.ImportDeclaration.
+          { specifiers = Some (ImportNamespaceSpecifier (id_loc, _)); _ }
+        when this#covers_target id_loc ->
+        raise (SpecialCase (Done (loc_of_aloc ~reader stmt_loc)))
+      | _ -> super#import_declaration stmt_loc decl
+
+    (*
+    Scope_api reports the definition of a declared function as:
+      function foo(bar) { baz }
+               ^^^
+    But to keep consistent with previous behavior, we instead report it as:
+      function foo(bar) { baz }
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  *)
+    method! statement ((stmt_loc, stmt') as stmt) =
+      match stmt' with
+      | Flow_ast.(Statement.FunctionDeclaration { Function.id = Some ((id_loc, _), _); _ })
+        when this#covers_target id_loc ->
+        raise (SpecialCase (Done (loc_of_aloc ~reader stmt_loc)))
+      | _ -> super#statement stmt
+  end
+
+let resolve_special_cases reader cx typed_ast def_loc =
+  try
+    Pervasives.ignore ((new special_caser reader cx def_loc)#program typed_ast);
+    Done def_loc
+  with SpecialCase res -> res
+
 let getdef_from_typed_ast ~reader cx typed_ast loc =
   match Typed_ast_utils.find_get_def_info typed_ast loc with
-  | Some { Typed_ast_utils.get_def_prop_name = name; get_def_object_source } ->
+  | Some Typed_ast_utils.(GetDefMember { get_def_prop_name = name; get_def_object_source }) ->
     let obj_t =
       match get_def_object_source with
       | Typed_ast_utils.GetDefType t -> t
       | Typed_ast_utils.GetDefRequireLoc loc -> Context.find_require cx loc
     in
     Some (extract_member_def ~reader cx obj_t name)
-  | _ -> None
+  | Some Typed_ast_utils.GetDefIdentifier ->
+    let ast = (new type_killer reader)#program typed_ast in
+    let scope_info = Scope_builder.program ast in
+    let all_uses = Scope_api.With_Loc.all_uses scope_info in
+    Loc_collections.(
+      let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
+      begin
+        match LocSet.elements matching_uses with
+        | [use] ->
+          let def = Scope_api.With_Loc.def_of_use scope_info use in
+          let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
+          let result = resolve_special_cases reader cx typed_ast def_loc in
+          Some (result, None)
+        | [] -> None
+        | _ :: _ :: _ -> failwith "Multiple identifiers were unexpectedly matched"
+      end)
+  | None -> None
 
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
    delicate, since in many cases the resulting type lacks location
@@ -176,8 +294,7 @@ let getdef_get_result_from_hooks ~options ~reader cx state =
                  * fall back to just the top of the file *)
                 let loc =
                   match cjs_export with
-                  | Some t -> loc_of_t t |> loc_of_aloc ~reader
-                  (* This can return Loc.none *)
+                  | Some t -> loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
                   | None -> Loc.none
                 in
                 if loc = Loc.none then
@@ -202,7 +319,6 @@ let getdef_get_result ~options ~reader cx typed_ast state loc =
 
 let getdef_set_hooks ~reader pos =
   let state = { getdef_type = None; getdef_require_patterns = [] } in
-  Type_inference_hooks_js.set_id_hook (getdef_id ~reader (state, pos));
   Type_inference_hooks_js.set_lval_hook (getdef_lval ~reader (state, pos));
   Type_inference_hooks_js.set_import_hook (getdef_import ~reader (state, pos));
   Type_inference_hooks_js.set_require_pattern_hook (getdef_require_pattern ~reader state);
