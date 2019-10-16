@@ -101,3 +101,5 @@ let rename old target =
     try Sys.rename old target
     with Sys_error s when s = "Directory not empty" ->
       raise (Rename_target_dir_not_empty target)
+
+let filemtime file = (Unix.stat file).Unix.st_mtime

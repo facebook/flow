@@ -35,4 +35,7 @@ module type S = sig
 
   (* Rename from old path to new path. *)
   val rename : string -> string -> unit
+
+  (* Modified time of a given file *)
+  val filemtime : string -> float
 end
