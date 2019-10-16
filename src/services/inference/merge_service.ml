@@ -83,7 +83,7 @@ let reqs_of_component ~reader component required =
             if info.checked && info.parsed then
               (* checked implementation exists *)
               let m = Files.module_ref dep in
-              if Nel.mem dep component then
+              if Nel.mem ~equal:File_key.equal dep component then
                 (* impl is part of component *)
                 (dep_cxs, Reqs.add_impl m file locs reqs)
               else

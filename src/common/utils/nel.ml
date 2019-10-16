@@ -23,7 +23,7 @@ let one x = (x, [])
 
 let cons x0 (x1, xs) = (x0, x1 :: xs)
 
-let mem y (x1, xs) = x1 = y || Core_list.mem xs y
+let mem ~equal y (x1, xs) = equal x1 y || Core_list.mem ~equal xs y
 
 let exists f (x1, xs) = f x1 || Core_list.exists ~f xs
 

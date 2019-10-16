@@ -363,12 +363,14 @@ let get_cycle ~env fn types_only =
     (Ok
        (let components = Sort_js.topsort ~roots:parsed dependency_graph in
         (* Get component for target file *)
-        let component = List.find (Nel.mem fn) components in
+        let component = List.find (Nel.mem ~equal:File_key.equal fn) components in
         (* Restrict dep graph to only in-cycle files *)
         Nel.fold_left
           (fun acc f ->
             Option.fold (FilenameMap.get f dependency_graph) ~init:acc ~f:(fun acc deps ->
-                let subdeps = FilenameSet.filter (fun f -> Nel.mem f component) deps in
+                let subdeps =
+                  FilenameSet.filter (fun f -> Nel.mem ~equal:File_key.equal f component) deps
+                in
                 if FilenameSet.is_empty subdeps then
                   acc
                 else
