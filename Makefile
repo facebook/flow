@@ -111,7 +111,6 @@ MODULES=\
   src/server/command_handler\
   src/server/env\
   src/server/error_collator\
-  src/server/find_refs\
   src/server/lazy_mode_utils\
   src/server/monitor_listener\
   src/server/persistent_connection\
@@ -127,6 +126,7 @@ MODULES=\
   src/services/inference\
   src/services/inference/module\
   src/services/flowFileGen\
+  src/services/references\
   src/services/saved_state\
   src/services/type_info\
   src/state/heaps/context\
@@ -229,7 +229,7 @@ OUNIT_TESTS=\
 	src/parser_utils/__tests__/parser_utils_tests.native\
 	src/parser_utils/output/__tests__/parser_utils_output_tests.native\
 	src/parser_utils/output/printers/__tests__/parser_utils_output_printers_tests.native\
-	src/server/find_refs/__tests__/find_refs_tests.native
+	src/services/references/__tests__/find_refs_tests.native
 	# src/typing/__tests__/typing_tests.native
 
 ################################################################################
