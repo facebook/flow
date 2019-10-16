@@ -4020,7 +4020,8 @@ and subscript =
             property =
               Member.PropertyIdentifier
                 (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as exports_name));
-          } ->
+          }
+        when not (Env.local_scope_entry_exists "module") ->
         let lhs_t = Import_export.get_module_exports cx loc in
         let module_reason = mk_reason (RCustom "module") object_loc in
         let module_t = MixedT.why module_reason |> with_trust bogus_trust in
@@ -4640,7 +4641,8 @@ and assign_member cx ~make_op t ~lhs_loc ~lhs_prop_reason ~mode lhs =
            (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as mod_name)) );
      property =
        Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
-    } ->
+    }
+      when not (Env.local_scope_entry_exists "module") ->
       Import_export.cjs_clobber cx lhs_loc t;
       let module_reason = mk_reason (RCustom "module") object_loc in
       let module_t = MixedT.why module_reason |> with_trust bogus_trust in
