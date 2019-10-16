@@ -2189,7 +2189,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         | ImportDeclaration.ImportTypeof -> Type.ImportTypeof
         | ImportDeclaration.ImportValue -> Type.ImportValue
       in
-      let module_t = Import_export.import cx (source_loc, module_name) import_loc in
+      let module_t = Import_export.import cx (source_loc, module_name) in
       let get_imported_t get_reason import_kind remote_export_name local_name =
         Tvar.mk_where cx get_reason (fun t ->
             let import_type =
@@ -2250,10 +2250,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             |> List.split
           in
           (named_specifiers, Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers_ast))
-        | Some (ImportDeclaration.ImportNamespaceSpecifier (ns_loc, local)) as specifiers ->
+        | Some (ImportDeclaration.ImportNamespaceSpecifier (_, local)) as specifiers ->
           let local_name = ident_name local in
-          Type_inference_hooks_js.dispatch_import_hook cx (source_loc, module_name) ns_loc;
-
           let import_reason =
             let import_reason_desc =
               match importKind with
@@ -2269,7 +2267,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               | ImportDeclaration.ImportTypeof ->
                 let bind_reason = repos_reason (fst local) import_reason in
                 let module_ns_t =
-                  Import_export.import_ns cx import_reason (fst source, module_name) import_loc
+                  Import_export.import_ns cx import_reason (fst source, module_name)
                 in
                 let module_ns_typeof =
                   Tvar.mk_where cx bind_reason (fun t ->
@@ -2279,9 +2277,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                 [(import_loc, local_name, module_ns_typeof, None)]
               | ImportDeclaration.ImportValue ->
                 let reason = mk_reason (RModule module_name) import_loc in
-                let module_ns_t =
-                  Import_export.import_ns cx reason (fst source, module_name) import_loc
-                in
+                let module_ns_t = Import_export.import_ns cx reason (fst source, module_name) in
                 Context.add_imported_t cx local_name module_ns_t;
                 [(fst local, local_name, module_ns_t, None)]
             end,
@@ -2384,7 +2380,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
           match source with
           | Some (src_loc, { Ast.StringLiteral.value = module_name; _ }) ->
             let reason = mk_reason (RCustom "ModuleNamespace for export {} from") src_loc in
-            Some (Import_export.import_ns cx reason (src_loc, module_name) loc)
+            Some (Import_export.import_ns cx reason (src_loc, module_name))
           | None -> None
         in
         let local_tvar =
@@ -2421,7 +2417,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
         in
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE then
-            Import_export.import_ns cx reason (source_loc, source_module_name) loc
+            Import_export.import_ns cx reason (source_loc, source_module_name)
           else
             AnyT.untyped
               (let config_value =
@@ -2435,7 +2431,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
         in
         Import_export.export cx name loc remote_namespace_t
       | None ->
-        let source_module_t = Import_export.import cx (source_loc, source_module_name) loc in
+        let source_module_t = Import_export.import cx (source_loc, source_module_name) in
         (match exportKind with
         | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
         | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t))
@@ -2761,24 +2757,6 @@ and variable cx kind ?if_uninitialized id init =
       | VariableDeclaration.Let -> (Env.init_let, Env.declare_let)
       | VariableDeclaration.Var -> (Env.init_var, (fun _ _ _ -> ()))
     in
-    Ast.Expression.(
-      match init with
-      | Some
-          ( _,
-            Call
-              {
-                Call.callee = (_, Identifier (_, { Ast.Identifier.name = "require"; comments = _ }));
-                _;
-              } )
-        when not (Env.local_scope_entry_exists "require") ->
-        let (loc, _) = id in
-        (* Record the loc of the pattern, which contains the locations of any
-         local definitions introduced by the pattern. This information is used
-         by commands to automatically "follow" such definitions to the actual
-         definitions in the required module. *)
-        Type_inference_hooks_js.dispatch_require_pattern_hook loc
-      | _ -> ());
-
     (* Identifiers do not need to be initialized at the declaration site as long
      * as they are definitely initialized before use. Destructuring patterns must
      * be initialized, since their declaration involves some operation on the
@@ -3423,7 +3401,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         in
         let imported_module_t =
           let import_reason = mk_reason (RModule module_name) loc in
-          Import_export.import_ns cx import_reason (source_loc, module_name) loc
+          Import_export.import_ns cx import_reason (source_loc, module_name)
         in
         let reason = mk_annot_reason (RCustom "async import") loc in
         let t = Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t] in
