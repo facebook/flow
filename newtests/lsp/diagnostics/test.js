@@ -29,7 +29,7 @@ export default suite(
         // expected publishDiagnostic, then verify that this expected publishDiagnostic
         // was sent at least once, and ignore any additional publishDiagnostics.
         .waitUntilLSPMessage(
-          9000,
+          60000,
           'textDocument/publishDiagnostics{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
@@ -47,7 +47,7 @@ export default suite(
       lspStartAndConnect(),
       addFile('witherrors2.js')
         .waitUntilLSPMessage(
-          9000,
+          60000,
           'textDocument/publishDiagnostics{Cannot extend}',
         )
         .verifyAllLSPMessagesInStep(
@@ -65,7 +65,7 @@ export default suite(
       lspStartAndConnect(),
       addFile('witherrors1.js')
         .waitUntilLSPMessage(
-          9000,
+          60000,
           'textDocument/publishDiagnostics{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
@@ -79,7 +79,7 @@ export default suite(
         ),
       modifyFile('witherrors1.js', 'return 23;', 'return "";')
         .waitUntilLSPMessage(
-          9000,
+          60000,
           'textDocument/publishDiagnostics{"diagnostics":[]}',
         )
         .verifyAllLSPMessagesInStep(
@@ -104,7 +104,7 @@ function fred(): number {return 1+;}
 `,
         },
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{Unexpected token}'],
           ['window/showStatus'],
@@ -123,7 +123,7 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [],
@@ -158,7 +158,7 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{Unexpected token}'],
           [],
@@ -170,7 +170,7 @@ function fred(): number {return 1+2;}
           version: 3,
         },
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [],
@@ -203,7 +203,7 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           [
             'textDocument/publishDiagnostics{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
@@ -224,7 +224,7 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [],
@@ -260,7 +260,7 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           [
             'textDocument/publishDiagnostics{Cannot assign `123` to `y` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
@@ -274,7 +274,7 @@ function fred(): number {return 1+2;}
           version: 6,
         },
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           [],
@@ -296,7 +296,7 @@ function fred(): number {return 1+2;}
         },
       })
         .waitUntilLSPMessage(
-          9000,
+          60000,
           'textDocument/publishDiagnostics{Cannot assign `123` to `x`}',
         )
         .verifyAllLSPMessagesInStep(
@@ -335,14 +335,14 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep([], ['window/showStatus']),
     ]).flowConfig('_flowconfig_disable_live_non_parse_errors'),
     test('pseudo parse errors', [
       lspStartAndConnect(),
       addFile('pseudo_parse_error.js')
         .waitUntilLSPMessage(
-          9000,
+          60000,
           'textDocument/publishDiagnostics{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
@@ -376,7 +376,7 @@ obj?.foo(); // Error
         },
       })
         .waitUntilLSPMessage(
-          9000,
+          60000,
           'textDocument/publishDiagnostics{Cannot return}',
         )
         .verifyAllLSPMessagesInStep(
@@ -392,7 +392,7 @@ obj?.foo(); // Error
     test('Errors with Loc.none', [
       lspStartAndConnect(),
       addFiles('empty.js', 'importsFakeSymbol.js').waitUntilLSPMessage(
-        9000,
+        60000,
         (() => {
           const expectedMessage = {
             uri: '<PLACEHOLDER_PROJECT_URL_SLASH>importsFakeSymbol.js',
