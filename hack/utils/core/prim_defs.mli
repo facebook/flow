@@ -16,7 +16,6 @@
 type comment =
   | CmtLine of string
   | CmtBlock of string
-  | CmtMarkup of string
 [@@deriving eq, show]
 
 val is_line_comment : comment -> bool

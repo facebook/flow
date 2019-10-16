@@ -16,7 +16,6 @@
 type comment =
   | CmtLine of string
   | CmtBlock of string
-  | CmtMarkup of string
 [@@deriving eq, show]
 
 let is_line_comment = function
@@ -25,6 +24,5 @@ let is_line_comment = function
 
 let string_of_comment = function
   | CmtLine s
-  | CmtBlock s
-  | CmtMarkup s ->
+  | CmtBlock s ->
     s
