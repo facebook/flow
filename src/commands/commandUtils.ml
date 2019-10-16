@@ -568,7 +568,7 @@ let file_options =
       let msg = "Could not locate flowlib files" in
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
-  let ignores_of_arg root patterns extras =
+  let ignores_of_arg root default_lib_dir patterns extras =
     let patterns = Core_list.rev_append extras patterns in
     Core_list.map
       ~f:(fun s ->
@@ -578,6 +578,8 @@ let file_options =
           |> remove_exclusion
           |> Str.split_delim Files.project_root_token
           |> String.concat root
+          |> Str.split_delim Files.flowlib_root_token
+          |> String.concat default_lib_dir
           |> Str.regexp
         in
         (s, reg))
@@ -638,17 +640,30 @@ let file_options =
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
       let no_flowlib = no_flowlib || FlowConfig.no_flowlib flowconfig in
-      Some (default_lib_dir ~no_flowlib temp_dir)
+      default_lib_dir ~no_flowlib temp_dir
     in
-    let ignores = ignores_of_arg root (FlowConfig.ignores flowconfig) ignores in
-    let untyped = ignores_of_arg root (FlowConfig.untyped flowconfig) untyped in
-    let declarations = ignores_of_arg root (FlowConfig.declarations flowconfig) declarations in
+    let ignores = ignores_of_arg
+      root
+      (Path.to_string default_lib_dir)
+      (FlowConfig.ignores flowconfig)
+      ignores in
+    let untyped = ignores_of_arg
+      root
+      (Path.to_string default_lib_dir)
+      (FlowConfig.untyped flowconfig)
+      untyped in
+    let declarations = ignores_of_arg
+      root
+      (Path.to_string default_lib_dir)
+      (FlowConfig.declarations flowconfig)
+      declarations in
     let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes
       |> Core_list.rev_append (FlowConfig.includes flowconfig)
       |> includes_of_arg ~root ~lib_paths
     in
+    let default_lib_dir = Some (default_lib_dir) in
     {
       Files.default_lib_dir;
       ignores;

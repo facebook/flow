@@ -84,6 +84,8 @@ val absolute_path_regexp : Str.regexp
 
 val project_root_token : Str.regexp
 
+val flowlib_root_token : Str.regexp
+
 val watched_paths : options -> Path.t list
 
 (* given a root, make a filter for file names *)

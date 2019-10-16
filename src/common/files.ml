@@ -300,43 +300,6 @@ let get_all =
   in
   (fun next -> get_all_rec next SSet.empty)
 
-let init ?(flowlibs_only = false) (options : options) =
-  let node_module_filter = is_node_module options in
-  let libs =
-    if flowlibs_only then
-      []
-    else
-      options.lib_paths
-  in
-  let (libs, filter) =
-    match options.default_lib_dir with
-    | None -> (libs, is_valid_path ~options)
-    | Some root ->
-      let is_in_flowlib = is_prefix (Path.to_string root) in
-      let is_valid_path = is_valid_path ~options in
-      let filter path = is_in_flowlib path || is_valid_path path in
-      (root :: libs, filter)
-  in
-  (* preserve enumeration order *)
-  let libs =
-    if libs = [] then
-      []
-    else
-      let get_next lib =
-        let lib_str = Path.to_string lib in
-        (* TODO: better to parse json files, not ignore them *)
-        let filter' path = (path = lib_str || filter path) && not (is_json_file path) in
-        make_next_files_following_symlinks
-          ~node_module_filter
-          ~path_filter:filter'
-          ~realpath_filter:filter'
-          ~error_filter:(fun _ -> true)
-          [lib]
-      in
-      libs |> Core_list.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
-  in
-  (libs, SSet.of_list libs)
-
 (* Local reference to the module exported by a file. Like other local references
    to modules imported by the file, it is a member of Context.module_map. *)
 let module_ref file = File_key.to_string file
@@ -352,6 +315,8 @@ let parent_dir_name = Str.regexp_string Filename.parent_dir_name
 let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
+
+let flowlib_root_token = Str.regexp_string "<FLOWLIB_ROOT>"
 
 let is_matching path pattern_list =
   List.fold_left
@@ -392,6 +357,37 @@ let wanted ~options lib_fileset =
   (fun path -> (not (is_ignored_ path)) && not (SSet.mem path lib_fileset))
 
 let watched_paths options = Path_matcher.stems options.includes
+
+let init ?(flowlibs_only=false) (options: options) =
+  let node_module_filter = is_node_module options in
+  let libs = if flowlibs_only then [] else options.lib_paths in
+  let libs, filter = match options.default_lib_dir with
+    | None -> libs, is_valid_path ~options
+    | Some root ->
+      let is_in_flowlib = is_prefix (Path.to_string root) in
+      let is_valid_path = is_valid_path ~options in
+      let filter path = (is_in_flowlib path || is_valid_path path) && (not (is_ignored options path)) in
+      root::libs, filter
+  in
+  (* preserve enumeration order *)
+  let libs = if libs = []
+    then []
+    else
+      let get_next lib =
+        let lib_str = Path.to_string lib in
+        let filter' path = path = lib_str || filter path in
+        make_next_files_following_symlinks
+          ~node_module_filter
+          ~path_filter:filter'
+          ~realpath_filter:filter'
+          ~error_filter:(fun _ -> true)
+          [lib]
+      in
+      libs
+      |> Core_list.map ~f:(fun lib -> SSet.elements (get_all (get_next lib)))
+      |> List.flatten
+  in
+  (libs, SSet.of_list libs)
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
