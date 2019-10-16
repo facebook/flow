@@ -114,3 +114,12 @@ let memoize_with_module_name_candidates_cache ~f name =
     let result = f name in
     Hashtbl.add module_name_candidates_cache name result;
     result
+
+let types_versions_candidates_cache = Hashtbl.create 100
+
+let memoize_with_types_versions_candidates_cache ~f name =
+  try Hashtbl.find types_versions_candidates_cache name
+  with Not_found ->
+    let result = f name in
+    Hashtbl.add types_versions_candidates_cache name result;
+    result

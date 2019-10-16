@@ -27,7 +27,7 @@ val string_starts_with : string -> string -> bool
 
 val string_ends_with : string -> string -> bool
 
-val substring_index : string -> string -> int
+val substring_index : ?start_pos:int -> string -> string -> int
 
 val is_substring : string -> string -> bool
 

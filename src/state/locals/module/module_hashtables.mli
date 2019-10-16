@@ -24,3 +24,6 @@ module All_providers_mutator : sig
 end
 
 val memoize_with_module_name_candidates_cache : f:(string -> string list) -> string -> string list
+
+val memoize_with_types_versions_candidates_cache :
+  f:(string -> (SMap.key * string) option) -> string -> (SMap.key * string) option

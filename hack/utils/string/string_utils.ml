@@ -34,7 +34,7 @@ let string_ends_with long short =
    `haystack`. If not found, returns -1.
 
    An implementation of the Knuth-Morris-Pratt (KMP) algorithm. *)
-let substring_index needle =
+let substring_index ?(start_pos = 0) needle =
   (* see Wikipedia pseudocode *)
   let needle_len = String.length needle in
   if needle_len = 0 then raise (Invalid_argument needle);
@@ -55,7 +55,7 @@ let substring_index needle =
   done;
   fun haystack ->
     let len = String.length haystack in
-    let p = ref 0 in
+    let p = ref start_pos in
     let q = ref 0 in
     while !p < len && !q < needle_len do
       if haystack.[!p] = needle.[!q] then (

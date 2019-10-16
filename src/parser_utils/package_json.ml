@@ -7,20 +7,28 @@
 
 module Ast = Flow_ast
 
+type flow_t = { types_versions: string SMap.t }
+
 type t = {
   name: string option;
   main: string option;
+  flow: flow_t option;
 }
 
 type 'a t_or_error = (t, 'a * string) result
 
 let ( >>= ) = Core_result.( >>= )
 
-let empty = { name = None; main = None }
+let empty = { name = None; main = None; flow = None }
 
 let name package = package.name
 
 let main package = package.main
+
+let flow_types_versions package =
+  match package.flow with
+  | Some t -> t.types_versions
+  | None -> SMap.empty
 
 let statement_of_program = function
   | (_, [statement], _) -> Ok statement
@@ -45,6 +53,46 @@ let properties_of_object = function
   | (_, Ast.Expression.Object { Ast.Expression.Object.properties; comments = _ }) -> Ok properties
   | (loc, _) -> Error (loc, "Expected an object literal")
 
+let parse_flow properties =
+  Ast.(
+    Expression.Object.(
+      let extract_property (flow : flow_t) = function
+        | Property
+            ( _,
+              Property.Init
+                {
+                  key = Property.Literal (_, { Literal.value = Literal.String key; _ });
+                  value = (_, Expression.Object { Expression.Object.properties; _ });
+                  _;
+                } ) ->
+          begin
+            match key with
+            | "typesVersions" ->
+              let value =
+                List.fold_left
+                  (fun map property ->
+                    match property with
+                    | Property
+                        ( _,
+                          Property.Init
+                            {
+                              key = Property.Literal (_, { Literal.value = Literal.String key; _ });
+                              value =
+                                (_, Expression.Literal { Literal.value = Literal.String value; _ });
+                              _;
+                            } ) ->
+                      SMap.add key value map
+                    | _ -> map)
+                  SMap.empty
+                  properties
+              in
+              { types_versions = value }
+            | _ -> flow
+          end
+        | _ -> flow
+      in
+      List.fold_left extract_property { types_versions = SMap.empty } properties))
+
 let parse ast : 'a t_or_error =
   statement_of_program ast
   >>= object_of_statement
@@ -65,6 +113,21 @@ let parse ast : 'a t_or_error =
             match key with
             | "name" -> { package with name = Some value }
             | "main" -> { package with main = Some value }
+            | _ -> package
+          end
+        | Property
+            ( _,
+              Property.Init
+                {
+                  key = Property.Literal (_, { Literal.value = Literal.String key; _ });
+                  value = (_, Expression.Object { Expression.Object.properties; _ });
+                  _;
+                } ) ->
+          begin
+            match key with
+            | "flow" ->
+              let value = parse_flow properties in
+              { package with flow = Some value }
             | _ -> package
           end
         | _ -> package

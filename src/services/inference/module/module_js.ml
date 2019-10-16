@@ -93,6 +93,69 @@ let module_name_candidates ~options =
       in
       List.rev (name :: List.fold_left map_name [] mappers))
 
+let types_versions_package_candidates reader =
+  Module_hashtables.memoize_with_types_versions_candidates_cache ~f:(fun package_filename ->
+      let package =
+        match Module_heaps.Reader_dispatcher.get_package ~reader package_filename with
+        | Some (Ok package) -> package
+        | _ -> Package_json.empty
+      in
+      let types_versions = Package_json.flow_types_versions package in
+      let version_path =
+        SMap.find_first_opt
+          (fun k ->
+            try Semver.satisfies ~include_prereleases:true k Flow_version.version
+            with Semver.Parse_error _ -> false)
+          types_versions
+      in
+      version_path)
+
+let types_versions_candidates ~reader dir rel_path dirname =
+  Node_paths_part.(
+    let parts = get_node_module_path_parts rel_path dirname in
+    match parts with
+    | Some parts ->
+      let package_root =
+        if parts.package_root_index == -1 then
+          rel_path
+        else
+          String.sub rel_path 0 parts.package_root_index
+      in
+      let package_filename = Filename.concat package_root "package.json" in
+      let package_filename = Files.normalize_path dir package_filename in
+      let version_path = types_versions_package_candidates reader package_filename in
+      let filename =
+        if parts.package_root_index == -1 then
+          ""
+        else
+          String.sub
+            rel_path
+            (parts.package_root_index + 1)
+            (String.length rel_path - (parts.package_root_index + 1))
+      in
+      let rel_path =
+        match version_path with
+        | Some (_, version_path) ->
+          (* Chop trailing "/" *)
+          let tail =
+            if filename = "" then
+              version_path
+            else
+              Filename.concat version_path filename
+          in
+          Files.normalize_path package_root tail
+        | None -> rel_path
+      in
+      (* If file points outside of root, resolve current package root *)
+      let rel_path =
+        if String_utils.string_starts_with rel_path package_root then
+          rel_path
+        else
+          Files.normalize_path package_root filename
+      in
+      Some rel_path
+    | _ -> None)
+
 let add_package filename = function
   | Ok package -> Module_heaps.Package_heap_mutator.add_package_json filename package
   | Error _ -> Module_heaps.Package_heap_mutator.add_error filename
@@ -320,6 +383,19 @@ module Node = struct
     let file_options = Options.file_options options in
     lazy_seq
       [
+        lazy
+          ( if SSet.mem dir node_modules_containers then
+            lazy_seq
+              ( Files.node_resolver_dirnames file_options
+              |> Core_list.map ~f:(fun dirname ->
+                     let rel_path = spf "%s%s%s" dirname Filename.dir_sep r in
+                     let rel_path_opt = types_versions_candidates ~reader dir rel_path dirname in
+                     match rel_path_opt with
+                     | Some rel_path ->
+                       lazy (resolve_relative ~options ~reader loc ?resolution_acc dir rel_path)
+                     | _ -> lazy None) )
+          else
+            None );
         lazy
           ( if SSet.mem dir node_modules_containers then
             lazy_seq

@@ -15,4 +15,6 @@ val name : t -> string option
 
 val main : t -> string option
 
+val flow_types_versions : t -> string SMap.t
+
 val parse : (Loc.t, Loc.t) Flow_ast.program -> Loc.t t_or_error
