@@ -9,57 +9,11 @@ open Core_result
 open Utils_js
 open Parsing_heaps_utils
 
-type getdef_type =
-  | Gdloc of Loc.t
-  | Gdval of Type.t
-  | Gdmem of (string * Type.t)
-  | Gdrequire of (Loc.t * string) * Loc.t
-
-type state = {
-  mutable getdef_type: getdef_type option;
-  mutable getdef_require_patterns: Loc.t list;
-}
-
 (* The result of a get-def is either a final location or an intermediate
    location that is fed into a subsequent get-def. *)
 type result =
   | Done of Loc.t
-  | Chain of int * int
-
-(* line, column *)
-
-let id ~reader state name =
-  let env = Env.all_entries () in
-  Scope.Entry.(
-    match SMap.get name env with
-    | Some (Value { kind = Const ConstImportBinding; general = v; _ }) ->
-      (* for references to import bindings, point directly to the exports they
-       resolve to (rather than to the import bindings, which would themselves in
-       turn point to the exports they resolve to) *)
-      state.getdef_type <- Some (Gdval v)
-    | Some (Type { type_binding_kind = ImportTypeBinding; type_ = v; _ }) ->
-      (* similarly for import type bindings *)
-      state.getdef_type <- Some (Gdval v)
-    | Some entry -> state.getdef_type <- Some (Gdloc (entry_loc entry |> loc_of_aloc ~reader))
-    | None -> ())
-
-let getdef_lval ~reader (state, loc1) _cx name loc2 rhs =
-  let loc2 = loc_of_aloc ~reader loc2 in
-  if Reason.in_range loc1 loc2 then
-    match rhs with
-    | Type_inference_hooks_js.Val v -> state.getdef_type <- Some (Gdval v)
-    | Type_inference_hooks_js.Parent t -> state.getdef_type <- Some (Gdmem (name, t))
-    | Type_inference_hooks_js.Id -> id ~reader state name
-
-let getdef_import ~reader (state, user_requested_loc) _cx (loc, name) import_loc =
-  let source = (loc_of_aloc ~reader loc, name) in
-  let import_loc = loc_of_aloc ~reader import_loc in
-  if Reason.in_range user_requested_loc import_loc then
-    state.getdef_type <- Some (Gdrequire (source, import_loc))
-
-let getdef_require_pattern ~reader state loc =
-  let loc = loc_of_aloc ~reader loc in
-  state.getdef_require_patterns <- loc :: state.getdef_require_patterns
+  | Chain of Get_def_request.t
 
 let extract_member_def ~reader cx this name =
   let member_result = Members.extract cx this in
@@ -114,7 +68,7 @@ class type_killer (reader : Parsing_heaps.Reader.reader) =
 
 exception SpecialCase of result
 
-class special_caser (reader : Parsing_heaps.Reader.reader) (cx : Context.t) (target_loc : Loc.t) =
+class special_caser (reader : Parsing_heaps.Reader.reader) (target_loc : Loc.t) =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -127,27 +81,13 @@ class special_caser (reader : Parsing_heaps.Reader.reader) (cx : Context.t) (tar
 
     (* Following ES6 imports through to their sources *)
     method! import_default_specifier (((aloc, v), _) as x) =
-      if this#covers_target aloc then
-        raise
-          (SpecialCase
-             begin
-               match Flow_js.possible_types_of_type cx v with
-               | [t] -> Done (Type.def_loc_of_t t |> loc_of_aloc ~reader)
-               | _ -> Done Loc.none
-             end);
+      if this#covers_target aloc then raise (SpecialCase (Chain (Get_def_request.Type v)));
       super#import_default_specifier x
 
     method! import_named_specifier
         ({ Flow_ast.Statement.ImportDeclaration.local; remote; kind = _ } as x) =
       let ((aloc, v), _) = Option.value ~default:remote local in
-      if this#covers_target aloc then
-        raise
-          (SpecialCase
-             begin
-               match Flow_js.possible_types_of_type cx v with
-               | [t] -> Done (Type.def_loc_of_t t |> loc_of_aloc ~reader)
-               | _ -> Done Loc.none
-             end);
+      if this#covers_target aloc then raise (SpecialCase (Chain (Get_def_request.Type v)));
       super#import_named_specifier x
 
     (* Following "require" imports through to their sources *)
@@ -164,8 +104,7 @@ class special_caser (reader : Parsing_heaps.Reader.reader) (cx : Context.t) (tar
                   _;
                 } )
         when this#covers_target id_loc ->
-        let Loc.{ start = { Loc.line; column; _ }; _ } = target_loc in
-        raise (SpecialCase (Chain (line, column)))
+        raise (SpecialCase (Chain (Get_def_request.Location target_loc)))
       | _ -> super#variable_declarator ~kind x
 
     (* Minor "repositioning" of get_def results *)
@@ -202,22 +141,25 @@ class special_caser (reader : Parsing_heaps.Reader.reader) (cx : Context.t) (tar
       | _ -> super#statement stmt
   end
 
-let resolve_special_cases reader cx typed_ast def_loc =
+let resolve_special_cases reader typed_ast def_loc =
   try
-    Pervasives.ignore ((new special_caser reader cx def_loc)#program typed_ast);
+    Pervasives.ignore ((new special_caser reader def_loc)#program typed_ast);
     Done def_loc
   with SpecialCase res -> res
 
-let getdef_from_typed_ast ~reader cx typed_ast loc =
-  match Typed_ast_utils.find_get_def_info typed_ast loc with
-  | Some Typed_ast_utils.(GetDefMember { get_def_prop_name = name; get_def_object_source }) ->
+let getdef_from_typed_ast ~options ~reader cx typed_ast = function
+  | Get_def_request.Location loc ->
+    Option.map (Get_def_process_location.process_location ~typed_ast loc) (fun req ->
+        (Chain req, None))
+  | Get_def_request.(Member { prop_name = name; object_source }) ->
     let obj_t =
-      match get_def_object_source with
-      | Typed_ast_utils.GetDefType t -> t
-      | Typed_ast_utils.GetDefRequireLoc loc -> Context.find_require cx loc
+      match object_source with
+      | Get_def_request.ObjectType t -> t
+      | Get_def_request.ObjectRequireLoc loc -> Context.find_require cx loc
     in
     Some (extract_member_def ~reader cx obj_t name)
-  | Some Typed_ast_utils.GetDefIdentifier ->
+  | Get_def_request.Identifier (_, aloc) ->
+    let loc = loc_of_aloc ~reader aloc in
     let ast = (new type_killer reader)#program typed_ast in
     let scope_info = Scope_builder.program ast in
     let all_uses = Scope_api.With_Loc.all_uses scope_info in
@@ -228,109 +170,81 @@ let getdef_from_typed_ast ~reader cx typed_ast loc =
         | [use] ->
           let def = Scope_api.With_Loc.def_of_use scope_info use in
           let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
-          let result = resolve_special_cases reader cx typed_ast def_loc in
+          let result = resolve_special_cases reader typed_ast def_loc in
           Some (result, None)
         | [] -> None
         | _ :: _ :: _ -> failwith "Multiple identifiers were unexpectedly matched"
       end)
-  | None -> None
-
-(* TODO: the uses of `resolve_type` in the implementation below are pretty
-   delicate, since in many cases the resulting type lacks location
-   information. Edit with caution. *)
-let getdef_get_result_from_hooks ~options ~reader cx state =
-  Ok
+  | Get_def_request.Type v ->
     begin
-      match state.getdef_type with
-      | Some (Gdloc loc) ->
-        if List.exists (fun range -> Loc.contains range loc) state.getdef_require_patterns then
-          let { Loc.line; column; _ } = loc.Loc.start in
-          (Chain (line, column), None)
-        else
-          (Done loc, None)
-      | Some (Gdval v) ->
-        (* Use `possible_types_of_type` instead of `resolve_type` because we're
-       actually interested in the location of the resolved types. *)
-        let ts = Flow_js.possible_types_of_type cx v in
-        ( Done
-            begin
-              match ts with
-              | [t] -> Type.def_loc_of_t t |> loc_of_aloc ~reader
-              | _ -> Loc.none
-            end,
-          None )
-      | Some (Gdmem (name, this)) -> extract_member_def ~reader cx this name
-      | Some (Gdrequire ((source_loc, name), require_loc)) ->
-        let module_t =
-          ALoc.of_loc source_loc |> Context.find_require cx |> Members.resolve_type cx
-        in
-        (* function just so we don't do the work unless it's actually needed. *)
-        let get_imported_file () =
-          let filename =
-            Module_heaps.Reader.get_file
-              ~reader
-              ~audit:Expensive.warn
-              (Module_js.imported_module
-                 ~options
-                 ~reader:(Abstract_state_reader.State_reader reader)
-                 ~node_modules_containers:!Files.node_modules_containers
-                 (Context.file cx)
-                 (Nel.one (ALoc.of_loc require_loc))
-                 name)
-          in
-          match filename with
-          | Some file -> Loc.{ none with source = Some file }
-          | None -> Loc.none
-        in
-        ( Done
-            Type.(
-              match module_t with
-              (*
-               * TODO: Specialized `import` hooks so that get-defs on named
-               *       imports point to their actual remote def location.
-               *)
-              | ModuleT (_, { cjs_export; _ }, _) ->
-                (* If we have a location for the cjs export, go there. Otherwise
-                 * fall back to just the top of the file *)
-                let loc =
-                  match cjs_export with
-                  | Some t -> loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
-                  | None -> Loc.none
-                in
-                if loc = Loc.none then
-                  get_imported_file ()
-                else
-                  loc
-              | AnyT _ -> get_imported_file ()
-              | _ ->
-                failwith
-                  (spf
-                     "Internal Flow Error: Expected ModuleT for %S, but got %S!"
-                     name
-                     (string_of_ctor module_t))),
-          None )
-      | None -> (Done Loc.none, None)
+      match Flow_js.possible_types_of_type cx v with
+      | [t] -> Some (Done (Type.def_loc_of_t t |> loc_of_aloc ~reader), None)
+      | _ -> None
     end
+  | Get_def_request.Require ((source_loc, name), require_loc) ->
+    let module_t = Context.find_require cx source_loc |> Members.resolve_type cx in
+    (* function just so we don't do the work unless it's actually needed. *)
+    let get_imported_file () =
+      let filename =
+        Module_heaps.Reader.get_file
+          ~reader
+          ~audit:Expensive.warn
+          (Module_js.imported_module
+             ~options
+             ~reader:(Abstract_state_reader.State_reader reader)
+             ~node_modules_containers:!Files.node_modules_containers
+             (Context.file cx)
+             (Nel.one require_loc)
+             name)
+      in
+      match filename with
+      | Some file -> Loc.{ none with source = Some file }
+      | None -> Loc.none
+    in
+    Some
+      ( Done
+          Type.(
+            match module_t with
+            | ModuleT (_, { cjs_export; _ }, _) ->
+              (* If we have a location for the cjs export, go there. Otherwise
+               * fall back to just the top of the file *)
+              let loc =
+                match cjs_export with
+                | Some t -> loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
+                | None -> Loc.none
+              in
+              if loc = Loc.none then
+                get_imported_file ()
+              else
+                loc
+            | AnyT _ -> get_imported_file ()
+            | _ ->
+              failwith
+                (spf
+                   "Internal Flow Error: Expected ModuleT for %S, but got %S!"
+                   name
+                   (string_of_ctor module_t))),
+        None )
 
-let getdef_get_result ~options ~reader cx typed_ast state loc =
-  match getdef_from_typed_ast ~reader cx typed_ast loc with
-  | Some x -> Ok x
-  | None -> getdef_get_result_from_hooks ~options ~reader cx state
+let recover_intermediate_loc = function
+  | Get_def_request.Location loc -> loc
+  | _ -> Loc.none
 
-let getdef_set_hooks ~reader pos =
-  let state = { getdef_type = None; getdef_require_patterns = [] } in
-  Type_inference_hooks_js.set_lval_hook (getdef_lval ~reader (state, pos));
-  Type_inference_hooks_js.set_import_hook (getdef_import ~reader (state, pos));
-  Type_inference_hooks_js.set_require_pattern_hook (getdef_require_pattern ~reader state);
-  state
+let rec getdef_get_result ~options ~reader cx typed_ast req =
+  match getdef_from_typed_ast ~options ~reader cx typed_ast req with
+  | Some (Done loc, json) -> (loc, json)
+  | Some (Chain req', json) ->
+    let (loc, json') = getdef_get_result ~options ~reader cx typed_ast req' in
+    if loc = Loc.none then
+      (recover_intermediate_loc req', json)
+    else
+      (loc, json')
+  | None -> (Loc.none, None)
 
-let getdef_unset_hooks () = Type_inference_hooks_js.reset_hooks ()
-
-let rec get_def ~options ~reader ~env ~profiling ~depth (file_input, line, col) =
+let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
   let loc = Loc.make file line col in
-  let state = getdef_set_hooks ~reader loc in
   let%lwt check_result =
     File_input.content_of_file_input file_input
     %>>= (fun content -> Types_js.basic_check_contents ~options ~env ~profiling content file)
@@ -340,26 +254,13 @@ let rec get_def ~options ~reader ~env ~profiling ~depth (file_input, line, col) 
     %>>= fun (cx, _, _, typed_ast) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
         try_with_json (fun () ->
-            Lwt.return (getdef_get_result ~reader ~options cx typed_ast state loc)))
+            let (res_loc, res_json) =
+              getdef_get_result ~reader ~options cx typed_ast (Get_def_request.Location loc)
+            in
+            (* If the result covers the requested location then we didn't find anything helpful *)
+            if Loc.(res_loc.source = loc.source) && Reason.in_range loc res_loc then
+              Lwt.return (Ok (Loc.none, res_json))
+            else
+              Lwt.return (Ok (res_loc, res_json))))
   in
-  let (result, json_object) = split_result getdef_result in
-  getdef_unset_hooks ();
-  match result with
-  | Error e -> Lwt.return (Error e, json_object)
-  | Ok ok ->
-    (match ok with
-    | Done loc -> Lwt.return (Ok loc, json_object)
-    | Chain (line, col) ->
-      let%lwt (result, chain_json_object) =
-        get_def ~options ~reader ~env ~profiling ~depth:(depth + 1) (file_input, line, col)
-      in
-      Lwt.return
-        (match result with
-        | Error e -> (Error e, json_object)
-        | Ok loc' ->
-          (* Chaining can sometimes lead to a dead end, due to lack of type
-           information. In that case, fall back to the previous location. *)
-          if loc' = Loc.none then
-            (Ok loc, json_object)
-          else
-            (Ok loc', chain_json_object)))
+  Lwt.return (split_result getdef_result)

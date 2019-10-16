@@ -30,22 +30,6 @@ val find_type_at_pos_annotation :
  * in direct response to a client query, which are typically concrete locations.
  *)
 
-type get_def_object_source =
-  | GetDefType of Type.t
-  | GetDefRequireLoc of ALoc.t
-
-type get_def_member_info = {
-  get_def_prop_name: string;
-  get_def_object_source: get_def_object_source;
-}
-
-type get_def_result =
-  | GetDefMember of get_def_member_info
-  | GetDefIdentifier
-
-val find_get_def_info :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.program -> Loc.t -> get_def_result option
-
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   Type.TypeScheme.t Loc_collections.ALocMap.t
