@@ -19,7 +19,7 @@ module Kit (Flow: Flow_common.S) = struct
   include Flow
   (* Creates the appropriate constraints for the compose() function and its
    * reversed variant. *)
-  let rec run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tout =
+  let rec run_compose cx trace ~use_op reason_op reverse fns spread_fn tins tout =
     match reverse, fns, spread_fn with
       (* Call the tail functions in our array first and call our head function
        * last after that. *)
@@ -27,7 +27,7 @@ module Kit (Flow: Flow_common.S) = struct
         let reason = replace_desc_reason (RCustom "compose intermediate value")
           (reason_of_t fn) in
         let tvar = Tvar.mk_where cx reason (fun tvar ->
-          run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar) in
+          run_compose cx trace ~use_op reason_op reverse fns spread_fn tins tvar) in
         rec_flow cx trace (fn,
           CallT (use_op, reason, mk_functioncalltype reason_op None [Arg tvar] tout))
 
@@ -36,14 +36,20 @@ module Kit (Flow: Flow_common.S) = struct
       | true, fn::fns, _ ->
         let reason = replace_desc_reason (RCustom "compose intermediate value")
           (reason_of_t fn) in
-        let tvar = Tvar.mk_where cx reason (fun tvar ->
-          rec_flow cx trace (fn,
-            CallT (use_op, reason, mk_functioncalltype reason_op None [Arg tin] tvar))) in
-        run_compose cx trace ~use_op reason_op reverse fns spread_fn tvar tout
+        let tvar = Tvar.mk_where cx reason (
+          fun tvar ->
+            let targs = List.map (fun tin -> Arg tin) tins in
+            rec_flow cx trace (
+              fn,
+              CallT (use_op, reason, mk_functioncalltype reason_op None targs tvar)
+            )
+        ) in
+        run_compose cx trace ~use_op reason_op reverse fns spread_fn [tvar] tout
 
       (* If there are no functions and no spread function then we are an identity
        * function. *)
       | _, [], None ->
+        let tin = List.hd tins in
         rec_flow_t cx trace (tin, tout)
 
       (* Correctly implementing spreads of unknown arity for the compose function
@@ -96,9 +102,38 @@ module Kit (Flow: Flow_common.S) = struct
        * The implementation of Flow should be able to terminate these recursive
        * constraints. If it doesn't then we have a bug. *)
       | _, [], Some spread_fn ->
-        run_compose cx trace ~use_op reason_op reverse [] None tin tout;
-        run_compose cx trace ~use_op reason_op reverse [spread_fn] None tin tout;
-        run_compose cx trace ~use_op reason_op reverse [spread_fn] None tout tin
+        run_compose cx trace ~use_op reason_op reverse [] None tins tout;
+        run_compose cx trace ~use_op reason_op reverse [spread_fn] None tins tout;
+        let tin = List.hd tins in
+        run_compose cx trace ~use_op reason_op reverse [spread_fn] None [tout] tin
+
+  let mk_compose_tins cx reason_op reverse fns spread_fn = match reverse, fns, spread_fn with
+    | true, fn::_, _ -> (
+      match fn with
+        | DefT(_, _, FunT (_, _, ft)) ->
+          List.map (fun _ -> Tvar.mk cx reason_op) ft.params
+        | _ ->
+          let tin = Tvar.mk cx reason_op in
+          [tin]
+    )
+    | false, fns, None -> (
+      let lastFn = ListUtils.last_opt fns in
+      match lastFn with
+        | Some fn -> (
+          match fn with
+            | DefT(_, _, FunT (_, _, ft)) ->
+              List.map (fun _ -> Tvar.mk cx reason_op) ft.params
+            | _ ->
+              let tin = Tvar.mk cx reason_op in
+              [tin]
+        )
+        | _ ->
+          let tin = Tvar.mk cx reason_op in
+          [tin]
+    )
+    | _, _, _ ->
+      let tin = Tvar.mk cx reason_op in
+      [tin]
 
   let run cx trace ~use_op reason_op kind args spread_arg tout = match kind with
   | Compose reverse ->
@@ -110,13 +145,13 @@ module Kit (Flow: Flow_common.S) = struct
         Op (FunCallMethod {op; fn; prop; args = []; local})
     | _ -> use_op
     in
-    let tin = Tvar.mk cx reason_op in
+    let tins = mk_compose_tins cx reason_op reverse args spread_arg in
     let tvar = Tvar.mk cx reason_op in
-    run_compose cx trace ~use_op reason_op reverse args spread_arg tin tvar;
+    run_compose cx trace ~use_op reason_op reverse args spread_arg tins tvar;
     let funt = FunT (
       dummy_static reason_op,
       dummy_prototype,
-      mk_functiontype reason_op [tin] ~rest_param:None ~def_reason:reason_op tvar
+      mk_functiontype reason_op tins ~rest_param:None ~def_reason:reason_op tvar
     ) in
     rec_flow_t cx trace (DefT (reason_op, bogus_trust (), funt), tout)
 
