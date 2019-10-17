@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_result
+open Base.Result
 open ServerEnv
 open Utils_js
 open Lsp
@@ -422,7 +422,7 @@ let find_global_refs ~reader ~genv ~env ~profiling (file_input, line, col, multi
     FindRefs_js.find_global_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~multi_hop
   in
   let env = !env in
-  let result = Core_result.map result ~f:convert_find_refs_result in
+  let result = Base.Result.map result ~f:convert_find_refs_result in
   Lwt.return (env, result, dep_count)
 
 let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
@@ -651,7 +651,7 @@ let handle_refactor
     in
     let env = !env in
     let result =
-      result |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> { refactor_edits }))
+      result |> Base.Result.map ~f:(Option.map ~f:(fun refactor_edits -> { refactor_edits }))
     in
     Lwt.return (env, REFACTOR result, None))
 
@@ -1507,7 +1507,7 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
       let lsp_locs =
         Core_list.fold locs ~init:(Ok []) ~f:(fun acc loc ->
             let location = Flow_lsp_conversions.loc_to_lsp loc in
-            Core_result.combine location acc ~ok:List.cons ~err:(fun e _ -> e))
+            Base.Result.combine location acc ~ok:List.cons ~err:(fun e _ -> e))
       in
       begin
         match lsp_locs with

@@ -2677,10 +2677,10 @@ let load_saved_state ~profiling ~workers options =
        in
        let updates =
          match updates with
-         | Core_result.Error { Recheck_updates.msg; _ } ->
+         | Base.Result.Error { Recheck_updates.msg; _ } ->
            Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
            raise Saved_state.(Invalid_saved_state Changed_files)
-         | Core_result.Ok updates -> updates
+         | Base.Result.Ok updates -> updates
        in
        Hh_logger.info
          "Saved state script reports %d files changed & we care about %d of them"
@@ -2740,10 +2740,10 @@ let query_watchman_for_changed_files ~options =
           Recheck_updates.process_updates ~skip_incompatible:true ~options ~libs changed_files
         in
         match updates with
-        | Core_result.Error { Recheck_updates.msg; _ } ->
+        | Base.Result.Error { Recheck_updates.msg; _ } ->
           failwith
             (Printf.sprintf "skip_incompatible was set to true, how did we manage to error? %S" msg)
-        | Core_result.Ok updates ->
+        | Base.Result.Ok updates ->
           Hh_logger.info
             "Watchman reports %d files changed since mergebase & we care about %d of them"
             (SSet.cardinal changed_files)

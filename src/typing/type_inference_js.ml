@@ -192,8 +192,8 @@ let scan_for_lint_suppressions =
         | (Ok kinds, Ok setting) ->
           Some (Core_list.map ~f:(fun kind -> ({ value = kind; loc = arg.loc }, setting)) kinds)
         | (rule_result, setting_result) ->
-          Core_result.iter_error rule_result ~f:(add_error cx);
-          Core_result.iter_error setting_result ~f:(add_error cx);
+          Base.Result.iter_error rule_result ~f:(add_error cx);
+          Base.Result.iter_error setting_result ~f:(add_error cx);
           None
       end
     | _ ->

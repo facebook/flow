@@ -322,7 +322,7 @@ let from_flag =
       match from with
       | Some from -> Some from
       | None ->
-        Core_result.(
+        Base.Result.(
           let parent_cmdline =
             Proc.get_proc_stat (Unix.getpid ())
             >>= fun proc_stat ->
@@ -1652,7 +1652,7 @@ let choose_file_watcher ~options ~file_watcher ~flowconfig =
 let json_of_loc_with_offset ?stdin_file ~strip_root loc =
   Option.(
     let file_content =
-      let path = Loc.source loc >>= File_key.to_path %> Core_result.ok in
+      let path = Loc.source loc >>= File_key.to_path %> Base.Result.ok in
       match stdin_file with
       | Some fileinput when path = File_input.path_of_file_input fileinput ->
         Some (File_input.content_of_file_input_unsafe fileinput)

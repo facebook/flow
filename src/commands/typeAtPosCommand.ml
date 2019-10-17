@@ -136,7 +136,7 @@ let main
         wait_for_recheck;
       }
   in
-  let file_contents = File_input.content_of_file_input file |> Core_result.ok in
+  let file_contents = File_input.content_of_file_input file |> Base.Result.ok in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
   | ServerProt.Response.INFER_TYPE (Ok resp) ->

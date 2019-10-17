@@ -744,7 +744,7 @@ let get_offset_table_expensive ~stdin_file loc =
   let open Option in
   let open Utils_js in
   Loc.source loc
-  >>= File_key.to_path %> Core_result.ok
+  >>= File_key.to_path %> Base.Result.ok
   >>= read_file ~stdin_file
   >>| Offset_utils.make
 

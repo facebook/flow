@@ -7,7 +7,7 @@
 
 open Utils_js
 open Parsing_heaps_utils
-module Result = Core_result
+module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 

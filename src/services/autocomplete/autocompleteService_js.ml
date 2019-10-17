@@ -6,7 +6,7 @@
  *)
 
 open Autocomplete_js
-open Core_result
+open Base.Result
 open ServerProt.Response
 open Parsing_heaps_utils
 

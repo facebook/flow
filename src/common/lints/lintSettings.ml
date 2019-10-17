@@ -9,7 +9,7 @@ open Lints
 open Severity
 open Utils_js
 
-let ( >>= ) = Core_result.bind
+let ( >>= ) = Base.Result.( >>= )
 
 type 'a t = {
   (* The default value associated with a lint if the lint kind isn't found in the map *)

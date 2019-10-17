@@ -44,7 +44,7 @@ let is_incompatible_package_json ~reader =
  *    changed or the .flowconfig changed. Maybe one day we'll learn to incrementally check those
  *    changes, but for now we just need to exit and restart from scratch *)
 let process_updates ?(skip_incompatible = false) ~options ~libs updates =
-  Core_result.(
+  Base.Result.(
     let reader = State_reader.create () in
     let file_options = Options.file_options options in
     let all_libs =

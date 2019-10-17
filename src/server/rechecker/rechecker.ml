@@ -77,8 +77,8 @@ let get_lazy_stats ~options env =
 let process_updates ~options env updates =
   Recheck_updates.(
     match process_updates ~options ~libs:env.ServerEnv.libs updates with
-    | Core_result.Ok updates -> updates
-    | Core_result.Error { msg; exit_status } ->
+    | Base.Result.Ok updates -> updates
+    | Base.Result.Error { msg; exit_status } ->
       Hh_logger.fatal "Status: Error";
       Hh_logger.fatal "%s" msg;
       FlowExitStatus.exit ~msg exit_status)

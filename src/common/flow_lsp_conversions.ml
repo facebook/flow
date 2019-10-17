@@ -109,14 +109,14 @@ let flow_completion_to_lsp
       }))
 
 let file_key_to_uri (file_key_opt : File_key.t option) : (string, string) result =
-  let ( >>| ) = Core_result.( >>| ) in
-  let ( >>= ) = Core_result.( >>= ) in
-  Core_result.of_option file_key_opt ~error:"File_key is None"
+  let ( >>| ) = Base.Result.( >>| ) in
+  let ( >>= ) = Base.Result.( >>= ) in
+  Base.Result.of_option file_key_opt ~error:"File_key is None"
   >>= File_key.to_path
   >>| File_url.create
 
 let loc_to_lsp (loc : Loc.t) : (Lsp.Location.t, string) result =
-  let ( >>| ) = Core_result.( >>| ) in
+  let ( >>| ) = Base.Result.( >>| ) in
   file_key_to_uri loc.Loc.source >>| (fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc })
 
 let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : string) : Lsp.Location.t =

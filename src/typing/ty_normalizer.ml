@@ -740,7 +740,7 @@ end = struct
       (* Resolve the tvar *)
       let (ty_res, out_st) = run in_st (resolve_bounds ~env cons) in
       (* Create a recursive type (if needed) *)
-      let ty_res = Core_result.map ~f:(Recursive.make out_st.free_tvars rid) ty_res in
+      let ty_res = Base.Result.map ~f:(Recursive.make out_st.free_tvars rid) ty_res in
       (* Reset state by removing the current tvar from the free vars set *)
       let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
       let%bind _ = put out_st in

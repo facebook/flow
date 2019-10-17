@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_result
+open Base.Result
 open Utils_js
 open Parsing_heaps_utils
 

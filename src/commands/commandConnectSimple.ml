@@ -168,7 +168,7 @@ let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
 
 (* Connects to the monitor via a socket. *)
 let connect_once ~flowconfig_name ~client_handshake ~tmp_dir root =
-  let ( >>= ) = Core_result.( >>= ) in
+  let ( >>= ) = Base.Result.( >>= ) in
   try
     Timeout.with_timeout
       ~timeout:1

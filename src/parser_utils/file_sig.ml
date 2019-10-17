@@ -7,7 +7,7 @@
 
 module Ast_utils = Flow_ast_utils
 module Ast = Flow_ast
-module Result = Core_result
+module Result = Base.Result
 open Flow_ast_visitor
 
 module Make

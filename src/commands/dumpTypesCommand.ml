@@ -97,7 +97,7 @@ let main
     () =
   let json = json || pretty in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path filename in
-  let file_content = File_input.content_of_file_input file |> Core_result.ok in
+  let file_content = File_input.content_of_file_input file |> Base.Result.ok in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
     guess_root

@@ -97,7 +97,7 @@ let dedup ?(compare = Pervasives.compare) (x, xs) =
 let result_all = function
   | (Ok x, rest) ->
     begin
-      match Core_result.all rest with
+      match Base.Result.all rest with
       | Ok rest -> Ok (x, rest)
       | Error _ as err -> err
     end

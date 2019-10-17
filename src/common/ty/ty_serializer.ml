@@ -6,7 +6,7 @@
  *)
 
 module Ast = Flow_ast
-open Core_result
+open Base.Result
 open Ty
 module T = Flow_ast.Type
 

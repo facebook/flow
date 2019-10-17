@@ -7,7 +7,7 @@
 
 open Utils_js
 
-let ( >>= ) = Core_result.( >>= )
+let ( >>= ) = Base.Result.( >>= )
 
 type line = int * string
 
@@ -257,13 +257,13 @@ module Opts = struct
       | (line_num, value_str) :: rest ->
         let value =
           optparser value_str
-          |> Core_result.map_error ~f:(fun msg -> (line_num, Failed_to_parse_value msg))
+          |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_parse_value msg))
         in
         let config =
           value
           >>= fun value ->
           setter config value
-          |> Core_result.map_error ~f:(fun msg -> (line_num, Failed_to_set msg))
+          |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_set msg))
         in
         config >>= loop optparser setter rest
     in
@@ -476,7 +476,7 @@ module Opts = struct
             Str.split_delim version_regex v
             |> String.concat (">=" ^ less_or_equal_curr_version)
             |> String.escaped
-            |> Core_result.return
+            |> Base.Result.return
             >>= optparse_regexp
             >>= (fun v -> Ok { opts with suppress_comments = v :: opts.suppress_comments })) );
       ( "suppress_type",
@@ -577,7 +577,7 @@ module Opts = struct
           | None -> Ok (raw_opts, config)
           | Some values ->
             f values config
-            |> Core_result.map_error ~f:(error_of_opt_error key)
+            |> Base.Result.map_error ~f:(error_of_opt_error key)
             >>= fun config ->
             let new_raw_opts = SMap.remove key raw_opts in
             Ok (new_raw_opts, config)
@@ -1018,7 +1018,7 @@ let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let ( >>= )
       (acc : (config * warning list, error) result)
       (fn : config -> (config * warning list, error) result) =
-    let ( >>= ) = Core_result.( >>= ) in
+    let ( >>= ) = Base.Result.( >>= ) in
     acc
     >>= fun (config, warn_acc) ->
     fn config >>= (fun (config, warnings) -> Ok (config, Core_list.rev_append warnings warn_acc))

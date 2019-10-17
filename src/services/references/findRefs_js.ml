@@ -7,7 +7,7 @@
 
 let ( >>= ) = Lwt_result.Infix.( >>= )
 
-let ( >>| ) = Core_result.( >>| )
+let ( >>| ) = Base.Result.( >>| )
 
 open Utils_js
 open Loc_collections

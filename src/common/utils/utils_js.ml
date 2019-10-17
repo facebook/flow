@@ -252,7 +252,7 @@ end
 
 module AugmentableSMap = Augmentable (SMap)
 
-(* The problem with Core_result's >>= is that the function second argument cannot return
+(* The problem with Base.Result's >>= is that the function second argument cannot return
  * an Lwt.t. This helper infix operator handles that case *)
 let ( %>>= ) (result : ('ok, 'err) result) (f : 'ok -> ('a, 'err) result Lwt.t) :
     ('a, 'err) result Lwt.t =
@@ -267,9 +267,9 @@ let ( %>>| ) (result : ('ok, 'err) result) (f : 'ok -> 'a Lwt.t) : ('a, 'err) re
     let%lwt new_x = f x in
     Lwt.return (Ok new_x)
 
-let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
+let bind2 ~f x y = Base.Result.bind x (fun x -> Base.Result.bind y (f x))
 
-let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
+let map2 ~f x y = Base.Result.bind x (fun x -> Base.Result.map y ~f:(f x))
 
 let try_with_json f =
   try%lwt f () with

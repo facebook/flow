@@ -101,7 +101,7 @@ end = struct
   let find_case name map = (try SMap.find name map with Not_found -> empty_case)
 
   let parse_options content =
-    Core_result.(
+    Base.Result.(
       let get_bool k v =
         try return (Hh_json.get_bool_exn v)
         with Assert_failure _ -> failf "invalid value for %S, expected bool" k
@@ -193,7 +193,7 @@ end = struct
                     | "failure" -> { case with expected = Some (Failure content) }
                     | "options" ->
                       (* TODO: propagate errors better *)
-                      let options = Core_result.ok_or_failwith (parse_options content) in
+                      let options = Base.Result.ok_or_failwith (parse_options content) in
                       { case with options = (fst options, Some (snd options)) }
                     | _ -> { case with skipped = file :: case.skipped }
                   in

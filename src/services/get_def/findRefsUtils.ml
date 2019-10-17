@@ -6,7 +6,7 @@
  *)
 
 open Utils_js
-module Result = Core_result
+module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
