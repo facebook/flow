@@ -256,7 +256,10 @@ let command =
     {
       CommandSpec.name = "autofix";
       doc = "";
-      usage = Printf.sprintf "Usage: %s autofix SUBCOMMAND [OPTIONS]...\n\nSUBCOMMANDS:\nsuggest: Provides type annotation suggestions for a given program\ninsert-type: Insert type information at file and position\nexports: Automatically fix signature verification errors\n" CommandUtils.exe_name;
+      usage =
+        Printf.sprintf
+          "Usage: %s autofix SUBCOMMAND [OPTIONS]...\n\nSUBCOMMANDS:\nsuggest: Provides type annotation suggestions for a given program\ninsert-type: Insert type information at file and position\nexports: Automatically fix signature verification errors\n"
+          CommandUtils.exe_name;
       args =
         CommandSpec.ArgSpec.(
           empty
