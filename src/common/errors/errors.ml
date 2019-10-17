@@ -732,33 +732,27 @@ let get_lines ~start ~len content =
   in
   loop ~start ~len ~acc:[] ~pos:0 content
 
-let read_file filename =
-  if Filename.is_relative filename then
-    failwith (Utils_js.spf "Expected absolute location, got %s" filename);
-  Sys_utils.cat_or_failed filename
+let read_file ~stdin_file filename =
+  match stdin_file with
+  | Some (stdin_path, contents) when Path.to_string stdin_path = filename -> Some contents
+  | _ ->
+    if Filename.is_relative filename then
+      failwith (Utils_js.spf "Expected absolute location, got %s" filename);
+    Sys_utils.cat_or_failed filename
 
 let get_offset_table_expensive ~stdin_file loc =
-  Option.(
-    Utils_js.(
-      let content =
-        let path = Loc.source loc >>= File_key.to_path %> Core_result.ok in
-        match stdin_file with
-        | Some (stdin_path, contents) when path = Some (Path.to_string stdin_path) -> Some contents
-        | _ -> path >>= read_file
-      in
-      content >>| Offset_utils.make))
+  let open Option in
+  let open Utils_js in
+  Loc.source loc
+  >>= File_key.to_path %> Core_result.ok
+  >>= read_file ~stdin_file
+  >>| Offset_utils.make
 
 let read_lines_in_file loc filename stdin_file =
   match filename with
   | None -> None
   | Some filename ->
-    let content_opt =
-      match stdin_file with
-      | Some (stdin_filename, content) when Path.to_string stdin_filename = filename ->
-        Some content
-      | _ -> read_file filename
-    in
-    (match content_opt with
+    (match read_file ~stdin_file filename with
     | None -> None
     | Some content ->
       (try
