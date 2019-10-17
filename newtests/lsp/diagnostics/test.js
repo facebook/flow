@@ -176,6 +176,7 @@ function fred(): number {return 1+2;}
           [],
         ),
     ]),
+
     test('live non-parse diagnostics', [
       lspStartAndConnect(),
       // Open a document with no errors. We should not see errors
@@ -280,6 +281,7 @@ function fred(): number {return 1+2;}
           [],
         ),
     ]),
+
     test('live non-parse diagnostics with unchecked dependencies', [
       addFile('dependency.js'),
       lspStartAndConnect(),
@@ -306,6 +308,7 @@ function fred(): number {return 1+2;}
           ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
     ]).flowConfig('_flowconfig_lazy'),
+
     test('live non-parse diagnostics', [
       lspStartAndConnect(),
       // Open a document with no errors. We should not see errors
@@ -335,15 +338,16 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(60000, 'textDocument/publishDiagnostics')
+        .waitUntilLSPMessage(1000, 'textDocument/publishDiagnostics')
         .verifyAllLSPMessagesInStep([], ['window/showStatus']),
     ]).flowConfig('_flowconfig_disable_live_non_parse_errors'),
+
     test('pseudo parse errors', [
       lspStartAndConnect(),
       addFile('pseudo_parse_error.js')
         .waitUntilLSPMessage(
           60000,
-          'textDocument/publishDiagnostics{Cannot return}',
+          'textDocument/publishDiagnostics{Flow does not yet}',
         )
         .verifyAllLSPMessagesInStep(
           [
@@ -377,7 +381,7 @@ obj?.foo(); // Error
       })
         .waitUntilLSPMessage(
           60000,
-          'textDocument/publishDiagnostics{Cannot return}',
+          'textDocument/publishDiagnostics{Flow does not yet}',
         )
         .verifyAllLSPMessagesInStep(
           [
@@ -388,68 +392,6 @@ obj?.foo(); // Error
             ...lspIgnoreStatusAndCancellation,
           ],
         ),
-    ]),
-    test('Errors with Loc.none', [
-      lspStartAndConnect(),
-      addFiles('empty.js', 'importsFakeSymbol.js').waitUntilLSPMessage(
-        60000,
-        (() => {
-          const expectedMessage = {
-            uri: '<PLACEHOLDER_PROJECT_URL_SLASH>importsFakeSymbol.js',
-            diagnostics: [
-              {
-                range: {
-                  start: {
-                    line: 2,
-                    character: 7,
-                  },
-                  end: {
-                    line: 2,
-                    character: 10,
-                  },
-                },
-                severity: 1,
-                code: 'InferError',
-                source: 'Flow',
-                message: 'property `foo` is missing in  exports [1].',
-                relatedInformation: [
-                  {
-                    location: {
-                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
-                      range: {
-                        start: {
-                          line: 0,
-                          character: 0,
-                        },
-                        end: {
-                          line: 0,
-                          character: 0,
-                        },
-                      },
-                    },
-                    message: '[1] exports',
-                  },
-                ],
-                relatedLocations: [
-                  {
-                    location: {
-                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
-                      range: {
-                        start: {line: 0, character: 0},
-                        end: {line: 0, character: 0},
-                      },
-                    },
-                    message: '[1] exports',
-                  },
-                ],
-              },
-            ],
-          };
-          return `textDocument/publishDiagnostics${JSON.stringify(
-            expectedMessage,
-          )}`;
-        })(),
-      ),
     ]),
   ],
 );
