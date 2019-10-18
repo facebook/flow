@@ -96,7 +96,7 @@ export default suite(
       // Open a document with errors. We should get a live syntax error immediately.
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/syntaxError1.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -112,7 +112,7 @@ function fred(): number {return 1+;}
       // Edit it fix the problem. The live syntax error should be dismissed immediately.
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/syntaxError1.js',
           version: 2,
         },
         contentChanges: [
@@ -131,7 +131,7 @@ function fred(): number {return 1+2;}
       // Make another change that doesn't introduce errors. We should get no reports.
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/syntaxError1.js',
           version: 2,
         },
         contentChanges: [
@@ -147,7 +147,7 @@ function fred(): number {return 1+2;}
       // Make a change that introduces the error. We should get a report immediately.
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/syntaxError1.js',
           version: 3,
         },
         contentChanges: [
@@ -166,7 +166,7 @@ function fred(): number {return 1+2;}
       // Close the file. The live error should go away.
       lspNotification('textDocument/didClose', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/syntaxError1.js',
           version: 3,
         },
       })
@@ -181,7 +181,7 @@ function fred(): number {return 1+2;}
       // Open a document with no errors. We should not see errors
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow`,
@@ -192,7 +192,7 @@ function fred(): number {return 1+2;}
       // Edit it and add a type error. We should see the error.
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           version: 2,
         },
         contentChanges: [
@@ -213,7 +213,7 @@ function fred(): number {return 1+2;}
       // Edit it fix the problem. The live type error should be dismissed.
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           version: 3,
         },
         contentChanges: [
@@ -232,7 +232,7 @@ function fred(): number {return 1+2;}
       // Make another change that doesn't introduce errors. We should get no reports.
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           version: 4,
         },
         contentChanges: [
@@ -248,7 +248,7 @@ function fred(): number {return 1+2;}
       // Make a change that introduces the error. We should get a report immediately.
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           version: 5,
         },
         contentChanges: [
@@ -270,7 +270,7 @@ function fred(): number {return 1+2;}
       // Close the file. The live error should go away.
       lspNotification('textDocument/didClose', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           version: 6,
         },
       })
@@ -286,7 +286,7 @@ function fred(): number {return 1+2;}
       // Open a document with errors. We should immediately see the live non-parse errors
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -311,7 +311,7 @@ function fred(): number {return 1+2;}
       // Open a document with no errors. We should not see errors
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow`,
@@ -324,7 +324,7 @@ function fred(): number {return 1+2;}
       // is set in the .flowconfig
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>typeError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
           version: 2,
         },
         contentChanges: [
@@ -363,7 +363,7 @@ function fred(): number {return 1+2;}
         ),
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>pseudo_parse_error.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/pseudo_parse_error.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -395,7 +395,7 @@ obj?.foo(); // Error
         9000,
         (() => {
           const expectedMessage = {
-            uri: '<PLACEHOLDER_PROJECT_URL_SLASH>importsFakeSymbol.js',
+            uri: '<PLACEHOLDER_PROJECT_URL>/importsFakeSymbol.js',
             diagnostics: [
               {
                 range: {
@@ -415,7 +415,7 @@ obj?.foo(); // Error
                 relatedInformation: [
                   {
                     location: {
-                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
                       range: {
                         start: {
                           line: 0,
@@ -433,7 +433,7 @@ obj?.foo(); // Error
                 relatedLocations: [
                   {
                     location: {
-                      uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
+                      uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
                       range: {
                         start: {line: 0, character: 0},
                         end: {line: 0, character: 0},

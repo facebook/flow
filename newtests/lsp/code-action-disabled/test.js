@@ -30,7 +30,7 @@ export default suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/error1.js',
         },
         range: {
           start: {
@@ -55,7 +55,7 @@ export default suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/error1.js',
         },
         range: {
           start: {
@@ -97,7 +97,7 @@ export default suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>error1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/error1.js',
         },
         range: {
           start: {
