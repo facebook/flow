@@ -40,7 +40,7 @@ let escape ~(safe_chars : string) (s : string) : string =
       let code = Char.code c in
       if code < 32 || code > 127 then
         failwith ("only 7bit ascii allowed in " ^ s);
-      Buffer.add_string buf (Printf.sprintf "%%%02x" code)
+      Buffer.add_string buf (Printf.sprintf "%%%02X" code)
   in
   String.iter f s;
   Buffer.contents buf
@@ -99,7 +99,7 @@ let dos_re = Str.regexp {|^\([a-zA-Z]\):\([/\].*\)$|} (* e.g. c:\ or z:/ *)
 let backslash_re = Str.regexp {|\\|} (* matches a single backslash *)
 
 let path_safe_chars =
-  "/-._~!$&'()*+,;=:@0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  "/-._~!$&'()*+,;=@0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 let create (path : string) : string =
   let absolute_path =

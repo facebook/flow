@@ -19,7 +19,7 @@ export default suite(
       addFile('completion.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion.js'},
         position: {line: 10, character: 15}, // statement position
       }).verifyAllLSPMessagesInStep(
         [
@@ -89,7 +89,7 @@ export default suite(
       addFile('kind.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>kind.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/kind.js'},
         position: {line: 13, character: 15},
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
@@ -196,7 +196,7 @@ export default suite(
         },
       }),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>params.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/params.js'},
         position: {line: 9, character: 15},
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
@@ -275,7 +275,7 @@ export default suite(
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 12, character: 4},
         context: {triggerKind: 2, triggerCharacter: ' '},
       }).verifyAllLSPMessagesInStep(
@@ -303,7 +303,7 @@ export default suite(
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 11, character: 1},
         context: {triggerKind: 2, triggerCharacter: ' '},
       }).verifyAllLSPMessagesInStep(
@@ -323,7 +323,7 @@ export default suite(
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 11, character: 1},
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
@@ -374,7 +374,7 @@ export default suite(
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 12, character: 4},
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
@@ -404,7 +404,7 @@ export default suite(
         addFile('jsx.js'),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/completion', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
           position: {line: 13, character: 4},
           context: {triggerKind: 2, triggerCharacter: ' '},
         }).verifyAllLSPMessagesInStep(
@@ -438,7 +438,7 @@ export default suite(
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 13, character: 4},
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
@@ -466,7 +466,7 @@ export default suite(
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 14, character: 3},
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
@@ -542,7 +542,7 @@ export default suite(
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 15, character: 2},
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
