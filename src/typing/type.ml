@@ -1662,6 +1662,8 @@ and UnionRep : sig
     quick_mem_result
 
   val check_enum : t -> UnionEnumSet.t option
+
+  val string_of_specialization : t -> string
 end = struct
   (* canonicalize a type w.r.t. enum membership *)
   let canon =
@@ -2020,6 +2022,17 @@ end = struct
     match !specialization with
     | Some (UnionEnum enums) -> Some enums
     | _ -> None
+
+  let string_of_specialization (_, _, _, spec) =
+    match !spec with
+    | Some (UnionEnum _) -> "Enum"
+    | Some Empty -> "Empty"
+    | Some Unoptimized -> "Unoptimized"
+    | Some (Singleton _) -> "Singleton"
+    | Some (PartiallyOptimizedDisjointUnion _) -> "Partially Optimized Disjoint Union"
+    | Some (DisjointUnion _) -> "Disjoint Union"
+    | Some (PartiallyOptimizedUnionEnum _) -> "Partially Optimized Enum"
+    | None -> "No Specialization"
 end
 
 (* We encapsulate IntersectionT's internal structure.

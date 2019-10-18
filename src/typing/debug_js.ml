@@ -1697,7 +1697,13 @@ let rec dump_t_ (depth, tvars) cx t =
     | IntersectionT (_, rep) ->
       p ~extra:(spf "[%s]" (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
     | UnionT (_, rep) ->
-      p ~extra:(spf "[%s]" (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))) t
+      p
+        ~extra:
+          (spf
+             "[%s]%s"
+             (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))
+             (UnionRep.string_of_specialization rep))
+        t
     | MergedT (_, uses) ->
       p
         ~extra:
