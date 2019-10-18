@@ -1,0 +1,46 @@
+{
+  "name": "typed-rest-client",
+  "version": "1.5.0",
+  "description": "Node Rest and Http Clients for use with TypeScript",
+  "main": "./RestClient.js",
+  "scripts": {
+    "build": "node make.js build",
+    "test": "node make.js test",
+    "bt": "node make.js buildtest",
+    "samples": "node make.js samples",
+    "units": "node make.js units",
+    "validate": "node make.js validate"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Microsoft/typed-rest-client.git"
+  },
+  "keywords": [
+    "rest",
+    "http",
+    "client",
+    "typescript",
+    "node"
+  ],
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Microsoft/typed-rest-client/issues"
+  },
+  "homepage": "https://github.com/Microsoft/typed-rest-client#readme",
+  "devDependencies": {
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^6.0.92",
+    "@types/shelljs": "0.7.4",
+    "mocha": "^3.5.3",
+    "nock": "9.6.1",
+    "react-scripts": "1.1.5",
+    "shelljs": "0.7.6",
+    "semver": "4.3.3",
+    "typescript": "3.1.5"
+  },
+  "dependencies": {
+    "tunnel": "0.0.4",
+    "underscore": "1.8.3"
+  }
+}

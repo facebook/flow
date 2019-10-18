@@ -1,0 +1,32 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build-win64:
+    name: Windows Build
+    runs-on: windows-2019
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Install opam
+      uses: ./.github/actions/setup-opam
+    - name: Initialize opam
+      run: |
+        c:\tools\cygwin\bin\bash.exe --noprofile --norc -eo pipefail -c ^
+          "/usr/local/bin/opam init --bare --disable-sandboxing"
+    - name: Install opam dependencies
+      run: |
+        c:\tools\cygwin\bin\bash.exe --noprofile --norc -eo pipefail -c ^
+          "export PATH=/usr/local/bin:/usr/bin:$PATH; opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes"
+    - name: Build flow.exe
+      run: |
+        c:\tools\cygwin\bin\bash.exe --noprofile --norc -eo pipefail -c ^
+          "export PATH=/usr/local/bin:/usr/bin:$PATH; eval $(opam env); make"
+    - name: Archive flow.exe
+      uses: actions/upload-artifact@v1
+      with:
+        name: flow.exe
+        path: bin/flow.exe

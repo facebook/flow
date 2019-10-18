@@ -1,0 +1,35 @@
+{
+  "name": "@actions/io",
+  "version": "1.0.1",
+  "description": "Actions io lib",
+  "keywords": [
+    "github",
+    "actions",
+    "io"
+  ],
+  "homepage": "https://github.com/actions/toolkit/tree/master/packages/io",
+  "license": "MIT",
+  "main": "lib/io.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actions/toolkit.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "tsc": "tsc"
+  },
+  "bugs": {
+    "url": "https://github.com/actions/toolkit/issues"
+  },
+  "gitHead": "a2ab4bcf78e4f7080f0d45856e6eeba16f0bbc52"
+}

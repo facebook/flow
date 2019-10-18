@@ -1,0 +1,18 @@
+{
+  "name": "setup-opam",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Flow Team <flow@fb.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.1.3",
+    "@actions/exec": "^1.0.1",
+    "@actions/tool-cache": "^1.1.2",
+    "uuid": "^3.3.2"
+  }
+}

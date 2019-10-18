@@ -1,0 +1,38 @@
+{
+  "name": "@actions/core",
+  "version": "1.1.3",
+  "description": "Actions core lib",
+  "keywords": [
+    "github",
+    "actions",
+    "core"
+  ],
+  "homepage": "https://github.com/actions/toolkit/tree/master/packages/core",
+  "license": "MIT",
+  "main": "lib/core.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actions/toolkit.git",
+    "directory": "packages/core"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "tsc": "tsc"
+  },
+  "bugs": {
+    "url": "https://github.com/actions/toolkit/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^12.0.2"
+  }
+}

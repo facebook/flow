@@ -1,0 +1,5 @@
+name: Setup opam environment
+description: Installs opam
+runs:
+  using: 'node12'
+  main: 'index.js'
