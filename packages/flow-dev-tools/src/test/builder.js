@@ -12,6 +12,7 @@ import {format} from 'util';
 import EventEmitter from 'events';
 
 import * as rpc from 'vscode-jsonrpc';
+import {URI as VscodeURI} from 'vscode-uri';
 
 import type {LSPMessage, RpcConnection} from './lsp';
 
@@ -515,11 +516,7 @@ export class TestBuilder {
   }
 
   getDirUrl(): string {
-    if (platform() === 'win32') {
-      return 'file:///' + this.dir;
-    } else {
-      return 'file://' + this.dir;
-    }
+    return VscodeURI.file(this.dir).toString();
   }
 
   // sanitizeIncomingLSPMessage: removes a few known fields from server output
@@ -532,15 +529,11 @@ export class TestBuilder {
     // a '.flowVersion' field
     // LSP sends back document URLs, to files within the test project
     const url = this.getDirUrl();
-    const urlslash = url + dir_sep;
+    const urlslash = `${url}/`;
     function replace(obj: Object) {
       function do_url_replace(str: string): string {
         if (str.startsWith(urlslash)) {
-          return (
-            '<PLACEHOLDER_PROJECT_URL_SLASH>' + str.substr(urlslash.length)
-          );
-        } else if (str.startsWith(url)) {
-          return '<PLACEHOLDER_PROJECT_URL>' + str.substr(url.length);
+          return '<PLACEHOLDER_PROJECT_URL>/' + str.substr(urlslash.length);
         } else {
           return str;
         }
@@ -602,9 +595,7 @@ export class TestBuilder {
             break;
           case 'string':
             if (obj[k].startsWith('<PLACEHOLDER')) {
-              obj[k] = obj[k]
-                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl)
-                .replace(/^<PLACEHOLDER_PROJECT_URL_SLASH>/, dirUrl + dir_sep);
+              obj[k] = obj[k].replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl);
             }
             break;
         }
@@ -984,7 +975,7 @@ export default class Builder {
   static builders: Array<TestBuilder> = [];
 
   static getDirForRun(runID: string): string {
-    return join(tmpdir(), 'flow/tests', runID);
+    return VscodeURI.file(join(tmpdir(), 'flow', 'tests', runID)).fsPath;
   }
 
   // doesMethodMatch(actual, 'M') judges whether the method name of the actual
