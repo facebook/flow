@@ -63,15 +63,23 @@ assert_ok \
 
 printf "jsx1.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx1.js 8 4 < jsx1.js
+  "$FLOW" autocomplete --strip-root --pretty jsx1.js 7 4 < jsx1.js
 
 printf "jsx2.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx2.js 8 11 < jsx2.js
+  "$FLOW" autocomplete --strip-root --pretty jsx2.js 7 11 < jsx2.js
 
 printf "jsx3.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx3.js 10 4 < jsx3.js
+  "$FLOW" autocomplete --strip-root --pretty jsx3.js 9 4 < jsx3.js
+
+printf "jsx-function-component.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-function-component.js 9 4 < jsx-function-component.js
+
+printf "jsx-abstract-component.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-abstract-component.js 8 4 < jsx-abstract-component.js
 
 printf "customfun.js = "
 assert_ok \

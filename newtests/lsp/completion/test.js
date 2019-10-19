@@ -342,8 +342,10 @@ export default suite(
                 {
                   label: 'React',
                   kind: 6,
-                  detail: '{createElement: any}',
-                  inlineDetail: '{createElement: any}',
+                  detail:
+                    '{|+AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React...',
+                  inlineDetail:
+                    '{|+AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React...',
                   insertTextFormat: 1,
                 },
                 {
@@ -396,12 +398,76 @@ export default suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test(
+      'textDocument/completion triggered by space in jsx, function component',
+      [
+        addFile('jsx.js'),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/completion', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+          position: {line: 13, character: 4},
+          context: {triggerKind: 2, triggerCharacter: ' '},
+        }).verifyAllLSPMessagesInStep(
+          [
+            (() => {
+              const expectedResponse = {
+                isIncomplete: false,
+                items: [
+                  {
+                    label: 'a',
+                    kind: 6,
+                    detail: 'number',
+                    inlineDetail: 'number',
+                    insertTextFormat: 1,
+                  },
+                ],
+              };
+              return `textDocument/completion${JSON.stringify(
+                expectedResponse,
+              )}`;
+            })(),
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+      ],
+    ),
+    test('textDocument/completion invoked in jsx, function component', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
+        position: {line: 13, character: 4},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'a',
+                  kind: 6,
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('textDocument/completion triggered by dot in jsx', [
       addFile('jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
-        position: {line: 13, character: 3},
+        position: {line: 14, character: 3},
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
         [
@@ -477,7 +543,7 @@ export default suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>jsx.js'},
-        position: {line: 14, character: 2},
+        position: {line: 15, character: 2},
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
         [

@@ -319,13 +319,10 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
 let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger docblock =
   Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
-    let component_instance = mk_instance cx reason cls in
     let props_object =
       Tvar.mk_where cx reason (fun tvar ->
           let use_op = Type.Op Type.UnknownUse in
-          flow
-            cx
-            (component_instance, Type.GetPropT (use_op, reason, Type.Named (reason, "props"), tvar)))
+          flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
     in
     (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
     autocomplete_member

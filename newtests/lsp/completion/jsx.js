@@ -1,15 +1,16 @@
 // @flow
 
-declare var React: {
-  createElement: any
-};
+var React = require('react');
 
 type Props = {a :number}
 
-class C {
-  props: Props
+class C extends React.Component<Props> {
 }
+function D(props: Props) {
+}
+
   // <- space
-<C   />// <- space
+<C   />;// <- space
+<D   />// <- space
 <C. />
 C.
