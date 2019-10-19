@@ -98,7 +98,8 @@ let types_versions_package_candidates reader =
       let package =
         match Module_heaps.Reader_dispatcher.get_package ~reader package_filename with
         | Some (Ok package) -> package
-        | _ -> Package_json.empty
+        | Some (Error ()) -> Package_json.empty
+        | None -> Package_json.empty
       in
       let types_versions = Package_json.flow_types_versions package in
       let version_path =
@@ -154,7 +155,7 @@ let types_versions_candidates ~reader dir rel_path dirname =
           Files.normalize_path package_root filename
       in
       Some rel_path
-    | _ -> None)
+    | None -> None)
 
 let add_package filename = function
   | Ok package -> Module_heaps.Package_heap_mutator.add_package_json filename package
