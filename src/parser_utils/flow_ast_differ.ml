@@ -827,6 +827,7 @@ let program
         extends = extends1;
         implements = implements1;
         classDecorators = classDecorators1;
+        comments = comments1;
       } =
         class1
       in
@@ -837,6 +838,7 @@ let program
         extends = extends2;
         implements = implements2;
         classDecorators = classDecorators2;
+        comments = comments2;
       } =
         class2
       in
@@ -847,6 +849,7 @@ let program
         (* extends handled below *)
         || implements1 != implements2
         || classDecorators1 != classDecorators2
+        || comments1 != comments2
       then
         None
       else

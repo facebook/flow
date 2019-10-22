@@ -186,8 +186,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_ (cls : ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
       Ast.Class.(
-        let { id; body; tparams; extends; implements; classDecorators } = cls in
+        let { id; body; tparams; extends; implements; classDecorators; comments } = cls in
         let id' = Option.map ~f:this#class_identifier id in
+        let comments' = Option.map ~f:this#syntax comments in
         this#type_parameter_declaration_opt tparams (fun tparams' ->
             let extends' = Option.map ~f:this#class_extends extends in
             let body' = this#class_body body in
@@ -200,6 +201,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               extends = extends';
               implements = implements';
               classDecorators = classDecorators';
+              comments = comments';
             }))
 
     method class_extends (extends : ('M, 'T) Ast.Class.Extends.t) : ('N, 'U) Ast.Class.Extends.t =

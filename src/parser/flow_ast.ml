@@ -1463,6 +1463,7 @@ and Class : sig
     extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Class.Implements.t list;
     classDecorators: ('M, 'T) Decorator.t list;
+    comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
 end =

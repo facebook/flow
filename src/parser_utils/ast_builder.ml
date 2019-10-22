@@ -169,7 +169,7 @@ module Classes = struct
   let implements ?targs id = (Loc.none, { Implements.id; targs })
 
   (* TODO: add method_ and property *)
-  let make ?super ?(implements = []) ?id elements =
+  let make ?comments ?super ?(implements = []) ?id elements =
     let extends =
       match super with
       | None -> None
@@ -182,6 +182,7 @@ module Classes = struct
       extends;
       implements;
       classDecorators = [];
+      comments;
     }
 end
 

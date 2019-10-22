@@ -6494,6 +6494,7 @@ and mk_class_sig =
           extends;
           implements;
           classDecorators;
+          comments;
         } ->
       let classDecorators_ast = warn_or_ignore_decorators cx classDecorators in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
@@ -6731,6 +6732,7 @@ and mk_class_sig =
             extends = extends_ast;
             implements = implements_ast;
             classDecorators = classDecorators_ast;
+            comments;
           } ))
 
 and mk_func_sig =

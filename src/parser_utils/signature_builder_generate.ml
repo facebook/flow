@@ -1002,7 +1002,9 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
       | (loc, Identifier stuff) -> (loc, T.ValueRef (identifier stuff))
       | (loc, Class stuff) ->
         Ast.Class.(
-          let { tparams; body; extends; implements; id; classDecorators = _ } = stuff in
+          let { tparams; body; extends; implements; id; classDecorators = _; comments = _ } =
+            stuff
+          in
           let (super, super_targs) =
             match extends with
             | None -> (None, None)
@@ -1761,7 +1763,15 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       | Declaration
           ( loc,
             Ast.Statement.ClassDeclaration
-              { Ast.Class.id = None; tparams; body; extends; implements; classDecorators = _ } ) ->
+              {
+                Ast.Class.id = None;
+                tparams;
+                body;
+                extends;
+                implements;
+                classDecorators = _;
+                comments = _;
+              } ) ->
         let (super, super_targs) =
           match extends with
           | None -> (None, None)

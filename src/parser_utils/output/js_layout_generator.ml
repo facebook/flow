@@ -1697,7 +1697,7 @@ and class_implements implements =
                 implements);
          ])
 
-and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorators } =
+and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorators; comments } =
   let decorator_parts = decorators_list classDecorators in
   let class_parts =
     [
@@ -1721,6 +1721,7 @@ and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorato
                    Atom "extends";
                    space;
                    source_location_with_comments
+                     ?comments
                      (loc, fuse [expression expr; option type_parameter_instantiation targs]);
                  ])
           | None -> None

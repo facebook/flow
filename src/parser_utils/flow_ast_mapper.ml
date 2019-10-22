@@ -284,14 +284,17 @@ class ['loc] mapper =
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       Ast.Class.(
-        let { id; body; tparams = _; extends; implements = _; classDecorators = _ } = cls in
+        let { id; body; tparams = _; extends; implements = _; classDecorators = _; comments } =
+          cls
+        in
         let id' = map_opt this#class_identifier id in
         let body' = this#class_body body in
         let extends' = map_opt (map_loc this#class_extends) extends in
-        if id == id' && body == body' && extends == extends' then
+        let comments' = this#syntax_opt comments in
+        if id == id' && body == body' && extends == extends' && comments = comments' then
           cls
         else
-          { cls with id = id'; body = body'; extends = extends' })
+          { cls with id = id'; body = body'; extends = extends'; comments = comments' })
 
     method class_extends _loc (extends : ('loc, 'loc) Ast.Class.Extends.t') =
       Ast.Class.Extends.(

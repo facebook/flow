@@ -754,6 +754,7 @@ module Object
         (* 10.2.1 says all parts of a class definition are strict *)
         let env = env |> with_strict true in
         let decorators = decorators @ decorator_list env in
+        let leading = Peek.comments env in
         Expect.token env T_CLASS;
         let tmp_env = env |> with_no_let true in
         let id =
@@ -763,8 +764,21 @@ module Object
         in
         let tparams = Type.type_parameter_declaration env in
         let (body, extends, implements) = _class env in
+        let trailing =
+          match id with
+          | None -> Peek.comments env
+          | _ -> []
+        in
         Ast.Statement.ClassDeclaration
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators })
+          {
+            Class.id;
+            body;
+            tparams;
+            extends;
+            implements;
+            classDecorators = decorators;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
       env
 
   let class_expression =
@@ -772,6 +786,7 @@ module Object
         (* 10.2.1 says all parts of a class expression are strict *)
         let env = env |> with_strict true in
         let decorators = decorator_list env in
+        let leading = Peek.comments env in
         Expect.token env T_CLASS;
         let (id, tparams) =
           match Peek.token env with
@@ -785,7 +800,20 @@ module Object
             let tparams = Type.type_parameter_declaration env in
             (id, tparams)
         in
+        let trailing =
+          match id with
+          | None -> Peek.comments env
+          | _ -> []
+        in
         let (body, extends, implements) = _class env in
         Ast.Expression.Class
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators })
+          {
+            Class.id;
+            body;
+            tparams;
+            extends;
+            implements;
+            classDecorators = decorators;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 end

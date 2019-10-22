@@ -786,13 +786,15 @@ with type t = Impl.t = struct
     and class_declaration ast = class_helper "ClassDeclaration" ast
     and class_expression ast = class_helper "ClassExpression" ast
     and class_helper
-        node_type (loc, { Class.id; extends; body; tparams; implements; classDecorators }) =
+        node_type (loc, { Class.id; extends; body; tparams; implements; classDecorators; comments })
+        =
       let (super, super_targs) =
         match extends with
         | Some (_, { Class.Extends.expr; targs }) -> (Some expr, targs)
         | None -> (None, None)
       in
       node
+        ?comments
         node_type
         loc
         [

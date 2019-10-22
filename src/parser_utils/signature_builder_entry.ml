@@ -80,7 +80,7 @@ let function_expression
 
 let class_ loc class_ =
   Ast.Class.(
-    let { id; tparams; body; extends; implements; classDecorators = _ } = class_ in
+    let { id; tparams; body; extends; implements; classDecorators = _; comments = _ } = class_ in
     let (super, super_targs) =
       match extends with
       | None -> (None, None)
