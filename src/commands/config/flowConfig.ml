@@ -145,7 +145,7 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
-      allow_skip_direct_dependents = false;
+      allow_skip_direct_dependents = true;
       cache_direct_dependents = true;
       disable_live_non_parse_errors = false;
       emoji = false;
