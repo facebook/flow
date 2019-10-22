@@ -20,6 +20,30 @@ let assert_checked_sets_equal ~ctxt expected actual =
     expected
     actual
 
+module FilenameSetSet = Set.Make (FilenameSet)
+
+let debug_string_of_filename_set_set =
+  FilenameSetSet.elements
+  %> List.map debug_string_of_filename_set
+  %> List.map (spf "  %s")
+  %> String.concat "\n"
+  %> spf "[\n%s\n]"
+
+let filename_set_set_of_nested_list = List.map FilenameSet.of_list %> FilenameSetSet.of_list
+
+let assert_components_equal ~ctxt expected actual =
+  (* `expected`, for convenience, is just a list of lists. `actual` is a list of Nel.ts. *)
+  let expected =
+    expected |> List.map (List.map make_fake_file_key) |> filename_set_set_of_nested_list
+  in
+  let actual = actual |> List.map Nel.to_list |> filename_set_set_of_nested_list in
+  assert_equal
+    ~ctxt
+    ~cmp:FilenameSetSet.equal
+    ~printer:debug_string_of_filename_set_set
+    expected
+    actual
+
 let dummy_flowconfig_params =
   {
     CommandUtils.ignores = [];
@@ -396,6 +420,42 @@ let tests =
                          assert_checked_sets_equal ~ctxt expected to_merge;
                          assert_checked_sets_equal ~ctxt to_merge to_check;
                          assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         Lwt.return_unit);
+                "cycle"
+                %>:: test_with_profiling (fun ctxt profiling ->
+                         let dependency_graph =
+                           [("a", ["b"]); ("b", ["c"]); ("c", ["a"]); ("d", ["c"]); ("e", [])]
+                         in
+                         let all_dependency_graph =
+                           [
+                             ("a", ["b"]);
+                             ("b", ["c"]);
+                             ("c", ["a"; "e"]);
+                             ("d", ["c"]);
+                             ("e", ["d"]);
+                           ]
+                         in
+                         let%lwt (to_merge, to_check, to_merge_or_check, components, _recheck_set)
+                             =
+                           include_dependencies_and_dependents
+                             ~profiling
+                             ~dependency_graph
+                             ~all_dependency_graph
+                             ~input_focused:["a"]
+                             ~input_dependents:[]
+                             ~input_dependencies:[]
+                         in
+                         let expected =
+                           make_checked_set
+                             ~focused:["a"]
+                             ~dependents:["b"; "c"; "d"; "e"]
+                             ~dependencies:[]
+                         in
+                         let expected_components = [["a"; "b"; "c"]; ["d"]; ["e"]] in
+                         assert_checked_sets_equal ~ctxt expected to_merge;
+                         assert_checked_sets_equal ~ctxt to_merge to_check;
+                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         assert_components_equal ~ctxt expected_components components;
                          Lwt.return_unit);
               ];
        ]
