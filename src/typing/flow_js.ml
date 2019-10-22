@@ -983,7 +983,7 @@ struct
        don't necessarily have the 0->1 property: they could be concretized at
        different types, as more and more lower bounds appear. *)
         | (UnionT (_, urep), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
-          UnionRep.members urep |> List.iter (fun t -> rec_flow cx trace (t, u))
+          flow_all_in_union cx trace urep u
         | (MaybeT (lreason, t), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
           let lreason = replace_desc_reason RNullOrVoid lreason in
           rec_flow cx trace (NullT.make lreason |> with_trust Trust.bogus_trust, u);
@@ -2614,7 +2614,7 @@ struct
               rec_flow_t ~use_op cx trace (remove_predicate filter_null rep, maybe)
             | (UnionRep.Yes, UnionRep.Yes) ->
               rec_flow_t ~use_op cx trace (remove_predicate filter_null_and_void rep, maybe)
-            | _ -> UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+            | _ -> flow_all_in_union cx trace rep u
           end
         | (UnionT (reason, rep), UseT (use_op, OptionalT (r, opt))) ->
           let checked_trust = Context.trust_errors cx in
@@ -2631,7 +2631,7 @@ struct
             match UnionRep.quick_mem_enum checked_trust void rep with
             | UnionRep.No -> rec_flow_t ~use_op cx trace (l, opt)
             | UnionRep.Yes -> rec_flow_t ~use_op cx trace (remove_void rep, opt)
-            | _ -> UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+            | _ -> flow_all_in_union cx trace rep u
           end
         | (UnionT (_, rep1), EqT (_, _, UnionT (_, rep2))) ->
           if
@@ -2644,7 +2644,7 @@ struct
           then
             ()
           else
-            UnionRep.members rep1 |> Core_list.iter ~f:(fun t -> rec_flow cx trace (t, u))
+            flow_all_in_union cx trace rep1 u
         | (UnionT _, EqT (reason, flip, t)) when needs_resolution t ->
           rec_flow cx trace (t, EqT (reason, not flip, l))
         | (UnionT (r, rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result)) ->
@@ -2671,7 +2671,7 @@ struct
               | UnionRep.Conditional _
               | UnionRep.Unknown ->
                 (* inconclusive: the union is not concretized *)
-                UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u)))
+                flow_all_in_union cx trace rep u)
             | UnionEnum.Many enums ->
               let acc =
                 UnionEnumSet.fold
@@ -2700,7 +2700,7 @@ struct
                 | UnionRep.Conditional _
                 | UnionRep.Unknown ->
                   (* inconclusive: the union is not concretized *)
-                  UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+                  flow_all_in_union cx trace rep u
               end
           else
             (* for l.key !== sentinel where l.key is a union, we can't really prove
@@ -2720,7 +2720,7 @@ struct
             | UseT (_, UnionT _) -> prerr_endline "UnionT ~> UnionT slow case"
             | UseT (_, IntersectionT _) -> prerr_endline "UnionT ~> IntersectionT slow case"
             | _ -> () );
-          UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+          flow_all_in_union cx trace rep u
         | (_, UseT (use_op, IntersectionT (_, rep))) ->
           ( if Context.is_verbose cx then
             match l with
@@ -11141,6 +11141,9 @@ struct
         | Shape -> "React$PropTypes$shape")
     in
     get_builtin_type cx ?trace reason x
+
+  and flow_all_in_union cx trace rep u =
+    UnionRep.members rep |> Core_list.iter ~f:(mk_tuple_swapped u %> rec_flow cx trace)
 
   and call_args_iter f =
     List.iter (function
