@@ -11,14 +11,18 @@ module type S = sig
   module L : Loc_sig.S
 
   module ExpectedAnnotationSort : sig
+    type property_key =
+      | Literal of string
+      | Identifier of string
+      | PrivateName of string
+      | Computed of string
+
     type t =
       | ArrayPattern
       | FunctionReturn
-      | PrivateField of L.t Flow_ast.PrivateName.t
-      | Property of (L.t, L.t) Flow_ast.Expression.Object.Property.key
-      | VariableDefinition of (L.t, L.t) Flow_ast.Identifier.t
-
-    val property_key_to_string : (L.t, L.t) Flow_ast.Expression.Object.Property.key -> string
+      | PrivateField of { name: string }
+      | Property of { name: property_key }
+      | VariableDefinition of { name: string }
 
     val to_string : t -> string
   end

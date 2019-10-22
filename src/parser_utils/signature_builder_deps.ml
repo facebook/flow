@@ -15,32 +15,31 @@ module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = s
   module L = L
 
   module ExpectedAnnotationSort = struct
+    type property_key =
+      | Literal of string
+      | Identifier of string
+      | PrivateName of string
+      | Computed of string
+
     type t =
       | ArrayPattern
       | FunctionReturn
-      | PrivateField of L.t Flow_ast.PrivateName.t
-      | Property of (L.t, L.t) Flow_ast.Expression.Object.Property.key
-      | VariableDefinition of (L.t, L.t) Flow_ast.Identifier.t
+      | PrivateField of { name: string }
+      | Property of { name: property_key }
+      | VariableDefinition of { name: string }
 
-    let property_key_to_string =
-      Flow_ast.Expression.Object.Property.(
-        function
-        | Literal (_, lit) ->
-          let lit = Reason.code_desc_of_literal lit in
-          spf "literal property %s" lit
-        | Identifier (_, { Flow_ast.Identifier.name; _ }) -> spf "property `%s`" name
-        | PrivateName (_, (_, { Flow_ast.Identifier.name; _ })) -> spf "property `%s`" name
-        | Computed e ->
-          let e = Reason.code_desc_of_expression ~wrap:false e in
-          spf "computed property `[%s]`" e)
+    let property_key_to_string = function
+      | Literal lit -> spf "literal property %s" lit
+      | Identifier name -> spf "property `%s`" name
+      | PrivateName name -> spf "property `%s`" name
+      | Computed e -> spf "computed property `[%s]`" e
 
     let to_string = function
       | ArrayPattern -> "array pattern"
       | FunctionReturn -> "function return"
-      | Property key -> property_key_to_string key
-      | PrivateField (_, (_, { Flow_ast.Identifier.name; _ })) -> spf "private field `#%s`" name
-      | VariableDefinition (_, { Flow_ast.Identifier.name; _ }) ->
-        spf "declaration of variable `%s`" name
+      | Property { name } -> property_key_to_string name
+      | PrivateField { name } -> spf "private field `#%s`" name
+      | VariableDefinition { name } -> spf "declaration of variable `%s`" name
   end
 
   module Error = struct
@@ -234,10 +233,17 @@ let abstractify_expected_annotation_sort =
   function
   | WL.ArrayPattern -> WA.ArrayPattern
   | WL.FunctionReturn -> WA.FunctionReturn
-  | WL.Property key -> WA.Property (Ast_loc_utils.loc_to_aloc_mapper#object_key key)
-  | WL.PrivateField key -> WA.PrivateField (Ast_loc_utils.loc_to_aloc_mapper#private_name key)
-  | WL.VariableDefinition id ->
-    WA.VariableDefinition (Ast_loc_utils.loc_to_aloc_mapper#identifier id)
+  | WL.Property { name } ->
+    let name =
+      match name with
+      | WL.Literal name -> WA.Literal name
+      | WL.Identifier name -> WA.Identifier name
+      | WL.PrivateName name -> WA.PrivateName name
+      | WL.Computed name -> WA.Computed name
+    in
+    WA.Property { name }
+  | WL.PrivateField { name } -> WA.PrivateField { name }
+  | WL.VariableDefinition { name } -> WA.VariableDefinition { name }
 
 let abstractify_error =
   let module WL = With_Loc.Error in
