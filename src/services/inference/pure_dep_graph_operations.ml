@@ -51,18 +51,21 @@ let calc_all_dependencies dependency_graph files = closure dependency_graph file
    turn, directly or transitively depends on `files`.  *)
 let calc_all_dependents ~dependency_graph ~all_dependency_graph files =
   let rev_dependency_graph = reverse dependency_graph in
-  let all_type_dependents = closure rev_dependency_graph files in
-  FilenameMap.fold
-    (fun f code_dependencies acc ->
-      if
-        (not (FilenameSet.mem f all_type_dependents))
-        && FilenameSet.exists (fun f' -> FilenameSet.mem f' all_type_dependents) code_dependencies
-      then
-        FilenameSet.add f acc
-      else
-        acc)
-    all_dependency_graph
-    all_type_dependents
+  let all_sig_dependents = closure rev_dependency_graph files in
+  let all_dependents =
+    FilenameMap.fold
+      (fun f code_dependencies acc ->
+        if
+          (not (FilenameSet.mem f all_sig_dependents))
+          && FilenameSet.exists (fun f' -> FilenameSet.mem f' all_sig_dependents) code_dependencies
+        then
+          FilenameSet.add f acc
+        else
+          acc)
+      all_dependency_graph
+      all_sig_dependents
+  in
+  (all_sig_dependents, all_dependents)
 
 (* Returns a copy of the dependency graph with only those file -> dependency edges where file and
    dependency are in files *)

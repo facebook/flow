@@ -153,7 +153,7 @@ let include_dependencies_and_dependents
   let checked_files = make_checked_files ~all_dependency_graph in
   let unchanged_checked = make_unchanged_checked checked_files changed_files in
   let options = make_options () in
-  let all_dependent_files =
+  let (_sig_dependent_files, all_dependent_files) =
     Pure_dep_graph_operations.calc_all_dependents
       ~dependency_graph
       ~all_dependency_graph

@@ -1332,7 +1332,7 @@ let focused_files_and_dependents_to_infer
   let input = CheckedSet.filter input ~f:is_file_checked in
   let focused = CheckedSet.focused input in
   (* Roots is the set of all focused files and all dependent files. *)
-  let roots =
+  let (_sig_dependents, roots) =
     Pure_dep_graph_operations.calc_all_dependents ~dependency_graph ~all_dependency_graph focused
   in
   let dependents = FilenameSet.diff roots focused in
@@ -1953,13 +1953,13 @@ end = struct
       ~files_to_force
       ~unchanged_files_to_force
       ~direct_dependent_files =
-    let%lwt all_dependent_files =
+    let%lwt (_sig_dependent_files, all_dependent_files) =
       with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
           if
             FilenameSet.is_empty direct_dependent_files
             (* as is the case for anything doing `check_contents` *)
           then
-            Lwt.return FilenameSet.empty
+            Lwt.return (FilenameSet.empty, FilenameSet.empty)
           (* avoid O(dependency graph) calculations *)
           else
             Lwt.return
