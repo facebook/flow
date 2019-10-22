@@ -1660,7 +1660,7 @@ end = struct
             Flow_error.ErrorSet.empty
         in
         let error_set = Flow_error.make_errors_printable lazy_table_of_aloc error_set in
-        if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0 then
+        if not (Errors.ConcreteLocPrintableErrorSet.is_empty error_set) then
           Persistent_connection.update_clients
             ~clients:env.ServerEnv.connections
             ~errors_reason:(LspProt.Recheck_streaming { recheck_reasons })
@@ -1944,7 +1944,7 @@ end = struct
       || resolved_requires_changed_in_commit_modules
       || resolved_requires_changed_in_reresolve_direct_dependents
       || deleted_count > 0
-      || FilenameSet.cardinal unparsed_set > 0
+      || not (FilenameSet.is_empty unparsed_set)
     in
     let env = { env with ServerEnv.files = parsed; unparsed; dependency_info } in
     let intermediate_values =
