@@ -130,6 +130,8 @@ type sig_t = {
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
+  mutable promises_useful: (Reason.t * bool) ALocMap.t;
+  mutable bare_expressions: (Reason.t * bool) ALocMap.t;
 }
 
 type phase =
@@ -222,6 +224,8 @@ let make_sig () =
     test_prop_hits_and_misses = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
+    promises_useful = ALocMap.empty;
+    bare_expressions = ALocMap.empty;
   }
 
 (* create a new context structure.
@@ -543,6 +547,8 @@ let clear_intermediates cx =
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
   cx.sig_cx.optional_chains_useful <- ALocMap.empty;
   cx.sig_cx.invariants_useful <- ALocMap.empty;
+  cx.sig_cx.promises_useful <- ALocMap.empty;
+  cx.sig_cx.bare_expressions <- ALocMap.empty;
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -618,6 +624,36 @@ let unnecessary_invariants cx =
         (loc, r) :: acc)
     cx.sig_cx.invariants_useful
     []
+
+let mark_floating_promise cx loc reason ~useful =
+  cx.sig_cx.promises_useful <-
+    ALocMap.add
+      loc
+      (reason, useful)
+      ~combine:(fun (r, u) (_, u') ->
+        (r, u || u')
+      )
+      cx.sig_cx.promises_useful
+
+let floating_promises cx =
+  ALocMap.fold
+    (fun loc (r, useful) acc ->
+      if useful then
+        acc
+      else
+        (loc, r) :: acc)
+    cx.sig_cx.promises_useful
+    []
+
+let mark_bare_expression cx loc reason =
+  cx.sig_cx.bare_expressions <-
+    ALocMap.add
+      loc
+      (reason, true)
+      ~combine:(fun (r, u) (_, u') -> (r, u || u'))
+      cx.sig_cx.bare_expressions
+
+let bare_expressions cx = cx.sig_cx.bare_expressions
 
 (* utils *)
 let find_real_props cx id =

@@ -38,6 +38,7 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | NonArraySpread
+  | NoFloatingPromises
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
@@ -66,6 +67,7 @@ let string_of_kind = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | NonArraySpread -> "non-array-spread"
+  | NoFloatingPromises -> "no-floating-promises"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -97,6 +99,7 @@ let kinds_of_string = function
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | "non-array-spread" -> Some [NonArraySpread]
+  | "no-floating-promises" -> Some [NoFloatingPromises]
   | _ -> None
 
 module LintKind = struct
