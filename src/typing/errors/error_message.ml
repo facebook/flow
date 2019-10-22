@@ -1133,25 +1133,48 @@ let string_of_internal_error = function
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
 type 'loc friendly_message_recipe =
-  | IncompatibleUse of
-      'loc
-      * 'loc upper_kind
-      * 'loc Reason.virtual_reason
-      * 'loc Reason.virtual_reason
-      * 'loc Type.virtual_use_op
-  | Speculation of 'loc * 'loc Type.virtual_use_op * ('loc Reason.virtual_reason * t) list
-  | Incompatible of
-      'loc Reason.virtual_reason * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
-  | IncompatibleTrust of
-      'loc Reason.virtual_reason * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
-  | PropMissing of 'loc * string option * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
-  | Normal of 'loc Errors.Friendly.message_feature list
-  | UseOp of 'loc * 'loc Errors.Friendly.message_feature list * 'loc Type.virtual_use_op
-  | PropPolarityMismatch of
-      string option
-      * ('loc Reason.virtual_reason * Polarity.t)
-      * ('loc Reason.virtual_reason * Polarity.t)
-      * 'loc Type.virtual_use_op
+  | IncompatibleUse of {
+      loc: 'loc;
+      upper_kind: 'loc upper_kind;
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+    }
+  | Speculation of {
+      loc: 'loc;
+      use_op: 'loc Type.virtual_use_op;
+      branches: ('loc Reason.virtual_reason * t) list;
+    }
+  | Incompatible of {
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+    }
+  | IncompatibleTrust of {
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+    }
+  | PropMissing of {
+      loc: 'loc;
+      prop: string option;
+      reason_obj: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+    }
+  | Normal of { features: 'loc Errors.Friendly.message_feature list }
+  | UseOp of {
+      loc: 'loc;
+      features: 'loc Errors.Friendly.message_feature list;
+      use_op: 'loc Type.virtual_use_op;
+    }
+  | PropPolarityMismatch of {
+      prop: string option;
+      reason_lower: 'loc Reason.virtual_reason;
+      polarity_lower: Polarity.t;
+      reason_upper: 'loc Reason.virtual_reason;
+      polarity_upper: Polarity.t;
+      use_op: 'loc Type.virtual_use_op;
+    }
 
 let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   let text = Errors.Friendly.text in
@@ -1170,27 +1193,39 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op; branches } ->
       if branches = [] then
         IncompatibleUse
-          ( loc_of_reason reason_upper,
-            upper_kind,
-            reason_lower,
-            reason_upper,
-            Option.value ~default:unknown_use use_op )
+          {
+            loc = loc_of_reason reason_upper;
+            upper_kind;
+            reason_lower;
+            reason_upper;
+            use_op = Option.value ~default:unknown_use use_op;
+          }
       else
-        Speculation (loc_of_reason reason_upper, Option.value ~default:unknown_use use_op, branches)
+        Speculation
+          {
+            loc = loc_of_reason reason_upper;
+            use_op = Option.value ~default:unknown_use use_op;
+            branches;
+          }
     | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
       if branches = [] then
-        Incompatible (reason_lower, reason_upper, use_op)
+        Incompatible { reason_lower; reason_upper; use_op }
       else
-        Speculation (loc_of_reason reason_upper, use_op, branches)
+        Speculation { loc = loc_of_reason reason_upper; use_op; branches }
     | EIncompatibleProp { prop; reason_prop; reason_obj; special = _; use_op } ->
       PropMissing
-        (loc_of_reason reason_prop, prop, reason_obj, Option.value ~default:unknown_use use_op)
-    | EDebugPrint (_, str) -> Normal [text str]
+        {
+          loc = loc_of_reason reason_prop;
+          prop;
+          reason_obj;
+          use_op = Option.value ~default:unknown_use use_op;
+        }
+    | EDebugPrint (_, str) -> Normal { features = [text str] }
     | EExportValueAsType (_, export_name) ->
-      Normal [text "Cannot export the value "; code export_name; text " as a type."]
+      Normal { features = [text "Cannot export the value "; code export_name; text " as a type."] }
     | EImportValueAsType (_, export_name) ->
       let (prefix, export) = msg_export "the value " export_name in
-      Normal
+      let features =
         [
           text "Cannot import ";
           prefix;
@@ -1203,9 +1238,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "import typeof";
           text " instead.";
         ]
+      in
+      Normal { features }
     | EImportTypeAsTypeof (_, export_name) ->
       let (prefix, export) = msg_export "the type " export_name in
-      Normal
+      let features =
         [
           text "Cannot import ";
           prefix;
@@ -1217,9 +1254,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "import type";
           text " instead.";
         ]
+      in
+      Normal { features }
     | EImportTypeAsValue (_, export_name) ->
       let (prefix, export) = msg_export "the type " export_name in
-      Normal
+      let features =
         [
           text "Cannot import ";
           prefix;
@@ -1229,24 +1268,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "import type";
           text " instead.";
         ]
+      in
+      Normal { features }
     | ERefineAsValue (_, name) ->
       let (_, export) = msg_export "" name in
-      Normal
-        [
-          text "Cannot refine ";
-          export;
-          text " as a value. ";
-            (* text "Use "; code "import type"; text " instead."; *)
-          
-        ]
+      let features = [text "Cannot refine "; export; text " as a value. "] in
+      Normal { features }
     | ENoDefaultExport (_, module_name, suggestion) ->
-      Normal
-        ( [
-            text "Cannot import a default export because there is no default export ";
-            text "in ";
-            code module_name;
-            text ".";
-          ]
+      let features =
+        [
+          text "Cannot import a default export because there is no default export ";
+          text "in ";
+          code module_name;
+          text ".";
+        ]
         @
         match suggestion with
         | None -> []
@@ -1256,9 +1291,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text "Did you mean ";
             code (spf "import {%s} from \"%s\"" suggestion module_name);
             text "?";
-          ] )
+          ]
+      in
+      Normal { features }
     | EOnlyDefaultExport (_, module_name, export_name) ->
-      Normal
+      let features =
         [
           text "Cannot import ";
           code export_name;
@@ -1271,22 +1308,26 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code (spf "import %s from \"...\"" export_name);
           text "?";
         ]
+      in
+      Normal { features }
     | ENoNamedExport (_, module_name, export_name, suggestion) ->
-      Normal
-        ( [
-            text "Cannot import ";
-            code export_name;
-            text " because ";
-            text "there is no ";
-            code export_name;
-            text " export in ";
-            code module_name;
-            text ".";
-          ]
+      let features =
+        [
+          text "Cannot import ";
+          code export_name;
+          text " because ";
+          text "there is no ";
+          code export_name;
+          text " export in ";
+          code module_name;
+          text ".";
+        ]
         @
         match suggestion with
         | None -> []
-        | Some suggestion -> [text " Did you mean "; code suggestion; text "?"] )
+        | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
+      in
+      Normal { features }
     | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
       let (arity, args) =
         if min_arity = max_arity then
@@ -1299,10 +1340,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf "%d-%d" min_arity max_arity, "arguments")
       in
       let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-      Normal [text "Cannot use "; ref reason_arity; text (spf " without %s type %s." arity args)]
+      let features =
+        [text "Cannot use "; ref reason_arity; text (spf " without %s type %s." arity args)]
+      in
+      Normal { features }
     | ETooManyTypeArgs (reason_tapp, reason_arity, n) ->
       let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-      Normal
+      let features =
         [
           text "Cannot use ";
           ref reason_arity;
@@ -1316,9 +1360,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                else
                  "arguments" ));
         ]
+      in
+      Normal { features }
     | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
       let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-      Normal
+      let features =
         [
           text "Cannot use ";
           ref reason_arity;
@@ -1332,14 +1378,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                else
                  "arguments" ));
         ]
+      in
+      Normal { features }
     | EInvalidTypeArgs (reason_main, reason_tapp) ->
-      Normal
+      let features =
         [text "Cannot use "; ref reason_main; text " with "; ref reason_tapp; text " argument"]
+      in
+      Normal { features }
     | ETypeParamArity (_, n) ->
       if n = 0 then
-        Normal [text "Cannot apply type because it is not a polymorphic type."]
+        Normal { features = [text "Cannot apply type because it is not a polymorphic type."] }
       else
-        Normal
+        let features =
           [
             text "Cannot use type without exactly ";
             text
@@ -1351,8 +1401,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                  else
                    "arguments" ));
           ]
+        in
+        Normal { features }
     | ETypeParamMinArity (_, n) ->
-      Normal
+      let features =
         [
           text "Cannot use type without at least ";
           text
@@ -1364,6 +1416,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                else
                  "arguments" ));
         ]
+      in
+      Normal { features }
     | ECallTypeArity { call_loc = _; is_new; reason_arity; expected_arity = n } ->
       let use =
         if is_new then
@@ -1372,7 +1426,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           "call "
       in
       if n = 0 then
-        Normal
+        let features =
           [
             text "Cannot ";
             text use;
@@ -1380,8 +1434,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             ref reason_arity;
             text " with type arguments.";
           ]
+        in
+        Normal { features }
       else
-        Normal
+        let features =
           [
             text "Cannot ";
             text use;
@@ -1396,8 +1452,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                  else
                    "s" ));
           ]
+        in
+        Normal { features }
     | EValueUsedAsType { reason_use } ->
-      Normal
+      let features =
         [
           text "Cannot use ";
           desc reason_use;
@@ -1408,22 +1466,35 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "typeof";
           text ".";
         ]
+      in
+      Normal { features }
     | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
-      Incompatible (reason_lower, reason_upper, use_op)
+      Incompatible { reason_lower; reason_upper; use_op }
     | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
-      Incompatible (reason_lower, reason_upper, use_op)
+      Incompatible { reason_lower; reason_upper; use_op }
     | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
-      Incompatible (reason_lower, reason_upper, use_op)
+      Incompatible { reason_lower; reason_upper; use_op }
     | EPropNotFound (prop, reasons, use_op) ->
       let (reason_prop, reason_obj) = reasons in
-      PropMissing (loc_of_reason reason_prop, prop, reason_obj, use_op)
+      PropMissing { loc = loc_of_reason reason_prop; prop; reason_obj; use_op }
     | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
-      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text " is not readable"], use_op)
+      UseOp
+        {
+          loc = loc_of_reason reason_prop;
+          features = mk_prop_message x @ [text " is not readable"];
+          use_op;
+        }
     | EPropNotWritable { reason_prop; prop_name = x; use_op } ->
-      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text " is not writable"], use_op)
-    | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
-      let (lreason, ureason) = reasons in
-      PropPolarityMismatch (x, (lreason, p1), (ureason, p2), use_op)
+      UseOp
+        {
+          loc = loc_of_reason reason_prop;
+          features = mk_prop_message x @ [text " is not writable"];
+          use_op;
+        }
+    | EPropPolarityMismatch
+        ((reason_lower, reason_upper), prop, (polarity_lower, polarity_upper), use_op) ->
+      PropPolarityMismatch
+        { prop; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
     | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       let polarity_string = function
         | Polarity.Positive -> "output"
@@ -1433,7 +1504,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       let expected_polarity = polarity_string expected_polarity in
       let actual_polarity = polarity_string actual_polarity in
       let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
-      Normal
+      let features =
         [
           text "Cannot use ";
           ref reason_targ;
@@ -1443,6 +1514,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " is expected to occur only in ";
           text (expected_polarity ^ " positions.");
         ]
+      in
+      Normal { features }
     | EStrictLookupFailed (reasons, lreason, x, use_op) ->
       (* if we're looking something up on the global/builtin object, then tweak
          the error to say that `x` doesn't exist. We can tell this is the
@@ -1458,78 +1531,110 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
           | Some x -> [text "Cannot resolve name "; code x; text "."]
         in
-        Normal msg
+        Normal { features = msg }
       else
         let (reason_prop, reason_obj) = reasons in
         PropMissing
-          (loc_of_reason reason_prop, x, reason_obj, Option.value ~default:unknown_use use_op)
+          {
+            loc = loc_of_reason reason_prop;
+            prop = x;
+            reason_obj;
+            use_op = Option.value ~default:unknown_use use_op;
+          }
     | EPrivateLookupFailed (reasons, x, use_op) ->
-      PropMissing (loc_of_reason (fst reasons), Some ("#" ^ x), snd reasons, use_op)
+      PropMissing
+        {
+          loc = loc_of_reason (fst reasons);
+          prop = Some ("#" ^ x);
+          reason_obj = snd reasons;
+          use_op;
+        }
     | EAdditionMixed (reason, use_op) ->
       UseOp
-        ( loc_of_reason reason,
-          [ref reason; text " could either behave like a string or like a number"],
-          use_op )
+        {
+          loc = loc_of_reason reason;
+          features = [ref reason; text " could either behave like a string or like a number"];
+          use_op;
+        }
     | EComparison (lower, upper) ->
-      Normal [text "Cannot compare "; ref lower; text " to "; ref upper; text "."]
+      Normal { features = [text "Cannot compare "; ref lower; text " to "; ref upper; text "."] }
     | ETupleArityMismatch (reasons, l1, l2, use_op) ->
       let (lower, upper) = reasons in
       UseOp
-        ( loc_of_reason lower,
-          [
-            ref lower;
-            text (spf " has an arity of %d but " l1);
-            ref upper;
-            text (spf " has an arity of %d" l2);
-          ],
-          use_op )
+        {
+          loc = loc_of_reason lower;
+          features =
+            [
+              ref lower;
+              text (spf " has an arity of %d but " l1);
+              ref upper;
+              text (spf " has an arity of %d" l2);
+            ];
+          use_op;
+        }
     | ENonLitArrayToTuple (reasons, use_op) ->
       let (lower, upper) = reasons in
       UseOp
-        ( loc_of_reason lower,
-          [
-            ref lower;
-            text " has an unknown number of elements, so is ";
-            text "incompatible with ";
-            ref upper;
-          ],
-          use_op )
+        {
+          loc = loc_of_reason lower;
+          features =
+            [
+              ref lower;
+              text " has an unknown number of elements, so is ";
+              text "incompatible with ";
+              ref upper;
+            ];
+          use_op;
+        }
     | ETupleOutOfBounds { reason; reason_op; length; index; use_op } ->
       UseOp
-        ( loc_of_reason reason,
-          [
-            ref reason_op;
-            text
-              (spf
-                 " only has %d element%s, so index %s is out of bounds"
-                 length
-                 ( if length == 1 then
-                   ""
-                 else
-                   "s" )
-                 index);
-          ],
-          use_op )
+        {
+          loc = loc_of_reason reason;
+          features =
+            [
+              ref reason_op;
+              text
+                (spf
+                   " only has %d element%s, so index %s is out of bounds"
+                   length
+                   ( if length == 1 then
+                     ""
+                   else
+                     "s" )
+                   index);
+            ];
+          use_op;
+        }
     | ETupleNonIntegerIndex { reason; index; use_op } ->
       let index_ref = Errors.Friendly.(Reference ([Code index], def_loc_of_reason reason)) in
       UseOp
-        ( loc_of_reason reason,
-          [
-            text "the index into a tuple must be an integer, but ";
-            index_ref;
-            text " is not an integer";
-          ],
-          use_op )
+        {
+          loc = loc_of_reason reason;
+          features =
+            [
+              text "the index into a tuple must be an integer, but ";
+              index_ref;
+              text " is not an integer";
+            ];
+          use_op;
+        }
     | ETupleUnsafeWrite { reason; use_op } ->
       UseOp
-        ( loc_of_reason reason,
-          [text "the index must be statically known to write a tuple element"],
-          use_op )
+        {
+          loc = loc_of_reason reason;
+          features = [text "the index must be statically known to write a tuple element"];
+          use_op;
+        }
     | EROArrayWrite (reasons, use_op) ->
       let (lower, _) = reasons in
-      UseOp (loc_of_reason lower, [text "read-only arrays cannot be written to"], use_op)
+      UseOp
+        {
+          loc = loc_of_reason lower;
+          features = [text "read-only arrays cannot be written to"];
+          use_op;
+        }
     | EUnionSpeculationFailed { use_op; reason; reason_op = _; branches } ->
-      Speculation (loc_of_reason reason, use_op, branches)
+      Speculation { loc = loc_of_reason reason; use_op; branches }
     | ESpeculationAmbiguous
         { reason = _; prev_case = (prev_i, prev_case); case = (i, case); cases = case_rs } ->
       Friendly.(
@@ -1537,16 +1642,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           mk_reason (RCustom ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
         in
         let case_r = mk_reason (RCustom ("case " ^ string_of_int (i + 1))) (loc_of_reason case) in
-        Normal
-          ( [
-              text "Could not decide which case to select, since ";
-              ref prev_case_r;
-              text " ";
-              text "may work but if it doesn't ";
-              ref case_r;
-              text " looks promising ";
-              text "too. To fix add a type annotation ";
-            ]
+        let features =
+          [
+            text "Could not decide which case to select, since ";
+            ref prev_case_r;
+            text " ";
+            text "may work but if it doesn't ";
+            ref case_r;
+            text " looks promising ";
+            text "too. To fix add a type annotation ";
+          ]
           @ conjunction_concat
               ~conjunction:"or"
               (Core_list.map
@@ -1554,64 +1659,81 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                    let text = "to " ^ string_of_desc (desc_of_reason case_r) in
                    [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
                  case_rs)
-          @ [text "."] ))
+          @ [text "."]
+        in
+        Normal { features })
     | EIncompatibleWithExact (reasons, use_op) ->
       let (lower, upper) = reasons in
       UseOp
-        ( loc_of_reason lower,
-          [text "inexact "; ref lower; text " is incompatible with exact "; ref upper],
-          use_op )
+        {
+          loc = loc_of_reason lower;
+          features = [text "inexact "; ref lower; text " is incompatible with exact "; ref upper];
+          use_op;
+        }
     | EUnsupportedExact (_, lower) ->
-      Normal [text "Cannot create exact type from "; ref lower; text "."]
+      Normal { features = [text "Cannot create exact type from "; ref lower; text "."] }
     | EIdxArity _ ->
-      Normal
+      let features =
         [
           text "Cannot call ";
           code "idx(...)";
           text " because only exactly two ";
           text "arguments are allowed.";
         ]
+      in
+      Normal { features }
     | EIdxUse1 _ ->
-      Normal
+      let features =
         [
           text "Cannot call ";
           code "idx(...)";
           text " because the callback ";
           text "argument must not be annotated.";
         ]
+      in
+      Normal { features }
     | EIdxUse2 _ ->
-      Normal
+      let features =
         [
           text "Cannot call ";
           code "idx(...)";
           text " because the callback must ";
           text "only access properties on the callback parameter.";
         ]
-    | EUnexpectedThisType _ -> Normal [text "Unexpected use of "; code "this"; text " type."]
+      in
+      Normal { features }
+    | EUnexpectedThisType _ ->
+      Normal { features = [text "Unexpected use of "; code "this"; text " type."] }
     | EPropertyTypeAnnot _ ->
-      Normal
+      let features =
         [
           text "Cannot use ";
           code "$PropertyType";
           text " because the second ";
           text "type argument must be a string literal.";
         ]
+      in
+      Normal { features }
     | EExportsAnnot _ ->
-      Normal
+      let features =
         [
           text "Cannot use ";
           code "$Exports";
           text " because the first type ";
           text "argument must be a string literal.";
         ]
+      in
+      Normal { features }
     | ECharSetAnnot _ ->
-      Normal
+      let features =
         [
           text "Cannot use ";
           code "$CharSet";
           text " because the first type ";
           text "argument must be a string literal.";
         ]
+      in
+      Normal { features }
     | EInvalidCharSet { invalid = (invalid_reason, invalid_chars); valid = valid_reason; use_op }
       ->
       let valid_reason =
@@ -1628,43 +1750,56 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         |> List.rev
       in
       UseOp
-        ( loc_of_reason invalid_reason,
-          [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
-          @ Friendly.conjunction_concat ~conjunction:"and" invalids,
-          use_op )
-    | EUnsupportedKeyInObjectType _ -> Normal [text "Unsupported key in object type."]
+        {
+          loc = loc_of_reason invalid_reason;
+          features =
+            [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
+            @ Friendly.conjunction_concat ~conjunction:"and" invalids;
+          use_op;
+        }
+    | EUnsupportedKeyInObjectType _ ->
+      Normal { features = [text "Unsupported key in object type."] }
     | EPredAnnot _ ->
-      Normal
+      let features =
         [
           text "Cannot use ";
           code "$Pred";
           text " because the first ";
           text "type argument must be a number literal.";
         ]
+      in
+      Normal { features }
     | ERefineAnnot _ ->
-      Normal
+      let features =
         [
           text "Cannot use ";
           code "$Refine";
           text " because the third ";
           text "type argument must be a number literal.";
         ]
-    | ETrustedAnnot _ -> Normal [text "Not a valid type to mark as "; code "$Trusted"; text "."]
-    | EPrivateAnnot _ -> Normal [text "Not a valid type to mark as "; code "$Private"; text "."]
+      in
+      Normal { features }
+    | ETrustedAnnot _ ->
+      Normal { features = [text "Not a valid type to mark as "; code "$Trusted"; text "."] }
+    | EPrivateAnnot _ ->
+      Normal { features = [text "Not a valid type to mark as "; code "$Private"; text "."] }
     | EUnexpectedTypeof _ ->
-      Normal [code "typeof"; text " can only be used to get the type of variables."]
+      Normal { features = [code "typeof"; text " can only be used to get the type of variables."] }
     | EFunPredCustom ((a, b), msg) ->
-      Normal [ref a; text ". "; text msg; text " "; ref b; text "."]
+      Normal { features = [ref a; text ". "; text msg; text " "; ref b; text "."] }
     | EIncompatibleWithShape (lower, upper, use_op) ->
       UseOp
-        ( loc_of_reason lower,
-          [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper],
-          use_op )
+        {
+          loc = loc_of_reason lower;
+          features =
+            [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
+          use_op;
+        }
     | EInternal (_, internal_error) ->
       let msg = string_of_internal_error internal_error in
-      Normal [text (spf "Internal error: %s" msg)]
+      Normal { features = [text (spf "Internal error: %s" msg)] }
     | EUnsupportedSyntax (_, unsupported_syntax) ->
-      let msg =
+      let features =
         match unsupported_syntax with
         | ComprehensionExpression
         | GeneratorExpression
@@ -1731,12 +1866,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | UnsupportedInternalSlot { name; static = true } ->
           [text "Unsupported static internal slot "; code name; text "."]
       in
-      Normal msg
+      Normal { features }
     | EUseArrayLiteral _ ->
-      Normal [text "Use an array literal instead of "; code "new Array(...)"; text "."]
+      Normal
+        { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
     | EMissingAnnotation (reason, _) ->
       let default = [text "Missing type annotation for "; desc reason; text "."] in
-      let msg =
+      let features =
         match desc_of_reason reason with
         | RTypeParam (_, (RImplicitInstantiation, _), _) ->
           [
@@ -1764,7 +1900,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
        * visitor is just visiting types. Instead, we collect a list of types we
        * visited to get to the missing annotation error and report that as the
        * trace *)
-      Normal msg
+      Normal { features }
     | EBindingError (binding_error, _, x, entry) ->
       let desc =
         if x = internal_name "this" then
@@ -1777,7 +1913,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       (* We can call to_loc here because reaching this point requires that everything else
         in the error message is concretized already; making Scopes polymorphic is not a good idea *)
       let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn) in
-      let msg =
+      let features =
         match binding_error with
         | ENameAlreadyBound ->
           [text "Cannot declare "; ref x; text " because the name is already bound."]
@@ -1806,10 +1942,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | EImportReassigned -> [text "Cannot reassign import "; ref x; text "."]
         | EEnumReassigned -> [text "Cannot reassign enum "; ref x; text "."]
       in
-      Normal msg
-    | ERecursionLimit _ -> Normal [text "*** Recursion limit exceeded ***"]
+      Normal { features }
+    | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
     | EModuleOutsideRoot (_, package_relative_to_root) ->
-      Normal
+      let features =
         [
           text "This module resolves to ";
           code package_relative_to_root;
@@ -1829,14 +1965,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " file higher in the project directory tree, or ";
           text "move this package under your Flow root directory.";
         ]
-    | EMalformedPackageJson (_, error) -> Normal [text error]
+      in
+      Normal { features }
+    | EMalformedPackageJson (_, error) -> Normal { features = [text error] }
     | EExperimentalDecorators _ ->
-      Normal
+      let features =
         [
           text "Experimental decorator usage. Decorators are an early stage ";
           text "proposal that may change. Additionally, Flow does not account for ";
           text "the type implications of decorators at this time.";
         ]
+      in
+      Normal { features }
     | EExperimentalClassProperties (_, static) ->
       let (config_name, config_key) =
         if static then
@@ -1844,7 +1984,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         else
           ("class instance field", "class_instance_fields")
       in
-      Normal
+      let features =
         [
           text ("Experimental " ^ config_name ^ " usage. ");
           text (String.capitalize_ascii config_name ^ "s are an active early stage ");
@@ -1858,8 +1998,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code ".flowconfig";
           text ".";
         ]
+      in
+      Normal { features }
     | EUnsafeGetSet _ ->
-      Normal
+      let features =
         [
           text "Potentially unsafe get/set usage. Getters and setters with side ";
           text "effects are potentially unsafe and so disabled by default. You may ";
@@ -1871,43 +2013,43 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code ".flowconfig";
           text ".";
         ]
+      in
+      Normal { features }
     | EUninitializedInstanceProperty (_loc, err) ->
-      Lints.(
-        (match err with
+      let open Lints in
+      let features =
+        match err with
         | PropertyNotDefinitelyInitialized ->
-          Normal
-            [
-              text "Class property not definitely initialized in the constructor. ";
-              text "Can you add an assignment to the property declaration?";
-            ]
+          [
+            text "Class property not definitely initialized in the constructor. ";
+            text "Can you add an assignment to the property declaration?";
+          ]
         | ReadFromUninitializedProperty ->
-          Normal
-            [
-              text "It is unsafe to read from a class property before it is ";
-              text "definitely initialized.";
-            ]
+          [
+            text "It is unsafe to read from a class property before it is ";
+            text "definitely initialized.";
+          ]
         | MethodCallBeforeEverythingInitialized ->
-          Normal
-            [
-              text "It is unsafe to call a method in the constructor before all ";
-              text "class properties are definitely initialized.";
-            ]
+          [
+            text "It is unsafe to call a method in the constructor before all ";
+            text "class properties are definitely initialized.";
+          ]
         | PropertyFunctionCallBeforeEverythingInitialized ->
-          Normal
-            [
-              text "It is unsafe to call a property function in the constructor ";
-              text "before all class properties are definitely initialized.";
-            ]
+          [
+            text "It is unsafe to call a property function in the constructor ";
+            text "before all class properties are definitely initialized.";
+          ]
         | ThisBeforeEverythingInitialized ->
-          Normal
-            [
-              text "It is unsafe to use ";
-              code "this";
-              text " in the constructor ";
-              text "before all class properties are definitely initialized.";
-            ]))
+          [
+            text "It is unsafe to use ";
+            code "this";
+            text " in the constructor ";
+            text "before all class properties are definitely initialized.";
+          ]
+      in
+      Normal { features }
     | EExperimentalExportStarAs _ ->
-      Normal
+      let features =
         [
           text "Experimental ";
           code "export * as";
@@ -1922,8 +2064,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code ".flowconfig";
           text ".";
         ]
+      in
+      Normal { features }
     | EExperimentalEnums _ ->
-      Normal
+      let features =
         [
           text "Experimental ";
           code "enum";
@@ -1936,8 +2080,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code ".flowconfig";
           text ".";
         ]
+      in
+      Normal { features }
     | EIndeterminateModuleType _ ->
-      Normal
+      let features =
         [
           text "Unable to determine module type (CommonJS vs ES) if both an export ";
           text "statement and ";
@@ -1945,21 +2091,34 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " are used in the ";
           text "same module!";
         ]
-    | EBadExportPosition _ -> Normal [text "Exports can only appear at the top level"]
+      in
+      Normal { features }
+    | EBadExportPosition _ ->
+      Normal { features = [text "Exports can only appear at the top level"] }
     | EBadExportContext (name, _) ->
-      Normal [code name; text " may only be used as part of a legal top level export statement"]
-    | EUnexpectedTemporaryBaseType _ ->
-      Normal [text "The type argument of a temporary base type must be a compatible literal type"]
-    | ECannotDelete (_, expr) ->
       Normal
+        {
+          features =
+            [code name; text " may only be used as part of a legal top level export statement"];
+        }
+    | EUnexpectedTemporaryBaseType _ ->
+      Normal
+        {
+          features =
+            [text "The type argument of a temporary base type must be a compatible literal type"];
+        }
+    | ECannotDelete (_, expr) ->
+      let features =
         [
           text "Cannot delete ";
           ref expr;
           text " because only member expressions and variables can be deleted.";
         ]
+      in
+      Normal { features }
     | ESignatureVerification sve ->
       Signature_builder_deps.With_ALoc.Error.(
-        let msg =
+        let features =
           match sve with
           | ExpectedSort (sort, x, _) ->
             [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
@@ -2002,15 +2161,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           | TODO (msg, _) ->
             [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
         in
-        Normal
-          ( text "Failed to build a typed interface for this module. "
+        let features =
+          text "Failed to build a typed interface for this module. "
           :: text "The exports of this module must be annotated with types. "
-          :: msg ))
-    | EUnreachable _ -> Normal [text "Unreachable code."]
+          :: features
+        in
+        Normal { features })
+    | EUnreachable _ -> Normal { features = [text "Unreachable code."] }
     | EInvalidObjectKit { reason; reason_op = _; use_op } ->
-      UseOp (loc_of_reason reason, [ref reason; text " is not an object"], use_op)
+      UseOp
+        { loc = loc_of_reason reason; features = [ref reason; text " is not an object"]; use_op }
     | EInvalidTypeof (_, typename) ->
-      Normal
+      let features =
         [
           text "Cannot compare the result of ";
           code "typeof";
@@ -2021,17 +2183,21 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "typeof";
           text " return value.";
         ]
+      in
+      Normal { features }
     | EArithmeticOperand reason ->
-      Normal
+      let features =
         [
           text "Cannot perform arithmetic operation because ";
           ref reason;
           text " ";
           text "is not a number.";
         ]
+      in
+      Normal { features }
     | EBinaryInLHS reason ->
       (* TODO: or symbol *)
-      Normal
+      let features =
         [
           text "Cannot use ";
           code "in";
@@ -2039,8 +2205,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref reason;
           text " must be a string or number.";
         ]
+      in
+      Normal { features }
     | EBinaryInRHS reason ->
-      Normal
+      let features =
         [
           text "Cannot use ";
           code "in";
@@ -2048,8 +2216,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref reason;
           text " must be an object or array.";
         ]
+      in
+      Normal { features }
     | EForInRHS reason ->
-      Normal
+      let features =
         [
           text "Cannot iterate using a ";
           code "for...in";
@@ -2058,21 +2228,40 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref reason;
           text " is not an object, null, or undefined.";
         ]
+      in
+      Normal { features }
     | EObjectComputedPropertyAccess (_, reason_prop) ->
-      Normal [text "Cannot access computed property using "; ref reason_prop; text "."]
+      Normal
+        { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
     | EObjectComputedPropertyAssign (_, reason_prop) ->
-      Normal [text "Cannot assign computed property using "; ref reason_prop; text "."]
-    | EInvalidLHSInAssignment _ -> Normal [text "Invalid left-hand side in assignment expression."]
-    | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
-      Incompatible (l_reason, u_reason, use_op)
-    | ETrustIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
-      IncompatibleTrust (l_reason, u_reason, use_op)
+      Normal
+        { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
+    | EInvalidLHSInAssignment _ ->
+      Normal { features = [text "Invalid left-hand side in assignment expression."] }
+    | EIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
+      Incompatible { reason_lower; reason_upper; use_op }
+    | ETrustIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
+      IncompatibleTrust { reason_lower; reason_upper; use_op }
     | EUnsupportedImplements reason ->
-      Normal [text "Cannot implement "; desc reason; text " because it is not an interface."]
+      Normal
+        {
+          features =
+            [text "Cannot implement "; desc reason; text " because it is not an interface."];
+        }
     | ENotAReactComponent { reason; use_op } ->
-      UseOp (loc_of_reason reason, [ref reason; text " is not a React component"], use_op)
+      UseOp
+        {
+          loc = loc_of_reason reason;
+          features = [ref reason; text " is not a React component"];
+          use_op;
+        }
     | EInvalidReactConfigType { reason; use_op } ->
-      UseOp (loc_of_reason reason, [ref reason; text " cannot calculate config"], use_op)
+      UseOp
+        {
+          loc = loc_of_reason reason;
+          features = [ref reason; text " cannot calculate config"];
+          use_op;
+        }
     | EInvalidReactPropType { reason; use_op; tool } ->
       React.(
         React.SimplifyPropType.(
@@ -2090,7 +2279,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             | Shape (ResolveDict _) -> is_not_prop_type
             | Shape (ResolveProp _) -> is_not_prop_type
           in
-          UseOp (loc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)))
+          UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
     | EInvalidReactCreateClass { reason; use_op; tool } ->
       React.(
         React.CreateClass.(
@@ -2106,9 +2295,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             | DefaultProps _ -> "is not an object"
             | InitialState _ -> "is not an object or null"
           in
-          UseOp (loc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)))
+          UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
     | EReactElementFunArity (_, fn, n) ->
-      Normal
+      let features =
         [
           text "Cannot call ";
           code ("React." ^ fn);
@@ -2122,6 +2311,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                else
                  "s" ));
         ]
+      in
+      Normal { features }
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
       let msg =
         match param_count with
@@ -2129,15 +2320,21 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | 1 -> "no more than 1 argument is expected by"
         | n -> spf "no more than %d arguments are expected by" n
       in
-      UseOp (loc_of_reason unused_reason, [text msg; text " "; ref def_reason], use_op)
-    | EUnsupportedSetProto _ -> Normal [text "Mutating this prototype is unsupported."]
+      UseOp
+        {
+          loc = loc_of_reason unused_reason;
+          features = [text msg; text " "; ref def_reason];
+          use_op;
+        }
+    | EUnsupportedSetProto _ ->
+      Normal { features = [text "Mutating this prototype is unsupported."] }
     | EDuplicateModuleProvider { module_name; provider; _ } ->
       let loc =
         Loc.(
           let pos = { line = 1; column = 0 } in
           { source = Some provider; start = pos; _end = pos })
       in
-      Normal
+      let features =
         [
           text "Duplicate module provider for ";
           code module_name;
@@ -2146,10 +2343,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref (mk_reason (RCustom "current module provider") loc);
           text ".";
         ]
+      in
+      Normal { features }
     | EParseError (_, parse_error) ->
-      Normal (Friendly.message_of_string (Parse_error.PP.error parse_error))
+      Normal { features = Friendly.message_of_string (Parse_error.PP.error parse_error) }
     | EDocblockError (_, err) ->
-      let msg =
+      let features =
         match err with
         | MultipleFlowAttributes ->
           [
@@ -2185,17 +2384,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           | None -> []
           | Some first_error -> [text (spf " Parse error: %s." first_error)])
       in
-      Normal msg
+      Normal { features }
     | EImplicitInexactObject _ ->
-      Normal
+      let features =
         [
           text "Please add ";
           code "...";
           text " to the end of the list of ";
           text "properties to express an inexact object type.";
         ]
+      in
+      Normal { features }
     | EUntypedTypeImport (_, module_name) ->
-      Normal
+      let features =
         [
           text "Importing a type from an untyped module makes it ";
           code "any";
@@ -2207,8 +2408,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code module_name;
           text "?";
         ]
+      in
+      Normal { features }
     | EUntypedImport (_, module_name) ->
-      Normal
+      let features =
         [
           text "Importing from an untyped module makes it ";
           code "any";
@@ -2220,8 +2423,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code module_name;
           text "?";
         ]
+      in
+      Normal { features }
     | ENonstrictImport _ ->
-      Normal
+      let features =
         [
           text "Dependencies of a ";
           code "@flow strict";
@@ -2230,8 +2435,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "@flow strict";
           text "!";
         ]
+      in
+      Normal { features }
     | EUnclearType _ ->
-      Normal
+      let features =
         [
           text "Unclear type. Using ";
           code "any";
@@ -2241,12 +2448,21 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "Function";
           text " types is not safe!";
         ]
+      in
+      Normal { features }
     | EDeprecatedType _ ->
-      Normal [text "Deprecated type. Using "; code "*"; text " types is not recommended!"]
-    | EDeprecatedUtility (_, name) ->
-      Normal [text "Deprecated utility. Using "; code name; text " types is not recommended!"]
-    | EDynamicExport (reason, reason_exp) ->
       Normal
+        {
+          features = [text "Deprecated type. Using "; code "*"; text " types is not recommended!"];
+        }
+    | EDeprecatedUtility (_, name) ->
+      Normal
+        {
+          features =
+            [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
+        }
+    | EDynamicExport (reason, reason_exp) ->
+      let features =
         [
           text "Dynamic ";
           ref reason;
@@ -2254,11 +2470,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref reason_exp;
           text ". This can cause importing modules to lose type coverage!";
         ]
+      in
+      Normal { features }
     | EUnsafeGettersSetters _ ->
-      Normal [text "Getters and setters can have side effects and are unsafe."]
-    | EUnusedSuppression _ -> Normal [text "Unused suppression comment."]
+      Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
+    | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
     | ELintSetting (_, kind) ->
-      let msg =
+      let features =
         match kind with
         | LintSettings.Redundant_argument ->
           [text "Redundant argument. This argument doesn't change any lint settings."]
@@ -2287,7 +2505,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text "?";
           ]
       in
-      Normal msg
+      Normal { features }
     | ESketchyNullLint { kind = sketchy_kind; loc = _; falsy_loc; null_loc } ->
       let (type_str, value_str) =
         match sketchy_kind with
@@ -2296,7 +2514,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | Lints.SketchyNullString -> ("string", "an empty string")
         | Lints.SketchyNullMixed -> ("mixed", "false")
       in
-      Normal
+      let features =
         [
           text "Sketchy null check on ";
           ref (mk_reason (RCustom type_str) falsy_loc);
@@ -2308,8 +2526,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref (mk_reason RNullOrVoid null_loc);
           text "?";
         ]
+      in
+      Normal { features }
     | ESketchyNumberLint (_, reason) ->
-      Normal
+      let features =
         [
           text "Avoid using ";
           code "&&";
@@ -2319,10 +2539,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text "Consider handling falsy values (0 and NaN) by using a conditional to choose an ";
           text "explicit default instead.";
         ]
+      in
+      Normal { features }
     | EInvalidPrototype reason ->
-      Normal [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."]
-    | EExperimentalOptionalChaining _ ->
       Normal
+        {
+          features =
+            [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."];
+        }
+    | EExperimentalOptionalChaining _ ->
+      let features =
         [
           text "Experimental optional chaining (";
           code "?.";
@@ -2336,10 +2562,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code ".flowconfig";
           text ".";
         ]
+      in
+      Normal { features }
     | EOptionalChainingMethods _ ->
-      Normal [text "Flow does not yet support method or property calls in optional chains."]
-    | EUnnecessaryOptionalChain (_, lhs_reason) ->
       Normal
+        {
+          features =
+            [text "Flow does not yet support method or property calls in optional chains."];
+        }
+    | EUnnecessaryOptionalChain (_, lhs_reason) ->
+      let features =
         [
           text "This use of optional chaining (";
           code "?.";
@@ -2349,15 +2581,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "?.";
           text " will short-circuit the nullish case.";
         ]
+      in
+      Normal { features }
     | EUnnecessaryInvariant (_, reason) ->
-      Normal
+      let features =
         [
           text "This use of `invariant` is unnecessary because ";
           ref reason;
           text " is always truthy.";
         ]
+      in
+      Normal { features }
     | EInexactSpread (reason, reason_op) ->
-      Normal
+      let features =
         [
           text "Cannot determine the type of ";
           ref reason_op;
@@ -2370,10 +2606,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " might be missing the types of some properties that are being copied. ";
           text "Perhaps you could make it exact?";
         ]
+      in
+      Normal { features }
     | EBigIntNotYetSupported reason ->
-      Normal [text "BigInt "; ref reason; text " is not yet supported."]
+      Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
     | ENonArraySpread reason ->
-      Normal
+      let features =
         [
           text "Cannot spread non-array iterable ";
           ref reason;
@@ -2381,8 +2619,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           code "...Array.from(<iterable>)";
           text " instead.";
         ]
+      in
+      Normal { features }
     | ECannotSpreadInterface { spread_reason; interface_reason } ->
-      Normal
+      let features =
         [
           text "Cannot determine a type for ";
           ref spread_reason;
@@ -2391,8 +2631,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " cannot be spread because interfaces do not ";
           text "track the own-ness of their properties. Can you use an object type instead?";
         ]
+      in
+      Normal { features }
     | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
-      Normal
+      let features =
         [
           text "Cannot determine a type for ";
           ref spread_reason;
@@ -2405,6 +2647,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref object_reason;
           text " first or remove the indexer?";
         ]
+      in
+      Normal { features }
     | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind } ->
       let (error_reason, fix_suggestion) =
         match error_kind with
@@ -2419,25 +2663,27 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text " a required property?";
             ] )
       in
-      Normal
-        ( [
-            text "Cannot determine a type for ";
-            ref spread_reason;
-            text ". ";
-            ref object2_reason;
-            text " ";
-            text error_reason;
-            text ", so it may contain ";
-            code propname;
-            text " with a type that conflicts with ";
-            code propname;
-            text "'s definition in ";
-            ref object1_reason;
-            text ".";
-          ]
-        @ fix_suggestion )
+      let features =
+        [
+          text "Cannot determine a type for ";
+          ref spread_reason;
+          text ". ";
+          ref object2_reason;
+          text " ";
+          text error_reason;
+          text ", so it may contain ";
+          code propname;
+          text " with a type that conflicts with ";
+          code propname;
+          text "'s definition in ";
+          ref object1_reason;
+          text ".";
+        ]
+        @ fix_suggestion
+      in
+      Normal { features }
     | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
-      Normal
+      let features =
         [
           text "Cannot determine a type for ";
           ref spread_reason;
@@ -2452,6 +2698,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ref object2_reason;
           text " exact?";
         ]
+      in
+      Normal { features }
     | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
       let format_reason_group reasons =
         match reasons with
@@ -2466,19 +2714,21 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         let reasons_for_operand2 = format_reason_group reasons_for_operand2 in
         reasons_for_operand1 @ [text " and "] @ reasons_for_operand2
       in
-      Normal
-        ( [
-            text "Computing ";
-            ref reason;
-            text " may lead to exponentially large type checking because ";
-          ]
+      let features =
+        [
+          text "Computing ";
+          ref reason;
+          text " may lead to exponentially large type checking because ";
+        ]
         @ union_refs
         @ [
             text
               " are both unions. Please use at most one union type per spread to avoid performance issues.";
             text
               " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
-          ] ))
+          ]
+      in
+      Normal { features })
 
 let is_lint_error = function
   | EUntypedTypeImport _

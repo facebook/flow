@@ -982,18 +982,25 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
         @ [text (actual ^ " in "); ref upper] )
     in
     match (loc, friendly_message_of_msg msg) with
-    | (Some loc, Error_message.Normal msg) -> mk_error ~trace_infos ~kind loc msg
-    | (None, UseOp (loc, text, use_op)) -> mk_use_op_error loc use_op text
-    | (None, PropMissing (prop_loc, prop, lower, use_op)) ->
-      mk_prop_missing_error prop_loc prop lower use_op
-    | (None, PropPolarityMismatch (x, p1, p2, use_op)) ->
-      mk_prop_polarity_mismatch_error x p1 p2 use_op
-    | (None, IncompatibleUse (loc, use_kind, lower, upper, use_op)) ->
-      mk_incompatible_use_error loc use_kind lower upper use_op
-    | (None, Incompatible (lower, upper, use_op)) -> mk_incompatible_error lower upper use_op
-    | (None, IncompatibleTrust (lower, upper, use_op)) ->
-      mk_trust_incompatible_error lower upper use_op
-    | (None, Error_message.Speculation (loc, use_op, branches)) ->
+    | (Some loc, Error_message.Normal { features }) -> mk_error ~trace_infos ~kind loc features
+    | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
+    | (None, PropMissing { loc; prop; reason_obj; use_op }) ->
+      mk_prop_missing_error loc prop reason_obj use_op
+    | ( None,
+        PropPolarityMismatch
+          { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op } ) ->
+      mk_prop_polarity_mismatch_error
+        prop
+        (reason_lower, polarity_lower)
+        (reason_upper, polarity_upper)
+        use_op
+    | (None, IncompatibleUse { loc; upper_kind; reason_lower; reason_upper; use_op }) ->
+      mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
+    | (None, Incompatible { reason_lower; reason_upper; use_op }) ->
+      mk_incompatible_error reason_lower reason_upper use_op
+    | (None, IncompatibleTrust { reason_lower; reason_upper; use_op }) ->
+      mk_trust_incompatible_error reason_lower reason_upper use_op
+    | (None, Error_message.Speculation { loc; use_op; branches }) ->
       mk_use_op_speculation_error loc use_op branches
     | (None, Error_message.Normal _)
     | (Some _, _) ->
