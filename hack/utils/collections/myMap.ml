@@ -81,8 +81,6 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
     in
     merge_env env s1 s2 ~combine:f
 
-  let compare ?(cmp = Pervasives.compare) x y = compare cmp x y
-
   let keys m = fold (fun k _ acc -> k :: acc) m []
 
   let ordered_keys m = List.map fst (bindings m)

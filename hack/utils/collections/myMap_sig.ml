@@ -34,7 +34,7 @@ module type S = sig
     combine:('a -> key -> 'b option -> 'c option -> 'a * 'd option) ->
     'a * 'd t
 
-  val compare : ?cmp:('a -> 'a -> int) -> 'a t -> 'a t -> int
+  val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
 
   val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
 
