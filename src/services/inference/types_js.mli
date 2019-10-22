@@ -115,5 +115,6 @@ val debug_include_dependencies_and_dependents :
   input:CheckedSet.t ->
   all_dependency_graph:FilenameSet.t FilenameMap.t ->
   dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependent_files:FilenameSet.t ->
   all_dependent_files:FilenameSet.t ->
   (CheckedSet.t * CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t

@@ -527,6 +527,7 @@ let include_dependencies_and_dependents
     ~input
     ~all_dependency_graph
     ~dependency_graph
+    ~sig_dependent_files
     ~all_dependent_files =
   with_timer_lwt ~options "PruneDeps" profiling (fun () ->
       (* Don't just look up the dependencies of the focused or dependent modules. Also look up
@@ -559,7 +560,13 @@ let include_dependencies_and_dependents
             in
             let dependencies =
               let (dependents, non_dependents) =
-                List.partition (fun fn -> FilenameSet.mem fn all_dependent_files)
+                List.partition
+                  ( if Options.minimal_merge options then
+                    fun fn ->
+                  FilenameSet.mem fn sig_dependent_files
+                  else
+                    fun fn ->
+                  FilenameSet.mem fn all_dependent_files )
                 @@ Nel.to_list component
               in
               if
@@ -579,17 +586,26 @@ let include_dependencies_and_dependents
       (* Definitely recheck input and dependencies. As merging proceeds, dependents may or may not be
        rechecked. *)
       let definitely_to_merge = CheckedSet.add ~dependencies input in
-      let to_merge = CheckedSet.add ~dependents:all_dependent_files definitely_to_merge in
-      (* TODO these should not be the same *)
-      let to_check = to_merge in
-      (* This contains all of the files which may be merged or checked. Conveniently, this is
-       * currently the same as to_check, so we can avoid doing a costly union, but if we change how
-       * to_check is computed we should be sure to change this as well. *)
-      let to_merge_or_check = to_check in
-      (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with to_merge on
-       dependency_graph, we would get exactly the same components. Later, we will filter
-       dependency_graph to just to_merge, and correspondingly filter components as well. This will
-       work out because every component is either entirely inside to_merge or entirely outside. *)
+      let (to_merge, to_check, to_merge_or_check) =
+        if Options.minimal_merge options then
+          let to_merge = CheckedSet.add ~dependents:sig_dependent_files definitely_to_merge in
+          (* We don't need to include definitely_to_merge here, since we only need to merge the
+           * dependencies, not check them. *)
+          let to_check = CheckedSet.add ~dependents:all_dependent_files input in
+          (* This contains all of the files which may be merged or checked. Conveniently, this is
+           * currently the same as to_check except for the addition of dependencies, so we can avoid
+           * doing a costly union, but if we change how to_check or to_merge is computed we should be
+           * sure to change this as well. *)
+          let to_merge_or_check = CheckedSet.add ~dependencies to_check in
+          (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with to_merge on
+         dependency_graph, we would get exactly the same components. Later, we will filter
+         dependency_graph to just to_merge, and correspondingly filter components as well. This will
+         work out because every component is either entirely inside to_merge or entirely outside. *)
+          (to_merge, to_check, to_merge_or_check)
+        else
+          let to_merge = CheckedSet.add ~dependents:all_dependent_files definitely_to_merge in
+          (to_merge, to_merge, to_merge)
+      in
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
@@ -1321,6 +1337,7 @@ let focused_files_and_dependents_to_infer
     ~dependency_graph
     ~input_focused
     ~input_dependencies
+    ~sig_dependent_files
     ~all_dependent_files =
   let input =
     CheckedSet.add
@@ -1342,8 +1359,9 @@ let focused_files_and_dependents_to_infer
    * dependency. That's fine if foo.js is in the checked set. But if it's just some random
    * other dependent then we need to filter it out.
    *)
+  let sig_dependent_files = FilenameSet.inter sig_dependent_files (CheckedSet.all checked_files) in
   let all_dependent_files = FilenameSet.inter all_dependent_files (CheckedSet.all checked_files) in
-  Lwt.return (checked_files, all_dependent_files)
+  Lwt.return (checked_files, sig_dependent_files, all_dependent_files)
 
 let filter_out_node_modules ~options =
   let root = Options.root options in
@@ -1360,10 +1378,13 @@ let filter_out_node_modules ~options =
  * 2. Dependent files are empty.
  *)
 let unfocused_files_and_dependents_to_infer
-    ~options ~input_focused ~input_dependencies ~all_dependent_files =
+    ~options ~input_focused ~input_dependencies ~sig_dependent_files ~all_dependent_files =
   let focused = filter_out_node_modules ~options input_focused in
   let dependencies = Option.value ~default:FilenameSet.empty input_dependencies in
-  Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty, all_dependent_files)
+  Lwt.return
+    ( CheckedSet.add ~focused ~dependencies CheckedSet.empty,
+      sig_dependent_files,
+      all_dependent_files )
 
 (* Called on initialization in non-lazy mode, with optional focus targets.
 
@@ -1385,6 +1406,7 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~
           ~options
           ~input_focused:parsed
           ~input_dependencies:None
+          ~sig_dependent_files:FilenameSet.empty
           ~all_dependent_files:FilenameSet.empty
       | Some input_focused ->
         let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
@@ -1398,6 +1420,7 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~
           ~dependency_graph
           ~input_focused
           ~input_dependencies:None
+          ~sig_dependent_files:FilenameSet.empty
           ~all_dependent_files:FilenameSet.empty)
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
@@ -1953,7 +1976,7 @@ end = struct
       ~files_to_force
       ~unchanged_files_to_force
       ~direct_dependent_files =
-    let%lwt (_sig_dependent_files, all_dependent_files) =
+    let%lwt (sig_dependent_files, all_dependent_files) =
       with_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
           if
             FilenameSet.is_empty direct_dependent_files
@@ -1971,7 +1994,7 @@ end = struct
     let acceptable_files_to_focus =
       FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
     in
-    let%lwt (updated_checked_files, all_dependent_files) =
+    let%lwt (updated_checked_files, sig_dependent_files, all_dependent_files) =
       with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
           match Options.lazy_mode options with
           | Options.NON_LAZY_MODE
@@ -1990,6 +2013,7 @@ end = struct
               ~options
               ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
               ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
+              ~sig_dependent_files
               ~all_dependent_files
           | Options.LAZY_MODE_IDE ->
             (* IDE mode only treats opened files as focused *)
@@ -2036,6 +2060,7 @@ end = struct
               ~dependency_graph
               ~input_focused
               ~input_dependencies
+              ~sig_dependent_files
               ~all_dependent_files)
     in
     (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
@@ -2052,6 +2077,7 @@ end = struct
         ~input
         ~all_dependency_graph
         ~dependency_graph
+        ~sig_dependent_files
         ~all_dependent_files
     in
     Lwt.return (to_merge, to_check, to_merge_or_check, components, recheck_set, all_dependent_files)
@@ -2849,7 +2875,7 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
   with_transaction (fun transaction reader ->
-      let%lwt (input, all_dependent_files) =
+      let%lwt (input, sig_dependent_files, all_dependent_files) =
         files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info
       in
       let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
@@ -2862,6 +2888,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~input
           ~all_dependency_graph
           ~dependency_graph
+          ~sig_dependent_files
           ~all_dependent_files
       in
       (* The values to_merge and recheck_set are essentially the same as input, aggregated. This

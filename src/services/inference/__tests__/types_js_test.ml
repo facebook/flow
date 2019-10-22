@@ -103,12 +103,16 @@ let make_unchanged_checked checked_files freshparsed =
 let make_options () =
   let flowconfig = FlowConfig.empty_config in
   let root = Path.dummy_path in
-  CommandUtils.make_options
-    ~flowconfig_name:".flowconfig"
-    ~flowconfig
-    ~lazy_mode:None
-    ~root
-    dummy_options_flags
+  {
+    (CommandUtils.make_options
+       ~flowconfig_name:".flowconfig"
+       ~flowconfig
+       ~lazy_mode:None
+       ~root
+       dummy_options_flags)
+    with
+    Options.opt_minimal_merge = true;
+  }
 
 let prepare_freshparsed freshparsed =
   freshparsed |> List.map make_fake_file_key |> FilenameSet.of_list
@@ -177,7 +181,7 @@ let include_dependencies_and_dependents
   let checked_files = make_checked_files ~all_dependency_graph in
   let unchanged_checked = make_unchanged_checked checked_files changed_files in
   let options = make_options () in
-  let (_sig_dependent_files, all_dependent_files) =
+  let (sig_dependent_files, all_dependent_files) =
     Pure_dep_graph_operations.calc_all_dependents
       ~dependency_graph
       ~all_dependency_graph
@@ -190,6 +194,7 @@ let include_dependencies_and_dependents
     ~input
     ~all_dependency_graph
     ~dependency_graph
+    ~sig_dependent_files
     ~all_dependent_files
 
 (* There is memory sampling embedded throughout the code under test. It polls the shared memory
@@ -235,12 +240,18 @@ let tests =
                              ~all_dependency_graph
                              ~freshparsed
                          in
-                         let expected =
+                         let expected_to_merge =
                            make_checked_set ~focused:["b"] ~dependents:["a"] ~dependencies:[]
                          in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         let expected_to_check =
+                           make_checked_set ~focused:["b"] ~dependents:["a"] ~dependencies:[]
+                         in
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          Lwt.return_unit);
                 "long_chain"
                 %>:: test_with_profiling (fun ctxt profiling ->
@@ -263,15 +274,24 @@ let tests =
                              ~all_dependency_graph
                              ~freshparsed
                          in
-                         let expected =
+                         let expected_to_merge =
                            make_checked_set
                              ~focused:["a"]
                              ~dependents:["b"; "c"; "d"; "e"]
                              ~dependencies:[]
                          in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         let expected_to_check =
+                           make_checked_set
+                             ~focused:["a"]
+                             ~dependents:["b"; "c"; "d"; "e"]
+                             ~dependencies:[]
+                         in
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          Lwt.return_unit);
                 "long_chain_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
@@ -294,18 +314,20 @@ let tests =
                              ~all_dependency_graph
                              ~freshparsed
                          in
-                         let expected =
-                           (* Currently, we have to include everything we need to *check* in the
-                            * to_merge set, since we don't separately compute the set of files to
-                            * merge and check. "a" changed, so it has to be rechecked. "b" has to be
-                            * rechecked because it depends on "a". We also treat direct dependents
-                            * as changed files when computing transitive dependents, so this also
-                            * pulls in "c". *)
+                         let expected_to_merge =
+                           (* We always include direct dependents, and compute them using the
+                            * implementation dependency graph. *)
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
+                         in
+                         let expected_to_check =
                            make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
                          in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          Lwt.return_unit);
                 "simple_cycle"
                 %>:: test_with_profiling (fun ctxt profiling ->
@@ -328,15 +350,24 @@ let tests =
                              ~all_dependency_graph
                              ~freshparsed
                          in
-                         let expected =
+                         let expected_to_merge =
                            make_checked_set
                              ~focused:["a"]
                              ~dependents:["b"; "c"; "d"; "e"]
                              ~dependencies:[]
                          in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         let expected_to_check =
+                           make_checked_set
+                             ~focused:["a"]
+                             ~dependents:["b"; "c"; "d"; "e"]
+                             ~dependencies:[]
+                         in
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          Lwt.return_unit);
                 "simple_cycle_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
@@ -359,14 +390,20 @@ let tests =
                              ~all_dependency_graph
                              ~freshparsed
                          in
-                         let expected =
-                           (* See the comment in the long_chain_no_sig_dependencies test (above) for
-                            * an explanation. *)
+                         let expected_to_merge =
+                           (* We always include direct dependents, and compute them using the
+                            * implementation dependency graph. *)
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
+                         in
+                         let expected_to_check =
                            make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
                          in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          Lwt.return_unit);
               ];
          "include_dependencies_and_dependents"
@@ -389,12 +426,18 @@ let tests =
                              ~input_dependents:[]
                              ~input_dependencies:[]
                          in
-                         let expected =
+                         let expected_to_merge =
                            make_checked_set ~focused:["b"] ~dependents:["a"] ~dependencies:[]
                          in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         let expected_to_check =
+                           make_checked_set ~focused:["b"] ~dependents:["a"] ~dependencies:[]
+                         in
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          Lwt.return_unit);
                 "long_chain_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
@@ -414,12 +457,18 @@ let tests =
                              ~input_dependents:[]
                              ~input_dependencies:[]
                          in
-                         let expected =
+                         let expected_to_merge =
+                           make_checked_set ~focused:["a"] ~dependents:[] ~dependencies:[]
+                         in
+                         let expected_to_check =
                            make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
                          in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          Lwt.return_unit);
                 "cycle"
                 %>:: test_with_profiling (fun ctxt profiling ->
@@ -445,16 +494,25 @@ let tests =
                              ~input_dependents:[]
                              ~input_dependencies:[]
                          in
-                         let expected =
+                         let expected_to_merge =
+                           make_checked_set
+                             ~focused:["a"]
+                             ~dependents:["b"; "c"; "d"]
+                             ~dependencies:[]
+                         in
+                         let expected_to_check =
                            make_checked_set
                              ~focused:["a"]
                              ~dependents:["b"; "c"; "d"; "e"]
                              ~dependencies:[]
                          in
                          let expected_components = [["a"; "b"; "c"]; ["d"]; ["e"]] in
-                         assert_checked_sets_equal ~ctxt expected to_merge;
-                         assert_checked_sets_equal ~ctxt to_merge to_check;
-                         assert_checked_sets_equal ~ctxt to_merge to_merge_or_check;
+                         assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
+                         assert_checked_sets_equal ~ctxt expected_to_check to_check;
+                         assert_checked_sets_equal
+                           ~ctxt
+                           (CheckedSet.union to_merge to_check)
+                           to_merge_or_check;
                          assert_components_equal ~ctxt expected_components components;
                          Lwt.return_unit);
               ];

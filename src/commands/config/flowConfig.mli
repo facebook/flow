@@ -122,6 +122,8 @@ val max_workers : config -> int
 
 val merge_timeout : config -> int option
 
+val minimal_merge : config -> bool
+
 val module_file_exts : config -> SSet.t
 
 val module_name_mappers : config -> (Str.regexp * string) list
