@@ -127,7 +127,7 @@ val shrink_by_one_char_both_sides : 'a pos -> 'a pos
  * end position *)
 val compare : 'a pos -> 'a pos -> int
 
-val set_file : 'a -> 'a pos -> 'a pos
+val set_file : 'a -> 'b pos -> 'a pos
 
 val make_from_lnum_bol_cnum :
   pos_file:Relative_path.t ->
