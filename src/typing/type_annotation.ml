@@ -354,8 +354,12 @@ let rec convert cx tparams_map =
                         ( poly_r,
                           poly_trust,
                           PolyT
-                            (tparams_loc, tparams, DefT (r, trust, FunT (statics, proto, ft)), id)
-                        ),
+                            {
+                              tparams_loc;
+                              tparams;
+                              t_out = DefT (r, trust, FunT (statics, proto, ft));
+                              id;
+                            } ),
                       DefT (_, objtrust, ObjT objtype) ) ->
                     let reason = reason_of_t statics in
                     let statics' =
@@ -366,8 +370,12 @@ let rec convert cx tparams_map =
                         ( poly_r,
                           poly_trust,
                           PolyT
-                            (tparams_loc, tparams, DefT (r, trust, FunT (statics', proto, ft)), id)
-                        )
+                            {
+                              tparams_loc;
+                              tparams;
+                              t_out = DefT (r, trust, FunT (statics', proto, ft));
+                              id;
+                            } )
                     in
                     reconstruct_ast t targs
                   | _ ->

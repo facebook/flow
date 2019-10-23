@@ -224,7 +224,12 @@ module rec TypeTerm : sig
        it is forced only when polymorphic types are applied. *)
 
     (* polymorphic type *)
-    | PolyT of ALoc.t * typeparam Nel.t * t * int
+    | PolyT of {
+        tparams_loc: ALoc.t;
+        tparams: typeparam Nel.t;
+        t_out: t;
+        id: int;
+      }
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
     (* React$AbstractComponent<Config, DefaultProps, Instance> *)
@@ -3777,7 +3782,7 @@ let extends_use_type use_op l u =
 let poly_type id tparams_loc (tparams : typeparam Nel.t) t =
   let reason = update_desc_new_reason (fun desc -> RPolyType desc) (reason_of_t t) in
   let reason = annot_reason ~annot_loc:(aloc_of_reason reason) reason in
-  DefT (reason, bogus_trust (), PolyT (tparams_loc, tparams, t, id))
+  DefT (reason, bogus_trust (), PolyT { tparams_loc; tparams; t_out = t; id })
 
 let poly_type_of_tparam_list id tparams_loc tparams t =
   match tparams with

@@ -137,9 +137,9 @@ class ['a] t =
       | SingletonBoolT _ ->
         acc
       | TypeT (_, t) -> self#type_ cx pole acc t
-      | PolyT (_, xs, t, _) ->
-        let acc = self#nel (self#type_param cx pole) acc xs in
-        let acc = self#type_ cx pole acc t in
+      | PolyT { tparams; t_out; tparams_loc = _; id = _ } ->
+        let acc = self#nel (self#type_param cx pole) acc tparams in
+        let acc = self#type_ cx pole acc t_out in
         acc
       | IdxWrapper t -> self#type_ cx pole acc t
       | ReactAbstractComponentT { config; instance } ->

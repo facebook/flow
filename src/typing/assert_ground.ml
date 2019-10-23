@@ -329,16 +329,18 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               ( _,
                 _,
                 PolyT
-                  ( _,
-                    tparams,
-                    DefT
-                      ( _,
-                        _,
-                        TypeT
-                          ( _,
-                            EvalT ((BoundT (_, s, _) as t), TypeDestructorT (_, _, destructor), _)
-                          ) ),
-                    _ ) ) ->
+                  {
+                    tparams;
+                    t_out =
+                      DefT
+                        ( _,
+                          _,
+                          TypeT
+                            ( _,
+                              EvalT ((BoundT (_, s, _) as t), TypeDestructorT (_, _, destructor), _)
+                            ) );
+                    _;
+                  } ) ->
             if (new type_finder t)#destructor cx false destructor then
               loop cx pole seen (Nel.to_list tparams, targs)
             else
@@ -348,7 +350,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                 seen
                 (Nel.to_list tparams, targs)
                 ~constant_polarity_param:(s, Polarity.Positive)
-          | DefT (_, _, PolyT (_, tparams, _, _)) -> loop cx pole seen (Nel.to_list tparams, targs)
+          | DefT (_, _, PolyT { tparams; _ }) -> loop cx pole seen (Nel.to_list tparams, targs)
           | DefT (_, _, EmptyT _) -> seen
           | AnyT _ -> seen
           | _ ->

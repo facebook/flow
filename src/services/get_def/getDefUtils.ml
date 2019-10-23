@@ -257,7 +257,7 @@ let extract_instancet cx ty : (Type.t, string) result =
     let resolved = Members.resolve_type cx ty in
     match resolved with
     | ThisClassT (_, t)
-    | DefT (_, _, PolyT (_, _, ThisClassT (_, t), _)) ->
+    | DefT (_, _, PolyT { t_out = ThisClassT (_, t); _ }) ->
       Ok t
     | _ ->
       let type_string = string_of_ctor resolved in

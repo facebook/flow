@@ -826,7 +826,7 @@ module ContextOptimizer = struct
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';
           t'
-        | DefT (_, _, PolyT (_, _, _, poly_id)) ->
+        | DefT (_, _, PolyT { id = poly_id; _ }) ->
           let id =
             if Context.mem_nominal_id cx poly_id then
               match IMap.get poly_id stable_poly_ids with

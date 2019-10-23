@@ -90,7 +90,7 @@ let substituter =
               Tvar.mk cx reason
             else
               t
-          | DefT (reason, trust, PolyT (tparams_loc, xs, inner, _)) ->
+          | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; _ }) ->
             let (xs, map, changed) =
               Nel.fold_left
                 (fun (xs, map, changed) typeparam ->
@@ -120,7 +120,11 @@ let substituter =
             let inner_ = self#type_ cx (map, false, None) inner in
             let changed = changed || inner_ != inner in
             if changed then
-              DefT (reason, trust, PolyT (tparams_loc, xs, inner_, Context.make_nominal cx))
+              DefT
+                ( reason,
+                  trust,
+                  PolyT { tparams_loc; tparams = xs; t_out = inner_; id = Context.make_nominal cx }
+                )
             else
               t
           | ThisClassT (reason, this) ->

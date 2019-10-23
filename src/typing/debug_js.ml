@@ -229,7 +229,7 @@ and _json_of_t_impl json_cx t =
           | None -> []
           | Some t -> [("result", _json_of_t json_cx t)]
         end
-      | DefT (_, _, PolyT (_, tparams, t, id)) ->
+      | DefT (_, _, PolyT { tparams; t_out = t; id; _ }) ->
         [
           ("id", JSON_Number (string_of_int id));
           ( "typeParams",
@@ -1640,7 +1640,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | FunProtoBindT _
     | FunProtoCallT _ ->
       p t
-    | DefT (_, trust, PolyT (_, tps, c, id)) ->
+    | DefT (_, trust, PolyT { tparams = tps; t_out = c; id; _ }) ->
       p
         ~trust:(Some trust)
         ~extra:

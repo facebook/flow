@@ -613,7 +613,7 @@ end = struct
         let%bind t1 = type__ ~env t1 in
         let%map ts = mapM (type__ ~env) ts in
         Ty.mk_inter (t0, t1 :: ts)
-      | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
+      | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
       | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
       | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
@@ -814,7 +814,7 @@ end = struct
     Type.(
       match t with
       | DefT (_, _, FunT (_, _, f)) -> fun_ty ~env f None
-      | DefT (_, _, PolyT (_, ps, DefT (_, _, FunT (_, _, f)), _)) ->
+      | DefT (_, _, PolyT { tparams = ps; t_out = DefT (_, _, FunT (_, _, f)); _ }) ->
         let%bind ps = mapM (type_param ~env) (Nel.to_list ps) in
         fun_ty ~env f (Some ps)
       | _ -> terr ~kind:BadMethodType (Some t))

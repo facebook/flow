@@ -6894,7 +6894,7 @@ and mk_func_sig =
 
         method! type_ cx pole acc t =
           match t with
-          | DefT (_, _, PolyT (_, tps, _, _)) ->
+          | DefT (_, _, PolyT { tparams = tps; _ }) ->
             let old_tparams = tparams in
             Nel.iter (fun tp -> tparams <- tp.name :: tparams) tps;
             let acc = super#type_ cx pole acc t in

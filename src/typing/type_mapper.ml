@@ -334,13 +334,13 @@ class virtual ['a] t =
           t
         else
           TypeT (s, t'')
-      | PolyT (tparams_loc, tparamlist, t', _) ->
+      | PolyT { tparams_loc; tparams = tparamlist; t_out = t'; _ } ->
         let tparamlist' = Nel.ident_map (self#type_param cx map_cx) tparamlist in
         let t'' = self#type_ cx map_cx t' in
         if tparamlist == tparamlist' && t' == t'' then
           t
         else
-          PolyT (tparams_loc, tparamlist', t'', Context.make_nominal cx)
+          PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Context.make_nominal cx }
       | IdxWrapper t' ->
         let t'' = self#type_ cx map_cx t' in
         if t' == t'' then

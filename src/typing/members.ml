@@ -251,7 +251,7 @@ let rec merge_type cx =
 
 let instantiate_poly_t cx t args =
   match t with
-  | DefT (_, _, PolyT (_, type_params, t_, _)) ->
+  | DefT (_, _, PolyT { tparams = type_params; t_out = t_; _ }) ->
     let args = Option.value ~default:[] args in
     let maximum_arity = Nel.length type_params in
     if List.length args > maximum_arity then (
@@ -420,7 +420,7 @@ let rec extract_type cx this_t =
     let inst_t = instantiate_poly_t cx c (Some ts) in
     let inst_t = instantiate_type inst_t in
     extract_type cx inst_t
-  | DefT (_, _, PolyT (_, _, sub_type, _)) ->
+  | DefT (_, _, PolyT { t_out = sub_type; _ }) ->
     (* TODO: replace type parameters with stable/proper names? *)
     extract_type cx sub_type
   | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)))

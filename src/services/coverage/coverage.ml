@@ -173,7 +173,7 @@ class visitor =
       (* Non-concrete (fallthrough) constructors *)
       | AnnotT (_, t, _)
       | ExactT (_, t)
-      | DefT (_, _, PolyT (_, _, t, _))
+      | DefT (_, _, PolyT { t_out = t; _ })
       | TypeAppT (_, _, t, _)
       | DefT (_, _, TypeT (_, t))
       | OpenPredT (_, t, _, _)

@@ -1174,10 +1174,12 @@ struct
               ( _,
                 _,
                 PolyT
-                  ( tparams_loc,
-                    typeparams,
-                    ((DefT (_, _, ClassT _) | DefT (_, _, FunT _)) as lower_t),
-                    id ) ),
+                  {
+                    tparams_loc;
+                    tparams = typeparams;
+                    t_out = (DefT (_, _, ClassT _) | DefT (_, _, FunT _)) as lower_t;
+                    id;
+                  } ),
             ImportTypeofT (reason, _, t) ) ->
           let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
           rec_flow_t
@@ -1189,7 +1191,7 @@ struct
                 typeparams
                 (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t))),
               t )
-        | ( (DefT (_, _, TypeT _) | DefT (_, _, PolyT (_, _, DefT (_, _, TypeT _), _))),
+        | ( (DefT (_, _, TypeT _) | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ })),
             ImportTypeofT (reason, export_name, _) ) ->
           add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name))
         | (_, ImportTypeofT (reason, _, t)) ->
@@ -1664,7 +1666,7 @@ struct
             | _ -> ()
           in
           rec_flow_t cx trace (AnyT.why src reason, t)
-        | ( (DefT (_, _, PolyT (_, _, DefT (_, _, TypeT _), _)) | DefT (_, _, TypeT _)),
+        | ( (DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) | DefT (_, _, TypeT _)),
             AssertImportIsValueT (reason, name) ) ->
           add_output cx ~trace (Error_message.EImportTypeAsValue (reason, name))
         | (_, AssertImportIsValueT (_, _)) -> ()
@@ -2254,19 +2256,25 @@ struct
          *
          * The upper bound's c should always be a PolyT here since we could not have
          * made it here if it was not given the logic of our earlier case. *)
-        | ( DefT (_, _, PolyT (_, _, _, id1)),
+        | ( DefT (_, _, PolyT { id = id1; _ }),
             ConcretizeTypeAppsT
-              (use_op, (ts1, _, r1), (DefT (_, _, PolyT (_, _, _, id2)), ts2, _, r2), false) )
+              (use_op, (ts1, _, r1), (DefT (_, _, PolyT { id = id2; _ }), ts2, _, r2), false) )
           when id1 = id2 && List.length ts1 = List.length ts2 ->
           let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
           rec_flow cx trace (l, TypeAppVarianceCheckT (use_op, r1, r2, targs))
         (* This is the case which implements the expansion for our
          * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
-        | ( DefT (_, _, PolyT (tparams_loc1, xs1, t1, id1)),
+        | ( DefT (_, _, PolyT { tparams_loc = tparams_loc1; tparams = xs1; t_out = t1; id = id1 }),
             ConcretizeTypeAppsT
               ( use_op,
                 (ts1, op1, r1),
-                (DefT (_, _, PolyT (tparams_loc2, xs2, t2, id2)), ts2, op2, r2),
+                ( DefT
+                    ( _,
+                      _,
+                      PolyT { tparams_loc = tparams_loc2; tparams = xs2; t_out = t2; id = id2 } ),
+                  ts2,
+                  op2,
+                  r2 ),
                 false ) ) ->
           let (op1, op2) =
             match root_of_use_op use_op with
@@ -3337,10 +3345,12 @@ struct
               ( _,
                 _,
                 PolyT
-                  ( tparams_loc,
-                    xs,
-                    ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype))),
-                    _ ) ),
+                  {
+                    tparams_loc;
+                    tparams = xs;
+                    t_out = ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)));
+                    _;
+                  } ),
             MixinT (r, tvar) ) ->
           let static = ObjProtoT r in
           let super = ObjProtoT r in
@@ -3363,7 +3373,7 @@ struct
        arguments. Use the instantiation cache if directed to do so by the
        operation. (SpecializeT operations are created when processing TypeAppT
        types, so the decision to cache or not originates there.) *)
-        | ( DefT (_, _, PolyT (tparams_loc, xs, t, id)),
+        | ( DefT (_, _, PolyT { tparams_loc; tparams = xs; t_out = t; id }),
             SpecializeT (use_op, reason_op, reason_tapp, cache, ts, tvar) ) ->
           let ts = Option.value ts ~default:[] in
           let t_ =
@@ -3381,14 +3391,14 @@ struct
               ts
           in
           rec_flow_t cx trace (t_, tvar)
-        | (DefT (_, _, PolyT (_, tps, _, _)), VarianceCheckT (_, ts, polarity)) ->
+        | (DefT (_, _, PolyT { tparams = tps; _ }), VarianceCheckT (_, ts, polarity)) ->
           variance_check cx ~trace polarity (Nel.to_list tps, ts)
         (* When we are checking the polarity of a super class where the super class has no type
        args, we end up generating this constraint. Since it has no type args, we never resolve to
        a PolyT, but we still want to check the polarity in this case. *)
         | (DefT (_, _, ClassT _), VarianceCheckT (_, [], polarity)) ->
           check_polarity cx ~trace polarity l
-        | ( DefT (_, _, PolyT (tparams_loc, tparams, _, _)),
+        | ( DefT (_, _, PolyT { tparams_loc; tparams; _ }),
             TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ) ->
           let minimum_arity = poly_minimum_arity tparams in
           let maximum_arity = Nel.length tparams in
@@ -3493,11 +3503,18 @@ struct
        can be derived as a specialization of the generic signature. *)
 
         (* some shortcuts **)
-        | (DefT (_, _, PolyT (_, _, _, id1)), UseT (_, DefT (_, _, PolyT (_, _, _, id2))))
+        | (DefT (_, _, PolyT { id = id1; _ }), UseT (_, DefT (_, _, PolyT { id = id2; _ })))
           when id1 = id2 ->
           ()
-        | ( DefT (r1, _, PolyT (tparams_loc1, params1, t1, id1)),
-            UseT (use_op, DefT (r2, _, PolyT (tparams_loc2, params2, t2, id2))) ) ->
+        | ( DefT
+              (r1, _, PolyT { tparams_loc = tparams_loc1; tparams = params1; t_out = t1; id = id1 }),
+            UseT
+              ( use_op,
+                DefT
+                  ( r2,
+                    _,
+                    PolyT { tparams_loc = tparams_loc2; tparams = params2; t_out = t2; id = id2 }
+                  ) ) ) ->
           let n1 = Nel.length params1 in
           let n2 = Nel.length params2 in
           if n2 > n1 then
@@ -3540,7 +3557,7 @@ struct
             in
             rec_flow_t cx trace (inst1, inst2)
         (* general case **)
-        | (_, UseT (use_op, DefT (_, _, PolyT (_, ids, t, _)))) ->
+        | (_, UseT (use_op, DefT (_, _, PolyT { tparams = ids; t_out = t; _ }))) ->
           generate_tests cx (Nel.to_list ids) (fun map_ ->
               rec_flow cx trace (l, UseT (use_op, subst cx ~use_op map_ t)))
         (* TODO: ideally we'd do the same when lower bounds flow to a
@@ -3557,7 +3574,7 @@ struct
         extends clauses and at function call sites - without explicit type
         arguments, since typically they're easily inferred from context.
       *)
-        | (DefT (reason_tapp, _, PolyT (tparams_loc, ids, t, _)), _) ->
+        | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
           let reason_op = reason_of_use_t u in
           begin
             match u with
@@ -3848,7 +3865,7 @@ struct
           begin
             match Context.find_call cx id with
             | ( DefT (_, _, FunT (_, _, { rest_param = None; is_predicate = false; _ }))
-              | DefT (_, _, PolyT (_, _, DefT (_, _, FunT _), _)) ) as fun_t ->
+              | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
               (* Keep the object's reason for better error reporting *)
               rec_flow cx trace (Fn.const r |> Fn.flip mod_reason_of_t fun_t, u)
             | _ ->
@@ -7710,7 +7727,7 @@ struct
     | UnionT (_, rep) -> List.iter (check_polarity cx ?trace polarity) (UnionRep.members rep)
     | IntersectionT (_, rep) ->
       List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
-    | DefT (_, _, PolyT (_, xs, t, _)) ->
+    | DefT (_, _, PolyT { tparams = xs; t_out = t; _ }) ->
       Nel.iter (check_polarity_typeparam cx ?trace polarity) xs;
       check_polarity cx ?trace polarity t
     | ThisTypeAppT (_, c, _, None) -> check_polarity cx ?trace Polarity.Positive c
@@ -7940,24 +7957,28 @@ struct
     | DefT (_, _, TypeT _)
     | AnyT _ ->
       true
-    | DefT (_, _, PolyT (_, _, t', _)) -> is_type t'
+    | DefT (_, _, PolyT { t_out = t'; _ }) -> is_type t'
     | _ -> false
 
   and canonicalize_imported_type cx trace reason t =
     match t with
     | DefT (_, trust, ClassT inst) -> Some (DefT (reason, trust, TypeT (ImportClassKind, inst)))
-    | DefT (_, _, PolyT (tparams_loc, typeparams, DefT (_, trust, ClassT inst), id)) ->
+    | DefT
+        ( _,
+          _,
+          PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, trust, ClassT inst); id } )
+      ->
       Some
         (poly_type id tparams_loc typeparams (DefT (reason, trust, TypeT (ImportClassKind, inst))))
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
-    | DefT (_, _, PolyT (tparams_loc, typeparams, ThisClassT _, _)) ->
+    | DefT (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
       let targs =
         typeparams |> Nel.map (fun tp -> BoundT (tp.reason, tp.name, tp.polarity)) |> Nel.to_list
       in
       let tapp = typeapp ~implicit:true t targs in
       Some (poly_type (Context.make_nominal cx) tparams_loc typeparams (class_type tapp))
-    | DefT (_, _, PolyT (_, _, DefT (_, _, TypeT _), _)) -> Some t
+    | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
     | ThisClassT (r, i) -> Some (fix_this_class cx trace reason (r, i))
     | DefT (_, _, TypeT _) -> Some t
@@ -10001,10 +10022,14 @@ struct
           resolve_id cx trace ~use_op id t
         | (t, OpenT (r, id)) when ok_unify ~unify_any (desc_of_reason r) t ->
           resolve_id cx trace ~use_op:(unify_flip use_op) id t
-        | (DefT (_, _, PolyT (_, _, _, id1)), DefT (_, _, PolyT (_, _, _, id2))) when id1 = id2 ->
+        | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ })) when id1 = id2
+          ->
           ()
-        | ( DefT (r1, _, PolyT (tparams_loc1, params1, t1, id1)),
-            DefT (r2, _, PolyT (tparams_loc2, params2, t2, id2)) ) ->
+        | ( DefT
+              (r1, _, PolyT { tparams_loc = tparams_loc1; tparams = params1; t_out = t1; id = id1 }),
+            DefT
+              (r2, _, PolyT { tparams_loc = tparams_loc2; tparams = params2; t_out = t2; id = id2 })
+          ) ->
           let n1 = Nel.length params1 in
           let n2 = Nel.length params2 in
           if n2 > n1 then
