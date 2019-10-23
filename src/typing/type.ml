@@ -712,7 +712,7 @@ module rec TypeTerm : sig
     | CreateObjWithComputedPropT of {
         reason: reason;
         value: t;
-        tout: t;
+        tout_tvar: tvar;
       }
 
   (* Bindings created from destructuring annotations should themselves act like
@@ -2549,7 +2549,7 @@ end = struct
     | ReactInToProps (reason, _) ->
       reason
     | DestructuringT (reason, _, _, _) -> reason
-    | CreateObjWithComputedPropT { reason; value = _; tout = _ } -> reason
+    | CreateObjWithComputedPropT { reason; value = _; tout_tvar = _ } -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2724,8 +2724,8 @@ end = struct
     | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
     | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
     | DestructuringT (reason, a, s, t) -> DestructuringT (f reason, a, s, t)
-    | CreateObjWithComputedPropT { reason; value; tout } ->
-      CreateObjWithComputedPropT { reason = f reason; value; tout }
+    | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
+      CreateObjWithComputedPropT { reason = f reason; value; tout_tvar }
 
   and mod_reason_of_opt_use_t f = function
     | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)

@@ -295,6 +295,15 @@ and 'loc t' =
       reasons_for_operand1: 'loc virtual_reason Nel.t;
       reasons_for_operand2: 'loc virtual_reason Nel.t;
     }
+  | EComputedPropertyWithMultipleLowerBounds of {
+      computed_property_reason: 'loc virtual_reason;
+      new_lower_bound_reason: 'loc virtual_reason;
+      existing_lower_bound_reason: 'loc virtual_reason;
+    }
+  | EComputedPropertyWithUnion of {
+      computed_property_reason: 'loc virtual_reason;
+      union_reason: 'loc virtual_reason;
+    }
 
 and spread_error_kind =
   | Indexer
@@ -698,6 +707,20 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reasons_for_operand1 = Nel.map map_reason reasons_for_operand1;
         reasons_for_operand2 = Nel.map map_reason reasons_for_operand2;
       }
+  | EComputedPropertyWithMultipleLowerBounds
+      { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
+    EComputedPropertyWithMultipleLowerBounds
+      {
+        computed_property_reason = map_reason computed_property_reason;
+        new_lower_bound_reason = map_reason new_lower_bound_reason;
+        existing_lower_bound_reason = map_reason existing_lower_bound_reason;
+      }
+  | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
+    EComputedPropertyWithUnion
+      {
+        computed_property_reason = map_reason computed_property_reason;
+        union_reason = map_reason union_reason;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -856,7 +879,9 @@ let util_use_op_of_msg nope util = function
   | ECannotSpreadIndexerOnRight _
   | EUnableToSpread _
   | EInexactMayOverwriteIndexer _
-  | EExponentialSpread _ ->
+  | EExponentialSpread _
+  | EComputedPropertyWithMultipleLowerBounds _
+  | EComputedPropertyWithUnion _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -899,7 +924,14 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | EDebugPrint (reason, _)
-  | ENonArraySpread reason ->
+  | ENonArraySpread reason
+  | EComputedPropertyWithMultipleLowerBounds
+      {
+        computed_property_reason = reason;
+        new_lower_bound_reason = _;
+        existing_lower_bound_reason = _;
+      }
+  | EComputedPropertyWithUnion { computed_property_reason = reason; union_reason = _ } ->
     Some (aloc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
@@ -2727,6 +2759,42 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text
               " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
           ]
+      in
+      Normal { features }
+    | EComputedPropertyWithMultipleLowerBounds
+        { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
+      let features =
+        [
+          text "Cannot use ";
+          ref computed_property_reason;
+          text " as a computed property.";
+          text
+            " Computed properties may only be primitive literal values, but this one may be either ";
+          ref existing_lower_bound_reason;
+          text " or ";
+          ref new_lower_bound_reason;
+          text ". Can you add a literal type annotation to ";
+          ref computed_property_reason;
+          text "?";
+          text
+            " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+        ]
+      in
+      Normal { features }
+    | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
+      let features =
+        [
+          text "Cannot use ";
+          ref computed_property_reason;
+          text " as a computed property.";
+          text " Computed properties may only be primitive literal values, but ";
+          ref union_reason;
+          text " is a union. Can you add a literal type annotation to ";
+          ref computed_property_reason;
+          text "?";
+          text
+            " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+        ]
       in
       Normal { features })
 

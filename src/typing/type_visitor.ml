@@ -605,9 +605,9 @@ class ['a] t =
         let acc = self#selector cx acc s in
         let acc = self#type_ cx pole_TODO acc tout in
         acc
-      | CreateObjWithComputedPropT { reason = _; value; tout } ->
+      | CreateObjWithComputedPropT { reason = _; value; tout_tvar = (r, id) } ->
         let acc = self#type_ cx pole_TODO acc value in
-        let acc = self#type_ cx pole_TODO acc tout in
+        let acc = self#tvar cx pole_TODO acc r id in
         acc
       | ModuleExportsAssignT (_, t, tout) ->
         let acc = self#type_ cx pole_TODO acc t in

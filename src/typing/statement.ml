@@ -2622,9 +2622,12 @@ and object_ cx reason ?(allow_sealed = true) props =
      to avoid race conditions. *)
     let mk_computed key value =
       Tvar.mk_where cx reason (fun t ->
-          let tout = Tvar.mk cx reason in
-          Flow.flow cx (key, CreateObjWithComputedPropT { reason; value; tout });
-          Flow.flow cx (tout, ObjSealT (reason, t)))
+          let tout_id = Tvar.mk_no_wrap cx reason in
+          let tvar = (reason, tout_id) in
+          Flow.flow
+            cx
+            (key, CreateObjWithComputedPropT { reason = reason_of_t key; value; tout_tvar = tvar });
+          Flow.flow cx (OpenT tvar, ObjSealT (reason, t)))
     in
     (* When there's no result, return a new object with specified sealing. When
      there's result, copy a new object into it, sealing the result when

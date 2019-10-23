@@ -75,6 +75,11 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
+(* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
+type computed_property_state =
+  | ResolvedOnce of Reason.t
+  | ResolvedMultipleTimes
+
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -128,6 +133,11 @@ type sig_t = {
    *)
   mutable voidable_checks: voidable_check list;
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
+  (* A map from syntactic computed properties to the reasons of the first lower bound they receive.
+   * If multiple lower bounds are received, we instead store ResolvedMultipleTimes so that we don't
+   * emit multiple errors for a single syntactic computed property.
+   *)
+  mutable computed_property_states: computed_property_state IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
 }
@@ -220,6 +230,7 @@ let make_sig () =
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
     test_prop_hits_and_misses = IMap.empty;
+    computed_property_states = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
   }
@@ -541,6 +552,7 @@ let clear_intermediates cx =
   cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.voidable_checks <- [];
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
+  cx.sig_cx.computed_property_states <- IMap.empty;
   cx.sig_cx.optional_chains_useful <- ALocMap.empty;
   cx.sig_cx.invariants_useful <- ALocMap.empty;
   ()
@@ -582,6 +594,16 @@ let test_prop_get_never_hit cx =
       | Miss (name, reasons, use_op) -> (name, reasons, use_op) :: acc)
     []
     (IMap.bindings cx.sig_cx.test_prop_hits_and_misses)
+
+let computed_property_state_for_id cx id = IMap.find_opt id cx.sig_cx.computed_property_states
+
+let computed_property_add_lower_bound cx id r =
+  cx.sig_cx.computed_property_states <-
+    IMap.add id (ResolvedOnce r) cx.sig_cx.computed_property_states
+
+let computed_property_add_multiple_lower_bounds cx id =
+  cx.sig_cx.computed_property_states <-
+    IMap.add id ResolvedMultipleTimes cx.sig_cx.computed_property_states
 
 let mark_optional_chain cx loc lhs_reason ~useful =
   cx.sig_cx.optional_chains_useful <-

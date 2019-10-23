@@ -781,11 +781,11 @@ and _json_of_use_t_impl json_cx t =
           ("selector", json_of_selector json_cx s);
           ("t_out", _json_of_t json_cx t_out);
         ]
-      | CreateObjWithComputedPropT { reason; value; tout } ->
+      | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
         [
           ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
           ("value", _json_of_t json_cx value);
-          ("tout", _json_of_t json_cx tout);
+          ("tout", _json_of_t json_cx (OpenT tout_tvar));
         ]
       | ModuleExportsAssignT (_, assign, t_out) ->
         [("assign", _json_of_t json_cx assign); ("t_out", _json_of_t json_cx t_out)] ))
@@ -2216,8 +2216,8 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | DestructuringT (_, k, s, tout) ->
       p t ~extra:(spf "%s, %s, %s" (string_of_destruct_kind k) (string_of_selector s) (kid tout))
-    | CreateObjWithComputedPropT { reason = _; value; tout } ->
-      p t ~extra:(spf "%s %s" (kid value) (kid tout))
+    | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
+      p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
     | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =
@@ -2894,7 +2894,19 @@ let dump_error_message =
           "EExponentialSpread %s ([%s]) ([%s])"
           (dump_reason cx reason)
           (format_reason_list reasons_for_operand1)
-          (format_reason_list reasons_for_operand2))
+          (format_reason_list reasons_for_operand2)
+      | EComputedPropertyWithMultipleLowerBounds
+          { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
+        spf
+          "EComputedPropertyWithMultipleLowerBounds (%s) (%s) (%s)"
+          (dump_reason cx computed_property_reason)
+          (dump_reason cx new_lower_bound_reason)
+          (dump_reason cx existing_lower_bound_reason)
+      | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
+        spf
+          "EComputedPropertyWithUnion (%s) (%s)"
+          (dump_reason cx computed_property_reason)
+          (dump_reason cx union_reason))
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

@@ -2584,6 +2584,16 @@ struct
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+        | ( UnionT (r, _),
+            CreateObjWithComputedPropT { reason; value = _; tout_tvar = (tout_reason, tout_id) } )
+          ->
+          Context.computed_property_add_multiple_lower_bounds cx tout_id;
+          rec_flow_t cx trace (AnyT.why AnyError reason, OpenT (tout_reason, tout_id));
+          add_output
+            cx
+            ~trace
+            (Error_message.EComputedPropertyWithUnion
+               { computed_property_reason = reason; union_reason = r })
         (* cases where there is no loss of precision *)
         | (UnionT _, UseT (_, (UnionT _ as u))) when union_optimization_guard cx l u -> ()
         (* Optimization to treat maybe and optional types as special unions for subset comparision *)
@@ -5267,13 +5277,34 @@ struct
         | (DefT (_, _, ArrT _), MethodT (_, _, _, Named (_, "constructor"), _, _)) ->
           ()
         (* computed properties *)
-        | (_, CreateObjWithComputedPropT { reason; value; tout }) ->
+        | (_, CreateObjWithComputedPropT { reason; value; tout_tvar = (tout_reason, tout_id) }) ->
           (* TODO (jmbrown): We might be able to avoid the SetElemT flow and instead
            * directly call whatever function SetElemT would call *)
+          begin
+            match Context.computed_property_state_for_id cx tout_id with
+            | None -> Context.computed_property_add_lower_bound cx tout_id (reason_of_t l)
+            | Some (Context.ResolvedOnce existing_lower_bound_reason) ->
+              Context.computed_property_add_multiple_lower_bounds cx tout_id;
+              add_output
+                cx
+                ~trace
+                (Error_message.EComputedPropertyWithMultipleLowerBounds
+                   {
+                     existing_lower_bound_reason;
+                     new_lower_bound_reason = reason_of_t l;
+                     computed_property_reason = reason;
+                   })
+            | Some Context.ResolvedMultipleTimes -> ()
+          end;
           let obj =
             Obj_type.mk_with_proto cx reason ~sealed:false ~props:SMap.empty (ObjProtoT reason)
           in
-          rec_flow cx trace (obj, SetElemT (unknown_use, reason, l, Assign, value, Some tout))
+          rec_flow
+            cx
+            trace
+            ( obj,
+              SetElemT (unknown_use, reason, l, Assign, value, Some (OpenT (tout_reason, tout_id)))
+            )
         (**************************************************)
         (* array pattern can consume the rest of an array *)
         (**************************************************)

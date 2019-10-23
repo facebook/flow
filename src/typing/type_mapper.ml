@@ -1382,13 +1382,13 @@ class virtual ['a] t_with_uses =
           t
         else
           DestructuringT (r, k, s', t'')
-      | CreateObjWithComputedPropT { reason; value; tout } ->
+      | CreateObjWithComputedPropT { reason; value; tout_tvar = (r, id) } ->
         let value' = self#type_ cx map_cx value in
-        let tout' = self#type_ cx map_cx tout in
-        if value' == value && tout' == tout then
+        let id' = self#tvar cx map_cx r id in
+        if value' == value && id' == id then
           t
         else
-          CreateObjWithComputedPropT { reason; value = value'; tout = tout' }
+          CreateObjWithComputedPropT { reason; value = value'; tout_tvar = (r, id') }
 
     method private opt_use_type cx map_cx t =
       match t with
