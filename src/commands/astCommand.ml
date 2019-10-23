@@ -44,6 +44,7 @@ let spec =
              (enum [("js", File_js); ("json", File_json)])
              ~doc:"Type of input file (js or json)"
         |> flag "--strict" no_arg ~doc:"Parse in strict mode"
+        |> CommandUtils.offset_style_flag
         |> CommandUtils.from_flag
         |> CommandUtils.path_flag
         |> anon "file" (optional string));
@@ -73,7 +74,18 @@ module Token_translator = Token_translator.Translate (Json_of_estree)
 
 let pp_underscore_loc fmt _ = Format.pp_print_string fmt "_"
 
-let main include_tokens pretty check debug pattern file_type_opt use_strict path filename () =
+let main
+    include_tokens
+    pretty
+    check
+    debug
+    pattern
+    file_type_opt
+    use_strict
+    offset_style
+    path
+    filename
+    () =
   let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in
@@ -97,7 +109,14 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
    * order.
    *)
   let tokens = ref [] in
-  let offset_table = lazy (Offset_utils.make ~kind:Offset_utils.Utf8 content) in
+  let offset_kind =
+    match offset_style with
+    | None
+    | Some CommandUtils.Utf8_offsets ->
+      Offset_utils.Utf8
+    | Some CommandUtils.JavaScript_offsets -> Offset_utils.JavaScript
+  in
+  let offset_table = lazy (Offset_utils.make ~kind:offset_kind content) in
   let token_sink =
     if not include_tokens then
       None

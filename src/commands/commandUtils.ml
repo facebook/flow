@@ -465,6 +465,19 @@ let log_file_flags =
            ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.monitor_log)"
            ~env:"FLOW_MONITOR_LOG_FILE")
 
+type offset_style =
+  | Utf8_offsets
+  | JavaScript_offsets
+
+let offset_style_flag prev =
+  CommandSpec.ArgSpec.(
+    prev
+    |> flag
+         "--offset-style"
+         (enum [("utf8-bytes", Utf8_offsets); ("js-indices", JavaScript_offsets)])
+         ~doc:
+           "How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)")
+
 let flowconfig_multi_error rev_errs =
   let msg =
     rev_errs
