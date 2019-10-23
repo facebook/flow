@@ -144,7 +144,7 @@ let parse content options =
   in
   let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options ~token_sink content in
   JsTranslator.translation_errors := [];
-  let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
+  let offset_table = Offset_utils.make ~kind:Offset_utils.JavaScript content in
   let ret = Translate.program (Some offset_table) ocaml_ast in
   let translation_errors = !JsTranslator.translation_errors in
   Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));
