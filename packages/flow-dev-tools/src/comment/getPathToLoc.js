@@ -49,7 +49,7 @@ class Path {
       }
       const prop = last.todo.pop();
       const ast = last.ast[prop];
-      if (this.push(prop, ast)) {
+      if (this.push(prop, ast, new Set(["range"]))) {
         return ast;
       }
     }
@@ -82,15 +82,31 @@ function errorLocMatchesAstLoc(errorLoc: FlowLoc, astLoc: Object): boolean {
     beforeOrEqual(astLoc.end, errorLoc.end);
 }
 
+function rangeMatchesAstRange(range: [number, number], astRange: [number, number]): boolean {
+  return range[0] == astRange[0] && range[1] == astRange[1];
+}
+
 /* Given a location and an AST, find the ast node whose location falls within
  * the given location. Then return the path to that node. */
 export default function (errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
   const path = new Path(astRoot);
   let ast = path.next();
   while (ast != null) {
-    const p = path.getPath().map(({key}) => key).join(".");
     if (ast.loc && errorLocMatchesAstLoc(errorLoc, ast.loc)) {
       return path.getPath();
+    }
+    ast = path.next();
+  }
+
+  return null;
+}
+
+export function getNodeAtRange (range: [number, number], astRoot: Object): ?Object {
+  const path = new Path(astRoot);
+  let ast = path.next();
+  while (ast != null) {
+    if (ast.range && rangeMatchesAstRange(range, ast.range)) {
+      return ast
     }
     ast = path.next();
   }

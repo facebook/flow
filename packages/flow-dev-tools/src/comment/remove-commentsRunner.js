@@ -7,10 +7,9 @@ import {join} from 'path';
 
 import {getFlowErrorsWithWarnings} from './getFlowErrors';
 import getAst from './getAst';
-import getPathToLoc from './getPathToLoc';
-import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
 
 import {readFile, writeFile} from '../utils/async';
+import {getNodeAtRange} from './getPathToLoc';
 
 import type {Args} from './remove-commentsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
@@ -81,63 +80,108 @@ function expandComment(
   contents: string,
   startOffset: number,
   endOffset: number,
-  context: Context,
+  commentAST: Object | void,
+  ast: Object,
 ) {
   const length = contents.length;
 
-  // ranges are [start, end). we're interested in the values of the characters
-  // within the range, so for origEnd, we subtract 1 from the end offset to
-  // make it inclusive.
-  let origStart = startOffset;
-  let origEnd = endOffset - 1;
+  const flowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?( .*)?$/;
+  const emptyFlowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?[ \t\n\r*]*$/;
+  if (commentAST && commentAST.value.match(flowlintRegex)) {
+    // We're operating on a flowlint comment
 
-  if (
-    context === JSX &&
-    contents[origStart - 1] === '{' &&
-    contents[origEnd + 1] === '}'
-  ) {
-    origStart--;
-    origEnd++;
-  }
+    // All comments start with 2 chars
+    const [commentStartOffset, commentEndOffset] = commentAST.range;
+    const commentValueOffset = commentStartOffset + 2;
 
-  let start = origStart;
-  let end = origEnd;
+    if (
+      commentAST.value[startOffset - commentValueOffset - 1].match(/[ \t\n\r]/)
+    ) {
+      // Remove the preceding whitespace when removing an element from the flowlint
+      startOffset--;
+    }
 
-  while (start > 0) {
-    // Eat whitespace towards the start of the line
-    if (contents[start - 1].match(edible)) {
-      start--;
-    } else if (contents[start - 1] === '\n') {
-      // If we make it to the beginning of the line, awesome! Let's try and
-      // expand the end too!
-      while (end < length - 1) {
-        // Eat whitespace towards the end of the line
-        if (contents[end + 1].match(edible)) {
-          end++;
-        } else if (contents[end + 1] === '\n') {
-          // If we make it to both the beginning and the end of the line,
-          // then we can totally remove a newline!
-          end++;
-          break;
-        } else {
-          // Otherwise we can't, undo the expansion
-          start = origStart;
-          end = origEnd;
-          break;
-        }
-      }
-      break;
+    const newCommentValue =
+      commentAST.value.slice(0, startOffset - commentValueOffset) +
+      commentAST.value.slice(endOffset - commentValueOffset);
+
+    if (newCommentValue.match(emptyFlowlintRegex)) {
+      startOffset = commentStartOffset;
+      endOffset = commentEndOffset;
     } else {
-      // If we hit something else, then undo the start expansion
-      start = origStart;
-      break;
+      commentAST.range[1] -= endOffset - startOffset;
+      commentAST.value = newCommentValue;
+      // All we're doing is removing a piece of a flowlint comment. Return immediately
+      return [startOffset, endOffset];
     }
   }
 
-  // as above, ranges are [X, Y) but in this function, `end` is inclusive. so
-  // add 1 to make it exclusive again.
-  return [start, end + 1];
+  let origBeforeStart = startOffset - 1;
+  let origAfterEnd = endOffset;
+
+  // Find the next interesting characters before and after the removed comment
+  let beforeStart = origBeforeStart;
+  let afterEnd = origAfterEnd;
+  while (beforeStart >= 0 && contents[beforeStart].match(edible)) {
+    beforeStart--;
+  }
+  while (afterEnd < length && contents[afterEnd].match(edible)) {
+    afterEnd++;
+  }
+
+  if (
+    beforeStart >= 0 &&
+    afterEnd < length &&
+    contents[beforeStart] === '{' &&
+    contents[afterEnd] === '}'
+  ) {
+    // If this is JSX, then the curly braces start and stop a JSXExpressionContainer
+    const node = getNodeAtRange([beforeStart, afterEnd + 1], ast);
+    if (node && node.type == 'JSXExpressionContainer') {
+      // Consume the curly braces
+      beforeStart--;
+      afterEnd++;
+
+      // If we do reset our spacing, we'll at least eat the curly braces
+      origBeforeStart = beforeStart;
+      origAfterEnd = afterEnd;
+
+      while (beforeStart >= 0 && contents[beforeStart].match(edible)) {
+        beforeStart--;
+      }
+      while (afterEnd < length && contents[afterEnd].match(edible)) {
+        afterEnd++;
+      }
+    }
+  }
+
+  if (beforeStart < 0 || contents[beforeStart] === '\n') {
+    // There's nothing before the removed comment on this line
+    if (afterEnd > length || contents[afterEnd] === '\n') {
+      // The line is completely empty. Let's remove a newline from the start or
+      // end of the line
+      if (afterEnd < length) {
+        afterEnd++;
+      } else if (beforeStart >= 0) {
+        beforeStart--;
+      }
+    } else {
+      // There's something after the comment. We shouldn't remove
+      // preceding whitespace thanks to indentation
+      beforeStart = origBeforeStart;
+    }
+  } else if (afterEnd >= length || contents[afterEnd] === '\n') {
+    // There's something preceding the comment but nothing afterwards. We can
+    // just remove the rest of the line
+  } else {
+    beforeStart = origBeforeStart;
+    afterEnd = origAfterEnd;
+  }
+
+  // The range should be [start, end) - that is includes start, excludes end
+  return [beforeStart + 1, afterEnd];
 }
+
 // Exported for testing
 export async function removeUnusedErrorSuppressionsFromText(
   contents: string,
@@ -152,19 +196,26 @@ export async function removeUnusedErrorSuppressionsFromText(
   const ast = await getAst(contents, flowBinPath);
 
   for (const error of errors) {
-    const path = getPathToLoc(error, ast);
-    let context: Context;
-    if (path == null) {
-      context = NORMAL;
-    } else {
-      [context] = getContext(error, path);
-    }
-
     const origStart = error.start.offset;
     const origEnd = error.end.offset;
 
+    let commentAST;
+    for (const comment of ast.comments) {
+      const [commentStartOffset, commentEndOffset] = comment.range;
+      if (origStart >= commentStartOffset && origEnd <= commentEndOffset) {
+        commentAST = comment;
+        break;
+      }
+    }
+
     // remove the comment and surrounding whitespace
-    let [start, end] = expandComment(contents, origStart, origEnd, context);
+    let [start, end] = expandComment(
+      contents,
+      origStart,
+      origEnd,
+      commentAST,
+      ast,
+    );
     contents = contents.slice(0, start) + contents.slice(end);
   }
   return contents;
