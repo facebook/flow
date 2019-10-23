@@ -332,6 +332,7 @@ let check_content ~filename ~content =
   Errors.Json_output.json_of_errors_with_context
     ~strip_root
     ~stdin_file
+    ~offset_kind:Offset_utils.Utf8
     ~suppressed_errors:[]
     ~errors
     ~warnings

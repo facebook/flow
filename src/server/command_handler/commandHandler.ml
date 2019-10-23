@@ -223,6 +223,7 @@ let collect_rage ~options ~reader ~env ~files =
     Errors.Json_output.json_of_errors_with_context
       ~strip_root:None
       ~stdin_file:None
+      ~offset_kind:Offset_utils.Utf8
       ~suppressed_errors:[]
       ~errors
       ~warnings

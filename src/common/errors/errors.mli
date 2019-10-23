@@ -157,6 +157,7 @@ module Json_output : sig
     stdin_file:stdin_file ->
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->
@@ -167,6 +168,7 @@ module Json_output : sig
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->
@@ -179,6 +181,7 @@ module Json_output : sig
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
+    offset_kind:Offset_utils.offset_kind ->
     ?stdin_file:stdin_file ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
@@ -192,6 +195,7 @@ module Json_output : sig
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->
