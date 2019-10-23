@@ -30,13 +30,34 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
   exception CannotSpreadError of Error_message.t
 
   let widen_obj_type cx ?trace ~use_op reason t =
-    let open Object in
     match t with
-    | OpenT (r, _) ->
-      let widened_id = Tvar.mk_no_wrap cx r in
-      let tout = OpenT (r, widened_id) in
-      flow_opt cx ?trace (t, ObjKitT (use_op, reason, Resolve Next, ObjectWiden widened_id, tout));
-      tout
+    | OpenT (r, id) ->
+      let open Constraint in
+      begin
+        match Context.find_graph cx id with
+        | Unresolved _ ->
+          let open Object in
+          let widened_id = Tvar.mk_no_wrap cx r in
+          let tout = OpenT (r, widened_id) in
+          flow_opt
+            cx
+            ?trace
+            (t, ObjKitT (use_op, reason, Resolve Next, ObjectWiden widened_id, tout));
+          tout
+        | Resolved (_, t)
+        | FullyResolved (_, t) ->
+          widen_obj_type cx ?trace ~use_op reason t
+      end
+    | UnionT (r, rep) ->
+      UnionT
+        ( r,
+          UnionRep.ident_map
+            (fun t ->
+              if is_proper_def t then
+                widen_obj_type cx ?trace ~use_op reason t
+              else
+                t)
+            rep )
     | t -> t
 
   let run =

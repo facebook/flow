@@ -2750,12 +2750,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [
           text "Computing ";
           ref reason;
-          text " may lead to exponentially large type checking because ";
+          text " may lead to an exponentially large number of cases to reason about because ";
         ]
         @ union_refs
         @ [
             text
-              " are both unions. Please use at most one union type per spread to avoid performance issues.";
+              " are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.";
             text
               " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
           ]

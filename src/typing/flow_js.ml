@@ -1090,6 +1090,9 @@ struct
        into the annotated site. *)
         | (_, UseT (use_op, AnnotT (r, t, use_desc))) ->
           rec_flow cx trace (t, ReposUseT (r, use_desc, use_op, l))
+        (* Don't widen annotations *)
+        | (AnnotT _, ObjKitT (use_op, _, _, Object.ObjectWiden _, tout)) ->
+          rec_flow_t cx trace ~use_op (l, tout)
         (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
         | (AnnotT (r, t, use_desc), u) ->
