@@ -22,7 +22,6 @@
     "minimist": "~1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
-    "newtests": "*",
     "resolve": "^1.1.7",
     "rimraf": "^2.5.2",
     "sane": "^1.4.0 || ^2.0.0 || ^3.0.0",
@@ -51,7 +50,7 @@
     ]
   },
   "scripts": {
-    "test": "make -C ../.. test"
+    "test": "jest"
   },
   "engines": {
     "node": ">=6"
