@@ -478,6 +478,12 @@ let offset_style_flag prev =
          ~doc:
            "How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)")
 
+let offset_kind_of_offset_style = function
+  | None
+  | Some Utf8_offsets ->
+    Offset_utils.Utf8
+  | Some JavaScript_offsets -> Offset_utils.JavaScript
+
 let flowconfig_multi_error rev_errs =
   let msg =
     rev_errs

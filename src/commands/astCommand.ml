@@ -109,13 +109,7 @@ let main
    * order.
    *)
   let tokens = ref [] in
-  let offset_kind =
-    match offset_style with
-    | None
-    | Some CommandUtils.Utf8_offsets ->
-      Offset_utils.Utf8
-    | Some CommandUtils.JavaScript_offsets -> Offset_utils.JavaScript
-  in
+  let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
   let offset_table = lazy (Offset_utils.make ~kind:offset_kind content) in
   let token_sink =
     if not include_tokens then
