@@ -488,6 +488,49 @@ export default suite(
         .sleep(1000)
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
     ]),
+    test('live non-parse diagnostics resent after recheck', [
+      addFile('export_number.js', 'importme.js'),
+      lspStartAndConnect(),
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/foo.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+          import value from './importme';
+          (value: boolean); // This will error
+          `,
+        },
+      })
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
+        )
+        .verifyAllLSPMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+      // Changing importme.js will trigger a recheck, which will resend the live non-parse errors
+      addFile('export_string.js', 'importme.js')
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
+        )
+        .verifyAllLSPMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+    ]),
     test('pseudo parse errors', [
       lspStartAndConnect(),
       addFile('pseudo_parse_error.js')
