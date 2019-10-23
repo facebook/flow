@@ -41,7 +41,7 @@ const foo = 4;
     [7, 4, 8, 20],
     [],
   ].map((args) => makeLoc(testInput, ...args));
-  expect(await removeUnusedErrorSuppressionsFromText(testInput, errorLocs, flowBinPath)).toEqual(testOutput);
+  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('removeExtraSpaceWhenRemovingUnusedFlowLint', async () => {
@@ -82,7 +82,7 @@ test('removeExtraSpaceWhenRemovingUnusedFlowLint', async () => {
     [8, 22, 8, 25],
     [9, 27, 9, 30],
   ].map((args) => makeLoc(testInput, ...args));
-  expect(await removeUnusedErrorSuppressionsFromText(testInput, errorLocs, flowBinPath)).toEqual(testOutput);
+  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('deleteUnusedFlowLintComments', async () => {
@@ -143,7 +143,74 @@ let x =
     [18, 17, 18, 20],
     [19, 15, 19, 18],
   ].map((args) => makeLoc(testInput, ...args));
-  expect(await removeUnusedErrorSuppressionsFromText(testInput, errorLocs, flowBinPath)).toEqual(testOutput);
+  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
+});
+
+test('unicode', async () => {
+  const flowBinPath = path.resolve(process.env.FLOW_BIN);
+
+  const testInput =
+`const unicode = "\u{714E}\u{8336}";
+const smiley = "\uD83D\uDE00";
+
+// flowlint foo bar
+//flowlint foo bar
+// flowlint-next-line foo bar
+//flowlint-next-line foo bar
+1*1; // flowlint-line foo bar
+1*1; //flowlint-line foo bar
+/* flowlint foo bar */
+/*flowlint foo bar */
+/* flowlint-next-line foo bar */
+/*flowlint-next-line foo bar */
+1*1; /* flowlint-line foo bar */
+1*1; /*flowlint-line foo bar */
+<div>{/* flowlint-line foo */}</div>;
+<div>
+  {/* flowlint-line foo */}
+</div>;
+let x =
+  { /* flowlint foo */ };
+{ /* flowlint foo */ }
+`;
+
+
+
+  const testOutput =
+`const unicode = "\u{714E}\u{8336}";
+const smiley = "\uD83D\uDE00";
+
+1*1;
+1*1;
+1*1;
+1*1;
+<div></div>;
+<div>
+</div>;
+let x =
+  {  };
+{  }
+`;
+
+  const errorLocs = [
+    [4, 13, 4, 16], [4, 17, 4, 20],
+    [5, 12, 5, 15], [5, 16, 5, 19],
+    [6, 23, 6, 26], [6, 27, 6, 30],
+    [7, 22, 7, 25], [7, 26, 7, 29],
+    [8, 23, 8, 26], [8, 27, 8, 30],
+    [9, 22, 9, 25], [9, 26, 9, 29],
+    [10, 13, 10, 16], [10, 17, 10, 20],
+    [11, 12, 11, 15], [11, 16, 11, 19],
+    [12, 23, 12, 26], [12, 27, 12, 30],
+    [13, 22, 13, 25], [13, 26, 13, 29],
+    [14, 23, 14, 26], [14, 27, 14, 30],
+    [15, 22, 15, 25], [15, 26, 15, 29],
+    [16, 24, 16, 27],
+    [18, 21, 18, 24],
+    [21, 17, 21, 20],
+    [22, 15, 22, 18],
+  ].map((args) => makeLoc(testInput, ...args));
+  expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 function makeLoc(contents, startLine, startCol, endLine, endCol) {
@@ -166,8 +233,9 @@ function posToOffset(contents: string, line: number, col: number) {
   // Using 1-indexed line and column for this
   let currentLine = 1;
   let currentCol = 1;
-  while (offset < contents.length && !(currentLine === line && currentCol === col)) {
-    const char = contents[offset];
+  const buf = Buffer.from(contents, "utf8");
+  while (offset < buf.length && !(currentLine === line && currentCol === col)) {
+    const char = buf.toString("utf8", offset, offset+1);
     if (char === '\n') {
       currentLine++;
       currentCol = 1;
@@ -178,4 +246,9 @@ function posToOffset(contents: string, line: number, col: number) {
   }
 
   return offset;
+}
+
+async function expectCommentsAreRemoved(input, expectedOutput, errorLocs, flowBinPath) {
+  const actualOutput = await removeUnusedErrorSuppressionsFromText(Buffer.from(input), errorLocs, flowBinPath);
+  expect(actualOutput.toString()).toEqual(expectedOutput);
 }

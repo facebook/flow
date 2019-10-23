@@ -53,13 +53,17 @@ async function removeUnusedErrorSuppressions(
   errors: Array<FlowLoc>,
   flowBinPath: string,
 ): Promise<void> {
-  let contents = await readFile(filename);
-  contents = await removeUnusedErrorSuppressionsFromText(
-    contents,
+  const contentsString = await readFile(filename);
+  const contents = await removeUnusedErrorSuppressionsFromText(
+    Buffer.from(contentsString, 'utf8'),
     errors,
     flowBinPath,
   );
-  await writeFile(filename, contents);
+  await writeFile(filename, contents.toString('utf8'));
+}
+
+function bufferCharAt(buf: Buffer, pos: number): string {
+  return buf.toString('utf8', pos, pos + 1);
 }
 
 const edible = /[\t ]/;
@@ -77,7 +81,7 @@ const edible = /[\t ]/;
  * in the case where there is nothing before or after it
  */
 function expandComment(
-  contents: string,
+  contents: Buffer,
   startOffset: number,
   endOffset: number,
   commentAST: Object | void,
@@ -122,18 +126,21 @@ function expandComment(
   // Find the next interesting characters before and after the removed comment
   let beforeStart = origBeforeStart;
   let afterEnd = origAfterEnd;
-  while (beforeStart >= 0 && contents[beforeStart].match(edible)) {
+  while (
+    beforeStart >= 0 &&
+    bufferCharAt(contents, beforeStart).match(edible)
+  ) {
     beforeStart--;
   }
-  while (afterEnd < length && contents[afterEnd].match(edible)) {
+  while (afterEnd < length && bufferCharAt(contents, afterEnd).match(edible)) {
     afterEnd++;
   }
 
   if (
     beforeStart >= 0 &&
     afterEnd < length &&
-    contents[beforeStart] === '{' &&
-    contents[afterEnd] === '}'
+    bufferCharAt(contents, beforeStart) === '{' &&
+    bufferCharAt(contents, afterEnd) === '}'
   ) {
     // If this is JSX, then the curly braces start and stop a JSXExpressionContainer
     const node = getNodeAtRange([beforeStart, afterEnd + 1], ast);
@@ -146,18 +153,24 @@ function expandComment(
       origBeforeStart = beforeStart;
       origAfterEnd = afterEnd;
 
-      while (beforeStart >= 0 && contents[beforeStart].match(edible)) {
+      while (
+        beforeStart >= 0 &&
+        bufferCharAt(contents, beforeStart).match(edible)
+      ) {
         beforeStart--;
       }
-      while (afterEnd < length && contents[afterEnd].match(edible)) {
+      while (
+        afterEnd < length &&
+        bufferCharAt(contents, afterEnd).match(edible)
+      ) {
         afterEnd++;
       }
     }
   }
 
-  if (beforeStart < 0 || contents[beforeStart] === '\n') {
+  if (beforeStart < 0 || bufferCharAt(contents, beforeStart) === '\n') {
     // There's nothing before the removed comment on this line
-    if (afterEnd > length || contents[afterEnd] === '\n') {
+    if (afterEnd > length || bufferCharAt(contents, afterEnd) === '\n') {
       // The line is completely empty. Let's remove a newline from the start or
       // end of the line
       if (afterEnd < length) {
@@ -170,7 +183,7 @@ function expandComment(
       // preceding whitespace thanks to indentation
       beforeStart = origBeforeStart;
     }
-  } else if (afterEnd >= length || contents[afterEnd] === '\n') {
+  } else if (afterEnd >= length || bufferCharAt(contents, afterEnd) === '\n') {
     // There's something preceding the comment but nothing afterwards. We can
     // just remove the rest of the line
   } else {
@@ -184,16 +197,16 @@ function expandComment(
 
 // Exported for testing
 export async function removeUnusedErrorSuppressionsFromText(
-  contents: string,
+  contents: Buffer,
   errors: Array<FlowLoc>,
   flowBinPath: string,
-): Promise<string> {
+): Promise<Buffer> {
   // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
   // removal of comments earlier in the file would outdate the locations for comments later in the
   // file.
   errors.sort((loc1, loc2) => loc2.start.offset - loc1.start.offset);
 
-  const ast = await getAst(contents, flowBinPath);
+  const ast = await getAst(contents.toString('utf8'), flowBinPath);
 
   for (const error of errors) {
     const origStart = error.start.offset;
@@ -216,7 +229,7 @@ export async function removeUnusedErrorSuppressionsFromText(
       commentAST,
       ast,
     );
-    contents = contents.slice(0, start) + contents.slice(end);
+    contents = Buffer.concat([contents.slice(0, start), contents.slice(end)]);
   }
   return contents;
 }
