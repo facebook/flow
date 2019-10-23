@@ -24,7 +24,8 @@ type kind =
   | Nl
   | Ls
 
-let size_of_kind = function
+(* Gives the size in bytes of the character's UTF-8 encoding *)
+let utf8_size_of_kind = function
   | Chars_0x0 -> 1
   | Chars_0x80 -> 2
   | Chars_0x800 -> 3
@@ -63,19 +64,19 @@ let make =
   in
   (* Traverses a `kind list`, breaking it up into an `int array array`, where each `int array`
      contains the offsets at each character (aka codepoint) of a line. *)
-  let rec build_table (offset, rev_line, acc) = function
+  let rec build_table size_of_kind (offset, rev_line, acc) = function
     | [] -> Array.of_list (List.rev acc)
     | Cr :: Nl :: rest ->
       (* https://www.ecma-international.org/ecma-262/5.1/#sec-7.3 says that "\r\n" should be treated
        like a single line terminator, even though both '\r' and '\n' are line terminators in their
        own right. *)
       let line = Array.of_list (List.rev (offset :: rev_line)) in
-      build_table (offset + 2, [], line :: acc) rest
+      build_table size_of_kind (offset + 2, [], line :: acc) rest
     | ((Cr | Nl | Ls) as kind) :: rest ->
       let line = Array.of_list (List.rev (offset :: rev_line)) in
-      build_table (offset + size_of_kind kind, [], line :: acc) rest
+      build_table size_of_kind (offset + size_of_kind kind, [], line :: acc) rest
     | ((Chars_0x0 | Chars_0x80 | Chars_0x800 | Chars_0x10000 | Malformed) as kind) :: rest ->
-      build_table (offset + size_of_kind kind, offset :: rev_line, acc) rest
+      build_table size_of_kind (offset + size_of_kind kind, offset :: rev_line, acc) rest
   in
   fun text ->
     let rev_kinds = Wtf8.fold_wtf_8 fold_codepoints [] text in
@@ -85,7 +86,7 @@ let make =
      * return the offset that is one higher than the last legitimate offset, since it could only be
      * correctly used as an exclusive index. *)
     let rev_kinds = Nl :: rev_kinds in
-    build_table (0, [], []) (List.rev rev_kinds)
+    build_table utf8_size_of_kind (0, [], []) (List.rev rev_kinds)
 
 exception Offset_lookup_failed of Loc.position * string
 
