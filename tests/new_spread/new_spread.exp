@@ -178,7 +178,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:36:2
 
-Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
+Cannot cast `o4` to object type because inexact `O4` [1] is incompatible with exact object type [2].
 
    type.js:36:2
    36| (o4: {|p:T|}); // error: not exact
@@ -195,7 +195,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:37:3
 
-Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in `O4` [2].
 
    type.js:37:3
    37| (({}:{}): O4); // error: property `p` not found
@@ -229,7 +229,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:47:2
 
-Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in `O5` [2].
 
    type.js:47:2
    47| (nil: O5); // error: property `p` not found
@@ -263,7 +263,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:50:2
 
-Cannot cast object literal to `O5` because property `q` is missing in object type [1] but exists in object literal [2].
+Cannot cast object literal to `O5` because property `q` is missing in `O5` [1] but exists in object literal [2].
 
    type.js:50:2
    50| ({p:x,q:y}: O5); // error: additional property `q` found
