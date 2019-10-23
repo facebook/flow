@@ -1,3 +1,10 @@
+### 0.110.1
+
+Notable bug fixes:
+* No longer show live Flow errors for files without @flow, unless `all=true` in the `.flowconfig`
+* No longer show live Flow errors for ignored files
+* Re-generate live errors after a recheck
+
 ### 0.110.0
 
 New Features:
