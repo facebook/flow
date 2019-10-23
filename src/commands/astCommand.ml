@@ -168,7 +168,7 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
           JSON_Object
             [("errors", Translate.errors errors); ("tokens", JSON_Array (List.rev !tokens))]
         else
-          let offset_table = Some (Offset_utils.make ~kind:Offset_utils.Utf8 content) in
+          let offset_table = Some (Lazy.force offset_table) in
           let translated_ast =
             match ast with
             | Ast_js ast -> Translate.program offset_table ast
