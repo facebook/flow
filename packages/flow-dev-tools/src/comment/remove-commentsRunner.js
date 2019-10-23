@@ -1,4 +1,7 @@
-/* @flow */
+/*
+ * @flow
+ * @format
+ */
 
 import {join} from 'path';
 
@@ -21,14 +24,14 @@ async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
     args.flowconfigName,
   );
 
-  const errors = result.errors.filter(error => (
-    error.message[0].descr === "Error suppressing comment" &&
-    error.message[1].descr === "Unused suppression"
-  ) || (
-    error.message[0].descr === "Unused suppression comment."
-  ));
+  const errors = result.errors.filter(
+    error =>
+      (error.message[0].descr === 'Error suppressing comment' &&
+        error.message[1].descr === 'Unused suppression') ||
+      error.message[0].descr === 'Unused suppression comment.',
+  );
 
-  const errorsByFile = new Map();;
+  const errorsByFile = new Map();
   for (const error of errors) {
     const message = error.message[0];
     const loc = message.loc;
@@ -52,7 +55,11 @@ async function removeUnusedErrorSuppressions(
   flowBinPath: string,
 ): Promise<void> {
   let contents = await readFile(filename);
-  contents = await removeUnusedErrorSuppressionsFromText(contents, errors, flowBinPath);
+  contents = await removeUnusedErrorSuppressionsFromText(
+    contents,
+    errors,
+    flowBinPath,
+  );
   await writeFile(filename, contents);
 }
 
@@ -84,7 +91,11 @@ function expandComment(
   let origStart = startOffset;
   let origEnd = endOffset - 1;
 
-  if (context === JSX && contents[origStart-1] === '{' && contents[origEnd+1] === '}') {
+  if (
+    context === JSX &&
+    contents[origStart - 1] === '{' &&
+    contents[origEnd + 1] === '}'
+  ) {
     origStart--;
     origEnd++;
   }
@@ -94,16 +105,16 @@ function expandComment(
 
   while (start > 0) {
     // Eat whitespace towards the start of the line
-    if (contents[start-1].match(edible)) {
+    if (contents[start - 1].match(edible)) {
       start--;
-    } else if (contents[start-1] === "\n") {
+    } else if (contents[start - 1] === '\n') {
       // If we make it to the beginning of the line, awesome! Let's try and
       // expand the end too!
       while (end < length - 1) {
         // Eat whitespace towards the end of the line
-        if (contents[end+1].match(edible)) {
+        if (contents[end + 1].match(edible)) {
           end++;
-        } else if (contents[end+1] === "\n") {
+        } else if (contents[end + 1] === '\n') {
           // If we make it to both the beginning and the end of the line,
           // then we can totally remove a newline!
           end++;
@@ -138,7 +149,7 @@ export async function removeUnusedErrorSuppressionsFromText(
   // file.
   errors.sort((loc1, loc2) => loc2.start.offset - loc1.start.offset);
 
-  const ast = await getAst(contents, flowBinPath)
+  const ast = await getAst(contents, flowBinPath);
 
   for (const error of errors) {
     const path = getPathToLoc(error, ast);
@@ -163,8 +174,10 @@ export async function removeUnusedErrorSuppressionsFromText(
  * named __flowtests__
  */
 function isFlowtest(filename) {
-  return filename.match(/-flowtest\.js$/) ||
-         filename.match(/[/\\]__flowtests__[/\\]/);
+  return (
+    filename.match(/-flowtest\.js$/) ||
+    filename.match(/[/\\]__flowtests__[/\\]/)
+  );
 }
 
 export default async function(args: Args): Promise<void> {
@@ -184,21 +197,23 @@ export default async function(args: Args): Promise<void> {
       }
       return true;
     });
-  await Promise.all(errors.map(
-    ([filename, errors]) => removeUnusedErrorSuppressions(filename, errors, args.bin)
-  ));
+  await Promise.all(
+    errors.map(([filename, errors]) =>
+      removeUnusedErrorSuppressions(filename, errors, args.bin),
+    ),
+  );
   console.log(
-    "Removed %d comments in %d files",
+    'Removed %d comments in %d files',
     removedErrorCount,
     errors.length,
   );
   if (ignoredFileCount > 0) {
     console.log(
-      "Ignored %d comments in %d files due to -flowtest.js suffix or " +
-        "__flowtests__ directory. Run with `--include-flowtest` to also " +
-        "remove those files.",
+      'Ignored %d comments in %d files due to -flowtest.js suffix or ' +
+        '__flowtests__ directory. Run with `--include-flowtest` to also ' +
+        'remove those files.',
       ignoredErrorCount,
-      ignoredFileCount
+      ignoredFileCount,
     );
   }
 }
