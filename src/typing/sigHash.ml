@@ -207,6 +207,7 @@ type hash =
   | ReactPropsToOutH
   | ReactInToPropsH
   | DestructuringH
+  | CreateObjWithComputedPropH
   | ModuleExportsAssignH
 
 let hash_of_def_ctor =
@@ -407,6 +408,7 @@ let hash_of_use_ctor =
     | ReactPropsToOut _ -> ReactPropsToOutH
     | ReactInToProps _ -> ReactInToPropsH
     | DestructuringT _ -> DestructuringH
+    | CreateObjWithComputedPropT _ -> CreateObjWithComputedPropH
     | ModuleExportsAssignT _ -> ModuleExportsAssignH)
 
 let add = Xx.update

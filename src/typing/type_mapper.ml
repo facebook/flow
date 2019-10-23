@@ -1382,6 +1382,13 @@ class virtual ['a] t_with_uses =
           t
         else
           DestructuringT (r, k, s', t'')
+      | CreateObjWithComputedPropT { reason; value; tout } ->
+        let value' = self#type_ cx map_cx value in
+        let tout' = self#type_ cx map_cx tout in
+        if value' == value && tout' == tout then
+          t
+        else
+          CreateObjWithComputedPropT { reason; value = value'; tout = tout' }
 
     method private opt_use_type cx map_cx t =
       match t with

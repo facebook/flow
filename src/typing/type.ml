@@ -709,6 +709,11 @@ module rec TypeTerm : sig
      * bound is an annotation (0->1), and t_out will be unified with the
      * destructured type. The caller should wrap the tvar with an AnnotT. *)
     | DestructuringT of reason * destruct_kind * selector * t_out
+    | CreateObjWithComputedPropT of {
+        reason: reason;
+        value: t;
+        tout: t;
+      }
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
@@ -2544,6 +2549,7 @@ end = struct
     | ReactInToProps (reason, _) ->
       reason
     | DestructuringT (reason, _, _, _) -> reason
+    | CreateObjWithComputedPropT { reason; value = _; tout = _ } -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2718,6 +2724,8 @@ end = struct
     | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
     | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
     | DestructuringT (reason, a, s, t) -> DestructuringT (f reason, a, s, t)
+    | CreateObjWithComputedPropT { reason; value; tout } ->
+      CreateObjWithComputedPropT { reason = f reason; value; tout }
 
   and mod_reason_of_opt_use_t f = function
     | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2837,7 +2845,8 @@ end = struct
     | ReactPropsToOut _
     | ReactInToProps _
     | DestructuringT _
-    | ModuleExportsAssignT _ ->
+    | ModuleExportsAssignT _
+    | CreateObjWithComputedPropT _ ->
       nope u
 
   let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)
@@ -3631,6 +3640,7 @@ let string_of_use_ctor = function
   | ReactPropsToOut _ -> "ReactPropsToOut"
   | ReactInToProps _ -> "ReactInToProps"
   | DestructuringT _ -> "DestructuringT"
+  | CreateObjWithComputedPropT _ -> "CreateObjWithComputedPropT"
   | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
 
 let string_of_binary_test = function

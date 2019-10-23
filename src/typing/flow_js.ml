@@ -5266,6 +5266,14 @@ struct
         | (DefT (_, _, ArrT _), SetPropT (_, _, Named (_, "constructor"), _, _, _, _))
         | (DefT (_, _, ArrT _), MethodT (_, _, _, Named (_, "constructor"), _, _)) ->
           ()
+        (* computed properties *)
+        | (_, CreateObjWithComputedPropT { reason; value; tout }) ->
+          (* TODO (jmbrown): We might be able to avoid the SetElemT flow and instead
+           * directly call whatever function SetElemT would call *)
+          let obj =
+            Obj_type.mk_with_proto cx reason ~sealed:false ~props:SMap.empty (ObjProtoT reason)
+          in
+          rec_flow cx trace (obj, SetElemT (unknown_use, reason, l, Assign, value, Some tout))
         (**************************************************)
         (* array pattern can consume the rest of an array *)
         (**************************************************)
@@ -6867,7 +6875,8 @@ struct
     | (_, ObjTestProtoT _)
     | (_, OptionalChainT _)
     | (_, SentinelPropTestT _)
-    | (_, TestPropT _) ->
+    | (_, TestPropT _)
+    | (_, CreateObjWithComputedPropT _) ->
       false
     (* Error prevention: we should succeed because otherwise we'll hit
      a case with a wildcard on the LHS that raises an error, which in
@@ -7114,6 +7123,7 @@ struct
     
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
+    | CreateObjWithComputedPropT _ (* Handled in __flow *)
     (* Should never occur, so we just defer to __flow to handle errors *)
     
     | UseT (_, InternalT _)

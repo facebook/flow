@@ -2620,9 +2620,11 @@ and object_ cx reason ?(allow_sealed = true) props =
     (* Add property to object, using optional tout argument to SetElemT to wait
      for the write to happen. This defers any reads until writes have happened,
      to avoid race conditions. *)
-    let mk_computed key value obj =
+    let mk_computed key value =
       Tvar.mk_where cx reason (fun t ->
-          Flow.flow cx (obj, SetElemT (unknown_use, reason, key, Assign, value, Some t)))
+          let tout = Tvar.mk cx reason in
+          Flow.flow cx (key, CreateObjWithComputedPropT { reason; value; tout });
+          Flow.flow cx (tout, ObjSealT (reason, t)))
     in
     (* When there's no result, return a new object with specified sealing. When
      there's result, copy a new object into it, sealing the result when
@@ -2682,7 +2684,8 @@ and object_ cx reason ?(allow_sealed = true) props =
             let (((_, kt), _) as k) = expression cx k in
             let (((_, vt), _) as v) = expression cx v in
             let obj = eval_object (map, result) in
-            let result = mk_computed kt vt obj in
+            let computed = mk_computed kt vt in
+            let result = mk_spread computed obj ~assert_exact:false in
             ( sealed,
               SMap.empty,
               proto,
@@ -2699,7 +2702,8 @@ and object_ cx reason ?(allow_sealed = true) props =
               | _ -> assert false
             in
             let obj = eval_object (map, result) in
-            let result = mk_computed kt vt obj in
+            let computed = mk_computed kt vt in
+            let result = mk_spread computed obj ~assert_exact:false in
             ( sealed,
               SMap.empty,
               proto,
