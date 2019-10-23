@@ -2205,7 +2205,7 @@ and Object : sig
     type target =
       (* When spreading values, the result is exact if all of the input types are
          also exact. If any input type is inexact, the output is inexact. *)
-      | Value
+      | Value of { make_seal: TypeTerm.sealtype }
       (* It's more flexible to allow annotations to specify whether they should be
          exact or not. If the spread type is annotated to be exact, any inexact
          input types will cause a type error. *)

@@ -30,6 +30,56 @@ open Env.LookupMode
 (* Utilities *)
 (*************)
 
+module ObjectExpressionAcc = struct
+  type element =
+    | Spread of Type.t
+    | Slice of { slice_pmap: Type.Properties.t }
+
+  type t = {
+    obj_pmap: Type.Properties.t;
+    tail: element list;
+    proto: Type.t option;
+    obj_sealed: bool;
+  }
+
+  let empty ~allow_sealed =
+    { obj_pmap = SMap.empty; tail = []; proto = None; obj_sealed = allow_sealed }
+
+  let empty_slice = Slice { slice_pmap = SMap.empty }
+
+  let head_slice { obj_pmap; _ } =
+    if SMap.is_empty obj_pmap then
+      None
+    else
+      Some (Slice { slice_pmap = obj_pmap })
+
+  let add_prop f acc = { acc with obj_pmap = f acc.obj_pmap }
+
+  let add_proto p acc = { acc with proto = Some p }
+
+  let add_spread t acc =
+    let tail =
+      match head_slice acc with
+      | None -> acc.tail
+      | Some slice -> slice :: acc.tail
+    in
+    { acc with obj_pmap = SMap.empty; tail = Spread t :: tail }
+
+  let set_seal ~allow_sealed sealed acc = { acc with obj_sealed = allow_sealed && sealed }
+
+  let sealed acc = acc.obj_sealed
+
+  let elements_rev acc =
+    match head_slice acc with
+    | Some slice -> (slice, acc.tail)
+    | None ->
+      (match acc.tail with
+      | [] -> (empty_slice, [])
+      | x :: xs -> (x, xs))
+
+  let proto { proto; _ } = proto
+end
+
 let ident_name = Flow_ast_utils.name_of_ident
 
 let mk_ident ~comments name = { Ast.Identifier.name; comments }
@@ -2451,7 +2501,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
         *)
       List.iter export_from_local export_info)
 
-and object_prop cx map prop =
+and object_prop cx acc prop =
   Ast.Expression.Object.(
     match prop with
     (* named prop *)
@@ -2463,26 +2513,30 @@ and object_prop cx map prop =
               value = v;
               shorthand;
             } ) ->
-      let (map, key, value) =
+      let (acc, key, value) =
         if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc in
           let key = translate_identifier_or_literal_key t key in
-          (* don't add `name` to `map` because `name` is the autocomplete token *)
+          (* don't add `name` to `acc` because `name` is the autocomplete token *)
           if shorthand then
             let value =
               ((loc, t), Ast.Expression.Identifier ((loc, t), { Ast.Identifier.name; comments }))
             in
-            (map, key, value)
+            (acc, key, value)
           else
             let (((_, _t), _) as value) = expression cx v in
-            (map, key, value)
+            (acc, key, value)
         else
           let (((_, t), _) as value) = expression cx v in
           let key = translate_identifier_or_literal_key t key in
-          let map = Properties.add_field name Polarity.Neutral (Some loc) t map in
-          (map, key, value)
+          let acc =
+            ObjectExpressionAcc.add_prop
+              (Properties.add_field name Polarity.Neutral (Some loc) t)
+              acc
+          in
+          (acc, key, value)
       in
-      (map, Property (prop_loc, Property.Init { key; value; shorthand }))
+      (acc, Property (prop_loc, Property.Init { key; value; shorthand }))
     (* string literal prop *)
     | Property
         ( prop_loc,
@@ -2494,7 +2548,7 @@ and object_prop cx map prop =
               shorthand;
             } ) ->
       let (((_, t), _) as v) = expression cx v in
-      ( Properties.add_field name Polarity.Neutral (Some loc) t map,
+      ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
         Property
           ( prop_loc,
             Property.Init { key = translate_identifier_or_literal_key t key; value = v; shorthand }
@@ -2516,7 +2570,7 @@ and object_prop cx map prop =
         | Ast.Expression.Function func -> func
         | _ -> assert false
       in
-      ( Properties.add_field name Polarity.Neutral (Some loc) t map,
+      ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
         Property
           ( prop_loc,
             Property.Method
@@ -2539,7 +2593,7 @@ and object_prop cx map prop =
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
       let (function_type, func) = mk_function_expression None cx vloc func in
       let return_t = Type.extract_getter_type function_type in
-      ( Properties.add_getter name (Some id_loc) return_t map,
+      ( ObjectExpressionAcc.add_prop (Properties.add_getter name (Some id_loc) return_t) acc,
         Property
           ( loc,
             Property.Get
@@ -2558,7 +2612,7 @@ and object_prop cx map prop =
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
       let (function_type, func) = mk_function_expression None cx vloc func in
       let param_t = Type.extract_setter_type function_type in
-      ( Properties.add_setter name (Some id_loc) param_t map,
+      ( ObjectExpressionAcc.add_prop (Properties.add_setter name (Some id_loc) param_t) acc,
         Property
           ( loc,
             Property.Set
@@ -2569,19 +2623,19 @@ and object_prop cx map prop =
     | Property (loc, Property.Get { key = Property.Literal _; _ })
     | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
-      (map, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
     (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)
     | Property (loc, Property.Get { key = Property.Computed _; _ })
     | Property (loc, Property.Set { key = Property.Computed _; _ }) ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
-      (map, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
     (* computed LHS silently ignored for now *)
     | Property (_, Property.Init { key = Property.Computed _; _ })
     | Property (_, Property.Method { key = Property.Computed _; _ }) ->
-      (map, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
     (* spread prop *)
-    | SpreadProperty _ -> (map, Tast_utils.error_mapper#object_property_or_spread_property prop)
+    | SpreadProperty _ -> (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
     | Property (_, Property.Init { key = Property.PrivateName _; _ })
     | Property (_, Property.Method { key = Property.PrivateName _; _ })
     | Property (_, Property.Get { key = Property.PrivateName _; _ })
@@ -2589,15 +2643,15 @@ and object_prop cx map prop =
       failwith "Internal Error: Non-private field with private name")
 
 and prop_map_of_object cx props =
-  let (map, rev_prop_asts) =
+  let (acc, rev_prop_asts) =
     List.fold_left
       (fun (map, rev_prop_asts) prop ->
         let (map, prop) = object_prop cx map prop in
         (map, prop :: rev_prop_asts))
-      (SMap.empty, [])
+      (ObjectExpressionAcc.empty ~allow_sealed:true, [])
       props
   in
-  (map, List.rev rev_prop_asts)
+  (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
 and object_ cx reason ?(allow_sealed = true) props =
   Ast.Expression.Object.(
@@ -2607,15 +2661,6 @@ and object_ cx reason ?(allow_sealed = true) props =
     (* Return an object with specified sealing. *)
     let mk_object ?(proto = obj_proto) ?(sealed = false) props =
       Obj_type.mk_with_proto cx reason ~sealed ~props proto
-    in
-    (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
-     not sealed. *)
-    let mk_spread from_obj to_obj ~assert_exact =
-      let use_op = Op (ObjectSpread { op = reason_of_t from_obj }) in
-      Tvar.mk_where cx reason (fun t ->
-          Flow.flow
-            cx
-            (to_obj, ObjAssignToT (use_op, reason, from_obj, t, ObjAssign { assert_exact })))
     in
     (* Add property to object, using optional tout argument to SetElemT to wait
      for the write to happen. This defers any reads until writes have happened,
@@ -2629,31 +2674,9 @@ and object_ cx reason ?(allow_sealed = true) props =
             (key, CreateObjWithComputedPropT { reason = reason_of_t key; value; tout_tvar = tvar });
           Flow.flow cx (OpenT tvar, ObjSealT (reason, t)))
     in
-    (* When there's no result, return a new object with specified sealing. When
-     there's result, copy a new object into it, sealing the result when
-     necessary.
-
-     When building an object incrementally, only the final call to this function
-     may be with sealed=true, so we will always have an unsealed object to copy
-     properties to. *)
-    let eval_object ?(proto = obj_proto) ?(sealed = false) (map, result) =
-      match result with
-      | None -> mk_object ~proto ~sealed map
-      | Some result ->
-        let result =
-          if not (SMap.is_empty map) then
-            mk_spread (mk_object ~proto map) result ~assert_exact:false
-          else
-            result
-        in
-        if not sealed then
-          result
-        else
-          Tvar.mk_where cx reason (fun t -> Flow.flow cx (result, ObjSealT (reason, t)))
-    in
-    let (sealed, map, proto, result, rev_prop_asts) =
+    let (acc, rev_prop_asts) =
       List.fold_left
-        (fun (sealed, map, proto, result, rev_prop_asts) -> function
+        (fun (acc, rev_prop_asts) -> function
           (* Enforce that the only way to make unsealed object literals is ...{} (spreading empty object
        literals). Otherwise, spreading always returns sealed object literals.
 
@@ -2673,26 +2696,20 @@ and object_ cx reason ?(allow_sealed = true) props =
               | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.sealed
               | _ -> true
             in
-            let obj = eval_object (map, result) in
-            let result =
-              mk_spread spread obj ~assert_exact:(not (SMap.is_empty map && result = None))
+            let acc =
+              if not_empty_object_literal_argument then
+                ObjectExpressionAcc.add_spread spread acc
+              else
+                acc
             in
-            ( sealed && not_empty_object_literal_argument,
-              SMap.empty,
-              proto,
-              Some result,
+            ( ObjectExpressionAcc.set_seal ~allow_sealed not_empty_object_literal_argument acc,
               SpreadProperty (prop_loc, { SpreadProperty.argument }) :: rev_prop_asts )
           | Property (prop_loc, Property.Init { key = Property.Computed k; value = v; shorthand })
             ->
             let (((_, kt), _) as k) = expression cx k in
             let (((_, vt), _) as v) = expression cx v in
-            let obj = eval_object (map, result) in
             let computed = mk_computed kt vt in
-            let result = mk_spread computed obj ~assert_exact:false in
-            ( sealed,
-              SMap.empty,
-              proto,
-              Some result,
+            ( ObjectExpressionAcc.add_spread computed acc,
               Property (prop_loc, Property.Init { key = Property.Computed k; value = v; shorthand })
               :: rev_prop_asts )
           | Property (prop_loc, Property.Method { key = Property.Computed k; value = (fn_loc, fn) })
@@ -2704,13 +2721,8 @@ and object_ cx reason ?(allow_sealed = true) props =
               | Ast.Expression.Function fn -> fn
               | _ -> assert false
             in
-            let obj = eval_object (map, result) in
             let computed = mk_computed kt vt in
-            let result = mk_spread computed obj ~assert_exact:false in
-            ( sealed,
-              SMap.empty,
-              proto,
-              Some result,
+            ( ObjectExpressionAcc.add_spread computed acc,
               Property
                 (prop_loc, Property.Method { key = Property.Computed k; value = (fn_loc, fn) })
               :: rev_prop_asts )
@@ -2730,10 +2742,7 @@ and object_ cx reason ?(allow_sealed = true) props =
             let t =
               Tvar.mk_where cx reason (fun t -> Flow.flow cx (vt, ObjTestProtoT (reason, t)))
             in
-            ( sealed,
-              map,
-              Some t,
-              result,
+            ( ObjectExpressionAcc.add_proto t acc,
               Property
                 ( prop_loc,
                   Property.Init
@@ -2744,17 +2753,71 @@ and object_ cx reason ?(allow_sealed = true) props =
                     } )
               :: rev_prop_asts )
           | prop ->
-            let (map, prop) = object_prop cx map prop in
-            (sealed, map, proto, result, prop :: rev_prop_asts))
-        (allow_sealed, SMap.empty, None, None, [])
+            let (acc, prop) = object_prop cx acc prop in
+            (acc, prop :: rev_prop_asts))
+        (ObjectExpressionAcc.empty ~allow_sealed, [])
         props
     in
-    let sealed =
-      match result with
-      | Some _ -> sealed
-      | None -> sealed && not (SMap.is_empty map)
+    let acc_sealed = ObjectExpressionAcc.sealed acc in
+    let proto = ObjectExpressionAcc.proto acc in
+    let t =
+      match ObjectExpressionAcc.elements_rev acc with
+      | (ObjectExpressionAcc.Slice { slice_pmap }, []) ->
+        let sealed = acc_sealed && not (SMap.is_empty slice_pmap) in
+        mk_object ?proto ~sealed slice_pmap
+      | os ->
+        Object.(
+          Object.Spread.(
+            let (t, ts, head_slice) =
+              let (t, ts) = os in
+              (* We don't need to do this recursively because every pair of slices must be separated
+               * by a spread *)
+              match (t, ts) with
+              | (ObjectExpressionAcc.Spread t, ts) ->
+                let ts =
+                  List.map
+                    (function
+                      | ObjectExpressionAcc.Spread t -> Type t
+                      | ObjectExpressionAcc.Slice { slice_pmap } ->
+                        Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
+                    ts
+                in
+                (t, ts, None)
+              | ( ObjectExpressionAcc.Slice { slice_pmap = prop_map },
+                  ObjectExpressionAcc.Spread t :: ts ) ->
+                let head_slice = { Type.Object.Spread.reason; prop_map; dict = None } in
+                let ts =
+                  List.map
+                    (function
+                      | ObjectExpressionAcc.Spread t -> Type t
+                      | ObjectExpressionAcc.Slice { slice_pmap } ->
+                        Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
+                    ts
+                in
+                (t, ts, Some head_slice)
+              | _ -> failwith "Invariant Violation: spread list has two slices in a row"
+            in
+            let seal = Obj_type.mk_seal reason acc_sealed in
+            let target = Value { make_seal = seal } in
+            let tool = Resolve Next in
+            let state =
+              {
+                todo_rev = ts;
+                acc = Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
+                spread_id = Reason.mk_id ();
+                union_reason = None;
+                curr_resolve_idx = 0;
+              }
+            in
+            let tout = Tvar.mk cx reason in
+            let use_op = Op (ObjectSpread { op = reason }) in
+            let l = Flow.widen_obj_type cx ~use_op:unknown_use reason t in
+            Flow.flow
+              cx
+              (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
+            tout))
     in
-    (eval_object ?proto ~sealed (map, result), List.rev rev_prop_asts))
+    (t, List.rev rev_prop_asts))
 
 and variable cx kind ?if_uninitialized id init =
   Ast.Statement.(

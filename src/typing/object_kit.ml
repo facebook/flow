@@ -330,14 +330,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let id = Context.generate_property_map cx props in
             let proto = ObjProtoT reason in
             let flags =
-              let exact =
+              let (exact, sealed) =
                 match target with
                 (* Type spread result is exact if annotated to be exact *)
-                | Annot { make_exact } -> make_exact
+                | Annot { make_exact } -> (make_exact, Sealed)
                 (* Value spread result is exact if all inputs are exact *)
-                | Value -> flags.exact
+                | Value { make_seal } -> (flags.exact, make_seal)
               in
-              { sealed = Sealed; frozen = false; exact }
+              { sealed; frozen = false; exact }
             in
             let call = None in
             let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
@@ -1133,7 +1133,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let resolve_tool = Super (interface_slice cx r own_props, resolve_tool) in
           begin
             match (tool, inst_kind) with
-            | (Spread _, InterfaceKind _) ->
+            | (Spread _, InterfaceKind _)
+            | (ObjectWiden _, InterfaceKind _) ->
               add_output
                 cx
                 ~trace

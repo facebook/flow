@@ -890,16 +890,18 @@ and json_of_dicttype_impl json_cx dicttype =
 
 and json_of_flags json_cx = check_depth json_of_flags_impl json_cx
 
-and json_of_flags_impl _json_cx flags =
+and bool_of_sealtype = function
+  | Sealed -> true
+  | _ -> false
+
+and json_of_sealtype _json_cx sealtype = Hh_json.(JSON_Bool (bool_of_sealtype sealtype))
+
+and json_of_flags_impl json_cx flags =
   Hh_json.(
     JSON_Object
       [
         ("frozen", JSON_Bool flags.frozen);
-        ( "sealed",
-          JSON_Bool
-            (match flags.sealed with
-            | Sealed -> true
-            | UnsealedInFile _ -> false) );
+        ("sealed", json_of_sealtype json_cx flags.sealed);
         ("exact", JSON_Bool flags.exact);
       ])
 
@@ -1076,7 +1078,8 @@ and json_of_destructor_impl json_cx =
       Object.Spread.(
         JSON_Object
           ( (match target with
-            | Value -> [("target", JSON_String "Value")]
+            | Value { make_seal } ->
+              [("target", JSON_String "Value"); ("make_seal", json_of_sealtype json_cx make_seal)]
             | Annot { make_exact } ->
               [("target", JSON_String "Annot"); ("makeExact", JSON_Bool make_exact)])
           @ [
@@ -1978,7 +1981,7 @@ and dump_use_t_ (depth, tvars) cx t =
           let target =
             match target with
             | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
-            | Value -> "Value"
+            | Value { make_seal } -> spf "Value {make_seal=%b" (bool_of_sealtype make_seal)
           in
           let spread_operand = function
             | Slice { Spread.reason; prop_map; dict } -> operand_slice reason prop_map dict

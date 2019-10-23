@@ -104,10 +104,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test1.js:7:2
 
-Cannot cast `b.x` to string because number [1] is incompatible with string [2].
+Cannot cast `b.x` to string because:
+ - number [1] is incompatible with string [2].
+ - undefined [1] is incompatible with string [2].
 
    test1.js:7:2
-   7| (b.x: string);
+   7| (b.x: string); // Error, might not be on b or will be number
        ^^^
 
 References:
@@ -115,16 +117,32 @@ References:
    3| type A = {| x: number |} | {| y: number |}
                      ^^^^^^ [1]
    test1.js:7:7
-   7| (b.x: string);
+   7| (b.x: string); // Error, might not be on b or will be number
             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test1.js:7:2
+
+Cannot get `b.x` because property `x` is missing in object literal [1].
+
+   test1.js:7:2
+   7| (b.x: string); // Error, might not be on b or will be number
+       ^^^
+
+References:
+   test1.js:6:11
+   6| const b = { z: 0, ...a };
+                ^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test1.js:8:2
 
-Cannot cast `b.y` to string because number [1] is incompatible with string [2].
+Cannot cast `b.y` to string because:
+ - number [1] is incompatible with string [2].
+ - undefined [1] is incompatible with string [2].
 
    test1.js:8:2
-   8| (b.y: string);
+   8| (b.y: string); // Error, might not be on b or will be number
        ^^^
 
 References:
@@ -132,7 +150,7 @@ References:
    3| type A = {| x: number |} | {| y: number |}
                                        ^^^^^^ [1]
    test1.js:8:7
-   8| (b.y: string);
+   8| (b.y: string); // Error, might not be on b or will be number
             ^^^^^^ [2]
 
 
@@ -188,4 +206,4 @@ References:
 
 
 
-Found 11 errors
+Found 14 errors

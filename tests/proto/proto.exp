@@ -331,12 +331,9 @@ Cannot cast `o_computed.__proto__` to empty because object literal [1] is incomp
 
    literal.js:21:2
    21| (o_computed.__proto__: empty); // TODO: error: number ~> empty
-        ^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   literal.js:20:18
-   20| var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
-                        ^^^^^^^^^^^^^^^^^^^^ [1]
    literal.js:21:24
    21| (o_computed.__proto__: empty); // TODO: error: number ~> empty
                               ^^^^^ [2]

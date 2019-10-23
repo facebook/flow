@@ -3,5 +3,5 @@
 function foo() {
   const bar = null;
   const empty = {...bar};
-  (empty.x);
+  (empty.x); // Error
 }

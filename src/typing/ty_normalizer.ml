@@ -1507,7 +1507,7 @@ end = struct
     let obj_exact target =
       match target with
       | Type.Object.Spread.(Annot { make_exact }) -> return make_exact
-      | Type.Object.Spread.Value -> terr ~kind:BadEvalT ~msg:"spread-target-value" None
+      | Type.Object.Spread.Value _ -> terr ~kind:BadEvalT ~msg:"spread-target-value" None
     in
     let mk_spread ty target prefix_tys head_slice =
       let obj_props = prefix_tys @ spread_of_ty ty in

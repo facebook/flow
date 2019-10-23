@@ -7,8 +7,8 @@ import type {Props} from './lib.js';
 class Class {
   constructor(props: Props) {
     const inputProps = {
-      foo: 'bar',
       ...props,
+      foo: 'bar',
     };
   }
 }
