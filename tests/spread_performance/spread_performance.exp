@@ -188,46 +188,46 @@ References:
                                                         ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:65:38
+Error --------------------------------------------------------------------------------------------- type_spread.js:66:38
 
-Computing object type [1] may lead to exponentially large type checking because inferred union from object literal [2] |
-object literal [3] and `U` [4] are both unions. Please use at most one union type per spread to avoid performance
-issues. You may be able to get rid of a union by specifying a more general type that captures all of the branches of the
-union.
+Computing object type [1] may lead to exponentially large type checking because inferred union from object type [2] |
+object type [2] and inferred union from object literal [3] | object literal [4] are both unions. Please use at most one
+union type per spread to avoid performance issues. You may be able to get rid of a union by specifying a more general
+type that captures all of the branches of the union.
 
-   type_spread.js:65:38
-   65| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
-                                            ^ [4]
+   type_spread.js:66:38
+   66| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
+                                            ^ [2]
 
 References:
    type_spread.js:64:49
    64| declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
                                                        ^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:65:17
-   65| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
-                       ^^^^^^^^ [2]
-   type_spread.js:65:42
-   65| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
-                                                ^^^^^^^^ [3]
+   type_spread.js:66:17
+   66| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
+                       ^^^^^^^^ [3]
+   type_spread.js:66:42
+   66| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
+                                                ^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:80:58
+Error --------------------------------------------------------------------------------------------- type_spread.js:81:58
 
 Computing `N` [1] may lead to exponentially large type checking because inferred union from object type [2] | object
 type [2] and inferred union from object type [3] | object type [3] are both unions. Please use at most one union type
 per spread to avoid performance issues. You may be able to get rid of a union by specifying a more general type that
 captures all of the branches of the union.
 
-   type_spread.js:80:58
-   80| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
+   type_spread.js:81:58
+   81| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
                                                                 ^^^^^ [2]
 
 References:
-   type_spread.js:80:10
-   80| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
+   type_spread.js:81:10
+   81| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:80:23
-   80| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
+   type_spread.js:81:23
+   81| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
                              ^^^^^ [3]
 
 

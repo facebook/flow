@@ -41,6 +41,8 @@ module type S = sig
 
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
+  val flow_opt : Context.t -> ?trace:Trace.t -> Type.t * Type.use_t -> unit
+
   val flow_p :
     Context.t ->
     ?use_op:use_op ->
@@ -128,6 +130,9 @@ module type S = sig
     unit
 
   val union_of_ts : reason -> Type.t list -> Type.t
+
+  val widen_obj_type :
+    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 
   include ASSERT_GROUND
 

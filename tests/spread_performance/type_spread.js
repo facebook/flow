@@ -62,6 +62,7 @@ declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
 (k: any);
 
 declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
+// Note the bad error message-- this is because ObjectWiden splits the union into its members
 const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
 
 export type State = 

@@ -2241,6 +2241,7 @@ and Object : sig
     | Rest of Rest.merge_mode * Rest.state
     | ReactConfig of ReactConfig.state
     | ObjectRep
+    | ObjectWiden of ident
 end =
   Object
 

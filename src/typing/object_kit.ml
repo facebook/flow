@@ -19,12 +19,25 @@ module type OBJECT = sig
     Type.t ->
     Type.t ->
     unit
+
+  val widen_obj_type :
+    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end
 
 module Kit (Flow : Flow_common.S) : OBJECT = struct
   include Flow
 
   exception CannotSpreadError of Error_message.t
+
+  let widen_obj_type cx ?trace ~use_op reason t =
+    let open Object in
+    match t with
+    | OpenT (r, _) ->
+      let widened_id = Tvar.mk_no_wrap cx r in
+      let tout = OpenT (r, widened_id) in
+      flow_opt cx ?trace (t, ObjKitT (use_op, reason, Resolve Next, ObjectWiden widened_id, tout));
+      tout
+    | t -> t
 
   let run =
     Object.(
@@ -375,7 +388,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     curr_resolve_idx;
                   }
                 in
-                rec_flow cx trace (t, ObjKitT (use_op, reason, tool, Spread (options, state), tout))
+                let l = widen_obj_type cx ~trace ~use_op reason t in
+                rec_flow cx trace (l, ObjKitT (use_op, reason, tool, Spread (options, state), tout))
               | Slice operand_slice :: todo_rev ->
                 let acc = resolved :: acc in
                 continue acc (InlineSlice operand_slice) (curr_resolve_idx + 1) todo_rev
@@ -677,6 +691,122 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           rec_flow_t cx trace ~use_op (t, tout)
       in
       (****************)
+      (* Object Widen *)
+      (****************)
+      let object_widen =
+        let mk_object cx reason { Object.reason = r; props; dict; flags } =
+          let polarity = Polarity.Neutral in
+          let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
+          let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+          let call = None in
+          let id = Context.generate_property_map cx props in
+          let proto = ObjProtoT reason in
+          mk_object_def_type ~reason:r ~flags ~dict ~call id proto
+        in
+        let widen cx trace ~use_op ~obj_reason ~slice ~widened_id ~tout =
+          let rec is_subset (x, y) =
+            match (x, y) with
+            | (UnionT (_, rep), u) ->
+              UnionRep.members rep |> List.for_all (fun t -> is_subset (t, u))
+            | (t, UnionT (_, rep)) ->
+              UnionRep.members rep |> List.exists (fun u -> is_subset (t, u))
+            | (MaybeT (_, t1), MaybeT (_, t2)) -> is_subset (t1, t2)
+            | (OptionalT (_, t1), OptionalT (_, t2)) -> is_subset (t1, t2)
+            | (DefT (_, _, (NullT | VoidT)), MaybeT _) -> true
+            | (DefT (_, _, VoidT), OptionalT _) -> true
+            | (t1, MaybeT (_, t2)) -> is_subset (t1, t2)
+            | (t1, OptionalT (_, t2)) -> is_subset (t1, t2)
+            | (t1, t2) -> quick_subtype false t1 t2
+          in
+          let widen_type cx trace reason ~use_op t1 t2 =
+            match (t1, t2) with
+            | (t1, t2) when is_subset (t2, t1) -> (t1, false)
+            | (OpenT _, t2) ->
+              rec_flow_t cx trace ~use_op (t2, t1);
+              (t1, false)
+            | (t1, t2) ->
+              ( Tvar.mk_where cx reason (fun t ->
+                    rec_flow_t cx trace ~use_op (t1, t);
+                    rec_flow_t cx trace ~use_op (t2, t)),
+                true )
+          in
+          let widest = Context.spread_widened_types_get_widest cx widened_id in
+          match widest with
+          | None ->
+            Context.spread_widened_types_add_widest cx widened_id slice;
+            rec_flow_t cx trace ~use_op (mk_object cx obj_reason slice, tout)
+          | Some widest ->
+            let widest_pmap = widest.props in
+            let new_pmap = slice.props in
+            let type_and_optionality (t, _) =
+              match t with
+              | OptionalT (_, t) -> (t, true)
+              | _ -> (t, false)
+            in
+            let pmap_and_changed =
+              SMap.merge
+                (fun _ p1 p2 ->
+                  let p1 = get_prop widest.Object.reason p1 widest.Object.dict in
+                  let p2 = get_prop slice.Object.reason p2 slice.Object.dict in
+                  match (p1, p2) with
+                  | (None, None) -> None
+                  | (None, Some t) ->
+                    let (t', _opt) = type_and_optionality t in
+                    Some (optional t', true)
+                  | (Some t, None) ->
+                    let (t', opt) = type_and_optionality t in
+                    Some (optional t', not opt)
+                  | (Some t1, Some t2) ->
+                    let (t1', opt1) = type_and_optionality t1 in
+                    let (t2', opt2) = type_and_optionality t2 in
+                    let (t, changed) = widen_type cx trace obj_reason ~use_op t1' t2' in
+                    if opt1 || opt2 then
+                      Some (optional t, changed)
+                    else
+                      Some (t, changed))
+                widest_pmap
+                new_pmap
+            in
+            let (pmap', changed) =
+              SMap.fold
+                (fun k (t, changed) (acc_map, acc_changed) ->
+                  (SMap.add k t acc_map, changed || acc_changed))
+                pmap_and_changed
+                (SMap.empty, false)
+            in
+            (* TODO: (jmbrown) we can be less strict here than unifying. It may be possible to
+             * also merge the dictionary types *)
+            let (dict, changed) =
+              match (widest.dict, slice.dict) with
+              | (Some d1, Some d2) ->
+                rec_unify cx trace ~use_op d1.key d2.key;
+                rec_unify cx trace ~use_op d1.value d2.value;
+                (Some d1, changed)
+              | (Some _, None) -> (None, true)
+              | _ -> (None, changed)
+            in
+            let (exact, changed) =
+              if widest.Object.flags.exact && not slice.Object.flags.exact then
+                (false, true)
+              else
+                (widest.Object.flags.exact && slice.Object.flags.exact, changed)
+            in
+            if not changed then
+              ()
+            else
+              let flags = { exact; frozen = false; sealed = Sealed } in
+              let props = SMap.map (fun t -> (t, true)) pmap' in
+              let slice' = { Object.reason = slice.Object.reason; props; flags; dict } in
+              Context.spread_widened_types_add_widest cx widened_id slice';
+              let obj = mk_object cx slice.Object.reason slice' in
+              rec_flow_t cx trace ~use_op (obj, tout)
+        in
+        fun widened_id cx trace use_op reason tout x ->
+          Nel.iter
+            (fun slice -> widen cx trace ~use_op ~obj_reason:reason ~slice ~widened_id ~tout)
+            x
+      in
+      (****************)
       (* React Config *)
       (****************)
       let react_config =
@@ -865,6 +995,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         | ReactConfig state -> react_config state
         | ReadOnly -> object_read_only
         | ObjectRep -> object_rep
+        | ObjectWiden id -> object_widen id
       in
       (* Intersect two object slices: slice * slice -> slice
        *
@@ -1052,7 +1183,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let flags = { frozen = true; sealed = Sealed; exact = true } in
           let x =
             match tool with
-            | Spread _ -> Nel.one { Object.reason; props = SMap.empty; dict = None; flags }
+            | ObjectWiden _
+            | Spread _ ->
+              Nel.one { Object.reason; props = SMap.empty; dict = None; flags }
             | _ ->
               Nel.one
                 {

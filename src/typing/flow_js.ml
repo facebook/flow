@@ -11372,6 +11372,8 @@ module rec FlowJs : Flow_common.S = struct
   let generate_tests = generate_tests
 
   let match_this_binding = match_this_binding
+
+  let widen_obj_type = ObjectKit.widen_obj_type
 end
 
 include FlowJs

@@ -2019,6 +2019,7 @@ and dump_use_t_ (depth, tvars) cx t =
       let tool = function
         | ReadOnly -> "ReadOnly"
         | ObjectRep -> "ObjectRep"
+        | ObjectWiden id -> spf "ObjectWiden (%s)" (string_of_int id)
         | Spread (options, state) -> spread options state
         | Rest (options, state) -> rest options state
         | ReactConfig state -> react_props state

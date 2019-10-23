@@ -358,6 +358,10 @@ val computed_property_add_lower_bound : t -> Constraint.ident -> Reason.t -> uni
 
 val computed_property_add_multiple_lower_bounds : t -> Constraint.ident -> unit
 
+val spread_widened_types_get_widest : t -> Constraint.ident -> Type.Object.slice option
+
+val spread_widened_types_add_widest : t -> Constraint.ident -> Type.Object.slice -> unit
+
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_optional_chains : t -> (ALoc.t * Reason.t) list

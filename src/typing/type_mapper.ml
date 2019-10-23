@@ -1783,6 +1783,7 @@ class virtual ['a] t_with_uses =
         match tool with
         | ReadOnly -> tool
         | ObjectRep -> tool
+        | ObjectWiden _ -> tool
         | Spread
             (options, { Object.Spread.todo_rev; acc; spread_id; union_reason; curr_resolve_idx })
           ->

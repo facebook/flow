@@ -125,3 +125,6 @@ val possible_uses : Context.t -> Constraint.ident -> Type.use_t list
 val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
 
 val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
+
+val widen_obj_type :
+  Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t

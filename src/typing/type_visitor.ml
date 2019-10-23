@@ -468,6 +468,7 @@ class ['a] t =
             match tool with
             | ReadOnly -> acc
             | ObjectRep -> acc
+            | ObjectWiden _ -> acc
             | Spread (_, state) ->
               Object.Spread.(
                 let {

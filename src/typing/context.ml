@@ -138,6 +138,7 @@ type sig_t = {
    * emit multiple errors for a single syntactic computed property.
    *)
   mutable computed_property_states: computed_property_state IMap.t;
+  mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
 }
@@ -231,6 +232,7 @@ let make_sig () =
     voidable_checks = [];
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
+    spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
   }
@@ -604,6 +606,11 @@ let computed_property_add_lower_bound cx id r =
 let computed_property_add_multiple_lower_bounds cx id =
   cx.sig_cx.computed_property_states <-
     IMap.add id ResolvedMultipleTimes cx.sig_cx.computed_property_states
+
+let spread_widened_types_get_widest cx id = IMap.find_opt id cx.sig_cx.spread_widened_types
+
+let spread_widened_types_add_widest cx id objtype =
+  cx.sig_cx.spread_widened_types <- IMap.add id objtype cx.sig_cx.spread_widened_types
 
 let mark_optional_chain cx loc lhs_reason ~useful =
   cx.sig_cx.optional_chains_useful <-

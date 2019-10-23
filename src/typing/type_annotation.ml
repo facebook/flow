@@ -1527,8 +1527,9 @@ and convert_object =
                 (t, ts, Some head_slice)
               | _ -> failwith "Invariant Violation: spread list has two slices in a row"
             in
+            let l = Flow.widen_obj_type cx ~use_op:unknown_use reason t in
             EvalT
-              ( t,
+              ( l,
                 TypeDestructorT (unknown_use, reason, SpreadType (target, ts, head_slice)),
                 mk_id () ))
       in
