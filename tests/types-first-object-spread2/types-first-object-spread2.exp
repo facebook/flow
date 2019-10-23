@@ -1,1 +1,27 @@
-Found 0 errors
+Error -------------------------------------------------------------------------------------- SUIExpressWiFiTheme.js:13:2
+
+Cannot cast `SUIExpressWiFiThemeComponents` to `ComponentUniforms` because:
+ - `SUIActionMenuUniform` [1] is incompatible with undefined [2] in property `SUIActionMenu`.
+ - inexact undefined [3] is incompatible with exact `SUIButtonUniform` [4] in property `SUIButton`.
+
+   SUIExpressWiFiTheme.js:13:2
+   13| (SUIExpressWiFiThemeComponents: ComponentUniforms); // Error unannotated, so read/write optional properties fail to unify
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   SUIExpressWiFiThemeComponents.js:10:18
+   10|   SUIActionMenu: SUIActionMenuUniformValue,
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   SUIExpressWiFiTheme.js:9:19
+    9|   SUIActionMenu?: SUIActionMenuUniform,
+                         ^^^^^^^^^^^^^^^^^^^^ [2]
+   SUIExpressWiFiTheme.js:10:15
+   10|   SUIButton?: SUIButtonUniform,
+                     ^^^^^^^^^^^^^^^^ [3]
+   SUIExpressWiFiThemeComponents.js:19:14
+   19|   SUIButton: require('./SUIButtonUniform'),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 2 errors

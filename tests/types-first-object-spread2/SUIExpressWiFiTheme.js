@@ -10,4 +10,4 @@ export type ComponentUniforms = {
   SUIButton?: SUIButtonUniform,
 };
 
-(SUIExpressWiFiThemeComponents: ComponentUniforms);
+(SUIExpressWiFiThemeComponents: ComponentUniforms); // Error unannotated, so read/write optional properties fail to unify

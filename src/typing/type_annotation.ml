@@ -139,8 +139,6 @@ let polarity = function
 (* Transform annotations to types *)
 (**********************************)
 
-exception UnexpectedTemporaryObject
-
 (* converter *)
 let rec convert cx tparams_map =
   Ast.Type.(
@@ -288,158 +286,6 @@ let rec convert cx tparams_map =
             } )
       in
       let use_op reason = Op (TypeApplication { type' = reason }) in
-      (* NOTE: The following two functions implement the currently broken "value spread" logic in the
-     `Statement` module, adapted to operate on object literal types instead of object literal
-     values. This code is used in the implementation of `$TEMPORARY$object`, which in turn wraps an
-     encoding of object literal values as object literal types created by the signature generator
-     (or, regrettably, the inadvertent user).
-
-     TODO: When the value spread logic in the `Statement` module is fixed to match the "type spread"
-     logic, this code should be updated. *)
-
-      (************ (begin) adaptation of code in statement.ml *****************)
-      let object_prop cx map prop =
-        Ast.Type.Object.(
-          match prop with
-          (* named prop or method *)
-          | {
-           Property.key =
-             ( Ast.Expression.Object.Property.Identifier
-                 (loc, { Ast.Identifier.name; comments = _ })
-             | Ast.Expression.Object.Property.Literal
-                 (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-           value = Property.Init v;
-           optional;
-           _;
-          } ->
-            let ((_, t), _) = convert cx tparams_map v in
-            let t =
-              if optional then
-                Type.optional t
-              else
-                t
-            in
-            Properties.add_field name Polarity.Neutral (Some loc) t map
-          (* We enable some unsafe support for getters and setters. The main unsafe bit
-    *  is that we don't properly havok refinements when getter and setter methods
-    *  are called. *)
-
-          (* unsafe getter property *)
-          | {
-           Property.key =
-             ( Ast.Expression.Object.Property.Identifier
-                 (id_loc, { Ast.Identifier.name; comments = _ })
-             | Ast.Expression.Object.Property.Literal
-                 (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-           value = Property.Get (func_loc, func);
-           _;
-          } ->
-            Flow_js.add_output cx (Error_message.EUnsafeGettersSetters func_loc);
-            let ((_, function_type), _) =
-              convert cx tparams_map (func_loc, Ast.Type.Function func)
-            in
-            let return_t = Type.extract_getter_type function_type in
-            Properties.add_getter name (Some id_loc) return_t map
-          (* unsafe setter property *)
-          | {
-           Property.key =
-             ( Ast.Expression.Object.Property.Identifier
-                 (id_loc, { Ast.Identifier.name; comments = _ })
-             | Ast.Expression.Object.Property.Literal
-                 (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-           value = Property.Set (func_loc, func);
-           _;
-          } ->
-            Flow_js.add_output cx (Error_message.EUnsafeGettersSetters func_loc);
-            let ((_, function_type), _) =
-              convert cx tparams_map (func_loc, Ast.Type.Function func)
-            in
-            let param_t = Type.extract_setter_type function_type in
-            Properties.add_setter name (Some id_loc) param_t map
-          | _ -> raise UnexpectedTemporaryObject)
-      in
-      let object_ cx reason ?(allow_sealed = true) props =
-        Ast.Type.Object.(
-          (* Use the same reason for proto and the ObjT so we can walk the proto chain
-       and use the root proto reason to build an error. *)
-          let obj_proto = ObjProtoT reason in
-          (* Return an object with specified sealing. *)
-          let mk_object ?(proto = obj_proto) ?(sealed = false) props =
-            Obj_type.mk_with_proto cx reason ~sealed ~props proto
-          in
-          (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
-       not sealed. *)
-          let mk_spread from_obj to_obj ~assert_exact =
-            let use_op = Op (ObjectSpread { op = reason_of_t from_obj }) in
-            Tvar.mk_where cx reason (fun t ->
-                Flow.flow
-                  cx
-                  (to_obj, ObjAssignToT (use_op, reason, from_obj, t, ObjAssign { assert_exact })))
-          in
-          (* When there's no result, return a new object with specified sealing. When
-       there's result, copy a new object into it, sealing the result when
-       necessary.
-
-       When building an object incrementally, only the final call to this function
-       may be with sealed=true, so we will always have an unsealed object to copy
-       properties to. *)
-          let eval_object ?(proto = obj_proto) ?(sealed = false) (map, result) =
-            match result with
-            | None -> mk_object ~proto ~sealed map
-            | Some result ->
-              let result =
-                if not (SMap.is_empty map) then
-                  mk_spread (mk_object ~proto map) result ~assert_exact:false
-                else
-                  result
-              in
-              if not sealed then
-                result
-              else
-                Tvar.mk_where cx reason (fun t -> Flow.flow cx (result, ObjSealT (reason, t)))
-          in
-          let (sealed, map, proto, result) =
-            List.fold_left
-              (fun (sealed, map, proto, result) -> function
-                (* Enforce that the only way to make unsealed object literals is ...{} (spreading empty object
-         literals). Otherwise, spreading always returns sealed object literals.
-
-         Also enforce that a spread of an inexact object can only appear as the first element of an
-         object literal, because otherwise we cannot determine the type of the object literal without
-         significantly losing precision about elements preceding that spread.
-
-         Finally, the exactness of an object literal type is determined solely by its sealedness.
-
-         TODO: This treatment of spreads is oblivious to issues that arise when spreading expressions
-         of union type.
-      *)
-                | SpreadProperty (_prop_loc, { SpreadProperty.argument }) ->
-                  let ((_, spread), _) = convert cx tparams_map argument in
-                  let not_empty_object_literal_argument =
-                    match spread with
-                    | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.sealed
-                    | _ -> true
-                  in
-                  let obj = eval_object (map, result) in
-                  let result =
-                    mk_spread spread obj ~assert_exact:(not (SMap.is_empty map && result = None))
-                  in
-                  (sealed && not_empty_object_literal_argument, SMap.empty, proto, Some result)
-                | Property (_prop_loc, prop) ->
-                  let map = object_prop cx map prop in
-                  (sealed, map, proto, result)
-                | _ -> raise UnexpectedTemporaryObject)
-              (allow_sealed, SMap.empty, None, None)
-              props
-          in
-          let sealed =
-            match result with
-            | Some _ -> sealed
-            | None -> sealed && not (SMap.is_empty map)
-          in
-          eval_object ?proto ~sealed (map, result))
-      in
-      (************ (end) adaptation of code in statement.ml *****************)
       begin
         match name with
         (* Temporary base types with literal information *)
@@ -531,18 +377,17 @@ let rec convert cx tparams_map =
               | _ -> assert false)
         | "$TEMPORARY$object" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (fake_ts, fake_targs) = convert_type_params () in
-              let t_object =
-                try
-                  match targs with
-                  | Some (_, [(loc, Ast.Type.Object { Ast.Type.Object.properties; _ })]) ->
-                    let reason = mk_annot_reason RObjectLit loc in
-                    object_ cx reason properties
-                  | _ -> raise UnexpectedTemporaryObject
-                with UnexpectedTemporaryObject -> (* TODO: lint error *)
-                                                  List.hd fake_ts
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              let tout =
+                match t with
+                | ExactT (_, DefT (r, trust, ObjT o))
+                | DefT (r, trust, ObjT o) ->
+                  let r = replace_desc_reason RObjectLit r in
+                  DefT (r, trust, ObjT { o with flags = { o.flags with exact = true } })
+                | _ -> t
               in
-              reconstruct_ast t_object fake_targs)
+              reconstruct_ast tout targs)
         | "$TEMPORARY$array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
