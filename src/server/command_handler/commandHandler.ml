@@ -1585,6 +1585,62 @@ let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:
   let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
   mk_lsp_error_response ~ret:() ~id ~reason metadata
 
+(* This tries to simulate the logic from elsewhere which determines whether we would report
+ * errors for a given file. The criteria are
+ *
+ * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
+ *    or explicitly included
+ * 2) The file must not be ignored
+ * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
+ * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
+ *)
+let check_that_we_care_about_this_file =
+  let check_file_not_ignored ~file_options ~env ~file_path () =
+    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
+      Ok ()
+    else
+      Error "File is ignored"
+  in
+  let check_file_included ~options ~file_options ~file_path () =
+    let file_is_implicitly_included =
+      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
+      String_utils.string_starts_with file_path root_str
+    in
+    if file_is_implicitly_included then
+      Ok ()
+    else if Files.is_included file_options file_path then
+      Ok ()
+    else
+      Error "File is not implicitly or explicitly included"
+  in
+  let check_is_flow_file ~file_options ~file_path () =
+    if Files.is_flow_file ~options:file_options file_path then
+      Ok ()
+    else
+      Error "File is not a Flow file"
+  in
+  let check_flow_pragma ~options ~content ~file_path () =
+    if Options.all options then
+      Ok ()
+    else
+      let (_, docblock) =
+        Parsing_service_js.(
+          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
+      in
+      if Docblock.is_flow docblock then
+        Ok ()
+      else
+        Error "File is missing @flow pragma and `all` is not set to `true`"
+  in
+  fun ~options ~env ~file_path ~content ->
+    let file_path = Files.imaginary_realpath file_path in
+    let file_options = Options.file_options options in
+    Ok ()
+    >>= check_file_not_ignored ~file_options ~env ~file_path
+    >>= check_file_included ~options ~file_options ~file_path
+    >>= check_is_flow_file ~file_options ~file_path
+    >>= check_flow_pragma ~options ~content ~file_path
+
 (* What should we do if we get multiple requests for the same URI? Each request wants the most
  * up-to-date live errors, so if we have 10 pending requests then we would want to send the same
  * response to each. And we could do that, but it might have some weird side effects:
@@ -1642,20 +1698,22 @@ let handle_live_errors_request =
                 metadata )
           | File_input.FileContent (_, content) ->
             let%lwt (live_errors, live_warnings) =
-              let file = File_key.SourceFile file_path in
-              if
-                Options.all options
-                ||
-                let (_, docblock) =
-                  Parsing_service_js.(parse_docblock docblock_max_tokens file content)
-                in
-                Docblock.is_flow docblock
-              then
+              match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
+              | Ok () ->
                 let%lwt (_, live_errors, live_warnings) =
-                  Types_js.typecheck_contents ~options ~env ~profiling content file
+                  Types_js.typecheck_contents
+                    ~options
+                    ~env
+                    ~profiling
+                    content
+                    (File_key.SourceFile file_path)
                 in
                 Lwt.return (live_errors, live_warnings)
-              else
+              | Error reason ->
+                Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
+
+                (* If the LSP requests errors for a file for which we wouldn't normally emit errors
+                 * then just return empty sets *)
                 Lwt.return
                   ( Errors.ConcreteLocPrintableErrorSet.empty,
                     Errors.ConcreteLocPrintableErrorSet.empty )
