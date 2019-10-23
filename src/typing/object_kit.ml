@@ -60,6 +60,40 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             rep )
     | t -> t
 
+  let type_optionality_and_missing_property (t, _) =
+    match t with
+    | OptionalT { reason; type_ = t; use_desc } ->
+      let is_missing_property_desc =
+        match desc_of_reason reason with
+        | RPossiblyMissingPropFromObj _ -> true
+        | _ -> false
+      in
+      (t, true, use_desc && is_missing_property_desc)
+    | _ -> (t, false, false)
+
+  (* Widening may create optional props because a property may not exist on some object. This
+   * synthetic property lacks a good location in the code, since it represents the absence
+   * of a key in some object. In order to point to a good location, we point to the object
+   * missing the property in the reason desc. *)
+  let possibly_missing_prop propname obj_reason type_ =
+    let reason =
+      update_desc_new_reason (fun desc -> RPossiblyMissingPropFromObj (propname, desc)) obj_reason
+    in
+    OptionalT { reason; type_; use_desc = true }
+
+  (* When a property is optional due to widening (see possibly_missing_prop), we want to make sure
+   * that the reason it is missing persists through interactions with other optional properties.
+   *
+   * This function preserves the possibly missing prop reason if it existed on both 
+   * of the optional properties. Otherwise, we have an explicit optional property, which
+   * is better to use.
+   *)
+  let make_optional_with_possible_missing_props propname missing_prop1 missing_prop2 r =
+    if missing_prop1 && missing_prop2 then
+      possibly_missing_prop propname r
+    else
+      optional ?annot_loc:None ~use_desc:false
+
   let run =
     Object.(
       (*******************************)
@@ -213,18 +247,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | Error e -> Error e
             | Ok dict ->
               let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
-              let type_and_optionality t =
-                match t with
-                | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
-                | _ -> (t, false)
-              in
-              let merge_props (t1, _) (t2, _) =
-                let (t1, opt1) = type_and_optionality t1 in
-                let (t2, opt2) = type_and_optionality t2 in
+              let merge_props propname t1 t2 =
+                let (t1, opt1, missing_prop1) = type_optionality_and_missing_property t1 in
+                let (t2, opt2, missing_prop2) = type_optionality_and_missing_property t2 in
                 if not opt2 then
                   (t2, true)
                 else if opt1 && opt2 then
-                  (optional (union t1 t2), true)
+                  ( make_optional_with_possible_missing_props
+                      propname
+                      missing_prop1
+                      missing_prop2
+                      r1
+                      (union t1 t2),
+                    true )
                 (* In this case, we know opt2 is true and opt1 is false *)
                 else
                   (union t1 t2, true)
@@ -237,7 +272,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                          match (p1, p2) with
                          | (None, None) -> None
                          | (_, Some p2) when inline2 -> Some (fst p2, true)
-                         | (Some p1, Some p2) -> Some (merge_props p1 p2)
+                         | (Some p1, Some p2) -> Some (merge_props x p1 p2)
                          | (Some p1, None) ->
                            if flags2.exact then
                              Some (fst p1, true)
@@ -271,7 +306,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                           *  handles 3. and the case when p2 is not optional.
                           *)
                          | (None, Some p2) ->
-                           let (_, opt2) = type_and_optionality (fst p2) in
+                           let (_, opt2, _) = type_optionality_and_missing_property p2 in
                            if (dict1 <> None || not flags1.exact) && opt2 then
                              let error_kind =
                                if dict1 <> None then
@@ -765,30 +800,44 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           | Some widest ->
             let widest_pmap = widest.props in
             let new_pmap = slice.props in
-            let type_and_optionality (t, _) =
-              match t with
-              | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
-              | _ -> (t, false)
-            in
             let pmap_and_changed =
               SMap.merge
-                (fun _ p1 p2 ->
+                (fun propname p1 p2 ->
                   let p1 = get_prop widest.Object.reason p1 widest.Object.dict in
                   let p2 = get_prop slice.Object.reason p2 slice.Object.dict in
                   match (p1, p2) with
                   | (None, None) -> None
                   | (None, Some t) ->
-                    let (t', _opt) = type_and_optionality t in
-                    Some (optional t', true)
+                    let (t', opt, missing_prop) = type_optionality_and_missing_property t in
+                    let t' =
+                      if opt && not missing_prop then
+                        optional t'
+                      else
+                        possibly_missing_prop propname widest.Object.reason t'
+                    in
+                    Some (t', true)
                   | (Some t, None) ->
-                    let (t', opt) = type_and_optionality t in
-                    Some (optional t', not opt)
+                    let (t', opt, missing_prop) = type_optionality_and_missing_property t in
+                    let t' =
+                      if opt && not missing_prop then
+                        optional t'
+                      else
+                        possibly_missing_prop propname slice.Object.reason t'
+                    in
+                    Some (t', not opt)
                   | (Some t1, Some t2) ->
-                    let (t1', opt1) = type_and_optionality t1 in
-                    let (t2', opt2) = type_and_optionality t2 in
+                    let (t1', opt1, missing_prop1) = type_optionality_and_missing_property t1 in
+                    let (t2', opt2, missing_prop2) = type_optionality_and_missing_property t2 in
                     let (t, changed) = widen_type cx trace obj_reason ~use_op t1' t2' in
                     if opt1 || opt2 then
-                      Some (optional t, changed)
+                      Some
+                        ( make_optional_with_possible_missing_props
+                            propname
+                            missing_prop1
+                            missing_prop2
+                            widest.Object.reason
+                            t,
+                          changed )
                     else
                       Some (t, changed))
                 widest_pmap
