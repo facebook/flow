@@ -1218,7 +1218,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           if Env.in_predicate_scope () then
             let ((((_, t), _) as ast), p_map, n_map, _) = predicates_of_condition cx expr in
             let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
-            (OpenPredT (pred_reason, t, p_map, n_map), Some ast)
+            (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
           else
             let (((_, t), _) as ast) = expression cx expr in
             (t, Some ast)

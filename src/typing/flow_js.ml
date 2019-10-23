@@ -3289,7 +3289,8 @@ struct
         | (_, CallLatentPredT (_, _, _, unrefined_t, fresh_t)) ->
           rec_flow_t cx trace (unrefined_t, fresh_t)
         (* Trap the return type of a predicated function *)
-        | (OpenPredT (_, _, p_pos, p_neg), CallOpenPredT (_, sense, key, unrefined_t, fresh_t)) ->
+        | ( OpenPredT { m_pos = p_pos; m_neg = p_neg; reason = _; base_t = _ },
+            CallOpenPredT (_, sense, key, unrefined_t, fresh_t) ) ->
           let preds =
             if sense then
               p_pos
@@ -3317,7 +3318,9 @@ struct
          *
          * Each matched pair of predicates is subsequently checked for consistency.
          *)
-        | (OpenPredT (_, t1, _, _), SubstOnPredT (_, _, OpenPredT (_, t2, p_pos_2, p_neg_2)))
+        | ( OpenPredT { base_t = t1; m_pos = _; m_neg = _; reason = _ },
+            SubstOnPredT
+              (_, _, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = p_neg_2; reason = _ }) )
           when Key_map.(is_empty p_pos_2 && is_empty p_neg_2) ->
           rec_flow_t cx trace (t1, t2)
         | (OpenPredT _, UseT (_, OpenPredT _)) ->
@@ -3326,7 +3329,8 @@ struct
         (*********************************************)
         (* Using predicate functions as regular ones *)
         (*********************************************)
-        | (OpenPredT (_, l, _, _), _) -> rec_flow cx trace (l, u)
+        | (OpenPredT { base_t = l; m_pos = _; m_neg = _; reason = _ }, _) ->
+          rec_flow cx trace (l, u)
         (********************)
         (* mixin conversion *)
         (********************)
@@ -7075,13 +7079,13 @@ struct
     | NotT (reason, t) ->
       rec_flow_t cx trace (AnyT.why (AnyT.source any) reason, t);
       true
-    | SubstOnPredT (_, _, OpenPredT (_, t, _, _)) ->
+    | SubstOnPredT (_, _, OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ }) ->
       covariant_flow ~use_op:unknown_use t;
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t))
-    | UseT (use_op, OpenPredT (_, t, _, _))
+    | UseT (use_op, OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ })
     | UseT (use_op, ShapeT t) ->
       covariant_flow ~use_op t;
       true

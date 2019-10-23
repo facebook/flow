@@ -179,7 +179,12 @@ module rec TypeTerm : sig
        predicates here are "open" in the sense that they contain free variable
        instances, which are the keys to the two maps.
     *)
-    | OpenPredT of reason * t * predicate Key_map.t * predicate Key_map.t
+    | OpenPredT of {
+        reason: reason;
+        base_t: t;
+        m_pos: predicate Key_map.t;
+        m_neg: predicate Key_map.t;
+      }
     | ReposT of reason * t
     | AnyT of reason * any_source
 
@@ -2444,7 +2449,7 @@ end = struct
     | ObjProtoT reason -> reason
     | MatchingPropT (reason, _, _) -> reason
     | OpaqueT (reason, _) -> reason
-    | OpenPredT (reason, _, _, _) -> reason
+    | OpenPredT { reason; m_pos = _; m_neg = _; base_t = _ } -> reason
     | InternalT (OptionalChainVoidT reason) -> reason
     | ReposT (reason, _) -> reason
     | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
@@ -2608,7 +2613,8 @@ end = struct
     | ObjProtoT reason -> ObjProtoT (f reason)
     | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
     | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
-    | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
+    | OpenPredT { reason; base_t; m_pos; m_neg } ->
+      OpenPredT { reason = f reason; base_t; m_pos; m_neg }
     | InternalT (OptionalChainVoidT reason) -> InternalT (OptionalChainVoidT (f reason))
     | ReposT (reason, t) -> ReposT (f reason, t)
     | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))

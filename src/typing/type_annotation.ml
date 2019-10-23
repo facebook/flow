@@ -807,7 +807,13 @@ let rec convert cx tparams_map =
                 let emp = Key_map.empty in
                 let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
                 let tout =
-                  OpenPredT (out_reason, MixedT.at loc |> with_trust bogus_trust, emp, emp)
+                  OpenPredT
+                    {
+                      reason = out_reason;
+                      base_t = MixedT.at loc |> with_trust bogus_trust;
+                      m_pos = emp;
+                      m_neg = emp;
+                    }
                 in
                 reconstruct_ast
                   (DefT

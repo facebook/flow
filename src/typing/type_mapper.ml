@@ -219,14 +219,14 @@ class virtual ['a] t =
           t
         else
           CustomFunT (r, kind')
-      | OpenPredT (r, t', map1, map2) ->
+      | OpenPredT { reason = r; base_t = t'; m_pos = map1; m_neg = map2 } ->
         let t'' = self#type_ cx map_cx t' in
         let map1' = Key_map.map (self#predicate cx map_cx) map1 in
         let map2' = Key_map.map (self#predicate cx map_cx) map2 in
         if t'' == t' then
           t
         else
-          OpenPredT (r, t'', map1', map2')
+          OpenPredT { reason = r; base_t = t''; m_pos = map1'; m_neg = map2' }
       | ReposT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

@@ -476,7 +476,7 @@ let rec extract_type cx this_t =
   | NullProtoT _
   | ObjProtoT _
   | OpaqueT _
-  | OpenPredT (_, _, _, _)
+  | OpenPredT _
   | ShapeT _
   | ThisClassT _
   | DefT (_, _, TypeT _) ->

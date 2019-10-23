@@ -74,7 +74,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | OpenPredT (_, t, p_map, n_map) ->
+      | OpenPredT { base_t = t; m_pos = p_map; m_neg = n_map; reason = _ } ->
         let acc = self#type_ cx pole acc t in
         let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
         let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in

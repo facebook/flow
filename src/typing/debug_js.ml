@@ -322,7 +322,7 @@ and _json_of_t_impl json_cx t =
         (match kind with
         | ReactElementFactory t -> [("componentType", _json_of_t json_cx t)]
         | _ -> [])
-      | OpenPredT (_, t, pos_preds, neg_preds) ->
+      | OpenPredT { base_t = t; m_pos = pos_preds; m_neg = neg_preds; reason = _ } ->
         [
           (let json_key_map f map =
              JSON_Object
@@ -1742,7 +1742,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | InternalT (ChoiceKitT _) -> p t
     | TypeDestructorTriggerT (_, _, _, s, x) ->
       p ~extra:(spf "%s on upper, %s" (string_of_destructor s) (kid x)) t
-    | OpenPredT (_, arg, p_pos, p_neg) ->
+    | OpenPredT { base_t = arg; m_pos = p_pos; m_neg = p_neg; reason = _ } ->
       p
         t
         ~extra:
