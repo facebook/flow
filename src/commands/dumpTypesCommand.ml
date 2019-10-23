@@ -44,7 +44,7 @@ let spec =
 let types_to_json ~file_content types ~strip_root =
   Hh_json.(
     Reason.(
-      let offset_table = Option.map file_content ~f:Offset_utils.make in
+      let offset_table = Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8) in
       let types_json =
         types
         |> Core_list.map ~f:(fun (loc, t) ->

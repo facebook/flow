@@ -746,7 +746,7 @@ let get_offset_table_expensive ~stdin_file loc =
   Loc.source loc
   >>= File_key.to_path %> Base.Result.ok
   >>= read_file ~stdin_file
-  >>| Offset_utils.make
+  >>| Offset_utils.make ~kind:Offset_utils.Utf8
 
 let read_lines_in_file loc filename stdin_file =
   match filename with

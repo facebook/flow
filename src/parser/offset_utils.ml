@@ -8,6 +8,10 @@
 (* table from 0-based line number and 0-based column number to the offset at that point *)
 type t = int array array
 
+type offset_kind =
+  | Utf8
+  | JavaScript
+
 (* Classify each codepoint. We care about how many bytes each codepoint takes, in order to
    compute offsets in terms of bytes instead of codepoints. We also care about various kinds of
    newlines. To reduce memory, it is important that this is a basic variant with no parameters
@@ -34,6 +38,18 @@ let utf8_size_of_kind = function
   | Cr -> 1
   | Nl -> 1
   | Ls -> 3
+
+(* Gives the size in code units (16-bit blocks) of the character's UTF-16 encoding *)
+let js_size_of_kind = function
+  | Chars_0x0
+  | Chars_0x80
+  | Chars_0x800 ->
+    1
+  | Chars_0x10000 -> 2
+  | Malformed -> 1
+  | Cr -> 1
+  | Nl -> 1
+  | Ls -> 1
 
 let make =
   (* Using Wtf8 allows us to properly track multi-byte characters, so that we increment the column
@@ -78,7 +94,7 @@ let make =
     | ((Chars_0x0 | Chars_0x80 | Chars_0x800 | Chars_0x10000 | Malformed) as kind) :: rest ->
       build_table size_of_kind (offset + size_of_kind kind, offset :: rev_line, acc) rest
   in
-  fun text ->
+  fun ~kind text ->
     let rev_kinds = Wtf8.fold_wtf_8 fold_codepoints [] text in
     (* Add a phantom line at the end of the file. Since end positions are reported exclusively, it
      * is possible for the lexer to output an end position with a line number one higher than the
@@ -86,7 +102,12 @@ let make =
      * return the offset that is one higher than the last legitimate offset, since it could only be
      * correctly used as an exclusive index. *)
     let rev_kinds = Nl :: rev_kinds in
-    build_table utf8_size_of_kind (0, [], []) (List.rev rev_kinds)
+    let size_of_kind =
+      match kind with
+      | Utf8 -> utf8_size_of_kind
+      | JavaScript -> js_size_of_kind
+    in
+    build_table size_of_kind (0, [], []) (List.rev rev_kinds)
 
 exception Offset_lookup_failed of Loc.position * string
 

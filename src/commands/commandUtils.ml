@@ -1659,5 +1659,5 @@ let json_of_loc_with_offset ?stdin_file ~strip_root loc =
         Some (File_input.content_of_file_input_unsafe fileinput)
       | _ -> path >>= Sys_utils.cat_or_failed
     in
-    let offset_table = Option.map file_content ~f:Offset_utils.make in
+    let offset_table = Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8) in
     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)

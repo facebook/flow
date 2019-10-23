@@ -523,7 +523,7 @@ end = struct
 
   let parse_file (test_options, parse_options) content =
     let (ast, errors) = Parser_flow.program_file ~fail:false ~parse_options content None in
-    let offset_table = Some (Offset_utils.make content) in
+    let offset_table = Some (Offset_utils.make ~kind:Offset_utils.Utf8 content) in
     let module Translate =
       Estree_translator.Translate
         (Json_of_estree)
