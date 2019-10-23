@@ -593,7 +593,7 @@ end = struct
       | MaybeT (_, t) ->
         let%map t = type__ ~env t in
         Ty.mk_union (Ty.Void, [Ty.Null; t])
-      | OptionalT (_, t) ->
+      | OptionalT { reason = _; type_ = t; use_desc = _ } ->
         let%map t = type__ ~env t in
         Ty.mk_union (Ty.Void, [t])
       | DefT (_, _, FunT (_, _, f)) ->
@@ -1485,7 +1485,7 @@ end = struct
   and opt_t ~env t =
     let (t, opt) =
       match t with
-      | T.OptionalT (_, t) -> (t, true)
+      | T.OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
       | t -> (t, false)
     in
     let%map t = type__ ~env t in

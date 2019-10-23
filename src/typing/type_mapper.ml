@@ -65,7 +65,9 @@ let union_flatten =
       DefT (r, Trust.bogus_trust (), NullT)
       :: DefT (r, Trust.bogus_trust (), VoidT)
       :: flatten cx seen t
-    | OptionalT (r, t) -> DefT (r, Trust.bogus_trust (), VoidT) :: flatten cx seen t
+    | OptionalT { reason = r; type_ = t; use_desc } ->
+      let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
+      void_t :: flatten cx seen t
     | DefT (_, _, EmptyT _) -> []
     | _ -> [t]
   in
@@ -239,12 +241,12 @@ class virtual ['a] t =
           InternalT (ReposUpperT (r, t''))
       | AnyT _ -> t
       | InternalT (OptionalChainVoidT _) -> t
-      | OptionalT (r, t') ->
+      | OptionalT { reason; type_ = t'; use_desc } ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          OptionalT (r, t'')
+          OptionalT { reason; type_ = t''; use_desc }
       | MaybeT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

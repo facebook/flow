@@ -215,7 +215,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
               let type_and_optionality t =
                 match t with
-                | OptionalT (_, t) -> (t, true)
+                | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
                 | _ -> (t, false)
               in
               let merge_props (t1, _) (t2, _) =
@@ -554,12 +554,16 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                    * {...{p?}, ...{p?}} is {p?} instead of {p}. This is inconsistent with
                    * the behavior of other object rest merge modes implemented in this
                    * pattern match. *)
-                  | (ReactConfigMerge _, Some (t1, _), Some (OptionalT (_, t2), _), _) ->
+                  | ( ReactConfigMerge _,
+                      Some (t1, _),
+                      Some (OptionalT { reason = _; type_ = t2; use_desc = _ }, _),
+                      _ ) ->
                     (* We only test the subtyping relation of t1 and t2 if both t1 and t2
                      * are optional types. If t1 is required then t2 will always
                      * be overwritten. *)
                     (match t1 with
-                    | OptionalT (_, t1) -> rec_flow_t cx trace (t2, t1)
+                    | OptionalT { reason = _; type_ = t1; use_desc = _ } ->
+                      rec_flow_t cx trace (t2, t1)
                     | _ -> ());
                     Some (Field (None, t1, Polarity.Positive))
                   (* Using our same equation. Consider this case:
@@ -732,11 +736,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | (t, UnionT (_, rep)) ->
               UnionRep.members rep |> List.exists (fun u -> is_subset (t, u))
             | (MaybeT (_, t1), MaybeT (_, t2)) -> is_subset (t1, t2)
-            | (OptionalT (_, t1), OptionalT (_, t2)) -> is_subset (t1, t2)
+            | ( OptionalT { reason = _; type_ = t1; use_desc = _ },
+                OptionalT { reason = _; type_ = t2; use_desc = _ } ) ->
+              is_subset (t1, t2)
             | (DefT (_, _, (NullT | VoidT)), MaybeT _) -> true
             | (DefT (_, _, VoidT), OptionalT _) -> true
             | (t1, MaybeT (_, t2)) -> is_subset (t1, t2)
-            | (t1, OptionalT (_, t2)) -> is_subset (t1, t2)
+            | (t1, OptionalT { reason = _; type_ = t2; use_desc = _ }) -> is_subset (t1, t2)
             | (t1, t2) -> quick_subtype false t1 t2
           in
           let widen_type cx trace reason ~use_op t1 t2 =
@@ -761,7 +767,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let new_pmap = slice.props in
             let type_and_optionality (t, _) =
               match t with
-              | OptionalT (_, t) -> (t, true)
+              | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
               | _ -> (t, false)
             in
             let pmap_and_changed =
@@ -1037,9 +1043,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let merge_props (t1, own1) (t2, own2) =
           let (t1, t2, opt) =
             match (t1, t2) with
-            | (OptionalT (_, t1), OptionalT (_, t2)) -> (t1, t2, true)
-            | (OptionalT (_, t1), t2)
-            | (t1, OptionalT (_, t2))
+            | ( OptionalT { reason = _; type_ = t1; use_desc = _ },
+                OptionalT { reason = _; type_ = t2; use_desc = _ } ) ->
+              (t1, t2, true)
+            | (OptionalT { reason = _; type_ = t1; use_desc = _ }, t2)
+            | (t1, OptionalT { reason = _; type_ = t2; use_desc = _ })
             | (t1, t2) ->
               (t1, t2, false)
           in

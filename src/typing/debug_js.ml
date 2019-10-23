@@ -216,7 +216,7 @@ and _json_of_t_impl json_cx t =
           ("implements", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) implements));
           ("instance", json_of_insttype json_cx instance);
         ]
-      | OptionalT (_, t) -> [("type", _json_of_t json_cx t)]
+      | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]
       | EvalT (t, defer_use_t, id) ->
         [
           ("type", _json_of_t json_cx t);
@@ -1682,7 +1682,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
     | OpaqueT _ -> p t
-    | OptionalT (_, arg) -> p ~extra:(kid arg) t
+    | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t
     | EvalT (arg, expr, id) -> p ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
     | TypeAppT (_, _, base, args) ->
       p ~extra:(spf "%s, [%s]" (kid base) (String.concat "; " (Core_list.map ~f:kid args))) t

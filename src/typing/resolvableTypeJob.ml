@@ -175,7 +175,7 @@ and collect_of_type ?log_unresolved cx acc = function
      would be quite nice (as long as we confirm that the resulting
      virtualization of calls to this function doesn't lead to perf
      degradation: this function is expected to be quite hot). *)
-  | OptionalT (_, t)
+  | OptionalT { reason = _; type_ = t; use_desc = _ }
   | MaybeT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
   | UnionT (_, rep) ->

@@ -101,7 +101,7 @@ class ['a] t =
       | AnyT _
       | InternalT (OptionalChainVoidT _) ->
         acc
-      | OptionalT (_, t)
+      | OptionalT { reason = _; type_ = t; use_desc = _ }
       | MaybeT (_, t) ->
         self#type_ cx pole acc t
       | IntersectionT (_, rep) -> self#list (self#type_ cx pole) acc (InterRep.members rep)

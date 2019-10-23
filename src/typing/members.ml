@@ -399,7 +399,7 @@ let rec extract_type cx this_t =
   | AnnotT _
   | MergedT _ ->
     resolve_type cx this_t |> extract_type cx
-  | OptionalT (_, ty)
+  | OptionalT { reason = _; type_ = ty; use_desc = _ }
   | MaybeT (_, ty) ->
     extract_type cx ty
   | DefT (_, _, (NullT | VoidT))

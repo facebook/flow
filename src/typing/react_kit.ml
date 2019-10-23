@@ -407,7 +407,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         Some
           (OptionalT
-             (r, union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))]))
+             {
+               reason = r;
+               type_ =
+                 union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))];
+               use_desc = false;
+             })
       (* If we have one children argument and a spread of unknown length then
        * React may either pass in the unwrapped argument, or an array where the
        * element type is the union of the known argument and the spread type. *)

@@ -989,8 +989,9 @@ struct
           rec_flow cx trace (NullT.make lreason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (VoidT.make lreason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
-        | (OptionalT (r, t), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
-          rec_flow cx trace (VoidT.why r |> with_trust Trust.bogus_trust, u);
+        | ( OptionalT { reason = r; type_ = t; use_desc },
+            IntersectionPreprocessKitT (_, ConcretizeTypes _) ) ->
+          rec_flow cx trace (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
         | (AnnotT (r, t, use_desc), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
           (* TODO: directly derive loc and desc from the reason of tvar *)
@@ -1069,7 +1070,8 @@ struct
               r
           in
           rec_flow cx trace (l, UseT (use_op, MaybeT (r, annot use_desc u)))
-        | (OptionalT (r, u), ReposUseT (reason, use_desc, use_op, l)) ->
+        | ( OptionalT { reason = r; type_ = u; use_desc = use_desc_optional_t },
+            ReposUseT (reason, use_desc, use_op, l) ) ->
           let loc = aloc_of_reason reason in
           let annot_loc = annot_aloc_of_reason reason in
           let r = opt_annot_reason ?annot_loc @@ repos_reason loc r in
@@ -1079,7 +1081,14 @@ struct
             else
               r
           in
-          rec_flow cx trace (l, UseT (use_op, OptionalT (r, annot use_desc u)))
+          rec_flow
+            cx
+            trace
+            ( l,
+              UseT
+                ( use_op,
+                  OptionalT
+                    { reason = r; type_ = annot use_desc u; use_desc = use_desc_optional_t } ) )
         (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
        through a tvar. *)
@@ -1805,7 +1814,7 @@ struct
         | (_, IdxUnwrap (_, t)) -> rec_flow_t cx trace (l, t)
         (* De-maybe-ify an idx() property access *)
         | (MaybeT (_, inner_t), IdxUnMaybeifyT _)
-        | (OptionalT (_, inner_t), IdxUnMaybeifyT _) ->
+        | (OptionalT { reason = _; type_ = inner_t; use_desc = _ }, IdxUnMaybeifyT _) ->
           rec_flow cx trace (inner_t, u)
         | (DefT (_, _, NullT), IdxUnMaybeifyT _) -> ()
         | (DefT (_, _, VoidT), IdxUnMaybeifyT _) -> ()
@@ -2047,13 +2056,15 @@ struct
         (******************)
 
         (* The type optional(T) is the same as undefined | UseT *)
-        | (DefT (r, trust, VoidT), UseT (use_op, OptionalT (_, tout))) ->
+        | ( DefT (r, trust, VoidT),
+            UseT (use_op, OptionalT { reason = _; type_ = tout; use_desc = _ }) ) ->
           rec_flow cx trace (EmptyT.why r trust, UseT (use_op, tout))
         | (OptionalT _, ReposLowerT (reason, use_desc, u)) ->
           (* Don't split the optional type into its constituent members. Instead,
          reposition the entire optional type. *)
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (OptionalT (r, t), DestructuringT (reason, DestructAnnot, s, tout)) ->
+        | ( OptionalT { reason = r; type_ = t; use_desc },
+            DestructuringT (reason, DestructAnnot, s, tout) ) ->
           let f t =
             AnnotT
               ( reason,
@@ -2061,20 +2072,21 @@ struct
                     rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))),
                 false )
           in
-          let void_t = VoidT.why r |> with_trust bogus_trust in
+          let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust bogus_trust in
           let rep = UnionRep.make (f void_t) (f t) [] in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
-        | (OptionalT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _)) ->
+        | ( OptionalT { reason = _; type_ = t; use_desc = _ },
+            ObjAssignFromT (_, _, _, _, ObjAssign _) ) ->
           (* This isn't correct, but matches the existing incorrectness of spreads
            * today. In particular, spreading `null` and `void` become {}. The wrong
            * part is that spreads should distribute through unions, so `{...?T}`
            * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
           rec_flow cx trace (t, u)
-        | (OptionalT (_, t), UseT (_, OptionalT _))
-        | (OptionalT (_, t), UseT (_, MaybeT _)) ->
+        | (OptionalT { reason = _; type_ = t; use_desc = _ }, UseT (_, OptionalT _))
+        | (OptionalT { reason = _; type_ = t; use_desc = _ }, UseT (_, MaybeT _)) ->
           rec_flow cx trace (t, u)
-        | (OptionalT (r, t), _) ->
-          rec_flow cx trace (VoidT.why r |> with_trust Trust.bogus_trust, u);
+        | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
+          rec_flow cx trace (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
         (*****************)
         (* logical types *)
@@ -2629,9 +2641,9 @@ struct
               rec_flow_t ~use_op cx trace (remove_predicate filter_null_and_void rep, maybe)
             | _ -> flow_all_in_union cx trace rep u
           end
-        | (UnionT (reason, rep), UseT (use_op, OptionalT (r, opt))) ->
+        | (UnionT (reason, rep), UseT (use_op, OptionalT { reason = r; type_ = opt; use_desc })) ->
           let checked_trust = Context.trust_errors cx in
-          let void = VoidT.why r |> with_trust bogus_trust in
+          let void = VoidT.why_with_use_desc ~use_desc r |> with_trust bogus_trust in
           let remove_void =
             UnionRep.members
             %> Type_mapper.union_flatten cx
@@ -2783,7 +2795,8 @@ struct
           try_union cx trace use_op l r rep
         (* maybe and optional types are just special union types *)
         | (t1, UseT (use_op, MaybeT (_, t2))) -> rec_flow cx trace (t1, UseT (use_op, t2))
-        | (t1, UseT (use_op, OptionalT (_, t2))) -> rec_flow cx trace (t1, UseT (use_op, t2))
+        | (t1, UseT (use_op, OptionalT { reason = _; type_ = t2; use_desc = _ })) ->
+          rec_flow cx trace (t1, UseT (use_op, t2))
         (* special treatment for some operations on intersections: these
         rules fire for particular UBs whose constraints can (or must)
         be resolved against intersection LBs as a whole, instead of
@@ -5374,7 +5387,7 @@ struct
           let map_t t =
             let (t, opt) =
               match t with
-              | OptionalT (_, t) -> (t, true)
+              | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
               | _ -> (t, false)
             in
             let use_op = Frame (ObjMapFunCompatibility { value = reason_of_t t }, use_op) in
@@ -5409,7 +5422,7 @@ struct
           let mapi_t key t =
             let (t, opt) =
               match t with
-              | OptionalT (_, t) -> (t, true)
+              | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
               | _ -> (t, false)
             in
             let use_op =
@@ -6720,7 +6733,8 @@ struct
           let lp = Field (None, value, dict_polarity) in
           let up =
             match up with
-            | Field (loc, OptionalT (_, ut), upolarity) -> Field (loc, ut, upolarity)
+            | Field (loc, OptionalT { reason = _; type_ = ut; use_desc = _ }, upolarity) ->
+              Field (loc, ut, upolarity)
             | _ -> up
           in
           if lit then
@@ -6797,7 +6811,8 @@ struct
             in
             let lp =
               match lp with
-              | Field (loc, OptionalT (_, lt), lpolarity) -> Field (loc, lt, lpolarity)
+              | Field (loc, OptionalT { reason = _; type_ = lt; use_desc = _ }, lpolarity) ->
+                Field (loc, lt, lpolarity)
               | _ -> lp
             in
             let up = Field (None, value, dict_polarity) in
@@ -6826,7 +6841,7 @@ struct
         in
         let lp =
           match Context.find_call cx lcall with
-          | OptionalT (_, t) -> Field (None, t, Polarity.Positive)
+          | OptionalT { reason = _; type_ = t; use_desc = _ } -> Field (None, t, Polarity.Positive)
           | t -> Field (None, t, Polarity.Positive)
         in
         let up = Field (None, value, dict_polarity) in
@@ -7345,7 +7360,7 @@ struct
                  use_op )
            in
            match p with
-           | Field (_, OptionalT (_, t), polarity) ->
+           | Field (_, OptionalT { reason = _; type_ = t; use_desc = _ }, polarity) ->
              let propref =
                let reason_prop =
                  update_desc_reason (fun desc -> ROptional (RPropertyOf (s, desc))) reason_struct
@@ -7662,7 +7677,7 @@ struct
       ()
     | ExistsT _ -> ()
     | InternalT (OptionalChainVoidT _) -> ()
-    | OptionalT (_, t)
+    | OptionalT { reason = _; type_ = t; use_desc = _ }
     | ExactT (_, t)
     | MaybeT (_, t)
     | ReposT (_, t)
@@ -9029,7 +9044,8 @@ struct
 
   (* filter out undefined from a type *)
   and filter_optional cx ?trace reason opt_t =
-    Tvar.mk_where cx reason (fun t -> flow_opt_t cx ?trace (opt_t, OptionalT (reason, t)))
+    Tvar.mk_where cx reason (fun t ->
+        flow_opt_t cx ?trace (opt_t, OptionalT { reason; type_ = t; use_desc = false }))
 
   (* filter out undefined and null from a type *)
   and filter_maybe cx ?trace reason maybe_t =
@@ -11123,9 +11139,9 @@ struct
          T. *)
         let r = mod_reason r in
         MaybeT (r, recurse seen t)
-      | OptionalT (r, t) ->
-        let r = mod_reason r in
-        OptionalT (r, recurse seen t)
+      | OptionalT { reason; type_ = t; use_desc } ->
+        let reason = mod_reason reason in
+        OptionalT { reason; type_ = recurse seen t; use_desc }
       | UnionT (r, rep) ->
         let r = mod_reason r in
         let rep = UnionRep.ident_map (recurse seen) rep in

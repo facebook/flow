@@ -100,7 +100,11 @@ module rec TypeTerm : sig
     (* ? types *)
     | MaybeT of reason * t
     (* type of an optional parameter *)
-    | OptionalT of reason * t
+    | OptionalT of {
+        reason: reason;
+        type_: t;
+        use_desc: bool;
+      }
     (* collects the keys of an object *)
     | KeysT of reason * t
     (* annotations *)
@@ -2447,7 +2451,7 @@ end = struct
     | UnionT (reason, _) -> reason
     | IntersectionT (reason, _) -> reason
     | MaybeT (reason, _) -> reason
-    | OptionalT (reason, _) -> reason
+    | OptionalT { reason; type_ = _; use_desc = _ } -> reason
 
   and reason_of_defer_use_t = function
     | LatentPredT (reason, _)
@@ -2584,7 +2588,7 @@ end = struct
     | UnionT (reason, src) -> UnionT (f reason, src)
     | IntersectionT (reason, src) -> IntersectionT (f reason, src)
     | MaybeT (reason, src) -> MaybeT (f reason, src)
-    | OptionalT (reason, src) -> OptionalT (f reason, src)
+    | OptionalT { reason; type_; use_desc } -> OptionalT { reason = f reason; type_; use_desc }
     | EvalT (t, defer_use_t, id) -> EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
     | ExactT (reason, t) -> ExactT (f reason, t)
     | ExistsT reason -> ExistsT (f reason)
@@ -2977,7 +2981,9 @@ end = struct
        * to make sure we swap the types for these reasons as well. Otherwise our
        * optimized union ~> union check will not pass. *)
       | (MaybeT (_, t2), MaybeT (r, t1)) -> MaybeT (r, swap_reason t2 t1)
-      | (OptionalT (_, t2), OptionalT (r, t1)) -> OptionalT (r, swap_reason t2 t1)
+      | ( OptionalT { reason = _; type_ = t2; use_desc = _ },
+          OptionalT { reason; type_ = t1; use_desc } ) ->
+        OptionalT { reason; type_ = swap_reason t2 t1; use_desc }
       | (ExactT (_, t2), ExactT (r, t1)) -> ExactT (r, swap_reason t2 t1)
       | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
     in
@@ -3078,6 +3084,15 @@ module Primitive (P : PrimitiveType) = struct
   let why reason = P.make (replace_desc_reason desc reason)
 
   let make = P.make
+
+  let why_with_use_desc ~use_desc r trust =
+    let r =
+      if use_desc then
+        r
+      else
+        replace_desc_reason P.desc r
+    in
+    P.make r trust
 end
 
 module NumT = Primitive (struct
@@ -3718,14 +3733,14 @@ and elemt_of_arrtype = function
   | TupleAT (elemt, _) ->
     elemt
 
-let optional ?annot_loc t =
+let optional ?annot_loc ?(use_desc = false) t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
   let reason =
     match annot_loc with
     | Some annot_loc -> annot_reason ~annot_loc @@ repos_reason annot_loc reason
     | None -> reason
   in
-  OptionalT (reason, t)
+  OptionalT { reason; type_ = t; use_desc }
 
 let maybe t =
   let reason = update_desc_new_reason (fun desc -> RMaybe desc) (reason_of_t t) in
