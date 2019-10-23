@@ -424,6 +424,70 @@ export default suite(
           ),
       ],
     ).flowConfig('_flowconfig_all_set_to_true'),
+    test('live non-parse diagnostics ignores ignored file', [
+      lspStartAndConnect(),
+      // Open an ignored document with errors. We should not get errors
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/ignoreme.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+          let x: string = 123;
+          `,
+        },
+      })
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+      // Modified an ignored document with errors. We should not get errors
+      lspNotification('textDocument/didChange', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/ignoreme.js',
+          version: 2,
+        },
+        contentChanges: [
+          {
+            text: `// @flow
+          let x: boolean = 123;
+          `,
+          },
+        ],
+      })
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+    ]).flowConfig('_flowconfig_with_ignores'),
+    test('live non-parse diagnostics ignores non-flow files', [
+      lspStartAndConnect(),
+      // Open a document with the wrong extension
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/foo.php',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+          let x: string = 123;
+          `,
+        },
+      })
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+      addFile('witherrors1.js', 'directory.js/with_errors.js.ignored')
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+      // Open a "document" which actually is a directory
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/directory.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+          let x: string = 123;
+          `,
+        },
+      })
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+    ]),
     test('pseudo parse errors', [
       lspStartAndConnect(),
       addFile('pseudo_parse_error.js')
