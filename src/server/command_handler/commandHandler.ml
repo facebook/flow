@@ -1641,9 +1641,24 @@ let handle_live_errors_request =
                        })),
                 metadata )
           | File_input.FileContent (_, content) ->
-            let file = File_key.SourceFile file_path in
-            let%lwt (_, live_errors, live_warnings) =
-              Types_js.typecheck_contents ~options ~env ~profiling content file
+            let%lwt (live_errors, live_warnings) =
+              let file = File_key.SourceFile file_path in
+              if
+                Options.all options
+                ||
+                let (_, docblock) =
+                  Parsing_service_js.(parse_docblock docblock_max_tokens file content)
+                in
+                Docblock.is_flow docblock
+              then
+                let%lwt (_, live_errors, live_warnings) =
+                  Types_js.typecheck_contents ~options ~env ~profiling content file
+                in
+                Lwt.return (live_errors, live_warnings)
+              else
+                Lwt.return
+                  ( Errors.ConcreteLocPrintableErrorSet.empty,
+                    Errors.ConcreteLocPrintableErrorSet.empty )
             in
             Lwt.return
               ( (),
