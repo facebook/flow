@@ -2020,6 +2020,22 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let state =
       show_recheck_progress { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats }
     in
+    Option.iter (get_open_files state) ~f:(fun open_files ->
+        let method_name = "synthetic/endRecheck" in
+        let metadata =
+          {
+            LspProt.empty_metadata with
+            LspProt.start_wall_time = Unix.gettimeofday ();
+            start_server_status = Some (fst cenv.c_server_status);
+            start_watcher_status = snd cenv.c_server_status;
+            start_json_truncated = Hh_json.(JSON_Object [("method", JSON_String method_name)]);
+            lsp_method_name = method_name;
+          }
+        in
+        SMap.iter
+          (fun uri _ -> send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata)
+          open_files);
+
     Ok (state, LogNotNeeded)
   | (Connected cenv, Server_message LspProt.(NotificationFromServer (Please_hold status))) ->
     let (server_status, watcher_status) = status in
