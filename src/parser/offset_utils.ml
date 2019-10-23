@@ -13,19 +13,23 @@ type t = int array array
    newlines. To reduce memory, it is important that this is a basic variant with no parameters
    (so, don't make it `Chars of int`). *)
 type kind =
-  | Chars_1
-  | Chars_2
-  | Chars_3
-  | Chars_4
+  (* Char has a codepoint greater than or equal to 0x0 but less than 0x80 *)
+  | Chars_0x0
+  (* Char has a codepoint greater than or equal to 0x80 but less than 0x800 *)
+  | Chars_0x80
+  | Chars_0x800
+  | Chars_0x10000
+  | Malformed
   | Cr
   | Nl
   | Ls
 
 let size_of_kind = function
-  | Chars_1 -> 1
-  | Chars_2 -> 2
-  | Chars_3 -> 3
-  | Chars_4 -> 4
+  | Chars_0x0 -> 1
+  | Chars_0x80 -> 2
+  | Chars_0x800 -> 3
+  | Chars_0x10000 -> 4
+  | Malformed -> 1
   | Cr -> 1
   | Nl -> 1
   | Ls -> 3
@@ -39,21 +43,21 @@ let make =
     let kind =
       match chr with
       | Wtf8.Point code ->
-        if code >= 0x10000 then
-          Chars_4
-        else if code == 0x2028 || code == 0x2029 then
+        if code == 0x2028 || code == 0x2029 then
           Ls
-        else if code >= 0x800 then
-          Chars_3
-        else if code >= 0x80 then
-          Chars_2
         else if code == 0xA then
           Nl
         else if code == 0xD then
           Cr
+        else if code >= 0x10000 then
+          Chars_0x10000
+        else if code >= 0x800 then
+          Chars_0x800
+        else if code >= 0x80 then
+          Chars_0x80
         else
-          Chars_1
-      | Wtf8.Malformed -> Chars_1
+          Chars_0x0
+      | Wtf8.Malformed -> Malformed
     in
     kind :: acc
   in
@@ -70,7 +74,7 @@ let make =
     | ((Cr | Nl | Ls) as kind) :: rest ->
       let line = Array.of_list (List.rev (offset :: rev_line)) in
       build_table (offset + size_of_kind kind, [], line :: acc) rest
-    | ((Chars_1 | Chars_2 | Chars_3 | Chars_4) as kind) :: rest ->
+    | ((Chars_0x0 | Chars_0x80 | Chars_0x800 | Chars_0x10000 | Malformed) as kind) :: rest ->
       build_table (offset + size_of_kind kind, offset :: rev_line, acc) rest
   in
   fun text ->
