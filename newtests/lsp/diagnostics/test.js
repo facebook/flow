@@ -100,8 +100,8 @@ export default suite(
           languageId: 'javascript',
           version: 1,
           text: `// @flow
-function fred(): number {return 1+;}
-`,
+    function fred(): number {return 1+;}
+    `,
         },
       })
         .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
@@ -118,8 +118,8 @@ function fred(): number {return 1+;}
         contentChanges: [
           {
             text: `// @flow
-function fred(): number {return 1+2;}
-`,
+    function fred(): number {return 1+2;}
+    `,
           },
         ],
       })
@@ -137,8 +137,8 @@ function fred(): number {return 1+2;}
         contentChanges: [
           {
             text: `// @flow
-  function fred(): number {return 1+3;}
-  `,
+      function fred(): number {return 1+3;}
+      `,
           },
         ],
       })
@@ -153,8 +153,8 @@ function fred(): number {return 1+2;}
         contentChanges: [
           {
             text: `// @flow
-  function fred(): number {return 1+;}
-  `,
+      function fred(): number {return 1+;}
+      `,
           },
         ],
       })
@@ -306,7 +306,7 @@ function fred(): number {return 1+2;}
           ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
     ]).flowConfig('_flowconfig_lazy'),
-    test('live non-parse diagnostics', [
+    test('live non-parse diagnostics can be disabled in .flowconfig', [
       lspStartAndConnect(),
       // Open a document with no errors. We should not see errors
       lspNotification('textDocument/didOpen', {
@@ -318,7 +318,7 @@ function fred(): number {return 1+2;}
         },
       })
         .sleep(1000)
-        .verifyAllLSPMessagesInStep([], []),
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
       // Edit it and add a type error. We won't see the error since
       // experimental.disable_live_non_parse_errors=true
       // is set in the .flowconfig
@@ -335,9 +335,95 @@ function fred(): number {return 1+2;}
           },
         ],
       })
-        .waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics')
-        .verifyAllLSPMessagesInStep([], ['window/showStatus']),
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
     ]).flowConfig('_flowconfig_disable_live_non_parse_errors'),
+    test('live non-parse diagnostics respect missing @flow pragma', [
+      lspStartAndConnect(),
+      // Open a document with no errors. We should not see errors
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `const bad = require("./bad");`,
+        },
+      })
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+      // Edit it and add a type error. We won't see the error since
+      // experimental.disable_live_non_parse_errors=true
+      // is set in the .flowconfig
+      lspNotification('textDocument/didChange', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
+          version: 2,
+        },
+        contentChanges: [
+          {
+            text: `const bad = require("./bad");
+    let x: string = 123;
+    `,
+          },
+        ],
+      })
+        .sleep(1000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+    ]),
+    test(
+      'live non-parse diagnostics ignores missing @flow pragma with all=true',
+      [
+        lspStartAndConnect(),
+        // Open a document with no errors. We should not see errors
+        lspNotification('textDocument/didOpen', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
+            languageId: 'javascript',
+            version: 1,
+            text: `const bad = require("./bad");`,
+          },
+        })
+          .waitUntilLSPMessage(
+            9000,
+            'textDocument/publishDiagnostics{Cannot resolve module `./bad`.}',
+          )
+          .verifyAllLSPMessagesInStep(
+            ['textDocument/publishDiagnostics{Cannot resolve module `./bad`.}'],
+            [
+              'textDocument/publishDiagnostics',
+              ...lspIgnoreStatusAndCancellation,
+            ],
+          ),
+        // Edit it and add a type error. We won't see the error since
+        // experimental.disable_live_non_parse_errors=true
+        // is set in the .flowconfig
+        lspNotification('textDocument/didChange', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/typeError1.js',
+            version: 2,
+          },
+          contentChanges: [
+            {
+              text: `let x: string = 123;
+    `,
+            },
+          ],
+        })
+          .waitUntilLSPMessage(
+            9000,
+            'textDocument/publishDiagnostics{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
+          )
+          .verifyAllLSPMessagesInStep(
+            [
+              'textDocument/publishDiagnostics{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
+            ],
+            [
+              'textDocument/publishDiagnostics',
+              ...lspIgnoreStatusAndCancellation,
+            ],
+          ),
+      ],
+    ).flowConfig('_flowconfig_all_set_to_true'),
     test('pseudo parse errors', [
       lspStartAndConnect(),
       addFile('pseudo_parse_error.js')
@@ -356,10 +442,10 @@ function fred(): number {return 1+2;}
         )
         .newErrors(
           `
-                pseudo_parse_error.js:6
-                  6: obj?.foo(); // Error
-                     ^^^^^^^^^^ Flow does not yet support method or property calls in optional chains.
-              `,
+                    pseudo_parse_error.js:6
+                      6: obj?.foo(); // Error
+                         ^^^^^^^^^^ Flow does not yet support method or property calls in optional chains.
+                  `,
         ),
       lspNotification('textDocument/didOpen', {
         textDocument: {
@@ -368,11 +454,11 @@ function fred(): number {return 1+2;}
           version: 1,
           text: `// @flow
 
-const obj = {};
-// Flow does not yet support method or property calls in optional chains, so
-// this will produce a pseudo parse error
-obj?.foo(); // Error
-`,
+    const obj = {};
+    // Flow does not yet support method or property calls in optional chains, so
+    // this will produce a pseudo parse error
+    obj?.foo(); // Error
+    `,
         },
       })
         .waitUntilLSPMessage(
