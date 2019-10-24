@@ -2572,13 +2572,19 @@ let dump_error_message =
           name
           (Polarity.string expected_polarity)
           (Polarity.string actual_polarity)
-      | EStrictLookupFailed ((reason1, reason2), reason, x, use_op) ->
+      | EBuiltinLookupFailed { reason; name } ->
         spf
-          "EStrictLookupFailed ((%s, %s), %s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+          "EBuiltinLookupFailed { reason = %s; name = %S }"
           (dump_reason cx reason)
-          (match x with
+          (match name with
+          | Some x -> spf "Some(%S)" x
+          | None -> "None")
+      | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
+        spf
+          "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; use_op = %s }"
+          (dump_reason cx reason_prop)
+          (dump_reason cx reason_obj)
+          (match name with
           | Some x -> spf "Some(%S)" x
           | None -> "None")
           (match use_op with

@@ -4279,11 +4279,14 @@ struct
                   (Context.find_call cx lcall, UseT (use_op, Context.find_call cx ucall))
               | None ->
                 let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
-                add_output
-                  cx
-                  ~trace
-                  (Error_message.EStrictLookupFailed
-                     ((reason_prop, lreason), lreason, prop_name, Some use_op)));
+                let error_message =
+                  if is_builtin_reason ALoc.source lreason then
+                    Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                  else
+                    Error_message.EStrictLookupFailed
+                      { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+                in
+                add_output cx ~trace error_message);
 
           Context.iter_real_props cx uflds (fun s up ->
               let use_op =
@@ -4340,11 +4343,14 @@ struct
               Context.find_call cx id
             | _ ->
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
-              add_output
-                cx
-                ~trace
-                (Error_message.EStrictLookupFailed
-                   ((reason_prop, reason), reason, prop_name, Some use_op));
+              let error_message =
+                if is_builtin_reason ALoc.source reason then
+                  Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                else
+                  Error_message.EStrictLookupFailed
+                    { reason_prop; reason_obj = reason; name = prop_name; use_op = Some use_op }
+              in
+              add_output cx ~trace error_message;
               AnyT.error reason_op
           in
           (match u with
@@ -6198,12 +6204,15 @@ struct
             LookupT
               (reason_op, Strict strict_reason, [], (Named (reason_prop, x) as propref), action) )
           ->
-          let use_op = use_op_of_lookup_action action in
-          add_output
-            cx
-            ~trace
-            (Error_message.EStrictLookupFailed
-               ((reason_prop, strict_reason), reason, Some x, use_op));
+          let error_message =
+            if is_builtin_reason ALoc.source reason then
+              Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+            else
+              let use_op = use_op_of_lookup_action action in
+              Error_message.EStrictLookupFailed
+                { reason_prop; reason_obj = strict_reason; name = Some x; use_op }
+          in
+          add_output cx ~trace error_message;
           let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
           perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
@@ -6229,12 +6238,15 @@ struct
             perform_lookup_action cx trace propref p PropertyMapProperty reason reason_op action
           | _ ->
             let reason_prop = reason_of_t elem_t in
-            let use_op = use_op_of_lookup_action action in
-            add_output
-              cx
-              ~trace
-              (Error_message.EStrictLookupFailed
-                 ((reason_prop, strict_reason), reason, None, use_op)))
+            let error_message =
+              if is_builtin_reason ALoc.source reason then
+                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = None }
+              else
+                let use_op = use_op_of_lookup_action action in
+                Error_message.EStrictLookupFailed
+                  { reason_prop; reason_obj = strict_reason; name = None; use_op }
+            in
+            add_output cx ~trace error_message)
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
               ( reason_op,
@@ -6246,12 +6258,15 @@ struct
           (match strict with
           | None -> ()
           | Some strict_reason ->
-            let use_op = use_op_of_lookup_action action in
-            add_output
-              cx
-              ~trace
-              (Error_message.EStrictLookupFailed
-                 ((reason_prop, strict_reason), reason, Some x, use_op)));
+            let error_message =
+              if is_builtin_reason ALoc.source reason then
+                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+              else
+                let use_op = use_op_of_lookup_action action in
+                Error_message.EStrictLookupFailed
+                  { reason_prop; reason_obj = strict_reason; name = Some x; use_op }
+            in
+            add_output cx ~trace error_message);
 
           (* Install shadow prop (if necessary) and link up proto chain. *)
           let prop_loc = def_aloc_of_reason reason_prop in
@@ -6712,11 +6727,14 @@ struct
         rec_flow cx trace (Context.find_call cx lcall, UseT (use_op, Context.find_call cx ucall))
       | None ->
         let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
-        add_output
-          cx
-          ~trace
-          (Error_message.EStrictLookupFailed
-             ((reason_prop, lreason), lreason, prop_name, Some use_op)))
+        let error_message =
+          if is_builtin_reason ALoc.source lreason then
+            Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+          else
+            Error_message.EStrictLookupFailed
+              { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+        in
+        add_output cx ~trace error_message)
     | None -> ());
 
     (* Properties in u must either exist in l, or match l's indexer. *)
@@ -7443,11 +7461,14 @@ struct
              let reason_prop =
                update_desc_reason (fun desc -> RPropertyOf ("$call", desc)) reason_struct
              in
-             add_output
-               cx
-               ~trace
-               (Error_message.EStrictLookupFailed
-                  ((reason_prop, lreason), lreason, prop_name, Some use_op)))
+             let error_message =
+               if is_builtin_reason ALoc.source lreason then
+                 Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+               else
+                 Error_message.EStrictLookupFailed
+                   { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+             in
+             add_output cx ~trace error_message)
 
   and check_super cx trace ~use_op lreason ureason t x p =
     let use_op =

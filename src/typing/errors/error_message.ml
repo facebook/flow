@@ -101,11 +101,16 @@ and 'loc t' =
       expected_polarity: Polarity.t;
       actual_polarity: Polarity.t;
     }
-  | EStrictLookupFailed of
-      ('loc virtual_reason * 'loc virtual_reason)
-      * 'loc virtual_reason
-      * string option
-      * 'loc virtual_use_op option
+  | EBuiltinLookupFailed of {
+      reason: 'loc virtual_reason;
+      name: string option;
+    }
+  | EStrictLookupFailed of {
+      reason_prop: 'loc virtual_reason;
+      reason_obj: 'loc virtual_reason;
+      name: string option;
+      use_op: 'loc virtual_use_op option;
+    }
   | EPrivateLookupFailed of
       ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
@@ -504,9 +509,16 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
     EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
-  | EStrictLookupFailed ((r1, r2), r, p, op) ->
+  | EBuiltinLookupFailed { reason; name } ->
+    EBuiltinLookupFailed { reason = map_reason reason; name }
+  | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
     EStrictLookupFailed
-      ((map_reason r1, map_reason r2), map_reason r, p, Option.map ~f:map_use_op op)
+      {
+        reason_prop = map_reason reason_prop;
+        reason_obj = map_reason reason_obj;
+        name;
+        use_op = Option.map ~f:map_use_op use_op;
+      }
   | EPrivateLookupFailed ((r1, r2), x, op) ->
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EAdditionMixed (r, op) -> EAdditionMixed (map_reason r, map_use_op op)
@@ -750,8 +762,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EPropNotWritable { reason_prop; prop_name; use_op })
   | EPropPolarityMismatch (rs, p, ps, op) ->
     util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
-  | EStrictLookupFailed (rs, r, p, Some op) ->
-    util op (fun op -> EStrictLookupFailed (rs, r, p, Some op))
+  | EStrictLookupFailed { reason_prop; reason_obj; name; use_op = Some op } ->
+    util op (fun op -> EStrictLookupFailed { reason_prop; reason_obj; name; use_op = Some op })
   | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
   | EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
   | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
@@ -795,7 +807,8 @@ let util_use_op_of_msg nope util = function
   | EMissingTypeArgs { reason_tapp = _; reason_arity = _; min_arity = _; max_arity = _ }
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
-  | EStrictLookupFailed (_, _, _, None)
+  | EBuiltinLookupFailed _
+  | EStrictLookupFailed { use_op = None; _ }
   | EComparison (_, _)
   | ESpeculationAmbiguous _
   | EUnsupportedExact (_, _)
@@ -1040,8 +1053,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (aloc_of_reason reason)
-  | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason ALoc.source lreason ->
-    Some (aloc_of_reason reason)
+  | EBuiltinLookupFailed { reason; _ } -> Some (aloc_of_reason reason)
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
   | EInvalidReactConfigType _
@@ -1542,31 +1554,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
       in
       Normal { features }
-    | EStrictLookupFailed (reasons, lreason, x, use_op) ->
-      (* if we're looking something up on the global/builtin object, then tweak
-         the error to say that `x` doesn't exist. We can tell this is the
-         global object because that should be the only object created with
-         `builtin_reason` instead of an actual location (isee `Init_js.init`). *)
-      if is_builtin_reason Loc.source lreason then
-        let (reason, _) = reasons in
-        let msg =
-          match x with
-          | Some x when is_internal_module_name x ->
-            [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
-          | None -> [text "Cannot resolve name "; desc reason; text "."]
-          | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
-          | Some x -> [text "Cannot resolve name "; code x; text "."]
-        in
-        Normal { features = msg }
-      else
-        let (reason_prop, reason_obj) = reasons in
-        PropMissing
-          {
-            loc = loc_of_reason reason_prop;
-            prop = x;
-            reason_obj;
-            use_op = Option.value ~default:unknown_use use_op;
-          }
+    | EBuiltinLookupFailed { reason; name } ->
+      let features =
+        match name with
+        | Some x when is_internal_module_name x ->
+          [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
+        | None -> [text "Cannot resolve name "; desc reason; text "."]
+        | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
+        | Some x -> [text "Cannot resolve name "; code x; text "."]
+      in
+      Normal { features }
+    | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
+      PropMissing
+        {
+          loc = loc_of_reason reason_prop;
+          prop = name;
+          reason_obj;
+          use_op = Option.value ~default:unknown_use use_op;
+        }
     | EPrivateLookupFailed (reasons, x, use_op) ->
       PropMissing
         {

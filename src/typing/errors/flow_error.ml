@@ -181,7 +181,7 @@ let score_of_msg msg =
      * the right types. *)
     | EIncompatibleProp { use_op = Some (Frame (PropertyCompatibility _, _)); _ }
     | EPropNotFound (_, _, Frame (PropertyCompatibility _, _))
-    | EStrictLookupFailed (_, _, _, Some (Frame (PropertyCompatibility _, _))) ->
+    | EStrictLookupFailed { use_op = Some (Frame (PropertyCompatibility _, _)); _ } ->
       -frame_score
     | _ -> 0
   in
