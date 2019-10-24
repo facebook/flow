@@ -12,7 +12,7 @@ module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
 module Deps = Signature_builder_deps.With_Loc
 module File_sig = File_sig.With_Loc
-module Error = Deps.Error
+module Error = Signature_error
 module Dep = Deps.Dep
 module EASort = Expected_annotation_sort
 
@@ -841,7 +841,7 @@ module Verifier (Env : EvalEnv) = struct
     | Kind.ImportStarDef { kind; source } ->
       Deps.import_star (Kind.Sort.of_import_kind kind) source
     | Kind.RequireDef { source; name } -> Deps.require ?name source
-    | Kind.SketchyToplevelDef -> Deps.top (Deps.Error.SketchyToplevelDef loc)
+    | Kind.SketchyToplevelDef -> Deps.top (Error.SketchyToplevelDef loc)
 
   let cjs_exports =
     let tps = SSet.empty in
@@ -1029,19 +1029,19 @@ module Verifier (Env : EvalEnv) = struct
   let dynamic_validator env (dynamic_imports, dynamic_requires) = function
     | Dep.Class (loc, x) ->
       if SMap.mem x env then
-        Deps.top (Deps.Error.SketchyToplevelDef loc)
+        Deps.top (Error.SketchyToplevelDef loc)
       else
         Deps.bot
     | Dep.DynamicImport loc ->
       begin
         match LocMap.get loc dynamic_imports with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
+        | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
         | Some source -> Deps.import_star Kind.Sort.Value source
       end
     | Dep.DynamicRequire loc ->
       begin
         match LocMap.get loc dynamic_requires with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
+        | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
         | Some source -> Deps.require source
       end
 

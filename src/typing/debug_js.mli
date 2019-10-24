@@ -54,6 +54,8 @@ val string_of_destructor : Type.TypeTerm.destructor -> string
 
 val string_of_default : (Loc.t, Loc.t) Flow_ast.Expression.t Default.t -> string
 
+val string_of_signature_error : ('loc -> string) -> 'loc Signature_error.t -> string
+
 val dump_t : ?depth:int -> Context.t -> Type.t -> string
 
 val dump_use_t : ?depth:int -> Context.t -> Type.use_t -> string

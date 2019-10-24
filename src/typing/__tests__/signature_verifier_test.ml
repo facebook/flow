@@ -477,7 +477,7 @@ let mk_signature_verifier_test
       signature
   in
   let error_msgs =
-    Core_list.map ~f:Signature_builder_deps.Error.debug_to_string
+    Core_list.map ~f:(Debug_js.string_of_signature_error Loc.debug_to_string)
     @@ Signature_builder_deps.PrintableErrorSet.elements errors
   in
   let remote_dependency_msgs =

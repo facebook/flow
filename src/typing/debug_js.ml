@@ -2372,6 +2372,33 @@ let string_of_default =
     ~selector:(fun _ str sel -> spf "Selector (%s) (%s)" str (string_of_selector sel))
     ~cons:(fun str default -> spf "Cons (%s) (%s)" str default)
 
+let string_of_signature_error pp_loc err =
+  let open Signature_error in
+  let module Sort = Signature_builder_kind.Sort in
+  match err with
+  | ExpectedSort (sort, x, loc) -> spf "%s @ %s is not a %s" x (pp_loc loc) (Sort.to_string sort)
+  | ExpectedAnnotation (loc, sort) ->
+    spf "Expected annotation at %s @ %s" (Expected_annotation_sort.to_string sort) (pp_loc loc)
+  | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (pp_loc loc)
+  | UnexpectedObjectKey (_loc, key_loc) -> spf "Expected simple object key @ %s" (pp_loc key_loc)
+  | UnexpectedObjectSpread (_loc, spread_loc) ->
+    spf "Unexpected object spread @ %s" (pp_loc spread_loc)
+  | UnexpectedArraySpread (_loc, spread_loc) ->
+    spf "Unexpected array spread @ %s" (pp_loc spread_loc)
+  | UnexpectedArrayHole loc -> spf "Unexpected array hole @ %s" (pp_loc loc)
+  | EmptyArray loc -> spf "Cannot determine the element type of an empty array @ %s" (pp_loc loc)
+  | EmptyObject loc ->
+    spf "Cannot determine types of initialized properties of an empty object @ %s" (pp_loc loc)
+  | UnexpectedExpression (loc, esort) ->
+    spf
+      "Cannot determine the type of this %s @ %s"
+      (Flow_ast_utils.ExpressionSort.to_string esort)
+      (pp_loc loc)
+  | SketchyToplevelDef loc ->
+    spf "Unexpected toplevel definition that needs hoisting @ %s" (pp_loc loc)
+  | UnsupportedPredicateExpression loc -> spf "Unsupported predicate expression @ %s" (pp_loc loc)
+  | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (pp_loc loc)
+
 let dump_error_message =
   Error_message.(
     let string_of_use_op = string_of_use_op_rec in
@@ -2859,9 +2886,8 @@ let dump_error_message =
       | ECannotDelete (l1, r1) ->
         spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
       | ESignatureVerification sve ->
-        spf
-          "ESignatureVerification (%s)"
-          (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
+        let msg = string_of_signature_error ALoc.debug_to_string sve in
+        spf "ESignatureVerification (%s)" msg
       | EBigIntNotYetSupported reason -> spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
       | ENonArraySpread reason -> spf "ENonArraySpread (%s)" (dump_reason cx reason)
       | ECannotSpreadInterface { spread_reason; interface_reason } ->

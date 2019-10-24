@@ -1021,7 +1021,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | ECallTypeArity { call_loc; _ } -> Some call_loc
   | EMissingTypeArgs { reason_tapp; _ } -> Some (aloc_of_reason reason_tapp)
   | ESignatureVerification sve ->
-    Signature_builder_deps.With_ALoc.Error.(
+    Signature_error.(
       (match sve with
       | ExpectedSort (_, _, loc)
       | ExpectedAnnotation (loc, _)
@@ -2149,7 +2149,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       Normal { features }
     | ESignatureVerification sve ->
-      Signature_builder_deps.With_ALoc.Error.(
+      Signature_error.(
         let features =
           match sve with
           | ExpectedSort (sort, x, _) ->

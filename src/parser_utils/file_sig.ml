@@ -1410,7 +1410,7 @@ struct
           else
             BadExportContext (str, loc')
         | SignatureVerificationError sve ->
-          Signature_builder_deps.Error.(
+          Signature_error.(
             begin
               match sve with
               | ExpectedSort (sort, x, loc) ->
@@ -1523,7 +1523,7 @@ let abstractify_tolerable_errors =
     | WL.BadExportPosition loc -> WA.BadExportPosition (ALoc.of_loc loc)
     | WL.BadExportContext (name, loc) -> WA.BadExportContext (name, ALoc.of_loc loc)
     | WL.SignatureVerificationError err ->
-      WA.SignatureVerificationError (Signature_builder_deps.abstractify_error err)
+      WA.SignatureVerificationError (Signature_error.map_locs ~f:ALoc.of_loc err)
   in
   Core_list.map ~f:abstractify_tolerable_error
 

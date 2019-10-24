@@ -11,24 +11,9 @@ module type S = sig
   module L : Loc_sig.S
 
   module Error : sig
-    type t =
-      | ExpectedSort of Sort.t * string * L.t
-      | ExpectedAnnotation of L.t * Expected_annotation_sort.t
-      | InvalidTypeParamUse of L.t
-      | UnexpectedObjectKey of L.t (* object loc *) * L.t (* key loc *)
-      | UnexpectedObjectSpread of L.t (* object loc *) * L.t (* spread loc *)
-      | UnexpectedArraySpread of L.t (* array loc *) * L.t (* spread loc *)
-      | UnexpectedArrayHole of L.t (* array loc *)
-      | EmptyArray of L.t (* array loc *)
-      | EmptyObject of L.t (* object loc *)
-      | UnexpectedExpression of L.t * Flow_ast_utils.ExpressionSort.t
-      | SketchyToplevelDef of L.t
-      | UnsupportedPredicateExpression of L.t
-      | TODO of string * L.t
+    type t = L.t Signature_error.t
 
     val compare : t -> t -> int
-
-    val debug_to_string : t -> string
   end
 
   module PrintableErrorSet : Set.S with type elt = Error.t
