@@ -170,7 +170,9 @@ let scan_for_lint_suppressions =
     in
     List.rev parts
   in
-  let add_error cx (loc, kind) = Error_message.ELintSetting (loc, kind) |> Flow_js.add_output cx in
+  let add_error cx (loc, kind) =
+    Error_message.ELintSetting (ALoc.of_loc loc, kind) |> Flow_js.add_output cx
+  in
   let parse_kind loc_str =
     match Lints.kinds_of_string loc_str.value with
     | Some kinds -> Ok kinds

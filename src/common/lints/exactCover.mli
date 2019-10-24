@@ -92,7 +92,7 @@ val update_settings :
 val update_settings_and_running :
   'a LintSettings.t ->
   ((* Running lint settings *)
-   LintSettings.lint_parse_error -> unit) ->
+   Loc.t * LintSettings.lint_parse_error -> unit) ->
   (* Parse error handler *)
   Loc.t ->
   (* Range to operate on *)

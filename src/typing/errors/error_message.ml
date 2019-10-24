@@ -248,7 +248,7 @@ and 'loc t' =
   | EDynamicExport of 'loc virtual_reason * 'loc virtual_reason
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
-  | ELintSetting of LintSettings.lint_parse_error
+  | ELintSetting of 'loc * LintSettings.lint_parse_error
   | ESketchyNullLint of {
       kind: Lints.sketchy_null_kind;
       loc: 'loc;
@@ -657,7 +657,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDynamicExport (r1, r2) -> EDynamicExport (map_reason r1, map_reason r2)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
-  | ELintSetting _ as e -> e
+  | ELintSetting (loc, err) -> ELintSetting (f loc, err)
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
   | ESketchyNumberLint (kind, r) -> ESketchyNumberLint (kind, map_reason r)
@@ -1014,7 +1014,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _) ->
     Some loc
-  | ELintSetting (loc, _) -> Some (ALoc.of_loc loc)
+  | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
   | ECallTypeArity { call_loc; _ } -> Some call_loc

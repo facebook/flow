@@ -2849,7 +2849,7 @@ let dump_error_message =
             | Overwritten_argument -> "Overwritten_argument"
             | Redundant_argument -> "Redundant_argument"
           in
-          spf "ELintSetting (%s, %s)" (string_of_loc loc) kind_str)
+          spf "ELintSetting (%s, %s)" (string_of_aloc loc) kind_str)
       | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
         Lints.(
           let kind_str =

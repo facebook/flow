@@ -216,12 +216,10 @@ let to_string settings =
     settings;
   Buffer.contents acc
 
-type lint_parse_error_kind =
+type lint_parse_error =
   | Invalid_setting
   | Malformed_argument
   | Naked_comment
   | Nonexistent_rule
   | Overwritten_argument
   | Redundant_argument
-
-type lint_parse_error = Loc.t * lint_parse_error_kind
