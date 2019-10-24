@@ -232,8 +232,8 @@ and 'loc t' =
   | EUnsupportedSetProto of 'loc virtual_reason
   | EDuplicateModuleProvider of {
       module_name: string;
-      provider: File_key.t;
-      conflict: File_key.t;
+      provider: 'loc;
+      conflict: 'loc;
     }
   | EParseError of 'loc * Parse_error.t
   | EDocblockError of 'loc * docblock_error
@@ -644,7 +644,8 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsupportedImplements r -> EUnsupportedImplements (map_reason r)
   | EReactElementFunArity (r, s, i) -> EReactElementFunArity (map_reason r, s, i)
   | EUnsupportedSetProto r -> EUnsupportedSetProto (map_reason r)
-  | EDuplicateModuleProvider { module_name = _; provider = _; conflict = _ } as e -> e
+  | EDuplicateModuleProvider { module_name; provider; conflict } ->
+    EDuplicateModuleProvider { module_name; provider = f provider; conflict = f conflict }
   | EParseError (loc, p) -> EParseError (f loc, p)
   | EDocblockError (loc, e) -> EDocblockError (f loc, e)
   | EImplicitInexactObject loc -> EImplicitInexactObject (f loc)
@@ -1036,13 +1037,7 @@ let aloc_of_msg : t -> ALoc.t option = function
       | UnsupportedPredicateExpression loc
       | TODO (_, loc) ->
         Some loc))
-  | EDuplicateModuleProvider { conflict; _ } ->
-    let loc1 =
-      Loc.(
-        let pos = { line = 1; column = 0 } in
-        { source = Some conflict; start = pos; _end = pos })
-    in
-    Some (ALoc.of_loc loc1)
+  | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (aloc_of_reason reason)
   | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason ALoc.source lreason ->
@@ -2355,18 +2350,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnsupportedSetProto _ ->
       Normal { features = [text "Mutating this prototype is unsupported."] }
     | EDuplicateModuleProvider { module_name; provider; _ } ->
-      let loc =
-        Loc.(
-          let pos = { line = 1; column = 0 } in
-          { source = Some provider; start = pos; _end = pos })
-      in
       let features =
         [
           text "Duplicate module provider for ";
           code module_name;
           text ". Change ";
           text "either this module provider or the ";
-          ref (mk_reason (RCustom "current module provider") loc);
+          ref (mk_reason (RCustom "current module provider") provider);
           text ".";
         ]
       in

@@ -2811,8 +2811,8 @@ let dump_error_message =
         spf
           "EDuplicateModuleProvider (%S, %s, %s)"
           module_name
-          (File_key.to_string provider)
-          (File_key.to_string conflict)
+          (string_of_aloc provider)
+          (string_of_aloc conflict)
       | EParseError (loc, _parse_error) -> spf "EParseError (%s, _)" (string_of_aloc loc)
       (* TODO: string of parse error constructor *)
       | EDocblockError (loc, err) ->

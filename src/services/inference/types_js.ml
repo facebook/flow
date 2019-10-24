@@ -305,6 +305,14 @@ let (commit_modules, commit_modules_from_saved_state) =
                         ->
                         let error =
                           Error_message.(
+                            let provider =
+                              let pos = Loc.{ line = 1; column = 0 } in
+                              ALoc.of_loc Loc.{ source = Some provider; start = pos; _end = pos }
+                            in
+                            let conflict =
+                              let pos = Loc.{ line = 1; column = 0 } in
+                              ALoc.of_loc Loc.{ source = Some conflict; start = pos; _end = pos }
+                            in
                             EDuplicateModuleProvider { module_name; provider; conflict })
                           |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
                         in
