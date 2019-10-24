@@ -265,8 +265,7 @@ and 'loc t' =
   | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
   | EBigIntNotYetSupported of 'loc virtual_reason
-  (* These are unused when calculating locations so we can leave this as Aloc *)
-  | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
+  | ESignatureVerification of 'loc Signature_error.t
   | ENonArraySpread of 'loc virtual_reason
   | ECannotSpreadInterface of {
       spread_reason: 'loc virtual_reason;
@@ -671,7 +670,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
-  | ESignatureVerification _ as e -> e
+  | ESignatureVerification sve -> ESignatureVerification (Signature_error.map_locs ~f sve)
   | ENonArraySpread r -> ENonArraySpread (map_reason r)
   | ECannotSpreadInterface { spread_reason; interface_reason } ->
     ECannotSpreadInterface
