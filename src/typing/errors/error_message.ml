@@ -2155,12 +2155,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           | ExpectedSort (sort, x, _) ->
             [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
           | ExpectedAnnotation (_, sort) ->
-            [
-              text
-                (spf
-                   "Missing type annotation at %s:"
-                   (Signature_builder_deps.With_ALoc.ExpectedAnnotationSort.to_string sort));
-            ]
+            [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
           | InvalidTypeParamUse _ -> [text "Invalid use of type parameter:"]
           | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
           | UnexpectedObjectSpread _ -> [text "Unexpected spread in object:"]

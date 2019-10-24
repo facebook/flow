@@ -105,6 +105,7 @@ MODULES=\
   src/parser_utils/aloc\
   src/parser_utils/output\
   src/parser_utils/output/printers\
+  src/parser_utils/signature_builder\
   src/parsing\
   src/procs\
   src/server\

@@ -10,27 +10,10 @@ module Sort = Signature_builder_kind.Sort
 module type S = sig
   module L : Loc_sig.S
 
-  module ExpectedAnnotationSort : sig
-    type property_key =
-      | Literal of string
-      | Identifier of string
-      | PrivateName of string
-      | Computed of string
-
-    type t =
-      | ArrayPattern
-      | FunctionReturn
-      | PrivateField of { name: string }
-      | Property of { name: property_key }
-      | VariableDefinition of { name: string }
-
-    val to_string : t -> string
-  end
-
   module Error : sig
     type t =
       | ExpectedSort of Sort.t * string * L.t
-      | ExpectedAnnotation of L.t * ExpectedAnnotationSort.t
+      | ExpectedAnnotation of L.t * Expected_annotation_sort.t
       | InvalidTypeParamUse of L.t
       | UnexpectedObjectKey of L.t (* object loc *) * L.t (* key loc *)
       | UnexpectedObjectSpread of L.t (* object loc *) * L.t (* spread loc *)

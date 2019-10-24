@@ -14,7 +14,7 @@ module Deps = Signature_builder_deps.With_Loc
 module File_sig = File_sig.With_Loc
 module Error = Deps.Error
 module Dep = Deps.Dep
-module EASort = Signature_builder_deps.ExpectedAnnotationSort
+module EASort = Expected_annotation_sort
 
 module type EvalEnv = sig
   val prevent_munge : bool

@@ -14,38 +14,10 @@ module Sort = Signature_builder_kind.Sort
 module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = struct
   module L = L
 
-  module ExpectedAnnotationSort = struct
-    type property_key =
-      | Literal of string
-      | Identifier of string
-      | PrivateName of string
-      | Computed of string
-
-    type t =
-      | ArrayPattern
-      | FunctionReturn
-      | PrivateField of { name: string }
-      | Property of { name: property_key }
-      | VariableDefinition of { name: string }
-
-    let property_key_to_string = function
-      | Literal lit -> spf "literal property %s" lit
-      | Identifier name -> spf "property `%s`" name
-      | PrivateName name -> spf "property `%s`" name
-      | Computed e -> spf "computed property `[%s]`" e
-
-    let to_string = function
-      | ArrayPattern -> "array pattern"
-      | FunctionReturn -> "function return"
-      | Property { name } -> property_key_to_string name
-      | PrivateField { name } -> spf "private field `#%s`" name
-      | VariableDefinition { name } -> spf "declaration of variable `%s`" name
-  end
-
   module Error = struct
     type t =
       | ExpectedSort of Sort.t * string * L.t
-      | ExpectedAnnotation of L.t * ExpectedAnnotationSort.t
+      | ExpectedAnnotation of L.t * Expected_annotation_sort.t
       | InvalidTypeParamUse of L.t
       | UnexpectedObjectKey of L.t * L.t
       | UnexpectedObjectSpread of L.t * L.t
@@ -66,7 +38,7 @@ module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = s
       | ExpectedAnnotation (loc, sort) ->
         spf
           "Expected annotation at %s @ %s"
-          (ExpectedAnnotationSort.to_string sort)
+          (Expected_annotation_sort.to_string sort)
           (L.debug_to_string loc)
       | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (L.debug_to_string loc)
       | UnexpectedObjectKey (_loc, key_loc) ->
@@ -227,31 +199,12 @@ module With_Loc = Make (Loc_sig.LocS)
 module With_ALoc = Make (Loc_sig.ALocS)
 include With_Loc
 
-let abstractify_expected_annotation_sort =
-  let module WL = With_Loc.ExpectedAnnotationSort in
-  let module WA = With_ALoc.ExpectedAnnotationSort in
-  function
-  | WL.ArrayPattern -> WA.ArrayPattern
-  | WL.FunctionReturn -> WA.FunctionReturn
-  | WL.Property { name } ->
-    let name =
-      match name with
-      | WL.Literal name -> WA.Literal name
-      | WL.Identifier name -> WA.Identifier name
-      | WL.PrivateName name -> WA.PrivateName name
-      | WL.Computed name -> WA.Computed name
-    in
-    WA.Property { name }
-  | WL.PrivateField { name } -> WA.PrivateField { name }
-  | WL.VariableDefinition { name } -> WA.VariableDefinition { name }
-
 let abstractify_error =
   let module WL = With_Loc.Error in
   let module WA = With_ALoc.Error in
   function
   | WL.ExpectedSort (sort, str, loc) -> WA.ExpectedSort (sort, str, ALoc.of_loc loc)
-  | WL.ExpectedAnnotation (loc, sort) ->
-    WA.ExpectedAnnotation (ALoc.of_loc loc, abstractify_expected_annotation_sort sort)
+  | WL.ExpectedAnnotation (loc, sort) -> WA.ExpectedAnnotation (ALoc.of_loc loc, sort)
   | WL.InvalidTypeParamUse loc -> WA.InvalidTypeParamUse (ALoc.of_loc loc)
   | WL.UnexpectedObjectKey (loc, key_loc) ->
     WA.UnexpectedObjectKey (ALoc.of_loc loc, ALoc.of_loc key_loc)
