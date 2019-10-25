@@ -32,13 +32,13 @@ and 'loc t' =
       lower: 'loc virtual_reason * lower_kind option;
       upper: 'loc virtual_reason * 'loc upper_kind;
       use_op: 'loc virtual_use_op option;
-      branches: ('loc Reason.virtual_reason * t) list;
+      branches: ('loc Reason.virtual_reason * 'loc t') list;
     }
   | EIncompatibleDefs of {
       use_op: 'loc virtual_use_op;
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
-      branches: ('loc Reason.virtual_reason * t) list;
+      branches: ('loc Reason.virtual_reason * 'loc t') list;
     }
   | EIncompatibleProp of {
       prop: string option;
@@ -139,7 +139,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reason: 'loc virtual_reason;
       reason_op: 'loc virtual_reason;
-      branches: ('loc virtual_reason * t) list;
+      branches: ('loc virtual_reason * 'loc t') list;
     }
   | ESpeculationAmbiguous of {
       reason: 'loc virtual_reason;
@@ -437,10 +437,10 @@ and 'loc upper_kind =
 let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
   { first_reason = f first_reason; second_reason = Option.map ~f second_reason }
 
-let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
+let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
   let map_reason = Reason.map_reason_locs f in
-  let map_branch (r, e) = (map_reason r, e) in
+  let map_branch (r, e) = (map_reason r, map_loc_of_error_message f e) in
   let map_upper_kind = function
     | IncompatibleGetPropT (loc, s) -> IncompatibleGetPropT (f loc, s)
     | IncompatibleSetPropT (loc, s) -> IncompatibleSetPropT (f loc, s)
@@ -1197,7 +1197,7 @@ type 'loc friendly_message_recipe =
   | Speculation of {
       loc: 'loc;
       use_op: 'loc Type.virtual_use_op;
-      branches: ('loc Reason.virtual_reason * t) list;
+      branches: ('loc Reason.virtual_reason * 'loc t') list;
     }
   | Incompatible of {
       reason_lower: 'loc Reason.virtual_reason;

@@ -235,7 +235,7 @@ let ordered_reasons ((rl, ru) as reasons) =
 let error_of_msg ~trace_reasons ~source_file (msg : 'loc Error_message.t') : 'loc t =
   { loc = loc_of_msg msg; msg; source_file; trace_reasons }
 
-let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors.printable_error =
+let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
   Errors.(
     let {
       loc : Loc.t option;
@@ -645,13 +645,9 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       let (root, loc, frames) = unwrap_use_ops loc use_op in
       let speculation_errors =
         Core_list.map
-          ~f:(fun (_, (msg : Error_message.t)) ->
+          ~f:(fun (_, (msg : Loc.t Error_message.t')) ->
             let score = score_of_msg msg in
-            let error =
-              error_of_msg ~trace_reasons:[] ~source_file msg
-              |> concretize_error lazy_table_of_aloc
-              |> make_error_printable lazy_table_of_aloc
-            in
+            let error = error_of_msg ~trace_reasons:[] ~source_file msg |> make_error_printable in
             (score, error))
           branches
       in
@@ -1010,7 +1006,7 @@ let make_errors_printable lazy_table_of_aloc set =
   Errors.(
     ErrorSet.fold
       ( concretize_error lazy_table_of_aloc
-      %> make_error_printable lazy_table_of_aloc
+      %> make_error_printable
       %> ConcreteLocPrintableErrorSet.add )
       set
       ConcreteLocPrintableErrorSet.empty)

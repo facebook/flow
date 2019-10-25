@@ -23,7 +23,7 @@ val error_of_msg :
   'loc Error_message.t' ->
   'loc t
 
-val make_error_printable : (ALoc.t -> ALoc.table Lazy.t) -> Loc.t t -> Loc.t Errors.printable_error
+val make_error_printable : Loc.t t -> Loc.t Errors.printable_error
 
 val ordered_reasons : Reason.t * Reason.t -> Reason.t * Reason.t
 

@@ -15,7 +15,7 @@ let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
   |> Flow_error.concretize_error lazy_table_of_aloc
-  |> Flow_error.make_error_printable lazy_table_of_aloc
+  |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
   File_sig.With_Loc.(
@@ -23,7 +23,7 @@ let error_of_file_sig_error source_file e =
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc))
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
   |> Flow_error.concretize_error lazy_table_of_aloc
-  |> Flow_error.make_error_printable lazy_table_of_aloc
+  |> Flow_error.make_error_printable
 
 let parse_content file content =
   let parse_options =
