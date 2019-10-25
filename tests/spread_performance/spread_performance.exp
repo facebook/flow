@@ -1,3 +1,32 @@
+Error --------------------------------------------------------------------------------- big_union_error_message.js:19:19
+
+Computing object literal [1] may lead to an exponentially large number of cases to reason about because inferred union
+from object literal [2] | object literal [3] and inferred union from object literal [4] | object literal [5] are both
+unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be able to
+get rid of a union by specifying a more general type that captures all of the branches of the union.
+
+   big_union_error_message.js:19:19
+   19| var z = {...x, ...y}; // Error, only mentions two elements per union
+                         ^
+
+References:
+   big_union_error_message.js:19:9
+   19| var z = {...x, ...y}; // Error, only mentions two elements per union
+               ^^^^^^^^^^^^ [1]
+   big_union_error_message.js:8:7
+    8|   y = {foo: 3};
+             ^^^^^^^^ [2]
+   big_union_error_message.js:11:7
+   11|   y = {bar: 3};
+             ^^^^^^^^ [3]
+   big_union_error_message.js:7:7
+    7|   x = {foo: 3};
+             ^^^^^^^^ [4]
+   big_union_error_message.js:16:7
+   16|   x = {qux: 3};
+             ^^^^^^^^ [5]
+
+
 Error ------------------------------------------------------------------------------------- large_type_spread.js:1007:22
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `A` [2] and `A` [3]
@@ -233,4 +262,4 @@ References:
 
 
 
-Found 12 errors
+Found 13 errors

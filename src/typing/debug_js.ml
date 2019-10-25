@@ -2923,14 +2923,17 @@ let dump_error_message =
           (dump_reason cx value_reason)
           (dump_reason cx object2_reason)
       | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
-        let format_reason_list reasons =
-          String.concat "; " (Nel.to_list reasons |> List.map (fun r -> dump_reason cx r))
+        let format_reason_group { first_reason; second_reason } =
+          spf
+            "[%s; %s]"
+            (dump_reason cx first_reason)
+            (Option.value_map ~default:"None" ~f:(dump_reason cx) second_reason)
         in
         spf
           "EExponentialSpread %s ([%s]) ([%s])"
           (dump_reason cx reason)
-          (format_reason_list reasons_for_operand1)
-          (format_reason_list reasons_for_operand2)
+          (format_reason_group reasons_for_operand1)
+          (format_reason_group reasons_for_operand2)
       | EComputedPropertyWithMultipleLowerBounds
           { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
         spf

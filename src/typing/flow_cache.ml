@@ -176,8 +176,10 @@ end
  * lower bounds when it's just resolved twice because of the separate resolution jobs.
  *)
 module Spread = struct
+  type reason_state = ALoc.t Error_message.exponential_spread_reason_group
+
   type cache_state =
-    (int option * (Object.slice * reason Nel.t) IMap.t, reason Nel.t * reason Nel.t) result
+    (int option * (Object.slice * reason_state) IMap.t, reason_state * reason_state) result
 
   let cache : (int, cache_state) Hashtbl.t = Hashtbl.create 0
 
@@ -193,13 +195,17 @@ module Spread = struct
       | Ok (idx_option, map) ->
         let (map', has_multiple_lower_bounds) =
           let (new_entry, has_multiple_lower_bounds) =
+            let open Error_message in
             match IMap.find_opt resolve_idx map with
-            | None -> ((Nel.hd objtypes, Nel.one r), Nel.length objtypes <> 1)
-            | Some (slice, rs) ->
+            | None ->
+              ( (Nel.hd objtypes, { first_reason = r; second_reason = None }),
+                Nel.length objtypes <> 1 )
+            | Some (slice, reason_state) ->
               let has_new_lower_bound =
                 Nel.fold_left (fun acc s -> acc || slice <> s) false objtypes
               in
-              ((slice, Nel.cons r rs), has_new_lower_bound)
+              let reason_state = { reason_state with second_reason = Some r } in
+              ((slice, reason_state), has_new_lower_bound)
           in
           (IMap.add resolve_idx new_entry map, has_multiple_lower_bounds)
         in
@@ -219,7 +225,7 @@ module Spread = struct
 
   let get_error_groups spread_id =
     match Hashtbl.find_opt cache spread_id with
-    | Some (Error (errs1, errs2)) -> (errs1, errs2)
+    | Some (Error (group1, group2)) -> (group1, group2)
     | _ ->
       assert_false
         "Invariant violation: make sure can_spread is false before calling get_error_groups"
