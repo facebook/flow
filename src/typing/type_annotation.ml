@@ -393,6 +393,10 @@ let rec convert cx tparams_map =
                 | DefT (r, trust, ObjT o) ->
                   let r = replace_desc_reason RObjectLit r in
                   DefT (r, trust, ObjT { o with flags = { o.flags with exact = true } })
+                | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
+                  ->
+                  let r = replace_desc_reason RObjectLit r in
+                  EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
                 | _ -> t
               in
               reconstruct_ast tout targs)

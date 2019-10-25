@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- driver.js:10:2
 
-Cannot get `b1.x` because property `x` is missing in object type [1].
+Cannot get `b1.x` because property `x` is missing in object literal [1].
 
    driver.js:10:2
    10| (b1.x: string); // Error number ~> string
@@ -48,7 +48,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- driver.js:11:2
 
-Cannot get `b1.y` because property `y` is missing in object type [1].
+Cannot get `b1.y` because property `y` is missing in object literal [1].
 
    driver.js:11:2
    11| (b1.y: string); // Error, y may not exist, number ~> string
@@ -86,9 +86,9 @@ Cannot cast `b2.x` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test2.js:3:16
-    3| const a = { x: 0 };
-                      ^ [1]
+   test2.js:8:16
+    8| type A = {| x: number |}
+                      ^^^^^^ [1]
    driver.js:15:8
    15| (b2.x: string); // Error number ~> string
               ^^^^^^ [2]
@@ -103,9 +103,9 @@ Cannot cast `b2.z` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test2.js:4:16
-    4| const b = { z: 0, ...a };
-                      ^ [1]
+   test2.js:9:23
+    9| export type B = {| z: number, ...A |}
+                             ^^^^^^ [1]
    driver.js:16:8
    16| (b2.z: string); // Error number ~> string
               ^^^^^^ [2]
