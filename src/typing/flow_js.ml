@@ -223,7 +223,7 @@ let add_output cx ?trace msg =
     match Error_message.kind_of_msg msg with
     | Errors.LintError lint_kind ->
       begin
-        match Error_message.aloc_of_msg msg with
+        match Error_message.loc_of_msg msg with
         | Some loc ->
           ALoc.to_loc_with_tables (Context.aloc_tables cx) loc
           |> Error_suppressions.get_lint_settings (Context.severity_cover cx)

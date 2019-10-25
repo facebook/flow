@@ -232,8 +232,8 @@ let ordered_reasons ((rl, ru) as reasons) =
   else
     reasons
 
-let error_of_msg ~trace_reasons ~source_file (msg : ALoc.t Error_message.t') : ALoc.t t =
-  { loc = aloc_of_msg msg; msg; source_file; trace_reasons }
+let error_of_msg ~trace_reasons ~source_file (msg : 'loc Error_message.t') : 'loc t =
+  { loc = loc_of_msg msg; msg; source_file; trace_reasons }
 
 let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors.printable_error =
   Errors.(

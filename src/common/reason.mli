@@ -282,6 +282,8 @@ val string_of_reason : ?strip_root:Path.t option -> reason -> string
 val dump_reason : ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
+val poly_loc_of_reason : 'loc virtual_reason -> 'loc
+
 val loc_of_reason : concrete_reason -> Loc.t
 
 val aloc_of_reason : reason -> ALoc.t

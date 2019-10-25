@@ -18,7 +18,10 @@ val trace_reasons : 'loc t -> 'loc Reason.virtual_reason list
 val kind_of_error : 'loc t -> Errors.error_kind
 
 val error_of_msg :
-  trace_reasons:Reason.t list -> source_file:File_key.t -> Error_message.t -> ALoc.t t
+  trace_reasons:'loc Reason.virtual_reason list ->
+  source_file:File_key.t ->
+  'loc Error_message.t' ->
+  'loc t
 
 val make_error_printable : (ALoc.t -> ALoc.table Lazy.t) -> Loc.t t -> Loc.t Errors.printable_error
 

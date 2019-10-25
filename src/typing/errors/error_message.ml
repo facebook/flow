@@ -909,7 +909,7 @@ let util_use_op_of_msg nope util = function
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
   determined while locations are abstract. We just return None in this case. *)
-let aloc_of_msg : t -> ALoc.t option = function
+let loc_of_msg : 'loc t' -> 'loc option = function
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
@@ -918,7 +918,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
-    Some (aloc_of_reason primary)
+    Some (poly_loc_of_reason primary)
   | ESketchyNumberLint (_, reason)
   | EInvalidPrototype reason
   | EBigIntNotYetSupported reason
@@ -955,7 +955,7 @@ let aloc_of_msg : t -> ALoc.t option = function
         existing_lower_bound_reason = _;
       }
   | EComputedPropertyWithUnion { computed_property_reason = reason; union_reason = _ } ->
-    Some (aloc_of_reason reason)
+    Some (poly_loc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
    * the reduction in coverage is far more drastic. *)
@@ -971,7 +971,7 @@ let aloc_of_msg : t -> ALoc.t option = function
       }
   | EInexactMayOverwriteIndexer
       { spread_reason = _; key_reason = _; value_reason = _; object2_reason = reason } ->
-    Some (aloc_of_reason reason)
+    Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
         reason = _;
@@ -997,7 +997,7 @@ let aloc_of_msg : t -> ALoc.t option = function
       | (_, None) -> first_reason_group2
       | (Some r, _) -> r
     in
-    Some (aloc_of_reason union_reason)
+    Some (poly_loc_of_reason union_reason)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
   | ENonstrictImport loc
@@ -1048,7 +1048,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
   | ECallTypeArity { call_loc; _ } -> Some call_loc
-  | EMissingTypeArgs { reason_tapp; _ } -> Some (aloc_of_reason reason_tapp)
+  | EMissingTypeArgs { reason_tapp; _ } -> Some (poly_loc_of_reason reason_tapp)
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
@@ -1068,8 +1068,8 @@ let aloc_of_msg : t -> ALoc.t option = function
         Some loc))
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
-  | ESpeculationAmbiguous { reason; _ } -> Some (aloc_of_reason reason)
-  | EBuiltinLookupFailed { reason; _ } -> Some (aloc_of_reason reason)
+  | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
+  | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
   | EInvalidReactConfigType _
