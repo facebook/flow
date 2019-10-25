@@ -867,6 +867,11 @@ module ContextOptimizer = struct
          in the heap. *)
         Utils_js.assert_false "choice kit uses should not appear in signatures"
 
+      (* We need to make sure to hash the keys in any spread intermediate types! *)
+      method! object_kit_spread_operand_slice cx map_cx slice =
+        SMap.iter (fun k _ -> SigHash.add sig_hash k) slice.Object.Spread.prop_map;
+        super#object_kit_spread_operand_slice cx map_cx slice
+
       method get_reduced_module_map = reduced_module_map
 
       method get_reduced_graph = reduced_graph
