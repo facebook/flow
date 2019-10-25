@@ -4419,7 +4419,12 @@ struct
             if object_like l then
               reposition cx ~trace (aloc_of_reason reason_op) l
             else
-              let () = add_output cx ~trace (Error_message.EInvalidPrototype (reason_of_t l)) in
+              let () =
+                add_output
+                  cx
+                  ~trace
+                  (Error_message.EInvalidPrototype (aloc_of_reason reason_op, reason_of_t l))
+              in
               ObjProtoT.why reason_op |> with_trust bogus_trust
           in
           rec_flow_t cx trace (proto, u)

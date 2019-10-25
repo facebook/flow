@@ -261,7 +261,7 @@ and 'loc t' =
       falsy_loc: 'loc;
     }
   | ESketchyNumberLint of Lints.sketchy_number_kind * 'loc virtual_reason
-  | EInvalidPrototype of 'loc virtual_reason
+  | EInvalidPrototype of 'loc * 'loc virtual_reason
   | EExperimentalOptionalChaining of 'loc
   | EOptionalChainingMethods of 'loc
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
@@ -682,7 +682,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
   | ESketchyNumberLint (kind, r) -> ESketchyNumberLint (kind, map_reason r)
-  | EInvalidPrototype r -> EInvalidPrototype (map_reason r)
+  | EInvalidPrototype (loc, r) -> EInvalidPrototype (f loc, map_reason r)
   | EExperimentalOptionalChaining loc -> EExperimentalOptionalChaining (f loc)
   | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
@@ -920,7 +920,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETooManyTypeArgs (primary, _, _) ->
     Some (poly_loc_of_reason primary)
   | ESketchyNumberLint (_, reason)
-  | EInvalidPrototype reason
   | EBigIntNotYetSupported reason
   | EUnsupportedSetProto reason
   | EReactElementFunArity (reason, _, _)
@@ -998,6 +997,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
       | (Some r, _) -> r
     in
     Some (poly_loc_of_reason union_reason)
+  | EInvalidPrototype (loc, _)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
   | ENonstrictImport loc
@@ -2578,7 +2578,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
       in
       Normal { features }
-    | EInvalidPrototype reason ->
+    | EInvalidPrototype (_, reason) ->
       Normal
         {
           features =
