@@ -432,7 +432,23 @@ let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let get_def ~options ~env ~profiling position = GetDef_js.get_def ~options ~env ~profiling position
+let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
+  let filename = File_input.filename_of_file_input file_input in
+  let file = File_key.SourceFile filename in
+  let loc = Loc.make file line col in
+  let%lwt check_result =
+    File_input.content_of_file_input file_input
+    %>>= (fun content -> Types_js.basic_check_contents ~options ~env ~profiling content file)
+  in
+  match check_result with
+  | Error msg ->
+    Lwt.return (Error msg, Some (Hh_json.JSON_Object [("error", Hh_json.JSON_String msg)]))
+  | Ok (cx, _, file_sig, typed_ast) ->
+    Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
+        try_with_json2 (fun () ->
+            Lwt.return
+              ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
+              |> (fun (a, b) -> (a, Some b)) )))
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
