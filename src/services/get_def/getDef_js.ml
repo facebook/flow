@@ -15,6 +15,8 @@ module Get_def_result = struct
     | Def of Loc.t
     (* if an intermediate get-def failed, return partial progress and the error message *)
     | Partial of Loc.t * string
+    (* the input loc didn't point at anything you can call get-def on *)
+    | Bad_loc
     (* an unexpected, internal error *)
     | Def_error of string
 end
@@ -138,7 +140,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
     begin
       match Get_def_process_location.process_location ~is_legit_require ~typed_ast loc with
       | Some req -> Chain req
-      | None -> Done (Def_error "Typed_ast_utils.find_get_def_info failed")
+      | None -> Done Bad_loc
     end
   | Get_def_request.Identifier (_, aloc) ->
     let loc = loc_of_aloc ~reader aloc in
@@ -251,7 +253,7 @@ let get_def ~options ~reader cx file_sig typed_ast requested_loc =
         match res with
         | Def loc ->
           if Loc.source loc = Loc.source requested_loc && Reason.in_range requested_loc loc then
-            Def Loc.none
+            Bad_loc
           else
             res
         | Def_error msg ->
