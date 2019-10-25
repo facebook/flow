@@ -240,8 +240,14 @@ let get_def ~options ~reader cx file_sig typed_ast requested_loc =
       in
       begin
         match res with
-        | Ok _ ->
-          (res, Hh_json.JSON_Object [request_history; ("result", Hh_json.JSON_String "SUCCESS")])
+        | Ok loc ->
+          let loc =
+            if Loc.source loc = Loc.source requested_loc && Reason.in_range requested_loc loc then
+              Loc.none
+            else
+              loc
+          in
+          (Ok loc, Hh_json.JSON_Object [request_history; ("result", Hh_json.JSON_String "SUCCESS")])
         | Error msg ->
           ( (match recover_intermediate_result rev_req_history with
             | Some recovered_loc -> Ok recovered_loc
@@ -257,14 +263,3 @@ let get_def ~options ~reader cx file_sig typed_ast requested_loc =
   in
   let initial_request = Get_def_request.Location requested_loc in
   loop [initial_request] initial_request
-  |> Utils_js.map_fst (fun res ->
-         res
-         >>= Loc.(
-               fun result_loc ->
-                 if
-                   result_loc.source = requested_loc.source
-                   && Reason.in_range requested_loc result_loc
-                 then
-                   return Loc.none
-                 else
-                   return result_loc))
