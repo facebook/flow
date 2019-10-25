@@ -549,6 +549,8 @@ let function_use = function
 
 let object_like = function
   | DefT (_, _, (ObjT _ | InstanceT _))
+  | ObjProtoT _
+  | FunProtoT _
   | AnyT _ ->
     true
   | t -> function_like t
