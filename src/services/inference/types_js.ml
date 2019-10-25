@@ -798,12 +798,24 @@ let mk_intermediate_result_callback
            ~f:(fun (file, result) ->
              match result with
              | Ok (errors, warnings, suppressions, _, _) ->
-               let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
-               let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
+               let errors =
+                 errors
+                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.make_errors_printable
+               in
+               let warnings =
+                 warnings
+                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.make_errors_printable
+               in
                (file, errors, warnings, suppressions)
              | Error msg ->
                let errors = error_set_of_internal_error file msg in
-               let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+               let errors =
+                 errors
+                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.make_errors_printable
+               in
                let suppressions = Error_suppressions.empty in
                let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
                (file, errors, warnings, suppressions))
@@ -1178,8 +1190,14 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
         aloc_tables
         severity_cover
     in
-    let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
-    let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
+    let errors =
+      errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+    in
+    let warnings =
+      warnings
+      |> Flow_error.concretize_errors lazy_table_of_aloc
+      |> Flow_error.make_errors_printable
+    in
     let root = Options.root options in
     let file_options = Some (Options.file_options options) in
     (* Filter out suppressed errors *)
@@ -1226,12 +1244,16 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
         let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
         Flow_error.ErrorSet.add err errors
     in
-    let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+    let errors =
+      errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+    in
     Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
   | Parsing_service_js.Parse_skip
       (Parsing_service_js.Skip_non_flow_file | Parsing_service_js.Skip_resource_file) ->
     (* should never happen *)
-    let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
+    let errors =
+      errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+    in
     Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
 let typecheck_contents ~options ~env ~profiling contents filename =
@@ -1667,7 +1689,11 @@ end = struct
             new_local_errors
             Flow_error.ErrorSet.empty
         in
-        let error_set = Flow_error.make_errors_printable lazy_table_of_aloc error_set in
+        let error_set =
+          error_set
+          |> Flow_error.concretize_errors lazy_table_of_aloc
+          |> Flow_error.make_errors_printable
+        in
         if not (Errors.ConcreteLocPrintableErrorSet.is_empty error_set) then
           Persistent_connection.update_clients
             ~clients:env.ServerEnv.connections

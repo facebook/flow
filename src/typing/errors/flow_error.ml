@@ -1002,11 +1002,14 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
     | (Some _, _) ->
       raise (ImproperlyFormattedError msg))
 
-let make_errors_printable lazy_table_of_aloc set =
-  Errors.(
-    ErrorSet.fold
-      ( concretize_error lazy_table_of_aloc
-      %> make_error_printable
-      %> ConcreteLocPrintableErrorSet.add )
-      set
-      ConcreteLocPrintableErrorSet.empty)
+let concretize_errors lazy_table_of_aloc set =
+  ErrorSet.fold
+    (concretize_error lazy_table_of_aloc %> ConcreteErrorSet.add)
+    set
+    ConcreteErrorSet.empty
+
+let make_errors_printable set =
+  ConcreteErrorSet.fold
+    (make_error_printable %> Errors.ConcreteLocPrintableErrorSet.add)
+    set
+    Errors.ConcreteLocPrintableErrorSet.empty

@@ -23,17 +23,18 @@ val error_of_msg :
   'loc Error_message.t' ->
   'loc t
 
-val make_error_printable : Loc.t t -> Loc.t Errors.printable_error
-
 val ordered_reasons : Reason.t * Reason.t -> Reason.t * Reason.t
 
 module ErrorSet : Set.S with type elt = ALoc.t t
 
 module ConcreteErrorSet : Set.S with type elt = Loc.t t
 
-val make_errors_printable :
-  (ALoc.t -> ALoc.table Lazy.t) -> ErrorSet.t -> Errors.ConcreteLocPrintableErrorSet.t
-
 val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
 
 val concretize_error : (ALoc.t -> ALoc.table Lazy.t) -> ALoc.t t -> Loc.t t
+
+val concretize_errors : (ALoc.t -> ALoc.table Lazy.t) -> ErrorSet.t -> ConcreteErrorSet.t
+
+val make_error_printable : Loc.t t -> Loc.t Errors.printable_error
+
+val make_errors_printable : ConcreteErrorSet.t -> Errors.ConcreteLocPrintableErrorSet.t

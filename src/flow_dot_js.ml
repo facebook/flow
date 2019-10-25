@@ -307,8 +307,16 @@ let check_content ~filename ~content =
           aloc_tables
           severity_cover
       in
-      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
-      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
+      let errors =
+        errors
+        |> Flow_error.concretize_errors lazy_table_of_aloc
+        |> Flow_error.make_errors_printable
+      in
+      let warnings =
+        warnings
+        |> Flow_error.concretize_errors lazy_table_of_aloc
+        |> Flow_error.make_errors_printable
+      in
       let (errors, _, suppressions) =
         Error_suppressions.filter_suppressed_errors
           ~root
