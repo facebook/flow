@@ -292,8 +292,8 @@ and 'loc t' =
     }
   | EExponentialSpread of {
       reason: 'loc virtual_reason;
-      reasons_for_operand1: 'loc virtual_reason Nel.t;
-      reasons_for_operand2: 'loc virtual_reason Nel.t;
+      reasons_for_operand1: 'loc exponential_spread_reason_group;
+      reasons_for_operand2: 'loc exponential_spread_reason_group;
     }
   | EComputedPropertyWithMultipleLowerBounds of {
       computed_property_reason: 'loc virtual_reason;
@@ -304,6 +304,11 @@ and 'loc t' =
       computed_property_reason: 'loc virtual_reason;
       union_reason: 'loc virtual_reason;
     }
+
+and 'loc exponential_spread_reason_group = {
+  first_reason: 'loc virtual_reason;
+  second_reason: 'loc virtual_reason option;
+}
 
 and spread_error_kind =
   | Indexer
@@ -424,6 +429,9 @@ and 'loc upper_kind =
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
   | IncompatibleUnclassified of string
+
+let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
+  { first_reason = f first_reason; second_reason = Option.map ~f second_reason }
 
 let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
@@ -704,8 +712,10 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EExponentialSpread
       {
         reason = map_reason reason;
-        reasons_for_operand1 = Nel.map map_reason reasons_for_operand1;
-        reasons_for_operand2 = Nel.map map_reason reasons_for_operand2;
+        reasons_for_operand1 =
+          map_loc_of_exponential_spread_reason_group map_reason reasons_for_operand1;
+        reasons_for_operand2 =
+          map_loc_of_exponential_spread_reason_group map_reason reasons_for_operand2;
       }
   | EComputedPropertyWithMultipleLowerBounds
       { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
@@ -949,7 +959,14 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EInexactMayOverwriteIndexer
       { spread_reason = _; key_reason = _; value_reason = _; object2_reason = reason } ->
     Some (aloc_of_reason reason)
-  | EExponentialSpread { reason = _; reasons_for_operand1; reasons_for_operand2 } ->
+  | EExponentialSpread
+      {
+        reason = _;
+        reasons_for_operand1 =
+          { first_reason = first_reason_group1; second_reason = second_reason_group1 };
+        reasons_for_operand2 =
+          { first_reason = first_reason_group2; second_reason = second_reason_group2 };
+      } ->
     (* Ideally, we have an actual annotated union in here somewhere. This function tries to find
      * it, otherwise our primary location will be around the first reason in the list of reasons
      * for the first spread operand.
@@ -962,11 +979,10 @@ let aloc_of_msg : t -> ALoc.t option = function
      * The same is true for all of the other spread errors.
      *)
     let union_reason =
-      match (reasons_for_operand1, reasons_for_operand2) with
-      | ((r, []), _)
-      | (_, (r, [])) ->
-        r
-      | ((r, _), _) -> r
+      match (second_reason_group1, second_reason_group2) with
+      | (None, _) -> first_reason_group1
+      | (_, None) -> first_reason_group2
+      | (Some r, _) -> r
     in
     Some (aloc_of_reason union_reason)
   | EUntypedTypeImport (loc, _)
@@ -2733,13 +2749,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       Normal { features }
     | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
-      let format_reason_group reasons =
-        match reasons with
-        | (r, []) -> [ref r]
-        | (r, rs) ->
-          text "inferred union from "
-          :: (rs |> List.map (fun r -> [ref r; text " | "]) |> List.flatten)
-          @ [ref r]
+      let format_reason_group { first_reason; second_reason } =
+        match second_reason with
+        | None -> [ref first_reason]
+        | Some second_reason ->
+          [text "inferred union from "; ref first_reason; text " | "; ref second_reason]
       in
       let union_refs =
         let reasons_for_operand1 = format_reason_group reasons_for_operand1 in
