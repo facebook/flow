@@ -103,8 +103,8 @@ let types_versions_package_candidates reader =
       in
       let types_versions = Package_json.flow_types_versions package in
       let version_path =
-        SMap.find_first_opt
-          (fun k ->
+        List.find_opt
+          (fun (k, _) ->
             try Semver.satisfies ~include_prereleases:true k Flow_version.version
             with Semver.Parse_error _ -> false)
           types_versions

@@ -7,7 +7,7 @@
 
 module Ast = Flow_ast
 
-type flow_t = { types_versions: string SMap.t }
+type flow_t = { types_versions: (string * string) list }
 
 type t = {
   name: string option;
@@ -28,7 +28,7 @@ let main package = package.main
 let flow_types_versions package =
   match package.flow with
   | Some t -> t.types_versions
-  | None -> SMap.empty
+  | None -> []
 
 let statement_of_program = function
   | (_, [statement], _) -> Ok statement
@@ -70,7 +70,7 @@ let parse_flow properties =
             | "typesVersions" ->
               let value =
                 List.fold_left
-                  (fun map property ->
+                  (fun list property ->
                     match property with
                     | Property
                         ( _,
@@ -81,17 +81,17 @@ let parse_flow properties =
                                 (_, Expression.Literal { Literal.value = Literal.String value; _ });
                               _;
                             } ) ->
-                      SMap.add key value map
-                    | _ -> map)
-                  SMap.empty
+                      (key, value) :: list
+                    | _ -> list)
+                  []
                   properties
               in
-              { types_versions = value }
+              { types_versions = List.rev value }
             | _ -> flow
           end
         | _ -> flow
       in
-      List.fold_left extract_property { types_versions = SMap.empty } properties))
+      List.fold_left extract_property { types_versions = [] } properties))
 
 let parse ast : 'a t_or_error =
   statement_of_program ast
