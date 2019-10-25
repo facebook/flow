@@ -9,22 +9,35 @@ open Base.Result
 open Utils_js
 open Parsing_heaps_utils
 
+module Get_def_result = struct
+  type t =
+    (* the final location of the definition *)
+    | Def of Loc.t
+    (* if an intermediate get-def failed, return partial progress and the error message *)
+    | Partial of Loc.t * string
+    (* an unexpected, internal error *)
+    | Def_error of string
+end
+
+open Get_def_result
+
 (* The result of a get-def is either a final location or an intermediate
    location that is fed into a subsequent get-def. *)
 type result =
-  | Done of (Loc.t, string) Pervasives.result
+  | Done of Get_def_result.t
   | Chain of Get_def_request.t
 
 let extract_member_def ~reader cx this name =
-  let member_result = Members.extract cx this in
-  let command_result = Members.to_command_result member_result in
-  Done
-    ( command_result
-    >>= fun result_map ->
-    match SMap.get name result_map with
-    | Some (None, t) -> Ok (Type.loc_of_t t |> loc_of_aloc ~reader)
-    | Some (Some x, _) -> Ok (loc_of_aloc ~reader x)
-    | None -> Error (spf "failed to find member %s in members map" name) )
+  let result =
+    match Members.extract cx this |> Members.to_command_result with
+    | Ok result_map ->
+      (match SMap.get name result_map with
+      | Some (None, t) -> Def (Type.loc_of_t t |> loc_of_aloc ~reader)
+      | Some (Some x, _) -> Def (loc_of_aloc ~reader x)
+      | None -> Def_error (spf "failed to find member %s in members map" name))
+    | Error msg -> Def_error msg
+  in
+  Done result
 
 (* turns typed AST into normal AST so we can run Scope_builder on it *)
 (* TODO(vijayramamurthy): make scope builder polymorphic *)
@@ -95,7 +108,7 @@ class special_caser
       | Flow_ast.Statement.ImportDeclaration.
           { specifiers = Some (ImportNamespaceSpecifier (id_loc, _)); _ }
         when this#covers_target id_loc ->
-        raise (SpecialCase (Done (Ok (loc_of_aloc ~reader stmt_loc))))
+        raise (SpecialCase (Done (Def (loc_of_aloc ~reader stmt_loc))))
       | _ -> super#import_declaration stmt_loc decl
 
     (*
@@ -110,14 +123,14 @@ class special_caser
       match stmt' with
       | Flow_ast.(Statement.FunctionDeclaration { Function.id = Some ((id_loc, _), _); _ })
         when this#covers_target id_loc ->
-        raise (SpecialCase (Done (Ok (loc_of_aloc ~reader stmt_loc))))
+        raise (SpecialCase (Done (Def (loc_of_aloc ~reader stmt_loc))))
       | _ -> super#statement stmt
   end
 
 let resolve_special_cases ~reader ~is_legit_require ~typed_ast def_loc =
   try
     Pervasives.ignore ((new special_caser reader is_legit_require def_loc)#program typed_ast);
-    Done (Ok def_loc)
+    Done (Def def_loc)
   with SpecialCase res -> res
 
 let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = function
@@ -125,7 +138,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
     begin
       match Get_def_process_location.process_location ~is_legit_require ~typed_ast loc with
       | Some req -> Chain req
-      | None -> Done (Error "Typed_ast_utils.find_get_def_info failed")
+      | None -> Done (Def_error "Typed_ast_utils.find_get_def_info failed")
     end
   | Get_def_request.Identifier (_, aloc) ->
     let loc = loc_of_aloc ~reader aloc in
@@ -140,8 +153,8 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
           let def = Scope_api.With_Loc.def_of_use scope_info use in
           let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
           resolve_special_cases ~reader ~is_legit_require ~typed_ast def_loc
-        | [] -> Done (Error "Scope builder found no matching identifiers")
-        | _ :: _ :: _ -> Done (Error "Scope builder found multiple matching identifiers")
+        | [] -> Done (Def_error "Scope builder found no matching identifiers")
+        | _ :: _ :: _ -> Done (Def_error "Scope builder found multiple matching identifiers")
       end)
   (*
     NOTE:
@@ -161,8 +174,8 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
   | Get_def_request.Type v ->
     begin
       match Flow_js.possible_types_of_type cx v with
-      | [t] -> Done (Ok (Type.def_loc_of_t t |> loc_of_aloc ~reader))
-      | _ -> Done (Error "Flow_js.possible_types_of_type failed")
+      | [t] -> Done (Def (Type.def_loc_of_t t |> loc_of_aloc ~reader))
+      | _ -> Done (Def_error "Flow_js.possible_types_of_type failed")
     end
   | Get_def_request.Require ((source_loc, name), require_loc) ->
     let module_t = Context.find_require cx source_loc |> Members.resolve_type cx in
@@ -181,8 +194,8 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
              name)
       in
       match filename with
-      | Some file -> Ok Loc.{ none with source = Some file }
-      | None -> Error (spf "Failed to find imported file %s" name)
+      | Some file -> Def Loc.{ none with source = Some file }
+      | None -> Def_error (spf "Failed to find imported file %s" name)
     in
     Done
       Type.(
@@ -198,10 +211,10 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
           if loc = Loc.none then
             get_imported_file ()
           else
-            Ok loc
+            Def loc
         | AnyT _ -> get_imported_file ()
         | _ ->
-          Error
+          Def_error
             (spf
                "Internal Flow Error: Expected ModuleT for %S, but got %S!"
                name
@@ -233,32 +246,21 @@ let get_def ~options ~reader cx file_sig typed_ast requested_loc =
   let rec loop rev_req_history req =
     match getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast req with
     | Done res ->
-      let request_history =
-        ( "request_history",
-          Hh_json.JSON_Array
-            (List.rev_map (fun req -> Hh_json.JSON_String (gdr_to_string req)) rev_req_history) )
-      in
-      begin
+      let request_history = Core_list.rev_map ~f:gdr_to_string rev_req_history in
+      let res =
         match res with
-        | Ok loc ->
-          let loc =
-            if Loc.source loc = Loc.source requested_loc && Reason.in_range requested_loc loc then
-              Loc.none
-            else
-              loc
-          in
-          (Ok loc, Hh_json.JSON_Object [request_history; ("result", Hh_json.JSON_String "SUCCESS")])
-        | Error msg ->
-          ( (match recover_intermediate_result rev_req_history with
-            | Some recovered_loc -> Ok recovered_loc
-            | None -> res),
-            Hh_json.JSON_Object
-              [
-                ("error", Hh_json.JSON_String msg);
-                request_history;
-                ("result", Hh_json.JSON_String "FAILURE");
-              ] )
-      end
+        | Def loc ->
+          if Loc.source loc = Loc.source requested_loc && Reason.in_range requested_loc loc then
+            Def Loc.none
+          else
+            res
+        | Def_error msg ->
+          (match recover_intermediate_result rev_req_history with
+          | Some recovered_loc -> Partial (recovered_loc, msg)
+          | None -> res)
+        | _ -> res
+      in
+      (res, request_history)
     | Chain req -> loop (req :: rev_req_history) req
   in
   let initial_request = Get_def_request.Location requested_loc in
