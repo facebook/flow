@@ -224,7 +224,7 @@ let gdr_to_string = function
   | Get_def_request.Member _ -> "Member"
   | Get_def_request.Require _ -> "Require"
 
-let getdef_get_result ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
+let get_def ~options ~reader cx file_sig typed_ast requested_loc =
   let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
   let is_legit_require source_aloc =
     let source_loc = loc_of_aloc ~reader source_aloc in
@@ -268,21 +268,3 @@ let getdef_get_result ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
                    return Loc.none
                  else
                    return result_loc))
-
-let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
-  let filename = File_input.filename_of_file_input file_input in
-  let file = File_key.SourceFile filename in
-  let loc = Loc.make file line col in
-  let%lwt check_result =
-    File_input.content_of_file_input file_input
-    %>>= (fun content -> Types_js.basic_check_contents ~options ~env ~profiling content file)
-  in
-  match check_result with
-  | Error msg ->
-    Lwt.return (Error msg, Some (Hh_json.JSON_Object [("error", Hh_json.JSON_String msg)]))
-  | Ok (cx, _, file_sig, typed_ast) ->
-    Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
-        try_with_json2 (fun () ->
-            Lwt.return
-              ( getdef_get_result ~reader ~options ~cx ~file_sig ~typed_ast loc
-              |> (fun (a, b) -> (a, Some b)) )))
