@@ -178,6 +178,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | ComposedFn (_, _, _, _)
     -> []
 
   | DefT (_, _, FunT (static, proto, funtype)) -> [
@@ -439,8 +440,10 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | ObjectAssign -> "Object.assign"
   | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
   | ObjectSetPrototypeOf -> "Object.setPrototypeOf"
-  | Compose false -> "Compose"
-  | Compose true -> "ComposeReverse"
+  | Compose (false, false) -> "Compose"
+  | Compose (false, true) -> "ComposeVariadic"
+  | Compose (true, false) -> "ComposeReverse"
+  | Compose (true, true) -> "ComposeReverseVariadic"
   | ReactPropType _ -> "ReactPropsCheckType"
   | ReactCreateClass -> "React.createClass"
   | ReactCreateElement -> "React.createElement"
@@ -1788,8 +1791,10 @@ let rec dump_t_ (depth, tvars) cx t =
     | ObjectAssign -> "ObjectAssign"
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
-    | Compose false -> "Compose"
-    | Compose true -> "ComposeReverse"
+    | Compose (false, false) -> "Compose"
+    | Compose (false, true) -> "ComposeVariadic"
+    | Compose (true, false) -> "ComposeReverse"
+    | Compose (true, true) -> "ComposeReverseVariadic"
     | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"
@@ -1835,6 +1840,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
+  | ComposedFn (_, _, _, _)
   | FunProtoCallT _ -> p t
   | DefT (_, trust, PolyT (_, tps, c, id)) -> p ~trust:(Some trust) ~extra:(spf "%s [%s] #%d"
       (kid c)

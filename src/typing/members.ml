@@ -411,6 +411,9 @@ let rec extract_type cx this_t = match this_t with
   | DefT (_, _, ReactAbstractComponentT _) as t ->
       Success t
 
+  | ComposedFn (_, _, _, _) as t ->
+    Success t
+
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
       extract_type cx t

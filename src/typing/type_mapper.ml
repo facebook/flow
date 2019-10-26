@@ -107,6 +107,7 @@ class virtual ['a] t = object(self)
       | NullProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _
+      | ComposedFn (_, _, _, _)
       | FunProtoCallT _ -> t
       | AnyWithLowerBoundT t' ->
           let t'' = self#type_ cx map_cx t' in
@@ -451,7 +452,7 @@ class virtual ['a] t = object(self)
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf
-    | Compose _
+    | Compose (_, _)
     | ReactPropType _
     | ReactCreateClass
     | ReactCreateElement

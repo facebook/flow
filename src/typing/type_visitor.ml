@@ -39,6 +39,9 @@ class ['a] t = object(self)
   | NullProtoT _
     -> acc
 
+  | ComposedFn (_, _, _, _) ->
+    acc
+
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
 
   | EvalT (t, defer_use_t, id) ->
@@ -253,7 +256,7 @@ class ['a] t = object(self)
   | ObjectAssign
   | ObjectGetPrototypeOf
   | ObjectSetPrototypeOf
-  | Compose _
+  | Compose (_, _)
   | ReactPropType _
   | ReactCreateClass
   | ReactCreateElement

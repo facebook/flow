@@ -874,10 +874,13 @@ let rec convert cx tparams_map = Ast.Type.(function
       mk_custom_fun cx loc t_ast targs ident ObjectSetPrototypeOf
 
   | "$Compose" ->
-      mk_custom_fun cx loc t_ast targs ident (Compose false)
+      mk_custom_fun cx loc t_ast targs ident (Compose (false, false))
+  | "$ComposeVariadic" ->
+      mk_custom_fun cx loc t_ast targs ident (Compose (false, true))
   | "$ComposeReverse" ->
-      mk_custom_fun cx loc t_ast targs ident (Compose true)
-
+      mk_custom_fun cx loc t_ast targs ident (Compose (true, false))
+  | "$ComposeReverseVariadic" ->
+      mk_custom_fun cx loc t_ast targs ident (Compose (true, true))
   | "React$AbstractComponent" ->
       check_type_arg_arity cx loc t_ast targs 2 (fun () ->
         let ts, targs = convert_type_params () in

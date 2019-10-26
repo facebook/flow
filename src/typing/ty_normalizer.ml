@@ -712,6 +712,9 @@ end = struct
       else
          return Ty.(TypeOf FunProtoCall)
 
+    | ComposedFn (_, _, _, _) ->
+      return Ty.Void
+
     | ModuleT (reason, exports, _) -> module_t env reason exports t
 
     | NullProtoT _ -> return Ty.Null
@@ -1428,8 +1431,10 @@ end = struct
     | ObjectAssign -> return (builtin_t "Object$Assign")
     | ObjectGetPrototypeOf -> return (builtin_t "Object$GetPrototypeOf")
     | ObjectSetPrototypeOf -> return (builtin_t "Object$SetPrototypeOf")
-    | Compose false -> return (builtin_t "$Compose")
-    | Compose true -> return (builtin_t "$ComposeReverse")
+    | Compose (false, false) -> return (builtin_t "$Compose")
+    | Compose (false, true) -> return (builtin_t "$ComposeVariadic")
+    | Compose (true, false) -> return (builtin_t "$ComposeReverse")
+    | Compose (true, true) -> return (builtin_t "$ComposeReverseVariadic")
     | ReactPropType t -> react_prop_type ~env t
     | ReactCreateClass -> return (builtin_t "React$CreateClass")
     | ReactCreateElement -> return (builtin_t "React$CreateElement")

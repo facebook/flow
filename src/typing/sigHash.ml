@@ -92,7 +92,10 @@ type hash =
   | CustomFunObjectGetPrototypeOfH
   | CustomFunObjectSetPrototypeOfH
   | CustomFunComposeH
+  | CustomFunComposeVariadicH
   | CustomFunReverseComposeH
+  | CustomFunReverseComposeVariadicH
+  | ComposedFnH
   | CustomFunReactPropTypePrimitiveRequiredH
   | CustomFunReactPropTypePrimitiveNotRequiredH
   | CustomFunReactPropTypeComplexArrayOfH
@@ -262,8 +265,11 @@ let hash_of_ctor = Type.(function
   | CustomFunT (_, ObjectAssign) -> CustomFunObjectAssignH
   | CustomFunT (_, ObjectGetPrototypeOf) -> CustomFunObjectGetPrototypeOfH
   | CustomFunT (_, ObjectSetPrototypeOf) -> CustomFunObjectSetPrototypeOfH
-  | CustomFunT (_, Compose true) -> CustomFunComposeH
-  | CustomFunT (_, Compose false) -> CustomFunReverseComposeH
+  | CustomFunT (_, Compose (true, false)) -> CustomFunComposeH
+  | CustomFunT (_, Compose (true, true)) -> CustomFunComposeVariadicH
+  | CustomFunT (_, Compose (false, false)) -> CustomFunReverseComposeH
+  | CustomFunT (_, Compose (false, true)) -> CustomFunReverseComposeVariadicH
+  | ComposedFn (_, _, _, _) -> ComposedFnH
   | CustomFunT (_, ReactPropType rpt) ->
     let open React.PropType in
     begin match rpt with

@@ -170,6 +170,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | TypeDestructorTriggerT _
   | ModuleT (_, _, _)
   | InternalT (ExtendsT _)
+  | ComposedFn (_, _, _, _)
     ->
     acc
 

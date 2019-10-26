@@ -168,6 +168,7 @@ class visitor = object (self)
     | ShapeT t
     | ThisClassT (_, t)
     | ThisTypeAppT (_, t, _, _)
+    | ComposedFn (_, _, _, t)
       ->
       self#type_ cx t
 

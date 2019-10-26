@@ -4308,7 +4308,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx ~use_op trace (VoidT.why reason_op |> with_trust bogus_trust, call_tout)
 
     | CustomFunT (lreason, (
-          Compose _
+          Compose (_, _)
         | ReactCreateElement
         | ReactCloneElement
         | ReactElementFactory _
@@ -4340,6 +4340,47 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_op = mod_root_of_use_op make_op_nonlocal use_op in
       resolve_call_list cx ~trace ~use_op reason_op args (
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
+
+    | ComposedFn (reason_compose, fn0, fn0_tout, tout_compose),
+      CallT (use_op, reason_op, calltype) ->
+      let {
+        call_targs = _;
+        call_args_tlist = args;
+        call_tout = tout;
+        call_this_t = _;
+        call_closure_t = _;
+        call_strict_arity = _;
+      } = calltype in
+        rec_flow cx trace (
+          fn0,
+          CallT (use_op, reason_op, mk_functioncalltype reason_compose None args fn0_tout)
+        );
+        rec_flow_t cx trace ~use_op (tout_compose, tout);
+
+    | ComposedFn (_reason_compose, fn0, fn0_tout, tout_compose),
+      UseT (use_op, (DefT (reason_op, _, (FunT (static, prototype, ft))))) ->
+      let {
+        this_t;
+        params;
+        rest_param;
+        return_t = t;
+        closure_t;
+        is_predicate;
+        changeset;
+        def_reason;
+      } = ft in
+      let funt = {
+        this_t;
+        params;
+        rest_param;
+        return_t = fn0_tout;
+        closure_t;
+        is_predicate;
+        changeset;
+        def_reason;
+      } in
+      rec_flow_t cx trace (fn0, DefT (reason_op, bogus_trust (), (FunT (static, prototype, funt))));
+      rec_flow_t cx trace ~use_op (tout_compose, t);
 
     | CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
       MethodT (use_op, reason_call, _, Named (_, "call"), calltype, _) ->
@@ -7340,7 +7381,8 @@ and any_propagated cx trace any u =
   | UseT (_, CustomFunT (_, ObjectAssign))
   | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
   | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
-  | UseT (_, CustomFunT (_, Compose _))
+  | UseT (_, CustomFunT (_, Compose (_, _)))
+  | UseT (_, ComposedFn (_, _, _, _))
   | UseT (_, CustomFunT (_, ReactCreateClass))
   | UseT (_, CustomFunT (_, ReactCreateElement))
   | UseT (_, CustomFunT (_, ReactCloneElement))
@@ -7436,7 +7478,8 @@ and any_propagated_use cx trace use_op any l =
   | CustomFunT (_, ObjectAssign)
   | CustomFunT (_, ObjectGetPrototypeOf)
   | CustomFunT (_, ObjectSetPrototypeOf)
-  | CustomFunT (_, Compose _)
+  | CustomFunT (_, Compose (_, _))
+  | ComposedFn (_, _, _, _)
   | CustomFunT (_, ReactCreateClass)
   | CustomFunT (_, ReactCreateElement)
   | CustomFunT (_, ReactCloneElement)
@@ -7831,6 +7874,7 @@ and check_polarity cx ?trace polarity = function
   | CustomFunT _
   | OpenPredT _
   | MergedT _
+  | ComposedFn (_, _, _, _)
     -> () (* TODO *)
 
 and check_polarity_propmap cx ?trace ?(skip_ctor=false) polarity id =

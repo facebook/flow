@@ -57,6 +57,7 @@ module rec TypeTerm : sig
     (*************)
 
     | DefT of reason * Trust.trust_rep * def_t
+    | ComposedFn of reason * t * t * t
 
     (* type expression whose evaluation is deferred *)
     (* Usually a type expression is evaluated by splitting it into a def type
@@ -1110,7 +1111,7 @@ module rec TypeTerm : sig
   | ObjectSetPrototypeOf
 
   (* common community functions *)
-  | Compose of bool
+  | Compose of bool * bool
 
   (* 3rd party libs *)
   | ReactPropType of React.PropType.t
@@ -2196,6 +2197,7 @@ end = struct
     | InternalT (ChoiceKitT (reason, _)) -> reason
     | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
     | CustomFunT (reason, _) -> reason
+    | ComposedFn (reason, _, _, _) -> reason
     | DefT (reason, _, _) -> reason
     | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
     | ExactT (reason, _) -> reason
@@ -2383,6 +2385,7 @@ end = struct
     | ThisClassT (reason, t) -> ThisClassT (f reason, t)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
     | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
+    | ComposedFn (reason, fn0, fn0_tout, tout) -> ComposedFn (reason, fn0, fn0_tout, tout)
 
   and mod_reason_of_defer_use_t f = function
     | LatentPredT (reason, p) -> LatentPredT (f reason, p)
@@ -3201,6 +3204,7 @@ let string_of_ctor = function
   | IntersectionT _ -> "IntersectionT"
   | OptionalT _ -> "OptionalT"
   | MaybeT _ -> "MaybeT"
+  | ComposedFn (_, _, _, _) -> "ComposedFn"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"

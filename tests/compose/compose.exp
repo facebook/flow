@@ -88,6 +88,679 @@ References:
                ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:13:2
+
+Cannot cast `pipeVariadic(...)(...)` to empty because number [1] is incompatible with empty [2].
+
+   composeReverseVariadic.js:13:2
+   13| (pipeVariadic(inc)(0): empty); // Error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeReverseVariadic.js:9:28
+    9| declare var inc: number => number;
+                                  ^^^^^^ [1]
+   composeReverseVariadic.js:13:24
+   13| (pipeVariadic(inc)(0): empty); // Error: number ~> empty
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:16:3
+
+Cannot call `pipeVariadic(...)` with empty string bound to the first parameter because string [1] is incompatible with
+number [2].
+
+   composeReverseVariadic.js:16:3
+   16|   "" // Error: string ~> number
+         ^^ [1]
+
+References:
+   composeReverseVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:19:2
+
+Cannot cast `pipeVariadic(...)(...)` to empty because string [1] is incompatible with empty [2].
+
+   composeReverseVariadic.js:19:2
+   19| (pipeVariadic(inc, toString)(10): empty); // Error: string ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeReverseVariadic.js:11:33
+   11| declare var toString: number => string;
+                                       ^^^^^^ [1]
+   composeReverseVariadic.js:19:35
+   19| (pipeVariadic(inc, toString)(10): empty); // Error: string ~> empty
+                                         ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:22:3
+
+Cannot call `pipeVariadic(...)` with empty string bound to the first parameter because string [1] is incompatible with
+number [2].
+
+   composeReverseVariadic.js:22:3
+   22|   "" // Error: string ~> number
+         ^^ [1]
+
+References:
+   composeReverseVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:25:1
+
+Cannot call `pipeVariadic` with call of `pipeVariadic` bound to the first parameter because string [1] is incompatible
+with number [2].
+
+   composeReverseVariadic.js:25:1
+       v------------
+   25| pipeVariadic(
+   26|   toString,
+   27|   inc // Error: string ~> number
+   28| )(9);
+       ^
+
+References:
+   composeReverseVariadic.js:11:33
+   11| declare var toString: number => string;
+                                       ^^^^^^ [1]
+   composeReverseVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- composeReverseVariadic.js:30:15
+
+number [1] is incompatible with string [2].
+
+   composeReverseVariadic.js:30:15
+   30| (pipeVariadic(inc): string => number); // Error: string ~> number
+                     ^^^
+
+References:
+   composeReverseVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [1]
+   composeReverseVariadic.js:30:21
+   30| (pipeVariadic(inc): string => number); // Error: string ~> number
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:31:2
+
+Cannot cast `pipeVariadic(...)` to function type because number [1] is incompatible with string [2].
+
+   composeReverseVariadic.js:31:2
+   31| (pipeVariadic(inc): number => string); // Error: number ~> string
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   composeReverseVariadic.js:9:28
+    9| declare var inc: number => number;
+                                  ^^^^^^ [1]
+   composeReverseVariadic.js:31:31
+   31| (pipeVariadic(inc): number => string); // Error: number ~> string
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:32:3
+
+Cannot cast `pipeVariadic(...)` to empty because function type [1] is incompatible with empty [2].
+
+   composeReverseVariadic.js:32:3
+   32| ((pipeVariadic(inc): number => number): empty); // Error: (number => number) ~> empty
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeReverseVariadic.js:32:22
+   32| ((pipeVariadic(inc): number => number): empty); // Error: (number => number) ~> empty
+                            ^^^^^^^^^^^^^^^^ [1]
+   composeReverseVariadic.js:32:41
+   32| ((pipeVariadic(inc): number => number): empty); // Error: (number => number) ~> empty
+                                               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:34:1
+
+Cannot call call of `pipeVariadic` [1] without exactly 1 type argument.
+
+   34| pipeVariadic(); // Error: pipeVariadic min_arity = 1
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:38:3
+
+Cannot call `pipeVariadic` with compose intermediate value bound to the first parameter because string [1] is
+incompatible with number [2].
+
+   composeReverseVariadic.js:38:3
+   38|   toString,
+         ^^^^^^^^
+
+References:
+   composeReverseVariadic.js:11:33
+   11| declare var toString: number => string;
+                                       ^^^^^^ [1]
+   composeReverseVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:42:1
+
+Cannot call `pipeVariadic(...)` because no more than 1 argument is expected by function type [1].
+
+   composeReverseVariadic.js:42:1
+   42| pipeVariadic(inc)(1, 2); // Error: No more than 1 argument is expected
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeReverseVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:44:2
+
+Cannot cast `pipeVariadic(...)(...)` to empty because number [1] is incompatible with empty [2].
+
+   composeReverseVariadic.js:44:2
+   44| (pipeVariadic(add)(1, 2): empty); // Error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeReverseVariadic.js:10:38
+   10| declare var add: (number, number) => number;
+                                            ^^^^^^ [1]
+   composeReverseVariadic.js:44:27
+   44| (pipeVariadic(add)(1, 2): empty); // Error: number ~> empty
+                                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- composeReverseVariadic.js:46:22
+
+Cannot call `pipeVariadic(...)` with empty string bound to the second parameter because string [1] is incompatible with
+number [2].
+
+   composeReverseVariadic.js:46:22
+   46| pipeVariadic(add)(1, ""); // Error: string ~> number
+                            ^^ [1]
+
+References:
+   composeReverseVariadic.js:10:27
+   10| declare var add: (number, number) => number;
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- composeReverseVariadic.js:48:22
+
+Cannot call `pipeVariadic(...)` with empty string bound to the second parameter because string [1] is incompatible with
+number [2].
+
+   composeReverseVariadic.js:48:22
+   48| pipeVariadic(add)(1, ""); // Error: string ~> number
+                            ^^ [1]
+
+References:
+   composeReverseVariadic.js:10:27
+   10| declare var add: (number, number) => number;
+                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:50:2
+
+Cannot cast `pipeVariadic(...)` to empty because call of `pipeVariadic` [1] is incompatible with empty [2].
+
+   composeReverseVariadic.js:50:2
+   50| (pipeVariadic(add, ...fns1): empty); // Error: ((number, number) => number) ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   composeReverseVariadic.js:50:30
+   50| (pipeVariadic(add, ...fns1): empty); // Error: ((number, number) => number) ~> empty
+                                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:52:2
+
+Cannot cast `pipeVariadic(...)(...)` to empty because:
+ - number [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   composeReverseVariadic.js:52:2
+   52| (pipeVariadic(inc, ...fns1)(1): empty); // Error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeReverseVariadic.js:5:37
+    5| declare var fns1: Array<(number) => number>;
+                                           ^^^^^^ [1]
+   composeReverseVariadic.js:52:33
+   52| (pipeVariadic(inc, ...fns1)(1): empty); // Error: number ~> empty
+                                       ^^^^^ [2]
+   composeReverseVariadic.js:9:28
+    9| declare var inc: number => number;
+                                  ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:54:1
+
+Cannot call `pipeVariadic` with call of `pipeVariadic` bound to the first parameter because string [1] is incompatible
+with number [2].
+
+   composeReverseVariadic.js:54:1
+       v------------
+   54| pipeVariadic(
+   55|   ...fns2 // Error: string ~> number
+   56| );
+       ^
+
+References:
+   composeReverseVariadic.js:6:37
+    6| declare var fns2: Array<(number) => string>;
+                                           ^^^^^^ [1]
+   composeReverseVariadic.js:6:26
+    6| declare var fns2: Array<(number) => string>;
+                                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:58:1
+
+Cannot call `pipeVariadic` because function [1] requires another argument.
+
+   composeReverseVariadic.js:58:1
+       v------------
+   58| pipeVariadic(
+   59|   ...fns3 // Error: Requires another argument
+   60| );
+       ^
+
+References:
+   composeReverseVariadic.js:7:25
+    7| declare var fns3: Array<(number, number) => string>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:58:1
+
+Cannot call `pipeVariadic` with call of `pipeVariadic` bound to the first parameter because string [1] is incompatible
+with number [2].
+
+   composeReverseVariadic.js:58:1
+       v------------
+   58| pipeVariadic(
+   59|   ...fns3 // Error: Requires another argument
+   60| );
+       ^
+
+References:
+   composeReverseVariadic.js:7:45
+    7| declare var fns3: Array<(number, number) => string>;
+                                                   ^^^^^^ [1]
+   composeReverseVariadic.js:7:26
+    7| declare var fns3: Array<(number, number) => string>;
+                                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- composeReverseVariadic.js:62:1
+
+Cannot call `pipeVariadic(...)` because no more than 1 argument is expected by function type [1].
+
+   composeReverseVariadic.js:62:1
+       v--------------------------
+   62| pipeVariadic(inc, ...fns1)(
+   63|   1,
+   64|   2 // Error: No more than 1 argument is expected
+   65| );
+       ^
+
+References:
+   composeReverseVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:13:2
+
+Cannot cast `composeVariadic(...)(...)` to empty because number [1] is incompatible with empty [2].
+
+   composeVariadic.js:13:2
+   13| (composeVariadic(inc)(0): empty); // Error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeVariadic.js:9:28
+    9| declare var inc: number => number;
+                                  ^^^^^^ [1]
+   composeVariadic.js:13:27
+   13| (composeVariadic(inc)(0): empty); // Error: number ~> empty
+                                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:16:3
+
+Cannot call `composeVariadic(...)` with empty string bound to the first parameter because string [1] is incompatible
+with number [2].
+
+   composeVariadic.js:16:3
+   16|   "" // Error: string ~> number
+         ^^ [1]
+
+References:
+   composeVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:19:2
+
+Cannot cast `composeVariadic(...)(...)` to empty because string [1] is incompatible with empty [2].
+
+   composeVariadic.js:19:2
+   19| (composeVariadic(toString, inc)(10): empty); // Error: string ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeVariadic.js:11:33
+   11| declare var toString: number => string;
+                                       ^^^^^^ [1]
+   composeVariadic.js:19:38
+   19| (composeVariadic(toString, inc)(10): empty); // Error: string ~> empty
+                                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:22:3
+
+Cannot call `composeVariadic(...)` with empty string bound to the first parameter because string [1] is incompatible
+with number [2].
+
+   composeVariadic.js:22:3
+   22|   "" // Error: string ~> number
+         ^^ [1]
+
+References:
+   composeVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:25:1
+
+Cannot call `composeVariadic` with call of `composeVariadic` bound to the first parameter because string [1] is
+incompatible with number [2].
+
+   composeVariadic.js:25:1
+       v---------------
+   25| composeVariadic(
+   26|   inc, // Error: string ~> number
+   27|   toString
+   28| )(9);
+       ^
+
+References:
+   composeVariadic.js:11:33
+   11| declare var toString: number => string;
+                                       ^^^^^^ [1]
+   composeVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- composeVariadic.js:30:18
+
+number [1] is incompatible with string [2].
+
+   composeVariadic.js:30:18
+   30| (composeVariadic(inc): string => number); // Error: string ~> number
+                        ^^^
+
+References:
+   composeVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [1]
+   composeVariadic.js:30:24
+   30| (composeVariadic(inc): string => number); // Error: string ~> number
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:31:2
+
+Cannot cast `composeVariadic(...)` to function type because number [1] is incompatible with string [2].
+
+   composeVariadic.js:31:2
+   31| (composeVariadic(inc): number => string); // Error: number ~> string
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeVariadic.js:9:28
+    9| declare var inc: number => number;
+                                  ^^^^^^ [1]
+   composeVariadic.js:31:34
+   31| (composeVariadic(inc): number => string); // Error: number ~> string
+                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:32:3
+
+Cannot cast `composeVariadic(...)` to empty because function type [1] is incompatible with empty [2].
+
+   composeVariadic.js:32:3
+   32| ((composeVariadic(inc): number => number): empty); // Error: (number => number) ~> empty
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeVariadic.js:32:25
+   32| ((composeVariadic(inc): number => number): empty); // Error: (number => number) ~> empty
+                               ^^^^^^^^^^^^^^^^ [1]
+   composeVariadic.js:32:44
+   32| ((composeVariadic(inc): number => number): empty); // Error: (number => number) ~> empty
+                                                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:34:1
+
+Cannot call call of `composeVariadic` [1] without exactly 1 type argument.
+
+   34| composeVariadic(); // Error: composeVariadic min_arity = 1
+       ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:38:3
+
+Cannot call `composeVariadic` with compose intermediate value bound to the first parameter because string [1] is
+incompatible with number [2].
+
+   composeVariadic.js:38:3
+   38|   toString,
+         ^^^^^^^^
+
+References:
+   composeVariadic.js:11:33
+   11| declare var toString: number => string;
+                                       ^^^^^^ [1]
+   composeVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:42:1
+
+Cannot call `composeVariadic(...)` because no more than 1 argument is expected by function type [1].
+
+   composeVariadic.js:42:1
+   42| composeVariadic(inc)(1, 2); // Error: No more than 1 argument is expected
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeVariadic.js:9:18
+    9| declare var inc: number => number;
+                        ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:44:2
+
+Cannot cast `composeVariadic(...)(...)` to empty because number [1] is incompatible with empty [2].
+
+   composeVariadic.js:44:2
+   44| (composeVariadic(add)(1, 2): empty); // Error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeVariadic.js:10:38
+   10| declare var add: (number, number) => number;
+                                            ^^^^^^ [1]
+   composeVariadic.js:44:30
+   44| (composeVariadic(add)(1, 2): empty); // Error: number ~> empty
+                                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- composeVariadic.js:46:25
+
+Cannot call `composeVariadic(...)` with empty string bound to the second parameter because string [1] is incompatible
+with number [2].
+
+   composeVariadic.js:46:25
+   46| composeVariadic(add)(1, ""); // Error: string ~> number
+                               ^^ [1]
+
+References:
+   composeVariadic.js:10:27
+   10| declare var add: (number, number) => number;
+                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- composeVariadic.js:48:25
+
+Cannot call `composeVariadic(...)` with empty string bound to the second parameter because string [1] is incompatible
+with number [2].
+
+   composeVariadic.js:48:25
+   48| composeVariadic(add)(1, ""); // Error: string ~> number
+                               ^^ [1]
+
+References:
+   composeVariadic.js:10:27
+   10| declare var add: (number, number) => number;
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:50:1
+
+Cannot call `composeVariadic` because function [1] requires another argument.
+
+   composeVariadic.js:50:1
+       v---------------
+   50| composeVariadic(
+   51|   add, // Error: require another argument
+   52|   ...fns1
+   53| );
+       ^
+
+References:
+   composeVariadic.js:10:18
+   10| declare var add: (number, number) => number;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:55:2
+
+Cannot cast `composeVariadic(...)(...)` to empty because number [1] is incompatible with empty [2].
+
+   composeVariadic.js:55:2
+   55| (composeVariadic(inc, ...fns1)(1): empty); // Error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   composeVariadic.js:9:28
+    9| declare var inc: number => number;
+                                  ^^^^^^ [1]
+   composeVariadic.js:55:36
+   55| (composeVariadic(inc, ...fns1)(1): empty); // Error: number ~> empty
+                                          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:57:1
+
+Cannot call `composeVariadic` with compose intermediate value bound to the first parameter because string [1] is
+incompatible with number [2].
+
+   composeVariadic.js:57:1
+       v---------------
+   57| composeVariadic(
+   58|   ...fns2 // Error: string ~> number
+   59| );
+       ^
+
+References:
+   composeVariadic.js:6:37
+    6| declare var fns2: Array<(number) => string>;
+                                           ^^^^^^ [1]
+   composeVariadic.js:6:26
+    6| declare var fns2: Array<(number) => string>;
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:61:1
+
+Cannot call `composeVariadic` because function [1] requires another argument.
+
+   composeVariadic.js:61:1
+       v---------------
+   61| composeVariadic(
+   62|   ...fns3 // Error: Requires another argument
+   63| );
+       ^
+
+References:
+   composeVariadic.js:7:25
+    7| declare var fns3: Array<(number, number) => string>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:61:1
+
+Cannot call `composeVariadic` with compose intermediate value bound to the first parameter because string [1] is
+incompatible with number [2].
+
+   composeVariadic.js:61:1
+       v---------------
+   61| composeVariadic(
+   62|   ...fns3 // Error: Requires another argument
+   63| );
+       ^
+
+References:
+   composeVariadic.js:7:45
+    7| declare var fns3: Array<(number, number) => string>;
+                                                   ^^^^^^ [1]
+   composeVariadic.js:7:26
+    7| declare var fns3: Array<(number, number) => string>;
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ composeVariadic.js:65:1
+
+Cannot call `composeVariadic(...)` because no more than 1 argument is expected by call of `composeVariadic` [1].
+
+   composeVariadic.js:65:1
+       v-----------------------------
+   65| composeVariadic(inc, ...fns1)(
+   66|   1,
+   67|   2 // Error: No more than 1 argument is expected
+   68| );
+       ^
+
+References:
+   composeVariadic.js:65:1
+   65| composeVariadic(inc, ...fns1)(
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- recompose.js:23:19
 
 Cannot call `Math.round` with `props.p` bound to `x` because string [1] is incompatible with number [2].
@@ -109,6 +782,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `compose(...)(...)` to empty because:
  - number [1] is incompatible with empty [2].
+ - number [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
  - number [3] is incompatible with empty [2].
 
    spread.js:8:2
@@ -155,6 +830,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `compose(...)(...)` to empty because:
  - number [1] is incompatible with empty [2].
+ - number [1] is incompatible with empty [2].
+ - string [3] is incompatible with empty [2].
  - string [3] is incompatible with empty [2].
 
    spread.js:12:2
@@ -201,6 +878,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `compose(...)(...)` to empty because:
  - string [1] is incompatible with empty [2].
+ - string [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
  - number [3] is incompatible with empty [2].
 
    spread.js:16:2
@@ -245,8 +924,13 @@ Cannot cast `compose(...)(...)` to empty because:
  - object literal [1] is incompatible with empty [2].
  - object literal [3] is incompatible with empty [2].
  - object literal [4] is incompatible with empty [2].
- - object literal [5] is incompatible with empty [2].
- - number [6] is incompatible with empty [2].
+ - number [5] is incompatible with empty [2].
+ - object literal [6] is incompatible with empty [2].
+ - object literal [1] is incompatible with empty [2].
+ - object literal [3] is incompatible with empty [2].
+ - object literal [4] is incompatible with empty [2].
+ - number [5] is incompatible with empty [2].
+ - object literal [6] is incompatible with empty [2].
 
    spread.js:21:2
         v-------
@@ -256,29 +940,31 @@ Cannot cast `compose(...)(...)` to empty because:
        ----^
 
 References:
-   spread.js:20:12
+   spread.js:20:17
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    spread.js:23:8
    23| )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]
-   spread.js:20:17
-   20| const x1 = { p: { p: { p: { p: 42 } } } };
-                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
    spread.js:20:22
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                            ^^^^^^^^^^^^^^^^ [4]
+                            ^^^^^^^^^^^^^^^^ [3]
    spread.js:20:27
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                                 ^^^^^^^^^ [5]
+                                 ^^^^^^^^^ [4]
    spread.js:20:32
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                                      ^^ [6]
+                                      ^^ [5]
+   spread.js:20:12
+   20| const x1 = { p: { p: { p: { p: 42 } } } };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:27:2
 
 Cannot cast `compose(...)(...)` to empty because:
+ - `X2` [1] is incompatible with empty [2].
+ - `X2` [3] is incompatible with empty [2].
  - `X2` [1] is incompatible with empty [2].
  - `X2` [3] is incompatible with empty [2].
 
@@ -302,4 +988,4 @@ References:
 
 
 
-Found 22 errors
+Found 76 errors
