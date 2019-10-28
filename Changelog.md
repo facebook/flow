@@ -1,3 +1,9 @@
+### 0.110.2
+
+Bug fixes:
+* Fixed "Go To Definition" on certain kinds of variables
+* Fixed (internal-only) logging that was classifying some "Go To Definition" responses as errors, when there was no valid definition to jump to, like on keywords or whitespace.
+
 ### 0.110.1
 
 Notable bug fixes:
