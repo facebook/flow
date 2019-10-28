@@ -69,6 +69,10 @@ printf "jsx3.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty jsx3.js 9 4 < jsx3.js
 
+printf "jsx4.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx4.js 7 3 < jsx4.js
+
 printf "jsx-function-component.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty jsx-function-component.js 9 4 < jsx-function-component.js

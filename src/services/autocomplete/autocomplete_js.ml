@@ -103,7 +103,7 @@ class searcher (from_trigger_character : bool) =
             this#find (Acjsx (attribute_name, loc, type_of_jsx_name component_name))
           | _ -> ())
         attributes;
-      elt
+      super#jsx_opening_element elt
 
     (* we don't currently autocomplete object keys *)
     method! object_key_identifier x = x

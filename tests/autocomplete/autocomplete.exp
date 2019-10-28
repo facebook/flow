@@ -1100,6 +1100,40 @@ jsx3.js = {
     }
   ]
 }
+jsx4.js = {
+  "result":[
+    {
+      "name":"Computerization",
+      "type":"(props: empty) => void",
+      "func_details":{"return_type":"void","params":[{"name":"props","type":"empty"}]},
+      "path":"jsx4.js",
+      "line":4,
+      "endline":4,
+      "start":7,
+      "end":21
+    },
+    {
+      "name":"Compressibility",
+      "type":"(props: empty) => void",
+      "func_details":{"return_type":"void","params":[{"name":"props","type":"empty"}]},
+      "path":"jsx4.js",
+      "line":5,
+      "endline":5,
+      "start":10,
+      "end":24
+    },
+    {
+      "name":"Complementarity",
+      "type":"class Complementarity",
+      "func_details":null,
+      "path":"jsx4.js",
+      "line":3,
+      "endline":3,
+      "start":7,
+      "end":21
+    }
+  ]
+}
 jsx-function-component.js = {
   "result":[
     {
