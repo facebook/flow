@@ -46,16 +46,40 @@ call.js
 
 {
   "expressions":{
-    "covered_count":1,
+    "covered_count":5,
     "covered_locs":[
       {
         "source":"call.js",
         "type":"SourceFile",
         "start":{"line":3,"column":10,"offset":19},
         "end":{"line":3,"column":10,"offset":20}
+      },
+      {
+        "source":"call.js",
+        "type":"SourceFile",
+        "start":{"line":8,"column":10,"offset":67},
+        "end":{"line":8,"column":10,"offset":68}
+      },
+      {
+        "source":"call.js",
+        "type":"SourceFile",
+        "start":{"line":8,"column":12,"offset":69},
+        "end":{"line":8,"column":12,"offset":70}
+      },
+      {
+        "source":"call.js",
+        "type":"SourceFile",
+        "start":{"line":9,"column":3,"offset":87},
+        "end":{"line":9,"column":3,"offset":88}
+      },
+      {
+        "source":"call.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":13,"offset":104},
+        "end":{"line":10,"column":13,"offset":105}
       }
     ],
-    "uncovered_count":6,
+    "uncovered_count":9,
     "uncovered_locs":[
       {
         "source":"call.js",
@@ -92,6 +116,24 @@ call.js
         "type":"SourceFile",
         "start":{"line":5,"column":13,"offset":50},
         "end":{"line":5,"column":15,"offset":53}
+      },
+      {
+        "source":"call.js",
+        "type":"SourceFile",
+        "start":{"line":9,"column":3,"offset":87},
+        "end":{"line":9,"column":5,"offset":90}
+      },
+      {
+        "source":"call.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":9,"offset":100},
+        "end":{"line":10,"column":9,"offset":101}
+      },
+      {
+        "source":"call.js",
+        "type":"SourceFile",
+        "start":{"line":10,"column":13,"offset":104},
+        "end":{"line":10,"column":15,"offset":107}
       }
     ],
     "empty_count":0,
