@@ -249,11 +249,14 @@ This can be especially useful for referring to the type of React props, or, even
 ```js
 // @flow
 import React from 'react';
-class Tooltip extends React.Component {
-  props: {
-    text: string,
-    onMouseOver: ({x: number, y: number}) => void
-  };
+
+type Props = {
+  text: string,
+  onMouseOver: ({x: number, y: number}) => void
+}
+
+class Tooltip extends React.Component<Props> {
+  props: Props;
 }
 
 const someProps: $PropertyType<Tooltip, 'props'> = {
