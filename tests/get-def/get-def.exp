@@ -15,6 +15,7 @@ namespaced import points to imported file (as) = {"path":"helpers/exports_named.
 namespaced import points to imported file (remote name) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
 namespaced import points to imported file (local name) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
 local reference points to namespaced import = {"path":"imports.js","line":10,"endline":10,"start":1,"end":53}
+class name (should be none) = {"path":"","line":0,"endline":0,"start":1,"end":0}
 class property read = {"path":"class.js","line":4,"endline":4,"start":3,"end":6}
 class property write = {"path":"class.js","line":4,"endline":4,"start":3,"end":6}
 class methods = {"path":"class.js","line":6,"endline":6,"start":3,"end":5}
