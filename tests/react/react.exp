@@ -1920,16 +1920,16 @@ Cannot call `ReactDOM.createPortal` with `document.getElementById(...)` bound to
 incompatible with `Element` [2].
 
    portals.js:12:7
-    12|       document.getElementById('portal'),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     12|       document.getElementById('portal'),
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:822:52
-   822|   getElementById(elementId: string): HTMLElement | null;
-                                                           ^^^^ [1]
+   <BUILTINS>/dom.js:1245:52
+   1245|   getElementById(elementId: string): HTMLElement | null;
+                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:30:16
-    30|     container: Element,
-                       ^^^^^^^ [2]
+     30|     container: Element,
+                        ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- profiler.js:21:3
@@ -2943,8 +2943,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1065:50
-   1065|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1064:50
+   1064|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -2961,8 +2961,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1065:50
-   1065|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1064:50
+   1064|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -2979,8 +2979,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1065:50
-   1065|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1064:50
+   1064|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -3011,8 +3011,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1065:50
-   1065|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1064:50
+   1064|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -3044,8 +3044,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1065:50
-   1065|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1064:50
+   1064|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
@@ -3077,8 +3077,8 @@ with `Element` [2].
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1065:50
-   1065|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1064:50
+   1064|   querySelector(selector: string): HTMLElement | null;
                                                           ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
      18|     container: Element,
