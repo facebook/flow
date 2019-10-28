@@ -445,7 +445,37 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
         try_with_json2 (fun () ->
             Lwt.return
               ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
-              |> (fun (a, b) -> (a, Some b)) )))
+              |> fun (result, request_history) ->
+              let open GetDef_js.Get_def_result in
+              let request_history =
+                ( "request_history",
+                  Hh_json.JSON_Array
+                    (Core_list.map ~f:(fun str -> Hh_json.JSON_String str) request_history) )
+              in
+              match result with
+              | Def loc ->
+                ( Ok loc,
+                  Some
+                    (Hh_json.JSON_Object
+                       [request_history; ("result", Hh_json.JSON_String "SUCCESS")]) )
+              | Partial (loc, msg) ->
+                ( Ok loc,
+                  Some
+                    (Hh_json.JSON_Object
+                       [
+                         request_history;
+                         ("result", Hh_json.JSON_String "PARTIAL_FAILURE");
+                         ("error", Hh_json.JSON_String msg);
+                       ]) )
+              | Def_error msg ->
+                ( Error msg,
+                  Some
+                    (Hh_json.JSON_Object
+                       [
+                         request_history;
+                         ("result", Hh_json.JSON_String "FAILURE");
+                         ("error", Hh_json.JSON_String msg);
+                       ]) ) )))
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
