@@ -1839,16 +1839,6 @@ export default suite(({addFile, flowCmd}) => [
                "endline": 3,
                "start": 13,
                "end": 15
-             },
-             {
-               "name": "exports",
-               "type": "{||}",
-               "func_details": null,
-               "path": "customfun.js",
-               "line": 0,
-               "endline": 0,
-               "start": 1,
-               "end": 0
              }
            ]
          }
@@ -2043,16 +2033,6 @@ export default suite(({addFile, flowCmd}) => [
               "endline": 5,
               "start": 13,
               "end": 15
-            },
-            {
-              "name": "exports",
-              "type": "{||}",
-              "func_details": null,
-              "path": "exact.js",
-              "line": 0,
-              "endline": 0,
-              "start": 1,
-              "end": 0
             }
           ]
         }

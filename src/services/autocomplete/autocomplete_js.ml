@@ -6,7 +6,7 @@
  *)
 
 type autocomplete_type =
-  | Acid of Scope.Entry.t SMap.t
+  | Acid
   | Ackey (* TODO: track which object, so we can complete the keys.
            for now, just classifying the kind of autocomplete *)
   | Acmem of Type.t
@@ -30,7 +30,7 @@ let is_autocomplete x =
 
 let autocomplete_id from_trigger_character state _cx ac_name ac_loc =
   if is_autocomplete ac_name && not from_trigger_character then (
-    state := Some { ac_name; ac_loc; ac_type = Acid (Env.all_entries ()) };
+    state := Some { ac_name; ac_loc; ac_type = Acid };
     true
   ) else
     false

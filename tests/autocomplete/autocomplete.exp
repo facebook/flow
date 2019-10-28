@@ -1202,16 +1202,6 @@ customfun.js = {
       "endline":3,
       "start":13,
       "end":15
-    },
-    {
-      "name":"exports",
-      "type":"{||}",
-      "func_details":null,
-      "path":"customfun.js",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
     }
   ]
 }
@@ -3299,16 +3289,6 @@ identifier.js = {
       "end":13
     },
     {
-      "name":"flowage",
-      "type":"number",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":14,
-      "endline":14,
-      "start":7,
-      "end":13
-    },
-    {
       "name":"flounder",
       "type":"any",
       "func_details":null,
@@ -3317,16 +3297,6 @@ identifier.js = {
       "endline":10,
       "start":7,
       "end":14
-    },
-    {
-      "name":"flounce",
-      "type":"number",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":19,
-      "endline":19,
-      "start":5,
-      "end":11
     },
     {
       "name":"flotsam",
@@ -3354,9 +3324,9 @@ identifier.js = {
       "func_details":{"return_type":"void","params":[]},
       "path":"identifier.js",
       "line":7,
-      "endline":15,
-      "start":1,
-      "end":1
+      "endline":7,
+      "start":10,
+      "end":19
     },
     {
       "name":"floater",
@@ -3369,16 +3339,6 @@ identifier.js = {
       "end":11
     },
     {
-      "name":"exports",
-      "type":"{||}",
-      "func_details":null,
-      "path":"identifier.js",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
       "name":"bartender",
       "type":"number",
       "func_details":null,
@@ -3387,26 +3347,6 @@ identifier.js = {
       "endline":5,
       "start":5,
       "end":13
-    },
-    {
-      "name":"this",
-      "type":"empty",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
-      "name":"super",
-      "type":"typeof Object.prototype",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
     }
   ]
 }

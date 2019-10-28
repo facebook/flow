@@ -9,6 +9,7 @@ open Autocomplete_js
 open Base.Result
 open ServerProt.Response
 open Parsing_heaps_utils
+open Loc_collections
 
 let add_autocomplete_token contents line column =
   let line = line - 1 in
@@ -166,6 +167,20 @@ let autocomplete_is_valid_member key =
      internal reasons *)
      not (Reason.is_internal_name key)
 
+let ty_normalizer_options =
+  Ty_normalizer_env.
+    {
+      fall_through_merged = true;
+      expand_internal_types = true;
+      expand_type_aliases = false;
+      flag_shadowed_type_params = true;
+      preserve_inferred_literal_types = false;
+      evaluate_type_destructors = true;
+      optimize_types = true;
+      omit_targ_defaults = false;
+      merge_bot_and_any_kinds = true;
+    }
+
 let autocomplete_member
     ~reader
     ~exclude_proto_members
@@ -209,19 +224,6 @@ let autocomplete_member
     match Members.to_command_result result with
     | Error error -> Error (error, Some json_data_to_log)
     | Ok result_map ->
-      let options =
-        {
-          Ty_normalizer_env.fall_through_merged = true;
-          expand_internal_types = true;
-          expand_type_aliases = false;
-          flag_shadowed_type_params = true;
-          preserve_inferred_literal_types = false;
-          evaluate_type_destructors = true;
-          optimize_types = true;
-          omit_targ_defaults = false;
-          merge_bot_and_any_kinds = true;
-        }
-      in
       let file = Context.file cx in
       let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
       let rev_result =
@@ -237,7 +239,7 @@ let autocomplete_member
       in
       let result =
         rev_result
-        |> Ty_normalizer.from_types ~options ~genv
+        |> Ty_normalizer.from_types ~options:ty_normalizer_options ~genv
         |> Core_list.rev_filter_map ~f:(function
                | ((name, ty_loc), Ok ty) ->
                  Some (autocomplete_create_result (name, ac_loc) (ty, ty_loc))
@@ -245,56 +247,110 @@ let autocomplete_member
       in
       Ok (result, Some json_data_to_log))
 
+(* turns typed AST into normal AST so we can run Scope_builder on it *)
+(* TODO(vijayramamurthy): make scope builder polymorphic *)
+class type_killer (reader : Parsing_heaps.Reader.reader) =
+  object
+    inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot x = loc_of_aloc ~reader x
+
+    method on_type_annot (x, _) = loc_of_aloc ~reader x
+  end
+
+(* The fact that we need this feels convoluted.
+    We started with a typed AST, then stripped the types off of it to run Scope_builder on it,
+    and now we go back to the typed AST to get the types of the locations we got from Scope_api.
+    We wouldn't need to do this separate pass if Scope_builder/Scope_api were polymorphic.
+ *)
+class type_collector (reader : Parsing_heaps.Reader.reader) (locs : LocSet.t) =
+  object
+    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+
+    val mutable acc = LocMap.empty
+
+    method on_loc_annot x = x
+
+    method on_type_annot x = x
+
+    method collected_types = acc
+
+    method! t_identifier (((aloc, t), _) as ident) =
+      let loc = loc_of_aloc ~reader aloc in
+      if LocSet.mem loc locs then acc <- LocMap.add loc t acc;
+      ident
+  end
+
+let collect_types ~reader locs typed_ast =
+  let collector = new type_collector reader locs in
+  Pervasives.ignore (collector#program typed_ast);
+  collector#collected_types
+
 (* env is all visible bound names at cursor *)
-let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
+let autocomplete_id ~reader cx ac_loc ac_trigger file_sig typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let (result, errors) =
-    SMap.fold
-      (fun name entry (acc, errors) ->
-        (* Filter out internal environment variables except for this and
-       super. *)
-        let is_this = name = Reason.internal_name "this" in
-        let is_super = name = Reason.internal_name "super" in
-        if (not (is_this || is_super)) && Reason.is_internal_name name then
-          (acc, errors)
+  let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
+  let open Scope_api.With_Loc in
+  (* get the innermost scope enclosing the requested location *)
+  let (ac_scope_id, _) =
+    IMap.fold
+      (fun this_scope_id this_scope (prev_scope_id, prev_scope) ->
+        if
+          Reason.in_range ac_loc this_scope.Scope.loc
+          && Reason.in_range this_scope.Scope.loc prev_scope.Scope.loc
+        then
+          (this_scope_id, this_scope)
         else
-          let (ty_loc, name) =
-            (* renaming of this/super *)
-            if is_this then
-              (Loc.none, "this")
-            else if is_super then
-              (Loc.none, "super")
-            else
-              (Scope.Entry.entry_loc entry |> loc_of_aloc ~reader, name)
-          in
-          let options =
-            {
-              Ty_normalizer_env.fall_through_merged = true;
-              expand_internal_types = true;
-              expand_type_aliases = false;
-              flag_shadowed_type_params = true;
-              preserve_inferred_literal_types = false;
-              evaluate_type_destructors = true;
-              optimize_types = true;
-              omit_targ_defaults = false;
-              merge_bot_and_any_kinds = true;
-            }
-          in
-          let file = Context.file cx in
-          let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
-          let type_ = Scope.Entry.actual_type entry in
-          match Ty_normalizer.from_type ~options ~genv type_ with
-          | Ok ty ->
-            let result = autocomplete_create_result (name, ac_loc) (ty, ty_loc) in
-            (result :: acc, errors)
-          | Error err -> (acc, err :: errors))
-      env
+          (prev_scope_id, prev_scope))
+      scope_info.scopes
+      (0, scope scope_info 0)
+  in
+  (* gather all in-scope variables *)
+  let names_and_locs =
+    fold_scope_chain
+      scope_info
+      (fun _ scope acc ->
+        let scope_vars = scope.Scope.defs |> SMap.map (fun Def.{ locs; _ } -> Nel.hd locs) in
+        (* don't suggest lexically-scoped variables declared after the current location.
+          this filtering isn't perfect:
+
+            let foo = /* request here */
+                ^^^
+                def_loc
+
+          since def_loc is the location of the identifier within the declaration statement
+          (not the entire statement), we don't filter out foo when declaring foo. *)
+        let relevant_scope_vars =
+          if scope.Scope.lexical then
+            SMap.filter (fun _name def_loc -> Loc.compare def_loc ac_loc < 0) scope_vars
+          else
+            scope_vars
+        in
+        SMap.union acc relevant_scope_vars)
+      ac_scope_id
+      SMap.empty
+  in
+  let types = collect_types ~reader (LocSet.of_list (SMap.values names_and_locs)) typed_ast in
+  let normalize_type =
+    Ty_normalizer.from_type
+      ~options:ty_normalizer_options
+      ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+  in
+  let (results, errors) =
+    SMap.fold
+      (fun name loc (results, errors) ->
+        match normalize_type (LocMap.find loc types) with
+        | Ok ty ->
+          let result = autocomplete_create_result (name, ac_loc) (ty, loc) in
+          (result :: results, errors)
+        | Error error -> (results, error :: errors))
+      names_and_locs
       ([], [])
   in
   let json_data_to_log =
     Hh_json.(
       let result_str =
-        match (result, errors) with
+        match (results, errors) with
         | (_, []) -> "SUCCESS"
         | ([], _) -> "FAILURE_NORMALIZER"
         | (_, _) -> "PARTIAL"
@@ -304,14 +360,14 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
           ("ac_type", JSON_String "Acid");
           ("ac_trigger", JSON_String (Option.value ac_trigger ~default:"None"));
           ("result", JSON_String result_str);
-          ("count", JSON_Number (result |> List.length |> string_of_int));
+          ("count", JSON_Number (results |> List.length |> string_of_int));
           ( "errors",
             JSON_Array
               (Core_list.rev_map errors ~f:(fun err ->
                    JSON_String (Ty_normalizer.error_to_string err))) );
         ])
   in
-  Ok (result, Some json_data_to_log)
+  Ok (results, Some json_data_to_log)
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
@@ -347,8 +403,8 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger
 let autocomplete_get_results ~reader cx file_sig typed_ast state trigger_character docblock =
   let file_sig = File_sig.abstractify_locs file_sig in
   match !state with
-  | Some { ac_loc; ac_type = Acid env; _ } ->
-    autocomplete_id ~reader cx ac_loc trigger_character file_sig env typed_ast
+  | Some { ac_loc; ac_type = Acid; _ } ->
+    autocomplete_id ~reader cx ac_loc trigger_character file_sig typed_ast
   | Some { ac_name; ac_loc; ac_type = Acmem this } ->
     autocomplete_member
       ~reader

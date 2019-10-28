@@ -43,13 +43,6 @@ export default suite(
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'exports',
-                  kind: 6,
-                  detail: '{||}',
-                  inlineDetail: '{||}',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'b',
                   kind: 6,
                   detail: 'string',
@@ -61,20 +54,6 @@ export default suite(
                   kind: 6,
                   detail: 'number',
                   inlineDetail: 'number',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'super',
-                  kind: 6,
-                  detail: 'typeof Object.prototype',
-                  inlineDetail: 'typeof Object.prototype',
                   insertTextFormat: 1,
                 },
               ],
@@ -114,27 +93,6 @@ export default suite(
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'exports',
-                  kind: 6,
-                  detail: '{||}',
-                  inlineDetail: '{||}',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'anInterface',
-                  kind: 8,
-                  detail: 'interface anInterface',
-                  inlineDetail: 'interface anInterface',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'aUnion',
-                  kind: 13,
-                  detail: 'type aUnion = "a" | "b"',
-                  inlineDetail: 'type aUnion = "a" | "b"',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'aNumber',
                   kind: 6,
                   detail: 'number',
@@ -154,20 +112,6 @@ export default suite(
                   kind: 7,
                   detail: 'class aClass',
                   inlineDetail: 'class aClass',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'super',
-                  kind: 6,
-                  detail: 'typeof Object.prototype',
-                  inlineDetail: 'typeof Object.prototype',
                   insertTextFormat: 1,
                 },
               ],
@@ -228,13 +172,6 @@ export default suite(
                   },
                 },
                 {
-                  label: 'exports',
-                  kind: 6,
-                  detail: '{||}',
-                  inlineDetail: '{||}',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'aFunction',
                   kind: 3,
                   detail: '(arg1: number, arg2: string) => null',
@@ -248,20 +185,6 @@ export default suite(
                     },
                     newText: 'aFunction(${1:arg1}, ${2:arg2})',
                   },
-                },
-                {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'super',
-                  kind: 6,
-                  detail: 'typeof Object.prototype',
-                  inlineDetail: 'typeof Object.prototype',
-                  insertTextFormat: 1,
                 },
               ],
             };
@@ -333,13 +256,6 @@ export default suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'exports',
-                  kind: 6,
-                  detail: '{||}',
-                  inlineDetail: '{||}',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'React',
                   kind: 6,
                   detail:
@@ -349,10 +265,11 @@ export default suite(
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'Props',
-                  kind: 13,
-                  detail: 'type Props = {a: number}',
-                  inlineDetail: 'type Props = {a: number}',
+                  label: 'D',
+                  kind: 3,
+                  detail: '(props: Props) => void',
+                  inlineDetail: '(props: Props)',
+                  itemType: 'void',
                   insertTextFormat: 1,
                 },
                 {
