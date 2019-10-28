@@ -10,7 +10,6 @@ val autocomplete_get_results :
   Context.t ->
   File_sig.With_Loc.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
-  Autocomplete_js.autocomplete_state option ref ->
   string option ->
   Docblock.t ->
   ( ServerProt.Response.complete_autocomplete_result list * Hh_json.json option,

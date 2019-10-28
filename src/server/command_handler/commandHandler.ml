@@ -64,7 +64,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling file_input 
     | File_input.FileName _ -> failwith "Not implemented"
     | File_input.FileContent (_, content) -> (File_input.filename_of_file_input file_input, content)
   in
-  let state = Autocomplete_js.autocomplete_set_hooks trigger_character in
+  Autocomplete_js.autocomplete_set_hooks trigger_character;
   let path = File_key.SourceFile path in
   let%lwt check_contents_result =
     Types_js.basic_check_contents ~options ~env ~profiling content path
@@ -80,7 +80,6 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling file_input 
                  cx
                  file_sig
                  tast
-                 state
                  trigger_character
                  info)))
   in

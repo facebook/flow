@@ -5013,7 +5013,7 @@ and jsx_title cx openingElement closingElement children locs =
           in
           let (o, attributes') = jsx_mk_props cx reason c name attributes children in
           let t = jsx_desugar cx name c o attributes children locs in
-          let name = Identifier ((loc, t), { Identifier.name }) in
+          let name = Identifier ((loc, c), { Identifier.name }) in
           (t, name, attributes')
       | (Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _) ->
         if Type_inference_hooks_js.dispatch_id_hook cx name loc then
@@ -5031,7 +5031,7 @@ and jsx_title cx openingElement closingElement children locs =
           in
           let (o, attributes') = jsx_mk_props cx reason c name attributes children in
           let t = jsx_desugar cx name c o attributes children locs in
-          let name = Identifier ((loc, t), { Identifier.name }) in
+          let name = Identifier ((loc, c), { Identifier.name }) in
           (t, name, attributes')
       | (Identifier (loc, { Identifier.name }), Options.Jsx_csx, _) ->
         (*
@@ -5048,7 +5048,7 @@ and jsx_title cx openingElement closingElement children locs =
           let c = identifier cx (mk_ident ~comments:None name) loc in
           let (o, attributes') = jsx_mk_props cx reason c name attributes children in
           let t = jsx_desugar cx name c o attributes children locs in
-          let name = Identifier ((loc, t), { Identifier.name }) in
+          let name = Identifier ((loc, c), { Identifier.name }) in
           (t, name, attributes')
       | (MemberExpression member, Options.Jsx_react, _) ->
         let name = jsx_title_member_to_string member in

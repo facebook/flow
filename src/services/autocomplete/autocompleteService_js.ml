@@ -400,12 +400,11 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger
       ac_trigger
       docblock)
 
-let autocomplete_get_results ~reader cx file_sig typed_ast state trigger_character docblock =
+let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character docblock =
   let file_sig = File_sig.abstractify_locs file_sig in
-  match !state with
-  | Some { ac_loc; ac_type = Acid; _ } ->
-    autocomplete_id ~reader cx ac_loc trigger_character file_sig typed_ast
-  | Some { ac_name; ac_loc; ac_type = Acmem this } ->
+  match Autocomplete_js.process_location ~trigger_character ~typed_ast with
+  | Some (Acid ac_loc) -> autocomplete_id ~reader cx ac_loc trigger_character file_sig typed_ast
+  | Some (Acmem (ac_name, ac_loc, this)) ->
     autocomplete_member
       ~reader
       ~exclude_proto_members:false
@@ -418,18 +417,8 @@ let autocomplete_get_results ~reader cx file_sig typed_ast state trigger_charact
       ac_loc
       trigger_character
       docblock
-  | Some { ac_name; ac_loc; ac_type = Acjsx cls } ->
+  | Some (Acjsx (ac_name, ac_loc, cls)) ->
     autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc trigger_character docblock
-  | Some { ac_name = _; ac_loc = _; ac_type = Ackey } ->
-    let json_data_to_log =
-      Hh_json.(
-        JSON_Object
-          [
-            ("ac_type", JSON_String "Ackey");
-            ("ac_trigger", JSON_String (Option.value trigger_character ~default:"None"));
-          ])
-    in
-    Ok ([], Some json_data_to_log)
   | None ->
     let json_data_to_log =
       Hh_json.(
