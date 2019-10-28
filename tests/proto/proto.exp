@@ -454,5 +454,13 @@ References:
                          ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- ternary-crash.js:3:29
 
-Found 33 errors
+Cannot use empty prototype object as a prototype. Expected an object or null.
+
+   3| const clone = Object.create(constructor.prototype);
+                                  ^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 34 errors

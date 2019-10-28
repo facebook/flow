@@ -2845,7 +2845,8 @@ let dump_error_message =
             | SketchyNumberAnd -> "SketchyNumberAnd"
           in
           spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason))
-      | EInvalidPrototype reason -> spf "EInvalidPrototype (%s)" (dump_reason cx reason)
+      | EInvalidPrototype (loc, reason) ->
+        spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
       | EExperimentalOptionalChaining loc ->
         spf "EExperimentalOptionalChaining (%s)" (string_of_aloc loc)
       | EOptionalChainingMethods loc -> spf "EOptionalChainingMethods (%s)" (string_of_aloc loc)
