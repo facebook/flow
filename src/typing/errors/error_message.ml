@@ -11,9 +11,9 @@ open Utils_js
 
 exception EDebugThrow of ALoc.t
 
-exception EMergeTimeout of float
+exception EMergeTimeout of float * string
 
-exception ECheckTimeout of float
+exception ECheckTimeout of float * string
 
 type invalid_char_set =
   | DuplicateChar of Char.t

@@ -389,7 +389,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                  run_time
                  files;
                Option.iter merge_timeout ~f:(fun merge_timeout ->
-                   if run_time >= merge_timeout then raise (Error_message.EMergeTimeout run_time)))
+                   if run_time >= merge_timeout then
+                     raise (Error_message.EMergeTimeout (run_time, files))))
              ~f:(fun () ->
                let start_time = Unix.gettimeofday () in
                (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
@@ -439,7 +440,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
               Error_message.(
                 match unwrapped_exc with
                 | EDebugThrow loc -> (loc, DebugThrow)
-                | EMergeTimeout s -> (file_loc, MergeTimeout s)
+                | EMergeTimeout (s, _) -> (file_loc, MergeTimeout s)
                 | _ -> (file_loc, MergeJobException exc))
           in
           (file, result) :: merged))
@@ -529,7 +530,8 @@ let check options ~reader file =
             run_time
             file_str;
           Option.iter check_timeout ~f:(fun check_timeout ->
-              if run_time >= check_timeout then raise (Error_message.ECheckTimeout run_time)))
+              if run_time >= check_timeout then
+                raise (Error_message.ECheckTimeout (run_time, file_str))))
         ~f:(fun () -> Ok (check_file options ~reader file))
     with
     | ( SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full
@@ -552,7 +554,7 @@ let check options ~reader file =
         Error_message.(
           match unwrapped_exc with
           | EDebugThrow loc -> (loc, DebugThrow)
-          | ECheckTimeout s -> (file_loc, CheckTimeout s)
+          | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
           | _ -> (file_loc, CheckJobException exc))
   in
   (file, result)
