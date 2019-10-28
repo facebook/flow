@@ -91,20 +91,6 @@ foo.js = {
   ]
 }
 bar.js = {"error":"not enough type information to autocomplete","result":[]}
-qux.js = {
-  "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"qux.js",
-      "line":3,
-      "endline":3,
-      "start":14,
-      "end":19
-    }
-  ]
-}
 str.js = {
   "result":[
     {
@@ -1738,13 +1724,27 @@ override.js = {
     }
   ]
 }
-class.js = {
+member_class_property.js = {
+  "result":[
+    {
+      "name":"baz",
+      "type":"string",
+      "func_details":null,
+      "path":"member_class_property.js",
+      "line":4,
+      "endline":4,
+      "start":8,
+      "end":13
+    }
+  ]
+}
+member_class_static.js = {
   "result":[
     {
       "name":"bar",
       "type":"string",
       "func_details":null,
-      "path":"class.js",
+      "path":"member_class_static.js",
       "line":3,
       "endline":3,
       "start":15,
@@ -1774,7 +1774,7 @@ class.js = {
       "name":"name",
       "type":"string",
       "func_details":null,
-      "path":"class.js",
+      "path":"member_class_static.js",
       "line":2,
       "endline":2,
       "start":7,

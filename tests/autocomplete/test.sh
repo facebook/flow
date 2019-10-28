@@ -13,10 +13,6 @@ printf "bar.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty bar.js 4 5 < bar.js
 
-printf "qux.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty qux.js 6 3 < qux.js
-
 printf "str.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty str.js 3 9 < str.js
@@ -101,9 +97,13 @@ printf "override.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty override.js 10 16 < override.js
 
-printf "class.js = "
+printf "member_class_property.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty class.js 7 5 < class.js
+  "$FLOW" autocomplete --strip-root --pretty member_class_property.js 8 5 < member_class_property.js
+
+printf "member_class_static.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty member_class_static.js 7 5 < member_class_static.js
 
 printf "optional_chaining_new.js = "
 assert_ok \
