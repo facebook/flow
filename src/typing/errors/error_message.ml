@@ -1241,1112 +1241,265 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     else
       (text prefix, code export_name)
   in
-  Errors.(
-    function
-    | EIncompatible
-        { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op; branches } ->
-      if branches = [] then
-        IncompatibleUse
-          {
-            loc = loc_of_reason reason_upper;
-            upper_kind;
-            reason_lower;
-            reason_upper;
-            use_op = Option.value ~default:unknown_use use_op;
-          }
-      else
-        Speculation
-          {
-            loc = loc_of_reason reason_upper;
-            use_op = Option.value ~default:unknown_use use_op;
-            branches;
-          }
-    | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
-      if branches = [] then
-        Incompatible { reason_lower; reason_upper; use_op }
-      else
-        Speculation { loc = loc_of_reason reason_upper; use_op; branches }
-    | EIncompatibleProp { prop; reason_prop; reason_obj; special = _; use_op } ->
-      PropMissing
+  let open Errors in
+  function
+  | EIncompatible
+      { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op; branches } ->
+    if branches = [] then
+      IncompatibleUse
         {
-          loc = loc_of_reason reason_prop;
-          prop;
-          reason_obj;
+          loc = loc_of_reason reason_upper;
+          upper_kind;
+          reason_lower;
+          reason_upper;
           use_op = Option.value ~default:unknown_use use_op;
         }
-    | EDebugPrint (_, str) -> Normal { features = [text str] }
-    | EExportValueAsType (_, export_name) ->
-      Normal { features = [text "Cannot export the value "; code export_name; text " as a type."] }
-    | EImportValueAsType (_, export_name) ->
-      let (prefix, export) = msg_export "the value " export_name in
-      let features =
+    else
+      Speculation
+        {
+          loc = loc_of_reason reason_upper;
+          use_op = Option.value ~default:unknown_use use_op;
+          branches;
+        }
+  | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
+    if branches = [] then
+      Incompatible { reason_lower; reason_upper; use_op }
+    else
+      Speculation { loc = loc_of_reason reason_upper; use_op; branches }
+  | EIncompatibleProp { prop; reason_prop; reason_obj; special = _; use_op } ->
+    PropMissing
+      {
+        loc = loc_of_reason reason_prop;
+        prop;
+        reason_obj;
+        use_op = Option.value ~default:unknown_use use_op;
+      }
+  | EDebugPrint (_, str) -> Normal { features = [text str] }
+  | EExportValueAsType (_, export_name) ->
+    Normal { features = [text "Cannot export the value "; code export_name; text " as a type."] }
+  | EImportValueAsType (_, export_name) ->
+    let (prefix, export) = msg_export "the value " export_name in
+    let features =
+      [
+        text "Cannot import ";
+        prefix;
+        export;
+        text " as a type. ";
+        code "import type";
+        text " only works on type exports like type aliases, ";
+        text "interfaces, and classes. If you intended to import the type of a ";
+        text "value use ";
+        code "import typeof";
+        text " instead.";
+      ]
+    in
+    Normal { features }
+  | EImportTypeAsTypeof (_, export_name) ->
+    let (prefix, export) = msg_export "the type " export_name in
+    let features =
+      [
+        text "Cannot import ";
+        prefix;
+        export;
+        text " as a type. ";
+        code "import typeof";
+        text " only works on value exports like variables, ";
+        text "functions, and classes. If you intended to import a type use ";
+        code "import type";
+        text " instead.";
+      ]
+    in
+    Normal { features }
+  | EImportTypeAsValue (_, export_name) ->
+    let (prefix, export) = msg_export "the type " export_name in
+    let features =
+      [
+        text "Cannot import ";
+        prefix;
+        export;
+        text " as a value. ";
+        text "Use ";
+        code "import type";
+        text " instead.";
+      ]
+    in
+    Normal { features }
+  | ERefineAsValue (_, name) ->
+    let (_, export) = msg_export "" name in
+    let features = [text "Cannot refine "; export; text " as a value. "] in
+    Normal { features }
+  | ENoDefaultExport (_, module_name, suggestion) ->
+    let features =
+      [
+        text "Cannot import a default export because there is no default export ";
+        text "in ";
+        code module_name;
+        text ".";
+      ]
+      @
+      match suggestion with
+      | None -> []
+      | Some suggestion ->
         [
-          text "Cannot import ";
-          prefix;
-          export;
-          text " as a type. ";
-          code "import type";
-          text " only works on type exports like type aliases, ";
-          text "interfaces, and classes. If you intended to import the type of a ";
-          text "value use ";
-          code "import typeof";
-          text " instead.";
-        ]
-      in
-      Normal { features }
-    | EImportTypeAsTypeof (_, export_name) ->
-      let (prefix, export) = msg_export "the type " export_name in
-      let features =
-        [
-          text "Cannot import ";
-          prefix;
-          export;
-          text " as a type. ";
-          code "import typeof";
-          text " only works on value exports like variables, ";
-          text "functions, and classes. If you intended to import a type use ";
-          code "import type";
-          text " instead.";
-        ]
-      in
-      Normal { features }
-    | EImportTypeAsValue (_, export_name) ->
-      let (prefix, export) = msg_export "the type " export_name in
-      let features =
-        [
-          text "Cannot import ";
-          prefix;
-          export;
-          text " as a value. ";
-          text "Use ";
-          code "import type";
-          text " instead.";
-        ]
-      in
-      Normal { features }
-    | ERefineAsValue (_, name) ->
-      let (_, export) = msg_export "" name in
-      let features = [text "Cannot refine "; export; text " as a value. "] in
-      Normal { features }
-    | ENoDefaultExport (_, module_name, suggestion) ->
-      let features =
-        [
-          text "Cannot import a default export because there is no default export ";
-          text "in ";
-          code module_name;
-          text ".";
-        ]
-        @
-        match suggestion with
-        | None -> []
-        | Some suggestion ->
-          [
-            text " ";
-            text "Did you mean ";
-            code (spf "import {%s} from \"%s\"" suggestion module_name);
-            text "?";
-          ]
-      in
-      Normal { features }
-    | EOnlyDefaultExport (_, module_name, export_name) ->
-      let features =
-        [
-          text "Cannot import ";
-          code export_name;
-          text " because ";
-          text "there is no ";
-          code export_name;
-          text " export in ";
-          code module_name;
-          text ". Did you mean ";
-          code (spf "import %s from \"...\"" export_name);
+          text " ";
+          text "Did you mean ";
+          code (spf "import {%s} from \"%s\"" suggestion module_name);
           text "?";
         ]
-      in
-      Normal { features }
-    | ENoNamedExport (_, module_name, export_name, suggestion) ->
-      let features =
-        [
-          text "Cannot import ";
-          code export_name;
-          text " because ";
-          text "there is no ";
-          code export_name;
-          text " export in ";
-          code module_name;
-          text ".";
-        ]
-        @
-        match suggestion with
-        | None -> []
-        | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
-      in
-      Normal { features }
-    | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
-      let (arity, args) =
-        if min_arity = max_arity then
-          ( spf "%d" max_arity,
-            if max_arity = 1 then
-              "argument"
-            else
-              "arguments" )
-        else
-          (spf "%d-%d" min_arity max_arity, "arguments")
-      in
-      let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-      let features =
-        [text "Cannot use "; ref reason_arity; text (spf " without %s type %s." arity args)]
-      in
-      Normal { features }
-    | ETooManyTypeArgs (reason_tapp, reason_arity, n) ->
-      let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-      let features =
-        [
-          text "Cannot use ";
-          ref reason_arity;
-          text " with more than ";
-          text
-            (spf
-               "%n type %s."
-               n
-               ( if n == 1 then
-                 "argument"
-               else
-                 "arguments" ));
-        ]
-      in
-      Normal { features }
-    | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
-      let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-      let features =
-        [
-          text "Cannot use ";
-          ref reason_arity;
-          text " with fewer than ";
-          text
-            (spf
-               "%n type %s."
-               n
-               ( if n == 1 then
-                 "argument"
-               else
-                 "arguments" ));
-        ]
-      in
-      Normal { features }
-    | EInvalidTypeArgs (reason_main, reason_tapp) ->
-      let features =
-        [text "Cannot use "; ref reason_main; text " with "; ref reason_tapp; text " argument"]
-      in
-      Normal { features }
-    | ETypeParamArity (_, n) ->
-      if n = 0 then
-        Normal { features = [text "Cannot apply type because it is not a polymorphic type."] }
-      else
-        let features =
-          [
-            text "Cannot use type without exactly ";
-            text
-              (spf
-                 "%n type %s."
-                 n
-                 ( if n == 1 then
-                   "argument"
-                 else
-                   "arguments" ));
-          ]
-        in
-        Normal { features }
-    | ETypeParamMinArity (_, n) ->
-      let features =
-        [
-          text "Cannot use type without at least ";
-          text
-            (spf
-               "%n type %s."
-               n
-               ( if n == 1 then
-                 "argument"
-               else
-                 "arguments" ));
-        ]
-      in
-      Normal { features }
-    | ECallTypeArity { call_loc = _; is_new; reason_arity; expected_arity = n } ->
-      let use =
-        if is_new then
-          "construct "
-        else
-          "call "
-      in
-      if n = 0 then
-        let features =
-          [
-            text "Cannot ";
-            text use;
-            text "non-polymorphic ";
-            ref reason_arity;
-            text " with type arguments.";
-          ]
-        in
-        Normal { features }
-      else
-        let features =
-          [
-            text "Cannot ";
-            text use;
-            ref reason_arity;
-            text " without exactly ";
-            text
-              (spf
-                 "%n type argument%s."
-                 n
-                 ( if n == 1 then
-                   ""
-                 else
-                   "s" ));
-          ]
-        in
-        Normal { features }
-    | EValueUsedAsType { reason_use } ->
-      let features =
-        [
-          text "Cannot use ";
-          desc reason_use;
-          text " as a type. ";
-          text "A name can be used as a type only if it refers to ";
-          text "a type definition, an interface definition, or a class definition. ";
-          text "To get the type of a non-class value, use ";
-          code "typeof";
-          text ".";
-        ]
-      in
-      Normal { features }
-    | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
-      Incompatible { reason_lower; reason_upper; use_op }
-    | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
-      Incompatible { reason_lower; reason_upper; use_op }
-    | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
-      Incompatible { reason_lower; reason_upper; use_op }
-    | EPropNotFound (prop, reasons, use_op) ->
-      let (reason_prop, reason_obj) = reasons in
-      PropMissing { loc = loc_of_reason reason_prop; prop; reason_obj; use_op }
-    | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
-      UseOp
-        {
-          loc = loc_of_reason reason_prop;
-          features = mk_prop_message x @ [text " is not readable"];
-          use_op;
-        }
-    | EPropNotWritable { reason_prop; prop_name = x; use_op } ->
-      UseOp
-        {
-          loc = loc_of_reason reason_prop;
-          features = mk_prop_message x @ [text " is not writable"];
-          use_op;
-        }
-    | EPropPolarityMismatch
-        ((reason_lower, reason_upper), prop, (polarity_lower, polarity_upper), use_op) ->
-      PropPolarityMismatch
-        { prop; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
-    | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
-      let polarity_string = function
-        | Polarity.Positive -> "output"
-        | Polarity.Negative -> "input"
-        | Polarity.Neutral -> "input/output"
-      in
-      let expected_polarity = polarity_string expected_polarity in
-      let actual_polarity = polarity_string actual_polarity in
-      let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
-      let features =
-        [
-          text "Cannot use ";
-          ref reason_targ;
-          text (" in an " ^ actual_polarity ^ " ");
-          text "position because ";
-          ref reason_targ;
-          text " is expected to occur only in ";
-          text (expected_polarity ^ " positions.");
-        ]
-      in
-      Normal { features }
-    | EBuiltinLookupFailed { reason; name } ->
-      let features =
-        match name with
-        | Some x when is_internal_module_name x ->
-          [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
-        | None -> [text "Cannot resolve name "; desc reason; text "."]
-        | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
-        | Some x -> [text "Cannot resolve name "; code x; text "."]
-      in
-      Normal { features }
-    | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
-      PropMissing
-        {
-          loc = loc_of_reason reason_prop;
-          prop = name;
-          reason_obj;
-          use_op = Option.value ~default:unknown_use use_op;
-        }
-    | EPrivateLookupFailed (reasons, x, use_op) ->
-      PropMissing
-        {
-          loc = loc_of_reason (fst reasons);
-          prop = Some ("#" ^ x);
-          reason_obj = snd reasons;
-          use_op;
-        }
-    | EAdditionMixed (reason, use_op) ->
-      UseOp
-        {
-          loc = loc_of_reason reason;
-          features = [ref reason; text " could either behave like a string or like a number"];
-          use_op;
-        }
-    | EComparison (lower, upper) ->
-      Normal { features = [text "Cannot compare "; ref lower; text " to "; ref upper; text "."] }
-    | ETupleArityMismatch (reasons, l1, l2, use_op) ->
-      let (lower, upper) = reasons in
-      UseOp
-        {
-          loc = loc_of_reason lower;
-          features =
-            [
-              ref lower;
-              text (spf " has an arity of %d but " l1);
-              ref upper;
-              text (spf " has an arity of %d" l2);
-            ];
-          use_op;
-        }
-    | ENonLitArrayToTuple (reasons, use_op) ->
-      let (lower, upper) = reasons in
-      UseOp
-        {
-          loc = loc_of_reason lower;
-          features =
-            [
-              ref lower;
-              text " has an unknown number of elements, so is ";
-              text "incompatible with ";
-              ref upper;
-            ];
-          use_op;
-        }
-    | ETupleOutOfBounds { reason; reason_op; length; index; use_op } ->
-      UseOp
-        {
-          loc = loc_of_reason reason;
-          features =
-            [
-              ref reason_op;
-              text
-                (spf
-                   " only has %d element%s, so index %s is out of bounds"
-                   length
-                   ( if length == 1 then
-                     ""
-                   else
-                     "s" )
-                   index);
-            ];
-          use_op;
-        }
-    | ETupleNonIntegerIndex { reason; index; use_op } ->
-      let index_ref = Errors.Friendly.(Reference ([Code index], def_loc_of_reason reason)) in
-      UseOp
-        {
-          loc = loc_of_reason reason;
-          features =
-            [
-              text "the index into a tuple must be an integer, but ";
-              index_ref;
-              text " is not an integer";
-            ];
-          use_op;
-        }
-    | ETupleUnsafeWrite { reason; use_op } ->
-      UseOp
-        {
-          loc = loc_of_reason reason;
-          features = [text "the index must be statically known to write a tuple element"];
-          use_op;
-        }
-    | EROArrayWrite (reasons, use_op) ->
-      let (lower, _) = reasons in
-      UseOp
-        {
-          loc = loc_of_reason lower;
-          features = [text "read-only arrays cannot be written to"];
-          use_op;
-        }
-    | EUnionSpeculationFailed { use_op; reason; reason_op = _; branches } ->
-      Speculation { loc = loc_of_reason reason; use_op; branches }
-    | ESpeculationAmbiguous
-        { reason = _; prev_case = (prev_i, prev_case); case = (i, case); cases = case_rs } ->
-      Friendly.(
-        let prev_case_r =
-          mk_reason (RCustom ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
-        in
-        let case_r = mk_reason (RCustom ("case " ^ string_of_int (i + 1))) (loc_of_reason case) in
-        let features =
-          [
-            text "Could not decide which case to select, since ";
-            ref prev_case_r;
-            text " ";
-            text "may work but if it doesn't ";
-            ref case_r;
-            text " looks promising ";
-            text "too. To fix add a type annotation ";
-          ]
-          @ conjunction_concat
-              ~conjunction:"or"
-              (Core_list.map
-                 ~f:(fun case_r ->
-                   let text = "to " ^ string_of_desc (desc_of_reason case_r) in
-                   [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
-                 case_rs)
-          @ [text "."]
-        in
-        Normal { features })
-    | EIncompatibleWithExact (reasons, use_op) ->
-      let (lower, upper) = reasons in
-      UseOp
-        {
-          loc = loc_of_reason lower;
-          features = [text "inexact "; ref lower; text " is incompatible with exact "; ref upper];
-          use_op;
-        }
-    | EUnsupportedExact (_, lower) ->
-      Normal { features = [text "Cannot create exact type from "; ref lower; text "."] }
-    | EIdxArity _ ->
-      let features =
-        [
-          text "Cannot call ";
-          code "idx(...)";
-          text " because only exactly two ";
-          text "arguments are allowed.";
-        ]
-      in
-      Normal { features }
-    | EIdxUse1 _ ->
-      let features =
-        [
-          text "Cannot call ";
-          code "idx(...)";
-          text " because the callback ";
-          text "argument must not be annotated.";
-        ]
-      in
-      Normal { features }
-    | EIdxUse2 _ ->
-      let features =
-        [
-          text "Cannot call ";
-          code "idx(...)";
-          text " because the callback must ";
-          text "only access properties on the callback parameter.";
-        ]
-      in
-      Normal { features }
-    | EUnexpectedThisType _ ->
-      Normal { features = [text "Unexpected use of "; code "this"; text " type."] }
-    | EPropertyTypeAnnot _ ->
-      let features =
-        [
-          text "Cannot use ";
-          code "$PropertyType";
-          text " because the second ";
-          text "type argument must be a string literal.";
-        ]
-      in
-      Normal { features }
-    | EExportsAnnot _ ->
-      let features =
-        [
-          text "Cannot use ";
-          code "$Exports";
-          text " because the first type ";
-          text "argument must be a string literal.";
-        ]
-      in
-      Normal { features }
-    | ECharSetAnnot _ ->
-      let features =
-        [
-          text "Cannot use ";
-          code "$CharSet";
-          text " because the first type ";
-          text "argument must be a string literal.";
-        ]
-      in
-      Normal { features }
-    | EInvalidCharSet { invalid = (invalid_reason, invalid_chars); valid = valid_reason; use_op }
-      ->
-      let valid_reason =
-        mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason)
-      in
-      let invalids =
-        InvalidCharSetSet.fold
-          (fun c acc ->
-            match c with
-            | InvalidChar c -> [code (String.make 1 c); text " is not a member of the set"] :: acc
-            | DuplicateChar c -> [code (String.make 1 c); text " is duplicated"] :: acc)
-          invalid_chars
-          []
-        |> List.rev
-      in
-      UseOp
-        {
-          loc = loc_of_reason invalid_reason;
-          features =
-            [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
-            @ Friendly.conjunction_concat ~conjunction:"and" invalids;
-          use_op;
-        }
-    | EUnsupportedKeyInObjectType _ ->
-      Normal { features = [text "Unsupported key in object type."] }
-    | EPredAnnot _ ->
-      let features =
-        [
-          text "Cannot use ";
-          code "$Pred";
-          text " because the first ";
-          text "type argument must be a number literal.";
-        ]
-      in
-      Normal { features }
-    | ERefineAnnot _ ->
-      let features =
-        [
-          text "Cannot use ";
-          code "$Refine";
-          text " because the third ";
-          text "type argument must be a number literal.";
-        ]
-      in
-      Normal { features }
-    | ETrustedAnnot _ ->
-      Normal { features = [text "Not a valid type to mark as "; code "$Trusted"; text "."] }
-    | EPrivateAnnot _ ->
-      Normal { features = [text "Not a valid type to mark as "; code "$Private"; text "."] }
-    | EUnexpectedTypeof _ ->
-      Normal { features = [code "typeof"; text " can only be used to get the type of variables."] }
-    | EFunPredCustom ((a, b), msg) ->
-      Normal { features = [ref a; text ". "; text msg; text " "; ref b; text "."] }
-    | EIncompatibleWithShape (lower, upper, use_op) ->
-      UseOp
-        {
-          loc = loc_of_reason lower;
-          features =
-            [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
-          use_op;
-        }
-    | EInternal (_, internal_error) ->
-      let msg = string_of_internal_error internal_error in
-      Normal { features = [text (spf "Internal error: %s" msg)] }
-    | EUnsupportedSyntax (_, unsupported_syntax) ->
-      let features =
-        match unsupported_syntax with
-        | ComprehensionExpression
-        | GeneratorExpression
-        | MetaPropertyExpression ->
-          [text "Not supported."]
-        | ObjectPropertyLiteralNonString ->
-          [text "Non-string literal property keys not supported."]
-        | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
-        | ObjectPropertyComputedGetSet ->
-          [text "Computed getters and setters are not yet supported."]
-        | InvariantSpreadArgument ->
-          [text "Unsupported arguments in call to "; code "invariant"; text "."]
-        | ClassPropertyLiteral -> [text "Literal properties not yet supported."]
-        | ClassPropertyComputed -> [text "Computed property keys not supported."]
-        | ReactCreateClassPropertyNonInit ->
-          [text "Unsupported property specification in "; code "createClass"; text "."]
-        | RequireDynamicArgument ->
-          [text "The parameter passed to "; code "require"; text " must be a string literal."]
-        | ImportDynamicArgument ->
-          [text "The parameter passed to "; code "import"; text " must be a string literal."]
-        | RequireLazyDynamicArgument ->
-          [
-            text "The first argument to ";
-            code "requireLazy";
-            text " must be an ";
-            text "array literal of string literals and the second argument must ";
-            text "be a callback.";
-          ]
-        | CatchParameterAnnotation ->
-          [text "Type annotations for catch parameters are not yet supported."]
-        | CatchParameterDeclaration -> [text "Unsupported catch parameter declaration."]
-        | DestructuringObjectPropertyLiteralNonString ->
-          [text "Unsupported non-string literal object property in destructuring."]
-        | DestructuringExpressionPattern ->
-          [text "Unsupported expression pattern in destructuring."]
-        | PredicateDeclarationForImplementation ->
-          [text "Cannot declare predicate when a function body is present."]
-        | PredicateDeclarationWithoutExpression ->
-          [text "Predicate function declarations need to declare a "; text "predicate expression."]
-        | PredicateDeclarationAnonymousParameters ->
-          [
-            text "Predicate function declarations cannot use anonymous ";
-            text "function parameters.";
-          ]
-        | PredicateInvalidBody ->
-          [
-            text "Invalid body for predicate function. Expected a simple return ";
-            text "statement as body.";
-          ]
-        | PredicateFunctionAbstractReturnType ->
-          [
-            text "The return type of a predicate function cannot contain a generic type. ";
-            text "The function predicate will be ignored here.";
-          ]
-        | PredicateVoidReturn -> [text "Predicate functions need to return non-void."]
-        | MultipleIndexers -> [text "Multiple indexers are not supported."]
-        | MultipleProtos -> [text "Multiple prototypes specified."]
-        | ExplicitCallAfterProto -> [text "Unexpected call property after explicit prototype."]
-        | ExplicitProtoAfterCall -> [text "Unexpected prototype after call property."]
-        | SpreadArgument -> [text "A spread argument is unsupported here."]
-        | IllegalName -> [text "Illegal name."]
-        | UnsupportedInternalSlot { name; static = false } ->
-          [text "Unsupported internal slot "; code name; text "."]
-        | UnsupportedInternalSlot { name; static = true } ->
-          [text "Unsupported static internal slot "; code name; text "."]
-      in
-      Normal { features }
-    | EUseArrayLiteral _ ->
-      Normal
-        { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
-    | EMissingAnnotation (reason, _) ->
-      let default = [text "Missing type annotation for "; desc reason; text "."] in
-      let features =
-        match desc_of_reason reason with
-        | RTypeParam (_, (RImplicitInstantiation, _), _) ->
-          [
-            text "Please use a concrete type annotation instead of ";
-            code "_";
-            text " in this position.";
-          ]
-        | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
-          let reason_op = mk_reason reason_op_desc reason_op_loc in
-          let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
-          default
-          @ [
-              text " ";
-              desc reason;
-              text " is a type parameter declared in ";
-              ref reason_tapp;
-              text " and was implicitly instantiated at ";
-              ref reason_op;
-              text ".";
-            ]
-        | _ -> default
-      in
-      (* We don't collect trace info in the assert_ground_visitor because traces
-       * represent tests of lower bounds to upper bounds, and the assert_ground
-       * visitor is just visiting types. Instead, we collect a list of types we
-       * visited to get to the missing annotation error and report that as the
-       * trace *)
-      Normal { features }
-    | EBindingError (binding_error, _, x, entry) ->
-      let desc =
-        if x = internal_name "this" then
-          RThis
-        else if x = internal_name "super" then
-          RSuper
-        else
-          RIdentifier x
-      in
-      (* We can call to_loc here because reaching this point requires that everything else
-        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
-      let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn) in
-      let features =
-        match binding_error with
-        | ENameAlreadyBound ->
-          [text "Cannot declare "; ref x; text " because the name is already bound."]
-        | EReferencedBeforeDeclaration ->
-          if desc = RThis || desc = RSuper then
-            [
-              text "Must call ";
-              code "super";
-              text " before accessing ";
-              ref x;
-              text " in a derived constructor.";
-            ]
+    in
+    Normal { features }
+  | EOnlyDefaultExport (_, module_name, export_name) ->
+    let features =
+      [
+        text "Cannot import ";
+        code export_name;
+        text " because ";
+        text "there is no ";
+        code export_name;
+        text " export in ";
+        code module_name;
+        text ". Did you mean ";
+        code (spf "import %s from \"...\"" export_name);
+        text "?";
+      ]
+    in
+    Normal { features }
+  | ENoNamedExport (_, module_name, export_name, suggestion) ->
+    let features =
+      [
+        text "Cannot import ";
+        code export_name;
+        text " because ";
+        text "there is no ";
+        code export_name;
+        text " export in ";
+        code module_name;
+        text ".";
+      ]
+      @
+      match suggestion with
+      | None -> []
+      | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
+    in
+    Normal { features }
+  | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+    let (arity, args) =
+      if min_arity = max_arity then
+        ( spf "%d" max_arity,
+          if max_arity = 1 then
+            "argument"
           else
-            [
-              text "Cannot use variable ";
-              ref x;
-              text " because the declaration ";
-              text "either comes later or was skipped.";
-            ]
-        | ETypeInValuePosition
-        | ETypeAliasInValuePosition ->
-          [text "Cannot reference type "; ref x; text " from a value position."]
-        | EConstReassigned
-        | EConstParamReassigned ->
-          [text "Cannot reassign constant "; ref x; text "."]
-        | EImportReassigned -> [text "Cannot reassign import "; ref x; text "."]
-        | EEnumReassigned -> [text "Cannot reassign enum "; ref x; text "."]
-      in
-      Normal { features }
-    | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
-    | EModuleOutsideRoot (_, package_relative_to_root) ->
+            "arguments" )
+      else
+        (spf "%d-%d" min_arity max_arity, "arguments")
+    in
+    let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
+    let features =
+      [text "Cannot use "; ref reason_arity; text (spf " without %s type %s." arity args)]
+    in
+    Normal { features }
+  | ETooManyTypeArgs (reason_tapp, reason_arity, n) ->
+    let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
+    let features =
+      [
+        text "Cannot use ";
+        ref reason_arity;
+        text " with more than ";
+        text
+          (spf
+             "%n type %s."
+             n
+             ( if n == 1 then
+               "argument"
+             else
+               "arguments" ));
+      ]
+    in
+    Normal { features }
+  | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
+    let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
+    let features =
+      [
+        text "Cannot use ";
+        ref reason_arity;
+        text " with fewer than ";
+        text
+          (spf
+             "%n type %s."
+             n
+             ( if n == 1 then
+               "argument"
+             else
+               "arguments" ));
+      ]
+    in
+    Normal { features }
+  | EInvalidTypeArgs (reason_main, reason_tapp) ->
+    let features =
+      [text "Cannot use "; ref reason_main; text " with "; ref reason_tapp; text " argument"]
+    in
+    Normal { features }
+  | ETypeParamArity (_, n) ->
+    if n = 0 then
+      Normal { features = [text "Cannot apply type because it is not a polymorphic type."] }
+    else
       let features =
         [
-          text "This module resolves to ";
-          code package_relative_to_root;
-          text " which ";
-          text "is outside both your root directory and all of the entries in the ";
-          code "[include]";
-          text " section of your ";
-          code ".flowconfig";
-          text ". ";
-          text "You should either add this directory to the ";
-          code "[include]";
-          text " ";
-          text "section of your ";
-          code ".flowconfig";
-          text ", move your ";
-          code ".flowconfig";
-          text " file higher in the project directory tree, or ";
-          text "move this package under your Flow root directory.";
-        ]
-      in
-      Normal { features }
-    | EMalformedPackageJson (_, error) -> Normal { features = [text error] }
-    | EExperimentalDecorators _ ->
-      let features =
-        [
-          text "Experimental decorator usage. Decorators are an early stage ";
-          text "proposal that may change. Additionally, Flow does not account for ";
-          text "the type implications of decorators at this time.";
-        ]
-      in
-      Normal { features }
-    | EExperimentalClassProperties (_, static) ->
-      let (config_name, config_key) =
-        if static then
-          ("class static field", "class_static_fields")
-        else
-          ("class instance field", "class_instance_fields")
-      in
-      let features =
-        [
-          text ("Experimental " ^ config_name ^ " usage. ");
-          text (String.capitalize_ascii config_name ^ "s are an active early stage ");
-          text "feature proposal that may change. You may opt-in to using them ";
-          text "anyway in Flow by putting ";
-          code ("esproposal." ^ config_key ^ "=enable");
-          text " ";
-          text "into the ";
-          code "[options]";
-          text " section of your ";
-          code ".flowconfig";
-          text ".";
-        ]
-      in
-      Normal { features }
-    | EUnsafeGetSet _ ->
-      let features =
-        [
-          text "Potentially unsafe get/set usage. Getters and setters with side ";
-          text "effects are potentially unsafe and so disabled by default. You may ";
-          text "opt-in to using them anyway by putting ";
-          code "unsafe.enable_getters_and_setters";
-          text " into the ";
-          code "[options]";
-          text " section of your ";
-          code ".flowconfig";
-          text ".";
-        ]
-      in
-      Normal { features }
-    | EUninitializedInstanceProperty (_loc, err) ->
-      let open Lints in
-      let features =
-        match err with
-        | PropertyNotDefinitelyInitialized ->
-          [
-            text "Class property not definitely initialized in the constructor. ";
-            text "Can you add an assignment to the property declaration?";
-          ]
-        | ReadFromUninitializedProperty ->
-          [
-            text "It is unsafe to read from a class property before it is ";
-            text "definitely initialized.";
-          ]
-        | MethodCallBeforeEverythingInitialized ->
-          [
-            text "It is unsafe to call a method in the constructor before all ";
-            text "class properties are definitely initialized.";
-          ]
-        | PropertyFunctionCallBeforeEverythingInitialized ->
-          [
-            text "It is unsafe to call a property function in the constructor ";
-            text "before all class properties are definitely initialized.";
-          ]
-        | ThisBeforeEverythingInitialized ->
-          [
-            text "It is unsafe to use ";
-            code "this";
-            text " in the constructor ";
-            text "before all class properties are definitely initialized.";
-          ]
-      in
-      Normal { features }
-    | EExperimentalExportStarAs _ ->
-      let features =
-        [
-          text "Experimental ";
-          code "export * as";
-          text " usage. ";
-          code "export * as";
-          text " is an active early stage feature propsal that ";
-          text "may change. You may opt-in to using it anyway by putting ";
-          code "esproposal.export_star_as=enable";
-          text " into the ";
-          code "[options]";
-          text " section of your ";
-          code ".flowconfig";
-          text ".";
-        ]
-      in
-      Normal { features }
-    | EExperimentalEnums _ ->
-      let features =
-        [
-          text "Experimental ";
-          code "enum";
-          text " usage. ";
-          text "You may opt-in to using enums by putting ";
-          code "experimental.enums=true";
-          text " into the ";
-          code "[options]";
-          text " section of your ";
-          code ".flowconfig";
-          text ".";
-        ]
-      in
-      Normal { features }
-    | EIndeterminateModuleType _ ->
-      let features =
-        [
-          text "Unable to determine module type (CommonJS vs ES) if both an export ";
-          text "statement and ";
-          code "module.exports";
-          text " are used in the ";
-          text "same module!";
-        ]
-      in
-      Normal { features }
-    | EBadExportPosition _ ->
-      Normal { features = [text "Exports can only appear at the top level"] }
-    | EBadExportContext (name, _) ->
-      Normal
-        {
-          features =
-            [code name; text " may only be used as part of a legal top level export statement"];
-        }
-    | EUnexpectedTemporaryBaseType _ ->
-      Normal
-        {
-          features =
-            [text "The type argument of a temporary base type must be a compatible literal type"];
-        }
-    | ECannotDelete (_, expr) ->
-      let features =
-        [
-          text "Cannot delete ";
-          ref expr;
-          text " because only member expressions and variables can be deleted.";
-        ]
-      in
-      Normal { features }
-    | ESignatureVerification sve ->
-      Signature_error.(
-        let features =
-          match sve with
-          | ExpectedSort (sort, x, _) ->
-            [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
-          | ExpectedAnnotation (_, sort) ->
-            [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
-          | InvalidTypeParamUse _ -> [text "Invalid use of type parameter:"]
-          | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
-          | UnexpectedObjectSpread _ -> [text "Unexpected spread in object:"]
-          | UnexpectedArraySpread _ -> [text "Unexpected spread in array:"]
-          | UnexpectedArrayHole _ -> [text "Unexpected array hole:"]
-          | EmptyArray _ ->
-            [
-              text "Cannot determine the element type of an empty array. ";
-              text
-                "Please provide an annotation, e.g., by adding a type cast around this expression.";
-            ]
-          | EmptyObject _ ->
-            [
-              text "Cannot determine types of initialized properties of an empty object. ";
-              text
-                "Please provide an annotation, e.g., by adding a type cast around this expression.";
-            ]
-          | UnexpectedExpression (_, esort) ->
-            [
-              text
-                (spf
-                   "Cannot determine the type of this %s. "
-                   (Flow_ast_utils.ExpressionSort.to_string esort));
-              text
-                "Please provide an annotation, e.g., by adding a type cast around this expression.";
-            ]
-          | SketchyToplevelDef _ -> [text "Unexpected toplevel definition that needs hoisting:"]
-          | UnsupportedPredicateExpression _ ->
-            [text "Unsupported kind of expression in predicate function:"]
-          | TODO (msg, _) ->
-            [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
-        in
-        let features =
-          text "Failed to build a typed interface for this module. "
-          :: text "The exports of this module must be annotated with types. "
-          :: features
-        in
-        Normal { features })
-    | EUnreachable _ -> Normal { features = [text "Unreachable code."] }
-    | EInvalidObjectKit { reason; reason_op = _; use_op } ->
-      UseOp
-        { loc = loc_of_reason reason; features = [ref reason; text " is not an object"]; use_op }
-    | EInvalidTypeof (_, typename) ->
-      let features =
-        [
-          text "Cannot compare the result of ";
-          code "typeof";
-          text " to string ";
-          text "literal ";
-          code typename;
-          text " because it is not a valid ";
-          code "typeof";
-          text " return value.";
-        ]
-      in
-      Normal { features }
-    | EArithmeticOperand reason ->
-      let features =
-        [
-          text "Cannot perform arithmetic operation because ";
-          ref reason;
-          text " ";
-          text "is not a number.";
-        ]
-      in
-      Normal { features }
-    | EBinaryInLHS reason ->
-      (* TODO: or symbol *)
-      let features =
-        [
-          text "Cannot use ";
-          code "in";
-          text " because on the left-hand side, ";
-          ref reason;
-          text " must be a string or number.";
-        ]
-      in
-      Normal { features }
-    | EBinaryInRHS reason ->
-      let features =
-        [
-          text "Cannot use ";
-          code "in";
-          text " because on the right-hand side, ";
-          ref reason;
-          text " must be an object or array.";
-        ]
-      in
-      Normal { features }
-    | EForInRHS reason ->
-      let features =
-        [
-          text "Cannot iterate using a ";
-          code "for...in";
-          text " statement ";
-          text "because ";
-          ref reason;
-          text " is not an object, null, or undefined.";
-        ]
-      in
-      Normal { features }
-    | EObjectComputedPropertyAccess (_, reason_prop) ->
-      Normal
-        { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
-    | EObjectComputedPropertyAssign (_, reason_prop) ->
-      Normal
-        { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
-    | EInvalidLHSInAssignment _ ->
-      Normal { features = [text "Invalid left-hand side in assignment expression."] }
-    | EIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
-      Incompatible { reason_lower; reason_upper; use_op }
-    | ETrustIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
-      IncompatibleTrust { reason_lower; reason_upper; use_op }
-    | EUnsupportedImplements reason ->
-      Normal
-        {
-          features =
-            [text "Cannot implement "; desc reason; text " because it is not an interface."];
-        }
-    | ENotAReactComponent { reason; use_op } ->
-      UseOp
-        {
-          loc = loc_of_reason reason;
-          features = [ref reason; text " is not a React component"];
-          use_op;
-        }
-    | EInvalidReactConfigType { reason; use_op } ->
-      UseOp
-        {
-          loc = loc_of_reason reason;
-          features = [ref reason; text " cannot calculate config"];
-          use_op;
-        }
-    | EInvalidReactPropType { reason; use_op; tool } ->
-      React.(
-        React.SimplifyPropType.(
-          let is_not_prop_type = "is not a React propType" in
-          let msg =
-            match tool with
-            | ArrayOf -> is_not_prop_type
-            | InstanceOf -> "is not a class"
-            | ObjectOf -> is_not_prop_type
-            | OneOf ResolveArray -> "is not an array"
-            | OneOf (ResolveElem _) -> "is not a literal"
-            | OneOfType ResolveArray -> "is not an array"
-            | OneOfType (ResolveElem _) -> is_not_prop_type
-            | Shape ResolveObject -> "is not an object"
-            | Shape (ResolveDict _) -> is_not_prop_type
-            | Shape (ResolveProp _) -> is_not_prop_type
-          in
-          UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
-    | EInvalidReactCreateClass { reason; use_op; tool } ->
-      React.(
-        React.CreateClass.(
-          let is_not_prop_type = "is not a React propType" in
-          let msg =
-            match tool with
-            | Spec _ -> "is not an exact object"
-            | Mixins _ -> "is not a tuple"
-            | Statics _ -> "is not an object"
-            | PropTypes (_, ResolveObject) -> "is not an object"
-            | PropTypes (_, ResolveDict _) -> is_not_prop_type
-            | PropTypes (_, ResolveProp _) -> is_not_prop_type
-            | DefaultProps _ -> "is not an object"
-            | InitialState _ -> "is not an object or null"
-          in
-          UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
-    | EReactElementFunArity (_, fn, n) ->
-      let features =
-        [
-          text "Cannot call ";
-          code ("React." ^ fn);
-          text " ";
+          text "Cannot use type without exactly ";
           text
             (spf
-               "without at least %d argument%s."
+               "%n type %s."
+               n
+               ( if n == 1 then
+                 "argument"
+               else
+                 "arguments" ));
+        ]
+      in
+      Normal { features }
+  | ETypeParamMinArity (_, n) ->
+    let features =
+      [
+        text "Cannot use type without at least ";
+        text
+          (spf
+             "%n type %s."
+             n
+             ( if n == 1 then
+               "argument"
+             else
+               "arguments" ));
+      ]
+    in
+    Normal { features }
+  | ECallTypeArity { call_loc = _; is_new; reason_arity; expected_arity = n } ->
+    let use =
+      if is_new then
+        "construct "
+      else
+        "call "
+    in
+    if n = 0 then
+      let features =
+        [
+          text "Cannot ";
+          text use;
+          text "non-polymorphic ";
+          ref reason_arity;
+          text " with type arguments.";
+        ]
+      in
+      Normal { features }
+    else
+      let features =
+        [
+          text "Cannot ";
+          text use;
+          ref reason_arity;
+          text " without exactly ";
+          text
+            (spf
+               "%n type argument%s."
                n
                ( if n == 1 then
                  ""
@@ -2355,451 +1508,1280 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
       in
       Normal { features }
-    | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
-      let msg =
-        match param_count with
-        | 0 -> "no arguments are expected by"
-        | 1 -> "no more than 1 argument is expected by"
-        | n -> spf "no more than %d arguments are expected by" n
-      in
-      UseOp
-        {
-          loc = loc_of_reason unused_reason;
-          features = [text msg; text " "; ref def_reason];
-          use_op;
-        }
-    | EUnsupportedSetProto _ ->
-      Normal { features = [text "Mutating this prototype is unsupported."] }
-    | EDuplicateModuleProvider { module_name; provider; _ } ->
-      let features =
-        [
-          text "Duplicate module provider for ";
-          code module_name;
-          text ". Change ";
-          text "either this module provider or the ";
-          ref (mk_reason (RCustom "current module provider") provider);
-          text ".";
-        ]
-      in
-      Normal { features }
-    | EParseError (_, parse_error) ->
-      Normal { features = Friendly.message_of_string (Parse_error.PP.error parse_error) }
-    | EDocblockError (_, err) ->
-      let features =
-        match err with
-        | MultipleFlowAttributes ->
+  | EValueUsedAsType { reason_use } ->
+    let features =
+      [
+        text "Cannot use ";
+        desc reason_use;
+        text " as a type. ";
+        text "A name can be used as a type only if it refers to ";
+        text "a type definition, an interface definition, or a class definition. ";
+        text "To get the type of a non-class value, use ";
+        code "typeof";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+    Incompatible { reason_lower; reason_upper; use_op }
+  | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+    Incompatible { reason_lower; reason_upper; use_op }
+  | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+    Incompatible { reason_lower; reason_upper; use_op }
+  | EPropNotFound (prop, reasons, use_op) ->
+    let (reason_prop, reason_obj) = reasons in
+    PropMissing { loc = loc_of_reason reason_prop; prop; reason_obj; use_op }
+  | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason_prop;
+        features = mk_prop_message x @ [text " is not readable"];
+        use_op;
+      }
+  | EPropNotWritable { reason_prop; prop_name = x; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason_prop;
+        features = mk_prop_message x @ [text " is not writable"];
+        use_op;
+      }
+  | EPropPolarityMismatch
+      ((reason_lower, reason_upper), prop, (polarity_lower, polarity_upper), use_op) ->
+    PropPolarityMismatch
+      { prop; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
+  | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
+    let polarity_string = function
+      | Polarity.Positive -> "output"
+      | Polarity.Negative -> "input"
+      | Polarity.Neutral -> "input/output"
+    in
+    let expected_polarity = polarity_string expected_polarity in
+    let actual_polarity = polarity_string actual_polarity in
+    let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
+    let features =
+      [
+        text "Cannot use ";
+        ref reason_targ;
+        text (" in an " ^ actual_polarity ^ " ");
+        text "position because ";
+        ref reason_targ;
+        text " is expected to occur only in ";
+        text (expected_polarity ^ " positions.");
+      ]
+    in
+    Normal { features }
+  | EBuiltinLookupFailed { reason; name } ->
+    let features =
+      match name with
+      | Some x when is_internal_module_name x ->
+        [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
+      | None -> [text "Cannot resolve name "; desc reason; text "."]
+      | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
+      | Some x -> [text "Cannot resolve name "; code x; text "."]
+    in
+    Normal { features }
+  | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
+    PropMissing
+      {
+        loc = loc_of_reason reason_prop;
+        prop = name;
+        reason_obj;
+        use_op = Option.value ~default:unknown_use use_op;
+      }
+  | EPrivateLookupFailed (reasons, x, use_op) ->
+    PropMissing
+      {
+        loc = loc_of_reason (fst reasons);
+        prop = Some ("#" ^ x);
+        reason_obj = snd reasons;
+        use_op;
+      }
+  | EAdditionMixed (reason, use_op) ->
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features = [ref reason; text " could either behave like a string or like a number"];
+        use_op;
+      }
+  | EComparison (lower, upper) ->
+    Normal { features = [text "Cannot compare "; ref lower; text " to "; ref upper; text "."] }
+  | ETupleArityMismatch (reasons, l1, l2, use_op) ->
+    let (lower, upper) = reasons in
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features =
           [
-            text "Unexpected ";
-            code "@flow";
-            text " declaration. Only one per ";
-            text "file is allowed.";
-          ]
-        | MultipleProvidesModuleAttributes ->
+            ref lower;
+            text (spf " has an arity of %d but " l1);
+            ref upper;
+            text (spf " has an arity of %d" l2);
+          ];
+        use_op;
+      }
+  | ENonLitArrayToTuple (reasons, use_op) ->
+    let (lower, upper) = reasons in
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features =
           [
-            text "Unexpected ";
-            code "@providesModule";
-            text " declaration. ";
-            text "Only one per file is allowed.";
-          ]
-        | MultipleJSXAttributes ->
+            ref lower;
+            text " has an unknown number of elements, so is ";
+            text "incompatible with ";
+            ref upper;
+          ];
+        use_op;
+      }
+  | ETupleOutOfBounds { reason; reason_op; length; index; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features =
           [
-            text "Unexpected ";
-            code "@jsx";
-            text " declaration. Only one per ";
-            text "file is allowed.";
-          ]
-        | InvalidJSXAttribute first_error ->
-          [
-            text "Invalid ";
-            code "@jsx";
-            text " declaration. Should have the form ";
-            code "@jsx LeftHandSideExpression";
-            text " with no spaces.";
-          ]
-          @
-          (match first_error with
-          | None -> []
-          | Some first_error -> [text (spf " Parse error: %s." first_error)])
-      in
-      Normal { features }
-    | EImplicitInexactObject _ ->
-      let features =
-        [
-          text "Please add ";
-          code "...";
-          text " to the end of the list of ";
-          text "properties to express an inexact object type.";
-        ]
-      in
-      Normal { features }
-    | EUntypedTypeImport (_, module_name) ->
-      let features =
-        [
-          text "Importing a type from an untyped module makes it ";
-          code "any";
-          text " ";
-          text "and is not safe! Did you mean to add ";
-          code "// @flow";
-          text " to ";
-          text "the top of ";
-          code module_name;
-          text "?";
-        ]
-      in
-      Normal { features }
-    | EUntypedImport (_, module_name) ->
-      let features =
-        [
-          text "Importing from an untyped module makes it ";
-          code "any";
-          text " ";
-          text "and is not safe! Did you mean to add ";
-          code "// @flow";
-          text " ";
-          text "to the top of ";
-          code module_name;
-          text "?";
-        ]
-      in
-      Normal { features }
-    | ENonstrictImport _ ->
-      let features =
-        [
-          text "Dependencies of a ";
-          code "@flow strict";
-          text " module must ";
-          text "also be ";
-          code "@flow strict";
-          text "!";
-        ]
-      in
-      Normal { features }
-    | EUnclearType _ ->
-      let features =
-        [
-          text "Unclear type. Using ";
-          code "any";
-          text ", ";
-          code "Object";
-          text ", or ";
-          code "Function";
-          text " types is not safe!";
-        ]
-      in
-      Normal { features }
-    | EDeprecatedType _ ->
-      Normal
-        {
-          features = [text "Deprecated type. Using "; code "*"; text " types is not recommended!"];
-        }
-    | EDeprecatedUtility (_, name) ->
-      Normal
-        {
-          features =
-            [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
-        }
-    | EDynamicExport (reason, reason_exp) ->
-      let features =
-        [
-          text "Dynamic ";
-          ref reason;
-          text " unsafely appears in exported ";
-          ref reason_exp;
-          text ". This can cause importing modules to lose type coverage!";
-        ]
-      in
-      Normal { features }
-    | EUnsafeGettersSetters _ ->
-      Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
-    | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
-    | ELintSetting (_, kind) ->
-      let features =
-        match kind with
-        | LintSettings.Redundant_argument ->
-          [text "Redundant argument. This argument doesn't change any lint settings."]
-        | LintSettings.Overwritten_argument ->
-          [
-            text "Redundant argument. The values set by this argument are ";
-            text "overwritten later in this comment.";
-          ]
-        | LintSettings.Naked_comment ->
-          [text "Malformed lint rule. At least one argument is required."]
-        | LintSettings.Nonexistent_rule ->
-          [
-            text "Nonexistent/misspelled lint rule. Perhaps you have a ";
-            text "missing/extra ";
-            code ",";
-            text "?";
-          ]
-        | LintSettings.Invalid_setting ->
-          [text "Invalid setting. Valid settings are error, warn, and off."]
-        | LintSettings.Malformed_argument ->
-          [
-            text "Malformed lint rule. Properly formed rules contain a single ";
-            code ":";
-            text " character. Perhaps you have a missing/extra ";
-            code ",";
-            text "?";
-          ]
-      in
-      Normal { features }
-    | ESketchyNullLint { kind = sketchy_kind; loc = _; falsy_loc; null_loc } ->
-      let (type_str, value_str) =
-        match sketchy_kind with
-        | Lints.SketchyNullBool -> ("boolean", "false")
-        | Lints.SketchyNullNumber -> ("number", "0")
-        | Lints.SketchyNullString -> ("string", "an empty string")
-        | Lints.SketchyNullMixed -> ("mixed", "false")
-      in
-      let features =
-        [
-          text "Sketchy null check on ";
-          ref (mk_reason (RCustom type_str) falsy_loc);
-          text " ";
-          text "which is potentially ";
-          text value_str;
-          text ". Perhaps you meant to ";
-          text "check for ";
-          ref (mk_reason RNullOrVoid null_loc);
-          text "?";
-        ]
-      in
-      Normal { features }
-    | ESketchyNumberLint (_, reason) ->
-      let features =
-        [
-          text "Avoid using ";
-          code "&&";
-          text " to check the value of ";
-          ref reason;
-          text ". ";
-          text "Consider handling falsy values (0 and NaN) by using a conditional to choose an ";
-          text "explicit default instead.";
-        ]
-      in
-      Normal { features }
-    | EInvalidPrototype (_, reason) ->
-      Normal
-        {
-          features =
-            [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."];
-        }
-    | EExperimentalOptionalChaining _ ->
-      let features =
-        [
-          text "Experimental optional chaining (";
-          code "?.";
-          text ") usage. ";
-          text "Optional chaining is an active early-stage feature proposal that ";
-          text "may change. You may opt in to using it anyway by putting ";
-          code "esproposal.optional_chaining=enable";
-          text " into the ";
-          code "[options]";
-          text " section of your ";
-          code ".flowconfig";
-          text ".";
-        ]
-      in
-      Normal { features }
-    | EOptionalChainingMethods _ ->
-      Normal
-        {
-          features =
-            [text "Flow does not yet support method or property calls in optional chains."];
-        }
-    | EUnnecessaryOptionalChain (_, lhs_reason) ->
-      let features =
-        [
-          text "This use of optional chaining (";
-          code "?.";
-          text ") is unnecessary because ";
-          ref lhs_reason;
-          text " cannot be nullish or because an earlier ";
-          code "?.";
-          text " will short-circuit the nullish case.";
-        ]
-      in
-      Normal { features }
-    | EUnnecessaryInvariant (_, reason) ->
-      let features =
-        [
-          text "This use of `invariant` is unnecessary because ";
-          ref reason;
-          text " is always truthy.";
-        ]
-      in
-      Normal { features }
-    | EInexactSpread (reason, reason_op) ->
-      let features =
-        [
-          text "Cannot determine the type of ";
-          ref reason_op;
-          text " because ";
-          text "it contains a spread of inexact ";
-          ref reason;
-          text ". ";
-          text "Being inexact, ";
-          ref reason;
-          text " might be missing the types of some properties that are being copied. ";
-          text "Perhaps you could make it exact?";
-        ]
-      in
-      Normal { features }
-    | EBigIntNotYetSupported reason ->
-      Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
-    | ENonArraySpread reason ->
-      let features =
-        [
-          text "Cannot spread non-array iterable ";
-          ref reason;
-          text ". Use ";
-          code "...Array.from(<iterable>)";
-          text " instead.";
-        ]
-      in
-      Normal { features }
-    | ECannotSpreadInterface { spread_reason; interface_reason } ->
-      let features =
-        [
-          text "Cannot determine a type for ";
-          ref spread_reason;
-          text ". ";
-          ref interface_reason;
-          text " cannot be spread because interfaces do not ";
-          text "track the own-ness of their properties. Can you use an object type instead?";
-        ]
-      in
-      Normal { features }
-    | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
-      let features =
-        [
-          text "Cannot determine a type for ";
-          ref spread_reason;
-          text ". ";
-          ref object_reason;
-          text " cannot be spread because the indexer ";
-          ref key_reason;
-          text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
-          text "Can you spread ";
-          ref object_reason;
-          text " first or remove the indexer?";
-        ]
-      in
-      Normal { features }
-    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind } ->
-      let (error_reason, fix_suggestion) =
-        match error_kind with
-        | Inexact -> ("is inexact", [text " Can you make "; ref object2_reason; text " exact?"])
-        | Indexer ->
-          ( "has an indexer",
-            [
-              text " Can you remove the indexer in ";
-              ref object2_reason;
-              text " or make ";
-              code propname;
-              text " a required property?";
-            ] )
-      in
-      let features =
-        [
-          text "Cannot determine a type for ";
-          ref spread_reason;
-          text ". ";
-          ref object2_reason;
-          text " ";
-          text error_reason;
-          text ", so it may contain ";
-          code propname;
-          text " with a type that conflicts with ";
-          code propname;
-          text "'s definition in ";
-          ref object1_reason;
-          text ".";
-        ]
-        @ fix_suggestion
-      in
-      Normal { features }
-    | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
-      let features =
-        [
-          text "Cannot determine a type for ";
-          ref spread_reason;
-          text ". ";
-          ref object2_reason;
-          text " is inexact and may ";
-          text "have a property key that conflicts with ";
-          ref key_reason;
-          text " or a property value that conflicts with ";
-          ref value_reason;
-          text ". Can you make ";
-          ref object2_reason;
-          text " exact?";
-        ]
-      in
-      Normal { features }
-    | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
-      let format_reason_group { first_reason; second_reason } =
-        match second_reason with
-        | None -> [ref first_reason]
-        | Some second_reason ->
-          [text "inferred union from "; ref first_reason; text " | "; ref second_reason]
-      in
-      let union_refs =
-        let reasons_for_operand1 = format_reason_group reasons_for_operand1 in
-        let reasons_for_operand2 = format_reason_group reasons_for_operand2 in
-        reasons_for_operand1 @ [text " and "] @ reasons_for_operand2
-      in
-      let features =
-        [
-          text "Computing ";
-          ref reason;
-          text " may lead to an exponentially large number of cases to reason about because ";
-        ]
-        @ union_refs
-        @ [
+            ref reason_op;
             text
-              " are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.";
-            text
-              " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
-          ]
+              (spf
+                 " only has %d element%s, so index %s is out of bounds"
+                 length
+                 ( if length == 1 then
+                   ""
+                 else
+                   "s" )
+                 index);
+          ];
+        use_op;
+      }
+  | ETupleNonIntegerIndex { reason; index; use_op } ->
+    let index_ref = Errors.Friendly.(Reference ([Code index], def_loc_of_reason reason)) in
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features =
+          [
+            text "the index into a tuple must be an integer, but ";
+            index_ref;
+            text " is not an integer";
+          ];
+        use_op;
+      }
+  | ETupleUnsafeWrite { reason; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features = [text "the index must be statically known to write a tuple element"];
+        use_op;
+      }
+  | EROArrayWrite (reasons, use_op) ->
+    let (lower, _) = reasons in
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features = [text "read-only arrays cannot be written to"];
+        use_op;
+      }
+  | EUnionSpeculationFailed { use_op; reason; reason_op = _; branches } ->
+    Speculation { loc = loc_of_reason reason; use_op; branches }
+  | ESpeculationAmbiguous
+      { reason = _; prev_case = (prev_i, prev_case); case = (i, case); cases = case_rs } ->
+    Friendly.(
+      let prev_case_r =
+        mk_reason (RCustom ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
       in
-      Normal { features }
-    | EComputedPropertyWithMultipleLowerBounds
-        { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
+      let case_r = mk_reason (RCustom ("case " ^ string_of_int (i + 1))) (loc_of_reason case) in
       let features =
         [
-          text "Cannot use ";
-          ref computed_property_reason;
-          text " as a computed property.";
-          text
-            " Computed properties may only be primitive literal values, but this one may be either ";
-          ref existing_lower_bound_reason;
-          text " or ";
-          ref new_lower_bound_reason;
-          text ". Can you add a literal type annotation to ";
-          ref computed_property_reason;
-          text "?";
-          text
-            " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+          text "Could not decide which case to select, since ";
+          ref prev_case_r;
+          text " ";
+          text "may work but if it doesn't ";
+          ref case_r;
+          text " looks promising ";
+          text "too. To fix add a type annotation ";
         ]
-      in
-      Normal { features }
-    | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
-      let features =
-        [
-          text "Cannot use ";
-          ref computed_property_reason;
-          text " as a computed property.";
-          text " Computed properties may only be primitive literal values, but ";
-          ref union_reason;
-          text " is a union. Can you add a literal type annotation to ";
-          ref computed_property_reason;
-          text "?";
-          text
-            " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
-        ]
+        @ conjunction_concat
+            ~conjunction:"or"
+            (Core_list.map
+               ~f:(fun case_r ->
+                 let text = "to " ^ string_of_desc (desc_of_reason case_r) in
+                 [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
+               case_rs)
+        @ [text "."]
       in
       Normal { features })
+  | EIncompatibleWithExact (reasons, use_op) ->
+    let (lower, upper) = reasons in
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features = [text "inexact "; ref lower; text " is incompatible with exact "; ref upper];
+        use_op;
+      }
+  | EUnsupportedExact (_, lower) ->
+    Normal { features = [text "Cannot create exact type from "; ref lower; text "."] }
+  | EIdxArity _ ->
+    let features =
+      [
+        text "Cannot call ";
+        code "idx(...)";
+        text " because only exactly two ";
+        text "arguments are allowed.";
+      ]
+    in
+    Normal { features }
+  | EIdxUse1 _ ->
+    let features =
+      [
+        text "Cannot call ";
+        code "idx(...)";
+        text " because the callback ";
+        text "argument must not be annotated.";
+      ]
+    in
+    Normal { features }
+  | EIdxUse2 _ ->
+    let features =
+      [
+        text "Cannot call ";
+        code "idx(...)";
+        text " because the callback must ";
+        text "only access properties on the callback parameter.";
+      ]
+    in
+    Normal { features }
+  | EUnexpectedThisType _ ->
+    Normal { features = [text "Unexpected use of "; code "this"; text " type."] }
+  | EPropertyTypeAnnot _ ->
+    let features =
+      [
+        text "Cannot use ";
+        code "$PropertyType";
+        text " because the second ";
+        text "type argument must be a string literal.";
+      ]
+    in
+    Normal { features }
+  | EExportsAnnot _ ->
+    let features =
+      [
+        text "Cannot use ";
+        code "$Exports";
+        text " because the first type ";
+        text "argument must be a string literal.";
+      ]
+    in
+    Normal { features }
+  | ECharSetAnnot _ ->
+    let features =
+      [
+        text "Cannot use ";
+        code "$CharSet";
+        text " because the first type ";
+        text "argument must be a string literal.";
+      ]
+    in
+    Normal { features }
+  | EInvalidCharSet { invalid = (invalid_reason, invalid_chars); valid = valid_reason; use_op } ->
+    let valid_reason = mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason) in
+    let invalids =
+      InvalidCharSetSet.fold
+        (fun c acc ->
+          match c with
+          | InvalidChar c -> [code (String.make 1 c); text " is not a member of the set"] :: acc
+          | DuplicateChar c -> [code (String.make 1 c); text " is duplicated"] :: acc)
+        invalid_chars
+        []
+      |> List.rev
+    in
+    UseOp
+      {
+        loc = loc_of_reason invalid_reason;
+        features =
+          [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
+          @ Friendly.conjunction_concat ~conjunction:"and" invalids;
+        use_op;
+      }
+  | EUnsupportedKeyInObjectType _ -> Normal { features = [text "Unsupported key in object type."] }
+  | EPredAnnot _ ->
+    let features =
+      [
+        text "Cannot use ";
+        code "$Pred";
+        text " because the first ";
+        text "type argument must be a number literal.";
+      ]
+    in
+    Normal { features }
+  | ERefineAnnot _ ->
+    let features =
+      [
+        text "Cannot use ";
+        code "$Refine";
+        text " because the third ";
+        text "type argument must be a number literal.";
+      ]
+    in
+    Normal { features }
+  | ETrustedAnnot _ ->
+    Normal { features = [text "Not a valid type to mark as "; code "$Trusted"; text "."] }
+  | EPrivateAnnot _ ->
+    Normal { features = [text "Not a valid type to mark as "; code "$Private"; text "."] }
+  | EUnexpectedTypeof _ ->
+    Normal { features = [code "typeof"; text " can only be used to get the type of variables."] }
+  | EFunPredCustom ((a, b), msg) ->
+    Normal { features = [ref a; text ". "; text msg; text " "; ref b; text "."] }
+  | EIncompatibleWithShape (lower, upper, use_op) ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features =
+          [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
+        use_op;
+      }
+  | EInternal (_, internal_error) ->
+    let msg = string_of_internal_error internal_error in
+    Normal { features = [text (spf "Internal error: %s" msg)] }
+  | EUnsupportedSyntax (_, unsupported_syntax) ->
+    let features =
+      match unsupported_syntax with
+      | ComprehensionExpression
+      | GeneratorExpression
+      | MetaPropertyExpression ->
+        [text "Not supported."]
+      | ObjectPropertyLiteralNonString -> [text "Non-string literal property keys not supported."]
+      | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
+      | ObjectPropertyComputedGetSet ->
+        [text "Computed getters and setters are not yet supported."]
+      | InvariantSpreadArgument ->
+        [text "Unsupported arguments in call to "; code "invariant"; text "."]
+      | ClassPropertyLiteral -> [text "Literal properties not yet supported."]
+      | ClassPropertyComputed -> [text "Computed property keys not supported."]
+      | ReactCreateClassPropertyNonInit ->
+        [text "Unsupported property specification in "; code "createClass"; text "."]
+      | RequireDynamicArgument ->
+        [text "The parameter passed to "; code "require"; text " must be a string literal."]
+      | ImportDynamicArgument ->
+        [text "The parameter passed to "; code "import"; text " must be a string literal."]
+      | RequireLazyDynamicArgument ->
+        [
+          text "The first argument to ";
+          code "requireLazy";
+          text " must be an ";
+          text "array literal of string literals and the second argument must ";
+          text "be a callback.";
+        ]
+      | CatchParameterAnnotation ->
+        [text "Type annotations for catch parameters are not yet supported."]
+      | CatchParameterDeclaration -> [text "Unsupported catch parameter declaration."]
+      | DestructuringObjectPropertyLiteralNonString ->
+        [text "Unsupported non-string literal object property in destructuring."]
+      | DestructuringExpressionPattern -> [text "Unsupported expression pattern in destructuring."]
+      | PredicateDeclarationForImplementation ->
+        [text "Cannot declare predicate when a function body is present."]
+      | PredicateDeclarationWithoutExpression ->
+        [text "Predicate function declarations need to declare a "; text "predicate expression."]
+      | PredicateDeclarationAnonymousParameters ->
+        [text "Predicate function declarations cannot use anonymous "; text "function parameters."]
+      | PredicateInvalidBody ->
+        [
+          text "Invalid body for predicate function. Expected a simple return ";
+          text "statement as body.";
+        ]
+      | PredicateFunctionAbstractReturnType ->
+        [
+          text "The return type of a predicate function cannot contain a generic type. ";
+          text "The function predicate will be ignored here.";
+        ]
+      | PredicateVoidReturn -> [text "Predicate functions need to return non-void."]
+      | MultipleIndexers -> [text "Multiple indexers are not supported."]
+      | MultipleProtos -> [text "Multiple prototypes specified."]
+      | ExplicitCallAfterProto -> [text "Unexpected call property after explicit prototype."]
+      | ExplicitProtoAfterCall -> [text "Unexpected prototype after call property."]
+      | SpreadArgument -> [text "A spread argument is unsupported here."]
+      | IllegalName -> [text "Illegal name."]
+      | UnsupportedInternalSlot { name; static = false } ->
+        [text "Unsupported internal slot "; code name; text "."]
+      | UnsupportedInternalSlot { name; static = true } ->
+        [text "Unsupported static internal slot "; code name; text "."]
+    in
+    Normal { features }
+  | EUseArrayLiteral _ ->
+    Normal
+      { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
+  | EMissingAnnotation (reason, _) ->
+    let default = [text "Missing type annotation for "; desc reason; text "."] in
+    let features =
+      match desc_of_reason reason with
+      | RTypeParam (_, (RImplicitInstantiation, _), _) ->
+        [
+          text "Please use a concrete type annotation instead of ";
+          code "_";
+          text " in this position.";
+        ]
+      | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
+        let reason_op = mk_reason reason_op_desc reason_op_loc in
+        let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
+        default
+        @ [
+            text " ";
+            desc reason;
+            text " is a type parameter declared in ";
+            ref reason_tapp;
+            text " and was implicitly instantiated at ";
+            ref reason_op;
+            text ".";
+          ]
+      | _ -> default
+    in
+    (* We don't collect trace info in the assert_ground_visitor because traces
+     * represent tests of lower bounds to upper bounds, and the assert_ground
+     * visitor is just visiting types. Instead, we collect a list of types we
+     * visited to get to the missing annotation error and report that as the
+     * trace *)
+    Normal { features }
+  | EBindingError (binding_error, _, x, entry) ->
+    let desc =
+      if x = internal_name "this" then
+        RThis
+      else if x = internal_name "super" then
+        RSuper
+      else
+        RIdentifier x
+    in
+    (* We can call to_loc here because reaching this point requires that everything else
+        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
+    let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn) in
+    let features =
+      match binding_error with
+      | ENameAlreadyBound ->
+        [text "Cannot declare "; ref x; text " because the name is already bound."]
+      | EReferencedBeforeDeclaration ->
+        if desc = RThis || desc = RSuper then
+          [
+            text "Must call ";
+            code "super";
+            text " before accessing ";
+            ref x;
+            text " in a derived constructor.";
+          ]
+        else
+          [
+            text "Cannot use variable ";
+            ref x;
+            text " because the declaration ";
+            text "either comes later or was skipped.";
+          ]
+      | ETypeInValuePosition
+      | ETypeAliasInValuePosition ->
+        [text "Cannot reference type "; ref x; text " from a value position."]
+      | EConstReassigned
+      | EConstParamReassigned ->
+        [text "Cannot reassign constant "; ref x; text "."]
+      | EImportReassigned -> [text "Cannot reassign import "; ref x; text "."]
+      | EEnumReassigned -> [text "Cannot reassign enum "; ref x; text "."]
+    in
+    Normal { features }
+  | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
+  | EModuleOutsideRoot (_, package_relative_to_root) ->
+    let features =
+      [
+        text "This module resolves to ";
+        code package_relative_to_root;
+        text " which ";
+        text "is outside both your root directory and all of the entries in the ";
+        code "[include]";
+        text " section of your ";
+        code ".flowconfig";
+        text ". ";
+        text "You should either add this directory to the ";
+        code "[include]";
+        text " ";
+        text "section of your ";
+        code ".flowconfig";
+        text ", move your ";
+        code ".flowconfig";
+        text " file higher in the project directory tree, or ";
+        text "move this package under your Flow root directory.";
+      ]
+    in
+    Normal { features }
+  | EMalformedPackageJson (_, error) -> Normal { features = [text error] }
+  | EExperimentalDecorators _ ->
+    let features =
+      [
+        text "Experimental decorator usage. Decorators are an early stage ";
+        text "proposal that may change. Additionally, Flow does not account for ";
+        text "the type implications of decorators at this time.";
+      ]
+    in
+    Normal { features }
+  | EExperimentalClassProperties (_, static) ->
+    let (config_name, config_key) =
+      if static then
+        ("class static field", "class_static_fields")
+      else
+        ("class instance field", "class_instance_fields")
+    in
+    let features =
+      [
+        text ("Experimental " ^ config_name ^ " usage. ");
+        text (String.capitalize_ascii config_name ^ "s are an active early stage ");
+        text "feature proposal that may change. You may opt-in to using them ";
+        text "anyway in Flow by putting ";
+        code ("esproposal." ^ config_key ^ "=enable");
+        text " ";
+        text "into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EUnsafeGetSet _ ->
+    let features =
+      [
+        text "Potentially unsafe get/set usage. Getters and setters with side ";
+        text "effects are potentially unsafe and so disabled by default. You may ";
+        text "opt-in to using them anyway by putting ";
+        code "unsafe.enable_getters_and_setters";
+        text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EUninitializedInstanceProperty (_loc, err) ->
+    let open Lints in
+    let features =
+      match err with
+      | PropertyNotDefinitelyInitialized ->
+        [
+          text "Class property not definitely initialized in the constructor. ";
+          text "Can you add an assignment to the property declaration?";
+        ]
+      | ReadFromUninitializedProperty ->
+        [
+          text "It is unsafe to read from a class property before it is ";
+          text "definitely initialized.";
+        ]
+      | MethodCallBeforeEverythingInitialized ->
+        [
+          text "It is unsafe to call a method in the constructor before all ";
+          text "class properties are definitely initialized.";
+        ]
+      | PropertyFunctionCallBeforeEverythingInitialized ->
+        [
+          text "It is unsafe to call a property function in the constructor ";
+          text "before all class properties are definitely initialized.";
+        ]
+      | ThisBeforeEverythingInitialized ->
+        [
+          text "It is unsafe to use ";
+          code "this";
+          text " in the constructor ";
+          text "before all class properties are definitely initialized.";
+        ]
+    in
+    Normal { features }
+  | EExperimentalExportStarAs _ ->
+    let features =
+      [
+        text "Experimental ";
+        code "export * as";
+        text " usage. ";
+        code "export * as";
+        text " is an active early stage feature propsal that ";
+        text "may change. You may opt-in to using it anyway by putting ";
+        code "esproposal.export_star_as=enable";
+        text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EExperimentalEnums _ ->
+    let features =
+      [
+        text "Experimental ";
+        code "enum";
+        text " usage. ";
+        text "You may opt-in to using enums by putting ";
+        code "experimental.enums=true";
+        text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EIndeterminateModuleType _ ->
+    let features =
+      [
+        text "Unable to determine module type (CommonJS vs ES) if both an export ";
+        text "statement and ";
+        code "module.exports";
+        text " are used in the ";
+        text "same module!";
+      ]
+    in
+    Normal { features }
+  | EBadExportPosition _ -> Normal { features = [text "Exports can only appear at the top level"] }
+  | EBadExportContext (name, _) ->
+    Normal
+      {
+        features =
+          [code name; text " may only be used as part of a legal top level export statement"];
+      }
+  | EUnexpectedTemporaryBaseType _ ->
+    Normal
+      {
+        features =
+          [text "The type argument of a temporary base type must be a compatible literal type"];
+      }
+  | ECannotDelete (_, expr) ->
+    let features =
+      [
+        text "Cannot delete ";
+        ref expr;
+        text " because only member expressions and variables can be deleted.";
+      ]
+    in
+    Normal { features }
+  | ESignatureVerification sve ->
+    Signature_error.(
+      let features =
+        match sve with
+        | ExpectedSort (sort, x, _) ->
+          [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
+        | ExpectedAnnotation (_, sort) ->
+          [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
+        | InvalidTypeParamUse _ -> [text "Invalid use of type parameter:"]
+        | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
+        | UnexpectedObjectSpread _ -> [text "Unexpected spread in object:"]
+        | UnexpectedArraySpread _ -> [text "Unexpected spread in array:"]
+        | UnexpectedArrayHole _ -> [text "Unexpected array hole:"]
+        | EmptyArray _ ->
+          [
+            text "Cannot determine the element type of an empty array. ";
+            text
+              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+          ]
+        | EmptyObject _ ->
+          [
+            text "Cannot determine types of initialized properties of an empty object. ";
+            text
+              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+          ]
+        | UnexpectedExpression (_, esort) ->
+          [
+            text
+              (spf
+                 "Cannot determine the type of this %s. "
+                 (Flow_ast_utils.ExpressionSort.to_string esort));
+            text
+              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+          ]
+        | SketchyToplevelDef _ -> [text "Unexpected toplevel definition that needs hoisting:"]
+        | UnsupportedPredicateExpression _ ->
+          [text "Unsupported kind of expression in predicate function:"]
+        | TODO (msg, _) -> [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
+      in
+      let features =
+        text "Failed to build a typed interface for this module. "
+        :: text "The exports of this module must be annotated with types. "
+        :: features
+      in
+      Normal { features })
+  | EUnreachable _ -> Normal { features = [text "Unreachable code."] }
+  | EInvalidObjectKit { reason; reason_op = _; use_op } ->
+    UseOp { loc = loc_of_reason reason; features = [ref reason; text " is not an object"]; use_op }
+  | EInvalidTypeof (_, typename) ->
+    let features =
+      [
+        text "Cannot compare the result of ";
+        code "typeof";
+        text " to string ";
+        text "literal ";
+        code typename;
+        text " because it is not a valid ";
+        code "typeof";
+        text " return value.";
+      ]
+    in
+    Normal { features }
+  | EArithmeticOperand reason ->
+    let features =
+      [
+        text "Cannot perform arithmetic operation because ";
+        ref reason;
+        text " ";
+        text "is not a number.";
+      ]
+    in
+    Normal { features }
+  | EBinaryInLHS reason ->
+    (* TODO: or symbol *)
+    let features =
+      [
+        text "Cannot use ";
+        code "in";
+        text " because on the left-hand side, ";
+        ref reason;
+        text " must be a string or number.";
+      ]
+    in
+    Normal { features }
+  | EBinaryInRHS reason ->
+    let features =
+      [
+        text "Cannot use ";
+        code "in";
+        text " because on the right-hand side, ";
+        ref reason;
+        text " must be an object or array.";
+      ]
+    in
+    Normal { features }
+  | EForInRHS reason ->
+    let features =
+      [
+        text "Cannot iterate using a ";
+        code "for...in";
+        text " statement ";
+        text "because ";
+        ref reason;
+        text " is not an object, null, or undefined.";
+      ]
+    in
+    Normal { features }
+  | EObjectComputedPropertyAccess (_, reason_prop) ->
+    Normal
+      { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
+  | EObjectComputedPropertyAssign (_, reason_prop) ->
+    Normal
+      { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
+  | EInvalidLHSInAssignment _ ->
+    Normal { features = [text "Invalid left-hand side in assignment expression."] }
+  | EIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
+    Incompatible { reason_lower; reason_upper; use_op }
+  | ETrustIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
+    IncompatibleTrust { reason_lower; reason_upper; use_op }
+  | EUnsupportedImplements reason ->
+    Normal
+      {
+        features = [text "Cannot implement "; desc reason; text " because it is not an interface."];
+      }
+  | ENotAReactComponent { reason; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features = [ref reason; text " is not a React component"];
+        use_op;
+      }
+  | EInvalidReactConfigType { reason; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features = [ref reason; text " cannot calculate config"];
+        use_op;
+      }
+  | EInvalidReactPropType { reason; use_op; tool } ->
+    React.(
+      React.SimplifyPropType.(
+        let is_not_prop_type = "is not a React propType" in
+        let msg =
+          match tool with
+          | ArrayOf -> is_not_prop_type
+          | InstanceOf -> "is not a class"
+          | ObjectOf -> is_not_prop_type
+          | OneOf ResolveArray -> "is not an array"
+          | OneOf (ResolveElem _) -> "is not a literal"
+          | OneOfType ResolveArray -> "is not an array"
+          | OneOfType (ResolveElem _) -> is_not_prop_type
+          | Shape ResolveObject -> "is not an object"
+          | Shape (ResolveDict _) -> is_not_prop_type
+          | Shape (ResolveProp _) -> is_not_prop_type
+        in
+        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
+  | EInvalidReactCreateClass { reason; use_op; tool } ->
+    React.(
+      React.CreateClass.(
+        let is_not_prop_type = "is not a React propType" in
+        let msg =
+          match tool with
+          | Spec _ -> "is not an exact object"
+          | Mixins _ -> "is not a tuple"
+          | Statics _ -> "is not an object"
+          | PropTypes (_, ResolveObject) -> "is not an object"
+          | PropTypes (_, ResolveDict _) -> is_not_prop_type
+          | PropTypes (_, ResolveProp _) -> is_not_prop_type
+          | DefaultProps _ -> "is not an object"
+          | InitialState _ -> "is not an object or null"
+        in
+        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
+  | EReactElementFunArity (_, fn, n) ->
+    let features =
+      [
+        text "Cannot call ";
+        code ("React." ^ fn);
+        text " ";
+        text
+          (spf
+             "without at least %d argument%s."
+             n
+             ( if n == 1 then
+               ""
+             else
+               "s" ));
+      ]
+    in
+    Normal { features }
+  | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
+    let msg =
+      match param_count with
+      | 0 -> "no arguments are expected by"
+      | 1 -> "no more than 1 argument is expected by"
+      | n -> spf "no more than %d arguments are expected by" n
+    in
+    UseOp
+      {
+        loc = loc_of_reason unused_reason;
+        features = [text msg; text " "; ref def_reason];
+        use_op;
+      }
+  | EUnsupportedSetProto _ ->
+    Normal { features = [text "Mutating this prototype is unsupported."] }
+  | EDuplicateModuleProvider { module_name; provider; _ } ->
+    let features =
+      [
+        text "Duplicate module provider for ";
+        code module_name;
+        text ". Change ";
+        text "either this module provider or the ";
+        ref (mk_reason (RCustom "current module provider") provider);
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EParseError (_, parse_error) ->
+    Normal { features = Friendly.message_of_string (Parse_error.PP.error parse_error) }
+  | EDocblockError (_, err) ->
+    let features =
+      match err with
+      | MultipleFlowAttributes ->
+        [
+          text "Unexpected ";
+          code "@flow";
+          text " declaration. Only one per ";
+          text "file is allowed.";
+        ]
+      | MultipleProvidesModuleAttributes ->
+        [
+          text "Unexpected ";
+          code "@providesModule";
+          text " declaration. ";
+          text "Only one per file is allowed.";
+        ]
+      | MultipleJSXAttributes ->
+        [
+          text "Unexpected ";
+          code "@jsx";
+          text " declaration. Only one per ";
+          text "file is allowed.";
+        ]
+      | InvalidJSXAttribute first_error ->
+        [
+          text "Invalid ";
+          code "@jsx";
+          text " declaration. Should have the form ";
+          code "@jsx LeftHandSideExpression";
+          text " with no spaces.";
+        ]
+        @
+        (match first_error with
+        | None -> []
+        | Some first_error -> [text (spf " Parse error: %s." first_error)])
+    in
+    Normal { features }
+  | EImplicitInexactObject _ ->
+    let features =
+      [
+        text "Please add ";
+        code "...";
+        text " to the end of the list of ";
+        text "properties to express an inexact object type.";
+      ]
+    in
+    Normal { features }
+  | EUntypedTypeImport (_, module_name) ->
+    let features =
+      [
+        text "Importing a type from an untyped module makes it ";
+        code "any";
+        text " ";
+        text "and is not safe! Did you mean to add ";
+        code "// @flow";
+        text " to ";
+        text "the top of ";
+        code module_name;
+        text "?";
+      ]
+    in
+    Normal { features }
+  | EUntypedImport (_, module_name) ->
+    let features =
+      [
+        text "Importing from an untyped module makes it ";
+        code "any";
+        text " ";
+        text "and is not safe! Did you mean to add ";
+        code "// @flow";
+        text " ";
+        text "to the top of ";
+        code module_name;
+        text "?";
+      ]
+    in
+    Normal { features }
+  | ENonstrictImport _ ->
+    let features =
+      [
+        text "Dependencies of a ";
+        code "@flow strict";
+        text " module must ";
+        text "also be ";
+        code "@flow strict";
+        text "!";
+      ]
+    in
+    Normal { features }
+  | EUnclearType _ ->
+    let features =
+      [
+        text "Unclear type. Using ";
+        code "any";
+        text ", ";
+        code "Object";
+        text ", or ";
+        code "Function";
+        text " types is not safe!";
+      ]
+    in
+    Normal { features }
+  | EDeprecatedType _ ->
+    Normal
+      { features = [text "Deprecated type. Using "; code "*"; text " types is not recommended!"] }
+  | EDeprecatedUtility (_, name) ->
+    Normal
+      {
+        features =
+          [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
+      }
+  | EDynamicExport (reason, reason_exp) ->
+    let features =
+      [
+        text "Dynamic ";
+        ref reason;
+        text " unsafely appears in exported ";
+        ref reason_exp;
+        text ". This can cause importing modules to lose type coverage!";
+      ]
+    in
+    Normal { features }
+  | EUnsafeGettersSetters _ ->
+    Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
+  | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
+  | ELintSetting (_, kind) ->
+    let features =
+      match kind with
+      | LintSettings.Redundant_argument ->
+        [text "Redundant argument. This argument doesn't change any lint settings."]
+      | LintSettings.Overwritten_argument ->
+        [
+          text "Redundant argument. The values set by this argument are ";
+          text "overwritten later in this comment.";
+        ]
+      | LintSettings.Naked_comment ->
+        [text "Malformed lint rule. At least one argument is required."]
+      | LintSettings.Nonexistent_rule ->
+        [
+          text "Nonexistent/misspelled lint rule. Perhaps you have a ";
+          text "missing/extra ";
+          code ",";
+          text "?";
+        ]
+      | LintSettings.Invalid_setting ->
+        [text "Invalid setting. Valid settings are error, warn, and off."]
+      | LintSettings.Malformed_argument ->
+        [
+          text "Malformed lint rule. Properly formed rules contain a single ";
+          code ":";
+          text " character. Perhaps you have a missing/extra ";
+          code ",";
+          text "?";
+        ]
+    in
+    Normal { features }
+  | ESketchyNullLint { kind = sketchy_kind; loc = _; falsy_loc; null_loc } ->
+    let (type_str, value_str) =
+      match sketchy_kind with
+      | Lints.SketchyNullBool -> ("boolean", "false")
+      | Lints.SketchyNullNumber -> ("number", "0")
+      | Lints.SketchyNullString -> ("string", "an empty string")
+      | Lints.SketchyNullMixed -> ("mixed", "false")
+    in
+    let features =
+      [
+        text "Sketchy null check on ";
+        ref (mk_reason (RCustom type_str) falsy_loc);
+        text " ";
+        text "which is potentially ";
+        text value_str;
+        text ". Perhaps you meant to ";
+        text "check for ";
+        ref (mk_reason RNullOrVoid null_loc);
+        text "?";
+      ]
+    in
+    Normal { features }
+  | ESketchyNumberLint (_, reason) ->
+    let features =
+      [
+        text "Avoid using ";
+        code "&&";
+        text " to check the value of ";
+        ref reason;
+        text ". ";
+        text "Consider handling falsy values (0 and NaN) by using a conditional to choose an ";
+        text "explicit default instead.";
+      ]
+    in
+    Normal { features }
+  | EInvalidPrototype (_, reason) ->
+    Normal
+      {
+        features =
+          [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."];
+      }
+  | EExperimentalOptionalChaining _ ->
+    let features =
+      [
+        text "Experimental optional chaining (";
+        code "?.";
+        text ") usage. ";
+        text "Optional chaining is an active early-stage feature proposal that ";
+        text "may change. You may opt in to using it anyway by putting ";
+        code "esproposal.optional_chaining=enable";
+        text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EOptionalChainingMethods _ ->
+    Normal
+      {
+        features = [text "Flow does not yet support method or property calls in optional chains."];
+      }
+  | EUnnecessaryOptionalChain (_, lhs_reason) ->
+    let features =
+      [
+        text "This use of optional chaining (";
+        code "?.";
+        text ") is unnecessary because ";
+        ref lhs_reason;
+        text " cannot be nullish or because an earlier ";
+        code "?.";
+        text " will short-circuit the nullish case.";
+      ]
+    in
+    Normal { features }
+  | EUnnecessaryInvariant (_, reason) ->
+    let features =
+      [
+        text "This use of `invariant` is unnecessary because ";
+        ref reason;
+        text " is always truthy.";
+      ]
+    in
+    Normal { features }
+  | EInexactSpread (reason, reason_op) ->
+    let features =
+      [
+        text "Cannot determine the type of ";
+        ref reason_op;
+        text " because ";
+        text "it contains a spread of inexact ";
+        ref reason;
+        text ". ";
+        text "Being inexact, ";
+        ref reason;
+        text " might be missing the types of some properties that are being copied. ";
+        text "Perhaps you could make it exact?";
+      ]
+    in
+    Normal { features }
+  | EBigIntNotYetSupported reason ->
+    Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
+  | ENonArraySpread reason ->
+    let features =
+      [
+        text "Cannot spread non-array iterable ";
+        ref reason;
+        text ". Use ";
+        code "...Array.from(<iterable>)";
+        text " instead.";
+      ]
+    in
+    Normal { features }
+  | ECannotSpreadInterface { spread_reason; interface_reason } ->
+    let features =
+      [
+        text "Cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref interface_reason;
+        text " cannot be spread because interfaces do not ";
+        text "track the own-ness of their properties. Can you use an object type instead?";
+      ]
+    in
+    Normal { features }
+  | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
+    let features =
+      [
+        text "Cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref object_reason;
+        text " cannot be spread because the indexer ";
+        ref key_reason;
+        text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
+        text "Can you spread ";
+        ref object_reason;
+        text " first or remove the indexer?";
+      ]
+    in
+    Normal { features }
+  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind } ->
+    let (error_reason, fix_suggestion) =
+      match error_kind with
+      | Inexact -> ("is inexact", [text " Can you make "; ref object2_reason; text " exact?"])
+      | Indexer ->
+        ( "has an indexer",
+          [
+            text " Can you remove the indexer in ";
+            ref object2_reason;
+            text " or make ";
+            code propname;
+            text " a required property?";
+          ] )
+    in
+    let features =
+      [
+        text "Cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref object2_reason;
+        text " ";
+        text error_reason;
+        text ", so it may contain ";
+        code propname;
+        text " with a type that conflicts with ";
+        code propname;
+        text "'s definition in ";
+        ref object1_reason;
+        text ".";
+      ]
+      @ fix_suggestion
+    in
+    Normal { features }
+  | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
+    let features =
+      [
+        text "Cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref object2_reason;
+        text " is inexact and may ";
+        text "have a property key that conflicts with ";
+        ref key_reason;
+        text " or a property value that conflicts with ";
+        ref value_reason;
+        text ". Can you make ";
+        ref object2_reason;
+        text " exact?";
+      ]
+    in
+    Normal { features }
+  | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
+    let format_reason_group { first_reason; second_reason } =
+      match second_reason with
+      | None -> [ref first_reason]
+      | Some second_reason ->
+        [text "inferred union from "; ref first_reason; text " | "; ref second_reason]
+    in
+    let union_refs =
+      let reasons_for_operand1 = format_reason_group reasons_for_operand1 in
+      let reasons_for_operand2 = format_reason_group reasons_for_operand2 in
+      reasons_for_operand1 @ [text " and "] @ reasons_for_operand2
+    in
+    let features =
+      [
+        text "Computing ";
+        ref reason;
+        text " may lead to an exponentially large number of cases to reason about because ";
+      ]
+      @ union_refs
+      @ [
+          text
+            " are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.";
+          text
+            " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
+        ]
+    in
+    Normal { features }
+  | EComputedPropertyWithMultipleLowerBounds
+      { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
+    let features =
+      [
+        text "Cannot use ";
+        ref computed_property_reason;
+        text " as a computed property.";
+        text
+          " Computed properties may only be primitive literal values, but this one may be either ";
+        ref existing_lower_bound_reason;
+        text " or ";
+        ref new_lower_bound_reason;
+        text ". Can you add a literal type annotation to ";
+        ref computed_property_reason;
+        text "?";
+        text " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+      ]
+    in
+    Normal { features }
+  | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
+    let features =
+      [
+        text "Cannot use ";
+        ref computed_property_reason;
+        text " as a computed property.";
+        text " Computed properties may only be primitive literal values, but ";
+        ref union_reason;
+        text " is a union. Can you add a literal type annotation to ";
+        ref computed_property_reason;
+        text "?";
+        text " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+      ]
+    in
+    Normal { features }
 
 let is_lint_error = function
   | EUntypedTypeImport _

@@ -2400,553 +2400,547 @@ let string_of_signature_error pp_loc err =
   | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (pp_loc loc)
 
 let dump_error_message =
-  Error_message.(
-    let string_of_use_op = string_of_use_op_rec in
-    let dump_internal_error = function
-      | PackageHeapNotFound _ -> "PackageHeapNotFound"
-      | AbnormalControlFlow -> "AbnormalControlFlow"
-      | MethodNotAFunction -> "MethodNotAFunction"
-      | OptionalMethod -> "OptionalMethod"
-      | OpenPredWithoutSubst -> "OpenPredWithoutSubst"
-      | PredFunWithoutParamNames -> "PredFunWithoutParamNames"
-      | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"
-      | BreakEnvMissingForCase -> "BreakEnvMissingForCase"
-      | PropertyDescriptorPropertyCannotBeRead -> "PropertyDescriptorPropertyCannotBeRead"
-      | ForInLHS -> "ForInLHS"
-      | ForOfLHS -> "ForOfLHS"
-      | InstanceLookupComputed -> "InstanceLookupComputed"
-      | PropRefComputedOpen -> "PropRefComputedOpen"
-      | PropRefComputedLiteral -> "PropRefComputedLiteral"
-      | ShadowReadComputed -> "ShadowReadComputed"
-      | ShadowWriteComputed -> "ShadowWriteComputed"
-      | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
-      | InterfaceTypeSpread -> "InterfaceTypeSpread"
-      | Error_message.DebugThrow -> "DebugThrow"
-      | MergeTimeout _ -> "MergeTimeout"
-      | MergeJobException _ -> "MergeJobException"
-      | CheckTimeout _ -> "CheckTimeout"
-      | CheckJobException _ -> "CheckJobException"
-      | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
-    in
-    let dump_upper_kind = function
-      | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
-      | IncompatibleSetPropT _ -> "IncompatibleSetPropT"
-      | IncompatibleMatchPropT _ -> "IncompatibleSetPropT"
-      | IncompatibleGetPrivatePropT -> "IncompatibleGetPrivatePropT"
-      | IncompatibleSetPrivatePropT -> "IncompatibleSetPrivatePropT"
-      | IncompatibleMethodT _ -> "IncompatibleMethodT"
-      | IncompatibleCallT -> "IncompatibleCallT"
-      | IncompatibleMixedCallT -> "IncompatibleMixedCallT"
-      | IncompatibleConstructorT -> "IncompatibleConstructorT"
-      | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
-      | IncompatibleSetElemT _ -> "IncompatibleSetElemT"
-      | IncompatibleCallElemT _ -> "IncompatibleCallElemT"
-      | IncompatibleElemTOfArrT -> "IncompatibleElemTOfArrT"
-      | IncompatibleObjAssignFromTSpread -> "IncompatibleObjAssignFromTSpread"
-      | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
-      | IncompatibleObjRestT -> "IncompatibleObjRestT"
-      | IncompatibleObjSealT -> "IncompatibleObjSealT"
-      | IncompatibleArrRestT -> "IncompatibleArrRestT"
-      | IncompatibleSuperT -> "IncompatibleSuperT"
-      | IncompatibleMixinT -> "IncompatibleMixinT"
-      | IncompatibleSpecializeT -> "IncompatibleSpecializeT"
-      | IncompatibleThisSpecializeT -> "IncompatibleThisSpecializeT"
-      | IncompatibleVarianceCheckT -> "IncompatibleVarianceCheckT"
-      | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
-      | IncompatibleHasOwnPropT _ -> "IncompatibleHasOwnPropT"
-      | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
-      | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
-      | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
-      | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
-      | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
-      | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
-    in
-    fun cx err ->
-      match err with
-      | EIncompatible
-          {
-            lower = (reason_lower, _lower_kind);
-            upper = (reason_upper, upper_kind);
-            use_op;
-            branches = _;
-          } ->
-        spf
-          "EIncompatible { lower = (%s, _); upper = (%s, %s); use_op = %s; branches = _ }"
-          (dump_reason cx reason_lower)
-          (dump_reason cx reason_upper)
-          (dump_upper_kind upper_kind)
-          (match use_op with
-          | None -> "None"
-          | Some use_op -> spf "Some(%s)" (string_of_use_op use_op))
-      | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches = _ } ->
-        spf
-          "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; use_op = %s; branches = _ }"
-          (dump_reason cx reason_lower)
-          (dump_reason cx reason_upper)
-          (string_of_use_op use_op)
-      | EIncompatibleProp { reason_prop; reason_obj; special = _; prop = _; use_op = _ } ->
-        spf
-          "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; prop = _; use_op = _ }"
-          (dump_reason cx reason_prop)
-          (dump_reason cx reason_obj)
-      | EDebugPrint (reason, _) -> spf "EDebugPrint (%s, _)" (dump_reason cx reason)
-      | EExportValueAsType (reason, str) ->
-        spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) str
-      | EImportValueAsType (reason, str) ->
-        spf "EImportValueAsType (%s, %s)" (dump_reason cx reason) str
-      | EImportTypeAsTypeof (reason, str) ->
-        spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
-      | EImportTypeAsValue (reason, str) ->
-        spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
-      | ERefineAsValue (reason, str) -> spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) str
-      | ENoDefaultExport (reason, module_name, _) ->
-        spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
-      | EOnlyDefaultExport (reason, module_name, export_name) ->
-        spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
-      | ENoNamedExport (reason, module_name, export_name, _) ->
-        spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
-      | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
-        spf
-          "EMissingTypeArgs { reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
-          (dump_reason cx reason_tapp)
-          (dump_reason cx reason_arity)
-          min_arity
-          max_arity
-      | EValueUsedAsType { reason_use } ->
-        spf "EValueUsedAsType { use = %s }" (dump_reason cx reason_use)
-      | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
-        spf
-          "EExpectedStringLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
-          (dump_reason cx reason_lower)
-          (dump_reason cx reason_upper)
-          (string_of_use_op use_op)
-      | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
-        spf
-          "EExpectedNumberLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
-          (dump_reason cx reason_lower)
-          (dump_reason cx reason_upper)
-          (string_of_use_op use_op)
-      | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
-        spf
-          "EExpectedBooleanLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
-          (dump_reason cx reason_lower)
-          (dump_reason cx reason_upper)
-          (string_of_use_op use_op)
-      | EPropNotFound (prop, (prop_reason, obj_reason), use_op) ->
-        spf
-          "EPropNotFound (%s, %s, %s, %s)"
-          (match prop with
-          | Some prop -> spf "Some %s" prop
-          | None -> "None")
-          (dump_reason cx prop_reason)
-          (dump_reason cx obj_reason)
-          (string_of_use_op use_op)
-      | EPropNotReadable { reason_prop; prop_name; use_op } ->
-        spf
-          "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
-          (dump_reason cx reason_prop)
-          (match prop_name with
-          | Some x -> spf "%S" x
-          | None -> "(computed)")
-          (string_of_use_op use_op)
-      | EPropNotWritable { reason_prop; prop_name; use_op } ->
-        spf
-          "EPropNotWritable { reason_prop = %s; prop_name = %s; use_op = %s }"
-          (dump_reason cx reason_prop)
-          (match prop_name with
-          | Some x -> spf "%S" x
-          | None -> "(computed)")
-          (string_of_use_op use_op)
-      | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
-        spf
-          "EPropPolarityMismatch ((%s, %s), %s, _, _)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (match x with
-          | Some x -> spf "%S" x
-          | None -> "(computed)")
-      | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
-        spf
-          "EPolarityMismatch { reason=%s; name=%S; expected_polarity=%s; actual_polarity=%s }"
-          (dump_reason cx reason)
-          name
-          (Polarity.string expected_polarity)
-          (Polarity.string actual_polarity)
-      | EBuiltinLookupFailed { reason; name } ->
-        spf
-          "EBuiltinLookupFailed { reason = %s; name = %S }"
-          (dump_reason cx reason)
-          (match name with
-          | Some x -> spf "Some(%S)" x
-          | None -> "None")
-      | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
-        spf
-          "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; use_op = %s }"
-          (dump_reason cx reason_prop)
-          (dump_reason cx reason_obj)
-          (match name with
-          | Some x -> spf "Some(%S)" x
-          | None -> "None")
-          (match use_op with
-          | Some use_op -> spf "Some(%s)" (string_of_use_op use_op)
-          | None -> "None")
-      | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
-        spf
-          "EPrivateLookupFailed ((%s, %s), %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          x
-          (string_of_use_op use_op)
-      | EAdditionMixed (reason, use_op) ->
-        spf "EAdditionMixed (%s, %s)" (dump_reason cx reason) (string_of_use_op use_op)
-      | EComparison (reason1, reason2) ->
-        spf "EComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-      | ETupleArityMismatch ((reason1, reason2), arity1, arity2, use_op) ->
-        spf
-          "ETupleArityMismatch (%s, %s, %d, %d, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          arity1
-          arity2
-          (string_of_use_op use_op)
-      | ENonLitArrayToTuple ((reason1, reason2), use_op) ->
-        spf
-          "ENonLitArrayToTuple ((%s, %s), %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (string_of_use_op use_op)
-      | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
-        spf
-          "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; length = %d; index = %s }"
-          (string_of_use_op use_op)
-          (dump_reason cx reason)
-          (dump_reason cx reason_op)
-          length
-          index
-      | ETupleNonIntegerIndex { use_op; reason; index } ->
-        spf
-          "ETupleNonIntegerIndex { use_op = %s; reason = %s; index = %s }"
-          (string_of_use_op use_op)
-          (dump_reason cx reason)
-          index
-      | ETupleUnsafeWrite { reason; use_op } ->
-        spf
-          "ETupleUnsafeWrite { reason = %s; use_op = %s }"
-          (dump_reason cx reason)
-          (string_of_use_op use_op)
-      | EROArrayWrite ((reason1, reason2), use_op) ->
-        spf
-          "EROArrayWrite (%s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (string_of_use_op use_op)
-      | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
-        spf
-          "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
-          (string_of_use_op use_op)
-          (dump_reason cx reason)
-          (dump_reason cx reason_op)
-      | ESpeculationAmbiguous { reason; _ } ->
-        spf "ESpeculationAmbiguous { reason = %s; _ }" (dump_reason cx reason)
-      | EIncompatibleWithExact ((reason1, reason2), use_op) ->
-        spf
-          "EIncompatibleWithExact ((%s, %s), %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (string_of_use_op use_op)
-      | EUnsupportedExact (reason1, reason2) ->
-        spf "EUnsupportedExact (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-      | EIdxArity reason -> spf "EIdxArity (%s)" (dump_reason cx reason)
-      | EIdxUse1 reason -> spf "EIdxUse1 (%s)" (dump_reason cx reason)
-      | EIdxUse2 reason -> spf "EIdxUse2 (%s)" (dump_reason cx reason)
-      | EUnexpectedThisType loc -> spf "EUnexpectedThisType (%s)" (string_of_aloc loc)
-      | ETypeParamArity (loc, expected) ->
-        spf "ETypeParamArity (%s, %d)" (string_of_aloc loc) expected
-      | ETypeParamMinArity (loc, expected) ->
-        spf "ETypeParamMinArity (%s, %d)" (string_of_aloc loc) expected
-      | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity } ->
-        spf
-          "ECallTypeArity { call_loc=%s; is_new=%b; reason_arity=%s; expected_arity=%d; }"
-          (string_of_aloc call_loc)
-          is_new
-          (dump_reason cx reason_arity)
-          expected_arity
-      | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
-        spf
-          "ETooManyTypeArgs (%s, %s, %d)"
-          (dump_reason cx reason_tapp)
-          (dump_reason cx reason_arity)
-          maximum_arity
-      | ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity) ->
-        spf
-          "ETooFewTypeArgs (%s, %s, %d)"
-          (dump_reason cx reason_tapp)
-          (dump_reason cx reason_arity)
-          minimum_arity
-      | EInvalidTypeArgs (reason_tapp, reason_arity) ->
-        spf "EInvalidTypeArgs (%s, %s)" (dump_reason cx reason_tapp) (dump_reason cx reason_arity)
-      | EPropertyTypeAnnot loc -> spf "EPropertyTypeAnnot (%s)" (string_of_aloc loc)
-      | EExportsAnnot loc -> spf "EExportsAnnot (%s)" (string_of_aloc loc)
-      | ECharSetAnnot loc -> spf "ECharSetAnnot (%s)" (string_of_aloc loc)
-      | EInvalidCharSet { invalid = (reason, _); valid; use_op } ->
-        spf
-          "EInvalidCharSet { invalid = (%s, _); valid = %s; use_op = %s }"
-          (dump_reason cx reason)
-          (dump_reason cx valid)
-          (string_of_use_op use_op)
-      | EUnsupportedKeyInObjectType loc ->
-        spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
-      | EPredAnnot loc -> spf "EPredAnnot (%s)" (string_of_aloc loc)
-      | ERefineAnnot loc -> spf "ERefineAnnot (%s)" (string_of_aloc loc)
-      | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)
-      | EPrivateAnnot loc -> spf "EPrivateAnnot (%s)" (string_of_aloc loc)
-      | EUnexpectedTypeof loc -> spf "EUnexpectedTypeof (%s)" (string_of_aloc loc)
-      | EFunPredCustom ((reason1, reason2), msg) ->
-        spf "EFunPredCustom (%s, %s, %S)" (dump_reason cx reason1) (dump_reason cx reason2) msg
-      | EIncompatibleWithShape (lower, upper, use_op) ->
-        spf
-          "EIncompatibleWithShape (%s, %s, %s)"
-          (dump_reason cx lower)
-          (dump_reason cx upper)
-          (string_of_use_op use_op)
-      | EInternal (loc, err) ->
-        spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
-      | EUnsupportedSyntax (loc, _) -> spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
-      | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)
-      | EMissingAnnotation (reason, _) -> spf "EMissingAnnotation (%s)" (dump_reason cx reason)
-      | EBindingError (_binding_error, loc, x, entry) ->
-        spf
-          "EBindingError (_, %s, %s, %s)"
-          (string_of_aloc loc)
-          x
-          (Scope.Entry.string_of_kind entry)
-      | ERecursionLimit (reason1, reason2) ->
-        spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-      | EModuleOutsideRoot (loc, name) ->
-        spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
-      | EMalformedPackageJson (loc, error) ->
-        spf "EMalformedPackageJson (%s, %S)" (string_of_aloc loc) error
-      | EExperimentalDecorators loc -> spf "EExperimentalDecorators (%s)" (string_of_aloc loc)
-      | EExperimentalClassProperties (loc, static) ->
-        spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
-      | EUnsafeGetSet loc -> spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
-      | EUninitializedInstanceProperty (loc, err) ->
-        spf
-          "EUninitializedInstanceProperty (%s, %s)"
-          (string_of_aloc loc)
-          Lints.(
-            match err with
-            | PropertyNotDefinitelyInitialized -> "PropertyNotDefinitelyInitialized"
-            | ReadFromUninitializedProperty -> "ReadFromUninitializedProperty"
-            | MethodCallBeforeEverythingInitialized -> "MethodCallBeforeEverythingInitialized"
-            | PropertyFunctionCallBeforeEverythingInitialized ->
-              "PropertyFunctionCallBeforeEverythingInitialized"
-            | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
-      | EExperimentalExportStarAs loc -> spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
-      | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
-      | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
-      | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
-      | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
-      | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
-      | EInvalidObjectKit { reason; reason_op; use_op } ->
-        spf
-          "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
-          (dump_reason cx reason)
-          (dump_reason cx reason_op)
-          (string_of_use_op use_op)
-      | EInvalidTypeof (loc, name) -> spf "EInvalidTypeof (%s, %S)" (string_of_aloc loc) name
-      | EBinaryInLHS reason -> spf "EBinaryInLHS (%s)" (dump_reason cx reason)
-      | EBinaryInRHS reason -> spf "EBinaryInRHS (%s)" (dump_reason cx reason)
-      | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
-      | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
-      | EObjectComputedPropertyAccess (reason1, reason2) ->
-        spf
-          "EObjectComputedPropertyAccess (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-      | EObjectComputedPropertyAssign (reason1, reason2) ->
-        spf
-          "EObjectComputedPropertyAssign (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-      | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
-      | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
-        spf
-          "EIncompatibleWithUseOp (%s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (string_of_use_op use_op)
-      | ETrustIncompatibleWithUseOp (reason1, reason2, use_op) ->
-        spf
-          "ETrustIncompatibleWithUseOp (%s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (string_of_use_op use_op)
-      | EUnsupportedImplements reason -> spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
-      | ENotAReactComponent { reason; use_op } ->
-        spf
-          "ENotAReactComponent { reason = %s; use_op = %s }"
-          (dump_reason cx reason)
-          (string_of_use_op use_op)
-      | EInvalidReactConfigType { reason; use_op } ->
-        spf
-          "EInvalidReactConfigType { reason = %s; use_op = %s }"
-          (dump_reason cx reason)
-          (string_of_use_op use_op)
-      | EInvalidReactPropType { reason; use_op; tool = _ } ->
-        spf
-          "EInvalidReactPropType { reason = %s; use_op = %s; _ }"
-          (dump_reason cx reason)
-          (string_of_use_op use_op)
-      | EInvalidReactCreateClass { reason; use_op; tool = _ } ->
-        spf
-          "EInvalidReactCreateClass { reason = %s; use_op = %s; _ }"
-          (dump_reason cx reason)
-          (string_of_use_op use_op)
-      | EReactElementFunArity (reason, _, _) ->
-        spf "EReactElementFunArity (%s)" (dump_reason cx reason)
-      | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
-        spf
-          "EFunctionCallExtraArg (%s, %s, %d, %s)"
-          (dump_reason cx unused_reason)
-          (dump_reason cx def_reason)
-          param_count
-          (string_of_use_op use_op)
-      | EUnsupportedSetProto reason -> spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
-      | EDuplicateModuleProvider { module_name; provider; conflict } ->
-        spf
-          "EDuplicateModuleProvider (%S, %s, %s)"
-          module_name
-          (string_of_aloc provider)
-          (string_of_aloc conflict)
-      | EParseError (loc, _parse_error) -> spf "EParseError (%s, _)" (string_of_aloc loc)
-      (* TODO: string of parse error constructor *)
-      | EDocblockError (loc, err) ->
-        spf
-          "EDocblockError (%s, %s)"
-          (string_of_aloc loc)
-          (match err with
-          | MultipleFlowAttributes -> "MultipleFlowAttributes"
-          | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
-          | MultipleJSXAttributes -> "MultipleJSXAttributes"
-          | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
-      | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
-      | EUntypedTypeImport (loc, module_name) ->
-        spf "EUntypedTypeImport (%s, %s)" (string_of_aloc loc) module_name
-      | EUntypedImport (loc, module_name) ->
-        spf "EUntypedImport (%s, %s)" (string_of_aloc loc) module_name
-      | ENonstrictImport loc -> spf "ENonstrictImport (%s)" (string_of_aloc loc)
-      | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
-      | EDeprecatedUtility (loc, name) ->
-        spf "EDeprecatedUtility (%s, %s)" (string_of_aloc loc) name
-      | EDynamicExport (reason, reason') ->
-        spf "EDynamicExport (%s, %s)" (dump_reason cx reason) (dump_reason cx reason')
-      | EDeprecatedType loc -> spf "EDeprecatedType (%s)" (string_of_aloc loc)
-      | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
-      | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
-      | ELintSetting (loc, kind) ->
-        LintSettings.(
-          let kind_str =
-            match kind with
-            | Invalid_setting -> "Invalid_setting"
-            | Malformed_argument -> "Malformed_argument"
-            | Naked_comment -> "Naked_comment"
-            | Nonexistent_rule -> "Nonexistent_rule"
-            | Overwritten_argument -> "Overwritten_argument"
-            | Redundant_argument -> "Redundant_argument"
-          in
-          spf "ELintSetting (%s, %s)" (string_of_aloc loc) kind_str)
-      | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+  let open Error_message in
+  let string_of_use_op = string_of_use_op_rec in
+  let dump_internal_error = function
+    | PackageHeapNotFound _ -> "PackageHeapNotFound"
+    | AbnormalControlFlow -> "AbnormalControlFlow"
+    | MethodNotAFunction -> "MethodNotAFunction"
+    | OptionalMethod -> "OptionalMethod"
+    | OpenPredWithoutSubst -> "OpenPredWithoutSubst"
+    | PredFunWithoutParamNames -> "PredFunWithoutParamNames"
+    | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"
+    | BreakEnvMissingForCase -> "BreakEnvMissingForCase"
+    | PropertyDescriptorPropertyCannotBeRead -> "PropertyDescriptorPropertyCannotBeRead"
+    | ForInLHS -> "ForInLHS"
+    | ForOfLHS -> "ForOfLHS"
+    | InstanceLookupComputed -> "InstanceLookupComputed"
+    | PropRefComputedOpen -> "PropRefComputedOpen"
+    | PropRefComputedLiteral -> "PropRefComputedLiteral"
+    | ShadowReadComputed -> "ShadowReadComputed"
+    | ShadowWriteComputed -> "ShadowWriteComputed"
+    | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
+    | InterfaceTypeSpread -> "InterfaceTypeSpread"
+    | Error_message.DebugThrow -> "DebugThrow"
+    | MergeTimeout _ -> "MergeTimeout"
+    | MergeJobException _ -> "MergeJobException"
+    | CheckTimeout _ -> "CheckTimeout"
+    | CheckJobException _ -> "CheckJobException"
+    | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
+  in
+  let dump_upper_kind = function
+    | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
+    | IncompatibleSetPropT _ -> "IncompatibleSetPropT"
+    | IncompatibleMatchPropT _ -> "IncompatibleSetPropT"
+    | IncompatibleGetPrivatePropT -> "IncompatibleGetPrivatePropT"
+    | IncompatibleSetPrivatePropT -> "IncompatibleSetPrivatePropT"
+    | IncompatibleMethodT _ -> "IncompatibleMethodT"
+    | IncompatibleCallT -> "IncompatibleCallT"
+    | IncompatibleMixedCallT -> "IncompatibleMixedCallT"
+    | IncompatibleConstructorT -> "IncompatibleConstructorT"
+    | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
+    | IncompatibleSetElemT _ -> "IncompatibleSetElemT"
+    | IncompatibleCallElemT _ -> "IncompatibleCallElemT"
+    | IncompatibleElemTOfArrT -> "IncompatibleElemTOfArrT"
+    | IncompatibleObjAssignFromTSpread -> "IncompatibleObjAssignFromTSpread"
+    | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
+    | IncompatibleObjRestT -> "IncompatibleObjRestT"
+    | IncompatibleObjSealT -> "IncompatibleObjSealT"
+    | IncompatibleArrRestT -> "IncompatibleArrRestT"
+    | IncompatibleSuperT -> "IncompatibleSuperT"
+    | IncompatibleMixinT -> "IncompatibleMixinT"
+    | IncompatibleSpecializeT -> "IncompatibleSpecializeT"
+    | IncompatibleThisSpecializeT -> "IncompatibleThisSpecializeT"
+    | IncompatibleVarianceCheckT -> "IncompatibleVarianceCheckT"
+    | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
+    | IncompatibleHasOwnPropT _ -> "IncompatibleHasOwnPropT"
+    | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
+    | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
+    | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
+    | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
+    | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
+    | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
+  in
+  fun cx err ->
+    match err with
+    | EIncompatible
+        {
+          lower = (reason_lower, _lower_kind);
+          upper = (reason_upper, upper_kind);
+          use_op;
+          branches = _;
+        } ->
+      spf
+        "EIncompatible { lower = (%s, _); upper = (%s, %s); use_op = %s; branches = _ }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (dump_upper_kind upper_kind)
+        (match use_op with
+        | None -> "None"
+        | Some use_op -> spf "Some(%s)" (string_of_use_op use_op))
+    | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches = _ } ->
+      spf
+        "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; use_op = %s; branches = _ }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
+    | EIncompatibleProp { reason_prop; reason_obj; special = _; prop = _; use_op = _ } ->
+      spf
+        "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; prop = _; use_op = _ }"
+        (dump_reason cx reason_prop)
+        (dump_reason cx reason_obj)
+    | EDebugPrint (reason, _) -> spf "EDebugPrint (%s, _)" (dump_reason cx reason)
+    | EExportValueAsType (reason, str) ->
+      spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) str
+    | EImportValueAsType (reason, str) ->
+      spf "EImportValueAsType (%s, %s)" (dump_reason cx reason) str
+    | EImportTypeAsTypeof (reason, str) ->
+      spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
+    | EImportTypeAsValue (reason, str) ->
+      spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
+    | ERefineAsValue (reason, str) -> spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) str
+    | ENoDefaultExport (reason, module_name, _) ->
+      spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
+    | EOnlyDefaultExport (reason, module_name, export_name) ->
+      spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
+    | ENoNamedExport (reason, module_name, export_name, _) ->
+      spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
+    | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+      spf
+        "EMissingTypeArgs { reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
+        (dump_reason cx reason_tapp)
+        (dump_reason cx reason_arity)
+        min_arity
+        max_arity
+    | EValueUsedAsType { reason_use } ->
+      spf "EValueUsedAsType { use = %s }" (dump_reason cx reason_use)
+    | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+      spf
+        "EExpectedStringLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
+    | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+      spf
+        "EExpectedNumberLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
+    | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+      spf
+        "EExpectedBooleanLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
+    | EPropNotFound (prop, (prop_reason, obj_reason), use_op) ->
+      spf
+        "EPropNotFound (%s, %s, %s, %s)"
+        (match prop with
+        | Some prop -> spf "Some %s" prop
+        | None -> "None")
+        (dump_reason cx prop_reason)
+        (dump_reason cx obj_reason)
+        (string_of_use_op use_op)
+    | EPropNotReadable { reason_prop; prop_name; use_op } ->
+      spf
+        "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
+        (dump_reason cx reason_prop)
+        (match prop_name with
+        | Some x -> spf "%S" x
+        | None -> "(computed)")
+        (string_of_use_op use_op)
+    | EPropNotWritable { reason_prop; prop_name; use_op } ->
+      spf
+        "EPropNotWritable { reason_prop = %s; prop_name = %s; use_op = %s }"
+        (dump_reason cx reason_prop)
+        (match prop_name with
+        | Some x -> spf "%S" x
+        | None -> "(computed)")
+        (string_of_use_op use_op)
+    | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
+      spf
+        "EPropPolarityMismatch ((%s, %s), %s, _, _)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (match x with
+        | Some x -> spf "%S" x
+        | None -> "(computed)")
+    | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
+      spf
+        "EPolarityMismatch { reason=%s; name=%S; expected_polarity=%s; actual_polarity=%s }"
+        (dump_reason cx reason)
+        name
+        (Polarity.string expected_polarity)
+        (Polarity.string actual_polarity)
+    | EBuiltinLookupFailed { reason; name } ->
+      spf
+        "EBuiltinLookupFailed { reason = %s; name = %S }"
+        (dump_reason cx reason)
+        (match name with
+        | Some x -> spf "Some(%S)" x
+        | None -> "None")
+    | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
+      spf
+        "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; use_op = %s }"
+        (dump_reason cx reason_prop)
+        (dump_reason cx reason_obj)
+        (match name with
+        | Some x -> spf "Some(%S)" x
+        | None -> "None")
+        (match use_op with
+        | Some use_op -> spf "Some(%s)" (string_of_use_op use_op)
+        | None -> "None")
+    | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
+      spf
+        "EPrivateLookupFailed ((%s, %s), %s, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        x
+        (string_of_use_op use_op)
+    | EAdditionMixed (reason, use_op) ->
+      spf "EAdditionMixed (%s, %s)" (dump_reason cx reason) (string_of_use_op use_op)
+    | EComparison (reason1, reason2) ->
+      spf "EComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, use_op) ->
+      spf
+        "ETupleArityMismatch (%s, %s, %d, %d, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        arity1
+        arity2
+        (string_of_use_op use_op)
+    | ENonLitArrayToTuple ((reason1, reason2), use_op) ->
+      spf
+        "ENonLitArrayToTuple ((%s, %s), %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (string_of_use_op use_op)
+    | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+      spf
+        "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; length = %d; index = %s }"
+        (string_of_use_op use_op)
+        (dump_reason cx reason)
+        (dump_reason cx reason_op)
+        length
+        index
+    | ETupleNonIntegerIndex { use_op; reason; index } ->
+      spf
+        "ETupleNonIntegerIndex { use_op = %s; reason = %s; index = %s }"
+        (string_of_use_op use_op)
+        (dump_reason cx reason)
+        index
+    | ETupleUnsafeWrite { reason; use_op } ->
+      spf
+        "ETupleUnsafeWrite { reason = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EROArrayWrite ((reason1, reason2), use_op) ->
+      spf
+        "EROArrayWrite (%s, %s, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (string_of_use_op use_op)
+    | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
+      spf
+        "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
+        (string_of_use_op use_op)
+        (dump_reason cx reason)
+        (dump_reason cx reason_op)
+    | ESpeculationAmbiguous { reason; _ } ->
+      spf "ESpeculationAmbiguous { reason = %s; _ }" (dump_reason cx reason)
+    | EIncompatibleWithExact ((reason1, reason2), use_op) ->
+      spf
+        "EIncompatibleWithExact ((%s, %s), %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (string_of_use_op use_op)
+    | EUnsupportedExact (reason1, reason2) ->
+      spf "EUnsupportedExact (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+    | EIdxArity reason -> spf "EIdxArity (%s)" (dump_reason cx reason)
+    | EIdxUse1 reason -> spf "EIdxUse1 (%s)" (dump_reason cx reason)
+    | EIdxUse2 reason -> spf "EIdxUse2 (%s)" (dump_reason cx reason)
+    | EUnexpectedThisType loc -> spf "EUnexpectedThisType (%s)" (string_of_aloc loc)
+    | ETypeParamArity (loc, expected) ->
+      spf "ETypeParamArity (%s, %d)" (string_of_aloc loc) expected
+    | ETypeParamMinArity (loc, expected) ->
+      spf "ETypeParamMinArity (%s, %d)" (string_of_aloc loc) expected
+    | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity } ->
+      spf
+        "ECallTypeArity { call_loc=%s; is_new=%b; reason_arity=%s; expected_arity=%d; }"
+        (string_of_aloc call_loc)
+        is_new
+        (dump_reason cx reason_arity)
+        expected_arity
+    | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
+      spf
+        "ETooManyTypeArgs (%s, %s, %d)"
+        (dump_reason cx reason_tapp)
+        (dump_reason cx reason_arity)
+        maximum_arity
+    | ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity) ->
+      spf
+        "ETooFewTypeArgs (%s, %s, %d)"
+        (dump_reason cx reason_tapp)
+        (dump_reason cx reason_arity)
+        minimum_arity
+    | EInvalidTypeArgs (reason_tapp, reason_arity) ->
+      spf "EInvalidTypeArgs (%s, %s)" (dump_reason cx reason_tapp) (dump_reason cx reason_arity)
+    | EPropertyTypeAnnot loc -> spf "EPropertyTypeAnnot (%s)" (string_of_aloc loc)
+    | EExportsAnnot loc -> spf "EExportsAnnot (%s)" (string_of_aloc loc)
+    | ECharSetAnnot loc -> spf "ECharSetAnnot (%s)" (string_of_aloc loc)
+    | EInvalidCharSet { invalid = (reason, _); valid; use_op } ->
+      spf
+        "EInvalidCharSet { invalid = (%s, _); valid = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (dump_reason cx valid)
+        (string_of_use_op use_op)
+    | EUnsupportedKeyInObjectType loc ->
+      spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
+    | EPredAnnot loc -> spf "EPredAnnot (%s)" (string_of_aloc loc)
+    | ERefineAnnot loc -> spf "ERefineAnnot (%s)" (string_of_aloc loc)
+    | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)
+    | EPrivateAnnot loc -> spf "EPrivateAnnot (%s)" (string_of_aloc loc)
+    | EUnexpectedTypeof loc -> spf "EUnexpectedTypeof (%s)" (string_of_aloc loc)
+    | EFunPredCustom ((reason1, reason2), msg) ->
+      spf "EFunPredCustom (%s, %s, %S)" (dump_reason cx reason1) (dump_reason cx reason2) msg
+    | EIncompatibleWithShape (lower, upper, use_op) ->
+      spf
+        "EIncompatibleWithShape (%s, %s, %s)"
+        (dump_reason cx lower)
+        (dump_reason cx upper)
+        (string_of_use_op use_op)
+    | EInternal (loc, err) ->
+      spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
+    | EUnsupportedSyntax (loc, _) -> spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
+    | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)
+    | EMissingAnnotation (reason, _) -> spf "EMissingAnnotation (%s)" (dump_reason cx reason)
+    | EBindingError (_binding_error, loc, x, entry) ->
+      spf "EBindingError (_, %s, %s, %s)" (string_of_aloc loc) x (Scope.Entry.string_of_kind entry)
+    | ERecursionLimit (reason1, reason2) ->
+      spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+    | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
+    | EMalformedPackageJson (loc, error) ->
+      spf "EMalformedPackageJson (%s, %S)" (string_of_aloc loc) error
+    | EExperimentalDecorators loc -> spf "EExperimentalDecorators (%s)" (string_of_aloc loc)
+    | EExperimentalClassProperties (loc, static) ->
+      spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
+    | EUnsafeGetSet loc -> spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
+    | EUninitializedInstanceProperty (loc, err) ->
+      spf
+        "EUninitializedInstanceProperty (%s, %s)"
+        (string_of_aloc loc)
         Lints.(
-          let kind_str =
-            match kind with
-            | SketchyNullBool -> "SketchyNullBool"
-            | SketchyNullString -> "SketchyNullString"
-            | SketchyNullNumber -> "SketchyNullNumber"
-            | SketchyNullMixed -> "SketchyNullMixed"
-          in
-          spf
-            "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
-            kind_str
-            (string_of_aloc loc)
-            (string_of_aloc null_loc)
-            (string_of_aloc falsy_loc))
-      | ESketchyNumberLint (kind, reason) ->
-        Lints.(
-          let kind_str =
-            match kind with
-            | SketchyNumberAnd -> "SketchyNumberAnd"
-          in
-          spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason))
-      | EInvalidPrototype (loc, reason) ->
-        spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
-      | EExperimentalOptionalChaining loc ->
-        spf "EExperimentalOptionalChaining (%s)" (string_of_aloc loc)
-      | EOptionalChainingMethods loc -> spf "EOptionalChainingMethods (%s)" (string_of_aloc loc)
-      | EUnnecessaryOptionalChain (loc, _) ->
-        spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
-      | EUnnecessaryInvariant (loc, _) -> spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)
-      | EInexactSpread (reason, reason_op) ->
-        spf "EInexactSpread (%s, %s)" (dump_reason cx reason) (dump_reason cx reason_op)
-      | EUnexpectedTemporaryBaseType loc ->
-        spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
-      | ECannotDelete (l1, r1) ->
-        spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
-      | ESignatureVerification sve ->
-        let msg = string_of_signature_error ALoc.debug_to_string sve in
-        spf "ESignatureVerification (%s)" msg
-      | EBigIntNotYetSupported reason -> spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
-      | ENonArraySpread reason -> spf "ENonArraySpread (%s)" (dump_reason cx reason)
-      | ECannotSpreadInterface { spread_reason; interface_reason } ->
-        spf
-          "ECannotSpreadInterface (%s) (%s)"
-          (dump_reason cx spread_reason)
-          (dump_reason cx interface_reason)
-      | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
-        spf
-          "ECannotSpreadIndexerOnRight (%s) (%s) (%s)"
-          (dump_reason cx spread_reason)
-          (dump_reason cx object_reason)
-          (dump_reason cx key_reason)
-      | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _ }
-        ->
-        spf
-          "EUnableToSpread (%s) (%s) (%s) (%s)"
-          (dump_reason cx spread_reason)
-          (dump_reason cx object1_reason)
-          (dump_reason cx object2_reason)
-          propname
-      | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
-        spf
-          "EInexactMayOverwriteIndexer (%s) (%s) (%s) (%s)"
-          (dump_reason cx spread_reason)
-          (dump_reason cx key_reason)
-          (dump_reason cx value_reason)
-          (dump_reason cx object2_reason)
-      | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
-        let format_reason_group { first_reason; second_reason } =
-          spf
-            "[%s; %s]"
-            (dump_reason cx first_reason)
-            (Option.value_map ~default:"None" ~f:(dump_reason cx) second_reason)
+          match err with
+          | PropertyNotDefinitelyInitialized -> "PropertyNotDefinitelyInitialized"
+          | ReadFromUninitializedProperty -> "ReadFromUninitializedProperty"
+          | MethodCallBeforeEverythingInitialized -> "MethodCallBeforeEverythingInitialized"
+          | PropertyFunctionCallBeforeEverythingInitialized ->
+            "PropertyFunctionCallBeforeEverythingInitialized"
+          | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
+    | EExperimentalExportStarAs loc -> spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
+    | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
+    | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
+    | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
+    | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
+    | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
+    | EInvalidObjectKit { reason; reason_op; use_op } ->
+      spf
+        "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (dump_reason cx reason_op)
+        (string_of_use_op use_op)
+    | EInvalidTypeof (loc, name) -> spf "EInvalidTypeof (%s, %S)" (string_of_aloc loc) name
+    | EBinaryInLHS reason -> spf "EBinaryInLHS (%s)" (dump_reason cx reason)
+    | EBinaryInRHS reason -> spf "EBinaryInRHS (%s)" (dump_reason cx reason)
+    | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
+    | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
+    | EObjectComputedPropertyAccess (reason1, reason2) ->
+      spf
+        "EObjectComputedPropertyAccess (%s, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+    | EObjectComputedPropertyAssign (reason1, reason2) ->
+      spf
+        "EObjectComputedPropertyAssign (%s, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+    | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
+    | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
+      spf
+        "EIncompatibleWithUseOp (%s, %s, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (string_of_use_op use_op)
+    | ETrustIncompatibleWithUseOp (reason1, reason2, use_op) ->
+      spf
+        "ETrustIncompatibleWithUseOp (%s, %s, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (string_of_use_op use_op)
+    | EUnsupportedImplements reason -> spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
+    | ENotAReactComponent { reason; use_op } ->
+      spf
+        "ENotAReactComponent { reason = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EInvalidReactConfigType { reason; use_op } ->
+      spf
+        "EInvalidReactConfigType { reason = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EInvalidReactPropType { reason; use_op; tool = _ } ->
+      spf
+        "EInvalidReactPropType { reason = %s; use_op = %s; _ }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EInvalidReactCreateClass { reason; use_op; tool = _ } ->
+      spf
+        "EInvalidReactCreateClass { reason = %s; use_op = %s; _ }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+    | EReactElementFunArity (reason, _, _) ->
+      spf "EReactElementFunArity (%s)" (dump_reason cx reason)
+    | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
+      spf
+        "EFunctionCallExtraArg (%s, %s, %d, %s)"
+        (dump_reason cx unused_reason)
+        (dump_reason cx def_reason)
+        param_count
+        (string_of_use_op use_op)
+    | EUnsupportedSetProto reason -> spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
+    | EDuplicateModuleProvider { module_name; provider; conflict } ->
+      spf
+        "EDuplicateModuleProvider (%S, %s, %s)"
+        module_name
+        (string_of_aloc provider)
+        (string_of_aloc conflict)
+    | EParseError (loc, _parse_error) -> spf "EParseError (%s, _)" (string_of_aloc loc)
+    (* TODO: string of parse error constructor *)
+    | EDocblockError (loc, err) ->
+      spf
+        "EDocblockError (%s, %s)"
+        (string_of_aloc loc)
+        (match err with
+        | MultipleFlowAttributes -> "MultipleFlowAttributes"
+        | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
+        | MultipleJSXAttributes -> "MultipleJSXAttributes"
+        | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
+    | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
+    | EUntypedTypeImport (loc, module_name) ->
+      spf "EUntypedTypeImport (%s, %s)" (string_of_aloc loc) module_name
+    | EUntypedImport (loc, module_name) ->
+      spf "EUntypedImport (%s, %s)" (string_of_aloc loc) module_name
+    | ENonstrictImport loc -> spf "ENonstrictImport (%s)" (string_of_aloc loc)
+    | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
+    | EDeprecatedUtility (loc, name) -> spf "EDeprecatedUtility (%s, %s)" (string_of_aloc loc) name
+    | EDynamicExport (reason, reason') ->
+      spf "EDynamicExport (%s, %s)" (dump_reason cx reason) (dump_reason cx reason')
+    | EDeprecatedType loc -> spf "EDeprecatedType (%s)" (string_of_aloc loc)
+    | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
+    | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
+    | ELintSetting (loc, kind) ->
+      LintSettings.(
+        let kind_str =
+          match kind with
+          | Invalid_setting -> "Invalid_setting"
+          | Malformed_argument -> "Malformed_argument"
+          | Naked_comment -> "Naked_comment"
+          | Nonexistent_rule -> "Nonexistent_rule"
+          | Overwritten_argument -> "Overwritten_argument"
+          | Redundant_argument -> "Redundant_argument"
+        in
+        spf "ELintSetting (%s, %s)" (string_of_aloc loc) kind_str)
+    | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+      Lints.(
+        let kind_str =
+          match kind with
+          | SketchyNullBool -> "SketchyNullBool"
+          | SketchyNullString -> "SketchyNullString"
+          | SketchyNullNumber -> "SketchyNullNumber"
+          | SketchyNullMixed -> "SketchyNullMixed"
         in
         spf
-          "EExponentialSpread %s ([%s]) ([%s])"
-          (dump_reason cx reason)
-          (format_reason_group reasons_for_operand1)
-          (format_reason_group reasons_for_operand2)
-      | EComputedPropertyWithMultipleLowerBounds
-          { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
+          "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
+          kind_str
+          (string_of_aloc loc)
+          (string_of_aloc null_loc)
+          (string_of_aloc falsy_loc))
+    | ESketchyNumberLint (kind, reason) ->
+      Lints.(
+        let kind_str =
+          match kind with
+          | SketchyNumberAnd -> "SketchyNumberAnd"
+        in
+        spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason))
+    | EInvalidPrototype (loc, reason) ->
+      spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
+    | EExperimentalOptionalChaining loc ->
+      spf "EExperimentalOptionalChaining (%s)" (string_of_aloc loc)
+    | EOptionalChainingMethods loc -> spf "EOptionalChainingMethods (%s)" (string_of_aloc loc)
+    | EUnnecessaryOptionalChain (loc, _) ->
+      spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
+    | EUnnecessaryInvariant (loc, _) -> spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)
+    | EInexactSpread (reason, reason_op) ->
+      spf "EInexactSpread (%s, %s)" (dump_reason cx reason) (dump_reason cx reason_op)
+    | EUnexpectedTemporaryBaseType loc ->
+      spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
+    | ECannotDelete (l1, r1) ->
+      spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
+    | ESignatureVerification sve ->
+      let msg = string_of_signature_error ALoc.debug_to_string sve in
+      spf "ESignatureVerification (%s)" msg
+    | EBigIntNotYetSupported reason -> spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
+    | ENonArraySpread reason -> spf "ENonArraySpread (%s)" (dump_reason cx reason)
+    | ECannotSpreadInterface { spread_reason; interface_reason } ->
+      spf
+        "ECannotSpreadInterface (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx interface_reason)
+    | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason } ->
+      spf
+        "ECannotSpreadIndexerOnRight (%s) (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx object_reason)
+        (dump_reason cx key_reason)
+    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _ }
+      ->
+      spf
+        "EUnableToSpread (%s) (%s) (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx object1_reason)
+        (dump_reason cx object2_reason)
+        propname
+    | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason } ->
+      spf
+        "EInexactMayOverwriteIndexer (%s) (%s) (%s) (%s)"
+        (dump_reason cx spread_reason)
+        (dump_reason cx key_reason)
+        (dump_reason cx value_reason)
+        (dump_reason cx object2_reason)
+    | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
+      let format_reason_group { first_reason; second_reason } =
         spf
-          "EComputedPropertyWithMultipleLowerBounds (%s) (%s) (%s)"
-          (dump_reason cx computed_property_reason)
-          (dump_reason cx new_lower_bound_reason)
-          (dump_reason cx existing_lower_bound_reason)
-      | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
-        spf
-          "EComputedPropertyWithUnion (%s) (%s)"
-          (dump_reason cx computed_property_reason)
-          (dump_reason cx union_reason))
+          "[%s; %s]"
+          (dump_reason cx first_reason)
+          (Option.value_map ~default:"None" ~f:(dump_reason cx) second_reason)
+      in
+      spf
+        "EExponentialSpread %s ([%s]) ([%s])"
+        (dump_reason cx reason)
+        (format_reason_group reasons_for_operand1)
+        (format_reason_group reasons_for_operand2)
+    | EComputedPropertyWithMultipleLowerBounds
+        { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
+      spf
+        "EComputedPropertyWithMultipleLowerBounds (%s) (%s) (%s)"
+        (dump_reason cx computed_property_reason)
+        (dump_reason cx new_lower_bound_reason)
+        (dump_reason cx existing_lower_bound_reason)
+    | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
+      spf
+        "EComputedPropertyWithUnion (%s) (%s)"
+        (dump_reason cx computed_property_reason)
+        (dump_reason cx union_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =
