@@ -467,6 +467,11 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
                          ("result", Hh_json.JSON_String "PARTIAL_FAILURE");
                          ("error", Hh_json.JSON_String msg);
                        ]) )
+              | Bad_loc ->
+                ( Ok Loc.none,
+                  Some
+                    (Hh_json.JSON_Object
+                       [request_history; ("result", Hh_json.JSON_String "BAD_LOC")]) )
               | Def_error msg ->
                 ( Error msg,
                   Some
