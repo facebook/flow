@@ -38,11 +38,11 @@ Flow-typed JavaScript can use this to generate Flow's syntax tree with annotated
 
 Flow is written in OCaml (OCaml 4.07.1 is required).
 
-1. Install [`opam`](http://opam.ocaml.org):
+1. Install [`opam`](https://opam.ocaml.org):
 
   - Mac: `brew install opam`
   - Debian: `sudo apt-get install opam`
-  - Other Linux: see [opam docs](http://opam.ocaml.org/doc/Install.html)
+  - Other Linux: see [opam docs](https://opam.ocaml.org/doc/Install.html)
   - Windows: see [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/)
 
 2. Initialize `opam`:
@@ -93,7 +93,7 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Discord: https://discord.gg/8ezwRUK
 * irc: #flowtype on Freenode
 * Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
-* Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)
+* Stack Overflow: Ask a question with the [flowtype tag](https://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is MIT-licensed ([LICENSE](http://github.com/facebook/flow/blob/master/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/master/website/LICENSE-DOCUMENTATION)).
+Flow is MIT-licensed ([LICENSE](https://github.com/facebook/flow/blob/master/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/master/website/LICENSE-DOCUMENTATION)).
