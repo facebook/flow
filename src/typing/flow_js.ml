@@ -5209,20 +5209,7 @@ struct
           let action = CallElem (reason_call, ft) in
           rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
         | (_, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action)) ->
-          let propref =
-            match l with
-            | DefT (reason_x, _, StrT (Literal (_, x))) ->
-              let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
-              Named (reason_prop, x)
-            | _ -> Computed l
-          in
-          (match action with
-          | ReadElem t -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, propref, t))
-          | WriteElem (tin, tout, mode) ->
-            rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
-            Option.iter ~f:(fun t -> rec_flow_t cx trace (obj, t)) tout
-          | CallElem (reason_call, ft) ->
-            rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, None)))
+          elem_action_on_obj cx trace ~use_op l obj reason_op action
         | (_, ElemT (use_op, reason_op, (AnyT _ as obj), action)) ->
           let value = AnyT.untyped reason_op in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op obj value action
@@ -5322,8 +5309,6 @@ struct
           ()
         (* computed properties *)
         | (_, CreateObjWithComputedPropT { reason; value; tout_tvar = (tout_reason, tout_id) }) ->
-          (* TODO (jmbrown): We might be able to avoid the SetElemT flow and instead
-           * directly call whatever function SetElemT would call *)
           begin
             match Context.computed_property_state_for_id cx tout_id with
             | None -> Context.computed_property_add_lower_bound cx tout_id (reason_of_t l)
@@ -5343,12 +5328,14 @@ struct
           let obj =
             Obj_type.mk_with_proto cx reason ~sealed:false ~props:SMap.empty (ObjProtoT reason)
           in
-          rec_flow
+          elem_action_on_obj
             cx
             trace
-            ( obj,
-              SetElemT (unknown_use, reason, l, Assign, value, Some (OpenT (tout_reason, tout_id)))
-            )
+            ~use_op:unknown_use
+            l
+            obj
+            reason
+            (WriteElem (value, Some (OpenT (tout_reason, tout_id)), Assign))
         (**************************************************)
         (* array pattern can consume the rest of an array *)
         (**************************************************)
@@ -6952,8 +6939,7 @@ struct
     | (_, ObjTestProtoT _)
     | (_, OptionalChainT _)
     | (_, SentinelPropTestT _)
-    | (_, TestPropT _)
-    | (_, CreateObjWithComputedPropT _) ->
+    | (_, TestPropT _) ->
       false
     (* Error prevention: we should succeed because otherwise we'll hit
      a case with a wildcard on the LHS that raises an error, which in
@@ -6984,6 +6970,7 @@ struct
     | (_, ConstructorT _)
     | (_, CopyNamedExportsT _)
     | (_, CopyTypeExportsT _)
+    | (_, CreateObjWithComputedPropT _)
     | (_, DebugSleepT _)
     | (_, ElemT _)
     | (_, ExportNamedT _)
@@ -8960,6 +8947,22 @@ struct
             cx
             ~trace
             (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop))))
+
+  and elem_action_on_obj cx trace ~use_op l obj reason_op action =
+    let propref =
+      match l with
+      | DefT (reason_x, _, StrT (Literal (_, x))) ->
+        let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
+        Named (reason_prop, x)
+      | _ -> Computed l
+    in
+    match action with
+    | ReadElem t -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, propref, t))
+    | WriteElem (tin, tout, mode) ->
+      rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
+      Option.iter ~f:(fun t -> rec_flow_t cx trace (obj, t)) tout
+    | CallElem (reason_call, ft) ->
+      rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, None))
 
   and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t action =
     match get_obj_prop cx trace o propref reason_op with
