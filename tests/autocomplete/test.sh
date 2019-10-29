@@ -49,9 +49,17 @@ printf "this.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty this.js 8 10 < this.js
 
+printf "this2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this2.js 5 6 < this2.js
+
 printf "typeparams.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty typeparams.js 6 16 < typeparams.js
+
+printf "typeparams_function.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty typeparams_function.js 3 2 < typeparams_function.js
 
 printf "generics.js = "
 assert_ok \
