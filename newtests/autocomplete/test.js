@@ -1738,22 +1738,12 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("jsx2.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', 'jsx2.js', '7', '11'],
+      ['autocomplete', '--strip-root', '--json', 'jsx2.js', '7', '9'],
       'jsx2.js',
     ).stdout(
        `
          {
            "result": [
-             {
-               "name": "x",
-               "type": "number",
-               "func_details": null,
-               "path": "jsx2.js",
-               "line": 5,
-               "endline": 5,
-               "start": 37,
-               "end": 42
-             },
              {
                "name": "y",
                "type": "string",

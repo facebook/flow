@@ -8,7 +8,7 @@
 type autocomplete_type =
   | Acid of ALoc.t
   | Acmem of string * ALoc.t * Type.t
-  | Acjsx of string * ALoc.t * Type.t
+  | Acjsx of string * SSet.t * ALoc.t * Type.t
 
 let autocomplete_suffix = "AUTO332"
 
@@ -90,19 +90,32 @@ class searcher (from_trigger_character : bool) =
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
       let (_, Opening.{ name = component_name; attributes; _ }) = elt in
-      List.iter
-        (function
-          | Opening.Attribute
-              ( _,
-                {
-                  Attribute.name =
-                    Attribute.Identifier ((loc, _), { Identifier.name = attribute_name });
-                  _;
-                } )
-            when is_autocomplete attribute_name ->
-            this#find (Acjsx (attribute_name, loc, type_of_jsx_name component_name))
-          | _ -> ())
-        attributes;
+      let (used_attr_names, found) =
+        List.fold_left
+          (fun (used_attr_names, found) -> function
+            | Opening.Attribute
+                ( _,
+                  {
+                    Attribute.name =
+                      Attribute.Identifier ((loc, _), { Identifier.name = attribute_name });
+                    _;
+                  } ) ->
+              let found' =
+                match found with
+                | Some _ -> found
+                | None when is_autocomplete attribute_name ->
+                  Some (attribute_name, loc, type_of_jsx_name component_name)
+                | None -> None
+              in
+              (SSet.add attribute_name used_attr_names, found')
+            | _ -> (used_attr_names, found))
+          (SSet.empty, None)
+          attributes
+      in
+      Option.iter
+        ~f:(fun (attribute_name, loc, component_t) ->
+          this#find (Acjsx (attribute_name, used_attr_names, loc, component_t)))
+        found;
       super#jsx_opening_element elt
 
     (* we don't currently autocomplete object keys *)

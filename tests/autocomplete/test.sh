@@ -63,7 +63,7 @@ assert_ok \
 
 printf "jsx2.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx2.js 7 11 < jsx2.js
+  "$FLOW" autocomplete --strip-root --pretty jsx2.js 7 9 < jsx2.js
 
 printf "jsx3.js = "
 assert_ok \
@@ -76,6 +76,14 @@ assert_ok \
 printf "jsx-function-component.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty jsx-function-component.js 9 4 < jsx-function-component.js
+
+printf "jsx-function-component-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-function-component-2.js 9 11 < jsx-function-component-2.js
+
+printf "jsx-function-component-3.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-function-component-3.js 10 4 < jsx-function-component-3.js
 
 printf "jsx-abstract-component.js = "
 assert_ok \

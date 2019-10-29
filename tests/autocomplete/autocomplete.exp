@@ -1055,16 +1055,6 @@ jsx1.js = {
 jsx2.js = {
   "result":[
     {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx2.js",
-      "line":5,
-      "endline":5,
-      "start":37,
-      "end":42
-    },
-    {
       "name":"y",
       "type":"string",
       "func_details":null,
@@ -1151,6 +1141,34 @@ jsx-function-component.js = {
       "type":"string",
       "func_details":null,
       "path":"jsx-function-component.js",
+      "line":5,
+      "endline":5,
+      "start":39,
+      "end":44
+    }
+  ]
+}
+jsx-function-component-2.js = {
+  "result":[
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"jsx-function-component-2.js",
+      "line":5,
+      "endline":5,
+      "start":28,
+      "end":33
+    }
+  ]
+}
+jsx-function-component-3.js = {
+  "result":[
+    {
+      "name":"y",
+      "type":"string",
+      "func_details":null,
+      "path":"jsx-function-component-3.js",
       "line":5,
       "endline":5,
       "start":39,

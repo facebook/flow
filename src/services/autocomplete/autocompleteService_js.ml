@@ -373,7 +373,8 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig typed_ast =
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger docblock =
+let autocomplete_jsx
+    ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ac_trigger docblock =
   Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let props_object =
@@ -383,8 +384,8 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger
     in
     (* The `children` prop (if it exists) is set with the contents between the opening and closing
      * elements, rather than through an explicit `children={...}` attribute, so we should exclude
-     * it from the autocomplete results. *)
-    let exclude_keys = SSet.singleton "children" in
+     * it from the autocomplete results, along with already used attribute names. *)
+    let exclude_keys = SSet.add "children" used_attr_names in
     (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
     autocomplete_member
       ~reader
@@ -417,8 +418,18 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character doc
       ac_loc
       trigger_character
       docblock
-  | Some (Acjsx (ac_name, ac_loc, cls)) ->
-    autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc trigger_character docblock
+  | Some (Acjsx (ac_name, used_attr_names, ac_loc, cls)) ->
+    autocomplete_jsx
+      ~reader
+      cx
+      file_sig
+      typed_ast
+      cls
+      ac_name
+      ~used_attr_names
+      ac_loc
+      trigger_character
+      docblock
   | None ->
     let json_data_to_log =
       Hh_json.(
