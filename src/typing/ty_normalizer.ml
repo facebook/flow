@@ -1168,14 +1168,23 @@ end = struct
         | OpaqueT (r, o) -> opaque_type_t ~env r o ps
         | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
       in
+      let type_param env r t =
+        match desc_of_reason r with
+        | RType name ->
+          let symbol = symbol_from_reason env r name in
+          return (Ty.named_alias symbol)
+        | RThisType -> type__ ~env t
+        | desc ->
+          terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
+      in
       fun ~env r kind t ps ->
         match kind with
         | TypeAliasKind -> local env t ps
         | ImportClassKind -> class_t ~env t ps
         | ImportTypeofKind -> import_typeof env r t ps
         | OpaqueKind -> opaque env t ps
+        | TypeParamKind -> type_param env r t
         (* The following cases are not common *)
-        | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"typeparam" (Some t)
         | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t))
 
   and exact_t ~env t = type__ ~env t >>| Ty.mk_exact
