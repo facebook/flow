@@ -12,14 +12,22 @@ open Parsing_heaps_utils
 
 let add_autocomplete_token contents line column =
   let line = line - 1 in
-  Line.transform_nth contents line (fun line_str ->
-      let length = String.length line_str in
-      if length >= column then
-        let start = String.sub line_str 0 column in
-        let end_ = String.sub line_str column (length - column) in
-        start ^ Autocomplete_js.autocomplete_suffix ^ end_
-      else
-        line_str)
+  let contents_with_token =
+    Line.transform_nth contents line (fun line_str ->
+        let length = String.length line_str in
+        if length >= column then
+          let start = String.sub line_str 0 column in
+          let end_ = String.sub line_str column (length - column) in
+          start ^ Autocomplete_js.autocomplete_suffix ^ end_
+        else
+          line_str)
+  in
+  let f (_, x, _) = x in
+  let default = "" in
+  ( contents_with_token,
+    Option.value_map ~f ~default (Line.split_nth contents_with_token (line - 1))
+    ^ Option.value_map ~f ~default (Line.split_nth contents_with_token line)
+    ^ Option.value_map ~f ~default (Line.split_nth contents_with_token (line + 1)) )
 
 (* the autocomplete token inserts `suffix_len` characters, which are included
  * in `ac_loc` returned by `Autocomplete_js`. They need to be removed before
@@ -178,7 +186,8 @@ let autocomplete_member
     ac_name
     ac_loc
     ac_trigger
-    docblock =
+    docblock
+    ~broader_context =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let result = Members.extract ~exclude_proto_members cx this in
   Hh_json.(
@@ -204,6 +213,7 @@ let autocomplete_member
           ("docblock", Docblock.json_of_docblock docblock);
           ("result", JSON_String result_str);
           ("type", Debug_js.json_of_t ~depth:3 cx t);
+          ("broader_context", JSON_String broader_context);
         ]
     in
     match Members.to_command_result result with
@@ -246,7 +256,7 @@ let autocomplete_member
       Ok (result, Some json_data_to_log))
 
 (* env is all visible bound names at cursor *)
-let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
+let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast ~broader_context =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let (result, errors) =
     SMap.fold
@@ -309,6 +319,7 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
             JSON_Array
               (Core_list.rev_map errors ~f:(fun err ->
                    JSON_String (Ty_normalizer.error_to_string err))) );
+          ("broader_context", JSON_String broader_context);
         ])
   in
   Ok (result, Some json_data_to_log)
@@ -317,7 +328,8 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast =
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger docblock =
+let autocomplete_jsx
+    ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger docblock ~broader_context =
   Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let props_object =
@@ -342,13 +354,15 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc ac_trigger
       ac_name
       ac_loc
       ac_trigger
-      docblock)
+      docblock
+      ~broader_context)
 
-let autocomplete_get_results ~reader cx file_sig typed_ast state trigger_character docblock =
+let autocomplete_get_results
+    ~reader cx file_sig typed_ast state trigger_character docblock ~broader_context =
   let file_sig = File_sig.abstractify_locs file_sig in
   match !state with
   | Some { ac_loc; ac_type = Acid env; _ } ->
-    autocomplete_id ~reader cx ac_loc trigger_character file_sig env typed_ast
+    autocomplete_id ~reader cx ac_loc trigger_character file_sig env typed_ast ~broader_context
   | Some { ac_name; ac_loc; ac_type = Acmem this } ->
     autocomplete_member
       ~reader
@@ -362,8 +376,19 @@ let autocomplete_get_results ~reader cx file_sig typed_ast state trigger_charact
       ac_loc
       trigger_character
       docblock
+      ~broader_context
   | Some { ac_name; ac_loc; ac_type = Acjsx cls } ->
-    autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ac_loc trigger_character docblock
+    autocomplete_jsx
+      ~reader
+      cx
+      file_sig
+      typed_ast
+      cls
+      ac_name
+      ac_loc
+      trigger_character
+      docblock
+      ~broader_context
   | Some { ac_name = _; ac_loc = _; ac_type = Ackey } ->
     let json_data_to_log =
       Hh_json.(
@@ -381,6 +406,7 @@ let autocomplete_get_results ~reader cx file_sig typed_ast state trigger_charact
           [
             ("ac_type", JSON_String "None");
             ("ac_trigger", JSON_String (Option.value trigger_character ~default:"None"));
+            ("broader_context", JSON_String broader_context);
           ])
     in
     Ok ([], Some json_data_to_log)

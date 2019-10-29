@@ -13,11 +13,12 @@ val autocomplete_get_results :
   Autocomplete_js.autocomplete_state option ref ->
   string option ->
   Docblock.t ->
+  broader_context:string ->
   ( ServerProt.Response.complete_autocomplete_result list * Hh_json.json option,
     string * Hh_json.json option )
   result
 
-val add_autocomplete_token : string -> int -> int -> string
+val add_autocomplete_token : string -> int -> int -> string * string
 
 val autocomplete_response_to_json :
   strip_root:Path.t option ->
