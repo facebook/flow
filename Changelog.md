@@ -1,8 +1,9 @@
-### 0.110.2
+### 0.110.3
 
 Bug fixes:
 * Fixed "Go To Definition" on certain kinds of variables
 * Fixed (internal-only) logging that was classifying some "Go To Definition" responses as errors, when there was no valid definition to jump to, like on keywords or whitespace.
+* Added (internal-only) logging of the context around the cursor during autocomplete requests to diagnose incorrect results.
 
 ### 0.110.1
 
