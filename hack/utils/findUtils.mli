@@ -9,7 +9,7 @@
 
 val is_dot_file : string -> bool
 
-val is_php : string -> bool
+val is_hack : string -> bool
 
 val has_ancestor : string -> string -> bool
 
