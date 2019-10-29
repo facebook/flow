@@ -792,6 +792,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             else
               T_LCURLY );
           let (properties, inexact) =
+            let env = with_no_anon_function_type false env in
             properties ~is_class ~allow_inexact ~exact ~allow_spread env ([], false)
           in
           Expect.token
