@@ -134,7 +134,7 @@ let lsp_completion_of_type =
     | Mu _ ->
       Some Lsp.Completion.Variable)
 
-let autocomplete_create_result ?(show_func_details = true) (name, loc) (ty, ty_loc) =
+let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, loc) (ty, ty_loc) =
   let res_ty = (ty_loc, Ty_printer.string_of_t ~with_comments:false ty) in
   let res_kind = lsp_completion_of_type ty in
   Ty.(
@@ -161,10 +161,19 @@ let autocomplete_create_result ?(show_func_details = true) (name, loc) (ty, ty_l
         res_loc = loc;
         res_kind;
         res_name = name;
+        res_insert_text = insert_text;
         res_ty;
         func_details = Some { param_tys; return_ty = return };
       }
-    | _ -> { res_loc = loc; res_kind; res_name = name; res_ty; func_details = None })
+    | _ ->
+      {
+        res_loc = loc;
+        res_kind;
+        res_name = name;
+        res_insert_text = insert_text;
+        res_ty;
+        func_details = None;
+      })
 
 let autocomplete_is_valid_member key =
   (* This is really for being better safe than sorry. It shouldn't happen. *)
@@ -194,6 +203,7 @@ let autocomplete_member
     ~exclude_proto_members
     ?(exclude_keys = SSet.empty)
     ~ac_type
+    ?compute_insert_text
     cx
     file_sig
     typed_ast
@@ -252,7 +262,11 @@ let autocomplete_member
         |> Ty_normalizer.from_types ~options:ty_normalizer_options ~genv
         |> Core_list.rev_filter_map ~f:(function
                | ((name, ty_loc), Ok ty) ->
-                 Some (autocomplete_create_result (name, ac_loc) (ty, ty_loc))
+                 Some
+                   (autocomplete_create_result
+                      ?insert_text:(Option.map ~f:(fun f -> f name) compute_insert_text)
+                      (name, ac_loc)
+                      (ty, ty_loc))
                | _ -> None)
       in
       Ok (result, Some json_data_to_log))
@@ -418,6 +432,7 @@ let autocomplete_jsx
       ~exclude_proto_members:true
       ~exclude_keys
       ~ac_type:"Acjsx"
+      ~compute_insert_text:(fun name -> name ^ "=")
       cx
       file_sig
       typed_ast

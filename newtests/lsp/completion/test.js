@@ -213,6 +213,13 @@ export default suite(
                   detail: 'number',
                   inlineDetail: 'number',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 12, character: 4},
+                      end: {line: 12, character: 4},
+                    },
+                    newText: 'a=',
+                  },
                 },
               ],
             };
@@ -306,6 +313,13 @@ export default suite(
                   detail: 'number',
                   inlineDetail: 'number',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 12, character: 4},
+                      end: {line: 12, character: 4},
+                    },
+                    newText: 'a=',
+                  },
                 },
               ],
             };
@@ -336,6 +350,13 @@ export default suite(
                     detail: 'number',
                     inlineDetail: 'number',
                     insertTextFormat: 1,
+                    textEdit: {
+                      range: {
+                        start: {line: 13, character: 4},
+                        end: {line: 13, character: 4},
+                      },
+                      newText: 'a=',
+                    },
                   },
                 ],
               };
@@ -370,6 +391,13 @@ export default suite(
                   detail: 'number',
                   inlineDetail: 'number',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 4},
+                      end: {line: 13, character: 4},
+                    },
+                    newText: 'a=',
+                  },
                 },
               ],
             };

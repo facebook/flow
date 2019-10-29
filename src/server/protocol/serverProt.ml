@@ -219,6 +219,7 @@ module Response = struct
     res_ty: Loc.t * string;
     res_kind: Lsp.Completion.completionItemKind option;
     res_name: string;
+    res_insert_text: string option;
     func_details: func_details_result option;
   }
 
