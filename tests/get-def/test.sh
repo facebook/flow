@@ -132,3 +132,6 @@ printf "property access on the arg to the idx callback = "
 assert_ok "$FLOW" get-def idx.js 12 25 --strip-root --pretty
 printf "nested property access on the arg to the idx callback = "
 assert_ok "$FLOW" get-def idx.js 12 29 --strip-root --pretty
+
+printf "global (builtin) variable = "
+assert_ok "$FLOW" get-def global.js 3 3 --strip-root --pretty

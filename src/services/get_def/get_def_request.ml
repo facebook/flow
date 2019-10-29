@@ -18,7 +18,11 @@ type member_info = {
 
 type t =
   | Location of Loc.t
-  | Identifier of string * ALoc.t
+  | Identifier of {
+      name: string;
+      loc: ALoc.t;
+      type_: Type.t;
+    }
   | Type of Type.t
   | Member of member_info
   | Require of (ALoc.t * string) * ALoc.t

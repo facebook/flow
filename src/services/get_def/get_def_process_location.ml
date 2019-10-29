@@ -93,12 +93,14 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
         in
         this#find_loc result
 
-    method! t_identifier (((loc, _t), { Flow_ast.Identifier.name; _ }) as id) =
-      if this#covers_target loc then this#find_loc (Get_def_request.Identifier (name, loc));
+    method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as id) =
+      if this#covers_target loc then
+        this#find_loc (Get_def_request.Identifier { name; loc; type_ });
       super#t_identifier id
 
-    method! jsx_identifier (((loc, _t), { Flow_ast.JSX.Identifier.name }) as id) =
-      if this#covers_target loc then this#find_loc (Get_def_request.Identifier (name, loc));
+    method! jsx_identifier (((loc, type_), { Flow_ast.JSX.Identifier.name }) as id) =
+      if this#covers_target loc then
+        this#find_loc (Get_def_request.Identifier { name; loc; type_ });
       super#jsx_identifier id
 
     method! pattern ?kind (((_, t), p) as pat) =

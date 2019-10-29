@@ -142,7 +142,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
       | Some req -> Chain req
       | None -> Done Bad_loc
     end
-  | Get_def_request.Identifier (_, aloc) ->
+  | Get_def_request.Identifier { name = _; loc = aloc; type_ } ->
     let loc = loc_of_aloc ~reader aloc in
     let ast = (new type_killer reader)#program typed_ast in
     let scope_info = Scope_builder.program ast in
@@ -155,7 +155,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
           let def = Scope_api.With_Loc.def_of_use scope_info use in
           let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
           resolve_special_cases ~reader ~is_legit_require ~typed_ast def_loc
-        | [] -> Done (Def_error "Scope builder found no matching identifiers")
+        | [] -> Chain (Get_def_request.Type type_)
         | _ :: _ :: _ -> Done (Def_error "Scope builder found multiple matching identifiers")
       end)
   (*
