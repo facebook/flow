@@ -41,3 +41,4 @@ destructuring a shadow prop = {"path":"objects.js","line":11,"endline":11,"start
 bogus array destructuring of an object = {"path":"","line":0,"endline":0,"start":1,"end":0}
 property access on the arg to the idx callback = {"path":"idx.js","line":6,"endline":6,"start":3,"end":5}
 nested property access on the arg to the idx callback = {"path":"idx.js","line":7,"endline":7,"start":5,"end":7}
+global (builtin) variable = {"path":"[LIB] prelude.js","line":23,"endline":23,"start":15,"end":19}
