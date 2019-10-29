@@ -5,8 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type ident_type =
+  | NormalIdent
+  | JSXIdent
+
 type autocomplete_type =
-  | Acid of ALoc.t
+  | Acid of ALoc.t * ident_type
   | Acmem of string * ALoc.t * Type.t
   | Acjsx of string * SSet.t * ALoc.t * Type.t
 
@@ -45,11 +49,11 @@ class searcher (from_trigger_character : bool) =
       | _ -> raise (Found x)
 
     method! t_identifier (((loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then this#find (Acid loc);
+      if is_autocomplete name then this#find (Acid (loc, NormalIdent));
       ident
 
     method! jsx_identifier (((loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then this#find (Acid loc);
+      if is_autocomplete name then this#find (Acid (loc, JSXIdent));
       ident
 
     method! member expr =

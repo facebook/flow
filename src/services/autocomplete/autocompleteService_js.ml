@@ -126,12 +126,12 @@ let lsp_completion_of_type =
     | Mu _ ->
       Some Lsp.Completion.Variable)
 
-let autocomplete_create_result (name, loc) (ty, ty_loc) =
+let autocomplete_create_result ?(show_func_details = true) (name, loc) (ty, ty_loc) =
   let res_ty = (ty_loc, Ty_printer.string_of_t ~with_comments:false ty) in
   let res_kind = lsp_completion_of_type ty in
   Ty.(
     match ty with
-    | Fun { fun_params; fun_rest_param; fun_return; _ } ->
+    | Fun { fun_params; fun_rest_param; fun_return; _ } when show_func_details ->
       let param_tys =
         Core_list.map
           ~f:(fun (n, t, fp) ->
@@ -287,7 +287,7 @@ let collect_types ~reader locs typed_ast =
   collector#collected_types
 
 (* env is all visible bound names at cursor *)
-let autocomplete_id ~reader cx ac_loc ac_trigger file_sig typed_ast =
+let autocomplete_id ~reader cx ac_loc ac_trigger ~id_type file_sig typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
   let open Scope_api.With_Loc in
@@ -341,7 +341,12 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig typed_ast =
       (fun name loc (results, errors) ->
         match normalize_type (LocMap.find loc types) with
         | Ok ty ->
-          let result = autocomplete_create_result (name, ac_loc) (ty, loc) in
+          let result =
+            autocomplete_create_result
+              ~show_func_details:(id_type <> JSXIdent)
+              (name, ac_loc)
+              (ty, loc)
+          in
           (result :: results, errors)
         | Error error -> (results, error :: errors))
       names_and_locs
@@ -404,7 +409,8 @@ let autocomplete_jsx
 let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character docblock =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~typed_ast with
-  | Some (Acid ac_loc) -> autocomplete_id ~reader cx ac_loc trigger_character file_sig typed_ast
+  | Some (Acid (ac_loc, id_type)) ->
+    autocomplete_id ~reader cx ac_loc trigger_character ~id_type file_sig typed_ast
   | Some (Acmem (ac_name, ac_loc, this)) ->
     autocomplete_member
       ~reader

@@ -1095,7 +1095,7 @@ jsx4.js = {
     {
       "name":"Computerization",
       "type":"(props: empty) => void",
-      "func_details":{"return_type":"void","params":[{"name":"props","type":"empty"}]},
+      "func_details":null,
       "path":"jsx4.js",
       "line":4,
       "endline":4,
@@ -1105,7 +1105,7 @@ jsx4.js = {
     {
       "name":"Compressibility",
       "type":"(props: empty) => void",
-      "func_details":{"return_type":"void","params":[{"name":"props","type":"empty"}]},
+      "func_details":null,
       "path":"jsx4.js",
       "line":5,
       "endline":5,
