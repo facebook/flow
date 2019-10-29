@@ -5294,9 +5294,9 @@ struct
           ()
         (* computed properties *)
         | (_, CreateObjWithComputedPropT { reason; value; tout_tvar = (tout_reason, tout_id) }) ->
-          begin
+          let on_named_prop reason_named =
             match Context.computed_property_state_for_id cx tout_id with
-            | None -> Context.computed_property_add_lower_bound cx tout_id (reason_of_t l)
+            | None -> Context.computed_property_add_lower_bound cx tout_id reason_named
             | Some (Context.ResolvedOnce existing_lower_bound_reason) ->
               Context.computed_property_add_multiple_lower_bounds cx tout_id;
               add_output
@@ -5305,11 +5305,11 @@ struct
                 (Error_message.EComputedPropertyWithMultipleLowerBounds
                    {
                      existing_lower_bound_reason;
-                     new_lower_bound_reason = reason_of_t l;
+                     new_lower_bound_reason = reason_named;
                      computed_property_reason = reason;
                    })
             | Some Context.ResolvedMultipleTimes -> ()
-          end;
+          in
           let obj =
             Obj_type.mk_with_proto cx reason ~sealed:false ~props:SMap.empty (ObjProtoT reason)
           in
@@ -5317,6 +5317,7 @@ struct
             cx
             trace
             ~use_op:unknown_use
+            ~on_named_prop
             l
             obj
             reason
@@ -8948,10 +8949,12 @@ struct
             ~trace
             (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop))))
 
-  and elem_action_on_obj cx trace ~use_op l obj reason_op action =
+  and elem_action_on_obj cx trace ~use_op ?on_named_prop l obj reason_op action =
     let propref =
       match l with
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
+        let reason_named = replace_desc_reason (RStringLit x) reason_x in
+        Option.iter ~f:(fun f -> f reason_named) on_named_prop;
         let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
         Named (reason_prop, x)
       | _ -> Computed l
