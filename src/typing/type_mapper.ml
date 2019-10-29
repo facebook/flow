@@ -1229,7 +1229,7 @@ class virtual ['a] t_with_uses =
           t
         else
           CopyTypeExportsT (r, t1', t2')
-      | ExportNamedT (r, skip, tmap, export_kind, t') ->
+      | ExportNamedT (r, tmap, export_kind, t') ->
         let map_loc_type_pair ((loc, t) as orig) =
           let t' = self#type_ cx map_cx t in
           if t == t' then
@@ -1242,14 +1242,14 @@ class virtual ['a] t_with_uses =
         if tmap' == tmap && t'' == t' then
           t
         else
-          ExportNamedT (r, skip, tmap', export_kind, t'')
-      | ExportTypeT (r, skip, name, t1, t2) ->
+          ExportNamedT (r, tmap', export_kind, t'')
+      | ExportTypeT (r, name, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
-          ExportTypeT (r, skip, name, t1', t2')
+          ExportTypeT (r, name, t1', t2')
       | AssertExportIsTypeT (r, name, t1) ->
         let t1' = self#type_ cx map_cx t1 in
         if t1' == t1 then

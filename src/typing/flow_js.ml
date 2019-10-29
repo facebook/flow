@@ -1265,28 +1265,28 @@ struct
        that are not @flow, so the rules have to deal with `any`. *)
 
         (* util that grows a module by adding named exports from a given map *)
-        | (ModuleT (_, exports, _), ExportNamedT (reason, skip_dupes, tmap, export_kind, t_out)) ->
-          tmap
-          |> SMap.iter (fun name (loc, t) ->
-                 if skip_dupes && Context.has_export cx exports.exports_tmap name then
-                   ()
-                 else
-                   let t' =
-                     match export_kind with
-                     | ExportValue
-                     (* If it's a re-export, we can assume that the appropriate export checks have been
-                      * applied in the original module. *)
-                     
-                     | ReExport ->
-                       t
-                     (* If it's of the form `export type` then check to make sure it's actually a type. *)
-                     | ExportType ->
-                       let t' = Tvar.mk cx (reason_of_t t) in
-                       rec_flow cx trace (t, AssertExportIsTypeT (reason, name, t'));
-                       t'
-                   in
-                   Context.set_export cx exports.exports_tmap name (loc, t'));
-          rec_flow_t cx trace (l, t_out)
+        | (ModuleT (_, { exports_tmap; _ }, _), ExportNamedT (reason, tmap, export_kind, tout)) ->
+          let add_export name export acc =
+            let export' =
+              match export_kind with
+              | ExportValue -> export
+              | ReExport ->
+                (* Re-exports do not overwrite named exports from the local module. Further, they do
+                 * not need to be checked, as the original module has already performed the check. *)
+                SMap.get name acc |> Option.value ~default:export
+              | ExportType ->
+                (* If it's of the form `export type` then check to make sure it's actually a type. *)
+                let (loc, t) = export in
+                let t' = Tvar.mk cx (reason_of_t t) in
+                rec_flow cx trace (t, AssertExportIsTypeT (reason, name, t'));
+                (loc, t')
+            in
+            SMap.add name export' acc
+          in
+          Context.find_exports cx exports_tmap
+          |> SMap.fold add_export tmap
+          |> Context.add_export_map cx exports_tmap;
+          rec_flow_t cx trace (l, tout)
         | (_, AssertExportIsTypeT (_, name, t_out)) ->
           if is_type l then
             rec_flow_t cx trace (l, t_out)
@@ -1299,11 +1299,7 @@ struct
         the target and the imported module as the source. *)
         | (ModuleT (_, source_exports, _), CopyNamedExportsT (reason, target_module_t, t_out)) ->
           let source_tmap = Context.find_exports cx source_exports.exports_tmap in
-          rec_flow
-            cx
-            trace
-            ( target_module_t,
-              ExportNamedT (reason, (*skip_dupes*) true, source_tmap, ReExport, t_out) )
+          rec_flow cx trace (target_module_t, ExportNamedT (reason, source_tmap, ReExport, t_out))
         (*
          * Copy only the type exports from a source module into a target module.
          * Used to implement `export type * from ...`.
@@ -1319,7 +1315,7 @@ struct
                     rec_flow
                       cx
                       trace
-                      (export_t, ExportTypeT (reason, true, export_name, target_module_t, t))))
+                      (export_t, ExportTypeT (reason, export_name, target_module_t, t))))
               source_exports
               target_module_t
           in
@@ -1333,7 +1329,7 @@ struct
          * exports one type at a time and it takes the type to be exported as a
          * lower (so that the type can be filtered post-resolution).
          *)
-        | (l, ExportTypeT (reason, skip_dupes, export_name, target_module_t, t_out)) ->
+        | (l, ExportTypeT (reason, export_name, target_module_t, t_out)) ->
           let is_type_export =
             match l with
             | DefT (_, _, ObjT _) when export_name = "default" -> true
@@ -1346,7 +1342,6 @@ struct
               ( target_module_t,
                 ExportNamedT
                   ( reason,
-                    skip_dupes,
                     (* TODO we may want to add location information here *)
                     SMap.singleton export_name (None, l),
                     ReExport,
@@ -1392,8 +1387,6 @@ struct
             ( module_t,
               ExportNamedT
                 ( reason,
-                  false,
-                  (* skip_dupes *)
                   Properties.extract_named_exports (Context.find_props cx props_tmap),
                   ExportValue,
                   t_out ) )
@@ -1415,28 +1408,14 @@ struct
                 rec_flow
                   cx
                   trace
-                  ( module_t,
-                    ExportNamedT
-                      ( reason,
-                        false,
-                        (* skip_dupes *)
-                        extract_named_exports own_props,
-                        ExportValue,
-                        t ) ))
+                  (module_t, ExportNamedT (reason, extract_named_exports own_props, ExportValue, t)))
           in
           (* Copy proto props *)
           (* TODO: own props should take precedence *)
           rec_flow
             cx
             trace
-            ( module_t,
-              ExportNamedT
-                ( reason,
-                  false,
-                  (* skip_dupes *)
-                  extract_named_exports proto_props,
-                  ExportValue,
-                  t_out ) )
+            (module_t, ExportNamedT (reason, extract_named_exports proto_props, ExportValue, t_out))
         (* If the module is exporting any or Object, then we allow any named
          * import
          *)

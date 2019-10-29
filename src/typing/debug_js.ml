@@ -613,15 +613,10 @@ and _json_of_use_t_impl json_cx t =
           ("target_module_t", _json_of_t json_cx target_module_t);
           ("t_out", _json_of_t json_cx t_out);
         ]
-      | ExportNamedT (_, skip_dupes, tmap, _export_kind, t_out) ->
+      | ExportNamedT (_, tmap, _export_kind, t_out) ->
+        [("tmap", json_of_loc_tmap json_cx tmap); ("t_out", _json_of_t json_cx t_out)]
+      | ExportTypeT (_, name, t, t_out) ->
         [
-          ("skip_duplicates", JSON_Bool skip_dupes);
-          ("tmap", json_of_loc_tmap json_cx tmap);
-          ("t_out", _json_of_t json_cx t_out);
-        ]
-      | ExportTypeT (_, skip_dupes, name, t, t_out) ->
-        [
-          ("skip_duplicates", JSON_Bool skip_dupes);
           ("name", JSON_String name);
           ("tmap", _json_of_t json_cx t);
           ("t_out", _json_of_t json_cx t_out);
@@ -2081,7 +2076,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | DebugSleepT _ -> p t
     | ElemT _ -> p t
     | EqT (_, _, arg) -> p ~extra:(kid arg) t
-    | ExportNamedT (_, _, tmap, _export_kind, arg) ->
+    | ExportNamedT (_, tmap, _export_kind, arg) ->
       p
         t
         ~extra:

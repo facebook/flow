@@ -389,14 +389,14 @@ class ['a] t =
         acc
       | CopyNamedExportsT (_, t, tout)
       | CopyTypeExportsT (_, t, tout)
-      | ExportTypeT (_, _, _, t, tout) ->
+      | ExportTypeT (_, _, t, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#type_ cx pole_TODO acc tout in
         acc
       | AssertExportIsTypeT (_, _, tout) ->
         let acc = self#type_ cx pole_TODO acc tout in
         acc
-      | ExportNamedT (_, _, ts, _, tout) ->
+      | ExportNamedT (_, ts, _, tout) ->
         let visit_pair acc (_loc, t) = self#type_ cx pole_TODO acc t in
         let acc = self#smap visit_pair acc ts in
         let acc = self#type_ cx pole_TODO acc tout in

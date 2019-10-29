@@ -202,7 +202,7 @@ let mk_module_t =
     in
     let export_named cx reason kind named module_t =
       Tvar.mk_where cx reason (fun tout ->
-          Flow.flow cx (module_t, ExportNamedT (reason, false, named, kind, tout)))
+          Flow.flow cx (module_t, ExportNamedT (reason, named, kind, tout)))
     in
     fun cx reason ->
       let info = Context.module_info cx in
