@@ -30,6 +30,8 @@ let hh_readdir path : (string * dt_kind) list =
       match (name, kind) with
       | (".", _) -> None
       | ("..", _) -> None
+      | (".git", _) -> None
+      | (".hg", _) -> None
       (* values from `man dirent` *)
       | (_, 4) -> Some (name, DT_DIR)
       | (_, 8) -> Some (name, DT_REG)
