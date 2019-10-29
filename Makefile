@@ -180,6 +180,7 @@ NATIVE_C_FILES=\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
   src/services/saved_state/saved_state_compression_stubs.c\
+  hack/find/hh_readdir.c\
   hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
   hack/utils/core/get_build_id.c\
