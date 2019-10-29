@@ -18,7 +18,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
 
     method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
-    method find_loc x = raise (Found x)
+    method find_loc : 'a. Get_def_request.t -> 'a = (fun x -> raise (Found x))
 
     method! import_declaration import_loc decl =
       Flow_ast.Statement.ImportDeclaration.(
@@ -131,23 +131,21 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
       super#t_pattern_identifier ?kind ((loc, t), name)
 
     method! expression ((loc, t), expr) =
-      ( if this#covers_target loc then
-        match expr with
-        | Flow_ast.Expression.(
-            Call
-              {
-                Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
-                arguments =
-                  [
-                    Expression
-                      ((source_loc, _), Literal Flow_ast.Literal.{ value = String module_name; _ });
-                  ];
-                _;
-              })
-          when is_legit_require source_loc ->
-          this#find_loc (Get_def_request.Require ((source_loc, module_name), loc))
-        | _ -> () );
-      super#expression ((loc, t), expr)
+      match expr with
+      | Flow_ast.Expression.(
+          Call
+            {
+              Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
+              arguments =
+                [
+                  Expression
+                    ((source_loc, _), Literal Flow_ast.Literal.{ value = String module_name; _ });
+                ];
+              _;
+            })
+        when this#covers_target loc && is_legit_require source_loc ->
+        this#find_loc (Get_def_request.Require ((source_loc, module_name), loc))
+      | _ -> super#expression ((loc, t), expr)
   end
 
 let process_location ~typed_ast ~is_legit_require loc =
