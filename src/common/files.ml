@@ -37,7 +37,15 @@ let module_resource_exts options = options.module_resource_exts
 
 let node_resolver_dirnames options = options.node_resolver_dirnames
 
-let node_modules_containers = ref SSet.empty
+(* During node module resolution, we need to look for node_modules/ directories
+ * as we walk up the path. But checking each directory for them would be expensive.
+ * So instead we memorize which directories contain node_modules/ directories.
+ *
+ * This is complicated by the node_resolver_dirnames option, which means
+ * node_modules/ directories might go by other names. So we need to keep track
+ * of which directories contain node_modules/ directories and which aliases we've
+ * seen *)
+let node_modules_containers = ref SMap.empty
 
 let global_file_name = "(global)"
 
@@ -208,7 +216,12 @@ let make_next_files_and_symlinks
             process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
           if node_module_filter file then
-            node_modules_containers := SSet.add (Filename.dirname file) !node_modules_containers;
+            node_modules_containers :=
+              SMap.add
+                ~combine:SSet.union
+                (Filename.dirname file)
+                (file |> Filename.basename |> SSet.singleton)
+                !node_modules_containers;
           let dirfiles = Array.to_list @@ try_readdir path in
           let symlinks =
             (* accumulates all of the symlinks that point to

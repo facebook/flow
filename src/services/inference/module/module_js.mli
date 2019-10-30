@@ -32,7 +32,7 @@ type resolution_acc = {
 val imported_module :
   options:Options.t ->
   reader:Abstract_state_reader.t ->
-  node_modules_containers:SSet.t ->
+  node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
   ALoc.t Nel.t ->
   ?resolution_acc:resolution_acc ->
@@ -102,7 +102,7 @@ val add_parsed_resolved_requires :
   mutator:Module_heaps.Resolved_requires_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
-  node_modules_containers:SSet.t ->
+  node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
   bool * Flow_error.ErrorSet.t
 

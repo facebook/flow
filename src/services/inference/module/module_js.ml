@@ -125,7 +125,7 @@ module type MODULE_SYSTEM = sig
   val imported_module :
     options:Options.t ->
     reader:Abstract_state_reader.t ->
-    SSet.t ->
+    SSet.t SMap.t ->
     File_key.t ->
     ALoc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
@@ -321,20 +321,23 @@ module Node = struct
     lazy_seq
       [
         lazy
-          ( if SSet.mem dir node_modules_containers then
+          (match SMap.get dir node_modules_containers with
+          | Some existing_node_modules_dirs ->
             lazy_seq
               ( Files.node_resolver_dirnames file_options
               |> Core_list.map ~f:(fun dirname ->
                      lazy
-                       (resolve_relative
-                          ~options
-                          ~reader
-                          loc
-                          ?resolution_acc
-                          dir
-                          (spf "%s%s%s" dirname Filename.dir_sep r))) )
-          else
-            None );
+                       ( if SSet.mem dirname existing_node_modules_dirs then
+                         resolve_relative
+                           ~options
+                           ~reader
+                           loc
+                           ?resolution_acc
+                           dir
+                           (spf "%s%s%s" dirname Filename.dir_sep r)
+                       else
+                         None )) )
+          | None -> None);
         lazy
           (let parent_dir = Filename.dirname dir in
            if dir = parent_dir then

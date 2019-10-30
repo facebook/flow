@@ -37,7 +37,7 @@ val module_resource_exts : options -> SSet.t
 
 val node_resolver_dirnames : options -> string list
 
-val node_modules_containers : SSet.t ref
+val node_modules_containers : SSet.t SMap.t ref
 
 val global_file_name : string
 

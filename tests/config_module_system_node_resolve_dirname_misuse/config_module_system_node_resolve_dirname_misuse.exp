@@ -1,1 +1,10 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------- subdir/test.js:3:17
+
+Cannot resolve module `foo/bar`.
+
+   3| import bar from 'foo/bar';
+                      ^^^^^^^^^
+
+
+
+Found 1 error
