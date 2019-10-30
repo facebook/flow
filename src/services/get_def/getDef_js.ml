@@ -255,11 +255,6 @@ let get_def ~options ~reader cx file_sig typed_ast requested_loc =
       let request_history = Core_list.rev_map ~f:gdr_to_string rev_req_history in
       let res =
         match res with
-        | Def loc ->
-          if Loc.source loc = Loc.source requested_loc && Reason.in_range requested_loc loc then
-            Bad_loc
-          else
-            res
         | Def_error msg ->
           (match recover_intermediate_result rev_req_history with
           | Some recovered_loc -> Partial (recovered_loc, msg)
