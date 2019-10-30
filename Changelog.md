@@ -6,10 +6,11 @@ Likely to cause new Flow errors:
 
 New features:
 * Introduced an experimental flag (`experimental.minimal_merge`) that speeds up rechecks when the experimental types-first mode is in use. This flag will be turned on by default and then removed in future releases.
-* Turned on `experimental.allow_skip_direct_dependents` by default. The flag will be removed next release. This flag speeds up rechecks when the experimental types-first mode is in use. 
+* Turned on `experimental.allow_skip_direct_dependents` by default. The flag will be removed next release. This flag speeds up rechecks when the experimental types-first mode is in use.
 
 Notable bug fixes:
 * Fixed a bug where the ocaml representation of union types caused crashes in rare scenarios
+* Fixed a bug in node module resolution which allowed `module.system.node.resolve_dirname=.`. For those who relied on this bug to import modules using root-relative paths, you can now use `module.system.node.allow_root_relative=true`. See [#8156](https://github.com/facebook/flow/issues/8156) for more details.
 
 Misc:
 * Add getElementById to DocumentFragment
