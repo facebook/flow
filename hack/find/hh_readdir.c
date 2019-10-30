@@ -17,6 +17,16 @@
 #include <caml/fail.h>
 #include <caml/unixsupport.h>
 
+#ifdef __APPLE__
+/* On glibc platforms (including mingw32) this is conditionally defined
+ * as appropriate; MacOS doesn't have glibc, but does have d_type, so just
+ * define a macro with the same name.
+ *
+ * If d_type is not available, 0 is returned.
+ */
+#define _DIRENT_HAVE_D_TYPE
+#endif
+
 CAMLprim value hh_readdir(value path) {
   CAMLparam1(path);
   CAMLlocal3(head, tail, list);
@@ -50,7 +60,12 @@ CAMLprim value hh_readdir(value path) {
 #else
     Store_field(head, 0, caml_copy_string(ent->d_name));
 #endif
+#ifdef _DIRENT_HAVE_D_TYPE
     Store_field(head, 1, Val_int(ent->d_type));
+#else
+    // 0 is DT_UNKNOWN
+    Store_field(head, 1, Val_int(0));
+#endif
 
     tail = list;
     list = caml_alloc(2, 0);
