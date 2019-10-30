@@ -91,6 +91,7 @@ module Opts = struct
     modules_are_use_strict: bool;
     munge_underscores: bool;
     no_flowlib: bool;
+    node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     recursion_limit: int;
     root_name: string option;
@@ -188,6 +189,7 @@ module Opts = struct
       modules_are_use_strict = false;
       munge_underscores = false;
       no_flowlib = false;
+      node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       recursion_limit = 10000;
       root_name = None;
@@ -453,6 +455,8 @@ module Opts = struct
       ( "module.system",
         enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
             Ok { opts with module_system = v }) );
+      ( "module.system.node.allow_root_relative",
+        boolean (fun opts v -> Ok { opts with node_resolver_allow_root_relative = v }) );
       ( "module.system.node.resolve_dirname",
         string
           ~init:(fun opts -> { opts with node_resolver_dirnames = [] })
@@ -1174,6 +1178,8 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 
 let no_flowlib c = c.options.Opts.no_flowlib
+
+let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_root_relative
 
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 

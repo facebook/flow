@@ -1280,6 +1280,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_saved_state_force_recheck = options_flags.saved_state_force_recheck;
       opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
       opt_no_saved_state = options_flags.no_saved_state;
+      opt_node_resolver_allow_root_relative =
+        FlowConfig.node_resolver_allow_root_relative flowconfig;
       opt_arch;
       opt_abstract_locations;
       opt_cache_direct_dependents = FlowConfig.cache_direct_dependents flowconfig;
