@@ -297,7 +297,7 @@ module CodeActionKind = struct
   (* Create a new sub-kind of an existing kind *)
   let sub_kind : t -> string -> t =
     let cons_to_end (ss : string list) (s : string) =
-      Core_list.(fold_right ss ~f:cons ~init:[s])
+      Base.List.(fold_right ss ~f:cons ~init:[s])
     in
     (fun (k, ks) s -> (k, cons_to_end ks s))
 

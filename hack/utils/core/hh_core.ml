@@ -8,7 +8,7 @@
  *)
 
 module List = struct
-  include Core_list
+  include Base.List
 
   let rec fold_left_env env l ~init ~f =
     match l with
@@ -99,9 +99,4 @@ module List = struct
   let filter_map_env env xs ~f =
     let (env, l) = rev_map_env env xs ~f in
     (env, rev_filter_map l ~f:(fun x -> x))
-
-  let for_all2 = List.for_all2
-
-  let same_length_and_for_all2 ~f l1 l2 =
-    List.length l1 = List.length l2 && for_all2 f l1 l2
 end

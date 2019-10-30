@@ -2,6 +2,7 @@
   (name lsp)
   (wrapped false)
   (libraries
+    base
     file_content
     file_url
     hh_json

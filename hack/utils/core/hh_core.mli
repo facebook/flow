@@ -14,7 +14,7 @@ clean it up manually, and then delete this comment once the interface is in
 shape. *)
 
 module List : sig
-  include module type of Core_list
+  include module type of Base.List
 
   val fold_left_env :
     'a -> 'b list -> init:'c -> f:('a -> 'c -> 'b -> 'a * 'c) -> 'a * 'c
@@ -36,9 +36,4 @@ module List : sig
 
   val filter_map_env :
     'a -> 'b list -> f:('a -> 'b -> 'a * 'c option) -> 'a * 'c list
-
-  val for_all2 : f:('a -> 'b -> bool) -> 'a list -> 'b list -> bool
-
-  val same_length_and_for_all2 :
-    f:('a -> 'b -> bool) -> 'a list -> 'b list -> bool
 end

@@ -96,7 +96,7 @@ struct
     in
     let ready_jobs = ready_funs @ ready_channels @ !env.ready_jobs in
     let ready_jobs =
-      List.sort ready_jobs ~cmp:(fun x y -> x.priority - y.priority)
+      List.sort ready_jobs ~compare:(fun x y -> x.priority - y.priority)
     in
     env := { ready_jobs; waiting_jobs = waiting_funs @ waiting_channels }
 

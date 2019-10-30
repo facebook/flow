@@ -175,7 +175,7 @@ let read_choice message choices =
       (String.concat "|" (List.map choices String_utils.string_of_char));
     let choice = read_char () in
     print_newline ();
-    if List.mem choices choice then
+    if List.mem ~equal:Char.equal choices choice then
       choice
     else
       loop ()
