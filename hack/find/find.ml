@@ -13,6 +13,13 @@
 
 open Hh_core
 
+let lstat_kind file =
+  Unix.(
+    try Some (lstat file).st_kind
+    with Unix_error (ENOENT, _, _) ->
+      prerr_endline ("File not found: " ^ file);
+      None)
+
 external native_hh_readdir : string -> (string * int) list = "hh_readdir"
 
 type dt_kind =
@@ -35,14 +42,14 @@ let hh_readdir path : (string * dt_kind) list =
       (* values from `man dirent` *)
       | (_, 4) -> Some (name, DT_DIR)
       | (_, 8) -> Some (name, DT_REG)
+      | (_, 0) ->
+        Unix.(
+          (* DT_UNKNOWN - filesystem does not give us the type; do it slow *)
+          (match lstat_kind (Filename.concat path name) with
+          | Some S_DIR -> Some (name, DT_DIR)
+          | Some S_REG -> Some (name, DT_REG)
+          | _ -> None))
       | _ -> None)
-
-let lstat_kind file =
-  Unix.(
-    try Some (lstat file).st_kind
-    with Unix_error (ENOENT, _, _) ->
-      prerr_endline ("File not found: " ^ file);
-      None)
 
 let fold_files
     (type t)
