@@ -100,6 +100,7 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
+  opt_node_resolver_allow_root_relative: bool;
   opt_no_saved_state: bool;
   opt_profile: bool;
   opt_quiet: bool;
@@ -199,6 +200,8 @@ let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let no_saved_state opts = opts.opt_no_saved_state
+
+let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
 
 let recursion_limit opts = opts.opt_recursion_limit
 
