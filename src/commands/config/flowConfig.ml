@@ -462,8 +462,14 @@ module Opts = struct
           ~init:(fun opts -> { opts with node_resolver_dirnames = [] })
           ~multiple:true
           (fun opts v ->
-            let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
-            Ok { opts with node_resolver_dirnames }) );
+            if v = Filename.current_dir_name || v = Filename.parent_dir_name then
+              Error
+                (spf
+                   "%S is not a valid value for `module.system.node.resolve_dirname`. Each value must be a valid directory name. Maybe try `module.system.node.allow_root_relative=true`?"
+                   v)
+            else
+              let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
+              Ok { opts with node_resolver_dirnames }) );
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ( "name",
@@ -991,7 +997,7 @@ let is_not_comment =
       (* Line starts with ; *)
         Str.regexp_string "\240\159\146\169";
         (* Line starts with poop emoji *)
-      
+
     ]
   in
   fun (_, line) ->
