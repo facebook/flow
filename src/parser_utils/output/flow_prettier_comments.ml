@@ -130,7 +130,7 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
       let handler_nodes =
         Option.value_map
           ~default:[]
-          ~f:(fun (_, { Try.CatchClause.param; body = (_, { Block.body }) }) ->
+          ~f:(fun (_, { Try.CatchClause.param; body = (_, { Block.body }); _ }) ->
             node_list_of_option ~f:get_children_nodes_pattern param @ body)
           handler
       in

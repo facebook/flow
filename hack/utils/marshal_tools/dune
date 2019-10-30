@@ -4,7 +4,8 @@
   (modules
     marshal_tools)
   (libraries
-    sys_utils))
+    sys_utils
+    utils_core))
 
 (library
   (name marshal_tools_lwt)

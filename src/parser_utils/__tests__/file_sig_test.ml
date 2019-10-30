@@ -22,7 +22,7 @@ let visit_err ?parse_options ?(module_ref_prefix = None) source =
 
 let substring_loc s loc =
   Loc.(
-    let table = Offset_utils.make s in
+    let table = Offset_utils.make ~kind:Offset_utils.Utf8 s in
     let a = Offset_utils.offset table loc.start in
     let b = Offset_utils.offset table loc._end in
     String.sub s a (b - a))
@@ -39,7 +39,7 @@ let assert_es ?assert_named ?assert_star = function
 
 let assert_cjs ~source ?assert_export_loc = function
   | CommonJS { mod_exp_loc } ->
-    let table = Offset_utils.make source in
+    let table = Offset_utils.make ~kind:Offset_utils.Utf8 source in
     let offset_pair_of_loc loc =
       Loc.(Offset_utils.offset table loc.start, Offset_utils.offset table loc._end)
     in

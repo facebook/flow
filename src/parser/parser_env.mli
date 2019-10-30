@@ -240,6 +240,8 @@ module Eat : sig
 end
 
 module Expect : sig
+  val error : env -> Token.t -> unit
+
   val token : env -> Token.t -> unit
 
   val identifier : env -> string -> unit

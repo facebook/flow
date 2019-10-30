@@ -195,7 +195,15 @@ class ['loc] lexical_hoister =
 
     method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       Ast.Class.(
-        let { id; body = _; tparams = _; extends = _; implements = _; classDecorators = _ } =
+        let {
+          id;
+          body = _;
+          tparams = _;
+          extends = _;
+          implements = _;
+          classDecorators = _;
+          comments = _;
+        } =
           cls
         in
         begin

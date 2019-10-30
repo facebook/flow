@@ -9,6 +9,10 @@ type t
 
 val wrap : exn -> t
 
+val wrap_unraised : ?frames:int -> exn -> t
+
+val unwrap : t -> exn
+
 val reraise : t -> 'a
 
 val to_string : t -> string

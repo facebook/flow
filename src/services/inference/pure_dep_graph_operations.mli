@@ -17,7 +17,8 @@ val calc_all_dependents :
   dependency_graph:dependency_graph ->
   all_dependency_graph:dependency_graph ->
   Utils_js.FilenameSet.t ->
-  Utils_js.FilenameSet.t
+  (* sig dependents, all dependents *)
+  Utils_js.FilenameSet.t * Utils_js.FilenameSet.t
 
 val filter_dependency_graph :
   dependency_graph -> Utils_js.FilenameSet.t -> (* files *)

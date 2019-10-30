@@ -11,9 +11,9 @@ val mk_resource_module_t : Context.t -> ALoc.t -> string -> Type.t
 
 val require : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
 
-val import : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
+val import : Context.t -> ALoc.t * string -> Type.t
 
-val import_ns : Context.t -> Reason.t -> ALoc.t * string -> ALoc.t -> Type.t
+val import_ns : Context.t -> Reason.t -> ALoc.t * string -> Type.t
 
 val nameify_default_export_decl :
   ('M, 'M) Flow_ast.Statement.t ->

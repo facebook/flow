@@ -82,7 +82,7 @@ CAMLexport value caml_xx_to_string_unboxed(XXH64_hash_t hash) {
    * wanted.
    */
   str = caml_alloc_string(16);
-  snprintf(String_val(str), 16, "%016llx", hash);
+  snprintf(String_val(str), 16, "%016llx", (unsigned long long)hash);
   CAMLreturn(str);
 }
 

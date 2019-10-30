@@ -29,8 +29,8 @@ let tests =
          ("to_list" >:: (fun ctxt -> assert_equal ~ctxt (Nel.to_list lst) [6; 4; 2]));
          ( "mem"
          >:: fun ctxt ->
-         assert_equal ~ctxt (Nel.mem 4 lst) true;
-         assert_equal ~ctxt (Nel.mem 5 lst) false );
+         assert_equal ~ctxt (Nel.mem ~equal:( = ) 4 lst) true;
+         assert_equal ~ctxt (Nel.mem ~equal:( = ) 5 lst) false );
          ( "exists"
          >:: fun ctxt ->
          assert_equal ~ctxt (Nel.exists (( = ) 4) lst) true;

@@ -42,6 +42,10 @@ let spec =
              "--omit-typearg-defaults"
              no_arg
              ~doc:"Omit type arguments when defaults exist and match the provided type argument"
+        |> flag
+             "--evaluate-type-destructors"
+             no_arg
+             ~doc:"Use the result of type destructor evaluation if available"
         |> anon "args" (required (list_of string)));
   }
 
@@ -54,7 +58,9 @@ let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded 
   if json then
     Hh_json.(
       Reason.(
-        let offset_table = Option.map file_contents ~f:Offset_utils.make in
+        let offset_table =
+          Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
+        in
         let json_assoc =
           ("type", JSON_String ty)
           :: ("reasons", JSON_Array [])
@@ -103,6 +109,7 @@ let main
     expanded
     expand_aliases
     omit_targ_defaults
+    evaluate_type_destructors
     args
     () =
   let json = json || pretty || expanded in
@@ -127,10 +134,11 @@ let main
         verbose;
         expand_aliases;
         omit_targ_defaults;
+        evaluate_type_destructors;
         wait_for_recheck;
       }
   in
-  let file_contents = File_input.content_of_file_input file |> Core_result.ok in
+  let file_contents = File_input.content_of_file_input file |> Base.Result.ok in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
   | ServerProt.Response.INFER_TYPE (Ok resp) ->

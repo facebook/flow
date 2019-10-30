@@ -38,7 +38,7 @@ let mk_patch_ast_differ
     (diff : Flow_ast_differ.node Flow_ast_differ.change list)
     (ast : (Loc.t, Loc.t) Ast.program)
     (content : string) : patch =
-  let offset_table = Offset_utils.make content in
+  let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
   let offset loc = Offset_utils.offset offset_table loc in
   mk_loc_patch_ast_differ diff ast
   |> Core_list.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))

@@ -44,7 +44,7 @@ let is_incompatible_package_json ~reader =
  *    changed or the .flowconfig changed. Maybe one day we'll learn to incrementally check those
  *    changes, but for now we just need to exit and restart from scratch *)
 let process_updates ?(skip_incompatible = false) ~options ~libs updates =
-  Core_result.(
+  Base.Result.(
     let reader = State_reader.create () in
     let file_options = Options.file_options options in
     let all_libs =
@@ -86,23 +86,6 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
           }
       else
         Ok ()
-        >>= fun () ->
-        Option.value_map
-          (Options.module_resolver options)
-          ~default:(Ok ())
-          ~f:(fun module_resolver ->
-            let str_module_resolver = Path.to_string module_resolver in
-            if (not skip_incompatible) && SSet.mem str_module_resolver updates then
-              Error
-                {
-                  msg =
-                    Printf.sprintf
-                      "Module resolver %s changed in an incompatible way. Exiting.\n%!"
-                      str_module_resolver;
-                  exit_status = FlowExitStatus.Server_out_of_date;
-                }
-            else
-              Ok ())
         >>= fun () ->
         let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
         let is_changed_lib filename =

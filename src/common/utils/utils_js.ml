@@ -18,6 +18,16 @@ let exe_name = Filename.basename Sys.executable_name
 module FilenameSet = Set.Make (File_key)
 module FilenameMap = MyMap.Make (File_key)
 
+let debug_string_of_filename_set set =
+  set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
+
+let debug_string_of_filename_map value_to_string map =
+  map
+  |> FilenameMap.map value_to_string
+  |> FilenameMap.elements
+  |> List.map (fun (file, value) -> spf "  %s: %s" (File_key.to_string file) value)
+  |> String.concat "\n"
+
 let assert_false s =
   let callstack = Exception.get_current_callstack_string 10 in
   prerr_endline
@@ -242,25 +252,24 @@ end
 
 module AugmentableSMap = Augmentable (SMap)
 
-(* The problem with Core_result's >>= is that the function second argument cannot return
+(* The problem with Base.Result's >>= is that the function second argument cannot return
  * an Lwt.t. This helper infix operator handles that case *)
-let ( %>>= ) (result : ('ok, 'err) Core_result.t) (f : 'ok -> ('a, 'err) Core_result.t Lwt.t) :
-    ('a, 'err) Core_result.t Lwt.t =
+let ( %>>= ) (result : ('ok, 'err) result) (f : 'ok -> ('a, 'err) result Lwt.t) :
+    ('a, 'err) result Lwt.t =
   match result with
   | Error e -> Lwt.return (Error e)
   | Ok x -> f x
 
-let ( %>>| ) (result : ('ok, 'err) Core_result.t) (f : 'ok -> 'a Lwt.t) :
-    ('a, 'err) Core_result.t Lwt.t =
+let ( %>>| ) (result : ('ok, 'err) result) (f : 'ok -> 'a Lwt.t) : ('a, 'err) result Lwt.t =
   match result with
   | Error e -> Lwt.return (Error e)
   | Ok x ->
     let%lwt new_x = f x in
     Lwt.return (Ok new_x)
 
-let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
+let bind2 ~f x y = Base.Result.bind x (fun x -> Base.Result.bind y (f x))
 
-let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
+let map2 ~f x y = Base.Result.bind x (fun x -> Base.Result.map y ~f:(f x))
 
 let try_with_json f =
   try%lwt f () with
@@ -270,6 +279,15 @@ let try_with_json f =
   | exn ->
     let exn = Exception.wrap exn in
     Lwt.return (Error (Exception.to_string exn, None))
+
+let try_with_json2 f =
+  try%lwt f () with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn), None)
 
 let try_with f =
   try%lwt f () with

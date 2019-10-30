@@ -296,21 +296,21 @@ module Make (F : Func_params.S) = struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             (use_op, t, None)
           | Async ->
-            let reason = annot_reason (mk_reason (RType "Promise") loc) in
+            let reason = mk_annot_reason (RType "Promise") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | Generator ->
-            let reason = annot_reason (mk_reason (RType "Generator") loc) in
+            let reason = mk_annot_reason (RType "Generator") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | AsyncGenerator ->
-            let reason = annot_reason (mk_reason (RType "AsyncGenerator") loc) in
+            let reason = mk_annot_reason (RType "AsyncGenerator") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t =
               Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t]

@@ -251,7 +251,7 @@ let rec merge_type cx =
 
 let instantiate_poly_t cx t args =
   match t with
-  | DefT (_, _, PolyT (_, type_params, t_, _)) ->
+  | DefT (_, _, PolyT { tparams = type_params; t_out = t_; _ }) ->
     let args = Option.value ~default:[] args in
     let maximum_arity = Nel.length type_params in
     if List.length args > maximum_arity then (
@@ -399,7 +399,7 @@ let rec extract_type cx this_t =
   | AnnotT _
   | MergedT _ ->
     resolve_type cx this_t |> extract_type cx
-  | OptionalT (_, ty)
+  | OptionalT { reason = _; type_ = ty; use_desc = _ }
   | MaybeT (_, ty) ->
     extract_type cx ty
   | DefT (_, _, (NullT | VoidT))
@@ -420,7 +420,7 @@ let rec extract_type cx this_t =
     let inst_t = instantiate_poly_t cx c (Some ts) in
     let inst_t = instantiate_type inst_t in
     extract_type cx inst_t
-  | DefT (_, _, PolyT (_, _, sub_type, _)) ->
+  | DefT (_, _, PolyT { t_out = sub_type; _ }) ->
     (* TODO: replace type parameters with stable/proper names? *)
     extract_type cx sub_type
   | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)))
@@ -458,8 +458,6 @@ let rec extract_type cx this_t =
     let array_t = resolve_type cx builtin in
     Some [elemt] |> instantiate_poly_t cx array_t |> instantiate_type |> extract_type cx
   | EvalT (t, defer, id) -> eval_evalt cx t defer id |> extract_type cx
-  | AnyWithLowerBoundT _
-  | AnyWithUpperBoundT _
   | BoundT _
   | InternalT (ChoiceKitT (_, _))
   | TypeDestructorTriggerT _
@@ -478,7 +476,7 @@ let rec extract_type cx this_t =
   | NullProtoT _
   | ObjProtoT _
   | OpaqueT _
-  | OpenPredT (_, _, _, _)
+  | OpenPredT _
   | ShapeT _
   | ThisClassT _
   | DefT (_, _, TypeT _) ->

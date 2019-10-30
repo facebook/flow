@@ -72,7 +72,7 @@ let rec get t id =
   | (None | Some (_, false)) as result ->
     (match advance t with
     | Complete -> Option.map result fst
-    | Yield (id', v) when id' = id -> Some v
+    | Yield (id', v) when String.equal id' id -> Some v
     | Skipped
     | Yield _ ->
       get t id)
@@ -83,7 +83,7 @@ let rec mem t id =
   else
     match advance t with
     | Complete -> false
-    | Yield (id', _) when id' = id -> true
+    | Yield (id', _) when String.equal id' id -> true
     | Skipped
     | Yield _ ->
       mem t id

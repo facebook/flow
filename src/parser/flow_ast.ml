@@ -432,6 +432,7 @@ and Statement : sig
       and ('M, 'T) t' = {
         param: ('M, 'T) Pattern.t option;
         body: 'M * ('M, 'T) Block.t;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end
@@ -1019,6 +1020,7 @@ and Expression : sig
       callee: ('M, 'T) Expression.t;
       targs: ('M, 'T) Expression.TypeParameterInstantiation.t option;
       arguments: ('M, 'T) expression_or_spread list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -1461,6 +1463,7 @@ and Class : sig
     extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Class.Implements.t list;
     classDecorators: ('M, 'T) Decorator.t list;
+    comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
 end =

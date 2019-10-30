@@ -43,6 +43,7 @@ let flow_completion_to_lsp
     Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
+      let insert_text = Option.value item.res_insert_text ~default:item.res_name in
       let trunc n s =
         if String.length s < n then
           s
@@ -65,9 +66,16 @@ let flow_completion_to_lsp
       let text_edit loc newText : Lsp.TextEdit.t =
         { Lsp.TextEdit.range = loc_to_lsp_range loc; Lsp.TextEdit.newText }
       in
-      let func_snippet item func_details =
-        let newText = flow_params_to_lsp_snippet item.res_name func_details.param_tys in
+      let func_snippet func_details =
+        let newText = flow_params_to_lsp_snippet insert_text func_details.param_tys in
         text_edit item.res_loc newText
+      in
+      let plaintext_text_edits =
+        lazy
+          ( if item.res_name <> insert_text then
+            [text_edit item.res_loc insert_text]
+          else
+            [] )
       in
       let (itemType, inlineDetail, detail, insertTextFormat, textEdits) =
         match item.func_details with
@@ -78,8 +86,8 @@ let flow_completion_to_lsp
           let detail = Some (trunc80 ty) in
           let (insertTextFormat, textEdits) =
             match is_snippet_supported with
-            | true -> (Some SnippetFormat, [func_snippet item func_details])
-            | false -> (Some PlainText, [])
+            | true -> (Some SnippetFormat, [func_snippet func_details])
+            | false -> (Some PlainText, Lazy.force plaintext_text_edits)
           in
           (itemType, inlineDetail, detail, insertTextFormat, textEdits)
         | None ->
@@ -87,8 +95,7 @@ let flow_completion_to_lsp
           let (_ty_loc, ty) = item.res_ty in
           let inlineDetail = Some (trunc80 ty) in
           let detail = inlineDetail in
-          let textEdits = [] in
-          (itemType, inlineDetail, detail, Some PlainText, textEdits)
+          (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
       in
       {
         label = item.res_name;
@@ -109,14 +116,14 @@ let flow_completion_to_lsp
       }))
 
 let file_key_to_uri (file_key_opt : File_key.t option) : (string, string) result =
-  let ( >>| ) = Core_result.( >>| ) in
-  let ( >>= ) = Core_result.( >>= ) in
-  Core_result.of_option file_key_opt ~error:"File_key is None"
+  let ( >>| ) = Base.Result.( >>| ) in
+  let ( >>= ) = Base.Result.( >>= ) in
+  Base.Result.of_option file_key_opt ~error:"File_key is None"
   >>= File_key.to_path
   >>| File_url.create
 
 let loc_to_lsp (loc : Loc.t) : (Lsp.Location.t, string) result =
-  let ( >>| ) = Core_result.( >>| ) in
+  let ( >>| ) = Base.Result.( >>| ) in
   file_key_to_uri loc.Loc.source >>| (fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc })
 
 let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : string) : Lsp.Location.t =

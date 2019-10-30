@@ -9,8 +9,8 @@ open Utils_js
 module File_sig = File_sig.With_Loc
 
 type denormalized_file_data = {
-  package: Package_json.t option;
   (* Only package.json files have this *)
+  package: Package_json.t option;
   file_sig: File_sig.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
@@ -51,7 +51,7 @@ type saved_state_data = {
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
-  node_modules_containers: SSet.t; (* TODO - Figure out what to do about module.resolver *)
+  node_modules_containers: SSet.t SMap.t;
 }
 
 let modulename_map_fn ~f = function
@@ -241,7 +241,10 @@ end = struct
         FilenameMap.empty
     in
     let node_modules_containers =
-      SSet.map (Files.relative_path root) !Files.node_modules_containers
+      SMap.fold
+        (fun key value acc -> SMap.add (Files.relative_path root key) value acc)
+        !Files.node_modules_containers
+        SMap.empty
     in
     let flowconfig_hash =
       FlowConfig.get_hash
@@ -494,7 +497,12 @@ end = struct
         warnings
         FilenameMap.empty
     in
-    let node_modules_containers = SSet.map (Files.absolute_path root) node_modules_containers in
+    let node_modules_containers =
+      SMap.fold
+        (fun key value acc -> SMap.add (Files.absolute_path root key) value acc)
+        node_modules_containers
+        SMap.empty
+    in
     Lwt.return
       {
         flowconfig_hash;

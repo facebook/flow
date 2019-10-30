@@ -1714,7 +1714,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("jsx1.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', 'jsx1.js', '8', '4'],
+      ['autocomplete', '--strip-root', '--json', 'jsx1.js', '7', '4'],
       'jsx1.js',
     ).stdout(
        `
@@ -1725,10 +1725,10 @@ export default suite(({addFile, flowCmd}) => [
                "type": "number",
                "func_details": null,
                "path": "jsx1.js",
-               "line": 6,
-               "endline": 6,
-               "start": 15,
-               "end": 20
+               "line": 5,
+               "endline": 5,
+               "start": 37,
+               "end": 42
              }
            ]
          }
@@ -1738,31 +1738,21 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("jsx2.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', 'jsx2.js', '8', '11'],
+      ['autocomplete', '--strip-root', '--json', 'jsx2.js', '7', '9'],
       'jsx2.js',
     ).stdout(
        `
          {
            "result": [
              {
-               "name": "x",
-               "type": "number",
-               "func_details": null,
-               "path": "jsx2.js",
-               "line": 6,
-               "endline": 6,
-               "start": 15,
-               "end": 20
-             },
-             {
                "name": "y",
                "type": "string",
                "func_details": null,
                "path": "jsx2.js",
-               "line": 6,
-               "endline": 6,
-               "start": 26,
-               "end": 31
+               "line": 5,
+               "endline": 5,
+               "start": 48,
+               "end": 53
              }
            ]
          }
@@ -1839,16 +1829,6 @@ export default suite(({addFile, flowCmd}) => [
                "endline": 3,
                "start": 13,
                "end": 15
-             },
-             {
-               "name": "exports",
-               "type": "{||}",
-               "func_details": null,
-               "path": "customfun.js",
-               "line": 0,
-               "endline": 0,
-               "start": 1,
-               "end": 0
              }
            ]
          }
@@ -2043,16 +2023,6 @@ export default suite(({addFile, flowCmd}) => [
               "endline": 5,
               "start": 13,
               "end": 15
-            },
-            {
-              "name": "exports",
-              "type": "{||}",
-              "func_details": null,
-              "path": "exact.js",
-              "line": 0,
-              "endline": 0,
-              "start": 1,
-              "end": 0
             }
           ]
         }

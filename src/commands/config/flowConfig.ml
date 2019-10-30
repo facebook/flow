@@ -7,7 +7,7 @@
 
 open Utils_js
 
-let ( >>= ) = Core_result.( >>= )
+let ( >>= ) = Base.Result.( >>= )
 
 type line = int * string
 
@@ -49,7 +49,9 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
+    allow_skip_direct_dependents: bool;
     cache_direct_dependents: bool;
+    disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
@@ -81,14 +83,15 @@ module Opts = struct
     max_literal_length: int;
     max_workers: int;
     merge_timeout: int option;
+    minimal_merge: bool;
     module_file_exts: SSet.t;
     module_name_mappers: (Str.regexp * string) list;
-    module_resolver: Path.t option;
     module_resource_exts: SSet.t;
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
     no_flowlib: bool;
+    node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_aliases: string list;
     recursion_limit: int;
@@ -144,7 +147,9 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
+      allow_skip_direct_dependents = true;
       cache_direct_dependents = true;
+      disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
       enforce_strict_call_arity = true;
@@ -177,14 +182,15 @@ module Opts = struct
       max_literal_length = 100;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
+      minimal_merge = false;
       module_file_exts;
       module_name_mappers = [];
-      module_resolver = None;
       module_resource_exts;
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
       no_flowlib = false;
+      node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_aliases = [];
       recursion_limit = 10000;
@@ -257,13 +263,13 @@ module Opts = struct
       | (line_num, value_str) :: rest ->
         let value =
           optparser value_str
-          |> Core_result.map_error ~f:(fun msg -> (line_num, Failed_to_parse_value msg))
+          |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_parse_value msg))
         in
         let config =
           value
           >>= fun value ->
           setter config value
-          |> Core_result.map_error ~f:(fun msg -> (line_num, Failed_to_set msg))
+          |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_set msg))
         in
         config >>= loop optparser setter rest
     in
@@ -448,17 +454,24 @@ module Opts = struct
           (fun opts v ->
             let module_name_mappers = v :: opts.module_name_mappers in
             Ok { opts with module_name_mappers }) );
-      ("module.resolver", filepath (fun opts v -> Ok { opts with module_resolver = Some v }));
       ( "module.system",
         enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
             Ok { opts with module_system = v }) );
+      ( "module.system.node.allow_root_relative",
+        boolean (fun opts v -> Ok { opts with node_resolver_allow_root_relative = v }) );
       ( "module.system.node.resolve_dirname",
         string
           ~init:(fun opts -> { opts with node_resolver_dirnames = [] })
           ~multiple:true
           (fun opts v ->
-            let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
-            Ok { opts with node_resolver_dirnames }) );
+            if v = Filename.current_dir_name || v = Filename.parent_dir_name then
+              Error
+                (spf
+                   "%S is not a valid value for `module.system.node.resolve_dirname`. Each value must be a valid directory name. Maybe try `module.system.node.allow_root_relative=true`?"
+                   v)
+            else
+              let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
+              Ok { opts with node_resolver_dirnames }) );
       ( "module.system.node.resolve_alias",
         string
           ~init:(fun opts -> { opts with node_resolver_aliases = [] })
@@ -484,7 +497,7 @@ module Opts = struct
             Str.split_delim version_regex v
             |> String.concat (">=" ^ less_or_equal_curr_version)
             |> String.escaped
-            |> Core_result.return
+            |> Base.Result.return
             >>= optparse_regexp
             >>= (fun v -> Ok { opts with suppress_comments = v :: opts.suppress_comments })) );
       ( "suppress_type",
@@ -544,6 +557,11 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.cache_direct_dependents",
         boolean (fun opts v -> Ok { opts with cache_direct_dependents = v }) );
+      ( "experimental.disable_live_non_parse_errors",
+        boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v }) );
+      ( "experimental.allow_skip_direct_dependents",
+        boolean (fun opts v -> Ok { opts with allow_skip_direct_dependents = v }) );
+      ("experimental.minimal_merge", boolean (fun opts v -> Ok { opts with minimal_merge = v }));
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "trust_mode",
         enum
@@ -581,7 +599,7 @@ module Opts = struct
           | None -> Ok (raw_opts, config)
           | Some values ->
             f values config
-            |> Core_result.map_error ~f:(error_of_opt_error key)
+            |> Base.Result.map_error ~f:(error_of_opt_error key)
             >>= fun config ->
             let new_raw_opts = SMap.remove key raw_opts in
             Ok (new_raw_opts, config)
@@ -1022,7 +1040,7 @@ let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let ( >>= )
       (acc : (config * warning list, error) result)
       (fn : config -> (config * warning list, error) result) =
-    let ( >>= ) = Core_result.( >>= ) in
+    let ( >>= ) = Base.Result.( >>= ) in
     acc
     >>= fun (config, warn_acc) ->
     fn config >>= (fun (config, warnings) -> Ok (config, Core_list.rev_append warnings warn_acc))
@@ -1092,7 +1110,11 @@ let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
 
+let allow_skip_direct_dependents c = c.options.Opts.allow_skip_direct_dependents
+
 let cache_direct_dependents c = c.options.Opts.cache_direct_dependents
+
+let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
 let emoji c = c.options.Opts.emoji
 
@@ -1156,11 +1178,11 @@ let max_workers c = c.options.Opts.max_workers
 
 let merge_timeout c = c.options.Opts.merge_timeout
 
+let minimal_merge c = c.options.Opts.minimal_merge
+
 let module_file_exts c = c.options.Opts.module_file_exts
 
 let module_name_mappers c = c.options.Opts.module_name_mappers
-
-let module_resolver c = c.options.Opts.module_resolver
 
 let module_resource_exts c = c.options.Opts.module_resource_exts
 
@@ -1171,6 +1193,8 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 
 let no_flowlib c = c.options.Opts.no_flowlib
+
+let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_root_relative
 
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 

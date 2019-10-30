@@ -50,7 +50,7 @@ export function exec(cmd: string, options?: ExecOpts): Promise<string> {
           cp.stdin.end();
           return;
         }
-        const canContinue = cp.stdin.write(chunks[chunkIndex]);
+        const canContinue = cp.stdin.write(chunks[chunkIndex], 'utf8');
         if (canContinue) {
           write(chunkIndex + 1);
         } else {

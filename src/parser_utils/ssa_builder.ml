@@ -1050,7 +1050,7 @@ struct
 
       method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
         Ast.Expression.New.(
-          let { callee; targs = _; arguments } = expr in
+          let { callee; targs = _; arguments; comments = _ } = expr in
           ignore @@ this#expression callee;
           ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
           this#havoc_current_ssa_env;

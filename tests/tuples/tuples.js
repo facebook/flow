@@ -29,4 +29,20 @@ let tests = [
     const x = 0.5;
     t[x]; // error, not an integer
   },
+  // Make sure tuple length is a singleton.
+  function (a: [number]) {
+    const a_len = a.length;
+    (a_len: 1);
+  },
+  // Return length from a function with mismatched return type.
+  function () {
+    // error: tuple length 2 !~> string
+    function a(x: [1, 2]): string { return x.length; }
+  },
+  // Fail for a mismatched tuple length type.
+  function (a: [number]) {
+    const a_len = a.length;
+    // error: tuple length of 1 !~> number literal `2`
+    (a_len: 2);
+  }
 ];

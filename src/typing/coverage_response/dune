@@ -1,4 +1,0 @@
-(library
-  (name flow_typing_coverage_response)
-  (wrapped false)
-)

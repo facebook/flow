@@ -174,6 +174,13 @@ let add_ns s =
   else
     s
 
+(* A:B:C -> :A:B:C *)
+let add_xhp_ns s =
+  if String.length s = 0 || s.[0] <> ':' then
+    ":" ^ s
+  else
+    s
+
 (* \A\B\C -> C *)
 let strip_all_ns s =
   try

@@ -17,7 +17,7 @@ val one : 'a -> 'a t
 
 val cons : 'a -> 'a t -> 'a t
 
-val mem : 'a -> 'a t -> bool
+val mem : equal:('a -> 'a -> bool) -> 'a -> 'a t -> bool
 
 val exists : ('a -> bool) -> 'a t -> bool
 

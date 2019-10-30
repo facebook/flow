@@ -76,6 +76,10 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
+type computed_property_state =
+  | ResolvedOnce of Reason.t
+  | ResolvedMultipleTimes
+
 val make_sig : unit -> sig_t
 
 val make :
@@ -347,6 +351,16 @@ val test_prop_miss :
   t -> Constraint.ident -> string option -> Reason.t * Reason.t -> Type.use_op -> unit
 
 val test_prop_get_never_hit : t -> (string option * (Reason.t * Reason.t) * Type.use_op) list
+
+val computed_property_state_for_id : t -> Constraint.ident -> computed_property_state option
+
+val computed_property_add_lower_bound : t -> Constraint.ident -> Reason.t -> unit
+
+val computed_property_add_multiple_lower_bounds : t -> Constraint.ident -> unit
+
+val spread_widened_types_get_widest : t -> Constraint.ident -> Type.Object.slice option
+
+val spread_widened_types_add_widest : t -> Constraint.ident -> Type.Object.slice -> unit
 
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 

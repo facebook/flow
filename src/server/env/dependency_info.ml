@@ -18,3 +18,17 @@ let all_dependency_graph = function
 let dependency_graph = function
   | Classic map -> map
   | TypesFirst map -> FilenameMap.map (fun (sig_files, _all_files) -> sig_files) map
+
+let debug_to_string = function
+  | Classic map ->
+    spf "Classic:\n%s" (debug_string_of_filename_map debug_string_of_filename_set map)
+  | TypesFirst map ->
+    spf
+      "TypesFirst:\n%s"
+      (debug_string_of_filename_map
+         (fun (sig_files, all_files) ->
+           spf
+             "Sig: %s, All: %s"
+             (debug_string_of_filename_set sig_files)
+             (debug_string_of_filename_set all_files))
+         map)

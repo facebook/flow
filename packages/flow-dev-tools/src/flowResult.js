@@ -59,9 +59,12 @@ type FlowTiming = {
     }
   }
 }
-type FlowMemory = {
-  [key: string]: number;
-}
+type FlowMemoryStat = {| start: number; delta: number; hwm_delta: number |}
+type FlowMemoryGroup = {| [stat: string]: FlowMemoryStat |}
+type FlowMemory = {|
+  sub_results: { [key: string]: FlowMemory };
+  [group: string]: number | FlowMemoryGroup;
+|}
 
 export const noErrors: FlowResult = {
   passed: true,

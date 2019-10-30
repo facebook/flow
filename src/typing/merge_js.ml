@@ -347,7 +347,6 @@ let detect_non_voidable_properties cx =
 let merge_component
     ~metadata
     ~lint_severities
-    ~file_options
     ~strict_mode
     ~file_sigs
     ~get_ast_unsafe
@@ -410,14 +409,7 @@ let merge_component
         in
         let file_sig = FilenameMap.find_unsafe filename file_sigs in
         let tast =
-          Type_inference_js.infer_ast
-            cx
-            filename
-            comments
-            ast
-            ~lint_severities
-            ~file_options
-            ~file_sig
+          Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
         in
         (cx :: cxs, tast :: tasts, FilenameMap.add filename cx impl_cxs))
       ([], [], FilenameMap.empty)
@@ -456,7 +448,6 @@ let merge_component
            let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs);
 
-    let coverages = Query_types.component_coverage ~full_cx:cx tasts in
     (* Post-merge errors.
      *
      * At this point, all dependencies have been merged and the component has been
@@ -473,7 +464,7 @@ let merge_component
 
     force_annotations cx other_cxs;
 
-    match ListUtils.combine3 (cxs, tasts, coverages) with
+    match Core_list.zip_exn cxs tasts with
     | [] -> failwith "there is at least one cx"
     | x :: xs -> (x, xs))
 
@@ -835,7 +826,7 @@ module ContextOptimizer = struct
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';
           t'
-        | DefT (_, _, PolyT (_, _, _, poly_id)) ->
+        | DefT (_, _, PolyT { id = poly_id; _ }) ->
           let id =
             if Context.mem_nominal_id cx poly_id then
               match IMap.get poly_id stable_poly_ids with
@@ -875,6 +866,11 @@ module ContextOptimizer = struct
          context. This makes it possible to clear the type graph before storing
          in the heap. *)
         Utils_js.assert_false "choice kit uses should not appear in signatures"
+
+      (* We need to make sure to hash the keys in any spread intermediate types! *)
+      method! object_kit_spread_operand_slice cx map_cx slice =
+        SMap.iter (fun k _ -> SigHash.add sig_hash k) slice.Object.Spread.prop_map;
+        super#object_kit_spread_operand_slice cx map_cx slice
 
       method get_reduced_module_map = reduced_module_map
 

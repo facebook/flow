@@ -18,6 +18,7 @@ type t = {
   pos_bol: int;
   pos_cnum: int;
 }
+[@@deriving eq]
 
 val pp : Format.formatter -> t -> unit
 

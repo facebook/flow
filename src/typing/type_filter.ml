@@ -55,7 +55,7 @@ let rec exists = function
     DefT (r, trust, EmptyT Bottom)
   (* unknown things become truthy *)
   | MaybeT (_, t) -> t
-  | OptionalT (_, t) -> exists t
+  | OptionalT { reason = _; type_ = t; use_desc = _ } -> exists t
   | DefT (r, trust, BoolT None) -> DefT (r, trust, BoolT (Some true))
   | DefT (r, trust, StrT AnyLiteral) -> DefT (r, trust, StrT Truthy)
   | DefT (r, trust, NumT AnyLiteral) -> DefT (r, trust, NumT Truthy)
@@ -125,7 +125,8 @@ let maybe = function
   | DefT (r, trust, MixedT Mixed_non_null) -> DefT (r, trust, VoidT)
   | DefT (_, _, NullT) as t -> t
   | DefT (_, _, VoidT) as t -> t
-  | OptionalT (r, _) -> Trust.bogus_trust () |> VoidT.why r
+  | OptionalT { reason = r; type_ = _; use_desc } ->
+    Trust.bogus_trust () |> VoidT.why_with_use_desc ~use_desc r
   | AnyT _ as t -> t
   | DefT (r, trust, _) -> EmptyT.why r trust
   | t ->
@@ -134,7 +135,7 @@ let maybe = function
 
 let rec not_maybe = function
   | MaybeT (_, t) -> t
-  | OptionalT (_, t) -> not_maybe t
+  | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_maybe t
   | DefT (r, trust, (NullT | VoidT)) -> DefT (r, trust, EmptyT Bottom)
   | DefT (r, trust, MixedT Mixed_truthy) -> DefT (r, trust, MixedT Mixed_truthy)
   | DefT (r, trust, MixedT Mixed_non_maybe) -> DefT (r, trust, MixedT Mixed_non_maybe)
@@ -145,7 +146,7 @@ let rec not_maybe = function
   | t -> t
 
 let null = function
-  | OptionalT (_, MaybeT (r, _))
+  | OptionalT { reason = _; type_ = MaybeT (r, _); use_desc = _ }
   | MaybeT (r, _) ->
     Trust.bogus_trust () |> NullT.why r
   | DefT (_, _, NullT) as t -> t
@@ -160,7 +161,7 @@ let null = function
 
 let rec not_null = function
   | MaybeT (r, t) -> UnionT (r, UnionRep.make (Trust.bogus_trust () |> VoidT.why r) t [])
-  | OptionalT (r, t) -> OptionalT (r, not_null t)
+  | OptionalT { reason; type_ = t; use_desc } -> OptionalT { reason; type_ = not_null t; use_desc }
   | UnionT (r, rep) -> recurse_into_union not_null (r, UnionRep.members rep)
   | DefT (r, trust, NullT) -> DefT (r, trust, EmptyT Bottom)
   | DefT (r, trust, MixedT Mixed_everything) -> DefT (r, trust, MixedT Mixed_non_null)
@@ -170,7 +171,8 @@ let rec not_null = function
 let undefined = function
   | MaybeT (r, _) -> VoidT.why r |> with_trust bogus_trust
   | DefT (_, _, VoidT) as t -> t
-  | OptionalT (r, _) -> VoidT.why r |> with_trust bogus_trust
+  | OptionalT { reason = r; type_ = _; use_desc } ->
+    VoidT.why_with_use_desc ~use_desc r |> with_trust bogus_trust
   | DefT (r, trust, MixedT Mixed_everything)
   | DefT (r, trust, MixedT Mixed_non_null) ->
     VoidT.why r trust
@@ -182,7 +184,7 @@ let undefined = function
 
 let rec not_undefined = function
   | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r |> with_trust bogus_trust) t [])
-  | OptionalT (_, t) -> not_undefined t
+  | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_undefined t
   | UnionT (r, rep) -> recurse_into_union not_undefined (r, UnionRep.members rep)
   | DefT (r, trust, VoidT) -> DefT (r, trust, EmptyT Bottom)
   | DefT (r, trust, MixedT Mixed_everything) -> DefT (r, trust, MixedT Mixed_non_void)

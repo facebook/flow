@@ -673,6 +673,7 @@ module Expression
 
   and new_expression env =
     let start_loc = Peek.loc env in
+    let leading = Peek.comments env in
     Expect.token env T_NEW;
 
     if in_function env && Peek.token env = T_PERIOD then (
@@ -726,7 +727,9 @@ module Expression
         | (_, Some (targs_loc, _)) -> (targs_loc, [])
         | _ -> (fst callee, [])
       in
-      (Loc.btwn start_loc end_loc, Expression.(New New.{ callee; targs; arguments }))
+      let trailing = Peek.comments env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      (Loc.btwn start_loc end_loc, Expression.(New New.{ callee; targs; arguments; comments }))
 
   and type_parameter_instantiation =
     let args env acc =

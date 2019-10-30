@@ -16,6 +16,9 @@ type acc =
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
   * Coverage_response.file_coverage FilenameMap.t
+  * float
+
+(* Time to check *)
 
 type 'a merge_job_results = 'a file_keyed_result list
 

@@ -97,6 +97,8 @@ let recheck
     ~estimated_files_to_recheck:_
     ~estimated_files_to_init:_
     ~first_internal_error:_
+    ~slowest_file:_
+    ~num_slow_files:_
     ~scm_update_distance:_
     ~scm_changed_mergebase:_ =
   ()
@@ -156,3 +158,7 @@ let load_saved_state_error ~saved_state_filename:_ ~changed_files_count:_ ~inval
 let idle_heartbeat ~idle_time:_ ~profiling:_ = ()
 
 let live_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
+
+let live_non_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
+
+let live_non_parse_errors_failed ~request:_ ~data:_ ~wall_start:_ = ()

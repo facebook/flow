@@ -15,4 +15,4 @@ val process_updates :
   options:Options.t ->
   libs:SSet.t ->
   SSet.t ->
-  (Utils_js.FilenameSet.t, error) Core_result.t
+  (Utils_js.FilenameSet.t, error) result

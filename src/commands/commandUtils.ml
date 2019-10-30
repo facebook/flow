@@ -322,7 +322,7 @@ let from_flag =
       match from with
       | Some from -> Some from
       | None ->
-        Core_result.(
+        Base.Result.(
           let parent_cmdline =
             Proc.get_proc_stat (Unix.getpid ())
             >>= fun proc_stat ->
@@ -464,6 +464,25 @@ let log_file_flags =
            string
            ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.monitor_log)"
            ~env:"FLOW_MONITOR_LOG_FILE")
+
+type offset_style =
+  | Utf8_offsets
+  | JavaScript_offsets
+
+let offset_style_flag prev =
+  CommandSpec.ArgSpec.(
+    prev
+    |> flag
+         "--offset-style"
+         (enum [("utf8-bytes", Utf8_offsets); ("js-indices", JavaScript_offsets)])
+         ~doc:
+           "How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)")
+
+let offset_kind_of_offset_style = function
+  | None
+  | Some Utf8_offsets ->
+    Offset_utils.Utf8
+  | Some JavaScript_offsets -> Offset_utils.JavaScript
 
 let flowconfig_multi_error rev_errs =
   let msg =
@@ -1175,13 +1194,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       | timeout -> timeout)
       |> Option.map ~f:float_of_int
     in
-    let expand_project_root_token path root =
-      let str_root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
-      Path.to_string path
-      |> Str.split_delim Files.project_root_token
-      |> String.concat str_root
-      |> Path.make
-    in
     (* The CLI flag overrides the .flowconfig *)
     let opt_saved_state_fetcher =
       Option.value
@@ -1224,11 +1236,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_profile = options_flags.profile;
       opt_strip_root = options_flags.strip_root;
       opt_module = FlowConfig.module_system flowconfig;
-      opt_module_resolver =
-        Option.value_map
-          (FlowConfig.module_resolver flowconfig)
-          ~default:None
-          ~f:(fun module_resolver -> Some (expand_project_root_token module_resolver root));
       opt_munge_underscores =
         options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
       opt_temp_dir = temp_dir;
@@ -1274,9 +1281,13 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_saved_state_force_recheck = options_flags.saved_state_force_recheck;
       opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
       opt_no_saved_state = options_flags.no_saved_state;
+      opt_node_resolver_allow_root_relative =
+        FlowConfig.node_resolver_allow_root_relative flowconfig;
       opt_arch;
       opt_abstract_locations;
       opt_cache_direct_dependents = FlowConfig.cache_direct_dependents flowconfig;
+      opt_allow_skip_direct_dependents = FlowConfig.allow_skip_direct_dependents flowconfig;
+      opt_minimal_merge = FlowConfig.minimal_merge flowconfig;
       opt_include_suppressions = options_flags.include_suppressions;
       opt_trust_mode =
         Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
@@ -1664,11 +1675,11 @@ let choose_file_watcher ~options ~file_watcher ~flowconfig =
 let json_of_loc_with_offset ?stdin_file ~strip_root loc =
   Option.(
     let file_content =
-      let path = Loc.source loc >>= File_key.to_path %> Core_result.ok in
+      let path = Loc.source loc >>= File_key.to_path %> Base.Result.ok in
       match stdin_file with
       | Some fileinput when path = File_input.path_of_file_input fileinput ->
         Some (File_input.content_of_file_input_unsafe fileinput)
       | _ -> path >>= Sys_utils.cat_or_failed
     in
-    let offset_table = Option.map file_content ~f:Offset_utils.make in
+    let offset_table = Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8) in
     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)

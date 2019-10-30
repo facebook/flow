@@ -18,6 +18,9 @@ type genv = {
 (* The environment constantly maintained by the server *)
 (*****************************************************************************)
 
+(* Do not change these to contain `Loc.t`s. Because these errors are stored between rechecks, it
+ * is critical that they contain `ALoc.t`s, so that we can update the concrete locations when we
+ * render the errors, without having to retypecheck the files that generated those errors. *)
 type errors = {
   (* errors are stored in a map from file path to error set, so that the errors
      from checking particular files can be cleared during recheck. *)

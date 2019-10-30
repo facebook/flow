@@ -625,8 +625,9 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
                pretty_space;
                block b;
                (match handler with
-               | Some (loc, { S.Try.CatchClause.param; body }) ->
+               | Some (loc, { S.Try.CatchClause.param; body; comments }) ->
                  source_location_with_comments
+                   ?comments
                    ( loc,
                      match param with
                      | Some p ->
@@ -912,7 +913,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
       | E.Member m -> member ~precedence ~ctxt m
       | E.OptionalMember { E.OptionalMember.member = m; optional } ->
         member ~optional ~precedence ~ctxt m
-      | E.New { E.New.callee; targs; arguments } ->
+      | E.New { E.New.callee; targs; arguments; comments } ->
         let callee_layout =
           if definitely_needs_parens ~precedence ctxt callee || contains_call_expression callee
           then
@@ -920,15 +921,16 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
           else
             expression ~ctxt callee
         in
-        group
-          [
-            fuse_with_space [Atom "new"; callee_layout];
-            option type_parameter_instantiation_with_implicit targs;
-            new_list
-              ~wrap:(Atom "(", Atom ")")
-              ~sep:(Atom ",")
-              (Core_list.map ~f:expression_or_spread arguments);
-          ]
+        layout_node_with_simple_comments_opt loc comments
+        @@ group
+             [
+               fuse_with_space [Atom "new"; callee_layout];
+               option type_parameter_instantiation_with_implicit targs;
+               new_list
+                 ~wrap:(Atom "(", Atom ")")
+                 ~sep:(Atom ",")
+                 (Core_list.map ~f:expression_or_spread arguments);
+             ]
       | E.Unary { E.Unary.operator; argument; comments } ->
         let (s_operator, needs_space) =
           match operator with
@@ -1695,7 +1697,7 @@ and class_implements implements =
                 implements);
          ])
 
-and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorators } =
+and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorators; comments } =
   let decorator_parts = decorators_list classDecorators in
   let class_parts =
     [
@@ -1719,6 +1721,7 @@ and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorato
                    Atom "extends";
                    space;
                    source_location_with_comments
+                     ?comments
                      (loc, fuse [expression expr; option type_parameter_instantiation targs]);
                  ])
           | None -> None

@@ -13,7 +13,7 @@ that this interface file is a poor interface, please take a few minutes to
 clean it up manually, and then delete this comment once the interface is in
 shape. *)
 
-type t = int
+type t = int [@@deriving eq]
 
 val column_bits : int
 

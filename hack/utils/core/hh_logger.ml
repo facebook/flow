@@ -31,6 +31,15 @@ let set_log filename fd = dupe_log := Some (filename, fd)
 
 let get_log_name () = Option.map !dupe_log ~f:fst
 
+let id : string option ref = ref None
+
+let set_id passed_id = id := Some passed_id
+
+let id_string () =
+  match !id with
+  | None -> ""
+  | Some id -> Printf.sprintf "[%s] " id
+
 let print_with_newline ?exn fmt =
   let print_raw ?exn s =
     let exn_str =
@@ -52,13 +61,14 @@ let print_with_newline ?exn fmt =
             bt)
     in
     let time = timestamp_string () in
+    let id_str = id_string () in
     begin
       match !dupe_log with
       | None -> ()
       | Some (_, dupe_log_oc) ->
-        Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str
+        Printf.fprintf dupe_log_oc "%s %s%s%s\n%!" time id_str s exn_str
     end;
-    Printf.eprintf "%s %s%s\n%!" time s exn_str
+    Printf.eprintf "%s %s%s%s\n%!" time id_str s exn_str
   in
   Printf.ksprintf (print_raw ?exn) fmt
 

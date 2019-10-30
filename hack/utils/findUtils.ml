@@ -36,7 +36,7 @@ let is_dot_file path =
   let filename = Filename.basename path in
   String.length filename > 0 && filename.[0] = '.'
 
-let is_php path =
+let is_hack path =
   (not (is_dot_file path))
   && List.exists extensions (Filename.check_suffix path)
 
@@ -55,6 +55,6 @@ let rec has_ancestor path ancestor_name =
 let file_filter f =
   (* Filter the relative path *)
   let f = Relative_path.strip_root_if_possible f |> Option.value ~default:f in
-  is_php f && not (FilesToIgnore.should_ignore f)
+  is_hack f && not (FilesToIgnore.should_ignore f)
 
 let path_filter f = Relative_path.suffix f |> file_filter

@@ -41,6 +41,7 @@ type 'loc virtual_reason_desc =
   | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleLength of int
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
@@ -172,6 +173,7 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
+  | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
 
 and reason_desc_function =
   | RAsync
@@ -280,6 +282,8 @@ val string_of_reason : ?strip_root:Path.t option -> reason -> string
 val dump_reason : ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
+val poly_loc_of_reason : 'loc virtual_reason -> 'loc
+
 val loc_of_reason : concrete_reason -> Loc.t
 
 val aloc_of_reason : reason -> ALoc.t
@@ -315,9 +319,17 @@ val replace_desc_reason : 'loc virtual_reason_desc -> 'loc virtual_reason -> 'lo
 val replace_desc_new_reason :
   'loc virtual_reason_desc -> 'loc virtual_reason -> 'loc virtual_reason
 
-val repos_reason : 'loc -> ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+(* replace loc, but keep def_loc *)
+val repos_reason : 'loc -> 'loc virtual_reason -> 'loc virtual_reason
 
-val annot_reason : 'loc virtual_reason -> 'loc virtual_reason
+(* add / replace annot_loc, but keep loc and def_loc *)
+val annot_reason : annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+
+(* when annot_loc is given, same as annot_reason; otherwise, identity *)
+val opt_annot_reason : ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+
+(* create a new reason with annot_loc = loc: same as mk_reason followed by annot_reason *)
+val mk_annot_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
 
 module ReasonMap : MyMap.S with type key = reason
 

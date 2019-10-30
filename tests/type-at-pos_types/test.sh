@@ -440,3 +440,9 @@ assert_ok "$FLOW" type-at-pos tparam_defaults.js 25 8 --strip-root --omit-typear
 # utility.js
 printf "utility.js:3:6:\n"
 assert_ok "$FLOW" type-at-pos utility.js 3 6 --strip-root
+
+printf "utility.js:7:13:\n"
+assert_ok "$FLOW" type-at-pos utility.js 7 13 --strip-root
+
+printf "utility.js:7:13: (evaluate-type-destructors)\n"
+assert_ok "$FLOW" type-at-pos utility.js 7 13 --strip-root --evaluate-type-destructors

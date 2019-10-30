@@ -183,7 +183,7 @@ let handle_response
     content =
   if debug then Core_list.iter ~f:debug_range types;
 
-  let offset_table = lazy (Offset_utils.make content) in
+  let offset_table = lazy (Offset_utils.make ~kind:Offset_utils.Utf8 content) in
   if color then (
     let coverage_offsets =
       let offset_table = Lazy.force offset_table in

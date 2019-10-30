@@ -187,8 +187,6 @@ and utility =
   | Call of t * t list
   | Class of t
   | Shape of t
-  | Supertype of t
-  | Subtype of t
   | Exists
   (* React utils *)
   | ReactElementPropsType of t
@@ -448,8 +446,6 @@ class ['A] comparator_ty =
       | Call _ -> 12
       | Class _ -> 13
       | Shape _ -> 14
-      | Supertype _ -> 15
-      | Subtype _ -> 16
       | Exists -> 17
       | ReactElementPropsType _ -> 18
       | ReactElementConfigType _ -> 19
@@ -604,8 +600,6 @@ let string_of_utility_ctor = function
   | Call _ -> "$Call"
   | Class _ -> "Class"
   | Shape _ -> "$Shape"
-  | Supertype _ -> "$Supertype"
-  | Subtype _ -> "$Subtype"
   | Exists -> "*"
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
@@ -628,8 +622,6 @@ let types_of_utility = function
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
   | Shape t -> Some [t]
-  | Supertype t -> Some [t]
-  | Subtype t -> Some [t]
   | Exists -> None
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]

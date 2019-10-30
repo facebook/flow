@@ -134,17 +134,8 @@ export default suite(({addFile, addFiles, addCode}) => [
            15:       (ret[5]: 2);
                       ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
             References:
-              6:         return foo([...arr, 1]);
-                                             ^ [1]
-             15:       (ret[5]: 2);
-                                ^ [2]
-
-          test.js:15
-           15:       (ret[5]: 2);
-                      ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2].
-            References:
-              8:       const ret = foo([1]);
-                                        ^ [1]
+              4:         function foo<T: Array<*>>(arr: T) {
+                                               ^ [1]
              15:       (ret[5]: 2);
                                 ^ [2]
         `,

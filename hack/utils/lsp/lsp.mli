@@ -120,45 +120,47 @@ module DocumentSelector : sig
 end
 
 module SymbolInformation : sig
+  type symbolKind =
+    | File [@value 1]
+    | Module [@value 2]
+    | Namespace [@value 3]
+    | Package [@value 4]
+    | Class [@value 5]
+    | Method [@value 6]
+    | Property [@value 7]
+    | Field [@value 8]
+    | Constructor [@value 9]
+    | Enum [@value 10]
+    | Interface [@value 11]
+    | Function [@value 12]
+    | Variable [@value 13]
+    | Constant [@value 14]
+    | String [@value 15]
+    | Number [@value 16]
+    | Boolean [@value 17]
+    | Array [@value 18]
+    | Object [@value 19]
+    | Key [@value 20]
+    | Null [@value 21]
+    | EnumMember [@value 22]
+    | Struct [@value 23]
+  [@@deriving enum]
+
   type t = {
     name: string;
     kind: symbolKind;
     location: Location.t;
     containerName: string option;
   }
-
-  and symbolKind =
-    | File
-    | Module
-    | Namespace
-    | Package
-    | Class
-    | Method
-    | Property
-    | Field
-    | Constructor
-    | Enum
-    | Interface
-    | Function
-    | Variable
-    | Constant
-    | String
-    | Number
-    | Boolean
-    | Array
-    | Object
-    | Key
-    | Null
-    | EnumMember
-    | Struct
 end
 
 module MessageType : sig
   type t =
-    | ErrorMessage
-    | WarningMessage
-    | InfoMessage
-    | LogMessage
+    | ErrorMessage [@value 1]
+    | WarningMessage [@value 2]
+    | InfoMessage [@value 3]
+    | LogMessage [@value 4]
+  [@@deriving enum]
 end
 
 module CancelRequest : sig
@@ -188,6 +190,12 @@ module CodeActionKind : sig
 end
 
 module Initialize : sig
+  type textDocumentSyncKind =
+    | NoSync [@value 0]
+    | FullSync [@value 1]
+    | IncrementalSync [@value 2]
+  [@@deriving enum]
+
   type params = {
     processId: int option;
     rootPath: string option;
@@ -280,6 +288,7 @@ module Initialize : sig
     renameProvider: bool;
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
+    implementationProvider: bool;
     typeCoverageProvider: bool;
     rageProvider: bool;
   }
@@ -309,11 +318,6 @@ module Initialize : sig
     want_willSaveWaitUntil: bool;
     want_didSave: saveOptions option;
   }
-
-  and textDocumentSyncKind =
-    | NoSync
-    | FullSync
-    | IncrementalSync
 
   and saveOptions = { includeText: bool }
 end
@@ -529,6 +533,12 @@ module Completion : sig
   (* wire: just "Snippet" *)
   [@@deriving enum]
 
+  type completionTriggerKind =
+    | Invoked [@value 1]
+    | TriggerCharacter [@value 2]
+    | TriggerForIncompleteCompletions [@value 3]
+  [@@deriving enum]
+
   type params = completionParams
 
   and completionParams = {
@@ -536,14 +546,11 @@ module Completion : sig
     context: completionContext option;
   }
 
-  and completionContext = { triggerKind: completionTriggerKind }
+  and completionContext = {
+    triggerKind: completionTriggerKind;
+    triggerCharacter: string option;
+  }
 
-  and completionTriggerKind =
-    | Invoked (* 1 *)
-    | TriggerCharacter (* 2 *)
-    | TriggerForIncompleteCompletions
-
-  (* 3 *)
   and result = completionList
 
   (* wire: can also be 'completionItem list' *)
@@ -619,20 +626,29 @@ module FindReferences : sig
   }
 end
 
+module GoToImplementation : sig
+  type params = implementationParams
+
+  and result = Location.t list
+
+  and implementationParams = { loc: TextDocumentPositionParams.t }
+end
+
 module DocumentHighlight : sig
   type params = TextDocumentPositionParams.t
 
-  and result = documentHighlight list
+  type documentHighlightKind =
+    | Text [@value 1]
+    | Read [@value 2]
+    | Write [@value 3]
+  [@@deriving enum]
+
+  type result = documentHighlight list
 
   and documentHighlight = {
     range: range;
     kind: documentHighlightKind option;
   }
-
-  and documentHighlightKind =
-    | Text
-    | Read
-    | Write
 end
 
 module TypeCoverage : sig
@@ -936,6 +952,7 @@ type lsp_result =
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
   | FindReferencesResult of FindReferences.result
+  | GoToImplementationResult of GoToImplementation.result
   | DocumentHighlightResult of DocumentHighlight.result
   | TypeCoverageResult of TypeCoverage.result
   | DocumentFormattingResult of DocumentFormatting.result

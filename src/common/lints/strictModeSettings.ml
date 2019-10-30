@@ -25,7 +25,7 @@ let of_lines =
   let rec loop acc = function
     | [] -> Ok acc
     | labeled_line :: labeled_lines ->
-      Core_result.bind (parse_line labeled_line) (fun kinds ->
+      Base.Result.bind (parse_line labeled_line) (fun kinds ->
           let acc = List.fold_left (fun acc kind -> LintSet.add kind acc) acc kinds in
           loop acc labeled_lines)
   in

@@ -1916,20 +1916,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- portals.js:12:7
 
-Cannot call `ReactDOM.createPortal` with `document.getElementById(...)` bound to `container` because null [1] is
+Cannot call `ReactDOM.createPortal` with `test$getElementById(...)` bound to `container` because null [1] is
 incompatible with `Element` [2].
 
    portals.js:12:7
-    12|       document.getElementById('portal'),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   12|       test$getElementById('portal'),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:819:52
-   819|   getElementById(elementId: string): HTMLElement | null;
-                                                           ^^^^ [1]
+   lib/test-lib.js:3:61
+    3| declare function test$getElementById(string): HTMLElement | null;
+                                                                   ^^^^ [1]
    <BUILTINS>/react-dom.js:30:16
-    30|     container: Element,
-                       ^^^^^^^ [2]
+   30|     container: Element,
+                      ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- profiler.js:21:3
@@ -2935,65 +2935,65 @@ References:
 
 Error ----------------------------------------------------------------------------------------- render_callback.js:13:29
 
-Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to `container` because null [1] is incompatible
-with `Element` [2].
+Cannot call `ReactDOM.render` with `test$querySelector(...)` bound to `container` because null [1] is incompatible with
+`Element` [2].
 
    render_callback.js:13:29
-     13| ReactDOM.render(<Example/>, document.querySelector('#site'), () => {
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   13| ReactDOM.render(<Example/>, test$querySelector('#site'), () => {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1062:50
-   1062|   querySelector(selector: string): HTMLElement | null;
-                                                          ^^^^ [1]
+   lib/test-lib.js:4:70
+    4| declare function test$querySelector(selector: string): HTMLElement | null
+                                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
-     18|     container: Element,
-                        ^^^^^^^ [2]
+   18|     container: Element,
+                      ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- render_callback.js:17:29
 
-Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to `container` because null [1] is incompatible
-with `Element` [2].
+Cannot call `ReactDOM.render` with `test$querySelector(...)` bound to `container` because null [1] is incompatible with
+`Element` [2].
 
    render_callback.js:17:29
-     17| ReactDOM.render(<Example/>, document.querySelector('#site'), function() {
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   17| ReactDOM.render(<Example/>, test$querySelector('#site'), function() {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1062:50
-   1062|   querySelector(selector: string): HTMLElement | null;
-                                                          ^^^^ [1]
+   lib/test-lib.js:4:70
+    4| declare function test$querySelector(selector: string): HTMLElement | null
+                                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
-     18|     container: Element,
-                        ^^^^^^^ [2]
+   18|     container: Element,
+                      ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- render_callback.js:22:29
 
-Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to `container` because null [1] is incompatible
-with `Element` [2].
+Cannot call `ReactDOM.render` with `test$querySelector(...)` bound to `container` because null [1] is incompatible with
+`Element` [2].
 
    render_callback.js:22:29
-     22| ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   22| ReactDOM.render(<Example/>, test$querySelector('#site'), 1);
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1062:50
-   1062|   querySelector(selector: string): HTMLElement | null;
-                                                          ^^^^ [1]
+   lib/test-lib.js:4:70
+    4| declare function test$querySelector(selector: string): HTMLElement | null
+                                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
-     18|     container: Element,
-                        ^^^^^^^ [2]
+   18|     container: Element,
+                      ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- render_callback.js:22:62
+Error ----------------------------------------------------------------------------------------- render_callback.js:22:58
 
 Cannot call `ReactDOM.render` with `1` bound to `callback` because number [1] is incompatible with function type [2].
 
-   render_callback.js:22:62
-   22| ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
-                                                                    ^ [1]
+   render_callback.js:22:58
+   22| ReactDOM.render(<Example/>, test$querySelector('#site'), 1);
+                                                                ^ [1]
 
 References:
    <BUILTINS>/react-dom.js:19:16
@@ -3003,30 +3003,30 @@ References:
 
 Error ----------------------------------------------------------------------------------------- render_callback.js:23:29
 
-Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to `container` because null [1] is incompatible
-with `Element` [2].
+Cannot call `ReactDOM.render` with `test$querySelector(...)` bound to `container` because null [1] is incompatible with
+`Element` [2].
 
    render_callback.js:23:29
-     23| ReactDOM.render(<Example/>, document.querySelector('#site'), {});
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   23| ReactDOM.render(<Example/>, test$querySelector('#site'), {});
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1062:50
-   1062|   querySelector(selector: string): HTMLElement | null;
-                                                          ^^^^ [1]
+   lib/test-lib.js:4:70
+    4| declare function test$querySelector(selector: string): HTMLElement | null
+                                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
-     18|     container: Element,
-                        ^^^^^^^ [2]
+   18|     container: Element,
+                      ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- render_callback.js:23:62
+Error ----------------------------------------------------------------------------------------- render_callback.js:23:58
 
 Cannot call `ReactDOM.render` with object literal bound to `callback` because a call signature declaring the expected
 parameter / return type is missing in object literal [1] but exists in function type [2].
 
-   render_callback.js:23:62
-   23| ReactDOM.render(<Example/>, document.querySelector('#site'), {});
-                                                                    ^^ [1]
+   render_callback.js:23:58
+   23| ReactDOM.render(<Example/>, test$querySelector('#site'), {});
+                                                                ^^ [1]
 
 References:
    <BUILTINS>/react-dom.js:19:16
@@ -3036,30 +3036,30 @@ References:
 
 Error ----------------------------------------------------------------------------------------- render_callback.js:24:29
 
-Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to `container` because null [1] is incompatible
-with `Element` [2].
+Cannot call `ReactDOM.render` with `test$querySelector(...)` bound to `container` because null [1] is incompatible with
+`Element` [2].
 
    render_callback.js:24:29
-     24| ReactDOM.render(<Example/>, document.querySelector('#site'), '');
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   24| ReactDOM.render(<Example/>, test$querySelector('#site'), '');
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1062:50
-   1062|   querySelector(selector: string): HTMLElement | null;
-                                                          ^^^^ [1]
+   lib/test-lib.js:4:70
+    4| declare function test$querySelector(selector: string): HTMLElement | null
+                                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
-     18|     container: Element,
-                        ^^^^^^^ [2]
+   18|     container: Element,
+                      ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- render_callback.js:24:62
+Error ----------------------------------------------------------------------------------------- render_callback.js:24:58
 
 Cannot call `ReactDOM.render` with empty string bound to `callback` because string [1] is incompatible with function
 type [2].
 
-   render_callback.js:24:62
-   24| ReactDOM.render(<Example/>, document.querySelector('#site'), '');
-                                                                    ^^ [1]
+   render_callback.js:24:58
+   24| ReactDOM.render(<Example/>, test$querySelector('#site'), '');
+                                                                ^^ [1]
 
 References:
    <BUILTINS>/react-dom.js:19:16
@@ -3069,29 +3069,29 @@ References:
 
 Error ----------------------------------------------------------------------------------------- render_callback.js:25:29
 
-Cannot call `ReactDOM.render` with `document.querySelector(...)` bound to `container` because null [1] is incompatible
-with `Element` [2].
+Cannot call `ReactDOM.render` with `test$querySelector(...)` bound to `container` because null [1] is incompatible with
+`Element` [2].
 
    render_callback.js:25:29
-     25| ReactDOM.render(<Example/>, document.querySelector('#site'), null);
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   25| ReactDOM.render(<Example/>, test$querySelector('#site'), null);
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1062:50
-   1062|   querySelector(selector: string): HTMLElement | null;
-                                                          ^^^^ [1]
+   lib/test-lib.js:4:70
+    4| declare function test$querySelector(selector: string): HTMLElement | null
+                                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
-     18|     container: Element,
-                        ^^^^^^^ [2]
+   18|     container: Element,
+                      ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- render_callback.js:25:62
+Error ----------------------------------------------------------------------------------------- render_callback.js:25:58
 
 Cannot call `ReactDOM.render` with `null` bound to `callback` because null [1] is incompatible with function type [2].
 
-   render_callback.js:25:62
-   25| ReactDOM.render(<Example/>, document.querySelector('#site'), null);
-                                                                    ^^^^ [1]
+   render_callback.js:25:58
+   25| ReactDOM.render(<Example/>, test$querySelector('#site'), null);
+                                                                ^^^^ [1]
 
 References:
    <BUILTINS>/react-dom.js:19:16

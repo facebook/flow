@@ -732,33 +732,27 @@ let get_lines ~start ~len content =
   in
   loop ~start ~len ~acc:[] ~pos:0 content
 
-let read_file filename =
-  if Filename.is_relative filename then
-    failwith (Utils_js.spf "Expected absolute location, got %s" filename);
-  Sys_utils.cat_or_failed filename
+let read_file ~stdin_file filename =
+  match stdin_file with
+  | Some (stdin_path, contents) when Path.to_string stdin_path = filename -> Some contents
+  | _ ->
+    if Filename.is_relative filename then
+      failwith (Utils_js.spf "Expected absolute location, got %s" filename);
+    Sys_utils.cat_or_failed filename
 
-let get_offset_table_expensive ~stdin_file loc =
-  Option.(
-    Utils_js.(
-      let content =
-        let path = Loc.source loc >>= File_key.to_path %> Core_result.ok in
-        match stdin_file with
-        | Some (stdin_path, contents) when path = Some (Path.to_string stdin_path) -> Some contents
-        | _ -> path >>= read_file
-      in
-      content >>| Offset_utils.make))
+let get_offset_table_expensive ~stdin_file ~offset_kind loc =
+  let open Option in
+  let open Utils_js in
+  Loc.source loc
+  >>= File_key.to_path %> Base.Result.ok
+  >>= read_file ~stdin_file
+  >>| Offset_utils.make ~kind:offset_kind
 
 let read_lines_in_file loc filename stdin_file =
   match filename with
   | None -> None
   | Some filename ->
-    let content_opt =
-      match stdin_file with
-      | Some (stdin_filename, content) when Path.to_string stdin_filename = filename ->
-        Some content
-      | _ -> read_file filename
-    in
-    (match content_opt with
+    (match read_file ~stdin_file filename with
     | None -> None
     | Some content ->
       (try
@@ -2815,7 +2809,7 @@ module Json_output = struct
     | CommentM str ->
       (str, None)
 
-  let json_of_message_props ~stdin_file ~strip_root message =
+  let json_of_message_props ~stdin_file ~strip_root ~offset_kind message =
     Hh_json.(
       let (desc, loc) = unwrap_message message in
       let type_ =
@@ -2829,7 +2823,7 @@ module Json_output = struct
       (match loc with
       | None -> deprecated_json_props_of_loc ~strip_root Loc.none
       | Some loc ->
-        let offset_table = get_offset_table_expensive ~stdin_file loc in
+        let offset_table = get_offset_table_expensive ~stdin_file ~offset_kind loc in
         ("loc", Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)
         :: deprecated_json_props_of_loc ~strip_root loc))
 
@@ -2889,20 +2883,20 @@ module Json_output = struct
       | None -> JSON_Null
       | Some code_lines -> JSON_Object code_lines)
 
-  let json_of_loc_with_context ~strip_root ~stdin_file loc =
+  let json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind loc =
     Hh_json.(
       let props =
-        let offset_table = get_offset_table_expensive ~stdin_file loc in
+        let offset_table = get_offset_table_expensive ~stdin_file ~offset_kind loc in
         Reason.json_of_loc_props ~strip_root ~offset_table ~catch_offset_errors:true loc
         @ [("context", json_of_loc_context_abridged ~stdin_file ~max_len:5 (Some loc))]
       in
       JSON_Object props)
 
-  let json_of_message_with_context ~strip_root ~stdin_file message =
+  let json_of_message_with_context ~strip_root ~stdin_file ~offset_kind message =
     Hh_json.(
       let (_, loc) = unwrap_message message in
       let context = ("context", json_of_loc_context ~stdin_file loc) in
-      JSON_Object (context :: json_of_message_props ~stdin_file ~strip_root message))
+      JSON_Object (context :: json_of_message_props ~stdin_file ~strip_root ~offset_kind message))
 
   let json_of_infos ~json_of_message infos =
     Hh_json.(JSON_Array (Core_list.map ~f:json_of_message (infos_to_messages infos)))
@@ -2979,17 +2973,19 @@ module Json_output = struct
                 JSON_Array (Core_list.map ~f:json_of_message_group_friendly group_message_list) );
             ]))
 
-  let json_of_references ~strip_root ~stdin_file references =
+  let json_of_references ~strip_root ~stdin_file ~offset_kind references =
     Hh_json.(
       JSON_Object
         (List.rev
            (IMap.fold
               (fun id loc acc ->
-                (string_of_int id, json_of_loc_with_context ~strip_root ~stdin_file loc) :: acc)
+                ( string_of_int id,
+                  json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind loc )
+                :: acc)
               references
               [])))
 
-  let json_of_friendly_error_props ~strip_root ~stdin_file error =
+  let json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind error =
     Hh_json.(
       Friendly.(
         let (_, primary_loc, message_group) =
@@ -2999,7 +2995,8 @@ module Json_output = struct
         let root_loc =
           match error.root with
           | None -> JSON_Null
-          | Some { root_loc; _ } -> json_of_loc_with_context ~strip_root ~stdin_file root_loc
+          | Some { root_loc; _ } ->
+            json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind root_loc
         in
         [
           (* Unfortunately, Nuclide currently depends on this flag. Remove it in
@@ -3009,14 +3006,15 @@ module Json_output = struct
            * is another loc which Flow associates with some errors. We include it
            * for tools which are interested in using the location to enhance
            * their rendering. `primaryLoc` will always be inside `rootLoc`. *)
-            ("primaryLoc", json_of_loc_with_context ~strip_root ~stdin_file primary_loc);
+            ( "primaryLoc",
+              json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind primary_loc );
           ("rootLoc", root_loc);
           (* NOTE: This `messageMarkup` can be concatenated into a string when
            * implementing the LSP error output. *)
             ("messageMarkup", json_of_message_group_friendly message_group);
           (* NOTE: These `referenceLocs` can become `relatedLocations` when
            * implementing the LSP error output. *)
-            ("referenceLocs", json_of_references ~strip_root ~stdin_file references);
+            ("referenceLocs", json_of_references ~strip_root ~stdin_file ~offset_kind references);
         ]))
 
   let json_of_error_props
@@ -3025,6 +3023,7 @@ module Json_output = struct
       ~version
       ~json_of_message
       ~severity
+      ~offset_kind
       ?(suppression_locs = Loc_collections.LocSet.empty)
       (kind, trace, error) =
     Hh_json.(
@@ -3046,7 +3045,7 @@ module Json_output = struct
         suppression_locs
         |> Loc_collections.LocSet.elements
         |> Core_list.map ~f:(fun loc ->
-               let offset_table = get_offset_table_expensive ~stdin_file loc in
+               let offset_table = get_offset_table_expensive ~stdin_file ~offset_kind loc in
                JSON_Object
                  [
                    ( "loc",
@@ -3064,7 +3063,7 @@ module Json_output = struct
       (* add the error type specific props *)
       @ (match version with
         | JsonV1 -> json_of_classic_error_props ~json_of_message (Friendly.to_classic error)
-        | JsonV2 -> json_of_friendly_error_props ~strip_root ~stdin_file error)
+        | JsonV2 -> json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind error)
       @
       (* add trace if present *)
       match trace with
@@ -3072,21 +3071,29 @@ module Json_output = struct
       | _ -> [("trace", JSON_Array (Core_list.map ~f:json_of_message trace))])
 
   let json_of_error_with_context
-      ~strip_root ~stdin_file ~version ~severity (error, suppression_locs) =
-    let json_of_message = json_of_message_with_context ~strip_root ~stdin_file in
+      ~strip_root ~stdin_file ~version ~severity ~offset_kind (error, suppression_locs) =
+    let json_of_message = json_of_message_with_context ~strip_root ~stdin_file ~offset_kind in
     Hh_json.JSON_Object
       (json_of_error_props
          ~strip_root
          ~stdin_file
          ~version
+         ~offset_kind
          ~json_of_message
          ~severity
          ~suppression_locs
          error)
 
   let json_of_errors_with_context
-      ~strip_root ~stdin_file ~suppressed_errors ?(version = JsonV1) ~errors ~warnings () =
-    let f = json_of_error_with_context ~strip_root ~stdin_file ~version in
+      ~strip_root
+      ~stdin_file
+      ~suppressed_errors
+      ?(version = JsonV1)
+      ~offset_kind
+      ~errors
+      ~warnings
+      () =
+    let f = json_of_error_with_context ~strip_root ~stdin_file ~version ~offset_kind in
     let obj_props_rev =
       []
       |> ConcreteLocPrintableErrorSet.fold
@@ -3119,8 +3126,14 @@ module Json_output = struct
      performing the expensive work within a running profiling segment. The
      returned closure can be passed the finished profiling data. *)
   let full_status_json_of_errors
-      ~strip_root ~suppressed_errors ?(version = JsonV1) ?(stdin_file = None) ~errors ~warnings ()
-      =
+      ~strip_root
+      ~suppressed_errors
+      ?(version = JsonV1)
+      ?(stdin_file = None)
+      ~offset_kind
+      ~errors
+      ~warnings
+      () =
     Hh_json.(
       let props =
         [
@@ -3136,6 +3149,7 @@ module Json_output = struct
               ~stdin_file
               ~suppressed_errors
               ~version
+              ~offset_kind
               ~errors
               ~warnings
               () );
@@ -3151,6 +3165,7 @@ module Json_output = struct
       ~pretty
       ?version
       ?(stdin_file = None)
+      ~offset_kind
       ~errors
       ~warnings
       () =
@@ -3161,6 +3176,7 @@ module Json_output = struct
           ?version
           ~stdin_file
           ~suppressed_errors
+          ~offset_kind
           ~errors
           ~warnings
           ()
@@ -3179,6 +3195,7 @@ module Json_output = struct
       ~suppressed_errors
       ~pretty
       ?version
+      ~offset_kind
       ?(stdin_file = None)
       ~errors
       ~warnings
@@ -3189,6 +3206,7 @@ module Json_output = struct
       ~suppressed_errors
       ~pretty
       ?version
+      ~offset_kind
       ~stdin_file
       ~errors
       ~warnings

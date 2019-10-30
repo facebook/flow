@@ -12,6 +12,7 @@ type t = {
   pos_bol: int;
   pos_cnum: int;
 }
+[@@deriving eq]
 
 let pp fmt pos =
   Format.pp_print_int fmt pos.pos_lnum;

@@ -23,7 +23,7 @@ let one x = (x, [])
 
 let cons x0 (x1, xs) = (x0, x1 :: xs)
 
-let mem y (x1, xs) = x1 = y || Core_list.mem xs y
+let mem ~equal y (x1, xs) = equal x1 y || Core_list.mem ~equal xs y
 
 let exists f (x1, xs) = f x1 || Core_list.exists ~f xs
 
@@ -97,7 +97,7 @@ let dedup ?(compare = Pervasives.compare) (x, xs) =
 let result_all = function
   | (Ok x, rest) ->
     begin
-      match Core_result.all rest with
+      match Base.Result.all rest with
       | Ok rest -> Ok (x, rest)
       | Error _ as err -> err
     end

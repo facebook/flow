@@ -91,6 +91,7 @@ type 'loc virtual_reason_desc =
   | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleLength of int
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
@@ -224,6 +225,7 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
+  | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
 [@@deriving eq]
 
 and reason_desc_function =
@@ -240,8 +242,8 @@ let rec map_desc_locs f = function
     | RVoid | RNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
     | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RROArrayType | RTupleType | RTupleElement | RTupleOutOfBoundsAccess | RFunction _
-    | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
+    | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
       ) as r ->
     r
@@ -303,6 +305,8 @@ let rec map_desc_locs f = function
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
   | (RReactSFC | RReactConfig) as r -> r
+  | RPossiblyMissingPropFromObj (propname, desc) ->
+    RPossiblyMissingPropFromObj (propname, map_desc_locs f desc)
 
 type 'loc virtual_reason = {
   test_id: int option;
@@ -539,6 +543,7 @@ let rec string_of_desc = function
   | RTupleType -> "tuple type"
   | RTupleElement -> "tuple element"
   | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
+  | RTupleLength i -> spf "length `%d` (number) of tuple" i
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
@@ -691,6 +696,8 @@ let rec string_of_desc = function
   | RReactChildrenOrUndefinedOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactSFC -> "React stateless functional component"
   | RReactConfig -> "config of React component"
+  | RPossiblyMissingPropFromObj (propname, desc) ->
+    spf "possibly missing property `%s` in %s" propname (string_of_desc desc)
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
@@ -872,7 +879,7 @@ let replace_desc_reason desc r =
 let replace_desc_new_reason desc r = mk_reason_with_test_id r.test_id desc r.loc None None
 
 (* returns reason with new location and description of original *)
-let repos_reason loc ?(annot_loc : 'loc option) reason =
+let repos_reason loc reason =
   let def_aloc_opt =
     let def_loc = def_poly_loc_of_reason reason in
     if loc = def_loc then
@@ -880,14 +887,16 @@ let repos_reason loc ?(annot_loc : 'loc option) reason =
     else
       Some def_loc
   in
-  let annot_aloc_opt =
-    match annot_loc with
-    | Some annot_loc -> Some annot_loc
-    | None -> reason.annot_loc_opt
-  in
-  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt annot_aloc_opt
+  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt reason.annot_loc_opt
 
-let annot_reason reason = { reason with annot_loc_opt = Some reason.loc }
+let annot_reason ~annot_loc reason = { reason with annot_loc_opt = Some annot_loc }
+
+let opt_annot_reason ?annot_loc reason =
+  match annot_loc with
+  | None -> reason
+  | Some annot_loc -> annot_reason ~annot_loc reason
+
+let mk_annot_reason desc annot_loc = annot_reason ~annot_loc (mk_reason desc annot_loc)
 
 module ReasonMap = MyMap.Make (struct
   type t = reason
@@ -987,7 +996,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
           property = (_, { Ast.Identifier.name = p; comments = _ });
         } ->
       o ^ "." ^ p
-    | New { New.callee; targs; arguments } ->
+    | New { New.callee; targs; arguments; comments = _ } ->
       let targs =
         match targs with
         | None -> ""
@@ -1293,6 +1302,7 @@ let classification_of_reason r =
   | RObjectClassName
   | RInterfaceType
   | RTupleElement
+  | RTupleLength _
   | RTupleOutOfBoundsAccess
   | RFunction _
   | RFunctionType
@@ -1412,6 +1422,7 @@ let classification_of_reason r =
   | RReactChildrenOrUndefinedOrType _
   | RReactSFC
   | RReactConfig
+  | RPossiblyMissingPropFromObj _
   | RTrusted _
   | RPrivate _
   | REnum ->

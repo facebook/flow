@@ -75,8 +75,6 @@ type hash =
   | MaybeH
   | IntersectionH
   | UnionH
-  | AnyWithLowerBoundH
-  | AnyWithUpperBoundH
   | MergedH
   | ShapeH
   | KeysH
@@ -209,6 +207,7 @@ type hash =
   | ReactPropsToOutH
   | ReactInToPropsH
   | DestructuringH
+  | CreateObjWithComputedPropH
   | ModuleExportsAssignH
 
 let hash_of_def_ctor =
@@ -256,8 +255,6 @@ let hash_of_ctor =
     | OpaqueT _ -> failwith "undefined hash of OpaqueT"
     | AnyT _ -> AnyH
     | AnnotT _ -> AnnotH
-    | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
-    | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
     | MergedT _ -> MergedH
     | BoundT _ -> BoundH
     | TypeDestructorTriggerT _ -> TvarDestructorH
@@ -411,6 +408,7 @@ let hash_of_use_ctor =
     | ReactPropsToOut _ -> ReactPropsToOutH
     | ReactInToProps _ -> ReactInToPropsH
     | DestructuringT _ -> DestructuringH
+    | CreateObjWithComputedPropT _ -> CreateObjWithComputedPropH
     | ModuleExportsAssignT _ -> ModuleExportsAssignH)
 
 let add = Xx.update

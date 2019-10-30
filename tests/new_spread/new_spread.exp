@@ -34,122 +34,6 @@ References:
                                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- error_messages.js:3:62
-
-Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `c` with a type that
-conflicts with `c`'s definition in object type [1]. Can you make object type [2] exact?
-
-   error_messages.js:3:62
-   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
-                                                                   ^^^^^^^^^^^ [2]
-
-References:
-   error_messages.js:3:16
-   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- error_messages.js:7:16
-
-Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
-conflicts with `b`'s definition in object type [2]. Can you make object type [1] exact?
-
-   error_messages.js:7:16
-   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   error_messages.js:7:58
-   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
-                                                               ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:13:49
-
-Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts with
-`c`'s definition in object type [1]. Can you make `B` [2] exact?
-
-   error_messages.js:13:49
-   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
-                                                       ^ [2]
-
-References:
-   error_messages.js:13:17
-   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:19:17
-
-Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
-conflicts with `b`'s definition in `D` [2]. Can you make object type [1] exact?
-
-   error_messages.js:19:17
-   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   error_messages.js:19:49
-   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
-                                                       ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- error_messages.js:26:6
-
-Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
-conflicts with `d`'s definition in object type [1]. Can you make object type [2] exact?
-
-   error_messages.js:26:6
-   26|   ...{b: number},
-            ^^^^^^^^^^^ [2]
-
-References:
-   error_messages.js:23:17
-                       v---------------------------------------------
-   23| declare var x3: { // Error, but message could use improvement.
-   24|   ...{a: number},
-   25|   d: number,
-   26|   ...{b: number},
-   27|   e: number,
-   28|   ...{c: number},
-   29|   f: number,
-   30| };
-       ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:33:27
-
-Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts with
-`b`'s definition in `A` [3]. Can you make `B` [2] exact?
-
-   error_messages.js:33:27
-   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
-                                 ^ [2]
-
-References:
-   error_messages.js:33:17
-   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
-                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   error_messages.js:33:21
-   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
-                           ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:36:47
-
-Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts with
-`foo`'s definition in object type [1]. Can you make `B` [2] exact?
-
-   error_messages.js:36:47
-   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
-                                                     ^ [2]
-
-References:
-   error_messages.js:36:17
-   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- no_interfaces.js:16:11
 
 Cannot determine a type for object type [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of
@@ -294,7 +178,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:36:2
 
-Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
+Cannot cast `o4` to object type because inexact `O4` [1] is incompatible with exact object type [2].
 
    type.js:36:2
    36| (o4: {|p:T|}); // error: not exact
@@ -311,7 +195,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:37:3
 
-Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in `O4` [2].
 
    type.js:37:3
    37| (({}:{}): O4); // error: property `p` not found
@@ -345,7 +229,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:47:2
 
-Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in `O5` [2].
 
    type.js:47:2
    47| (nil: O5); // error: property `p` not found
@@ -379,7 +263,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:50:2
 
-Cannot cast object literal to `O5` because property `q` is missing in object type [1] but exists in object literal [2].
+Cannot cast object literal to `O5` because property `q` is missing in `O5` [1] but exists in object literal [2].
 
    type.js:50:2
    50| ({p:x,q:y}: O5); // error: additional property `q` found
@@ -1406,7 +1290,7 @@ References:
 
 
 
-Found 92 errors
+Found 85 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

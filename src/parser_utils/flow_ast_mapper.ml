@@ -273,24 +273,28 @@ class ['loc] mapper =
 
     method catch_clause _loc (clause : ('loc, 'loc) Ast.Statement.Try.CatchClause.t') =
       Ast.Statement.Try.CatchClause.(
-        let { param; body } = clause in
+        let { param; body; comments } = clause in
         let param' = map_opt this#catch_clause_pattern param in
         let body' = this#catch_body body in
-        if param == param' && body == body' then
+        let comments' = this#syntax_opt comments in
+        if param == param' && body == body' && comments == comments' then
           clause
         else
-          { param = param'; body = body' })
+          { param = param'; body = body'; comments = comments' })
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       Ast.Class.(
-        let { id; body; tparams = _; extends; implements = _; classDecorators = _ } = cls in
+        let { id; body; tparams = _; extends; implements = _; classDecorators = _; comments } =
+          cls
+        in
         let id' = map_opt this#class_identifier id in
         let body' = this#class_body body in
         let extends' = map_opt (map_loc this#class_extends) extends in
-        if id == id' && body == body' && extends == extends' then
+        let comments' = this#syntax_opt comments in
+        if id == id' && body == body' && extends == extends' && comments = comments' then
           cls
         else
-          { cls with id = id'; body = body'; extends = extends' })
+          { cls with id = id'; body = body'; extends = extends'; comments = comments' })
 
     method class_extends _loc (extends : ('loc, 'loc) Ast.Class.Extends.t') =
       Ast.Class.Extends.(
@@ -1356,14 +1360,16 @@ class ['loc] mapper =
 
     method new_ _loc (expr : ('loc, 'loc) Ast.Expression.New.t) =
       Ast.Expression.New.(
-        let { callee; targs; arguments } = expr in
+        let { callee; targs; arguments; comments } = expr in
         let callee' = this#expression callee in
         let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
         let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
-        if callee == callee' && targs == targs' && arguments == arguments' then
+        let comments' = this#syntax_opt comments in
+        if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'
+        then
           expr
         else
-          { callee = callee'; targs = targs'; arguments = arguments' })
+          { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' })
 
     method object_ _loc (expr : ('loc, 'loc) Ast.Expression.Object.t) =
       Ast.Expression.Object.(

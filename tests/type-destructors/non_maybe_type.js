@@ -1,5 +1,4 @@
 // @flow
-
 function foo(x: ?string): $NonMaybeType<?string> {
   if (x != null) { return x; }
   else return 0; // this should be an error
@@ -11,3 +10,8 @@ function foo(x: ?string): $NonMaybeType<?string> {
 (0: $NonMaybeType<?number>); // ok
 (0: $NonMaybeType<number | null>); // ok
 (0: $NonMaybeType<$PropertyType<{p?: number}, 'p'>>); // ok
+
+('str': $NonMaybeType<mixed>);
+(0: $NonMaybeType<mixed>);
+(null: $NonMaybeType<mixed>);
+(undefined: $NonMaybeType<mixed>);

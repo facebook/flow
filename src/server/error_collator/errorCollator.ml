@@ -48,7 +48,7 @@ let regenerate ~reader =
                 let msg = Error_message.EUnusedSuppression (ALoc.of_loc loc) in
                 Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
                 |> Flow_error.concretize_error lazy_table_of_aloc
-                |> Flow_error.make_error_printable lazy_table_of_aloc
+                |> Flow_error.make_error_printable
               in
               let file_warnings =
                 FilenameMap.get source_file warnings
@@ -72,7 +72,9 @@ let regenerate ~reader =
         let root = Options.root options in
         let file_options = Some (Options.file_options options) in
         let (file_errs, file_suppressed, unused) =
-          Flow_error.make_errors_printable lazy_table_of_aloc file_errs
+          file_errs
+          |> Flow_error.concretize_errors lazy_table_of_aloc
+          |> Flow_error.make_errors_printable
           |> filter_suppressed_errors ~root ~file_options suppressions ~unused
         in
         let errors = f filename file_errs errors in

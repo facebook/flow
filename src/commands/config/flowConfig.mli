@@ -54,7 +54,11 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
+val allow_skip_direct_dependents : config -> bool
+
 val cache_direct_dependents : config -> bool
+
+val disable_live_non_parse_errors : config -> bool
 
 val emoji : config -> bool
 
@@ -118,11 +122,11 @@ val max_workers : config -> int
 
 val merge_timeout : config -> int option
 
+val minimal_merge : config -> bool
+
 val module_file_exts : config -> SSet.t
 
 val module_name_mappers : config -> (Str.regexp * string) list
-
-val module_resolver : config -> Path.t option
 
 val module_resource_exts : config -> SSet.t
 
@@ -133,6 +137,8 @@ val modules_are_use_strict : config -> bool
 val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool
+
+val node_resolver_allow_root_relative : config -> bool
 
 val node_resolver_dirnames : config -> string list
 

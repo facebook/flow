@@ -160,7 +160,7 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some id -> Context.find_call cx id :: ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, PolyT (_, _, t, _)) -> collect_of_type ?log_unresolved cx acc t
+  | DefT (_, _, PolyT { t_out = t; _ }) -> collect_of_type ?log_unresolved cx acc t
   | BoundT _ -> acc
   (* TODO: The following kinds of types are not walked out of laziness. It's
      not immediately clear what we'd gain (or lose) by walking them. *)
@@ -175,7 +175,7 @@ and collect_of_type ?log_unresolved cx acc = function
      would be quite nice (as long as we confirm that the resulting
      virtualization of calls to this function doesn't lead to perf
      degradation: this function is expected to be quite hot). *)
-  | OptionalT (_, t)
+  | OptionalT { reason = _; type_ = t; use_desc = _ }
   | MaybeT (_, t) ->
     collect_of_type ?log_unresolved cx acc t
   | UnionT (_, rep) ->
@@ -190,8 +190,6 @@ and collect_of_type ?log_unresolved cx acc = function
     let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     acc
-  | AnyWithUpperBoundT t
-  | AnyWithLowerBoundT t
   | ExactT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)

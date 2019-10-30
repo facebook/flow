@@ -105,13 +105,13 @@ MODULES=\
   src/parser_utils/aloc\
   src/parser_utils/output\
   src/parser_utils/output/printers\
+  src/parser_utils/signature_builder\
   src/parsing\
   src/procs\
   src/server\
   src/server/command_handler\
   src/server/env\
   src/server/error_collator\
-  src/server/find_refs\
   src/server/lazy_mode_utils\
   src/server/monitor_listener\
   src/server/persistent_connection\
@@ -122,10 +122,12 @@ MODULES=\
   src/server/shmem\
   src/server/watchman_expression_terms\
   src/services/autocomplete\
+  src/services/coverage\
   src/services/get_def\
   src/services/inference\
   src/services/inference/module\
   src/services/flowFileGen\
+  src/services/references\
   src/services/saved_state\
   src/services/type_info\
   src/state/heaps/context\
@@ -178,6 +180,7 @@ NATIVE_C_FILES=\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
   src/services/saved_state/saved_state_compression_stubs.c\
+  hack/find/hh_readdir.c\
   hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
   hack/utils/core/get_build_id.c\
@@ -215,6 +218,7 @@ COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
 JS_STUBS=\
+	+base/runtime.js\
 	+dtoa/dtoa_stubs.js\
 	$(wildcard js/*.js)
 
@@ -228,7 +232,7 @@ OUNIT_TESTS=\
 	src/parser_utils/__tests__/parser_utils_tests.native\
 	src/parser_utils/output/__tests__/parser_utils_output_tests.native\
 	src/parser_utils/output/printers/__tests__/parser_utils_output_printers_tests.native\
-	src/server/find_refs/__tests__/find_refs_tests.native
+	src/services/references/__tests__/find_refs_tests.native
 	# src/typing/__tests__/typing_tests.native
 
 ################################################################################

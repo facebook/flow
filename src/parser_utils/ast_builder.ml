@@ -169,7 +169,7 @@ module Classes = struct
   let implements ?targs id = (Loc.none, { Implements.id; targs })
 
   (* TODO: add method_ and property *)
-  let make ?super ?(implements = []) ?id elements =
+  let make ?comments ?super ?(implements = []) ?id elements =
     let extends =
       match super with
       | None -> None
@@ -182,6 +182,7 @@ module Classes = struct
       extends;
       implements;
       classDecorators = [];
+      comments;
     }
 end
 
@@ -423,7 +424,8 @@ module Expressions = struct
   let optional_member_expression ~optional expr =
     (Loc.none, OptionalMember { OptionalMember.member = expr; optional })
 
-  let new_ ?targs ?(args = []) callee = (Loc.none, New { New.callee; targs; arguments = args })
+  let new_ ?comments ?targs ?(args = []) callee =
+    (Loc.none, New { New.callee; targs; arguments = args; comments })
 
   let sequence exprs = (Loc.none, Sequence { Sequence.expressions = exprs })
 

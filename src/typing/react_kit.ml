@@ -407,7 +407,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         Some
           (OptionalT
-             (r, union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))]))
+             {
+               reason = r;
+               type_ =
+                 union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))];
+               use_desc = false;
+             })
       (* If we have one children argument and a spread of unknown length then
        * React may either pass in the unwrapped argument, or an array where the
        * element type is the union of the known argument and the spread type. *)
@@ -573,7 +578,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let action = LookupProp (use_op, Field (None, ref_t, Polarity.Positive)) in
         rec_flow cx trace (normalized_config, LookupT (reason_ref, kind, [], propref, action))
       in
-      let elem_reason = annot_reason (replace_desc_reason (RType "React$Element") reason_op) in
+      let annot_loc = aloc_of_reason reason_op in
+      let elem_reason =
+        annot_reason ~annot_loc (replace_desc_reason (RType "React$Element") reason_op)
+      in
       rec_flow_t
         cx
         trace
@@ -662,7 +670,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, None))) in
           resolve t
         | InstanceOf ->
-          let t = mk_instance cx (annot_reason reason_op) l in
+          let annot_loc = aloc_of_reason reason_op in
+          let t = mk_instance cx (annot_reason ~annot_loc reason_op) l in
           resolve t
         | ObjectOf ->
           (* TODO: Don't ignore the required flag. *)

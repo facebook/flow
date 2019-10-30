@@ -217,18 +217,11 @@ let set_live_parse_errors_and_send send_json uri live_parse_errors state =
 
 (* We've run check-contents on a modified open file and now want to record the errors reported by
  * check-contents *)
-let set_live_non_parse_errors_and_send send_json uri_to_live_error_map state =
-  SMap.fold
-    (fun uri live_non_parse_errors state ->
-      (* If the caller passes in some parse errors then we'll just ignore them *)
-      let live_non_parse_errors = List.filter live_non_parse_errors ~f:is_not_parse_error in
-      modify_per_file_errors uri state (fun per_file_errors ->
-          {
-            per_file_errors with
-            live_non_parse_errors = Some (NonParseErrors live_non_parse_errors);
-          }))
-    uri_to_live_error_map
-    state
+let set_live_non_parse_errors_and_send send_json uri live_non_parse_errors state =
+  (* If the caller passes in some parse errors then we'll just ignore them *)
+  let live_non_parse_errors = List.filter live_non_parse_errors ~f:is_not_parse_error in
+  modify_per_file_errors uri state (fun per_file_errors ->
+      { per_file_errors with live_non_parse_errors = Some (NonParseErrors live_non_parse_errors) })
   |> send_all_errors send_json
 
 (* When we close a file we clear all the live parse errors or non-parse errors for that file, but we

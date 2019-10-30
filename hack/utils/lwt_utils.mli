@@ -1,9 +1,3 @@
-val select :
-  Unix.file_descr list ->
-  Unix.file_descr list ->
-  Unix.file_descr list ->
-  float ->
-  (Unix.file_descr list * Unix.file_descr list * Unix.file_descr list) Lwt.t
 (** Drop-in replacement for [Unix.select] that works even when the Lwt main loop
 is running (i.e. your function has [Lwt_main.run] somewhere higher up in the
 call stack).
@@ -13,6 +7,12 @@ The Lwt main loop is an event loop pumped by [Unix.select], and so regular
 function does not use [Unix.select] at all, but Lwt primitives that accomplish
 the same thing.
 *)
+val select :
+  Unix.file_descr list ->
+  Unix.file_descr list ->
+  Unix.file_descr list ->
+  float ->
+  (Unix.file_descr list * Unix.file_descr list * Unix.file_descr list) Lwt.t
 
 module Process_success : sig
   type t = {
@@ -34,12 +34,6 @@ module Process_failure : sig
   val to_string : t -> string
 end
 
-val exec_checked :
-  ?input:string ->
-  ?env:string array ->
-  string ->
-  string array ->
-  (Process_success.t, Process_failure.t) Lwt_result.t
 (** Run a command with a given input and return the output. If the command exits
 with an exit status other than zero, raises [Process_failure] instead.
 
@@ -48,15 +42,21 @@ tried to implement it, but after killing the process, both [Lwt_io.close] and
 [Lwt_io.abort] would hang when trying to close the process's
 stdin/stdout/stderr.)
 *)
+val exec_checked :
+  ?input:string ->
+  ?env:string array ->
+  string ->
+  string array ->
+  (Process_success.t, Process_failure.t) Lwt_result.t
 
-val try_finally :
-  f:(unit -> 'a Lwt.t) -> finally:(unit -> unit Lwt.t) -> 'a Lwt.t
 (** Asynchronous version of [Utils.try_finally]. Run and wait for [f] to
 complete, and be sure to invoke [finally] asynchronously afterward, even if [f]
 raises an exception. *)
+val try_finally :
+  f:(unit -> 'a Lwt.t) -> finally:(unit -> unit Lwt.t) -> 'a Lwt.t
 
-val read_all : string -> (string, string) Lwt_result.t
 (** Reads all the contents from the given file on disk, or returns an error
 message if unable to do so. *)
+val read_all : string -> (string, string) Lwt_result.t
 
 module Promise : Promise.S with type 'a t = 'a Lwt.t

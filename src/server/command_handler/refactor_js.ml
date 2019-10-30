@@ -8,9 +8,9 @@
 module Ast = Flow_ast
 open Utils_js
 
-let ( >>= ) = Core_result.( >>= )
+let ( >>= ) = Base.Result.( >>= )
 
-let ( >>| ) = Core_result.( >>| )
+let ( >>| ) = Base.Result.( >>| )
 
 let get_ref_kinds refs loc =
   refs |> List.filter (fun (_, ref_loc) -> ref_loc = loc) |> Core_list.map ~f:fst
@@ -132,7 +132,7 @@ let split_by_source refs =
       let (_, loc) = ref in
       acc
       >>= fun map ->
-      Core_result.of_option ~error:"No source found" Loc.(loc.source)
+      Base.Result.of_option ~error:"No source found" Loc.(loc.source)
       >>= fun source ->
       let lst = ref :: get_with_default [] source map in
       Ok (FilenameMap.add source lst map)

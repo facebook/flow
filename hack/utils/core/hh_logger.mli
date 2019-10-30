@@ -7,12 +7,6 @@
  *
  *)
 
-(* This `.mli` file was generated automatically. It may include extra
-definitions that should not actually be exposed to the caller. If you notice
-that this interface file is a poor interface, please take a few minutes to
-clean it up manually, and then delete this comment once the interface is in
-shape. *)
-
 val timestamp_string : unit -> string
 
 val dupe_log : (string * out_channel) option ref
@@ -20,6 +14,8 @@ val dupe_log : (string * out_channel) option ref
 val set_log : string -> out_channel -> unit
 
 val get_log_name : unit -> string option
+
+val set_id : string -> unit
 
 val print_with_newline :
   ?exn:Exception.t -> ('a, unit, string, unit) format4 -> 'a

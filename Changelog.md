@@ -1,3 +1,75 @@
+### 0.111.0
+
+Likely to cause new Flow errors:
+
+* Fixes to object spread. See https://medium.com/flow-type/spreads-common-errors-fixes-9701012e9d58
+
+New features:
+* Introduced an experimental flag (`experimental.minimal_merge`) that speeds up rechecks when the experimental types-first mode is in use. This flag will be turned on by default and then removed in future releases.
+* Turned on `experimental.allow_skip_direct_dependents` by default. The flag will be removed next release. This flag speeds up rechecks when the experimental types-first mode is in use.
+
+Notable bug fixes:
+* Fixed a bug where the ocaml representation of union types caused crashes in rare scenarios
+* Fixed a bug in node module resolution which allowed `module.system.node.resolve_dirname=.`. For those who relied on this bug to import modules using root-relative paths, you can now use `module.system.node.allow_root_relative=true`. See [#8156](https://github.com/facebook/flow/issues/8156) for more details.
+
+Misc:
+* Add getElementById to DocumentFragment
+* Add missing methods to Blob (thanks @lyleunderwood!)
+* Allow clients of `flow status`, `flow check`, etc. to choose character offset style
+* Support length refinement on tuples (thanks @ilya-bobyr)
+
+Parser:
+* Allow => in objects in return types of arrow functions
+
+### 0.110.1
+
+Notable bug fixes:
+* No longer show live Flow errors for files without @flow, unless `all=true` in the `.flowconfig`
+* No longer show live Flow errors for ignored files
+* Re-generate live errors after a recheck
+
+### 0.110.0
+
+New Features:
+* Flow will now send type errors as you type to LSP clients. To disable this behavior, add `experimental.disable_live_non_parse_errors=true` to the `[options]` section of your `.flowconfig`.
+
+Notable bug fixes:
+* Fixed file descriptor leak leading to LSP connection refusal in some cases
+* Improved the behavior of the `[declarations]` configuration in the presence of dependency cycles (thanks @STRML!)
+
+Misc:
+* Added `--evaluate-type-destructors` to `type-at-pos` command.
+* Added `--evaluate-type-destructors` and `--expand-type-aliases` to `dump-types` command (thanks @goodmind!)
+* Changed `proceses.env` values from `?string` to `string|void` (thanks @FireyFly!)
+* Improved detection of rebases when using watchman file watcher
+* Improved positions for error messages involving the deprecated `*` type
+
+### 0.109.0
+
+Likely to cause new Flow errors:
+    - Flow was previously not typechecking `delete`, but now does
+    - `Object.defineProperty` and similar methods now adhere more closely to the spec
+    - Allow defaults for properties that may not exist in React components
+
+Notable bug fixes:
+   - `$NonMaybeType<mixed>` no longer includes null and undefined (Thanks @goodmind)
+
+Misc:
+   - Deprecated `$Supertype` and `$Subtype` utilities are now removed entirely
+   - flow-upgrade should now use https over git (Thanks @lukeapage)
+   - Autocomplete now fires on spaces in JSX
+   - Better error messages when a value is used as a type
+
+Performance:
+   - Reduced memory usage by using a more compact representation for code locations
+   - Types-first should no longer check direct dependents of files where the signature has not changed
+
+Library Definitions
+   - Add a number of CSSOM interfaces + fix `HTMLStyleElement.sheet` type (Thanks @kof)
+   - Add `AsyncIterator` to `node.js` (Thanks @goodmind)
+   - Add `undefined` to prelude (Thanks @goodmind)
+   - Add String.prototype.matchAll (Thanks @goodmind)
+
 ### 0.108.0
 
 Notable bug fixes:

@@ -14,85 +14,10 @@ module Sort = Signature_builder_kind.Sort
 module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = struct
   module L = L
 
-  module ExpectedAnnotationSort = struct
-    type t =
-      | ArrayPattern
-      | FunctionReturn
-      | PrivateField of L.t Flow_ast.PrivateName.t
-      | Property of (L.t, L.t) Flow_ast.Expression.Object.Property.key
-      | VariableDefinition of (L.t, L.t) Flow_ast.Identifier.t
-
-    let property_key_to_string =
-      Flow_ast.Expression.Object.Property.(
-        function
-        | Literal (_, lit) ->
-          let lit = Reason.code_desc_of_literal lit in
-          spf "literal property %s" lit
-        | Identifier (_, { Flow_ast.Identifier.name; _ }) -> spf "property `%s`" name
-        | PrivateName (_, (_, { Flow_ast.Identifier.name; _ })) -> spf "property `%s`" name
-        | Computed e ->
-          let e = Reason.code_desc_of_expression ~wrap:false e in
-          spf "computed property `[%s]`" e)
-
-    let to_string = function
-      | ArrayPattern -> "array pattern"
-      | FunctionReturn -> "function return"
-      | Property key -> property_key_to_string key
-      | PrivateField (_, (_, { Flow_ast.Identifier.name; _ })) -> spf "private field `#%s`" name
-      | VariableDefinition (_, { Flow_ast.Identifier.name; _ }) ->
-        spf "declaration of variable `%s`" name
-  end
-
   module Error = struct
-    type t =
-      | ExpectedSort of Sort.t * string * L.t
-      | ExpectedAnnotation of L.t * ExpectedAnnotationSort.t
-      | InvalidTypeParamUse of L.t
-      | UnexpectedObjectKey of L.t * L.t
-      | UnexpectedObjectSpread of L.t * L.t
-      | UnexpectedArraySpread of L.t * L.t
-      | UnexpectedArrayHole of L.t
-      | EmptyArray of L.t
-      | EmptyObject of L.t
-      | UnexpectedExpression of L.t * Ast_utils.ExpressionSort.t
-      | SketchyToplevelDef of L.t
-      | UnsupportedPredicateExpression of L.t
-      | TODO of string * L.t
+    type t = L.t Signature_error.t
 
-    let compare = Pervasives.compare
-
-    let debug_to_string = function
-      | ExpectedSort (sort, x, loc) ->
-        spf "%s @ %s is not a %s" x (L.debug_to_string loc) (Sort.to_string sort)
-      | ExpectedAnnotation (loc, sort) ->
-        spf
-          "Expected annotation at %s @ %s"
-          (ExpectedAnnotationSort.to_string sort)
-          (L.debug_to_string loc)
-      | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (L.debug_to_string loc)
-      | UnexpectedObjectKey (_loc, key_loc) ->
-        spf "Expected simple object key @ %s" (L.debug_to_string key_loc)
-      | UnexpectedObjectSpread (_loc, spread_loc) ->
-        spf "Unexpected object spread @ %s" (L.debug_to_string spread_loc)
-      | UnexpectedArraySpread (_loc, spread_loc) ->
-        spf "Unexpected array spread @ %s" (L.debug_to_string spread_loc)
-      | UnexpectedArrayHole loc -> spf "Unexpected array hole @ %s" (L.debug_to_string loc)
-      | EmptyArray loc ->
-        spf "Cannot determine the element type of an empty array @ %s" (L.debug_to_string loc)
-      | EmptyObject loc ->
-        spf
-          "Cannot determine types of initialized properties of an empty object @ %s"
-          (L.debug_to_string loc)
-      | UnexpectedExpression (loc, esort) ->
-        spf
-          "Cannot determine the type of this %s @ %s"
-          (Ast_utils.ExpressionSort.to_string esort)
-          (L.debug_to_string loc)
-      | SketchyToplevelDef loc ->
-        spf "Unexpected toplevel definition that needs hoisting @ %s" (L.debug_to_string loc)
-      | UnsupportedPredicateExpression loc ->
-        spf "Unsupported predicate expression @ %s" (L.debug_to_string loc)
-      | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (L.debug_to_string loc)
+    let compare = Signature_error.compare
   end
 
   module PrintableErrorSet = Set.Make (Error)
@@ -128,7 +53,7 @@ module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = s
 
     let compare = Pervasives.compare
 
-    let expectation sort x loc = Error.ExpectedSort (sort, x, loc)
+    let expectation sort x loc = Signature_error.ExpectedSort (sort, x, loc)
 
     let remote = function
       | Remote _ -> true
@@ -186,7 +111,7 @@ module Make (L : Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = s
 
   let unreachable = bot
 
-  let todo loc msg = top (Error.TODO (msg, loc))
+  let todo loc msg = top (Signature_error.TODO (msg, loc))
 
   let unit dep = (DepSet.singleton dep, PrintableErrorSet.empty)
 
@@ -227,36 +152,3 @@ end
 module With_Loc = Make (Loc_sig.LocS)
 module With_ALoc = Make (Loc_sig.ALocS)
 include With_Loc
-
-let abstractify_expected_annotation_sort =
-  let module WL = With_Loc.ExpectedAnnotationSort in
-  let module WA = With_ALoc.ExpectedAnnotationSort in
-  function
-  | WL.ArrayPattern -> WA.ArrayPattern
-  | WL.FunctionReturn -> WA.FunctionReturn
-  | WL.Property key -> WA.Property (Ast_loc_utils.loc_to_aloc_mapper#object_key key)
-  | WL.PrivateField key -> WA.PrivateField (Ast_loc_utils.loc_to_aloc_mapper#private_name key)
-  | WL.VariableDefinition id ->
-    WA.VariableDefinition (Ast_loc_utils.loc_to_aloc_mapper#identifier id)
-
-let abstractify_error =
-  let module WL = With_Loc.Error in
-  let module WA = With_ALoc.Error in
-  function
-  | WL.ExpectedSort (sort, str, loc) -> WA.ExpectedSort (sort, str, ALoc.of_loc loc)
-  | WL.ExpectedAnnotation (loc, sort) ->
-    WA.ExpectedAnnotation (ALoc.of_loc loc, abstractify_expected_annotation_sort sort)
-  | WL.InvalidTypeParamUse loc -> WA.InvalidTypeParamUse (ALoc.of_loc loc)
-  | WL.UnexpectedObjectKey (loc, key_loc) ->
-    WA.UnexpectedObjectKey (ALoc.of_loc loc, ALoc.of_loc key_loc)
-  | WL.UnexpectedObjectSpread (loc, spread_loc) ->
-    WA.UnexpectedObjectSpread (ALoc.of_loc loc, ALoc.of_loc spread_loc)
-  | WL.UnexpectedArraySpread (loc, spread_loc) ->
-    WA.UnexpectedArraySpread (ALoc.of_loc loc, ALoc.of_loc spread_loc)
-  | WL.UnexpectedArrayHole loc -> WA.UnexpectedArrayHole (ALoc.of_loc loc)
-  | WL.EmptyArray loc -> WA.EmptyArray (ALoc.of_loc loc)
-  | WL.EmptyObject loc -> WA.EmptyObject (ALoc.of_loc loc)
-  | WL.UnexpectedExpression (loc, sort) -> WA.UnexpectedExpression (ALoc.of_loc loc, sort)
-  | WL.SketchyToplevelDef loc -> WA.SketchyToplevelDef (ALoc.of_loc loc)
-  | WL.UnsupportedPredicateExpression loc -> WA.UnsupportedPredicateExpression (ALoc.of_loc loc)
-  | WL.TODO (str, loc) -> WA.TODO (str, ALoc.of_loc loc)

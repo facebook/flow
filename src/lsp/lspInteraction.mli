@@ -25,14 +25,18 @@ type trigger =
   | PushedErrorsRecheckStreaming of LspProt.recheck_reason
   | Rage
   | Rename
+  | ServerConnected
   | TypeCoverage
   | UnknownTrigger
 
 type ux =
   | Canceled
+  | CanceledPushingLiveNonParseErrors
   | Errored
+  | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveNonParseErrors
   | PushedLiveParseErrors
   | Responded
   | Timeout

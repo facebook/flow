@@ -8,27 +8,48 @@
 (* table from 0-based line number and 0-based column number to the offset at that point *)
 type t = int array array
 
+type offset_kind =
+  | Utf8
+  | JavaScript
+
 (* Classify each codepoint. We care about how many bytes each codepoint takes, in order to
    compute offsets in terms of bytes instead of codepoints. We also care about various kinds of
    newlines. To reduce memory, it is important that this is a basic variant with no parameters
    (so, don't make it `Chars of int`). *)
 type kind =
-  | Chars_1
-  | Chars_2
-  | Chars_3
-  | Chars_4
+  (* Char has a codepoint greater than or equal to 0x0 but less than 0x80 *)
+  | Chars_0x0
+  (* Char has a codepoint greater than or equal to 0x80 but less than 0x800 *)
+  | Chars_0x80
+  | Chars_0x800
+  | Chars_0x10000
+  | Malformed
   | Cr
   | Nl
   | Ls
 
-let size_of_kind = function
-  | Chars_1 -> 1
-  | Chars_2 -> 2
-  | Chars_3 -> 3
-  | Chars_4 -> 4
+(* Gives the size in bytes of the character's UTF-8 encoding *)
+let utf8_size_of_kind = function
+  | Chars_0x0 -> 1
+  | Chars_0x80 -> 2
+  | Chars_0x800 -> 3
+  | Chars_0x10000 -> 4
+  | Malformed -> 1
   | Cr -> 1
   | Nl -> 1
   | Ls -> 3
+
+(* Gives the size in code units (16-bit blocks) of the character's UTF-16 encoding *)
+let js_size_of_kind = function
+  | Chars_0x0
+  | Chars_0x80
+  | Chars_0x800 ->
+    1
+  | Chars_0x10000 -> 2
+  | Malformed -> 1
+  | Cr -> 1
+  | Nl -> 1
+  | Ls -> 1
 
 let make =
   (* Using Wtf8 allows us to properly track multi-byte characters, so that we increment the column
@@ -39,41 +60,41 @@ let make =
     let kind =
       match chr with
       | Wtf8.Point code ->
-        if code >= 0x10000 then
-          Chars_4
-        else if code == 0x2028 || code == 0x2029 then
+        if code == 0x2028 || code == 0x2029 then
           Ls
-        else if code >= 0x800 then
-          Chars_3
-        else if code >= 0x80 then
-          Chars_2
         else if code == 0xA then
           Nl
         else if code == 0xD then
           Cr
+        else if code >= 0x10000 then
+          Chars_0x10000
+        else if code >= 0x800 then
+          Chars_0x800
+        else if code >= 0x80 then
+          Chars_0x80
         else
-          Chars_1
-      | Wtf8.Malformed -> Chars_1
+          Chars_0x0
+      | Wtf8.Malformed -> Malformed
     in
     kind :: acc
   in
   (* Traverses a `kind list`, breaking it up into an `int array array`, where each `int array`
      contains the offsets at each character (aka codepoint) of a line. *)
-  let rec build_table (offset, rev_line, acc) = function
+  let rec build_table size_of_kind (offset, rev_line, acc) = function
     | [] -> Array.of_list (List.rev acc)
     | Cr :: Nl :: rest ->
       (* https://www.ecma-international.org/ecma-262/5.1/#sec-7.3 says that "\r\n" should be treated
        like a single line terminator, even though both '\r' and '\n' are line terminators in their
        own right. *)
       let line = Array.of_list (List.rev (offset :: rev_line)) in
-      build_table (offset + 2, [], line :: acc) rest
+      build_table size_of_kind (offset + 2, [], line :: acc) rest
     | ((Cr | Nl | Ls) as kind) :: rest ->
       let line = Array.of_list (List.rev (offset :: rev_line)) in
-      build_table (offset + size_of_kind kind, [], line :: acc) rest
-    | ((Chars_1 | Chars_2 | Chars_3 | Chars_4) as kind) :: rest ->
-      build_table (offset + size_of_kind kind, offset :: rev_line, acc) rest
+      build_table size_of_kind (offset + size_of_kind kind, [], line :: acc) rest
+    | ((Chars_0x0 | Chars_0x80 | Chars_0x800 | Chars_0x10000 | Malformed) as kind) :: rest ->
+      build_table size_of_kind (offset + size_of_kind kind, offset :: rev_line, acc) rest
   in
-  fun text ->
+  fun ~kind text ->
     let rev_kinds = Wtf8.fold_wtf_8 fold_codepoints [] text in
     (* Add a phantom line at the end of the file. Since end positions are reported exclusively, it
      * is possible for the lexer to output an end position with a line number one higher than the
@@ -81,7 +102,12 @@ let make =
      * return the offset that is one higher than the last legitimate offset, since it could only be
      * correctly used as an exclusive index. *)
     let rev_kinds = Nl :: rev_kinds in
-    build_table (0, [], []) (List.rev rev_kinds)
+    let size_of_kind =
+      match kind with
+      | Utf8 -> utf8_size_of_kind
+      | JavaScript -> js_size_of_kind
+    in
+    build_table size_of_kind (0, [], []) (List.rev rev_kinds)
 
 exception Offset_lookup_failed of Loc.position * string
 

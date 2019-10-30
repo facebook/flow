@@ -39,31 +39,35 @@ let spec =
 let parse_args = function
   | None
   | Some [] ->
-    File_input.FileContent (None, Sys_utils.read_stdin_to_string ())
+    (File_input.FileContent (None, Sys_utils.read_stdin_to_string ()), "")
   | Some [filename] ->
     let filename = get_path_of_file filename in
-    File_input.FileContent (Some filename, Sys_utils.read_stdin_to_string ())
+    (File_input.FileContent (Some filename, Sys_utils.read_stdin_to_string ()), "")
   | Some [line; column] ->
     let line = int_of_string line in
     let column = int_of_string column in
     let contents = Sys_utils.read_stdin_to_string () in
     let (line, column) = convert_input_pos (line, column) in
-    File_input.FileContent
-      (None, AutocompleteService_js.add_autocomplete_token contents line column)
+    let (contents_with_token, broader_context) =
+      AutocompleteService_js.add_autocomplete_token contents line column
+    in
+    (File_input.FileContent (None, contents_with_token), broader_context)
   | Some [filename; line; column] ->
     let line = int_of_string line in
     let column = int_of_string column in
     let contents = Sys_utils.read_stdin_to_string () in
     let filename = get_path_of_file filename in
     let (line, column) = convert_input_pos (line, column) in
-    File_input.FileContent
-      (Some filename, AutocompleteService_js.add_autocomplete_token contents line column)
+    let (contents_with_token, broader_context) =
+      AutocompleteService_js.add_autocomplete_token contents line column
+    in
+    (File_input.FileContent (Some filename, contents_with_token), broader_context)
   | _ ->
     CommandSpec.usage spec;
     FlowExitStatus.(exit Commandline_usage_error)
 
 let main base_flags option_values json pretty root strip_root wait_for_recheck args () =
-  let file = parse_args args in
+  let (file, broader_context) = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
     guess_root
@@ -78,7 +82,10 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck a
     else
       None
   in
-  let request = ServerProt.Request.AUTOCOMPLETE { input = file; wait_for_recheck } in
+  let request =
+    ServerProt.Request.AUTOCOMPLETE
+      { input = file; wait_for_recheck; trigger_character = None; broader_context }
+  in
   let results =
     match connect_and_make_request flowconfig_name option_values root request with
     | ServerProt.Response.AUTOCOMPLETE response -> response

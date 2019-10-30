@@ -511,8 +511,9 @@ with type t = Impl.t = struct
               ("consequent", expression consequent);
               ("alternate", expression alternate);
             ]
-        | (loc, New { New.callee; targs; arguments }) ->
+        | (loc, New { New.callee; targs; arguments; comments }) ->
           node
+            ?comments
             "NewExpression"
             loc
             [
@@ -673,8 +674,8 @@ with type t = Impl.t = struct
         "SwitchCase"
         loc
         [("test", option expression test); ("consequent", array_of_list statement consequent)]
-    and catch (loc, { Statement.Try.CatchClause.param; body }) =
-      node "CatchClause" loc [("param", option pattern param); ("body", block body)]
+    and catch (loc, { Statement.Try.CatchClause.param; body; comments }) =
+      node ?comments "CatchClause" loc [("param", option pattern param); ("body", block body)]
     and block (loc, { Statement.Block.body }) =
       node "BlockStatement" loc [("body", statement_list body)]
     and declare_variable (loc, { Statement.DeclareVariable.id; annot }) =
@@ -785,13 +786,15 @@ with type t = Impl.t = struct
     and class_declaration ast = class_helper "ClassDeclaration" ast
     and class_expression ast = class_helper "ClassExpression" ast
     and class_helper
-        node_type (loc, { Class.id; extends; body; tparams; implements; classDecorators }) =
+        node_type (loc, { Class.id; extends; body; tparams; implements; classDecorators; comments })
+        =
       let (super, super_targs) =
         match extends with
         | Some (_, { Class.Extends.expr; targs }) -> (Some expr, targs)
         | None -> (None, None)
       in
       node
+        ?comments
         node_type
         loc
         [

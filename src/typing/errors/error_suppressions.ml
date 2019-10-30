@@ -167,6 +167,11 @@ let in_node_modules ~root ~file_options loc =
   | None -> false
   | Some (file, options) -> Files.is_within_node_modules ~root ~options (File_key.to_string file)
 
+let in_declarations ~file_options loc =
+  match Option.both (Loc.source loc) file_options with
+  | None -> false
+  | Some (file, options) -> Files.is_declaration options (File_key.to_string file)
+
 let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions : t) (unused : t)
     =
   let locs =
@@ -176,11 +181,11 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
      * without a source. *)
     |> List.filter (fun loc -> Option.is_some (Loc.source loc))
   in
-  (* Ignore lint errors from node modules. *)
+  (* Ignore lint errors from node modules, and all errors from declarations directories. *)
   let ignore =
     match Errors.kind_of_printable_error err with
     | Errors.LintError _ -> in_node_modules ~root ~file_options (Errors.loc_of_printable_error err)
-    | _ -> false
+    | _ -> in_declarations ~file_options (Errors.loc_of_printable_error err)
   in
   if ignore then
     None

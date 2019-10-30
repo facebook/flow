@@ -13,6 +13,12 @@ that this interface file is a poor interface, please take a few minutes to
 clean it up manually, and then delete this comment once the interface is in
 shape. *)
 
+type override_info = {
+  class_name: string;
+  method_name: string;
+  is_static: bool;
+}
+
 type kind =
   | Class
   | Record
@@ -23,6 +29,7 @@ type kind =
   | ClassConst of string * string
   | Typeconst of string * string
   | GConst
+  | Attribute of override_info option
 
 type 'a t = {
   name: string;

@@ -573,12 +573,6 @@ end = struct
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t ~env t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
-      | AnyWithUpperBoundT t ->
-        let%map t = type__ ~env t in
-        Ty.Utility (Ty.Subtype t)
-      | AnyWithLowerBoundT t ->
-        let%map t = type__ ~env t in
-        Ty.Utility (Ty.Supertype t)
       | DefT (_, _, MixedT _) -> return Ty.Top
       | AnyT (_, kind) -> return (Ty.Any (any_t kind))
       | DefT (_, _, VoidT) -> return Ty.Void
@@ -599,7 +593,7 @@ end = struct
       | MaybeT (_, t) ->
         let%map t = type__ ~env t in
         Ty.mk_union (Ty.Void, [Ty.Null; t])
-      | OptionalT (_, t) ->
+      | OptionalT { reason = _; type_ = t; use_desc = _ } ->
         let%map t = type__ ~env t in
         Ty.mk_union (Ty.Void, [t])
       | DefT (_, _, FunT (_, _, f)) ->
@@ -619,7 +613,7 @@ end = struct
         let%bind t1 = type__ ~env t1 in
         let%map ts = mapM (type__ ~env) ts in
         Ty.mk_inter (t0, t1 :: ts)
-      | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
+      | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
       | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
       | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
@@ -649,7 +643,7 @@ end = struct
       | ExistsT _ -> return Ty.(Utility Exists)
       | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
       | FunProtoT _ -> return Ty.(TypeOf FunProto)
-      | OpenPredT (_, t, _, _) -> type__ ~env t
+      | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ } -> type__ ~env t
       | FunProtoApplyT _ ->
         if Env.expand_internal_types env then
           (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
@@ -746,7 +740,7 @@ end = struct
       (* Resolve the tvar *)
       let (ty_res, out_st) = run in_st (resolve_bounds ~env cons) in
       (* Create a recursive type (if needed) *)
-      let ty_res = Core_result.map ~f:(Recursive.make out_st.free_tvars rid) ty_res in
+      let ty_res = Base.Result.map ~f:(Recursive.make out_st.free_tvars rid) ty_res in
       (* Reset state by removing the current tvar from the free vars set *)
       let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
       let%bind _ = put out_st in
@@ -820,7 +814,7 @@ end = struct
     Type.(
       match t with
       | DefT (_, _, FunT (_, _, f)) -> fun_ty ~env f None
-      | DefT (_, _, PolyT (_, ps, DefT (_, _, FunT (_, _, f)), _)) ->
+      | DefT (_, _, PolyT { tparams = ps; t_out = DefT (_, _, FunT (_, _, f)); _ }) ->
         let%bind ps = mapM (type_param ~env) (Nel.to_list ps) in
         fun_ty ~env f (Some ps)
       | _ -> terr ~kind:BadMethodType (Some t))
@@ -1174,14 +1168,23 @@ end = struct
         | OpaqueT (r, o) -> opaque_type_t ~env r o ps
         | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
       in
+      let type_param env r t =
+        match desc_of_reason r with
+        | RType name ->
+          let symbol = symbol_from_reason env r name in
+          return (Ty.named_alias symbol)
+        | RThisType -> type__ ~env t
+        | desc ->
+          terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
+      in
       fun ~env r kind t ps ->
         match kind with
         | TypeAliasKind -> local env t ps
         | ImportClassKind -> class_t ~env t ps
         | ImportTypeofKind -> import_typeof env r t ps
         | OpaqueKind -> opaque env t ps
+        | TypeParamKind -> type_param env r t
         (* The following cases are not common *)
-        | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"typeparam" (Some t)
         | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t))
 
   and exact_t ~env t = type__ ~env t >>| Ty.mk_exact
@@ -1491,7 +1494,7 @@ end = struct
   and opt_t ~env t =
     let (t, opt) =
       match t with
-      | T.OptionalT (_, t) -> (t, true)
+      | T.OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
       | t -> (t, false)
     in
     let%map t = type__ ~env t in
@@ -1513,7 +1516,7 @@ end = struct
     let obj_exact target =
       match target with
       | Type.Object.Spread.(Annot { make_exact }) -> return make_exact
-      | Type.Object.Spread.Value -> terr ~kind:BadEvalT ~msg:"spread-target-value" None
+      | Type.Object.Spread.Value _ -> terr ~kind:BadEvalT ~msg:"spread-target-value" None
     in
     let mk_spread ty target prefix_tys head_slice =
       let obj_props = prefix_tys @ spread_of_ty ty in

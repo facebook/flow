@@ -204,7 +204,7 @@ let entry_counter = ref 0
 let register_entry_point ~restore =
   incr entry_counter;
   let restore (st, gc_control, heap_handle, worker_id) =
-    restore st;
+    restore st ~worker_id;
     SharedMem.connect heap_handle ~worker_id;
     Gc.set gc_control
   in

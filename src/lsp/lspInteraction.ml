@@ -30,6 +30,7 @@ type trigger =
   | PushedErrorsRecheckStreaming of recheck_reason
   | Rage
   | Rename
+  | ServerConnected
   | TypeCoverage
   | UnknownTrigger
 
@@ -42,9 +43,12 @@ type source =
 (* What was the result of this interaction. *)
 type ux =
   | Canceled
+  | CanceledPushingLiveNonParseErrors
   | Errored
+  | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveNonParseErrors
   | PushedLiveParseErrors
   | Responded
   | Timeout
@@ -90,14 +94,18 @@ let string_of_trigger = function
   | PushedErrorsNewSubscription -> "newSubscription"
   | Rage -> "Rage"
   | Rename -> "Rename"
+  | ServerConnected -> "ServerConnected"
   | TypeCoverage -> "TypeCoverage"
   | UnknownTrigger -> "UnknownTrigger"
 
 let string_of_ux = function
   | Canceled -> "Canceled"
+  | CanceledPushingLiveNonParseErrors -> "CanceledPushingLiveNonParseErrors"
   | Errored -> "Errored"
+  | ErroredPushingLiveNonParseErrors -> "ErroredPushingLiveNonParseErrors"
   | ErroredPushingLiveParseErrors -> "ErroredPushingLiveParseErrors"
   | PushedErrors -> "PushedErrors"
+  | PushedLiveNonParseErrors -> "PushedLiveNonParseErrors"
   | PushedLiveParseErrors -> "PushedLiveParseErrors"
   | Responded -> "Responded"
   | Timeout -> "Timeout"
@@ -132,7 +140,8 @@ let source_of_trigger = function
   | PushedErrorsEndOfRecheck _
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
-  | PushedErrorsRecheckStreaming _ ->
+  | PushedErrorsRecheckStreaming _
+  | ServerConnected ->
     Server
   | UnknownTrigger -> UnknownSource
 
@@ -295,6 +304,7 @@ let trigger_of_lsp_msg =
     | ResponseMessage (_, WorkspaceSymbolResult _)
     | ResponseMessage (_, DocumentSymbolResult _)
     | ResponseMessage (_, FindReferencesResult _)
+    | ResponseMessage (_, GoToImplementationResult _)
     | ResponseMessage (_, DocumentHighlightResult _)
     | ResponseMessage (_, DocumentCodeLensResult _)
     | ResponseMessage (_, TypeCoverageResult _)

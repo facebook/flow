@@ -178,15 +178,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method catch_clause (clause : ('M, 'T) Ast.Statement.Try.CatchClause.t')
         : ('N, 'U) Ast.Statement.Try.CatchClause.t' =
       Ast.Statement.Try.CatchClause.(
-        let { param; body } = clause in
+        let { param; body; comments } = clause in
         let param' = Option.map ~f:this#catch_clause_pattern param in
         let body' = (this#on_loc_annot * this#block) body in
-        { param = param'; body = body' })
+        let comments' = Option.map ~f:this#syntax comments in
+        { param = param'; body = body'; comments = comments' })
 
     method class_ (cls : ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
       Ast.Class.(
-        let { id; body; tparams; extends; implements; classDecorators } = cls in
+        let { id; body; tparams; extends; implements; classDecorators; comments } = cls in
         let id' = Option.map ~f:this#class_identifier id in
+        let comments' = Option.map ~f:this#syntax comments in
         this#type_parameter_declaration_opt tparams (fun tparams' ->
             let extends' = Option.map ~f:this#class_extends extends in
             let body' = this#class_body body in
@@ -199,6 +201,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               extends = extends';
               implements = implements';
               classDecorators = classDecorators';
+              comments = comments';
             }))
 
     method class_extends (extends : ('M, 'T) Ast.Class.Extends.t) : ('N, 'U) Ast.Class.Extends.t =
@@ -1156,11 +1159,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method new_ (expr : ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
       Ast.Expression.New.(
-        let { callee; targs; arguments } = expr in
+        let { callee; targs; arguments; comments } = expr in
         let callee' = this#expression callee in
         let targs' = Option.map ~f:this#type_parameter_instantiation_with_implicit targs in
         let arguments' = Core_list.map ~f:this#expression_or_spread arguments in
-        { callee = callee'; targs = targs'; arguments = arguments' })
+        let comments' = Option.map ~f:this#syntax comments in
+        { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' })
 
     method object_ (expr : ('M, 'T) Ast.Expression.Object.t) : ('N, 'U) Ast.Expression.Object.t =
       Ast.Expression.Object.(

@@ -204,8 +204,8 @@ module Object
                     let params =
                       let (yield, await) =
                         match (async, generator) with
-                        | (true, true) -> (true, true)
-                        (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+                        | (true, true) ->
+                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
                         | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
                         | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
                         | (false, false) -> (false, false)
@@ -553,12 +553,16 @@ module Object
     fun env ->
       with_loc
         (fun env ->
-          Expect.token env T_LCURLY;
-          enter_class env;
-          let body = elements env false SMap.empty [] in
-          exit_class env;
-          Expect.token env T_RCURLY;
-          { Ast.Class.Body.body })
+          if Expect.maybe env T_LCURLY then (
+            enter_class env;
+            let body = elements env false SMap.empty [] in
+            exit_class env;
+            Expect.token env T_RCURLY;
+            { Ast.Class.Body.body }
+          ) else (
+            Expect.error env T_LCURLY;
+            { Ast.Class.Body.body = [] }
+          ))
         env
 
   (* In the ES6 draft, all elements are methods. No properties (though there
@@ -654,8 +658,8 @@ module Object
                     let params =
                       let (yield, await) =
                         match (async, generator) with
-                        | (true, true) -> (true, true)
-                        (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+                        | (true, true) ->
+                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
                         | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
                         | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
                         | (false, false) -> (false, false)
@@ -750,6 +754,7 @@ module Object
         (* 10.2.1 says all parts of a class definition are strict *)
         let env = env |> with_strict true in
         let decorators = decorators @ decorator_list env in
+        let leading = Peek.comments env in
         Expect.token env T_CLASS;
         let tmp_env = env |> with_no_let true in
         let id =
@@ -759,8 +764,21 @@ module Object
         in
         let tparams = Type.type_parameter_declaration env in
         let (body, extends, implements) = _class env in
+        let trailing =
+          match id with
+          | None -> Peek.comments env
+          | _ -> []
+        in
         Ast.Statement.ClassDeclaration
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators })
+          {
+            Class.id;
+            body;
+            tparams;
+            extends;
+            implements;
+            classDecorators = decorators;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
       env
 
   let class_expression =
@@ -768,6 +786,7 @@ module Object
         (* 10.2.1 says all parts of a class expression are strict *)
         let env = env |> with_strict true in
         let decorators = decorator_list env in
+        let leading = Peek.comments env in
         Expect.token env T_CLASS;
         let (id, tparams) =
           match Peek.token env with
@@ -781,7 +800,20 @@ module Object
             let tparams = Type.type_parameter_declaration env in
             (id, tparams)
         in
+        let trailing =
+          match id with
+          | None -> Peek.comments env
+          | _ -> []
+        in
         let (body, extends, implements) = _class env in
         Ast.Expression.Class
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators })
+          {
+            Class.id;
+            body;
+            tparams;
+            extends;
+            implements;
+            classDecorators = decorators;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
 end

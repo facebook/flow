@@ -12,9 +12,9 @@ module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
 module Deps = Signature_builder_deps.With_Loc
 module File_sig = File_sig.With_Loc
-module Error = Deps.Error
+module Error = Signature_error
 module Dep = Deps.Dep
-module EASort = Signature_builder_deps.ExpectedAnnotationSort
+module EASort = Expected_annotation_sort
 
 module type EvalEnv = sig
   val prevent_munge : bool
@@ -697,9 +697,18 @@ module Eval (Env : EvalEnv) = struct
           in
           function_ tps generator tparams params return body predicate
         | Body.Property (loc, { Property.annot; key; _ }) ->
-          annotated_type ~sort:(EASort.Property key) tps loc annot
+          let name =
+            let open Ast.Expression.Object.Property in
+            match key with
+            | Literal (_, lit) -> EASort.Literal (Reason.code_desc_of_literal lit)
+            | Identifier (_, { Ast.Identifier.name; _ }) -> EASort.Identifier name
+            | PrivateName (_, (_, { Ast.Identifier.name; _ })) -> EASort.PrivateName name
+            | Computed e -> EASort.Computed (Reason.code_desc_of_expression ~wrap:false e)
+          in
+          annotated_type ~sort:(EASort.Property { name }) tps loc annot
         | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
-          annotated_type ~sort:(EASort.PrivateField key) tps loc annot)
+          let (_, (_, { Ast.Identifier.name; _ })) = key in
+          annotated_type ~sort:(EASort.PrivateField { name }) tps loc annot)
     in
     fun tparams body super super_targs implements ->
       Ast.Class.(
@@ -796,7 +805,8 @@ module Verifier (Env : EvalEnv) = struct
         | None -> eval id_loc (loc, base)
       end
     | Kind.VariableDef { id; annot; init } ->
-      Eval.annotation ~sort:(EASort.VariableDefinition id) ?init SSet.empty (id_loc, annot)
+      let (_, { Ast.Identifier.name; _ }) = id in
+      Eval.annotation ~sort:(EASort.VariableDefinition { name }) ?init SSet.empty (id_loc, annot)
     | Kind.FunctionDef { generator; async = _; tparams; params; return; body; predicate } ->
       Eval.function_ SSet.empty generator tparams params return body predicate
     | Kind.DeclareFunctionDef { annot = (_, t); predicate } ->
@@ -831,7 +841,7 @@ module Verifier (Env : EvalEnv) = struct
     | Kind.ImportStarDef { kind; source } ->
       Deps.import_star (Kind.Sort.of_import_kind kind) source
     | Kind.RequireDef { source; name } -> Deps.require ?name source
-    | Kind.SketchyToplevelDef -> Deps.top (Deps.Error.SketchyToplevelDef loc)
+    | Kind.SketchyToplevelDef -> Deps.top (Error.SketchyToplevelDef loc)
 
   let cjs_exports =
     let tps = SSet.empty in
@@ -1019,19 +1029,19 @@ module Verifier (Env : EvalEnv) = struct
   let dynamic_validator env (dynamic_imports, dynamic_requires) = function
     | Dep.Class (loc, x) ->
       if SMap.mem x env then
-        Deps.top (Deps.Error.SketchyToplevelDef loc)
+        Deps.top (Error.SketchyToplevelDef loc)
       else
         Deps.bot
     | Dep.DynamicImport loc ->
       begin
         match LocMap.get loc dynamic_imports with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
+        | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
         | Some source -> Deps.import_star Kind.Sort.Value source
       end
     | Dep.DynamicRequire loc ->
       begin
         match LocMap.get loc dynamic_requires with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
+        | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
         | Some source -> Deps.require source
       end
 

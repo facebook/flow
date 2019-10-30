@@ -53,9 +53,6 @@ class ['a] t =
       | BoundT _ -> acc
       | ExistsT _ -> acc
       | ExactT (_, t) -> self#type_ cx pole acc t
-      | AnyWithLowerBoundT t
-      | AnyWithUpperBoundT t ->
-        self#type_ cx pole acc t
       | MergedT (_, uses) -> List.fold_left (self#use_type_ cx) acc uses
       | ShapeT t -> self#type_ cx pole acc t
       | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
@@ -77,7 +74,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | OpenPredT (_, t, p_map, n_map) ->
+      | OpenPredT { base_t = t; m_pos = p_map; m_neg = n_map; reason = _ } ->
         let acc = self#type_ cx pole acc t in
         let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
         let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in
@@ -104,7 +101,7 @@ class ['a] t =
       | AnyT _
       | InternalT (OptionalChainVoidT _) ->
         acc
-      | OptionalT (_, t)
+      | OptionalT { reason = _; type_ = t; use_desc = _ }
       | MaybeT (_, t) ->
         self#type_ cx pole acc t
       | IntersectionT (_, rep) -> self#list (self#type_ cx pole) acc (InterRep.members rep)
@@ -140,9 +137,9 @@ class ['a] t =
       | SingletonBoolT _ ->
         acc
       | TypeT (_, t) -> self#type_ cx pole acc t
-      | PolyT (_, xs, t, _) ->
-        let acc = self#nel (self#type_param cx pole) acc xs in
-        let acc = self#type_ cx pole acc t in
+      | PolyT { tparams; t_out; tparams_loc = _; id = _ } ->
+        let acc = self#nel (self#type_param cx pole) acc tparams in
+        let acc = self#type_ cx pole acc t_out in
         acc
       | IdxWrapper t -> self#type_ cx pole acc t
       | ReactAbstractComponentT { config; instance } ->
@@ -244,7 +241,7 @@ class ['a] t =
         let acc = self#fun_call_type cx acc fn in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
         acc
-      | SetPropT (_, _, p, _, t, prop_t) ->
+      | SetPropT (_, _, p, _, _, t, prop_t) ->
         let acc = self#propref cx acc p in
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
@@ -255,7 +252,7 @@ class ['a] t =
         let acc = self#propref cx acc p in
         let acc = self#type_ cx pole_TODO acc t in
         acc
-      | SetPrivatePropT (_, _, _, scopes, _, t, prop_t) ->
+      | SetPrivatePropT (_, _, _, _, scopes, _, t, prop_t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
@@ -264,7 +261,7 @@ class ['a] t =
         let acc = List.fold_left (self#class_binding cx) acc scopes in
         let acc = self#type_ cx pole_TODO acc t in
         acc
-      | SetElemT (_, _, e, tin, tout) ->
+      | SetElemT (_, _, e, _, tin, tout) ->
         let acc = self#type_ cx pole_TODO acc e in
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in
@@ -392,14 +389,14 @@ class ['a] t =
         acc
       | CopyNamedExportsT (_, t, tout)
       | CopyTypeExportsT (_, t, tout)
-      | ExportTypeT (_, _, _, t, tout) ->
+      | ExportTypeT (_, _, t, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#type_ cx pole_TODO acc tout in
         acc
       | AssertExportIsTypeT (_, _, tout) ->
         let acc = self#type_ cx pole_TODO acc tout in
         acc
-      | ExportNamedT (_, _, ts, _, tout) ->
+      | ExportNamedT (_, ts, _, tout) ->
         let visit_pair acc (_loc, t) = self#type_ cx pole_TODO acc t in
         let acc = self#smap visit_pair acc ts in
         let acc = self#type_ cx pole_TODO acc tout in
@@ -471,9 +468,18 @@ class ['a] t =
             match tool with
             | ReadOnly -> acc
             | ObjectRep -> acc
+            | ObjectWiden _ -> acc
             | Spread (_, state) ->
               Object.Spread.(
-                let { todo_rev; acc = object_spread_acc } = state in
+                let {
+                  todo_rev;
+                  acc = object_spread_acc;
+                  spread_id = _;
+                  union_reason = _;
+                  curr_resolve_idx = _;
+                } =
+                  state
+                in
                 let acc = List.fold_left (self#object_kit_spread_operand cx) acc todo_rev in
                 let acc = List.fold_left (self#object_kit_acc_element cx) acc object_spread_acc in
                 acc)
@@ -599,6 +605,10 @@ class ['a] t =
       | DestructuringT (_, _, s, tout) ->
         let acc = self#selector cx acc s in
         let acc = self#type_ cx pole_TODO acc tout in
+        acc
+      | CreateObjWithComputedPropT { reason = _; value; tout_tvar = (r, id) } ->
+        let acc = self#type_ cx pole_TODO acc value in
+        let acc = self#tvar cx pole_TODO acc r id in
         acc
       | ModuleExportsAssignT (_, t, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
@@ -765,7 +775,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | WriteProp { use_op = _; obj_t; prop_tout; tin; write_ctx = _ } ->
+      | WriteProp { use_op = _; obj_t; prop_tout; tin; write_ctx = _; mode = _ } ->
         let acc = self#type_ cx pole_TODO acc obj_t in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_tout in
         let acc = self#type_ cx pole_TODO acc tin in
@@ -778,7 +788,7 @@ class ['a] t =
     method private elem_action cx acc =
       function
       | ReadElem t -> self#type_ cx pole_TODO acc t
-      | WriteElem (tin, tout) ->
+      | WriteElem (tin, tout, _) ->
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in
         acc

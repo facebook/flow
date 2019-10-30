@@ -1,3 +1,0 @@
-all: false
-shell: test.sh
-skip_saved_state: true

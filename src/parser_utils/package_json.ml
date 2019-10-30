@@ -14,7 +14,7 @@ type t = {
 
 type 'a t_or_error = (t, 'a * string) result
 
-let ( >>= ) = Core_result.( >>= )
+let ( >>= ) = Base.Result.( >>= )
 
 let empty = { name = None; main = None }
 

@@ -1,6 +1,6 @@
 // @flow
 
-type Key = 'A' | 'B';
+type Key = 'A';
 declare opaque type Val;
 
 declare var key: Key;

@@ -91,20 +91,6 @@ foo.js = {
   ]
 }
 bar.js = {"error":"not enough type information to autocomplete","result":[]}
-qux.js = {
-  "result":[
-    {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"qux.js",
-      "line":3,
-      "endline":3,
-      "start":14,
-      "end":19
-    }
-  ]
-}
 str.js = {
   "result":[
     {
@@ -814,6 +800,20 @@ this.js = {
     }
   ]
 }
+this2.js = {
+  "result":[
+    {
+      "name":"A",
+      "type":"class A",
+      "func_details":null,
+      "path":"this2.js",
+      "line":3,
+      "endline":3,
+      "start":7,
+      "end":7
+    }
+  ]
+}
 typeparams.js = {
   "result":[
     {
@@ -881,6 +881,20 @@ typeparams.js = {
       "endline":165,
       "start":5,
       "end":21
+    }
+  ]
+}
+typeparams_function.js = {
+  "result":[
+    {
+      "name":"test",
+      "type":"<T>() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"typeparams_function.js",
+      "line":2,
+      "endline":2,
+      "start":10,
+      "end":13
     }
   ]
 }
@@ -1059,34 +1073,24 @@ jsx1.js = {
       "type":"number",
       "func_details":null,
       "path":"jsx1.js",
-      "line":6,
-      "endline":6,
-      "start":15,
-      "end":20
+      "line":5,
+      "endline":5,
+      "start":37,
+      "end":42
     }
   ]
 }
 jsx2.js = {
   "result":[
     {
-      "name":"x",
-      "type":"number",
-      "func_details":null,
-      "path":"jsx2.js",
-      "line":6,
-      "endline":6,
-      "start":15,
-      "end":20
-    },
-    {
       "name":"y",
       "type":"string",
       "func_details":null,
       "path":"jsx2.js",
-      "line":6,
-      "endline":6,
-      "start":26,
-      "end":31
+      "line":5,
+      "endline":5,
+      "start":48,
+      "end":53
     }
   ]
 }
@@ -1099,8 +1103,8 @@ jsx3.js = {
       "path":"jsx3.js",
       "line":5,
       "endline":5,
-      "start":29,
-      "end":34
+      "start":28,
+      "end":33
     },
     {
       "name":"y",
@@ -1109,8 +1113,132 @@ jsx3.js = {
       "path":"jsx3.js",
       "line":5,
       "endline":5,
-      "start":40,
-      "end":45
+      "start":39,
+      "end":44
+    }
+  ]
+}
+jsx4.js = {
+  "result":[
+    {
+      "name":"Computerization",
+      "type":"(props: empty) => void",
+      "func_details":null,
+      "path":"jsx4.js",
+      "line":4,
+      "endline":4,
+      "start":7,
+      "end":21
+    },
+    {
+      "name":"Compressibility",
+      "type":"(props: empty) => void",
+      "func_details":null,
+      "path":"jsx4.js",
+      "line":5,
+      "endline":5,
+      "start":10,
+      "end":24
+    },
+    {
+      "name":"Complementarity",
+      "type":"class Complementarity",
+      "func_details":null,
+      "path":"jsx4.js",
+      "line":3,
+      "endline":3,
+      "start":7,
+      "end":21
+    }
+  ]
+}
+jsx-function-component.js = {
+  "result":[
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"jsx-function-component.js",
+      "line":5,
+      "endline":5,
+      "start":28,
+      "end":33
+    },
+    {
+      "name":"y",
+      "type":"string",
+      "func_details":null,
+      "path":"jsx-function-component.js",
+      "line":5,
+      "endline":5,
+      "start":39,
+      "end":44
+    }
+  ]
+}
+jsx-function-component-2.js = {
+  "result":[
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"jsx-function-component-2.js",
+      "line":5,
+      "endline":5,
+      "start":28,
+      "end":33
+    }
+  ]
+}
+jsx-function-component-3.js = {
+  "result":[
+    {
+      "name":"y",
+      "type":"string",
+      "func_details":null,
+      "path":"jsx-function-component-3.js",
+      "line":5,
+      "endline":5,
+      "start":39,
+      "end":44
+    }
+  ]
+}
+jsx-abstract-component.js = {
+  "result":[
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"jsx-abstract-component.js",
+      "line":5,
+      "endline":5,
+      "start":28,
+      "end":33
+    },
+    {
+      "name":"y",
+      "type":"string",
+      "func_details":null,
+      "path":"jsx-abstract-component.js",
+      "line":5,
+      "endline":5,
+      "start":39,
+      "end":44
+    }
+  ]
+}
+jsx-with-children.js = {
+  "result":[
+    {
+      "name":"x",
+      "type":"number",
+      "func_details":null,
+      "path":"jsx-with-children.js",
+      "line":5,
+      "endline":5,
+      "start":28,
+      "end":33
     }
   ]
 }
@@ -1154,16 +1282,6 @@ customfun.js = {
       "endline":3,
       "start":13,
       "end":15
-    },
-    {
-      "name":"exports",
-      "type":"{||}",
-      "func_details":null,
-      "path":"customfun.js",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
     }
   ]
 }
@@ -1676,13 +1794,27 @@ override.js = {
     }
   ]
 }
-class.js = {
+member_class_property.js = {
+  "result":[
+    {
+      "name":"baz",
+      "type":"string",
+      "func_details":null,
+      "path":"member_class_property.js",
+      "line":4,
+      "endline":4,
+      "start":8,
+      "end":13
+    }
+  ]
+}
+member_class_static.js = {
   "result":[
     {
       "name":"bar",
       "type":"string",
       "func_details":null,
-      "path":"class.js",
+      "path":"member_class_static.js",
       "line":3,
       "endline":3,
       "start":15,
@@ -1712,7 +1844,7 @@ class.js = {
       "name":"name",
       "type":"string",
       "func_details":null,
-      "path":"class.js",
+      "path":"member_class_static.js",
       "line":2,
       "endline":2,
       "start":7,
@@ -3221,6 +3353,80 @@ poly_no_args.js = {
       "endline":3,
       "start":10,
       "end":15
+    }
+  ]
+}
+identifier.js = {
+  "result":[
+    {
+      "name":"flowery",
+      "type":"number",
+      "func_details":null,
+      "path":"identifier.js",
+      "line":8,
+      "endline":8,
+      "start":7,
+      "end":13
+    },
+    {
+      "name":"flounder",
+      "type":"any",
+      "func_details":null,
+      "path":"identifier.js",
+      "line":10,
+      "endline":10,
+      "start":7,
+      "end":14
+    },
+    {
+      "name":"flotsam",
+      "type":"number",
+      "func_details":null,
+      "path":"identifier.js",
+      "line":12,
+      "endline":12,
+      "start":7,
+      "end":13
+    },
+    {
+      "name":"florist",
+      "type":"number",
+      "func_details":null,
+      "path":"identifier.js",
+      "line":3,
+      "endline":3,
+      "start":5,
+      "end":11
+    },
+    {
+      "name":"florescent",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"identifier.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":19
+    },
+    {
+      "name":"floater",
+      "type":"number",
+      "func_details":null,
+      "path":"identifier.js",
+      "line":17,
+      "endline":17,
+      "start":5,
+      "end":11
+    },
+    {
+      "name":"bartender",
+      "type":"number",
+      "func_details":null,
+      "path":"identifier.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":13
     }
   ]
 }

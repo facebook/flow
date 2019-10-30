@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "dependencies": {
     "babel-core": "^6.8.0",
-    "babel-jest": "^21.0.2",
+    "babel-jest": "^23.0.0",
     "babel-plugin-syntax-flow": "^6.8.0",
     "babel-plugin-transform-class-properties": "^6.8.0",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",
@@ -18,18 +18,18 @@
     "diff": "^3.5.0",
     "flow-parser": "~0.21.0",
     "glob": "^7.0.3",
-    "jest": "^21.1.0",
+    "jest": "^23.0.0",
     "minimist": "~1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
-    "newtests": "*",
     "resolve": "^1.1.7",
     "rimraf": "^2.5.2",
     "sane": "^1.4.0 || ^2.0.0 || ^3.0.0",
     "semver": "^5.6.0",
     "source-map-support": "~0.4.0",
     "twit": "^2.1.5",
-    "vscode-jsonrpc": "^4.0.0"
+    "vscode-jsonrpc": "^4.0.0",
+    "vscode-uri": "^2.0.3"
   },
   "babel": {
     "presets": [
@@ -50,7 +50,7 @@
     ]
   },
   "scripts": {
-    "test": "make -C ../.. test"
+    "test": "jest"
   },
   "engines": {
     "node": ">=6"

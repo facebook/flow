@@ -13,7 +13,6 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
-open Hh_json
 open Utils_js
 
 type mode =
@@ -129,7 +128,7 @@ module type MODULE_SYSTEM = sig
   val imported_module :
     options:Options.t ->
     reader:Abstract_state_reader.t ->
-    SSet.t ->
+    SSet.t SMap.t ->
     File_key.t ->
     ALoc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
@@ -214,95 +213,6 @@ let eponymous_module file =
     (match Files.chop_flow_ext file with
     | Some file -> file
     | None -> file)
-
-(*******************************)
-
-exception Module_resolver_fatal of string
-
-exception Invalid_resolution
-
-module External = struct
-  let external_status = ref true
-
-  let external_channels = ref None
-
-  let get_external_channels resolver =
-    (* Create the channels if they don't exists *)
-    if !external_status && !external_channels = None then (
-      let program = Path.to_string resolver in
-      if not (Sys.file_exists program) then
-        external_status := false
-      else
-        let (child_r, parent_w) = Unix.pipe () in
-        let (parent_r, child_w) = Unix.pipe () in
-        (* Don't leak these fds *)
-        List.iter Unix.set_close_on_exec [parent_w; parent_r];
-
-        let channels = (Unix.out_channel_of_descr parent_w, Unix.in_channel_of_descr parent_r) in
-        try
-          ignore (Unix.create_process program [|program|] child_r child_w Unix.stderr);
-          List.iter Unix.close [child_r; child_w];
-          external_channels := Some channels
-        with Unix.Unix_error (_, _, _) ->
-          Hh_logger.info "Failed to create module resolver";
-          List.iter Unix.close [child_r; child_w; parent_r; parent_w]
-    );
-
-    !external_channels
-
-  let resolve_import opts f r =
-    match Options.module_resolver opts with
-    | None -> None
-    | Some resolver ->
-      let issuer = File_key.to_string f in
-      let payload = json_to_string (JSON_Array [JSON_String r; JSON_String issuer]) in
-      (match get_external_channels resolver with
-      | None -> None
-      | Some (out_channel, in_channel) ->
-        let response_data =
-          try
-            output_string out_channel (payload ^ "\n");
-            Pervasives.flush out_channel;
-
-            let response_text = input_line in_channel in
-            json_of_string response_text
-          with exn ->
-            let exn = Exception.wrap exn in
-            let () = Hh_logger.fatal ~exn "Failed to talk to the module resolver" in
-            let exn_str = Printf.sprintf "Exception %s" (Exception.get_ctor_string exn) in
-            raise (Module_resolver_fatal exn_str)
-        in
-        let resolution =
-          match response_data with
-          | JSON_Null -> None
-          | JSON_Array items ->
-            begin
-              match items with
-              | [error; resolution] ->
-                begin
-                  match error with
-                  | JSON_Null ->
-                    begin
-                      match resolution with
-                      | JSON_Null -> None
-                      | JSON_String r -> Some (resolve_symlinks r)
-                      | _ -> raise Invalid_resolution
-                    end
-                  | _ -> None
-                end
-              | _ -> raise Invalid_resolution
-            end
-          | _ -> raise Invalid_resolution
-        in
-        (match resolution with
-        | None -> None
-        | Some r ->
-          let file_options = Options.file_options opts in
-          if not (Files.is_ignored file_options r) then
-            Some r
-          else
-            None))
-end
 
 (*******************************)
 
@@ -415,7 +325,8 @@ module Node = struct
     lazy_seq
       [
         lazy
-          ( if SSet.mem dir node_modules_containers then
+          (match SMap.get dir node_modules_containers with
+          | Some existing_node_modules_dirs ->
             lazy_seq
               [
                 lazy
@@ -440,13 +351,14 @@ module Node = struct
                      ( Files.node_resolver_dirnames file_options
                      |> Core_list.map ~f:(fun dirname ->
                             lazy
-                              (resolve_relative
-                                 ~options
-                                 ~reader
-                                 loc
-                                 ?resolution_acc
-                                 dir
-                                 (spf "%s%s%s" dirname Filename.dir_sep r))) ));
+                              ( if SSet.mem dirname existing_node_modules_dirs then
+                                resolve_relative
+                                  ~options
+                                  ~reader
+                                  loc
+                                  ?resolution_acc
+                                  dir
+                                  (spf "%s%s%s" dirname Filename.dir_sep r))) ));
               ]
           else
             None );
@@ -474,10 +386,28 @@ module Node = struct
   let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
+    let root_str = Options.root options |> Path.to_string in
     if explicitly_relative import_str || absolute import_str then
       resolve_relative ~options ~reader loc ?resolution_acc dir import_str
     else
-      node_module ~options ~reader node_modules_containers f loc resolution_acc dir import_str
+      lazy_seq
+        [
+          lazy
+            ( if Options.node_resolver_allow_root_relative options then
+              resolve_relative ~options ~reader loc ?resolution_acc root_str import_str
+            else
+              None );
+          lazy
+            (node_module
+               ~options
+               ~reader
+               node_modules_containers
+               f
+               loc
+               resolution_acc
+               dir
+               import_str);
+        ]
 
   let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str
       =
@@ -594,7 +524,6 @@ module Haste : MODULE_SYSTEM = struct
     let file = File_key.to_string f in
     lazy_seq
       [
-        lazy (External.resolve_import options f r);
         lazy (Node.resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r);
         lazy
           (match expanded_name ~reader r with

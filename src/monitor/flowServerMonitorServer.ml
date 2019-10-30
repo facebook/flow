@@ -675,7 +675,9 @@ let send_request ~client ~request =
   push_to_command_stream (Some (Write_ephemeral_request { request; client }))
 
 let send_persistent_request ~client_id ~request =
-  Logger.debug "Adding request (%s) to the command stream" (LspProt.string_of_request request);
+  Logger.debug
+    "Adding request (%s) to the command stream"
+    (LspProt.string_of_request_with_metadata request);
   push_to_command_stream (Some (Write_persistent_request { client_id; request }))
 
 let notify_new_persistent_connection ~client_id ~lsp_init_params =

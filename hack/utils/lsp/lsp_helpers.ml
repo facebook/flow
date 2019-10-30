@@ -257,12 +257,12 @@ let update_diagnostics_due_to_change
       | _ -> None
     in
     let replaces =
-      Core_list.map change.DidChange.contentChanges ~f:replace_of_change
+      Base.List.map change.DidChange.contentChanges ~f:replace_of_change
     in
     let apply_all_replaces diagnostic =
-      Core_list.fold replaces ~init:(Some diagnostic) ~f:apply_replace
+      Base.List.fold replaces ~init:(Some diagnostic) ~f:apply_replace
     in
-    Core_list.filter_map diagnostics ~f:apply_all_replaces)
+    Base.List.filter_map diagnostics ~f:apply_all_replaces)
 
 (************************************************************************)
 (* Accessors                                                            *)

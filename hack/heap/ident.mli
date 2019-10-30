@@ -7,7 +7,7 @@
  *
  *)
 
-type t = int
+type t = int [@@deriving eq]
 
 val compare : t -> t -> int
 

@@ -13,7 +13,7 @@ type t =
      these, just check that they exist *)
   | ResourceFile of string
   | Builtins
-[@@deriving show]
+[@@deriving show, eq]
 
 let to_string = function
   | LibFile x

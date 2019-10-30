@@ -5,6 +5,7 @@
   (libraries
     flow_typing_key
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -15,6 +16,7 @@
     flow_common
     flow_common_utils
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -26,6 +28,7 @@
     flow_typing_trust
     flow_typing_type
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -35,6 +38,7 @@
   (libraries
     flow_common_utils
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -48,6 +52,7 @@
     flow_typing_polarity
     flow_typing_trust
   )
+  (preprocess (pps ppx_let))
 )
 
 (library
@@ -62,7 +67,6 @@
     flow_common_tarjan
     flow_parser_utils
     flow_state_heaps_parsing_exceptions
-    flow_typing_coverage_response
     flow_typing_errors
     flow_typing_polarity
     flow_typing_ty
@@ -71,4 +75,5 @@
     xx
   )
   (modules_without_implementation graph partition resolvable_type_job)
+  (preprocess (pps ppx_let))
 )

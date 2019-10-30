@@ -6,7 +6,7 @@
  *)
 
 open Utils_js
-module Result = Core_result
+module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
@@ -72,8 +72,10 @@ let get_all_dependents ~reader options workers env file_key content =
   let dependency_info = !env.ServerEnv.dependency_info in
   let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
   let dependency_graph = Dependency_info.dependency_graph dependency_info in
-  Lwt.return
-    (Pure_dep_graph_operations.calc_all_dependents
-       ~dependency_graph
-       ~all_dependency_graph
-       direct_deps)
+  let (_sig_dependents, all_dependents) =
+    Pure_dep_graph_operations.calc_all_dependents
+      ~dependency_graph
+      ~all_dependency_graph
+      direct_deps
+  in
+  Lwt.return all_dependents

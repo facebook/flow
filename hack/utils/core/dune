@@ -9,6 +9,7 @@
   (c_flags (:standard
     (:include config/build-timestamp-opt)))
   (libraries
+    base
     string
     imported_core
     hh_json
