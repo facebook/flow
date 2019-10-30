@@ -1,3 +1,25 @@
+### 0.111.0
+
+Likely to cause new Flow errors:
+
+* Fixes to object spread. See https://medium.com/flow-type/spreads-common-errors-fixes-9701012e9d58
+
+New features:
+* Introduced an experimental flag (`experimental.minimal_merge`) that speeds up rechecks when the experimental types-first mode is in use. This flag will be turned on by default and then removed in future releases.
+* Turned on `experimental.allow_skip_direct_dependents` by default. The flag will be removed next release. This flag speeds up rechecks when the experimental types-first mode is in use. 
+
+Notable bug fixes:
+* Fixed a bug where the ocaml representation of union types caused crashes in rare scenarios
+
+Misc:
+* Add getElementById to DocumentFragment
+* Add missing methods to Blob (thanks @lyleunderwood!)
+* Allow clients of `flow status`, `flow check`, etc. to choose character offset style
+* Support length refinement on tuples (thanks @ilya-bobyr)
+
+Parser:
+* Allow => in objects in return types of arrow functions
+
 ### 0.110.1
 
 Notable bug fixes:
