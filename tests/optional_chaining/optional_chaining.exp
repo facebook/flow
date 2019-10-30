@@ -676,6 +676,20 @@ References:
        ^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- function_calls.js:13:1
+
+Cannot call `x3?.()` because null or undefined [1] is not a function.
+
+   function_calls.js:13:1
+   13| (x3?.())();
+       ^^^^^^^^^^
+
+References:
+   function_calls.js:11:17
+   11| declare var x3: ?(() => (() => number));
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ lhs_types.js:12:2
 
 This use of optional chaining (`?.`) is unnecessary because `x` [1] cannot be nullish or because an earlier `?.` will
@@ -1608,4 +1622,4 @@ References:
 
 
 
-Found 122 errors
+Found 123 errors

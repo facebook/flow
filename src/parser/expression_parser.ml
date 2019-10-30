@@ -649,6 +649,7 @@ module Expression
         else
           Expression.Call call
       in
+      let in_optional_chain = in_optional_chain || optional in
       call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, call))
     in
     if no_call env then
