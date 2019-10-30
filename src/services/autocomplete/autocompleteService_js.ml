@@ -258,21 +258,27 @@ let autocomplete_member
 (* env is all visible bound names at cursor *)
 let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast ~broader_context =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let (result, errors) =
+  let (result, errors, this_result) =
     SMap.fold
-      (fun name entry (acc, errors) ->
+      (fun name entry (acc, errors, this_result) ->
         (* Filter out internal environment variables except for this and
-       super. *)
-        let is_this = name = Reason.internal_name "this" in
-        let is_super = name = Reason.internal_name "super" in
-        if (not (is_this || is_super)) && Reason.is_internal_name name then
-          (acc, errors)
+       super. `this` may appear twice in the scope entries when inside a class, once as `.this` and
+       a second time as `this`. In order to avoid duplicate autocomplete results,
+       we take care to only add this to the results once. *)
+        let is_this = name = "this" in
+        let is_internal_this = name = Reason.internal_name "this" in
+        let is_internal_super = name = Reason.internal_name "super" in
+        if (not (is_internal_this || is_internal_super)) && Reason.is_internal_name name then
+          (acc, errors, this_result)
+        (* Prefer this over .this *)
+        else if is_internal_this && this_result <> None then
+          (acc, errors, this_result)
         else
           let (ty_loc, name) =
             (* renaming of this/super *)
-            if is_this then
+            if is_internal_this then
               (Loc.none, "this")
-            else if is_super then
+            else if is_internal_super then
               (Loc.none, "super")
             else
               (Scope.Entry.entry_loc entry |> loc_of_aloc ~reader, name)
@@ -296,10 +302,18 @@ let autocomplete_id ~reader cx ac_loc ac_trigger file_sig env typed_ast ~broader
           match Ty_normalizer.from_type ~options ~genv type_ with
           | Ok ty ->
             let result = autocomplete_create_result (name, ac_loc) (ty, ty_loc) in
-            (result :: acc, errors)
-          | Error err -> (acc, err :: errors))
+            if is_this || is_internal_this then
+              (acc, errors, Some result)
+            else
+              (result :: acc, errors, this_result)
+          | Error err -> (acc, err :: errors, this_result))
       env
-      ([], [])
+      ([], [], None)
+  in
+  let result =
+    match this_result with
+    | Some this_result -> this_result :: result
+    | None -> result
   in
   let json_data_to_log =
     Hh_json.(

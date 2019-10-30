@@ -28,6 +28,13 @@ export default suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'empty',
+                  inlineDetail: 'empty',
+                  insertTextFormat: 1,
+                },
+                {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
@@ -64,13 +71,6 @@ export default suite(
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'super',
                   kind: 6,
                   detail: 'typeof Object.prototype',
@@ -98,6 +98,13 @@ export default suite(
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'empty',
+                  inlineDetail: 'empty',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,
@@ -157,13 +164,6 @@ export default suite(
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'super',
                   kind: 6,
                   detail: 'typeof Object.prototype',
@@ -205,6 +205,13 @@ export default suite(
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'empty',
+                  inlineDetail: 'empty',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,
@@ -248,13 +255,6 @@ export default suite(
                     },
                     newText: 'aFunction(${1:arg1}, ${2:arg2})',
                   },
-                },
-                {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
                 },
                 {
                   label: 'super',

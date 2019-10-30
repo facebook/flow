@@ -847,16 +847,6 @@ this2.js = {
       "end":7
     },
     {
-      "name":"this",
-      "type":"A",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    },
-    {
       "name":"super",
       "type":"typeof Object.prototype",
       "func_details":null,
@@ -941,6 +931,16 @@ typeparams.js = {
 typeparams_function.js = {
   "result":[
     {
+      "name":"this",
+      "type":"empty",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
       "name":"test",
       "type":"<T>() => void",
       "func_details":{"return_type":"void","params":[]},
@@ -969,16 +969,6 @@ typeparams_function.js = {
       "endline":2,
       "start":15,
       "end":15
-    },
-    {
-      "name":"this",
-      "type":"empty",
-      "func_details":null,
-      "path":"",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
     },
     {
       "name":"super",
