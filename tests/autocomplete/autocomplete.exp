@@ -3720,7 +3720,7 @@ normalize-1.js = {
   "result":[
     {
       "name":"b",
-      "type":"mixed",
+      "type":"T",
       "func_details":null,
       "path":"normalize-1.js",
       "line":3,
@@ -3814,7 +3814,7 @@ normalize-2.js = {
     },
     {
       "name":"c",
-      "type":"mixed",
+      "type":"T",
       "func_details":null,
       "path":"normalize-2.js",
       "line":4,

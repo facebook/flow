@@ -37,21 +37,16 @@ let type_of_jsx_name =
     | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
       t)
 
-exception Found of autocomplete_type
+exception Found of Type.typeparam list * autocomplete_type
 
 class searcher (from_trigger_character : bool) =
   object (this)
-    inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
-
-    method on_loc_annot x = x
-
-    method on_type_annot x = x
+    inherit Typed_ast_utils.type_parameter_mapper as super
 
     method find x =
       match x with
       | Acid _ when from_trigger_character -> ()
-      | _ -> raise (Found x)
+      | _ -> this#annot_with_tparams (fun tparams -> raise (Found (tparams, x)))
 
     method! t_identifier (((ac_loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
       if is_autocomplete name then
@@ -148,16 +143,18 @@ class searcher (from_trigger_character : bool) =
 
     method! class_body x =
       try super#class_body x
-      with Found (Acid id) ->
-        raise (Found (Acid { id with include_super = true; include_this = true }))
+      with Found (tparams, Acid id) ->
+        raise (Found (tparams, Acid { id with include_super = true; include_this = true }))
 
     method! function_expression x =
       try super#function_expression x
-      with Found (Acid id) -> raise (Found (Acid { id with include_this = true }))
+      with Found (tparams, Acid id) ->
+        raise (Found (tparams, Acid { id with include_this = true }))
 
     method! function_declaration x =
       try super#function_declaration x
-      with Found (Acid id) -> raise (Found (Acid { id with include_this = true }))
+      with Found (tparams, Acid id) ->
+        raise (Found (tparams, Acid { id with include_this = true }))
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =
@@ -174,7 +171,7 @@ let process_location ~trigger_character ~typed_ast =
   try
     ignore ((new searcher (trigger_character <> None))#program typed_ast);
     None
-  with Found res -> Some res
+  with Found (tparams, res) -> Some (tparams, res)
 
 let autocomplete_set_hooks ~trigger_character =
   Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None));

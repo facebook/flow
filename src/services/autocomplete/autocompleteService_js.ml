@@ -212,7 +212,8 @@ let autocomplete_member
     ac_loc
     ac_trigger
     docblock
-    ~broader_context =
+    ~broader_context
+    ~tparams =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let result = Members.extract ~exclude_proto_members cx this in
   Hh_json.(
@@ -248,18 +249,19 @@ let autocomplete_member
       let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
       let rev_result =
         SMap.fold
-          (fun name (_id_loc, t) acc ->
+          (fun name (_id_loc, type_) acc ->
             if (not (autocomplete_is_valid_member name)) || SSet.mem name exclude_keys then
               acc
             else
-              let loc = Type.loc_of_t t |> loc_of_aloc ~reader in
-              ((name, loc), t) :: acc)
+              let loc = Type.loc_of_t type_ |> loc_of_aloc ~reader in
+              let scheme = Type.TypeScheme.{ tparams; type_ } in
+              ((name, loc), scheme) :: acc)
           result_map
           []
       in
       let result =
         rev_result
-        |> Ty_normalizer.from_types ~options:ty_normalizer_options ~genv
+        |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
         |> Core_list.rev_filter_map ~f:(function
                | ((name, ty_loc), Ok ty) ->
                  Some
@@ -321,6 +323,7 @@ let autocomplete_id
     ~typed_ast
     ~include_super
     ~include_this
+    ~tparams
     ~broader_context =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
@@ -365,26 +368,27 @@ let autocomplete_id
       SMap.empty
   in
   let types = collect_types ~reader (LocSet.of_list (SMap.values names_and_locs)) typed_ast in
-  let normalize_type =
-    Ty_normalizer.from_type
-      ~options:ty_normalizer_options
-      ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
-  in
   let (results, errors) =
-    SMap.fold
-      (fun name loc (results, errors) ->
-        match normalize_type (LocMap.find loc types) with
-        | Ok ty ->
-          let result =
-            autocomplete_create_result
-              ~show_func_details:(id_type <> JSXIdent)
-              (name, ac_loc)
-              (ty, loc)
-          in
-          (result :: results, errors)
-        | Error error -> (results, error :: errors))
-      names_and_locs
-      ([], [])
+    names_and_locs
+    |> SMap.bindings
+    |> List.map (fun (name, loc) ->
+           ((name, loc), Type.TypeScheme.{ tparams; type_ = LocMap.find loc types }))
+    |> Ty_normalizer.from_schemes
+         ~options:ty_normalizer_options
+         ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+    |> List.fold_left
+         (fun (results, errors) ((name, loc), normalization_result) ->
+           match normalization_result with
+           | Ok ty ->
+             let result =
+               autocomplete_create_result
+                 ~show_func_details:(id_type <> JSXIdent)
+                 (name, ac_loc)
+                 (ty, loc)
+             in
+             (result :: results, errors)
+           | Error error -> (results, error :: errors))
+         ([], [])
   in
   let json_data_to_log =
     Hh_json.(
@@ -454,6 +458,7 @@ let autocomplete_jsx
     ac_loc
     ac_trigger
     docblock
+    ~tparams
     ~broader_context =
   Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
@@ -481,13 +486,14 @@ let autocomplete_jsx
       ac_loc
       ac_trigger
       docblock
+      ~tparams
       ~broader_context)
 
 let autocomplete_get_results
     ~reader cx file_sig typed_ast trigger_character docblock ~broader_context =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~typed_ast with
-  | Some (Acid { ac_loc; id_type; include_super; include_this }) ->
+  | Some (tparams, Acid { ac_loc; id_type; include_super; include_this }) ->
     autocomplete_id
       ~reader
       ~cx
@@ -498,8 +504,9 @@ let autocomplete_get_results
       ~typed_ast
       ~include_super
       ~include_this
+      ~tparams
       ~broader_context
-  | Some (Acmem (ac_name, ac_loc, this)) ->
+  | Some (tparams, Acmem (ac_name, ac_loc, this)) ->
     autocomplete_member
       ~reader
       ~exclude_proto_members:false
@@ -512,8 +519,9 @@ let autocomplete_get_results
       ac_loc
       trigger_character
       docblock
+      ~tparams
       ~broader_context
-  | Some (Acjsx (ac_name, used_attr_names, ac_loc, cls)) ->
+  | Some (tparams, Acjsx (ac_name, used_attr_names, ac_loc, cls)) ->
     autocomplete_jsx
       ~reader
       cx
@@ -525,6 +533,7 @@ let autocomplete_get_results
       ac_loc
       trigger_character
       docblock
+      ~tparams
       ~broader_context
   | None ->
     let json_data_to_log =
