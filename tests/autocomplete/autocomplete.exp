@@ -3690,3 +3690,29 @@ this-2.js = {
     }
   ]
 }
+pattern.js = {"result":[]}
+{
+  "result":[
+    {
+      "name":"foo",
+      "type":"number",
+      "func_details":null,
+      "path":"pattern.js",
+      "line":3,
+      "endline":3,
+      "start":5,
+      "end":7
+    },
+    {
+      "name":"bar",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"pattern.js",
+      "line":9,
+      "endline":9,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{"result":[]}

@@ -100,6 +100,11 @@ class searcher (from_trigger_character : bool) =
       end;
       super#pattern ?kind pat
 
+    method! t_pattern_identifier ?kind x =
+      match kind with
+      | None -> super#t_pattern_identifier ?kind x
+      | Some _ -> x
+
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
       let (_, Opening.{ name = component_name; attributes; _ }) = elt in

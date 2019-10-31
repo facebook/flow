@@ -198,3 +198,11 @@ assert_ok \
   "$FLOW" autocomplete --strip-root --pretty this-2.js 11 15 < this-2.js
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty this-2.js 14 9 < this-2.js
+
+printf "pattern.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 3 8 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 6 4 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 9 14 < pattern.js
