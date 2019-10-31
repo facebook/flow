@@ -10,7 +10,12 @@ type ident_type =
   | JSXIdent
 
 type autocomplete_type =
-  | Acid of ALoc.t * ident_type
+  | Acid of {
+      ac_loc: ALoc.t;
+      id_type: ident_type;
+      include_super: bool;
+      include_this: bool;
+    }
   | Acmem of string * ALoc.t * Type.t
   | Acjsx of string * SSet.t * ALoc.t * Type.t
 
@@ -48,12 +53,16 @@ class searcher (from_trigger_character : bool) =
       | Acid _ when from_trigger_character -> ()
       | _ -> raise (Found x)
 
-    method! t_identifier (((loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then this#find (Acid (loc, NormalIdent));
+    method! t_identifier (((ac_loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
+      if is_autocomplete name then
+        this#find
+          (Acid { ac_loc; id_type = NormalIdent; include_super = false; include_this = false });
       ident
 
-    method! jsx_identifier (((loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then this#find (Acid (loc, JSXIdent));
+    method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
+      if is_autocomplete name then
+        this#find
+          (Acid { ac_loc; id_type = JSXIdent; include_super = false; include_this = false });
       ident
 
     method! member expr =
@@ -131,6 +140,19 @@ class searcher (from_trigger_character : bool) =
       match prop with
       | (_, Init { shorthand = true; _ }) -> prop
       | _ -> super#object_property prop
+
+    method! class_body x =
+      try super#class_body x
+      with Found (Acid id) ->
+        raise (Found (Acid { id with include_super = true; include_this = true }))
+
+    method! function_expression x =
+      try super#function_expression x
+      with Found (Acid id) -> raise (Found (Acid { id with include_this = true }))
+
+    method! function_declaration x =
+      try super#function_declaration x
+      with Found (Acid id) -> raise (Found (Acid { id with include_this = true }))
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =

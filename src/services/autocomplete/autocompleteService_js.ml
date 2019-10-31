@@ -311,7 +311,17 @@ let collect_types ~reader locs typed_ast =
   collector#collected_types
 
 (* env is all visible bound names at cursor *)
-let autocomplete_id ~reader cx ac_loc ac_trigger ~id_type file_sig typed_ast ~broader_context =
+let autocomplete_id
+    ~reader
+    ~cx
+    ~ac_loc
+    ~ac_trigger
+    ~id_type
+    ~file_sig
+    ~typed_ast
+    ~include_super
+    ~include_this
+    ~broader_context =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
   let open Scope_api.With_Loc in
@@ -397,6 +407,36 @@ let autocomplete_id ~reader cx ac_loc ac_trigger ~id_type file_sig typed_ast ~br
           ("broader_context", JSON_String broader_context);
         ])
   in
+  (* "this" is legal inside classes and (non-arrow) functions *)
+  let results =
+    if include_this then
+      {
+        res_loc = ac_loc;
+        res_kind = Some Lsp.Completion.Variable;
+        res_name = "this";
+        res_ty = (Loc.none, "this");
+        func_details = None;
+        res_insert_text = None;
+      }
+      :: results
+    else
+      results
+  in
+  (* "super" is legal inside classes *)
+  let results =
+    if include_super then
+      {
+        res_loc = ac_loc;
+        res_kind = Some Lsp.Completion.Variable;
+        res_name = "super";
+        res_ty = (Loc.none, "super");
+        func_details = None;
+        res_insert_text = None;
+      }
+      :: results
+    else
+      results
+  in
   Ok (results, Some json_data_to_log)
 
 (* Similar to autocomplete_member, except that we're not directly given an
@@ -447,15 +487,17 @@ let autocomplete_get_results
     ~reader cx file_sig typed_ast trigger_character docblock ~broader_context =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~typed_ast with
-  | Some (Acid (ac_loc, id_type)) ->
+  | Some (Acid { ac_loc; id_type; include_super; include_this }) ->
     autocomplete_id
       ~reader
-      cx
-      ac_loc
-      trigger_character
+      ~cx
+      ~ac_loc
+      ~ac_trigger:trigger_character
       ~id_type
-      file_sig
-      typed_ast
+      ~file_sig
+      ~typed_ast
+      ~include_super
+      ~include_this
       ~broader_context
   | Some (Acmem (ac_name, ac_loc, this)) ->
     autocomplete_member

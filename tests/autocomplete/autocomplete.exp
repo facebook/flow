@@ -803,6 +803,26 @@ this.js = {
 this2.js = {
   "result":[
     {
+      "name":"super",
+      "type":"super",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
       "name":"A",
       "type":"class A",
       "func_details":null,
@@ -886,6 +906,16 @@ typeparams.js = {
 }
 typeparams_function.js = {
   "result":[
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
     {
       "name":"test",
       "type":"<T>() => void",
@@ -3359,6 +3389,16 @@ poly_no_args.js = {
 identifier.js = {
   "result":[
     {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
       "name":"flowery",
       "type":"number",
       "func_details":null,
@@ -3427,6 +3467,226 @@ identifier.js = {
       "endline":5,
       "start":5,
       "end":13
+    }
+  ]
+}
+super.js = {
+  "result":[
+    {
+      "name":"super",
+      "type":"super",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Foo",
+      "type":"class Foo",
+      "func_details":null,
+      "path":"super.js",
+      "line":3,
+      "endline":3,
+      "start":7,
+      "end":9
+    }
+  ]
+}
+this-2.js = {
+  "result":[
+    {
+      "name":"y",
+      "type":"(z: empty) => empty",
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"any",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{
+  "result":[
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"y",
+      "type":"(z: empty) => empty",
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"void",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{
+  "result":[
+    {
+      "name":"z",
+      "type":"empty",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":9,
+      "end":9
+    },
+    {
+      "name":"y",
+      "type":"(z: empty) => any",
+      "func_details":{"return_type":"any","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"void",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    }
+  ]
+}
+{
+  "result":[
+    {
+      "name":"super",
+      "type":"super",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"y",
+      "type":"(z: empty) => empty",
+      "func_details":{"return_type":"empty","params":[{"name":"z","type":"empty"}]},
+      "path":"this-2.js",
+      "line":11,
+      "endline":11,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"x",
+      "type":"void",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":5,
+      "endline":5,
+      "start":5,
+      "end":5
+    },
+    {
+      "name":"foo",
+      "type":"() => void",
+      "func_details":{"return_type":"void","params":[]},
+      "path":"this-2.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":12
+    },
+    {
+      "name":"Bar",
+      "type":"class Bar",
+      "func_details":null,
+      "path":"this-2.js",
+      "line":13,
+      "endline":13,
+      "start":7,
+      "end":9
     }
   ]
 }
