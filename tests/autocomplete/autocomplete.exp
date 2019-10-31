@@ -3716,3 +3716,121 @@ pattern.js = {"result":[]}
   ]
 }
 {"result":[]}
+normalize-1.js = {
+  "result":[
+    {
+      "name":"b",
+      "type":"mixed",
+      "func_details":null,
+      "path":"normalize-1.js",
+      "line":3,
+      "endline":3,
+      "start":27,
+      "end":27
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
+normalize-2.js = {
+  "result":[
+    {
+      "name":"this",
+      "type":"this",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"foo",
+      "type":"<T>(a: {b: T}) => any",
+      "func_details":{"return_type":"any","params":[{"name":"a","type":"{b: T}"}]},
+      "path":"normalize-2.js",
+      "line":3,
+      "endline":3,
+      "start":10,
+      "end":12
+    },
+    {
+      "name":"c",
+      "type":"mixed",
+      "func_details":null,
+      "path":"normalize-2.js",
+      "line":4,
+      "endline":4,
+      "start":7,
+      "end":7
+    },
+    {
+      "name":"a",
+      "type":"{b: T}",
+      "func_details":null,
+      "path":"normalize-2.js",
+      "line":3,
+      "endline":3,
+      "start":17,
+      "end":17
+    }
+  ]
+}

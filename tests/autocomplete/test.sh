@@ -206,3 +206,11 @@ assert_ok \
   "$FLOW" autocomplete --strip-root --pretty pattern.js 6 4 < pattern.js
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty pattern.js 9 14 < pattern.js
+
+printf "normalize-1.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-1.js 4 12 < normalize-1.js
+
+printf "normalize-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-2.js 5 10 < normalize-2.js
