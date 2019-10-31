@@ -6809,35 +6809,46 @@ struct
     (match udict with
     | None -> ()
     | Some { key; value; dict_polarity; _ } ->
-      Context.iter_real_props cx lflds (fun s lp ->
-          if not (Context.has_prop cx uflds s) then (
-            rec_flow
-              cx
-              trace
-              ( string_key s lreason,
-                UseT
-                  ( Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op),
-                    key ) );
-            let use_op =
-              Frame
-                (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op)
-            in
-            let lp =
-              match lp with
-              | Field (loc, OptionalT { reason = _; type_ = lt; use_desc = _ }, lpolarity) ->
-                Field (loc, lt, lpolarity)
-              | _ -> lp
-            in
-            let up = Field (None, value, dict_polarity) in
-            if lit then
-              match (Property.read_t lp, Property.read_t up) with
-              | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
-              | _ -> ()
+      let keys =
+        Context.fold_real_props
+          cx
+          lflds
+          (fun s lp keys ->
+            if Context.has_prop cx uflds s then
+              keys
             else
-              let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
-              let propref = Named (reason_prop, s) in
-              rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
-          ));
+              let use_op =
+                Frame
+                  ( PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason },
+                    use_op )
+              in
+              let lp =
+                match lp with
+                | Field (loc, OptionalT { reason = _; type_ = lt; use_desc = _ }, lpolarity) ->
+                  Field (loc, lt, lpolarity)
+                | _ -> lp
+              in
+              let up = Field (None, value, dict_polarity) in
+              begin
+                if lit then
+                  match (Property.read_t lp, Property.read_t up) with
+                  | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
+                  | _ -> ()
+                else
+                  let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
+                  let propref = Named (reason_prop, s) in
+                  rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
+              end;
+              string_key s lreason :: keys)
+          []
+        |> union_of_ts lreason
+      in
+      rec_flow
+        cx
+        trace
+        ( keys,
+          UseT (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op), key)
+        );
 
       (* Previously, call properties were stored in the props map, and were
        checked against dictionary upper bounds. This is wrong, but useful for
