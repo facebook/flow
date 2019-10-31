@@ -10,7 +10,12 @@ type ident_type =
   | JSXIdent
 
 type autocomplete_type =
-  | Acid of ALoc.t * ident_type
+  | Acid of {
+      ac_loc: ALoc.t;
+      id_type: ident_type;
+      include_super: bool;
+      include_this: bool;
+    }
   | Acmem of string * ALoc.t * Type.t
   | Acjsx of string * SSet.t * ALoc.t * Type.t
 
@@ -32,28 +37,27 @@ let type_of_jsx_name =
     | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
       t)
 
-exception Found of autocomplete_type
+exception Found of Type.typeparam list * autocomplete_type
 
 class searcher (from_trigger_character : bool) =
   object (this)
-    inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
-
-    method on_loc_annot x = x
-
-    method on_type_annot x = x
+    inherit Typed_ast_utils.type_parameter_mapper as super
 
     method find x =
       match x with
       | Acid _ when from_trigger_character -> ()
-      | _ -> raise (Found x)
+      | _ -> this#annot_with_tparams (fun tparams -> raise (Found (tparams, x)))
 
-    method! t_identifier (((loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then this#find (Acid (loc, NormalIdent));
+    method! t_identifier (((ac_loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
+      if is_autocomplete name then
+        this#find
+          (Acid { ac_loc; id_type = NormalIdent; include_super = false; include_this = false });
       ident
 
-    method! jsx_identifier (((loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then this#find (Acid (loc, JSXIdent));
+    method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
+      if is_autocomplete name then
+        this#find
+          (Acid { ac_loc; id_type = JSXIdent; include_super = false; include_this = false });
       ident
 
     method! member expr =
@@ -90,6 +94,11 @@ class searcher (from_trigger_character : bool) =
         | _ -> ()
       end;
       super#pattern ?kind pat
+
+    method! t_pattern_identifier ?kind x =
+      match kind with
+      | None -> super#t_pattern_identifier ?kind x
+      | Some _ -> x
 
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
@@ -131,6 +140,21 @@ class searcher (from_trigger_character : bool) =
       match prop with
       | (_, Init { shorthand = true; _ }) -> prop
       | _ -> super#object_property prop
+
+    method! class_body x =
+      try super#class_body x
+      with Found (tparams, Acid id) ->
+        raise (Found (tparams, Acid { id with include_super = true; include_this = true }))
+
+    method! function_expression x =
+      try super#function_expression x
+      with Found (tparams, Acid id) ->
+        raise (Found (tparams, Acid { id with include_this = true }))
+
+    method! function_declaration x =
+      try super#function_declaration x
+      with Found (tparams, Acid id) ->
+        raise (Found (tparams, Acid { id with include_this = true }))
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =
@@ -147,7 +171,7 @@ let process_location ~trigger_character ~typed_ast =
   try
     ignore ((new searcher (trigger_character <> None))#program typed_ast);
     None
-  with Found res -> Some res
+  with Found (tparams, res) -> Some (tparams, res)
 
 let autocomplete_set_hooks ~trigger_character =
   Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None));

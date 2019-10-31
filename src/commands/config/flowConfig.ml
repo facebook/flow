@@ -94,6 +94,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_aliases: string list;
+    node_resolver_root_relative_dirnames: string list;
     recursion_limit: int;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
@@ -193,6 +194,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_aliases = [];
+      node_resolver_root_relative_dirnames = [""];
       recursion_limit = 10000;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
@@ -479,6 +481,15 @@ module Opts = struct
           (fun opts v ->
             let node_resolver_aliases = v :: opts.node_resolver_aliases in
             Ok { opts with node_resolver_aliases }) );
+      ( "module.system.node.root_relative_dirname",
+        string
+          ~init:(fun opts -> { opts with node_resolver_root_relative_dirnames = [] })
+          ~multiple:true
+          (fun opts v ->
+            let node_resolver_root_relative_dirnames =
+              v :: opts.node_resolver_root_relative_dirnames
+            in
+            Ok { opts with node_resolver_root_relative_dirnames }) );
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ( "name",
@@ -1199,6 +1210,8 @@ let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_roo
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_aliases c = c.options.Opts.node_resolver_aliases
+
+let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
 let recursion_limit c = c.options.Opts.recursion_limit
 

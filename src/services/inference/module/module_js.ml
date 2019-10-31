@@ -394,7 +394,18 @@ module Node = struct
         [
           lazy
             ( if Options.node_resolver_allow_root_relative options then
-              resolve_relative ~options ~reader loc ?resolution_acc root_str import_str
+              lazy_seq
+                ( Options.node_resolver_root_relative_dirnames options
+                |> Core_list.map ~f:(fun root_relative_dirname ->
+                       lazy
+                         (let root_str =
+                            if root_relative_dirname = "" then
+                              root_str
+                            else
+                              Filename.concat root_str root_relative_dirname
+                          in
+                          resolve_relative ~options ~reader loc ?resolution_acc root_str import_str))
+                )
             else
               None );
           lazy

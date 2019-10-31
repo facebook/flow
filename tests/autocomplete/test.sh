@@ -184,3 +184,33 @@ assert_ok \
 printf "identifier.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty identifier.js 10 18 < identifier.js
+
+printf "super.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty super.js 4 8 < super.js
+
+printf "this-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 5 10 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 8 3 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 11 15 < this-2.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty this-2.js 14 9 < this-2.js
+
+printf "pattern.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 3 8 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 6 4 < pattern.js
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty pattern.js 9 14 < pattern.js
+
+printf "normalize-1.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-1.js 4 12 < normalize-1.js
+
+printf "normalize-2.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty normalize-2.js 5 10 < normalize-2.js

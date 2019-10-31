@@ -28,6 +28,13 @@ export default suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
+                {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
@@ -77,6 +84,13 @@ export default suite(
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,
@@ -149,6 +163,13 @@ export default suite(
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,

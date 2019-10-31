@@ -73,7 +73,7 @@ assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 printf "local reference points to namespaced import = "
 assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
 
-printf "class name (should be none) = "
+printf "class name (should be itself) = "
 assert_ok "$FLOW" get-def class.js 3 8 --strip-root --pretty
 printf "class property read = "
 assert_ok "$FLOW" get-def class.js 13 6 --strip-root --pretty
@@ -124,7 +124,7 @@ printf "destructuring without type alias = "
 assert_ok "$FLOW" get-def objects.js 22 11 --strip-root --pretty
 printf "destructuring a shadow prop = "
 assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
-# This one should return no results
+# This one should return itself
 printf "bogus array destructuring of an object = "
 assert_ok "$FLOW" get-def objects.js 24 11 --strip-root --pretty
 

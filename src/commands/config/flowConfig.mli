@@ -144,6 +144,8 @@ val node_resolver_dirnames : config -> string list
 
 val node_resolver_aliases: config -> string list
 
+val node_resolver_root_relative_dirnames : config -> string list
+
 val required_version : config -> string option
 
 val recursion_limit : config -> int
