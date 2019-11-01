@@ -4528,29 +4528,40 @@ and unary cx loc =
 
 (* numeric pre/post inc/dec *)
 and update cx loc expr =
-  Ast.Expression.Update.(
-    let reason = mk_reason (RCustom "update") loc in
-    let result_t = NumT.at loc |> with_trust literal_trust in
-    ( result_t,
-      match expr.argument with
-      | ( arg_loc,
-          Ast.Expression.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)) )
-        ->
-        Flow.flow cx (identifier cx id_name id_loc, AssertArithmeticOperandT reason);
+  let open Ast.Expression.Update in
+  let reason = mk_reason (RCustom "update") loc in
+  let result_t = NumT.at loc |> with_trust literal_trust in
+  let { argument; _ } = expr in
+  ( result_t,
+    match argument with
+    | ( arg_loc,
+        Ast.Expression.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ) ->
+      Flow.flow cx (identifier cx id_name id_loc, AssertArithmeticOperandT reason);
 
-        (* enforce state-based guards for binding update, e.g., const *)
-        let use_op =
-          Op
-            (AssignVar
-               { var = Some (mk_reason (RIdentifier name) id_loc); init = reason_of_t result_t })
-        in
-        ignore (Env.set_var cx ~use_op name result_t id_loc);
-        let t = NumT.at arg_loc |> with_trust bogus_trust in
-        { expr with argument = ((arg_loc, t), Ast.Expression.Identifier ((id_loc, t), id_name)) }
-      | argument ->
-        let (((_, arg_t), _) as arg_ast) = expression cx argument in
-        Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
-        { expr with argument = arg_ast } ))
+      (* enforce state-based guards for binding update, e.g., const *)
+      let use_op =
+        Op
+          (AssignVar
+             { var = Some (mk_reason (RIdentifier name) id_loc); init = reason_of_t result_t })
+      in
+      ignore (Env.set_var cx ~use_op name result_t id_loc);
+      let t = NumT.at arg_loc |> with_trust bogus_trust in
+      { expr with argument = ((arg_loc, t), Ast.Expression.Identifier ((id_loc, t), id_name)) }
+    | (lhs_loc, Ast.Expression.Member mem) ->
+      (* Updating involves both reading and writing. We need to model both of these, and ensuring
+       * an arithmetic operand should use the read type, which is affected by refinements. *)
+      let ((_, arg_val_t), _) = expression cx argument in
+      Flow.flow cx (arg_val_t, AssertArithmeticOperandT reason);
+      let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
+      let lhs_prop_reason = mk_expression_reason argument in
+      let arg_update_ast =
+        assign_member cx ~make_op result_t ~lhs_loc ~lhs_prop_reason ~mode:Assign mem
+      in
+      { expr with argument = arg_update_ast }
+    | _ ->
+      let (((_, arg_t), _) as arg_ast) = expression cx argument in
+      Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
+      { expr with argument = arg_ast } )
 
 (* traverse a binary expression, return result type *)
 and binary cx loc { Ast.Expression.Binary.operator; left; right } =
