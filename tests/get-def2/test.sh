@@ -25,11 +25,11 @@ printf "\nTrace \`ParentFoo\` back to its def\n"
 assert_ok "$FLOW" get-def --strip-root require.js 4 2
 
 printf "\nReact class and attribute expressions\n"
-assert_ok "$FLOW" get-def --strip-root react.js 9 3
-assert_ok "$FLOW" get-def --strip-root react.js 9 9
+assert_ok "$FLOW" get-def --strip-root react.js 11 3
+assert_ok "$FLOW" get-def --strip-root react.js 11 9
 # TODO give some result for the JSX intrinsic here
-assert_ok "$FLOW" get-def --strip-root react.js 11 4
-assert_ok "$FLOW" get-def --strip-root react.js 11 12
+assert_ok "$FLOW" get-def --strip-root react.js 13 4
+assert_ok "$FLOW" get-def --strip-root react.js 13 12
 
 printf "\nInheritance\n"
 assert_ok "$FLOW" get-def --strip-root override.js 8 19
