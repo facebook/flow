@@ -771,7 +771,7 @@ class ['a] t =
 
     method private lookup_action cx acc =
       function
-      | ReadProp { use_op = _; obj_t = t1; tout = t2 } ->
+      | ReadProp { use_op = _; suggestion = _; obj_t = t1; tout = t2 } ->
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc

@@ -1633,13 +1633,13 @@ class virtual ['a] t_with_uses =
 
     method lookup_action cx map_cx t =
       match t with
-      | ReadProp { use_op; obj_t; tout } ->
+      | ReadProp { use_op; obj_t; suggestion; tout } ->
         let obj_t' = self#type_ cx map_cx obj_t in
         let tout' = self#type_ cx map_cx tout in
         if obj_t' == obj_t && tout' == tout then
           t
         else
-          ReadProp { use_op; obj_t = obj_t'; tout = tout' }
+          ReadProp { use_op; obj_t = obj_t'; suggestion; tout = tout' }
       | WriteProp { use_op; obj_t; prop_tout; tin; write_ctx; mode } ->
         let obj_t' = self#type_ cx map_cx obj_t in
         let tin' = self#type_ cx map_cx tin in

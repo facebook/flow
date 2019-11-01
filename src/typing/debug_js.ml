@@ -1336,7 +1336,7 @@ and json_of_lookup_action_impl json_cx action =
   Hh_json.(
     JSON_Object
       (match action with
-      | ReadProp { use_op = _; obj_t = _; tout } ->
+      | ReadProp { use_op = _; obj_t = _; suggestion = _; tout } ->
         [("kind", JSON_String "ReadProp"); ("t", _json_of_t json_cx tout)]
       | WriteProp { use_op = _; obj_t = _; prop_tout = _; tin; write_ctx = _; mode = _ } ->
         [("kind", JSON_String "WriteProp"); ("t", _json_of_t json_cx tin)]
@@ -2572,16 +2572,19 @@ let dump_error_message =
           name
           (Polarity.string expected_polarity)
           (Polarity.string actual_polarity)
-      | EBuiltinLookupFailed { reason; name } ->
+      | EBuiltinLookupFailed { reason; name; suggestion } ->
         spf
-          "EBuiltinLookupFailed { reason = %s; name = %S }"
+          "EBuiltinLookupFailed { reason = %s; name = %S; suggestion = %s }"
           (dump_reason cx reason)
           (match name with
           | Some x -> spf "Some(%S)" x
           | None -> "None")
-      | EStrictLookupFailed { reason_prop; reason_obj; name; use_op } ->
+          (match suggestion with
+          | Some suggestion -> spf "Some(%s)" suggestion
+          | None -> "None")
+      | EStrictLookupFailed { reason_prop; reason_obj; name; use_op; suggestion } ->
         spf
-          "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; use_op = %s }"
+          "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; use_op = %s; suggestion = %s }"
           (dump_reason cx reason_prop)
           (dump_reason cx reason_obj)
           (match name with
@@ -2589,6 +2592,9 @@ let dump_error_message =
           | None -> "None")
           (match use_op with
           | Some use_op -> spf "Some(%s)" (string_of_use_op use_op)
+          | None -> "None")
+          (match suggestion with
+          | Some suggestion -> spf "Some(%s)" suggestion
           | None -> "None")
       | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
         spf

@@ -1274,7 +1274,7 @@ struct
                      | ExportValue
                      (* If it's a re-export, we can assume that the appropriate export checks have been
                       * applied in the original module. *)
-                     
+
                      | ReExport ->
                        t
                      (* If it's of the form `export type` then check to make sure it's actually a type. *)
@@ -4281,10 +4281,17 @@ struct
                 let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
                 let error_message =
                   if is_builtin_reason ALoc.source lreason then
-                    Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                    Error_message.EBuiltinLookupFailed
+                      { reason = reason_prop; name = prop_name; suggestion = None }
                   else
                     Error_message.EStrictLookupFailed
-                      { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+                      {
+                        reason_prop;
+                        reason_obj = lreason;
+                        name = prop_name;
+                        use_op = Some use_op;
+                        suggestion = None;
+                      }
                 in
                 add_output cx ~trace error_message);
 
@@ -4345,10 +4352,17 @@ struct
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
               let error_message =
                 if is_builtin_reason ALoc.source reason then
-                  Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                  Error_message.EBuiltinLookupFailed
+                    { reason = reason_prop; name = prop_name; suggestion = None }
                 else
                   Error_message.EStrictLookupFailed
-                    { reason_prop; reason_obj = reason; name = prop_name; use_op = Some use_op }
+                    {
+                      reason_prop;
+                      reason_obj = reason;
+                      name = prop_name;
+                      use_op = Some use_op;
+                      suggestion = None;
+                    }
               in
               add_output cx ~trace error_message;
               AnyT.error reason_op
@@ -4669,6 +4683,14 @@ struct
               | (true, Strict _) -> NonstrictReturning (None, None)
               | _ -> kind
             in
+            let action =
+              match action with
+              | ReadProp ({ suggestion = None; _ } as obj) ->
+                let known_props = SMap.keys pmap in
+                let suggestion = typo_suggestion known_props x in
+                ReadProp { obj with suggestion }
+              | t -> t
+            in
             rec_flow cx trace (super, LookupT (reason_op, kind, try_ts_on_failure, propref, action))
           | Some p ->
             (match kind with
@@ -4799,7 +4821,7 @@ struct
                 ~trace
                 (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
             | Some p ->
-              let action = ReadProp { use_op; obj_t = l; tout } in
+              let action = ReadProp { use_op; obj_t = l; suggestion = None; tout } in
               let propref = Named (reason_op, x) in
               perform_lookup_action
                 cx
@@ -5109,6 +5131,15 @@ struct
               | (false, ShadowRead (strict, ids)) -> ShadowRead (strict, Nel.cons o.props_tmap ids)
               | (false, ShadowWrite ids) -> ShadowWrite (Nel.cons o.props_tmap ids)
               | _ -> strict
+            in
+            let action =
+              match (action, propref) with
+              | (ReadProp ({ suggestion = None; _ } as obj), Named (_, x)) ->
+                let pmap = Context.find_props cx o.props_tmap in
+                let known_props = SMap.keys pmap in
+                let suggestion = typo_suggestion known_props x in
+                ReadProp { obj with suggestion }
+              | (t, _) -> t
             in
             rec_flow
               cx
@@ -6112,7 +6143,7 @@ struct
                   lookup_kind,
                   [],
                   propref,
-                  ReadProp { use_op = unknown_use; obj_t = l; tout } ) )
+                  ReadProp { use_op = unknown_use; obj_t = l; suggestion = None; tout } ) )
         (************)
         (* indexing *)
         (************)
@@ -6176,8 +6207,11 @@ struct
           rec_flow cx trace (next, LookupT (reason, strict, try_ts_on_failure, propref, t))
         | ( (ObjProtoT _ | FunProtoT _),
             LookupT
-              (reason_op, _, [], Named (_, "__proto__"), ReadProp { use_op = _; obj_t = l; tout })
-          ) ->
+              ( reason_op,
+                _,
+                [],
+                Named (_, "__proto__"),
+                ReadProp { use_op = _; obj_t = l; suggestion = _; tout } ) ) ->
           (* __proto__ is a getter/setter on Object.prototype *)
           rec_flow cx trace (l, GetProtoT (reason_op, tout))
         | ( (ObjProtoT _ | FunProtoT _),
@@ -6204,13 +6238,19 @@ struct
             LookupT
               (reason_op, Strict strict_reason, [], (Named (reason_prop, x) as propref), action) )
           ->
+          let suggestion =
+            match action with
+            | ReadProp { suggestion; _ } -> suggestion
+            | _ -> None
+          in
           let error_message =
             if is_builtin_reason ALoc.source reason then
-              Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+              Error_message.EBuiltinLookupFailed
+                { reason = reason_prop; name = Some x; suggestion }
             else
               let use_op = use_op_of_lookup_action action in
               Error_message.EStrictLookupFailed
-                { reason_prop; reason_obj = strict_reason; name = Some x; use_op }
+                { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
           in
           add_output cx ~trace error_message;
           let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
@@ -6240,11 +6280,18 @@ struct
             let reason_prop = reason_of_t elem_t in
             let error_message =
               if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = None }
+                Error_message.EBuiltinLookupFailed
+                  { reason = reason_prop; name = None; suggestion = None }
               else
                 let use_op = use_op_of_lookup_action action in
                 Error_message.EStrictLookupFailed
-                  { reason_prop; reason_obj = strict_reason; name = None; use_op }
+                  {
+                    reason_prop;
+                    reason_obj = strict_reason;
+                    name = None;
+                    use_op;
+                    suggestion = None;
+                  }
             in
             add_output cx ~trace error_message)
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
@@ -6260,11 +6307,18 @@ struct
           | Some strict_reason ->
             let error_message =
               if is_builtin_reason ALoc.source reason then
-                Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+                Error_message.EBuiltinLookupFailed
+                  { reason = reason_prop; name = Some x; suggestion = None }
               else
                 let use_op = use_op_of_lookup_action action in
                 Error_message.EStrictLookupFailed
-                  { reason_prop; reason_obj = strict_reason; name = Some x; use_op }
+                  {
+                    reason_prop;
+                    reason_obj = strict_reason;
+                    name = Some x;
+                    use_op;
+                    suggestion = None;
+                  }
             in
             add_output cx ~trace error_message);
 
@@ -6729,10 +6783,17 @@ struct
         let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
         let error_message =
           if is_builtin_reason ALoc.source lreason then
-            Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+            Error_message.EBuiltinLookupFailed
+              { reason = reason_prop; name = prop_name; suggestion = None }
           else
             Error_message.EStrictLookupFailed
-              { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+              {
+                reason_prop;
+                reason_obj = lreason;
+                name = prop_name;
+                use_op = Some use_op;
+                suggestion = None;
+              }
         in
         add_output cx ~trace error_message)
     | None -> ());
@@ -6928,7 +6989,7 @@ struct
     (* Propagation cases: these cases don't use the fact that the LHS is
      empty, but they propagate the LHS to other types and trigger additional
      flows that may need to occur. *)
-    
+
     | (_, UseT (_, DefT (_, _, PolyT _)))
     | (_, UseT (_, TypeAppT _))
     | (_, UseT (_, MaybeT _))
@@ -6985,7 +7046,7 @@ struct
      types; either the flow would succeed anyways or it would fall
      through to the final catch-all error case and cause a spurious
      error. *)
-    
+
     | (_, UseT _)
     | (_, ArrRestT _)
     | (_, CallElemT _)
@@ -7196,7 +7257,7 @@ struct
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
-    
+
     | TestPropT _
     | ThisSpecializeT _
     | ToStringT _
@@ -7208,12 +7269,12 @@ struct
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
-    
+
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     | CreateObjWithComputedPropT _ (* Handled in __flow *)
     (* Should never occur, so we just defer to __flow to handle errors *)
-    
+
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
     | UseT (_, DefT (_, _, IdxWrapper _))
@@ -7223,7 +7284,7 @@ struct
     (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
      this can be handled by the pre-existing rules *)
-    
+
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
     | UseT (_, OpenT _) ->
@@ -7463,10 +7524,17 @@ struct
              in
              let error_message =
                if is_builtin_reason ALoc.source lreason then
-                 Error_message.EBuiltinLookupFailed { reason = reason_prop; name = prop_name }
+                 Error_message.EBuiltinLookupFailed
+                   { reason = reason_prop; name = prop_name; suggestion = None }
                else
                  Error_message.EStrictLookupFailed
-                   { reason_prop; reason_obj = lreason; name = prop_name; use_op = Some use_op }
+                   {
+                     reason_prop;
+                     reason_obj = lreason;
+                     name = prop_name;
+                     use_op = Some use_op;
+                     suggestion = None;
+                   }
              in
              add_output cx ~trace error_message)
 
@@ -7512,7 +7580,7 @@ struct
         | Prop (x, has_default) ->
           let lookup_ub () =
             let use_op = unknown_use in
-            let action = ReadProp { use_op; obj_t = curr_t; tout = tvar } in
+            let action = ReadProp { use_op; obj_t = curr_t; suggestion = None; tout = tvar } in
             (* LookupT unifies with the default with tvar. To get around that, we can create some
              * indirection with a fresh tvar in between to ensure that we only add a lower bound
              *)
@@ -8890,7 +8958,9 @@ struct
     | None -> lookup_prop cx trace super reason_prop reason_op strict x action
 
   and get_prop cx trace ~use_op reason_prop reason_op strict l super x map tout =
-    ReadProp { use_op; obj_t = l; tout }
+    let known_props = SMap.keys map in
+    let suggestion = typo_suggestion known_props x in
+    ReadProp { use_op; obj_t = l; suggestion; tout }
     |> access_prop cx trace reason_prop reason_op strict super x map
 
   and match_prop cx trace ~use_op reason_prop reason_op strict super x pmap prop_t =
@@ -8936,9 +9006,15 @@ struct
 
   and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
     let l = DefT (reason_obj, bogus_trust (), ObjT o) in
+    let known_props = SMap.keys (Context.find_props cx o.props_tmap) in
+    let suggestion =
+      match propref with
+      | Named (_, x) -> typo_suggestion known_props x
+      | _ -> None
+    in
     match get_obj_prop cx trace o propref reason_op with
     | Some (p, target_kind) ->
-      let action = ReadProp { use_op; obj_t = l; tout } in
+      let action = ReadProp { use_op; obj_t = l; suggestion; tout } in
       perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
     | None ->
       (match propref with
@@ -8953,7 +9029,7 @@ struct
           cx
           trace
           ( o.proto_t,
-            LookupT (reason_op, strict, [], propref, ReadProp { use_op; obj_t = l; tout }) )
+            LookupT (reason_op, strict, [], propref, ReadProp { use_op; obj_t = l; suggestion; tout }) )
       | Computed elem_t ->
         (match elem_t with
         | OpenT _ ->
@@ -10426,7 +10502,7 @@ struct
     *)
       | (_, [])
       (* No more arguments *)
-      
+
       | ([], _) ->
         ([], arglist, parlist)
       | (tin :: tins, (name, tout) :: touts) ->
@@ -10639,7 +10715,7 @@ struct
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
           | `Literal
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          
+
           | `Tuple ->
             AnyT.untyped reason_op
         else
@@ -10880,7 +10956,7 @@ struct
   and perform_lookup_action cx trace propref p target_kind lreason ureason = function
     | LookupProp (use_op, up) -> rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
     | SuperProp (use_op, lp) -> rec_flow_p cx trace ~use_op ureason lreason propref (lp, p)
-    | ReadProp { use_op; obj_t = _; tout } ->
+    | ReadProp { use_op; obj_t = _; suggestion = _; tout } ->
       begin
         match Property.read_t p with
         | Some t ->
@@ -10967,7 +11043,7 @@ struct
             strict,
             [],
             propref,
-            ReadProp { use_op = unknown_use; obj_t = l; tout = builtin } ) )
+            ReadProp { use_op = unknown_use; obj_t = l; tout = builtin; suggestion = None } ) )
 
   and get_builtin_typeapp cx ?trace reason x ts =
     typeapp ?annot_loc:(annot_aloc_of_reason reason) (get_builtin cx ?trace x reason) ts

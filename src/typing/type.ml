@@ -962,6 +962,7 @@ module rec TypeTerm : sig
   and lookup_action =
     | ReadProp of {
         use_op: use_op;
+        suggestion: string option;
         obj_t: t;
         tout: t;
       }
@@ -1791,13 +1792,13 @@ end = struct
         (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
         | OpenT _
         (* some types may not be evaluated yet; TODO *)
-        
+
         | EvalT _
         | TypeAppT _
         | KeysT _
         | IntersectionT _
         (* other types might wrap parts that are accessible directly *)
-        
+
         | OpaqueT _
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->

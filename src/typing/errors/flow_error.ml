@@ -859,7 +859,7 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
      * If the use_op is a PropertyCompatibility frame then we encountered this
      * error while subtyping two objects. In this case we add a bit more
      * information to the error message. *)
-    let mk_prop_missing_error prop_loc prop lower use_op =
+    let mk_prop_missing_error prop_loc prop lower use_op suggestion =
       let (loc, lower, upper, use_op) =
         match use_op with
         (* If we are missing a property while performing property compatibility
@@ -878,6 +878,11 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
         | Some upper ->
           prop_message @ [text " is missing in "; ref lower; text " but exists in "] @ [ref upper]
         | None -> prop_message @ [text " is missing in "; ref lower]
+      in
+      let message = message @
+        match suggestion with
+        | None -> []
+        | Some suggestion -> [text "."; text " Did you mean "; code suggestion; text "?"]
       in
       (* Finally, create our error message. *)
       mk_use_op_error loc use_op message
@@ -929,11 +934,11 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
       | IncompatibleMatchPropT (prop_loc, prop)
       | IncompatibleHasOwnPropT (prop_loc, prop)
       | IncompatibleMethodT (prop_loc, prop) ->
-        mk_prop_missing_error prop_loc prop lower use_op
+        mk_prop_missing_error prop_loc prop lower use_op None
       | IncompatibleGetElemT prop_loc
       | IncompatibleSetElemT prop_loc
       | IncompatibleCallElemT prop_loc ->
-        mk_prop_missing_error prop_loc None lower use_op
+        mk_prop_missing_error prop_loc None lower use_op None
       | IncompatibleGetStaticsT -> nope "is not an instance type"
       (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
@@ -984,8 +989,8 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
     match (loc, friendly_message_of_msg msg) with
     | (Some loc, Error_message.Normal { features }) -> mk_error ~trace_infos ~kind loc features
     | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
-    | (None, PropMissing { loc; prop; reason_obj; use_op }) ->
-      mk_prop_missing_error loc prop reason_obj use_op
+    | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
+      mk_prop_missing_error loc prop reason_obj use_op suggestion
     | ( None,
         PropPolarityMismatch
           { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op } ) ->
