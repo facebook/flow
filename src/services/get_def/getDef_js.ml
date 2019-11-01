@@ -139,6 +139,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
   | Get_def_request.Location loc ->
     begin
       match Get_def_process_location.process_location ~is_legit_require ~typed_ast loc with
+      | Get_def_process_location.Loc aloc -> Done (Def (loc_of_aloc ~reader aloc))
       | Get_def_process_location.Chain req -> Chain req
       | Get_def_process_location.No_loc -> Done Bad_loc
     end

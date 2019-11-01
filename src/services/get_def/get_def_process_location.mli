@@ -6,6 +6,7 @@
  *)
 
 type result =
+  | Loc of ALoc.t
   | Chain of Get_def_request.t
   | No_loc
 
