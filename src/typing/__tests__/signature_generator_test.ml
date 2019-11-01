@@ -804,6 +804,13 @@ let tests =
          >:: mk_signature_generator_test
                ["declare function foo(x: string): void;"; "export function foo(x: any): any {};"]
                ["declare function foo(x: string): void;"; "export {foo};"];
+         "static_propTypes"
+         >:: mk_signature_generator_test
+               ["class C {static propTypes = {foo: 42}}"; "module.exports = C"]
+               [
+                 "declare class C {static propTypes: $FlowFixMe}";
+                 "declare module.exports: typeof C;";
+               ];
        ]
        @ verified_signature_generator_tests
        @ generated_signature_file_sig_tests
