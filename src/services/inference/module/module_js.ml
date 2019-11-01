@@ -332,7 +332,7 @@ module Node = struct
                 lazy
                   (lazy_seq
                      ( Files.node_resolver_aliases file_options
-                     |> Core_list.map ~f:(fun dirname ->
+                     |> Base.List.map ~f:(fun dirname ->
                             let modified_dirname =
                               dirname
                               |> Str.split_delim Files.project_root_token
