@@ -372,7 +372,7 @@ module Node = struct
             ( if Options.node_resolver_allow_root_relative options then
               lazy_seq
                 ( Options.node_resolver_root_relative_dirnames options
-                |> Core_list.map ~f:(fun root_relative_dirname ->
+                |> Base.List.map ~f:(fun root_relative_dirname ->
                        lazy
                          (let root_str =
                             if root_relative_dirname = "" then
