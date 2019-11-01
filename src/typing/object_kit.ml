@@ -1252,6 +1252,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let flags = { frozen = true; sealed = Sealed; exact = true } in
           let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
           resolved cx trace use_op reason resolve_tool tool tout x
+        (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
+         * In principle, we should be able to use it for Rest, but right now
+         * `const {x, ...y} = 3;` tries to get `x` from Number.
+         * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
+         * copying/spreading an object. *)
+        | DefT (_, _, (StrT _ | NumT _ | BoolT _))
+          when match tool with
+               | ObjectWiden _
+               | Spread _ ->
+                 true
+               | _ -> false ->
+          let flags = { frozen = true; sealed = Sealed; exact = true } in
+          let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
+          resolved cx trace use_op reason resolve_tool tool tout x
         (* mixed is treated as {[string]: mixed} except in type spread, where it's treated as
          * {}. Any JavaScript value may be treated as an object and so this is safe.
          *
