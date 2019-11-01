@@ -29,10 +29,13 @@ let print_ast program = Hh_json.json_to_string ~pretty:true @@ Translate.program
 let verify_and_generate
     ?prevent_munge ?facebook_fbt ?ignore_static_propTypes ?facebook_keyMirror contents =
   let contents = String.concat "\n" contents in
-  let program = Signature_verifier_test.parse contents in
+  let ast = Signature_verifier_test.parse contents in
+  let { File_sig.With_Loc.toplevel_names; exports_info } =
+    File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix:None
+  in
   let signature =
-    match Signature_builder.program ~module_ref_prefix:None program with
-    | Ok signature -> signature
+    match exports_info with
+    | Ok exports_info -> Signature_builder.program ast ~exports_info ~toplevel_names
     | Error _ -> failwith "Signature builder failure!"
   in
   Signature_builder.Signature.verify_and_generate
@@ -41,7 +44,7 @@ let verify_and_generate
     ?ignore_static_propTypes
     ?facebook_keyMirror
     signature
-    program
+    ast
 
 let mk_signature_generator_test
     ?prevent_munge

@@ -463,9 +463,13 @@ let mk_signature_verifier_test
     expected_msgs
     ctxt =
   let contents = String.concat "\n" contents in
+  let ast = parse contents in
+  let { File_sig.With_Loc.toplevel_names; exports_info } =
+    File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix:None
+  in
   let signature =
-    match Signature_builder.program ~module_ref_prefix:None (parse contents) with
-    | Ok signature -> signature
+    match exports_info with
+    | Ok exports_info -> Signature_builder.program ast ~exports_info ~toplevel_names
     | Error _ -> failwith "Signature builder failure!"
   in
   let (errors, remote_dependencies, env) =

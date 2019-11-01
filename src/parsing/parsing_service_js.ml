@@ -435,8 +435,12 @@ let do_parse ~parse_options ~info content file =
              recognize and process a custom `keyMirror` function that makes an enum out of the keys
              of an object. *)
           let facebook_keyMirror = true in
-          match Signature_builder.program ast ~module_ref_prefix with
-          | Ok signature ->
+          let { File_sig.With_Loc.toplevel_names; exports_info } =
+            File_sig.With_Loc.program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix
+          in
+          match exports_info with
+          | Ok exports_info ->
+            let signature = Signature_builder.program ast ~exports_info ~toplevel_names in
             let (errors, sig_ast) =
               Signature_builder.Signature.verify_and_generate
                 ~prevent_munge

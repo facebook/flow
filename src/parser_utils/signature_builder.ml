@@ -579,14 +579,9 @@ class type_hoister =
     method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) = expr
   end
 
-let program program ~module_ref_prefix =
+let program ast ~exports_info ~toplevel_names =
   let env =
     let hoist = new type_hoister in
-    hoist#eval hoist#program program
+    hoist#eval hoist#program ast
   in
-  let { File_sig.toplevel_names; exports_info } =
-    File_sig.program_with_toplevel_names_and_exports_info ~ast:program ~module_ref_prefix
-  in
-  match exports_info with
-  | Ok exports_info -> Ok (Signature.mk env toplevel_names exports_info)
-  | Error e -> Error e
+  Signature.mk env toplevel_names exports_info
