@@ -179,7 +179,8 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
       | Type.OpenT _ ->
         (match Flow_js.possible_types_of_type cx v with
         | [t] -> Def (Type.def_loc_of_t t |> loc_of_aloc ~reader)
-        | _ -> Def_error "Flow_js.possible_types_of_type failed")
+        | [] -> Def_error "No possible types"
+        | _ -> Def_error "More than one possible type")
       | _ -> Def (Type.def_loc_of_t v |> loc_of_aloc ~reader)
     in
     Done loc
