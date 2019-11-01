@@ -125,7 +125,7 @@ let debug_to_string ?limit =
   let string_of_set set =
     let files =
       Utils_js.FilenameSet.elements set
-      |> Core_list.map ~f:(fun f -> spf "\"%s\"" (File_key.to_string f))
+      |> Base.List.map ~f:(fun f -> spf "\"%s\"" (File_key.to_string f))
     in
     let files =
       match limit with

@@ -431,7 +431,7 @@ let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogg
         in
         acc
     in
-    Core_list.fold summaries ~init ~f)
+    Base.List.fold summaries ~init ~f)
 
 (* When the server is initializing it will publish statuses that say it is initializing. The
  * monitor might know that the server actually is restarting. This function turns a initializing

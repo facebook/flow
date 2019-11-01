@@ -31,7 +31,7 @@ let ignored_by_all =
   ]
 
 let config_default =
-  Core_list.Assoc.find default_lint_severities ~equal:( = )
+  Base.List.Assoc.find default_lint_severities ~equal:( = )
   %> Option.value ~default:(Severity.Off, None)
 
 let of_default default_value =
@@ -169,7 +169,7 @@ let of_lines base_settings =
         res
     in
     (* Artificially locate the lines to detect unused lines *)
-    let located_lines = Core_list.map ~f:locate_fun lint_lines in
+    let located_lines = Base.List.map ~f:locate_fun lint_lines in
     let settings = loop base_settings located_lines in
     settings
     >>= fun settings ->

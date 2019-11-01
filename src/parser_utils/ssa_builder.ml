@@ -103,7 +103,7 @@ struct
 
     let one loc = Loc loc
 
-    let all locs = join (Core_list.map ~f:(fun loc -> Loc loc) locs)
+    let all locs = join (Base.List.map ~f:(fun loc -> Loc loc) locs)
 
     (* Resolving unresolved to t essentially models an equation of the form
        unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -146,7 +146,7 @@ struct
     (* Simplification converts a Val.t to a list of locations. *)
     let simplify t =
       let vals = normalize t in
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Uninitialized -> Ssa_api.Uninitialized
           | Loc loc -> Ssa_api.Write loc

@@ -467,7 +467,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = Option.map ~f:map_use_op use_op;
         lower = (map_reason lreason, lkind);
         upper = (map_reason ureason, map_upper_kind ukind);
-        branches = Core_list.map ~f:map_branch branches;
+        branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     EIncompatibleDefs
@@ -475,7 +475,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
-        branches = Core_list.map ~f:map_branch branches;
+        branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleProp { use_op; prop; reason_prop; reason_obj; special } ->
     EIncompatibleProp
@@ -554,7 +554,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         reason = map_reason reason;
         reason_op = map_reason reason_op;
-        branches = Core_list.map ~f:map_branch branches;
+        branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleWithExact ((r1, r2), op) ->
     EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op)
@@ -608,7 +608,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason = map_reason reason;
         prev_case = (prev_i, map_reason prev_case_reason);
         case = (i, map_reason case_reason);
-        cases = Core_list.map ~f:map_reason cases;
+        cases = Base.List.map ~f:map_reason cases;
       }
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
   | EIdxArity r -> EIdxArity (map_reason r)
@@ -636,7 +636,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
-  | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Core_list.map ~f:map_reason rs)
+  | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
@@ -1701,7 +1701,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
         @ conjunction_concat
             ~conjunction:"or"
-            (Core_list.map
+            (Base.List.map
                ~f:(fun case_r ->
                  let text = "to " ^ string_of_desc (desc_of_reason case_r) in
                  [ref (mk_reason (RCustom text) (loc_of_reason case_r))])

@@ -157,7 +157,7 @@ end = struct
       Context.make sig_cx metadata leader_f aloc_tables rev_table module_ref Context.Merging
     in
     let module_refs =
-      Core_list.map
+      Base.List.map
         ~f:(fun f ->
           let module_ref = Files.module_ref f in
           let module_t = Type.AnyT.locationless Type.AnyError in

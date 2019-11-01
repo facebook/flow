@@ -1,3 +1,12 @@
+### 0.111.1
+
+New features:
+* Add `module.system.node.root_relative_dirname` to allow you to configure where root relative paths resolve to
+
+Notable bug fixes:
+* Fixed the regex generator that handles the <VERSION> magic string in Flow suppression comments
+* Allow spreads of bools, strings, and numbers to support common React Native patterns
+
 ### 0.111.0
 
 Likely to cause new Flow errors:

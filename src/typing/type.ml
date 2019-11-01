@@ -344,6 +344,10 @@ module rec TypeTerm : sig
         prop: 'loc virtual_reason;
         value: 'loc virtual_reason;
       }
+    | UpdateProperty of {
+        lhs: 'loc virtual_reason;
+        prop: 'loc virtual_reason;
+      }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -2082,7 +2086,7 @@ end = struct
 
   let members_nel (t0, t1, ts) = (t0, (t1, ts))
 
-  let map f (t0, t1, ts) = make (f t0) (f t1) (Core_list.map ~f ts)
+  let map f (t0, t1, ts) = make (f t0) (f t1) (Base.List.map ~f ts)
 
   let append ts2 (t0, t1, ts1) = make t0 t1 (ts1 @ ts2)
 
@@ -2900,7 +2904,7 @@ end = struct
             local;
             op = mod_reason op;
             fn = mod_reason fn;
-            args = Core_list.map ~f:mod_reason args;
+            args = Base.List.map ~f:mod_reason args;
           }
       | FunCallMethod { op; fn; args; prop; local } ->
         FunCallMethod
@@ -2909,7 +2913,7 @@ end = struct
             op = mod_reason op;
             fn = mod_reason fn;
             prop = mod_reason prop;
-            args = Core_list.map ~f:mod_reason args;
+            args = Base.List.map ~f:mod_reason args;
           }
       | FunReturnStatement { value } -> FunReturnStatement { value = mod_reason value }
       | FunImplicitReturn { fn; upper } ->
@@ -2927,6 +2931,8 @@ end = struct
       | TypeApplication { type' } -> TypeApplication { type' = mod_reason type' }
       | SetProperty { lhs; prop; value } ->
         SetProperty { lhs = mod_reason lhs; prop = mod_reason prop; value = mod_reason value }
+      | UpdateProperty { lhs; prop } ->
+        UpdateProperty { lhs = mod_reason lhs; prop = mod_reason prop }
       | UnknownUse -> UnknownUse
     in
     let mod_loc_of_frame_use_op = function
@@ -3367,7 +3373,8 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | JSXCreateElement { op; _ }
   | ReactCreateElementCall { op; _ }
   | TypeApplication { type' = op }
-  | SetProperty { value = op; _ } ->
+  | SetProperty { value = op; _ }
+  | UpdateProperty { lhs = op; _ } ->
     aloc_of_reason op
   | ReactGetIntrinsic _
   | Speculation _
@@ -3502,6 +3509,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | Speculation _ -> "Speculation"
   | TypeApplication _ -> "TypeApplication"
   | SetProperty _ -> "SetProperty"
+  | UpdateProperty _ -> "UpdateProperty"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function
@@ -3859,7 +3867,7 @@ let mk_methodtype
     this_t = this;
     params =
       (match params_names with
-      | None -> Core_list.map ~f:(fun t -> (None, t)) tins
+      | None -> Base.List.map ~f:(fun t -> (None, t)) tins
       | Some xs -> List.map2 (fun x t -> (x, t)) xs tins);
     rest_param;
     return_t = tout;

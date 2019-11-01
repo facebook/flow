@@ -656,6 +656,8 @@ let iter_props cx id f = find_props cx id |> SMap.iter f
 
 let iter_real_props cx id f = find_real_props cx id |> SMap.iter f
 
+let fold_real_props cx id f = find_real_props cx id |> SMap.fold f
+
 let has_prop cx id x = find_props cx id |> SMap.mem x
 
 let get_prop cx id x = find_props cx id |> SMap.get x

@@ -53,7 +53,7 @@ let send_errors =
         ]
   in
   fun ~errors_reason ~errors ~warnings client ->
-    let opened_filenames = SMap.bindings client.opened_files |> Core_list.map ~f:fst in
+    let opened_filenames = SMap.bindings client.opened_files |> Base.List.map ~f:fst in
     let warnings =
       List.fold_right
         (fun filename warn_acc ->

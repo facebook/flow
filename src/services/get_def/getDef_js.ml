@@ -179,7 +179,8 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
       | Type.OpenT _ ->
         (match Flow_js.possible_types_of_type cx v with
         | [t] -> Def (Type.def_loc_of_t t |> loc_of_aloc ~reader)
-        | _ -> Def_error "Flow_js.possible_types_of_type failed")
+        | [] -> Def_error "No possible types"
+        | _ -> Def_error "More than one possible type")
       | _ -> Def (Type.def_loc_of_t v |> loc_of_aloc ~reader)
     in
     Done loc
@@ -252,7 +253,7 @@ let get_def ~options ~reader cx file_sig typed_ast requested_loc =
   let rec loop rev_req_history req =
     match getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast req with
     | Done res ->
-      let request_history = Core_list.rev_map ~f:gdr_to_string rev_req_history in
+      let request_history = Base.List.rev_map ~f:gdr_to_string rev_req_history in
       let res =
         match res with
         | Def_error msg ->

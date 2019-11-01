@@ -92,7 +92,7 @@ module Patterns = struct
 
   let array elements =
     let elements =
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Some i ->
             Some (Array.Element (Loc.none, { Array.Element.argument = i; default = None }))

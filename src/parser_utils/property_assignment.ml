@@ -45,7 +45,7 @@ let filter_uninitialized
     (properties : (ALoc.t, ALoc.t) Flow_ast.Identifier.t list) :
     (ALoc.t, ALoc.t) Flow_ast.Identifier.t list =
   let ssa_env = SMap.map Ssa_builder.With_ALoc.Val.simplify ssa_env in
-  Core_list.filter
+  Base.List.filter
     ~f:(fun id ->
       match SMap.get (Flow_ast_utils.name_of_ident id) ssa_env with
       | Some write_locs -> not_definitively_initialized write_locs
@@ -204,7 +204,7 @@ class property_assignment (property_names : SSet.t) =
 let eval_property_assignment class_body =
   Ast.Class.(
     let property_declarations =
-      Core_list.filter_map
+      Base.List.filter_map
         ~f:(function
           | Body.Property
               ( _,
@@ -230,7 +230,7 @@ let eval_property_assignment class_body =
         class_body
     in
     let ctor_body : (ALoc.t, ALoc.t) Ast.Statement.Block.t =
-      Core_list.find_map
+      Base.List.find_map
         ~f:(function
           | Body.Method
               ( _,
@@ -258,7 +258,7 @@ let eval_property_assignment class_body =
         class_body
       |> Option.value ~default:{ Ast.Statement.Block.body = [] }
     in
-    let properties = Core_list.map ~f:fst property_declarations in
+    let properties = Base.List.map ~f:fst property_declarations in
     let bindings : ALoc.t Hoister.Bindings.t =
       List.fold_left
         (fun bindings property -> Hoister.Bindings.add property bindings)
@@ -288,7 +288,7 @@ let eval_property_assignment class_body =
            body)
          ctor_body;
 
-    (* We make heavy use of the Core_list.rev_* functions below because they are
+    (* We make heavy use of the Base.List.rev_* functions below because they are
      * tail recursive. We can do this freely because the order in which we
      * process the errors doesn't actually matter (Flow will sort the errors
      * before printing them anyway).
@@ -296,7 +296,7 @@ let eval_property_assignment class_body =
     let uninitialized_properties : (ALoc.t error * string) list =
       properties
       |> filter_uninitialized ssa_walk#final_ssa_env
-      |> Core_list.rev_map ~f:(fun id ->
+      |> Base.List.rev_map ~f:(fun id ->
              ( {
                  loc = Flow_ast_utils.loc_of_ident id;
                  desc = Lints.PropertyNotDefinitelyInitialized;
@@ -306,7 +306,7 @@ let eval_property_assignment class_body =
     let read_before_initialized : (ALoc.t error * string) list =
       ssa_walk#values
       |> Loc_collections.ALocMap.bindings
-      |> Core_list.rev_filter_map ~f:(fun (read_loc, write_locs) ->
+      |> Base.List.rev_filter_map ~f:(fun (read_loc, write_locs) ->
              if not_definitively_initialized write_locs then
                ssa_walk#metadata_of_read_loc read_loc
                |> Option.map ~f:(fun name ->
@@ -315,17 +315,17 @@ let eval_property_assignment class_body =
                None)
     in
     let this_errors : (ALoc.t error * string Nel.t) list =
-      Core_list.rev_filter_map
+      Base.List.rev_filter_map
         ~f:(fun (loc, desc, ssa_env) ->
           filter_uninitialized ssa_env properties
-          |> Core_list.map ~f:Flow_ast_utils.name_of_ident
+          |> Base.List.map ~f:Flow_ast_utils.name_of_ident
           |> Nel.of_list
           |> Option.map ~f:(fun uninitialized_properties ->
                  ({ loc; desc }, uninitialized_properties)))
         ssa_walk#this_escape_errors
     in
     (* It's better to append new to old b/c new is always a singleton *)
-    let combine_voidable_checks old new_ = Core_list.rev_append new_ old in
+    let combine_voidable_checks old new_ = Base.List.rev_append new_ old in
     let add_to_errors error errors prefixed_name =
       (* Check if it is private first since `this.` is a prefix of `this.#` *)
       if String_utils.string_starts_with prefixed_name "this.#" then

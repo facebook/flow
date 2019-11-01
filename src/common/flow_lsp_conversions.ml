@@ -52,12 +52,12 @@ let flow_completion_to_lsp
       in
       let trunc80 s = trunc 80 s in
       let flow_params_to_string params =
-        let params = Core_list.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
+        let params = Base.List.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
         "(" ^ String.concat ", " params ^ ")"
       in
       let flow_params_to_lsp_snippet name params =
         let params =
-          Core_list.mapi
+          Base.List.mapi
             ~f:(fun i p -> "${" ^ string_of_int (i + 1) ^ ":" ^ p.param_name ^ "}")
             params
         in
@@ -259,7 +259,7 @@ module DocumentSymbols = struct
       in
       let containerName = name_of_id_opt class_.id in
       let (_, body) = class_.body in
-      Core_list.fold body.Body.body ~init:acc ~f:(ast_class_member ~uri ~containerName))
+      Base.List.fold body.Body.body ~init:acc ~f:(ast_class_member ~uri ~containerName))
 
   let ast_type_object_property
       ~(uri : Lsp.documentUri)
@@ -282,7 +282,7 @@ module DocumentSymbols = struct
       ~(acc : Lsp.SymbolInformation.t list)
       ~(object_ : (Loc.t, Loc.t) Ast.Type.Object.t) : Lsp.SymbolInformation.t list =
     Ast.Type.Object.(
-      Core_list.fold object_.properties ~init:acc ~f:(ast_type_object_property ~uri ~containerName))
+      Base.List.fold object_.properties ~init:acc ~f:(ast_type_object_property ~uri ~containerName))
 
   let ast_type
       ~(uri : Lsp.documentUri)
@@ -378,7 +378,7 @@ module DocumentSymbols = struct
         let ast_declarator acc (loc, declarator) =
           ast_pattern acc loc declarator.VariableDeclaration.Declarator.id
         in
-        Core_list.fold declarations ~init:acc ~f:ast_declarator
+        Base.List.fold declarations ~init:acc ~f:ast_declarator
       | (loc, DeclareClass { DeclareClass.id; body = (_, object_); _ }) ->
         let acc = ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Class in
         ast_type_object ~uri ~containerName:(Some (name_of_id id)) ~acc ~object_
@@ -389,7 +389,7 @@ module DocumentSymbols = struct
             { DeclareModule.id = DeclareModule.Identifier id; body = (_, { Block.body }); _ } ) ->
         let acc = ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Module in
         let containerName = Some (name_of_id id) in
-        Core_list.fold body ~init:acc ~f:(ast_statement ~uri ~containerName)
+        Base.List.fold body ~init:acc ~f:(ast_statement ~uri ~containerName)
       | (loc, DeclareVariable { DeclareVariable.id; _ }) ->
         ast_id ~uri ~containerName ~acc ~loc ~id ~kind:Lsp.SymbolInformation.Variable
       | (loc, DeclareOpaqueType { OpaqueType.id; _ }) ->
@@ -403,4 +403,4 @@ end
 let flow_ast_to_lsp_symbols ~(uri : Lsp.documentUri) (program : (Loc.t, Loc.t) Ast.program) :
     Lsp.SymbolInformation.t list =
   let (_loc, statements, _comments) = program in
-  Core_list.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)
+  Base.List.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)

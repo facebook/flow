@@ -34,7 +34,7 @@ let find_related_symbol_from_export loc = function
 let find_related_symbol_from_module_kind loc = function
   | CommonJS _ -> None
   | ES { named; _ } ->
-    let exports = Core_list.map ~f:snd named in
+    let exports = Base.List.map ~f:snd named in
     ListUtils.first_some_map (find_related_symbol_from_export loc) exports
 
 let rec find_related_symbol_from_bindings loc remote_loc bindings =
@@ -82,4 +82,4 @@ let find_related_symbol file_sig loc =
   | None -> find_related_symbol_from_requires loc file_sig.module_sig.requires
 
 let find_related_symbols file_sig starting_locs =
-  Core_list.map ~f:(find_related_symbol file_sig) starting_locs |> ListUtils.cat_maybes
+  Base.List.map ~f:(find_related_symbol file_sig) starting_locs |> ListUtils.cat_maybes

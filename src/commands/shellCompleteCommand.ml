@@ -65,7 +65,7 @@ module Command (CommandList : COMMAND_LIST) = struct
     in
     if current <= 1 then
       let commands =
-        CommandList.commands |> Core_list.map ~f:(fun command -> CommandSpec.name command)
+        CommandList.commands |> Base.List.map ~f:(fun command -> CommandSpec.name command)
       in
       print_endline (String.concat " " commands)
     else

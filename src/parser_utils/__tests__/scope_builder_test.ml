@@ -24,8 +24,8 @@ let mk_scope_builder_all_uses_test contents expected_all_uses ctxt =
 let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_defs ctxt =
   let info = Scope_builder.program (parse contents) in
   let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
-  let defs = Core_list.map ~f:(Scope_api.def_of_use info) all_uses in
-  let locs_of_defs = Core_list.map ~f:(fun { Scope_api.Def.locs; _ } -> Nel.to_list locs) defs in
+  let defs = Base.List.map ~f:(Scope_api.def_of_use info) all_uses in
+  let locs_of_defs = Base.List.map ~f:(fun { Scope_api.Def.locs; _ } -> Nel.to_list locs) defs in
   let printer = print_list @@ print_list Loc.debug_to_string in
   assert_equal
     ~ctxt
@@ -39,7 +39,7 @@ let mk_scope_builder_uses_of_all_uses_test contents expected_uses ctxt =
   let info = Scope_builder.program (parse contents) in
   let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
   let uses =
-    Core_list.map
+    Base.List.map
       ~f:(fun use ->
         Loc_collections.LocSet.elements @@ Scope_api.uses_of_use ~exclude_def:true info use)
       all_uses

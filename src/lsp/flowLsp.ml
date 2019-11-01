@@ -8,7 +8,7 @@
 open CommandUtils
 open Lsp
 open Lsp_fmt
-module List = Core_list
+module List = Base.List
 
 (************************************************************************)
 (** Protocol orchestration & helpers                                   **)
@@ -335,7 +335,7 @@ let get_next_event
       in
       if fds = [] then
         Lwt.return Tick
-      else if List.mem fds server_fd then
+      else if List.mem ~equal:( = ) fds server_fd then
         Lwt.return (get_next_event_from_server server_fd)
       else
         let%lwt event = get_next_event_from_client state client parser in
@@ -1195,7 +1195,7 @@ let do_rage flowconfig_name (state : state) : Rage.result =
             let pids =
               PidLog.get_pids (Server_files_js.pids_file ~flowconfig_name ~tmp_dir ienv.i_root)
             in
-            Core_list.fold pids ~init:items ~f:add_pid
+            Base.List.fold pids ~init:items ~f:add_pid
           with e ->
             let e = Exception.wrap e in
             add_string items (Printf.sprintf "Failed to get PIDs: %s" (Exception.to_string e))
@@ -2086,7 +2086,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     let delays =
       match state with
       | Connected cenv ->
-        Core_list.filter_map cenv.c_recent_summaries ~f:(fun (t, s) ->
+        Base.List.filter_map cenv.c_recent_summaries ~f:(fun (t, s) ->
             if t > wall_start then
               Some s
             else

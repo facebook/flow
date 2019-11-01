@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module List = Core_list
+module List = Base.List
 open LspProt
 
 (* Each interaction gets a unique id. *)

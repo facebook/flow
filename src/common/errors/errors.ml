@@ -155,7 +155,7 @@ module Friendly = struct
    *
    * The inverse of string_of_message_inlines. *)
   let message_inlines_of_string s =
-    Core_list.mapi
+    Base.List.mapi
       ~f:(fun i s ->
         if i mod 2 = 0 then
           Text s
@@ -288,8 +288,8 @@ module Friendly = struct
    * speculation branches are hidden then the boolean we return will be true. *)
   let message_group_of_error =
     let message_of_frames frames acc_frames =
-      let frames = Core_list.concat (List.rev (frames :: acc_frames)) in
-      Core_list.concat (Core_list.intersperse (List.rev frames) [text " of "])
+      let frames = Base.List.concat (List.rev (frames :: acc_frames)) in
+      Base.List.concat (Base.List.intersperse (List.rev frames) [text " of "])
     in
     let rec flatten_speculation_branches
         ~show_all_branches ~hidden_branches ~high_score acc_frames acc = function
@@ -478,7 +478,7 @@ module Friendly = struct
             {
               group_message = message;
               group_message_list =
-                Core_list.mapi
+                Base.List.mapi
                   ~f:(fun i message_group ->
                     append_group_message
                       ( if i = 0 then
@@ -560,7 +560,7 @@ module Friendly = struct
     in
     fun message_group ->
       let acc = loop [] message_group in
-      Core_list.concat (Core_list.intersperse (List.rev acc) [text " "])
+      Base.List.concat (Base.List.intersperse (List.rev acc) [text " "])
 
   (* Converts our friendly error to a classic error message. *)
   let to_classic error =
@@ -590,7 +590,7 @@ module Friendly = struct
           InfoLeaf [(Loc.none, ["References:"])]
           :: ( references
              |> IMap.bindings
-             |> Core_list.map ~f:(fun (id, loc) ->
+             |> Base.List.map ~f:(fun (id, loc) ->
                     InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])]) )
         else
           [] );
@@ -601,9 +601,9 @@ type 'loc printable_error = error_kind * 'loc message list * 'loc Friendly.t'
 
 let info_to_messages = function
   | (loc, []) -> [BlameM (loc, "")]
-  | (loc, msg :: msgs) -> BlameM (loc, msg) :: (msgs |> Core_list.map ~f:(fun msg -> CommentM msg))
+  | (loc, msg :: msgs) -> BlameM (loc, msg) :: (msgs |> Base.List.map ~f:(fun msg -> CommentM msg))
 
-let infos_to_messages infos = Core_list.(infos >>= info_to_messages)
+let infos_to_messages infos = Base.List.(infos >>= info_to_messages)
 
 let mk_error
     ?(kind = InferError)
@@ -631,7 +631,7 @@ let mk_speculation_error ?(kind = InferError) ?trace_infos ~loc ~root ~frames ~s
   Friendly.(
     let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let branches =
-      Core_list.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
+      Base.List.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
       |> ListUtils.dedup
     in
     ( kind,
@@ -1793,7 +1793,7 @@ module Cli_output = struct
               init
               words
           in
-          Core_list.concat (List.rev acc)
+          Base.List.concat (List.rev acc)
       in
       (* Create the tuple structure we pass into split_into_words. Code is not
        * breakable but Text is breakable. *)
@@ -1814,11 +1814,11 @@ module Cli_output = struct
                  match feature with
                  | Inline inlines ->
                    List.rev_append
-                     (Core_list.map ~f:(print_message_inline ~flags ~reference:false) inlines)
+                     (Base.List.map ~f:(print_message_inline ~flags ~reference:false) inlines)
                      acc
                  | Reference (inlines, id) ->
                    let message =
-                     Core_list.map ~f:(print_message_inline ~flags ~reference:true) inlines
+                     Base.List.map ~f:(print_message_inline ~flags ~reference:true) inlines
                      @ [
                          (false, Tty.Normal Tty.Default, " ");
                          (false, Tty.Dim Tty.Default, "[");
@@ -1918,7 +1918,7 @@ module Cli_output = struct
             _end = { root_loc._end with line = end_line };
           }
         in
-        expanded_root_loc :: Core_list.map ~f:snd (IMap.bindings references)
+        expanded_root_loc :: Base.List.map ~f:snd (IMap.bindings references)
       in
       (* Group our locs by their file key.
        *
@@ -2197,7 +2197,7 @@ module Cli_output = struct
                            (loc.start.line, tags, opened, [])
                            (Nel.to_list lines)
                        in
-                       (tags, opened, Core_list.concat (List.rev code_frame) :: code_frames)
+                       (tags, opened, Base.List.concat (List.rev code_frame) :: code_frames)
                      with Oh_no_file_contents_have_changed ->
                        (* Realized the file has changed, so skip this code frame *)
                        (tags, opened, code_frames)))
@@ -2209,7 +2209,7 @@ module Cli_output = struct
             | code_frame :: code_frames ->
               (* Add all of our code frames together with a colon for omitted chunks
                * of code in the file. *)
-              Core_list.concat
+              Base.List.concat
                 (List.fold_left
                    (fun acc code_frame ->
                      code_frame
@@ -2243,7 +2243,7 @@ module Cli_output = struct
           | Some root_code_frame -> (root_file_key, root_code_frame) :: code_frames
         in
         (* Add a title to non-root code frames and concatenate them all together! *)
-        Core_list.concat
+        Base.List.concat
           (List.rev
              (List.fold_left
                 (fun acc (file_key, code_frame) ->
@@ -2550,7 +2550,7 @@ module Cli_output = struct
             let acc = loop ~indentation acc message_group in
             loop_list ~indentation acc message_group_list
         in
-        Core_list.concat (List.rev (loop ~indentation:0 [] message_group))
+        Base.List.concat (List.rev (loop ~indentation:0 [] message_group))
       in
       (* Print the code frame for our error message. *)
       let code_frame =
@@ -2573,7 +2573,7 @@ module Cli_output = struct
             root_loc
       in
       (* Put it all together! *)
-      Core_list.concat
+      Base.List.concat
         [
           (* Header: *)
             header;
@@ -2588,8 +2588,8 @@ module Cli_output = struct
             (match trace with
             | [] -> []
             | _ -> [default_style "\n"]);
-          Core_list.concat
-            (Core_list.map
+          Base.List.concat
+            (Base.List.map
                ~f:
                  (print_message_nice
                     ~strip_root
@@ -2694,7 +2694,7 @@ module Cli_output = struct
   let print_styles ~out_channel ~flags styles =
     let styles =
       if flags.one_line then
-        Core_list.map ~f:remove_newlines styles
+        Base.List.map ~f:remove_newlines styles
       else
         styles
     in
@@ -2858,7 +2858,7 @@ module Json_output = struct
               let lines = Nel.to_list l in
               let num_lines = List.length lines in
               let numbered_lines =
-                Core_list.mapi
+                Base.List.mapi
                   ~f:(fun i line -> (string_of_int (i + loc.start.line), JSON_String line))
                   lines
               in
@@ -2875,8 +2875,8 @@ module Json_output = struct
                 let end_len = max_len / 2 in
                 (* floor *)
                 Some
-                  ( Core_list.sub numbered_lines ~pos:0 ~len:start_len
-                  @ Core_list.sub numbered_lines ~pos:(num_lines - end_len) ~len:end_len )
+                  ( Base.List.sub numbered_lines ~pos:0 ~len:start_len
+                  @ Base.List.sub numbered_lines ~pos:(num_lines - end_len) ~len:end_len )
             | None -> None))
       in
       match code_lines with
@@ -2899,7 +2899,7 @@ module Json_output = struct
       JSON_Object (context :: json_of_message_props ~stdin_file ~strip_root ~offset_kind message))
 
   let json_of_infos ~json_of_message infos =
-    Hh_json.(JSON_Array (Core_list.map ~f:json_of_message (infos_to_messages infos)))
+    Hh_json.(JSON_Array (Base.List.map ~f:json_of_message (infos_to_messages infos)))
 
   let rec json_of_info_tree ~json_of_message tree =
     Hh_json.(
@@ -2914,18 +2914,18 @@ module Json_output = struct
         (match kids with
         | None -> []
         | Some kids ->
-          let kids = Core_list.map ~f:(json_of_info_tree ~json_of_message) kids in
+          let kids = Base.List.map ~f:(json_of_info_tree ~json_of_message) kids in
           [("children", JSON_Array kids)]) ))
 
   let json_of_classic_error_props ~json_of_message error =
     Hh_json.(
       let { messages; extra } = error in
-      let props = [("message", JSON_Array (Core_list.map ~f:json_of_message messages))] in
+      let props = [("message", JSON_Array (Base.List.map ~f:json_of_message messages))] in
       (* add extra if present *)
       if extra = [] then
         props
       else
-        let extra = Core_list.map ~f:(json_of_info_tree ~json_of_message) extra in
+        let extra = Base.List.map ~f:(json_of_info_tree ~json_of_message) extra in
         ("extra", JSON_Array extra) :: props)
 
   let json_of_message_inline_friendly message_inline =
@@ -2940,10 +2940,10 @@ module Json_output = struct
       Friendly.(
         let message = flatten_message message in
         JSON_Array
-          (Core_list.concat
-             (Core_list.map
+          (Base.List.concat
+             (Base.List.map
                 ~f:(function
-                  | Inline inlines -> Core_list.map ~f:json_of_message_inline_friendly inlines
+                  | Inline inlines -> Base.List.map ~f:json_of_message_inline_friendly inlines
                   | Reference (inlines, id) ->
                     [
                       JSON_Object
@@ -2951,7 +2951,7 @@ module Json_output = struct
                           ("kind", JSON_String "Reference");
                           ("referenceId", JSON_String (string_of_int id));
                           ( "message",
-                            JSON_Array (Core_list.map ~f:json_of_message_inline_friendly inlines)
+                            JSON_Array (Base.List.map ~f:json_of_message_inline_friendly inlines)
                           );
                         ];
                     ])
@@ -2970,7 +2970,7 @@ module Json_output = struct
               ("kind", JSON_String "UnorderedList");
               ("message", group_message);
               ( "items",
-                JSON_Array (Core_list.map ~f:json_of_message_group_friendly group_message_list) );
+                JSON_Array (Base.List.map ~f:json_of_message_group_friendly group_message_list) );
             ]))
 
   let json_of_references ~strip_root ~stdin_file ~offset_kind references =
@@ -3044,7 +3044,7 @@ module Json_output = struct
       let suppressions =
         suppression_locs
         |> Loc_collections.LocSet.elements
-        |> Core_list.map ~f:(fun loc ->
+        |> Base.List.map ~f:(fun loc ->
                let offset_table = get_offset_table_expensive ~stdin_file ~offset_kind loc in
                JSON_Object
                  [
@@ -3068,7 +3068,7 @@ module Json_output = struct
       (* add trace if present *)
       match trace with
       | [] -> []
-      | _ -> [("trace", JSON_Array (Core_list.map ~f:json_of_message trace))])
+      | _ -> [("trace", JSON_Array (Base.List.map ~f:json_of_message trace))])
 
   let json_of_error_with_context
       ~strip_root ~stdin_file ~version ~severity ~offset_kind (error, suppression_locs) =

@@ -154,7 +154,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       (FilenameMap.empty, FilenameMap.empty)
       cx_nel
   in
-  let other_cxs = Core_list.map ~f:(fun (cx, _) -> cx) other_cxs in
+  let other_cxs = Base.List.map ~f:(fun (cx, _) -> cx) other_cxs in
   { cx = full_cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
 
 let merge_context ~options ~reader component =
@@ -375,7 +375,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
         (* A component may have several files: there's always at least one, and
          multiple files indicate a cycle. *)
         let files =
-          component |> Nel.to_list |> Core_list.map ~f:File_key.to_string |> String.concat "\n\t"
+          component |> Nel.to_list |> Base.List.map ~f:File_key.to_string |> String.concat "\n\t"
         in
         let merge_timeout = Options.merge_timeout options in
         let interval = Option.value_map ~f:(min 15.0) ~default:15.0 merge_timeout in

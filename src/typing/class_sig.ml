@@ -318,12 +318,12 @@ module Make (F : Func_sig.S) = struct
       methods = SMap.map (Nel.map subst_func_sig) s.methods;
       getters = SMap.map subst_func_sig s.getters;
       setters = SMap.map subst_func_sig s.setters;
-      calls = Core_list.map ~f:(Flow.subst cx map) s.calls;
+      calls = Base.List.map ~f:(Flow.subst cx map) s.calls;
     }
 
   let subst_typeapp cx map (loc, c, targs) =
     let c = Flow.subst cx map c in
-    let targs = Option.map ~f:(Core_list.map ~f:(Flow.subst cx map)) targs in
+    let targs = Option.map ~f:(Base.List.map ~f:(Flow.subst cx map)) targs in
     (loc, c, targs)
 
   let subst_extends cx map = function
@@ -332,13 +332,13 @@ module Make (F : Func_sig.S) = struct
 
   let subst_super cx map = function
     | Interface { inline; extends; callable } ->
-      Interface { inline; extends = Core_list.map ~f:(subst_typeapp cx map) extends; callable }
+      Interface { inline; extends = Base.List.map ~f:(subst_typeapp cx map) extends; callable }
     | Class { extends; mixins; implements } ->
       Class
         {
           extends = subst_extends cx map extends;
-          mixins = Core_list.map ~f:(subst_typeapp cx map) mixins;
-          implements = Core_list.map ~f:(subst_typeapp cx map) implements;
+          mixins = Base.List.map ~f:(subst_typeapp cx map) mixins;
+          implements = Base.List.map ~f:(subst_typeapp cx map) implements;
         }
 
   let generate_tests cx f x =
@@ -382,7 +382,7 @@ module Make (F : Func_sig.S) = struct
             match ms with
             | ((loc, t, _), []) -> (loc, t)
             | ((loc0, t0, _), (_, t1, _) :: ts) ->
-              let ts = Core_list.map ~f:(fun (_loc, t, _) -> t) ts in
+              let ts = Base.List.map ~f:(fun (_loc, t, _) -> t) ts in
               (loc0, IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts)))
         s.methods
     in
@@ -481,13 +481,13 @@ module Make (F : Func_sig.S) = struct
       | [] -> None
       | [x] -> Some x
       | (loc0, t0) :: (_loc1, t1) :: ts ->
-        let ts = Core_list.map ~f:snd ts in
+        let ts = Base.List.map ~f:snd ts in
         Type.(
           let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
           Some (loc0, t))
     in
     let type_args =
-      Core_list.map
+      Base.List.map
         ~f:(fun { Type.name; reason; polarity; _ } ->
           let t = SMap.find_unsafe name s.tparams_map in
           (name, reason, t, polarity))
@@ -515,7 +515,7 @@ module Make (F : Func_sig.S) = struct
       | None -> Flow.mk_instance cx reason self
       | _ ->
         let targs =
-          Core_list.map
+          Base.List.map
             ~f:(fun tp ->
               let { Type.reason; name; polarity; _ } = tp in
               Type.BoundT (reason, name, polarity))
@@ -574,7 +574,7 @@ module Make (F : Func_sig.S) = struct
       match x.super with
       | Interface { inline = _; extends; callable } ->
         let extends =
-          Core_list.map
+          Base.List.map
             ~f:(fun (annot_loc, c, targs_opt) ->
               match targs_opt with
               | None ->
@@ -661,7 +661,7 @@ module Make (F : Func_sig.S) = struct
       match x.super with
       | Interface _ -> []
       | Class { implements; _ } ->
-        Core_list.map
+        Base.List.map
           ~f:(fun (annot_loc, c, targs_opt) ->
             match targs_opt with
             | None ->

@@ -173,7 +173,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let resolved_list = resolved_list |> mapM List.rev in
           (* Each of the lists were non-empty, so concatenating them creates a non-empty list. Thus,
            * Nel.of_list_exn is safe *)
-          bind (fun lists -> Ok (Nel.of_list_exn (Core_list.join lists))) resolved_list
+          bind (fun lists -> Ok (Nel.of_list_exn (Base.List.join lists))) resolved_list
         in
         let rec loop (x0 : 'a Nel.t) (xs : 'b list) =
           match xs with
@@ -426,7 +426,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                         UnionRep.make
                           (mk_object cx reason options x0)
                           (mk_object cx reason options x1)
-                          (Core_list.map ~f:(mk_object cx reason options) xs) )
+                          (Base.List.map ~f:(mk_object cx reason options) xs) )
                   | Error e ->
                     add_output cx ~trace e;
                     AnyT.why AnyError reason
@@ -1249,6 +1249,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         (* Mirroring Object.assign() and {...null} semantics, treat null/void as
          * empty objects. *)
         | DefT (_, _, (NullT | VoidT)) ->
+          let flags = { frozen = true; sealed = Sealed; exact = true } in
+          let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
+          resolved cx trace use_op reason resolve_tool tool tout x
+        (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
+         * In principle, we should be able to use it for Rest, but right now
+         * `const {x, ...y} = 3;` tries to get `x` from Number.
+         * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
+         * copying/spreading an object. *)
+        | DefT (_, _, (StrT _ | NumT _ | BoolT _))
+          when match tool with
+               | ObjectWiden _
+               | Spread _ ->
+                 true
+               | _ -> false ->
           let flags = { frozen = true; sealed = Sealed; exact = true } in
           let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
           resolved cx trace use_op reason resolve_tool tool tout x

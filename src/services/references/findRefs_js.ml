@@ -21,10 +21,10 @@ let locmap_of_bindings =
    if we ever need to report multiple ref kinds for a single location. *)
 let sort_and_dedup refs =
   refs
-  |> Core_list.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
+  |> Base.List.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
   |> locmap_of_bindings
   |> LocMap.bindings
-  |> Core_list.map ~f:snd
+  |> Base.List.map ~f:snd
 
 let local_variable_refs ast_info loc =
   let (ast, _, _) = ast_info in

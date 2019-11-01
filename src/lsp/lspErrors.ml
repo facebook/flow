@@ -6,7 +6,7 @@
  *)
 
 open Lsp
-module List = Core_list
+module List = Base.List
 
 (* This module is how the Flow lsp stores and reasons about Flow errors. This is tricky because
  * Flow errors might come from a few different places.
@@ -83,7 +83,7 @@ let empty = { dirty_files = SSet.empty; file_to_errors_map = SMap.empty }
  * out. The one exception is in limit_errors, to ensure consistent results *)
 let sort_errors =
   PublishDiagnostics.(
-    List.sort ~cmp:(fun d1 d2 -> Lsp_helpers.pos_compare d1.range.start d2.range.start))
+    List.sort ~compare:(fun d1 d2 -> Lsp_helpers.pos_compare d1.range.start d2.range.start))
 
 (* If we have too many errors then limit them to the first N errors *)
 let limit_errors errors =

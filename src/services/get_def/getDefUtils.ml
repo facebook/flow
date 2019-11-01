@@ -216,7 +216,7 @@ type def_loc =
   | AnyType
 
 let debug_string_of_locs locs =
-  locs |> Nel.to_list |> Core_list.map ~f:Loc.debug_to_string |> String.concat ", "
+  locs |> Nel.to_list |> Base.List.map ~f:Loc.debug_to_string |> String.concat ", "
 
 (* Disable the unused value warning -- we want to keep this around for debugging *)
 [@@@warning "-32"]
@@ -242,7 +242,7 @@ let rec debug_string_of_def_loc = function
   | FoundObject loc -> spf "FoundObject (%s)" (Loc.debug_to_string loc)
   | FoundUnion def_locs ->
     Nel.to_list def_locs
-    |> Core_list.map ~f:debug_string_of_def_loc
+    |> Base.List.map ~f:debug_string_of_def_loc
     |> String.concat ", "
     |> spf "FoundUnion (%s)"
   | NoDefFound -> "NoDefFound"
@@ -332,7 +332,7 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
       | Success (UnionT (_, rep)) ->
         let union_members =
           UnionRep.members rep
-          |> Core_list.map ~f:(fun member -> extract_def_loc ~reader cx member name)
+          |> Base.List.map ~f:(fun member -> extract_def_loc ~reader cx member name)
           |> Result.all
         in
         union_members

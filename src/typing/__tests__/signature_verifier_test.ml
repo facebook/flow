@@ -477,11 +477,11 @@ let mk_signature_verifier_test
       signature
   in
   let error_msgs =
-    Core_list.map ~f:(Debug_js.string_of_signature_error Loc.debug_to_string)
+    Base.List.map ~f:(Debug_js.string_of_signature_error Loc.debug_to_string)
     @@ Signature_builder_deps.PrintableErrorSet.elements errors
   in
   let remote_dependency_msgs =
-    Core_list.map ~f:Signature_builder_deps.Dep.to_string
+    Base.List.map ~f:Signature_builder_deps.Dep.to_string
     @@ Signature_builder_deps.DepSet.elements remote_dependencies
   in
   let reachable_msg_opt =
@@ -496,7 +496,7 @@ let mk_signature_verifier_test
 
 let tests =
   "signature_verifier"
-  >::: Core_list.map
+  >::: Base.List.map
          ~f:
            (fun ( (prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, name),
                   contents,

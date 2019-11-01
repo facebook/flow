@@ -14,7 +14,7 @@ open ServerEnv
 open FindRefsUtils
 open GetDefUtils
 
-let add_ref_kind kind = Core_list.map ~f:(fun loc -> (kind, loc))
+let add_ref_kind kind = Base.List.map ~f:(fun loc -> (kind, loc))
 
 module LiteralToPropLoc : sig
   (* Returns a map from object_literal_loc to prop_loc, for all object literals which contain the
@@ -99,7 +99,7 @@ let type_matches_locs ~reader cx ty prop_def_info name =
 let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
   potential_refs
   |> ALocMap.bindings
-  |> Core_list.map ~f:(fun (ref_loc, ty) ->
+  |> Base.List.map ~f:(fun (ref_loc, ty) ->
          type_matches_locs ~reader cx ty prop_def_info name
          >>| function
          | true -> Some (loc_of_aloc ~reader ref_loc)
@@ -142,7 +142,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
         | true -> LocMap.get obj_loc (Lazy.force prop_loc_map)
       in
       !potential_matching_literals
-      |> Core_list.map ~f:get_prop_loc_if_relevant
+      |> Base.List.map ~f:get_prop_loc_if_relevant
       |> Result.all
       >>| fun refs ->
       refs |> ListUtils.cat_maybes |> add_ref_kind FindRefsTypes.PropertyDefinition
@@ -185,7 +185,7 @@ let export_find_refs_in_file ~reader ast_info file_key def_loc =
 
 let add_related_bindings ast_info refs =
   let (ast, file_sig, _) = ast_info in
-  let locs = Core_list.map ~f:snd refs in
+  let locs = Base.List.map ~f:snd refs in
   let related_bindings = ImportExportSymbols.find_related_symbols file_sig locs in
   List.fold_left
     begin
@@ -223,7 +223,7 @@ let find_refs_in_multiple_files ~reader genv all_deps def_info =
           (* Yay for global mutable state *)
           Files.node_modules_containers := node_modules_containers;
           deps
-          |> Core_list.map ~f:(fun dep ->
+          |> Base.List.map ~f:(fun dep ->
                  get_ast_result ~reader dep
                  >>= (fun ast_info -> find_refs_in_file ~reader options ast_info dep def_info))
         end
@@ -285,7 +285,7 @@ let focus_and_check genv env paths =
   Lwt.return_unit
 
 let focus_and_check_filename_set genv env files =
-  let paths = files |> FilenameSet.elements |> Core_list.map ~f:File_key.to_path |> Result.all in
+  let paths = files |> FilenameSet.elements |> Base.List.map ~f:File_key.to_path |> Result.all in
   paths
   %>>| fun paths ->
   Nel.of_list paths |> Option.value_map ~default:Lwt.return_unit ~f:(focus_and_check genv env)
@@ -309,7 +309,7 @@ let find_related_defs_in_file ~reader options name file =
         | (FoundClass class_locs, FoundObject obj_loc) ->
           class_locs
           |> Nel.to_list
-          |> Core_list.map ~f:(fun class_loc -> (Class class_loc, Object obj_loc))
+          |> Base.List.map ~f:(fun class_loc -> (Class class_loc, Object obj_loc))
         | _ -> [])
     (* TODO union types *)
   in
@@ -326,7 +326,7 @@ let find_related_defs_in_file ~reader options name file =
   cx_result
   >>= fun (cx, _) ->
   let results : ((single_def_info * single_def_info) list list, string) result =
-    !related_types |> Core_list.map ~f:(get_single_def_info_pairs_if_relevant cx) |> Result.all
+    !related_types |> Base.List.map ~f:(get_single_def_info_pairs_if_relevant cx) |> Result.all
   in
   results >>| List.concat
 
@@ -364,7 +364,7 @@ let find_related_defs ~reader genv env (def_info : property_def_info) (name : st
           begin
             fun _acc files ->
             Files.node_modules_containers := node_modules_containers;
-            Core_list.map ~f:(find_related_defs_in_file ~reader options name) files
+            Base.List.map ~f:(find_related_defs_in_file ~reader options name) files
           end
         ~merge:List.rev_append
         ~neutral:[]

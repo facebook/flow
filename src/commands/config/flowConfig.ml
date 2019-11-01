@@ -119,10 +119,10 @@ module Opts = struct
     (* If the user specified any options that aren't defined, issue a warning *)
     let warnings =
       SMap.elements raw_opts
-      |> Core_list.fold_left
+      |> Base.List.fold_left
            ~f:(fun acc (k, v) ->
              let msg = spf "Unsupported option specified! (%s)" k in
-             Core_list.fold_left ~f:(fun acc (line_num, _) -> (line_num, msg) :: acc) ~init:acc v)
+             Base.List.fold_left ~f:(fun acc (line_num, _) -> (line_num, msg) :: acc) ~init:acc v)
            ~init:[]
     in
     Ok (config, warnings)
@@ -243,8 +243,8 @@ module Opts = struct
     fun lines ->
       let lines =
         lines
-        |> Core_list.map ~f:(fun (ln, line) -> (ln, String.trim line))
-        |> Core_list.filter ~f:(fun (_, s) -> s <> "")
+        |> Base.List.map ~f:(fun (ln, line) -> (ln, String.trim line))
+        |> Base.List.filter ~f:(fun (_, s) -> s <> "")
       in
       loop (Ok SMap.empty) lines
 
@@ -304,7 +304,7 @@ module Opts = struct
 
   let enum values =
     opt (fun str ->
-        let values = Core_list.fold_left ~f:map_add ~init:SMap.empty values in
+        let values = Base.List.fold_left ~f:map_add ~init:SMap.empty values in
         match SMap.get str values with
         | Some v -> Ok v
         | None ->
@@ -657,15 +657,15 @@ end = struct
 
   let section_header o section = fprintf o "[%s]\n" section
 
-  let ignores o = Core_list.iter ~f:(fprintf o "%s\n")
+  let ignores o = Base.List.iter ~f:(fprintf o "%s\n")
 
-  let untyped o = Core_list.iter ~f:(fprintf o "%s\n")
+  let untyped o = Base.List.iter ~f:(fprintf o "%s\n")
 
-  let declarations o = Core_list.iter ~f:(fprintf o "%s\n")
+  let declarations o = Base.List.iter ~f:(fprintf o "%s\n")
 
-  let includes o = Core_list.iter ~f:(fprintf o "%s\n")
+  let includes o = Base.List.iter ~f:(fprintf o "%s\n")
 
-  let libs o = Core_list.iter ~f:(fprintf o "%s\n")
+  let libs o = Base.List.iter ~f:(fprintf o "%s\n")
 
   let options =
     let pp_opt o name value = fprintf o "%s=%s\n" name value in
@@ -752,11 +752,11 @@ let group_into_sections : line list -> (section list, error) result =
     >>= fun (seen, sections, (section_name, section_lines)) ->
     match lines with
     | [] ->
-      let section = (section_name, Core_list.rev section_lines) in
-      Ok (Core_list.rev (section :: sections))
+      let section = (section_name, Base.List.rev section_lines) in
+      Ok (Base.List.rev (section :: sections))
     | (ln, line) :: rest ->
       if Str.string_match is_section_header line 0 then
-        let sections = (section_name, Core_list.rev section_lines) :: sections in
+        let sections = (section_name, Base.List.rev section_lines) :: sections in
         let section_name = Str.matched_group 1 line in
         if SSet.mem section_name seen then
           Error (ln, spf "contains duplicate section: \"%s\"" section_name)
@@ -773,13 +773,13 @@ let group_into_sections : line list -> (section list, error) result =
 
 let trim_lines lines =
   lines
-  |> Core_list.map ~f:(fun (_, line) -> String.trim line)
-  |> Core_list.filter ~f:(fun s -> s <> "")
+  |> Base.List.map ~f:(fun (_, line) -> String.trim line)
+  |> Base.List.filter ~f:(fun s -> s <> "")
 
 let trim_labeled_lines lines =
   lines
-  |> Core_list.map ~f:(fun (label, line) -> (label, String.trim line))
-  |> Core_list.filter ~f:(fun (_, s) -> s <> "")
+  |> Base.List.map ~f:(fun (label, line) -> (label, String.trim line))
+  |> Base.List.filter ~f:(fun (_, s) -> s <> "")
 
 (* parse [include] lines *)
 let parse_includes lines config =
@@ -809,8 +809,8 @@ let parse_options lines config : (config * warning list, error) result =
 let parse_version lines config =
   let potential_versions =
     lines
-    |> Core_list.map ~f:(fun (ln, line) -> (ln, String.trim line))
-    |> Core_list.filter ~f:(fun (_, s) -> s <> "")
+    |> Base.List.map ~f:(fun (ln, line) -> (ln, String.trim line))
+    |> Base.List.filter ~f:(fun (_, s) -> s <> "")
   in
   match potential_versions with
   | (ln, version_str) :: _ ->
@@ -978,13 +978,13 @@ let parse =
                   Error (line_num, spf "Unknown group %S in rollout %S" group_name rollout_name)
             else
               Ok ((line_num, line) :: acc))
-        >>= (fun lines -> Ok ((section_name, Core_list.rev lines) :: acc)))
-    >>= (fun sections -> Ok (config, Core_list.rev sections))
+        >>= (fun lines -> Ok ((section_name, Base.List.rev lines) :: acc)))
+    >>= (fun sections -> Ok (config, Base.List.rev sections))
   in
   let process_rollouts config sections =
     let rollout_section_lines = ref None in
     let sections =
-      Core_list.filter sections ~f:(function
+      Base.List.filter sections ~f:(function
           | ((_, "rollouts"), lines) ->
             rollout_section_lines := Some lines;
             false
@@ -996,11 +996,11 @@ let parse =
     acc
     >>= fun (config, warn_acc) ->
     match sections with
-    | [] -> Ok (config, Core_list.rev warn_acc)
+    | [] -> Ok (config, Base.List.rev warn_acc)
     | section :: rest ->
       parse_section config section
       >>= fun (config, warnings) ->
-      let acc = Ok (config, Core_list.rev_append warnings warn_acc) in
+      let acc = Ok (config, Base.List.rev_append warnings warn_acc) in
       loop acc rest
   in
   fun config lines ->
@@ -1021,7 +1021,7 @@ let is_not_comment =
     ]
   in
   fun (_, line) ->
-    not (Core_list.exists ~f:(fun regexp -> Str.string_match regexp line 0) comment_regexps)
+    not (Base.List.exists ~f:(fun regexp -> Str.string_match regexp line 0) comment_regexps)
 
 let read filename =
   let contents = Sys_utils.cat_no_fail filename in
@@ -1033,14 +1033,14 @@ let read filename =
   let lines =
     contents
     |> Sys_utils.split_lines
-    |> Core_list.mapi ~f:(fun i line -> (i + 1, String.trim line))
-    |> Core_list.filter ~f:is_not_comment
+    |> Base.List.mapi ~f:(fun i line -> (i + 1, String.trim line))
+    |> Base.List.filter ~f:is_not_comment
   in
   (lines, hash)
 
 let get_empty_config () =
   let lint_severities =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun acc (lint, severity) -> LintSettings.set_value lint severity acc)
       ~init:empty_config.lint_severities
       LintSettings.default_lint_severities
@@ -1054,15 +1054,15 @@ let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
     let ( >>= ) = Base.Result.( >>= ) in
     acc
     >>= fun (config, warn_acc) ->
-    fn config >>= (fun (config, warnings) -> Ok (config, Core_list.rev_append warnings warn_acc))
+    fn config >>= (fun (config, warnings) -> Ok (config, Base.List.rev_append warnings warn_acc))
   in
-  let ignores_lines = Core_list.map ~f:(fun s -> (1, s)) ignores in
-  let untyped_lines = Core_list.map ~f:(fun s -> (1, s)) untyped in
-  let declarations_lines = Core_list.map ~f:(fun s -> (1, s)) declarations in
-  let includes_lines = Core_list.map ~f:(fun s -> (1, s)) includes in
-  let options_lines = Core_list.map ~f:(fun s -> (1, s)) options in
-  let lib_lines = Core_list.map ~f:(fun s -> (1, s)) libs in
-  let lint_lines = Core_list.map ~f:(fun s -> (1, s)) lints in
+  let ignores_lines = Base.List.map ~f:(fun s -> (1, s)) ignores in
+  let untyped_lines = Base.List.map ~f:(fun s -> (1, s)) untyped in
+  let declarations_lines = Base.List.map ~f:(fun s -> (1, s)) declarations in
+  let includes_lines = Base.List.map ~f:(fun s -> (1, s)) includes in
+  let options_lines = Base.List.map ~f:(fun s -> (1, s)) options in
+  let lib_lines = Base.List.map ~f:(fun s -> (1, s)) libs in
+  let lint_lines = Base.List.map ~f:(fun s -> (1, s)) lints in
   Ok (empty_config, [])
   >>= parse_ignores ignores_lines
   >>= parse_untyped untyped_lines

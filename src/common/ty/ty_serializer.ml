@@ -10,7 +10,7 @@ open Base.Result
 open Ty
 module T = Flow_ast.Type
 
-let mapM f ts = all (Core_list.map ~f ts)
+let mapM f ts = all (Base.List.map ~f ts)
 
 let opt f t =
   match t with

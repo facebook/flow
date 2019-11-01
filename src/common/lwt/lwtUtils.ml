@@ -32,7 +32,7 @@ let get_value_unsafe thread =
 
 let all threads =
   let%lwt () = iter_all threads in
-  threads |> Core_list.map ~f:get_value_unsafe |> Lwt.return
+  threads |> Base.List.map ~f:get_value_unsafe |> Lwt.return
 
 let output_graph out strip_root graph =
   let%lwt () = Lwt_io.fprint out "digraph {\n" in

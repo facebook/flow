@@ -169,7 +169,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       | [] -> Empty
       | _ ->
         fuse_with_space
-          [Atom "extends"; list ~sep:(Atom ",") (Core_list.map ~f:(type_generic ~depth) extends)]
+          [Atom "extends"; list ~sep:(Atom ",") (Base.List.map ~f:(type_generic ~depth) extends)]
     in
     let body = type_object ~depth body in
     fuse_with_space [Atom "interface"; extends; body]
@@ -324,7 +324,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       else
         None
     in
-    let elts = Core_list.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "|") in
+    let elts = Base.List.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "|") in
     fuse [prefix; list ?wrap ~inline:(false, true) elts]
   and type_intersection ~depth ts =
     let wrap =
@@ -333,7 +333,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       else
         None
     in
-    let elts = Core_list.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "&") in
+    let elts = Base.List.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "&") in
     list ?wrap ~inline:(false, true) elts
   and type_with_parens ~depth t =
     match t with
@@ -381,7 +381,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
   (* Main call *)
   let type_layout = type_ ~depth:0 t in
   (* Run type_ first so that env_map has been populated *)
-  let env_layout = Core_list.map ~f:env_ (IMap.bindings !env_map) in
+  let env_layout = Base.List.map ~f:env_ (IMap.bindings !env_map) in
   Layout.(join Newline (env_layout @ [type_layout]))
 
 (* Same as Compact_printer with the exception of:

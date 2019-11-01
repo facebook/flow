@@ -147,7 +147,7 @@ class mapper_type_printing_hardcoded_fixes =
     method! type_parameter_instantiation (pi : ('loc, 'loc) Flow_ast.Type.ParameterInstantiation.t)
         =
       let (loc, targs) = pi in
-      let targs' = Core_list.map ~f:this#type_generic_normalize targs in
+      let targs' = Base.List.map ~f:this#type_generic_normalize targs in
       if targs' == targs then
         pi
       else

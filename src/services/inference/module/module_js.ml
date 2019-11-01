@@ -240,7 +240,7 @@ module Node = struct
   let path_if_exists_with_file_exts ~file_options resolution_acc path file_exts =
     lazy_seq
       ( file_exts
-      |> Core_list.map ~f:(fun ext ->
+      |> Base.List.map ~f:(fun ext ->
              lazy (path_if_exists ~file_options resolution_acc (path ^ ext))) )
 
   let parse_main
@@ -349,7 +349,7 @@ module Node = struct
                 lazy
                   (lazy_seq
                      ( Files.node_resolver_dirnames file_options
-                     |> Core_list.map ~f:(fun dirname ->
+                     |> Base.List.map ~f:(fun dirname ->
                             lazy
                               ( if SSet.mem dirname existing_node_modules_dirs then
                                 resolve_relative
@@ -396,7 +396,7 @@ module Node = struct
             ( if Options.node_resolver_allow_root_relative options then
               lazy_seq
                 ( Options.node_resolver_root_relative_dirnames options
-                |> Core_list.map ~f:(fun root_relative_dirname ->
+                |> Base.List.map ~f:(fun root_relative_dirname ->
                        lazy
                          (let root_str =
                             if root_relative_dirname = "" then

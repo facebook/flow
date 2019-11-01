@@ -374,7 +374,7 @@ module T = struct
            {
              Ast.Type.Object.exact = true;
              inexact = false;
-             properties = Core_list.map ~f:(type_of_object_property outlined) (pt :: pts);
+             properties = Base.List.map ~f:(type_of_object_property outlined) (pt :: pts);
            })
     | (loc, ArrayLiteral ets) ->
       temporary_type
@@ -386,7 +386,7 @@ module T = struct
           Ast.Type.Union
             ( type_of_array_element outlined et1,
               type_of_array_element outlined et2,
-              Core_list.map ~f:(type_of_array_element outlined) ets ))
+              Base.List.map ~f:(type_of_array_element outlined) ets ))
     | (loc, ValueRef reference) ->
       ( loc,
         Ast.Type.Typeof
@@ -579,7 +579,7 @@ module T = struct
           params =
             ( params_loc,
               {
-                Ast.Type.Function.Params.params = Core_list.map ~f:param_of_type params;
+                Ast.Type.Function.Params.params = Base.List.map ~f:param_of_type params;
                 rest =
                   (match rest with
                   | None -> None
@@ -674,7 +674,7 @@ module T = struct
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
       (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
       let filtered_body_FIXME =
-        Core_list.filter
+        Base.List.filter
           ~f:(fun prop ->
             match prop with
             | (_loc, CPrivateField _) -> false
@@ -687,7 +687,7 @@ module T = struct
             Ast.Type.Object.exact = false;
             inexact = false;
             properties =
-              Core_list.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
+              Base.List.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
           } )
       in
       let mixins = [] in
@@ -709,7 +709,7 @@ module T = struct
     | FunctionWithStaticsDecl { base; statics } ->
       let annot = type_of_expr_type outlined base in
       let properties =
-        Core_list.rev_map
+        Base.List.rev_map
           ~f:(fun (id, expr) ->
             let annot = type_of_expr_type outlined expr in
             Ast.Type.Object.(
@@ -917,7 +917,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and type_args = function
     | None -> None
-    | Some (loc, ts) -> Some (loc, Core_list.map ~f:type_ ts)
+    | Some (loc, ts) -> Some (loc, Base.List.map ~f:type_ ts)
 
   let rec annot_path = function
     | Kind.Annot_path.Annot (_, t) -> T.TYPE (type_ t)
@@ -1314,7 +1314,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
   and function_params params =
     Ast.Function.(
       let (params_loc, { Params.params; rest }) = params in
-      let params = Core_list.map ~f:function_param params in
+      let params = Base.List.map ~f:function_param params in
       let rest =
         match rest with
         | None -> None
@@ -1454,7 +1454,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
               | None -> T.FixMe.mk_extends (fst expr)
             end
         in
-        let implements = Core_list.map ~f:class_implement implements in
+        let implements = Base.List.map ~f:class_implement implements in
         T.CLASS { tparams; extends; implements; body = (body_loc, body) })
 
   and array_ =
@@ -1558,7 +1558,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
             {
               base = (loc, T.Function (Eval.function_ generator async tparams params return body));
               statics =
-                Core_list.map properties ~f:(fun (id_prop, expr) ->
+                Base.List.map properties ~f:(fun (id_prop, expr) ->
                     (id_prop, Eval.literal_expr expr));
             }
         | None -> eval (loc, base)
@@ -1582,8 +1582,8 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         | None -> None
         | Some r -> Some (Eval.generic r)
       in
-      let mixins = Core_list.map ~f:Eval.generic mixins in
-      let implements = Core_list.map ~f:Eval.class_implement implements in
+      let mixins = Base.List.map ~f:Eval.generic mixins in
+      let implements = Base.List.map ~f:Eval.class_implement implements in
       T.ClassDecl
         (T.DECLARE_CLASS { tparams; extends; mixins; implements; body = (body_loc, body) })
     | Kind.TypeDef { tparams; right } ->
@@ -1605,7 +1605,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       T.OpaqueType { tparams; impltype; supertype }
     | Kind.InterfaceDef { tparams; extends; body = (body_loc, body) } ->
       let tparams = Eval.type_params tparams in
-      let extends = Core_list.map ~f:Eval.generic extends in
+      let extends = Base.List.map ~f:Eval.generic extends in
       let body = Eval.object_type body in
       T.Interface { tparams; extends; body = (body_loc, body) }
     | Kind.ImportNamedDef { kind; source; name } -> T.ImportNamed { kind; source; name }
@@ -1655,7 +1655,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       (mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t))
     in
     let additional_properties_of_module_exports outlined add_module_exports_list =
-      Core_list.rev_map
+      Base.List.rev_map
         ~f:(fun (id, expr) ->
           let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
           Ast.Type.Object.(

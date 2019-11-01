@@ -19,7 +19,7 @@ let run_command command argv =
     begin
       try
         let json_arg =
-          Core_list.find_exn
+          Base.List.find_exn
             ~f:(fun s ->
               String_utils.string_starts_with s "--pretty"
               || String_utils.string_starts_with s "--json")
@@ -40,7 +40,7 @@ let run_command command argv =
     FlowExitStatus.(exit ~msg Commandline_usage_error)
 
 let expand_file_list ?options filenames =
-  let paths = Core_list.map ~f:Path.make filenames in
+  let paths = Base.List.map ~f:Path.make filenames in
   let next_files =
     match paths with
     | [] -> (fun () -> [])
@@ -50,7 +50,7 @@ let expand_file_list ?options filenames =
         | Some options -> Files.is_valid_path ~options
         | _ -> (fun filename -> Filename.check_suffix filename ".js")
       in
-      Find.make_next_files ~filter ~others:(Core_list.tl_exn paths) (Core_list.hd_exn paths)
+      Find.make_next_files ~filter ~others:(Base.List.tl_exn paths) (Base.List.hd_exn paths)
   in
   Files.get_all next_files
 
@@ -295,7 +295,7 @@ let shm_config shm_flags flowconfig =
       shm_flags.shm_dirs
       ~default:(FlowConfig.shm_dirs flowconfig)
       ~f:(Str.split (Str.regexp ","))
-    |> Core_list.map ~f:Path.(make %> to_string)
+    |> Base.List.map ~f:Path.(make %> to_string)
   in
   let shm_min_avail =
     Option.value shm_flags.shm_min_avail ~default:(FlowConfig.shm_min_avail flowconfig)
@@ -487,7 +487,7 @@ let offset_kind_of_offset_style = function
 let flowconfig_multi_error rev_errs =
   let msg =
     rev_errs
-    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> Base.List.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
   FlowExitStatus.(exit ~msg Invalid_flowconfig)
@@ -495,7 +495,7 @@ let flowconfig_multi_error rev_errs =
 let flowconfig_multi_warn rev_errs =
   let msg =
     rev_errs
-    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> Base.List.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
   prerr_endline msg
@@ -588,8 +588,8 @@ let file_options =
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
   let ignores_of_arg root patterns extras =
-    let patterns = Core_list.rev_append extras patterns in
-    Core_list.map
+    let patterns = Base.List.rev_append extras patterns in
+    Base.List.map
       ~f:(fun s ->
         let root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
         let reg =
@@ -605,7 +605,7 @@ let file_options =
   let includes_of_arg ~root ~lib_paths paths =
     (* Explicitly included paths are always added to the path_matcher *)
     let path_matcher =
-      Core_list.fold_left
+      Base.List.fold_left
         ~f:(fun acc path -> Path_matcher.add acc (Files.make_path_absolute root path))
         ~init:Path_matcher.empty
         paths
@@ -613,10 +613,10 @@ let file_options =
     (* Implicitly included paths are added only if they're not already being watched *)
     let path_len path = path |> Path.to_string |> String.length in
     let implicitly_included_paths_sorted =
-      Core_list.sort ~cmp:(fun a b -> path_len a - path_len b) (root :: lib_paths)
+      Base.List.sort ~compare:(fun a b -> path_len a - path_len b) (root :: lib_paths)
       (* Shortest path first *)
     in
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:(fun acc path ->
         (* If this include is already covered by an explicit include or a shorter implicit include,
          * then skip it *)
@@ -631,7 +631,7 @@ let file_options =
     let flowtyped_path = Files.get_flowtyped_path root in
     let has_explicit_flowtyped_lib = ref false in
     let config_libs =
-      Core_list.fold_right
+      Base.List.fold_right
         ~f:(fun lib abs_libs ->
           let abs_lib = Files.make_path_absolute root lib in
           (*
@@ -652,7 +652,7 @@ let file_options =
     in
     match extras with
     | [] -> config_libs
-    | _ -> config_libs @ Core_list.map ~f:(Files.make_path_absolute root) extras
+    | _ -> config_libs @ Base.List.map ~f:(Files.make_path_absolute root) extras
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
@@ -665,7 +665,7 @@ let file_options =
     let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes
-      |> Core_list.rev_append (FlowConfig.includes flowconfig)
+      |> Base.List.rev_append (FlowConfig.includes flowconfig)
       |> includes_of_arg ~root ~lib_paths
     in
     {
@@ -877,7 +877,7 @@ end
 let parse_lints_flag =
   let number =
     let rec number' index acc = function
-      | [] -> Core_list.rev acc
+      | [] -> Base.List.rev acc
       | head :: tail -> number' (index + 1) ((index, head) :: acc) tail
     in
     number' 1 []
@@ -1307,7 +1307,7 @@ let make_env flowconfig_name connect_flags root =
   in
   let shm_dirs =
     Option.map
-      ~f:(Str.split (Str.regexp ",") %> Core_list.map ~f:normalize)
+      ~f:(Str.split (Str.regexp ",") %> Base.List.map ~f:normalize)
       connect_flags.shm_flags.shm_dirs
   in
   let log_file = Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in

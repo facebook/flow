@@ -43,7 +43,7 @@ let unwrap_type =
 (* NOTE: While union flattening could be performed at any time, it is most effective when we know
    that all tvars have been resolved. *)
 let union_flatten =
-  let rec union_flatten cx seen ts = Core_list.(ts >>= flatten cx seen)
+  let rec union_flatten cx seen ts = Base.List.(ts >>= flatten cx seen)
   and flatten cx seen t =
     match t with
     | OpenT (_, id) ->

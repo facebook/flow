@@ -507,7 +507,7 @@ let is_dynamic = function
 let mk_maybe t = mk_union (Null, [Void; t])
 
 let mk_field_props prop_list =
-  Core_list.map
+  Base.List.map
     ~f:(fun (id, t, opt) ->
       NamedProp (id, Field (t, { fld_polarity = Neutral; fld_optional = opt })))
     prop_list
