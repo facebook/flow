@@ -9686,6 +9686,7 @@ struct
                   | FunReturnStatement _
                   | GetProperty _
                   | SetProperty _
+                  | UpdateProperty _
                   | JSXCreateElement _
                   | ObjectSpread _
                   | ObjectChain _

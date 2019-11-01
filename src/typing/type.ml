@@ -344,6 +344,10 @@ module rec TypeTerm : sig
         prop: 'loc virtual_reason;
         value: 'loc virtual_reason;
       }
+    | UpdateProperty of {
+        lhs: 'loc virtual_reason;
+        prop: 'loc virtual_reason;
+      }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -2927,6 +2931,8 @@ end = struct
       | TypeApplication { type' } -> TypeApplication { type' = mod_reason type' }
       | SetProperty { lhs; prop; value } ->
         SetProperty { lhs = mod_reason lhs; prop = mod_reason prop; value = mod_reason value }
+      | UpdateProperty { lhs; prop } ->
+        UpdateProperty { lhs = mod_reason lhs; prop = mod_reason prop }
       | UnknownUse -> UnknownUse
     in
     let mod_loc_of_frame_use_op = function
@@ -3367,7 +3373,8 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | JSXCreateElement { op; _ }
   | ReactCreateElementCall { op; _ }
   | TypeApplication { type' = op }
-  | SetProperty { value = op; _ } ->
+  | SetProperty { value = op; _ }
+  | UpdateProperty { lhs = op; _ } ->
     aloc_of_reason op
   | ReactGetIntrinsic _
   | Speculation _
@@ -3502,6 +3509,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | Speculation _ -> "Speculation"
   | TypeApplication _ -> "TypeApplication"
   | SetProperty _ -> "SetProperty"
+  | UpdateProperty _ -> "UpdateProperty"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function

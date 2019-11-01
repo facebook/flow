@@ -481,6 +481,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
                   value
               in
               `Root (loc_reason, None, [text "Cannot assign "; desc value; text " to "; desc prop])
+            | Op (UpdateProperty { prop; lhs }) ->
+              `Root (lhs, None, [text "Cannot update "; desc prop])
             | Op (DeleteProperty { prop; lhs }) ->
               `Root (lhs, None, [text "Cannot delete "; desc prop])
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
