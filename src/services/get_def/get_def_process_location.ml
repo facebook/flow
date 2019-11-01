@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-exception Found of Get_def_request.t
+type result =
+  | Chain of Get_def_request.t
+  | No_loc
+
+exception Result of result
 
 class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
   object (this)
@@ -18,7 +22,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
 
     method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
-    method find_loc : 'a. Get_def_request.t -> 'a = (fun x -> raise (Found x))
+    method chain : 'a. Get_def_request.t -> 'a = (fun x -> raise (Result (Chain x)))
 
     method! import_declaration import_loc decl =
       Flow_ast.Statement.ImportDeclaration.(
@@ -33,7 +37,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
         Option.iter ~f:(this#import_specifier_with_loc ~source_loc) specifiers;
         Option.iter ~f:(this#import_default_specifier_with_loc ~source_loc) default;
         if this#covers_target import_loc then
-          this#find_loc (Get_def_request.Require ((source_loc, module_name), import_loc));
+          this#chain (Get_def_request.Require ((source_loc, module_name), import_loc));
         decl)
 
     method import_specifier_with_loc ~source_loc specifier =
@@ -51,7 +55,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
           Get_def_request.(
             Member { prop_name = remote_name; object_source = ObjectRequireLoc source_loc })
         in
-        if this#covers_target remote_name_loc then this#find_loc result;
+        if this#covers_target remote_name_loc then this#chain result;
         Option.iter
           ~f:(fun local ->
             let ((local_name_loc, _), _) = local in
@@ -60,7 +64,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
                 Get_def_request.(
                   Member { prop_name = remote_name; object_source = ObjectRequireLoc source_loc })
               in
-              this#find_loc result)
+              this#chain result)
           local)
 
     method! member expr =
@@ -74,7 +78,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
             let result =
               Get_def_request.(Member { prop_name = name; object_source = ObjectType t })
             in
-            this#find_loc result
+            this#chain result
           | _ -> ()
         end;
         super#member expr)
@@ -91,16 +95,14 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
                 object_source = ObjectRequireLoc source_loc;
               })
         in
-        this#find_loc result
+        this#chain result
 
     method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as id) =
-      if this#covers_target loc then
-        this#find_loc (Get_def_request.Identifier { name; loc; type_ });
+      if this#covers_target loc then this#chain (Get_def_request.Identifier { name; loc; type_ });
       super#t_identifier id
 
     method! jsx_identifier (((loc, type_), { Flow_ast.JSX.Identifier.name }) as id) =
-      if this#covers_target loc then
-        this#find_loc (Get_def_request.Identifier { name; loc; type_ });
+      if this#covers_target loc then this#chain (Get_def_request.Identifier { name; loc; type_ });
       super#jsx_identifier id
 
     method! pattern ?kind (((_, t), p) as pat) =
@@ -118,7 +120,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
                         (loc, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
                     | Property.Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
                       when this#covers_target loc ->
-                      this#find_loc
+                      this#chain
                         Get_def_request.(Member { prop_name = name; object_source = ObjectType t })
                     | _ -> ()
                   end
@@ -129,7 +131,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
         super#pattern ?kind pat)
 
     method! t_pattern_identifier ?kind ((loc, t), name) =
-      if kind != None && this#covers_target loc then this#find_loc (Get_def_request.Type t);
+      if kind != None && this#covers_target loc then this#chain (Get_def_request.Type t);
       super#t_pattern_identifier ?kind ((loc, t), name)
 
     method! expression ((loc, t), expr) =
@@ -146,7 +148,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
               _;
             })
         when this#covers_target loc && is_legit_require source_loc ->
-        this#find_loc (Get_def_request.Require ((source_loc, module_name), loc))
+        this#chain (Get_def_request.Require ((source_loc, module_name), loc))
       | _ -> super#expression ((loc, t), expr)
   end
 
@@ -154,5 +156,5 @@ let process_location ~typed_ast ~is_legit_require loc =
   let searcher = new searcher loc is_legit_require in
   try
     ignore (searcher#program typed_ast);
-    None
-  with Found info -> Some info
+    No_loc
+  with Result info -> info
