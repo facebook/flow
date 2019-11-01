@@ -4870,6 +4870,10 @@ and op_assignment cx loc lhs op rhs =
           Op (AssignVar { var = Some (mk_reason (RIdentifier name) id_loc); init = reason })
         in
         ignore Env.(set_var cx ~use_op name result_t id_loc)
+      | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+        let lhs_prop_reason = mk_pattern_reason lhs in
+        let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
+        ignore @@ assign_member cx ~make_op result_t ~lhs_loc ~lhs_prop_reason ~mode:Assign mem
       | _ -> ());
       (lhs_t, lhs_ast, rhs_ast)
     | Assignment.MinusAssign
@@ -4891,17 +4895,23 @@ and op_assignment cx loc lhs op rhs =
       Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
       Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
 
+      let result_t = NumT.at loc |> with_trust literal_trust in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | ( _,
           Ast.Pattern.Identifier
             { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ } )
         ->
-        let t = NumT.at loc |> with_trust literal_trust in
         let use_op =
-          Op (AssignVar { var = Some (mk_reason (RIdentifier name) id_loc); init = reason_of_t t })
+          Op
+            (AssignVar
+               { var = Some (mk_reason (RIdentifier name) id_loc); init = reason_of_t result_t })
         in
-        ignore Env.(set_var cx ~use_op name t id_loc)
+        ignore Env.(set_var cx ~use_op name result_t id_loc)
+      | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+        let lhs_prop_reason = mk_pattern_reason lhs in
+        let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
+        ignore @@ assign_member cx ~make_op result_t ~lhs_loc ~lhs_prop_reason ~mode:Assign mem
       | _ -> ());
       (lhs_t, lhs_ast, rhs_ast))
 

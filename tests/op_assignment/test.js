@@ -49,6 +49,23 @@
 }
 
 {
+  // Read-only property
+  const o: {|+p: number|} = {p: 1};
+  o.p += 2; // Error: property is non-writable
+  o.p -= 2; // Error: property is non-writable
+  o.p *= 2; // Error: property is non-writable
+  o.p /= 2; // Error: property is non-writable
+  o.p **= 2; // Error: property is non-writable
+  o.p %= 2; // Error: property is non-writable
+}
+
+{
+  // Read-only property, string value
+  const o: {|+p: string|} = {p: "a"};
+  o.p += "b"; // Error: property is non-writable
+}
+
+{
   // Write-only property
   const o: {|-p: number|} = {p: 1};
   o.p += 2; // Error: property is non-readable

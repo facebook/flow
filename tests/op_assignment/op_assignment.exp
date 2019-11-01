@@ -98,11 +98,67 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:3
 
+Cannot update `o.p` because property `p` is not writable.
+
+   54|   o.p += 2; // Error: property is non-writable
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:55:3
+
+Cannot update `o.p` because property `p` is not writable.
+
+   55|   o.p -= 2; // Error: property is non-writable
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:56:3
+
+Cannot update `o.p` because property `p` is not writable.
+
+   56|   o.p *= 2; // Error: property is non-writable
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:57:3
+
+Cannot update `o.p` because property `p` is not writable.
+
+   57|   o.p /= 2; // Error: property is non-writable
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:58:3
+
+Cannot update `o.p` because property `p` is not writable.
+
+   58|   o.p **= 2; // Error: property is non-writable
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:59:3
+
+Cannot update `o.p` because property `p` is not writable.
+
+   59|   o.p %= 2; // Error: property is non-writable
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:65:3
+
+Cannot update `o.p` because property `p` is not writable.
+
+   65|   o.p += "b"; // Error: property is non-writable
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:71:3
+
 Cannot get `o.p` because property `p` is not readable.
 
-   54|   o.p += 2; // Error: property is non-readable
+   71|   o.p += 2; // Error: property is non-readable
          ^^^
 
 
 
-Found 8 errors
+Found 15 errors
