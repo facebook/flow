@@ -202,7 +202,7 @@ class useless_mapper =
           | Explicit targ' -> Explicit (this#type_ targ')
           | Implicit loc -> Explicit (loc, Ast.Type.Any)
         in
-        (loc, Core_list.map ~f targs))
+        (loc, Base.List.map ~f targs))
 
     method! function_param_type (fpt : (Loc.t, Loc.t) Ast.Type.Function.Param.t) =
       Ast.Type.Function.Param.(
@@ -707,11 +707,11 @@ let edits_of_source algo source mapper =
   let new_ast = mapper#program ast in
   let edits = program algo ast new_ast |> Ast_diff_printer.edits_of_changes None in
   (* Extract columns from the locs *)
-  Core_list.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) edits
+  Base.List.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) edits
 
 let debug_string_of_edit ((start, end_), text) = Printf.sprintf "((%d, %d), %s)" start end_ text
 
-let debug_string_of_edits = Core_list.map ~f:debug_string_of_edit %> String.concat ", "
+let debug_string_of_edits = Base.List.map ~f:debug_string_of_edit %> String.concat ", "
 
 let debug_print_string_script script =
   let print_string_result (i, chg) =
@@ -1616,12 +1616,12 @@ let tests =
          let edits_trivial =
            program Trivial ast_empty ast_var
            |> Ast_diff_printer.edits_of_changes None
-           |> Core_list.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text))
+           |> Base.List.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text))
          in
          let edits_standard =
            program Standard ast_empty ast_var
            |> Ast_diff_printer.edits_of_changes None
-           |> Core_list.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text))
+           |> Base.List.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text))
          in
          assert_equal ~ctxt edits_trivial [((0, 0), "var x = 6;")];
          assert_equal ~ctxt edits_standard [((0, 0), "var x = 6;")];

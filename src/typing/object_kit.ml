@@ -173,7 +173,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let resolved_list = resolved_list |> mapM List.rev in
           (* Each of the lists were non-empty, so concatenating them creates a non-empty list. Thus,
            * Nel.of_list_exn is safe *)
-          bind (fun lists -> Ok (Nel.of_list_exn (Core_list.join lists))) resolved_list
+          bind (fun lists -> Ok (Nel.of_list_exn (Base.List.join lists))) resolved_list
         in
         let rec loop (x0 : 'a Nel.t) (xs : 'b list) =
           match xs with
@@ -426,7 +426,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                         UnionRep.make
                           (mk_object cx reason options x0)
                           (mk_object cx reason options x1)
-                          (Core_list.map ~f:(mk_object cx reason options) xs) )
+                          (Base.List.map ~f:(mk_object cx reason options) xs) )
                   | Error e ->
                     add_output cx ~trace e;
                     AnyT.why AnyError reason

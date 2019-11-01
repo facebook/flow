@@ -92,7 +92,7 @@ let peek_scope () = List.hd !scopes
 let peek_env () = !scopes
 
 let string_of_env cx env =
-  spf "[ %s ]" (String.concat ";\n" (Core_list.map ~f:(Debug_js.string_of_scope cx) env))
+  spf "[ %s ]" (String.concat ";\n" (Base.List.map ~f:(Debug_js.string_of_scope cx) env))
 
 (* return the value of f applied to topmost var scope in a scope list *)
 let rec top_var_scope = function
@@ -126,7 +126,7 @@ let iter_local_scopes f =
   loop !scopes
 
 (* clone the given scope stack (snapshots entry maps) *)
-let clone_env scopes = Core_list.map ~f:Scope.clone scopes
+let clone_env scopes = Base.List.map ~f:Scope.clone scopes
 
 let var_scope_kind () =
   let scope = peek_var_scope () in
@@ -205,7 +205,7 @@ let push_var_scope cx scope =
 let saved_closure_changeset = ref (Some Changeset.empty)
 
 let save_closure_changeset scopes =
-  let ids = Core_list.map ~f:(fun { id; _ } -> id) scopes in
+  let ids = Base.List.map ~f:(fun { id; _ } -> id) scopes in
   let changeset = Changeset.(include_scopes ids (Global.peek ())) in
   saved_closure_changeset := Some changeset
 
@@ -392,7 +392,7 @@ let get_class_entries () =
     | Entry.Class c -> c
     | _ -> assert_false "Internal Error: Non-class binding stored with .class"
   in
-  Core_list.map ~f:to_class_record class_bindings
+  Base.List.map ~f:to_class_record class_bindings
 
 (* Search for the scope which binds the given name, through the
    topmost LexScopes and up to the first VarScope. If the entry
@@ -980,7 +980,7 @@ let envs_congruent envs =
       let scope = List.hd env in
       scope.id = scope0.id && scope.kind = scope0.kind
     in
-    List.for_all check_scope (List.tl envs) && check_scopes (Core_list.map ~f:List.tl envs)
+    List.for_all check_scope (List.tl envs) && check_scopes (Base.List.map ~f:List.tl envs)
   in
   let envs = ListUtils.phys_uniq envs in
   List.length envs <= 1

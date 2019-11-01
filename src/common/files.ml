@@ -194,7 +194,7 @@ let max_files = 1000
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
-  let prefix_checkers = Core_list.map ~f:is_prefix paths in
+  let prefix_checkers = Base.List.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
       ((acc, symlinks), S_Dir (files, dir, stack))
@@ -257,7 +257,7 @@ let make_next_files_and_symlinks
    of `paths`. *)
 let make_next_files_following_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
-  let paths = Core_list.map ~f:Path.to_string paths in
+  let paths = Base.List.map ~f:Path.to_string paths in
   let cb =
     ref
       (make_next_files_and_symlinks
@@ -346,7 +346,7 @@ let init ?(flowlibs_only = false) (options : options) =
           ~error_filter:(fun _ -> true)
           [lib]
       in
-      libs |> Core_list.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
+      libs |> Base.List.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
   in
   (libs, SSet.of_list libs)
 
@@ -610,7 +610,7 @@ let imaginary_realpath =
     | Some abs -> List.fold_left Filename.concat abs rev_suffix
 
 let canonicalize_filenames ~cwd ~handle_imaginary filenames =
-  Core_list.map
+  Base.List.map
     ~f:(fun filename ->
       let filename = Sys_utils.expanduser filename in
       (* normalize ~ *)

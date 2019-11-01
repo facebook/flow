@@ -50,7 +50,7 @@ let autocomplete_result_to_json ~strip_root result =
       Hh_json.JSON_Object
         [
           ("return_type", Hh_json.JSON_String fd.return_ty);
-          ("params", Hh_json.JSON_Array (Core_list.map ~f:func_param_to_json fd.param_tys));
+          ("params", Hh_json.JSON_Array (Base.List.map ~f:func_param_to_json fd.param_tys));
         ]
     | None -> Hh_json.JSON_Null
   in
@@ -141,7 +141,7 @@ let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, l
     match ty with
     | Fun { fun_params; fun_rest_param; fun_return; _ } when show_func_details ->
       let param_tys =
-        Core_list.map
+        Base.List.map
           ~f:(fun (n, t, fp) ->
             let param_name = parameter_name fp.prm_optional n in
             let param_ty = Ty_printer.string_of_t ~with_comments:false t in
@@ -262,7 +262,7 @@ let autocomplete_member
       let result =
         rev_result
         |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
-        |> Core_list.rev_filter_map ~f:(function
+        |> Base.List.rev_filter_map ~f:(function
                | ((name, ty_loc), Ok ty) ->
                  Some
                    (autocomplete_create_result
@@ -406,7 +406,7 @@ let autocomplete_id
           ("count", JSON_Number (results |> List.length |> string_of_int));
           ( "errors",
             JSON_Array
-              (Core_list.rev_map errors ~f:(fun err ->
+              (Base.List.rev_map errors ~f:(fun err ->
                    JSON_String (Ty_normalizer.error_to_string err))) );
           ("broader_context", JSON_String broader_context);
         ])

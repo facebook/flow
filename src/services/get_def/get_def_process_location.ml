@@ -40,7 +40,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
       Flow_ast.Statement.ImportDeclaration.(
         match specifier with
         | ImportNamedSpecifiers named_specifiers ->
-          Core_list.iter ~f:(this#import_named_specifier_with_loc ~source_loc) named_specifiers
+          Base.List.iter ~f:(this#import_named_specifier_with_loc ~source_loc) named_specifiers
         | ImportNamespaceSpecifier _ -> ())
 
     method import_named_specifier_with_loc ~source_loc specifier =

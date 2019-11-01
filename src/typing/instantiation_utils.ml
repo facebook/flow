@@ -93,7 +93,7 @@ end = struct
   (* Util to stringify a list, given a separator string and a function that maps
      elements of the list to strings. Should probably be moved somewhere else
      for general reuse. *)
-  let string_of_list list sep f = list |> Core_list.map ~f |> String.concat sep
+  let string_of_list list sep f = list |> Base.List.map ~f |> String.concat sep
 
   let string_of_desc_of_t t = DescFormat.name_of_instance_reason (reason_of_t t)
 
@@ -138,7 +138,7 @@ end = struct
       loop false (prev_tss, tss)
     in
     fun cx (c, ts) ->
-      let tss = Core_list.map ~f:(collect_roots cx) ts in
+      let tss = Base.List.map ~f:(collect_roots cx) ts in
       let loop =
         !stack
         |> List.exists (fun (prev_c, prev_tss) ->

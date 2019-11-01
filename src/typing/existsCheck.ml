@@ -28,7 +28,7 @@ let debug_to_string t =
     ("number_loc", t.number_loc);
     ("mixed_loc", t.mixed_loc);
   ]
-  |> Core_list.map ~f:(fun (name, loc_opt) -> (name, string_of_loc_option loc_opt))
-  |> Core_list.map ~f:(fun (name, loc) -> Printf.sprintf "  %s: %s;\n" name loc)
+  |> Base.List.map ~f:(fun (name, loc_opt) -> (name, string_of_loc_option loc_opt))
+  |> Base.List.map ~f:(fun (name, loc) -> Printf.sprintf "  %s: %s;\n" name loc)
   |> String.concat ""
   |> Printf.sprintf "{\n%s}"

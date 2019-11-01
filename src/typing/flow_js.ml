@@ -691,7 +691,7 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
     | params ->
       let all = mk_argmap (mk_bound cx) params in
       let each =
-        Core_list.map ~f:(fun ({ name; _ } as p) -> SMap.add name (mk_bot SMap.empty p) all) params
+        Base.List.map ~f:(fun ({ name; _ } as p) -> SMap.add name (mk_bot SMap.empty p) all) params
       in
       List.rev (all :: each)
   in
@@ -700,8 +700,8 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
     let none = mk_argmap mk_bot params in
     List.fold_left
       (fun maps ({ name; _ } as p) ->
-        let bots = Core_list.map ~f:(SMap.add name (SMap.find_unsafe name none)) maps in
-        let bounds = Core_list.map ~f:(fun m -> SMap.add name (mk_bound cx m p) m) maps in
+        let bots = Base.List.map ~f:(SMap.add name (SMap.find_unsafe name none)) maps in
+        let bounds = Base.List.map ~f:(fun m -> SMap.add name (mk_bound cx m p) m) maps in
         bots @ bounds)
       [arg_map]
       params
@@ -717,13 +717,13 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
       in
       let (free_params, dep_params) = List.partition is_free params in
       let free_sets = linear cx free_params in
-      let powersets = Core_list.map ~f:(powerset cx dep_params) free_sets in
+      let powersets = Base.List.map ~f:(powerset cx dep_params) free_sets in
       let (hd_map, tl_maps) =
         match List.flatten powersets with
         | x :: xs -> (x, xs)
         | [] -> assert false
       in
-      Core_list.fold_left ~f:(Fn.const (TestID.run f)) ~init:(f hd_map) tl_maps
+      Base.List.fold_left ~f:(Fn.const (TestID.run f)) ~init:(f hd_map) tl_maps
 
 let inherited_method x = x <> "constructor"
 
@@ -2584,7 +2584,7 @@ struct
                     rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))),
                 false )
           in
-          let rep = UnionRep.make (f t0) (f t1) (Core_list.map ts ~f) in
+          let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) tout
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
@@ -2611,7 +2611,7 @@ struct
           let remove_predicate predicate =
             UnionRep.members
             %> Type_mapper.union_flatten cx
-            %> Core_list.rev_filter ~f:(predicate %> not)
+            %> Base.List.rev_filter ~f:(predicate %> not)
             %> union_of_ts reason
           in
           (* if the union doesn't contain void or null,
@@ -2636,7 +2636,7 @@ struct
           let remove_void =
             UnionRep.members
             %> Type_mapper.union_flatten cx
-            %> Core_list.rev_filter ~f:(fun t ->
+            %> Base.List.rev_filter ~f:(fun t ->
                    TypeUtil.quick_subtype checked_trust t void |> not)
             %> union_of_ts reason
           in
@@ -3017,7 +3017,7 @@ struct
                * 3. rec_flow caches (l,u) pairs.
                *)
               let reason_elemt = reason_of_t elemt in
-              let pos = Core_list.length rrt_resolved in
+              let pos = Base.List.length rrt_resolved in
               ConstFoldExpansion.guard id (reason_elemt, pos) (fun recursion_depth ->
                   match recursion_depth with
                   | 0 ->
@@ -3054,7 +3054,7 @@ struct
             | ResolveSpreadsToCustomFunCall (id, _, _)
             | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
               let reason_elemt = reason_of_t elemt in
-              let pos = Core_list.length rrt_resolved in
+              let pos = Base.List.length rrt_resolved in
               ConstFoldExpansion.guard id (reason_elemt, pos) (fun recursion_depth ->
                   match recursion_depth with
                   | 0 ->
@@ -3636,7 +3636,7 @@ struct
                 match calltype.call_targs with
                 | None ->
                   let arg_reasons =
-                    Core_list.map
+                    Base.List.map
                       ~f:(function
                         | Arg t -> reason_of_t t
                         | SpreadArg t -> reason_of_t t)
@@ -3828,7 +3828,7 @@ struct
         | ( DefT (reason, _, FunT (_, _, { params; rest_param = None; is_predicate = false; _ })),
             ReactPropsToOut (_, props) ) ->
           (* Contravariance *)
-          Core_list.hd params
+          Base.List.hd params
           |> Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
           |> (fun t -> rec_flow_t cx trace (t, props))
         | ( DefT
@@ -3837,7 +3837,7 @@ struct
                 FunT (_, _, { params; return_t; rest_param = None; is_predicate = false; _ }) ),
             ReactInToProps (reason_op, props) ) ->
           (* Contravariance *)
-          Core_list.hd params
+          Base.List.hd params
           |> Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
           |> fun t ->
           rec_flow_t cx trace (props, t);
@@ -5331,8 +5331,8 @@ struct
             | ArrayAT (_, None)
             | ROArrayAT _ ->
               arrtype
-            | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Core_list.drop ts i))
-            | TupleAT (elemt, ts) -> TupleAT (elemt, Core_list.drop ts i)
+            | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Base.List.drop ts i))
+            | TupleAT (elemt, ts) -> TupleAT (elemt, Base.List.drop ts i)
           in
           let a = DefT (reason, trust, ArrT arrtype) in
           rec_flow_t cx trace (a, tout)
@@ -5370,8 +5370,8 @@ struct
           in
           let arrtype =
             match arrtype with
-            | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(Core_list.map ~f) ts)
-            | TupleAT (elemt, ts) -> TupleAT (f elemt, Core_list.map ~f ts)
+            | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(Base.List.map ~f) ts)
+            | TupleAT (elemt, ts) -> TupleAT (f elemt, Base.List.map ~f ts)
             | ROArrayAT elemt -> ROArrayAT (f elemt)
           in
           let t =
@@ -7036,7 +7036,7 @@ struct
     match t with
     | DefT (r, trust, ArrT (ArrayAT _)) -> DefT (r, trust, ArrT (ArrayAT (any, None)))
     | DefT (r, trust, ArrT (TupleAT (_, ts))) ->
-      DefT (r, trust, ArrT (TupleAT (any, Core_list.map ~f:only_any ts)))
+      DefT (r, trust, ArrT (TupleAT (any, Base.List.map ~f:only_any ts)))
     | OpaqueT (r, ({ underlying_t; super_t; opaque_type_args; _ } as opaquetype)) ->
       let opaquetype =
         {
@@ -7044,7 +7044,7 @@ struct
           underlying_t = Option.(underlying_t >>| only_any);
           super_t = Option.(super_t >>| only_any);
           opaque_type_args =
-            Core_list.(
+            Base.List.(
               opaque_type_args >>| (fun (str, r', _, polarity) -> (str, r', any, polarity)));
         }
       in
@@ -7653,7 +7653,7 @@ struct
           | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, tout))
           | ValuesType -> GetValuesT (reason, tout)
           | CallType args ->
-            let args = Core_list.map ~f:(fun arg -> Arg arg) args in
+            let args = Base.List.map ~f:(fun arg -> Arg arg) args in
             let call = mk_functioncalltype reason None args tout in
             let call = { call with call_strict_arity = false } in
             let use_op =
@@ -8681,7 +8681,7 @@ struct
    during a trial.
 *)
   and blame_unresolved cx trace prev_i i cases case_r tvars =
-    let rs = tvars |> Core_list.map ~f:(fun (_, r) -> r) |> List.sort compare in
+    let rs = tvars |> Base.List.map ~f:(fun (_, r) -> r) |> List.sort compare in
     let prev_case = reason_of_t (List.nth cases prev_i) in
     let case = reason_of_t (List.nth cases i) in
     add_output
@@ -10599,7 +10599,7 @@ struct
     (* Turn tuple rest params into single params *)
     let flatten_spread_args list =
       list
-      |> Core_list.fold_left
+      |> Base.List.fold_left
            ~f:(fun acc param ->
              match param with
              | ResolvedSpreadArg (_, arrtype) ->
@@ -10607,7 +10607,7 @@ struct
                  match arrtype with
                  | ArrayAT (_, Some tuple_types)
                  | TupleAT (_, tuple_types) ->
-                   Core_list.fold_left
+                   Base.List.fold_left
                      ~f:(fun acc elem -> ResolvedArg elem :: acc)
                      ~init:acc
                      tuple_types
@@ -10619,7 +10619,7 @@ struct
              | ResolvedArg _ ->
                param :: acc)
            ~init:[]
-      |> Core_list.rev
+      |> Base.List.rev
     in
     let spread_resolved_to_any =
       List.exists (function
@@ -10852,7 +10852,7 @@ struct
     let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
       let flattened = flatten_spread_args resolved in
       let call_args_tlist =
-        Core_list.map
+        Base.List.map
           ~f:(function
             | ResolvedArg t -> Arg t
             | ResolvedSpreadArg (r, arrtype) -> SpreadArg (DefT (r, bogus_trust (), ArrT arrtype))
@@ -11054,8 +11054,8 @@ struct
     let union_subtype cx rep1 rep2 =
       let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
       Type_mapper.union_flatten cx @@ UnionRep.members rep1
-      |> Core_list.for_all ~f:(fun t1 ->
-             Core_list.exists ~f:(TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2)
+      |> Base.List.for_all ~f:(fun t1 ->
+             Base.List.exists ~f:(TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2)
     in
     let rec union_optimization_guard_impl seen cx l u =
       match (l, u) with
@@ -11071,8 +11071,8 @@ struct
            This is faster than the n^2 case below because it avoids flattening both
            unions *)
             UnionRep.members rep2
-            |> Core_list.map ~f:(Type_mapper.unwrap_type cx)
-            |> Core_list.exists ~f:(fun u ->
+            |> Base.List.map ~f:(Type_mapper.unwrap_type cx)
+            |> Base.List.exists ~f:(fun u ->
                    (not (TypeSet.mem u seen))
                    && union_optimization_guard_impl (TypeSet.add u seen) cx l u)
             || union_subtype cx rep1 rep2
@@ -11257,7 +11257,7 @@ struct
     get_builtin_type cx ?trace reason x
 
   and flow_all_in_union cx trace rep u =
-    UnionRep.members rep |> Core_list.iter ~f:(mk_tuple_swapped u %> rec_flow cx trace)
+    UnionRep.members rep |> Base.List.iter ~f:(mk_tuple_swapped u %> rec_flow cx trace)
 
   and call_args_iter f =
     List.iter (function

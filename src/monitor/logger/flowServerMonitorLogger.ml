@@ -80,7 +80,7 @@ let init_logger log_fd =
   let output section level messages =
     let buffer = Buffer.create 42 in
     let formatted_messages =
-      Core_list.map
+      Base.List.map
         ~f:(fun message ->
           Buffer.clear buffer;
           Lwt_log.render ~buffer ~template ~section ~level ~message;

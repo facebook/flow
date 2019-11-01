@@ -13,7 +13,7 @@ let ( >>= ) = Base.Result.( >>= )
 let ( >>| ) = Base.Result.( >>| )
 
 let get_ref_kinds refs loc =
-  refs |> List.filter (fun (_, ref_loc) -> ref_loc = loc) |> Core_list.map ~f:fst
+  refs |> List.filter (fun (_, ref_loc) -> ref_loc = loc) |> Base.List.map ~f:fst
 
 class rename_mapper refs new_name =
   object (this)

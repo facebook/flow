@@ -314,7 +314,7 @@ and collect_of_use ?log_unresolved cx acc = function
   | UseT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | CallT (_, _, fct) ->
     let arg_types =
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Arg t
           | SpreadArg t ->

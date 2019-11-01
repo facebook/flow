@@ -19,4 +19,4 @@ let remove ~client_id = map := IMap.remove client_id !map
 
 let cardinal () = IMap.cardinal !map
 
-let get_all_clients () = IMap.bindings !map |> Core_list.map ~f:snd
+let get_all_clients () = IMap.bindings !map |> Base.List.map ~f:snd

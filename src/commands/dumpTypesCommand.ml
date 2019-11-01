@@ -47,7 +47,7 @@ let types_to_json ~file_content types ~strip_root =
       let offset_table = Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8) in
       let types_json =
         types
-        |> Core_list.map ~f:(fun (loc, t) ->
+        |> Base.List.map ~f:(fun (loc, t) ->
                let json_assoc =
                  ("type", JSON_String t)
                  :: ("reasons", JSON_Array [])
@@ -65,7 +65,7 @@ let handle_response types ~json ~file_content ~pretty ~strip_root =
   else
     let out =
       types
-      |> Core_list.map ~f:(fun (loc, str) ->
+      |> Base.List.map ~f:(fun (loc, str) ->
              spf "%s: %s" (Reason.string_of_loc ~strip_root loc) str)
       |> String.concat "\n"
     in

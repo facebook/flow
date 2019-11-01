@@ -202,7 +202,7 @@ let collect_rage ~options ~reader ~env ~files =
     let file = File_key.to_string file in
     let deps =
       Utils_js.FilenameSet.elements deps
-      |> Core_list.map ~f:File_key.to_string
+      |> Base.List.map ~f:File_key.to_string
       |> ListUtils.first_upto_n 20 (fun t -> Some (Printf.sprintf " ...%d more" t))
       |> String.concat ","
     in
@@ -211,7 +211,7 @@ let collect_rage ~options ~reader ~env ~files =
   let dependencies =
     Dependency_info.all_dependency_graph env.ServerEnv.dependency_info
     |> Utils_js.FilenameMap.bindings
-    |> Core_list.map ~f:dependency_to_string
+    |> Base.List.map ~f:dependency_to_string
     |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
     |> String.concat ""
   in
@@ -308,7 +308,7 @@ let batch_coverage ~options ~env ~trust ~batch =
     |> Lwt.return
   else
     let is_checked key = CheckedSet.mem key env.checked_files in
-    let filter key = Core_list.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
+    let filter key = Base.List.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
     let coverage_map =
       FilenameMap.filter
         (fun key _ -> is_checked key && File_key.to_string key |> filter)
@@ -410,7 +410,7 @@ let find_module ~options ~reader (moduleref, filename) =
 
 let convert_find_refs_result (result : FindRefsTypes.find_refs_ok) :
     ServerProt.Response.find_refs_success =
-  Option.map result ~f:(fun (name, refs) -> (name, Core_list.map ~f:snd refs))
+  Option.map result ~f:(fun (name, refs) -> (name, Base.List.map ~f:snd refs))
 
 (* Find refs is a really weird command. Whereas other commands will cancel themselves if they find
  * unchecked code, find refs will focus that code and keep chugging along. It may therefore change
@@ -453,7 +453,7 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
               let request_history =
                 ( "request_history",
                   Hh_json.JSON_Array
-                    (Core_list.map ~f:(fun str -> Hh_json.JSON_String str) request_history) )
+                    (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) )
               in
               match result with
               | Def loc ->
@@ -1385,7 +1385,7 @@ let handle_persistent_autocomplete_lsp
         match result with
         | Ok items ->
           let items =
-            Core_list.map
+            Base.List.map
               ~f:(Flow_lsp_conversions.flow_completion_to_lsp is_snippet_supported)
               items
           in
@@ -1420,7 +1420,7 @@ let handle_persistent_document_highlight
         kind = Some DocumentHighlight.Text;
       }
     in
-    let r = DocumentHighlightResult (Core_list.map ~f:loc_to_highlight locs) in
+    let r = DocumentHighlightResult (Base.List.map ~f:loc_to_highlight locs) in
     let response = ResponseMessage (id, r) in
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Ok None ->
@@ -1485,7 +1485,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       in
       (covered, total + 1)
     in
-    let (covered, total) = Core_list.fold all_locs ~init:(0, 0) ~f:accum_coverage in
+    let (covered, total) = Base.List.fold all_locs ~init:(0, 0) ~f:accum_coverage in
     let coveredPercent =
       if total = 0 then
         100
@@ -1494,7 +1494,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
     in
     (* Figure out each individual uncovered span *)
     let uncovereds =
-      Core_list.filter_map all_locs ~f:(fun (loc, cov) ->
+      Base.List.filter_map all_locs ~f:(fun (loc, cov) ->
           match cov with
           | Coverage_response.Tainted
           | Coverage_response.Untainted ->
@@ -1505,7 +1505,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
     in
     (* Imagine a tree of uncovered spans based on range inclusion. *)
     (* This sorted list is a pre-order flattening of that tree. *)
-    let sorted = Core_list.sort uncovereds ~cmp:Loc.compare in
+    let sorted = Base.List.sort uncovereds ~compare:Loc.compare in
     (* We can use that sorted list to remove any span which contains another, so *)
     (* the user only sees actionable reports of the smallest causes of untypedness. *)
     (* The algorithm: accept a range if its immediate successor isn't contained by it. *)
@@ -1519,14 +1519,14 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       match sorted with
       | [] -> []
       | first :: _ ->
-        let (final_candidate, singles) = Core_list.fold sorted ~init:(first, []) ~f in
+        let (final_candidate, singles) = Base.List.fold sorted ~init:(first, []) ~f in
         final_candidate :: singles
     in
     (* Convert to LSP *)
     let loc_to_lsp loc =
       { TypeCoverage.range = Flow_lsp_conversions.loc_to_lsp_range loc; message = None }
     in
-    let uncoveredRanges = Core_list.map singles ~f:loc_to_lsp in
+    let uncoveredRanges = Base.List.map singles ~f:loc_to_lsp in
     (* Send the results! *)
     let r =
       TypeCoverageResult
@@ -1568,7 +1568,7 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
     match result with
     | Ok (Some (_name, locs)) ->
       let lsp_locs =
-        Core_list.fold locs ~init:(Ok []) ~f:(fun acc loc ->
+        Base.List.fold locs ~init:(Ok []) ~f:(fun acc loc ->
             let location = Flow_lsp_conversions.loc_to_lsp loc in
             Base.Result.combine location acc ~ok:List.cons ~err:(fun e _ -> e))
       in
@@ -1619,7 +1619,7 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
     in
     (* Convert all of the edits to LSP edits *)
     let file_to_textedits : (TextEdit.t list SMap.t, string) result =
-      file_to_edits >>| SMap.map (Core_list.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
+      file_to_edits >>| SMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
     in
     let workspace_edit : (WorkspaceEdit.t, string) result =
       file_to_textedits >>| (fun file_to_textedits -> { WorkspaceEdit.changes = file_to_textedits })

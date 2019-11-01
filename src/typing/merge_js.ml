@@ -174,19 +174,19 @@ let detect_sketchy_null_checks cx =
 
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
-  Core_list.iter
+  Base.List.iter
     ~f:(fun (name, reasons, use_op) ->
       Flow_js.add_output cx (Error_message.EPropNotFound (name, reasons, use_op)))
     misses
 
 let detect_unnecessary_optional_chains cx =
-  Core_list.iter
+  Base.List.iter
     ~f:(fun (loc, lhs_reason) ->
       Flow_js.add_output cx (Error_message.EUnnecessaryOptionalChain (loc, lhs_reason)))
     (Context.unnecessary_optional_chains cx)
 
 let detect_unnecessary_invariants cx =
-  Core_list.iter
+  Base.List.iter
     ~f:(fun (loc, reason) ->
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
@@ -195,7 +195,7 @@ let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
 let force_annotations leader_cx other_cxs =
-  Core_list.iter
+  Base.List.iter
     ~f:(fun cx ->
       let should_munge_underscores = Context.should_munge_underscores cx in
       Context.module_ref cx
@@ -415,12 +415,12 @@ let merge_component
       ([], [], FilenameMap.empty)
       component
   in
-  let cxs = Core_list.rev rev_cxs in
-  let tasts = Core_list.rev rev_tasts in
-  let (cx, other_cxs) = (Core_list.hd_exn cxs, Core_list.tl_exn cxs) in
+  let cxs = Base.List.rev rev_cxs in
+  let tasts = Base.List.rev rev_tasts in
+  let (cx, other_cxs) = (Base.List.hd_exn cxs, Base.List.tl_exn cxs) in
   Flow_js.Cache.clear ();
 
-  dep_cxs |> Core_list.iter ~f:(Context.merge_into sig_cx);
+  dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
 
   Reqs.(
     reqs.impls
@@ -464,7 +464,7 @@ let merge_component
 
     force_annotations cx other_cxs;
 
-    match Core_list.zip_exn cxs tasts with
+    match Base.List.zip_exn cxs tasts with
     | [] -> failwith "there is at least one cx"
     | x :: xs -> (x, xs))
 
@@ -472,7 +472,7 @@ let merge_tvar =
   Type.(
     let possible_types = Flow_js.possible_types in
     let rec collect_lowers ~filter_empty cx seen acc = function
-      | [] -> Core_list.rev acc
+      | [] -> Base.List.rev acc
       | t :: ts ->
         (match t with
         (* Recursively unwrap unseen tvars *)
@@ -890,7 +890,7 @@ module ContextOptimizer = struct
   (* walk a context from a list of exports *)
   let reduce_context cx module_refs =
     let reducer = new context_optimizer in
-    Core_list.iter ~f:(reducer#reduce cx) module_refs;
+    Base.List.iter ~f:(reducer#reduce cx) module_refs;
     (reducer#sig_hash (), reducer)
 
   (* reduce a context to a "signature context" *)

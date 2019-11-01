@@ -56,7 +56,7 @@ module Make (C : Config) = struct
 
   let subst cx map { params_rev; rest; reconstruct } =
     {
-      params_rev = Core_list.map ~f:(C.subst_param cx map) params_rev;
+      params_rev = Base.List.map ~f:(C.subst_param cx map) params_rev;
       rest = Option.map ~f:(C.subst_rest cx map) rest;
       reconstruct;
     }

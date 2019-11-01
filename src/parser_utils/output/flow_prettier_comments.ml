@@ -118,7 +118,7 @@ and get_children_nodes (statement : (Loc.t, Loc.t) Ast.Statement.t) =
           (fun nodes (_, { Switch.Case.test; consequent }) ->
             let test_nodes = node_list_of_option ~f:get_children_nodes_expr test in
             let consequent_nodes =
-              consequent |> Core_list.map ~f:get_children_nodes |> List.flatten
+              consequent |> Base.List.map ~f:get_children_nodes |> List.flatten
             in
             nodes @ test_nodes @ consequent_nodes)
           []
@@ -282,7 +282,7 @@ and get_children_nodes_expr expression =
     | TaggedTemplate { TaggedTemplate.tag; quasi = (loc, quasi) } ->
       get_children_nodes_expr tag @ get_children_nodes_expr (loc, TemplateLiteral quasi)
     | TemplateLiteral { TemplateLiteral.expressions; _ } ->
-      expressions |> Core_list.map ~f:get_children_nodes_expr |> List.flatten
+      expressions |> Base.List.map ~f:get_children_nodes_expr |> List.flatten
     | This -> []
     | TypeCast { TypeCast.expression; _ } -> get_children_nodes_expr expression
     | Unary { Unary.argument; _ } -> get_children_nodes_expr argument
@@ -305,7 +305,7 @@ and get_children_nodes_pattern (_loc, pattern) =
     match pattern with
     | Object { Object.properties; _ } ->
       properties
-      |> Core_list.map ~f:(fun property ->
+      |> Base.List.map ~f:(fun property ->
              match property with
              | Object.Property (_, { Object.Property.key; pattern; default; shorthand = _ }) ->
                let key_nodes =
@@ -322,7 +322,7 @@ and get_children_nodes_pattern (_loc, pattern) =
       |> List.flatten
     | Array { Array.elements; _ } ->
       elements
-      |> Core_list.map ~f:(fun element_opt ->
+      |> Base.List.map ~f:(fun element_opt ->
              match element_opt with
              | Some (Array.Element (_, { Array.Element.argument; default })) ->
                let pattern_nodes = get_children_nodes_pattern argument in
@@ -362,14 +362,14 @@ and get_children_nodes_comprehension_block_list
     (blocks : (Loc.t, Loc.t) Ast.Expression.Comprehension.Block.t list) =
   Ast.Expression.Comprehension.(
     blocks
-    |> Core_list.map ~f:(fun (_, { Block.left; right; _ }) ->
+    |> Base.List.map ~f:(fun (_, { Block.left; right; _ }) ->
            get_children_nodes_pattern left @ get_children_nodes_expr right)
     |> List.flatten)
 
 and get_children_nodes_jsx_opening (_loc, { Ast.JSX.Opening.attributes; _ }) =
   Ast.JSX.(
     attributes
-    |> Core_list.map ~f:(fun attr ->
+    |> Base.List.map ~f:(fun attr ->
            match attr with
            | Opening.Attribute (_, { Attribute.value; _ }) ->
              node_list_of_option
@@ -389,7 +389,7 @@ and get_children_nodes_jsx_opening (_loc, { Ast.JSX.Opening.attributes; _ }) =
 and get_children_nodes_jsx_child_list (_children_loc, children) =
   Ast.JSX.(
     children
-    |> Core_list.map ~f:(fun (loc, child) ->
+    |> Base.List.map ~f:(fun (loc, child) ->
            match child with
            | Element e -> get_children_nodes_expr (loc, Ast.Expression.JSXElement e)
            | Fragment f -> get_children_nodes_expr (loc, Ast.Expression.JSXFragment f)

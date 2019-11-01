@@ -192,7 +192,7 @@ let scan_for_lint_suppressions =
       begin
         match (parse_kind rule, parse_value setting) with
         | (Ok kinds, Ok setting) ->
-          Some (Core_list.map ~f:(fun kind -> ({ value = kind; loc = arg.loc }, setting)) kinds)
+          Some (Base.List.map ~f:(fun kind -> ({ value = kind; loc = arg.loc }, setting)) kinds)
         | (rule_result, setting_result) ->
           Base.Result.iter_error rule_result ~f:(add_error cx);
           Base.Result.iter_error setting_result ~f:(add_error cx);
@@ -205,7 +205,7 @@ let scan_for_lint_suppressions =
   (* parse arguments of the form lint1:setting1,lint2:setting2... *)
   let get_settings_list cx args =
     split_delim_locational ',' args
-    |> Core_list.map ~f:(fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
+    |> Base.List.map ~f:(fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
   in
   (* Doesn't preserve offset, but is only used in locations where offset isn't used,
    * so that's fine. *)
@@ -241,7 +241,7 @@ let scan_for_lint_suppressions =
         let new_loc = { loc with start = new_start } in
         { loc = new_loc; value = s })
   in
-  let nested_map f outer_list = Core_list.map ~f:(Core_list.map ~f) outer_list in
+  let nested_map f outer_list = Base.List.map ~f:(Base.List.map ~f) outer_list in
   let process_comment
       cx ((severity_cover_builder, running_settings, suppression_locs) as acc) comment =
     let loc_comment = comment |> convert_comment |> trim_and_stars_locational in

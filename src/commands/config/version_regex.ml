@@ -80,7 +80,7 @@ let less_than_or_equal_to_version =
         x
       else
         let prev = pred part |> string_of_int in
-        let rest = Core_list.map ~f:(fun _ -> "\\(\\.[0-9]+\\)?") rest in
+        let rest = Base.List.map ~f:(fun _ -> "\\(\\.[0-9]+\\)?") rest in
         union [x; union (range prev) ^ String.concat "" rest]
   in
   fun version ->

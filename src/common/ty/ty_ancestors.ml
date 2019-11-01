@@ -78,7 +78,7 @@ class ['self] map_ty_base =
     method private on_aloc : 'env -> ALoc.t -> ALoc.t = (fun _ x -> x)
 
     method private on_list : 'env 'a 'b. ('env -> 'a -> 'b) -> 'env -> 'a list -> 'b list =
-      (fun f env -> Core_list.map ~f:(f env))
+      (fun f env -> Base.List.map ~f:(f env))
 
     method private on_option : 'env 'a 'b. ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option =
       (fun f env -> Option.map ~f:(f env))

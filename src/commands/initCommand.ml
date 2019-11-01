@@ -34,7 +34,7 @@ let spec =
 let error (errs : (int * string) list) =
   let msg =
     errs
-    |> Core_list.map ~f:(fun (ln, msg) -> Utils_js.spf ".flowconfig:%d %s" ln msg)
+    |> Base.List.map ~f:(fun (ln, msg) -> Utils_js.spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
   FlowExitStatus.(exit ~msg Invalid_flowconfig)

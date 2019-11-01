@@ -116,7 +116,7 @@ end = struct
   include StateResult.Make (State)
 
   (* Monadic helper functions *)
-  let mapM f xs = all (Core_list.map ~f xs)
+  let mapM f xs = all (Base.List.map ~f xs)
 
   let optMapM f = function
     | Some xs -> mapM f xs >>| Option.return
@@ -130,7 +130,7 @@ end = struct
 
   let sndMapM f (x, y) = f y >>| mk_tuple x
 
-  let concat_fold_m f xs = mapM f xs >>| Core_list.concat
+  let concat_fold_m f xs = mapM f xs >>| Base.List.concat
 
   let fresh_num =
     State.(
@@ -768,8 +768,8 @@ end = struct
     |> mapM (fun t ->
            let%map ty = type__ ~env t in
            Nel.to_list (Ty.bk_union ty))
-    >>| Core_list.concat
-    >>| Core_list.dedup
+    >>| Base.List.concat
+    >>| Base.List.dedup_and_sort ~compare:Pervasives.compare
 
   and empty_with_upper_bounds ~env bounds =
     let uses = T.UseTypeMap.keys bounds.Constraint.upper in
@@ -867,7 +867,7 @@ end = struct
       | t -> [t]
     in
     let%map ts = mapM (method_ty ~env) ts in
-    Core_list.map ~f:(fun t -> Ty.CallProp t) ts
+    Base.List.map ~f:(fun t -> Ty.CallProp t) ts
 
   and obj_props =
     (* call property *)
@@ -996,7 +996,7 @@ end = struct
   and inline_interface =
     let rec extends = function
       | Ty.Generic g -> return [g]
-      | Ty.Inter (t1, t2, ts) -> mapM extends (t1 :: t2 :: ts) >>| Core_list.concat
+      | Ty.Inter (t1, t2, ts) -> mapM extends (t1 :: t2 :: ts) >>| Base.List.concat
       | Ty.TypeOf Ty.ObjProto (* interface {} *)
       | Ty.TypeOf Ty.FunProto (* interface { (): void } *) ->
         (* Do not contribute to the extends clause *)

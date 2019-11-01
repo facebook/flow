@@ -794,7 +794,7 @@ let mk_intermediate_result_callback
   let intermediate_result_callback results =
     let errors =
       lazy
-        (Core_list.map
+        (Base.List.map
            ~f:(fun (file, result) ->
              match result with
              | Ok (errors, warnings, suppressions, _, _) ->
@@ -2451,7 +2451,7 @@ let make_next_files ~libs ~file_options root =
     MonitorRPC.status_update ServerStatus.(Parsing_progress { finished; total = None });
     total := finished + length;
 
-    files |> Core_list.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
+    files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
 let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~coverage =
   {

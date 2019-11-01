@@ -91,7 +91,7 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
           let { Type.TypeScheme.type_ = t; _ } = scheme in
           wrap (Type.desc_of_t t))
   in
-  Core_list.iter2_exn
+  Base.List.iter2_exn
     ~f:(fun cx typed_ast ->
       let file = Context.file cx in
       let file_sig = FilenameMap.find_unsafe file file_sigs in

@@ -806,7 +806,7 @@ let rec convert cx tparams_map =
                 let n = Pervasives.int_of_float f in
                 let key_strs =
                   ListUtils.range 0 n
-                  |> Core_list.map ~f:(fun i -> Some ("x_" ^ Pervasives.string_of_int i))
+                  |> Base.List.map ~f:(fun i -> Some ("x_" ^ Pervasives.string_of_int i))
                 in
                 let emp = Key_map.empty in
                 let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
@@ -963,7 +963,7 @@ let rec convert cx tparams_map =
       let (iface_sig, extend_asts) =
         let id = ALoc.none in
         let (extends, extend_asts) =
-          extends |> Core_list.map ~f:(mk_interface_super cx tparams_map) |> List.split
+          extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
         in
         let super =
           let callable =
@@ -1783,7 +1783,7 @@ let mk_interface_sig cx reason decl =
     let (iface_sig, extends_ast) =
       let id = id_loc in
       let (extends, extends_ast) =
-        extends |> Core_list.map ~f:(mk_interface_super cx tparams_map) |> List.split
+        extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
       in
       let super =
         let callable =
@@ -1874,11 +1874,11 @@ let mk_declare_class_sig =
           | None -> (None, None)
         in
         let (mixins, mixins_ast) =
-          mixins |> Core_list.map ~f:(mk_mixins cx tparams_map) |> List.split
+          mixins |> Base.List.map ~f:(mk_mixins cx tparams_map) |> List.split
         in
         let (implements, implements_ast) =
           implements
-          |> Core_list.map ~f:(fun (loc, i) ->
+          |> Base.List.map ~f:(fun (loc, i) ->
                  let { Ast.Class.Implements.id = (id_loc, id_name_inner); targs } = i in
                  let { Ast.Identifier.name; comments = _ } = id_name_inner in
                  let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in

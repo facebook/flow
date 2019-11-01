@@ -195,14 +195,14 @@ and _json_of_t_impl json_cx t =
           ("elemType", _json_of_t json_cx elemt);
           ( "tupleType",
             match tuple_types with
-            | Some tuplet -> JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuplet)
+            | Some tuplet -> JSON_Array (Base.List.map ~f:(_json_of_t json_cx) tuplet)
             | None -> JSON_Null );
         ]
       | DefT (_, _, ArrT (TupleAT (elemt, tuple_types))) ->
         [
           ("kind", JSON_String "Tuple");
           ("elemType", _json_of_t json_cx elemt);
-          ("tupleType", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuple_types));
+          ("tupleType", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) tuple_types));
         ]
       | DefT (_, _, ArrT (ROArrayAT elemt)) ->
         [("kind", JSON_String "ReadOnlyArray"); ("elemType", _json_of_t json_cx elemt)]
@@ -213,7 +213,7 @@ and _json_of_t_impl json_cx t =
         [
           ("static", _json_of_t json_cx static);
           ("super", _json_of_t json_cx super);
-          ("implements", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) implements));
+          ("implements", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) implements));
           ("instance", json_of_insttype json_cx instance);
         ]
       | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]
@@ -233,18 +233,18 @@ and _json_of_t_impl json_cx t =
         [
           ("id", JSON_Number (string_of_int id));
           ( "typeParams",
-            JSON_Array (Core_list.map ~f:(json_of_typeparam json_cx) (Nel.to_list tparams)) );
+            JSON_Array (Base.List.map ~f:(json_of_typeparam json_cx) (Nel.to_list tparams)) );
           ("type", _json_of_t json_cx t);
         ]
       | TypeAppT (_, _, t, targs) ->
         [
-          ("typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
+          ("typeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs));
           ("type", _json_of_t json_cx t);
         ]
       | ThisClassT (_, t) -> [("type", _json_of_t json_cx t)]
       | ThisTypeAppT (_, t, this, targs_opt) ->
         (match targs_opt with
-        | Some targs -> [("typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs))]
+        | Some targs -> [("typeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs))]
         | None -> [])
         @ [("thisArg", _json_of_t json_cx this); ("type", _json_of_t json_cx t)]
       | BoundT (_, name, polarity) ->
@@ -255,15 +255,15 @@ and _json_of_t_impl json_cx t =
       | IntersectionT (_, rep) ->
         [
           (let ts = InterRep.members rep in
-           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)));
+           ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts)));
         ]
       | UnionT (_, rep) ->
         [
           (let ts = UnionRep.members rep in
-           ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)));
+           ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts)));
         ]
       | MergedT (_, uses) ->
-        [("uses", JSON_Array (Core_list.map ~f:(_json_of_use_t json_cx) uses))]
+        [("uses", JSON_Array (Base.List.map ~f:(_json_of_use_t json_cx) uses))]
       | DefT (_, _, IdxWrapper t) -> [("wrappedObj", _json_of_t json_cx t)]
       | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
         [("config", _json_of_t json_cx config); ("instance", _json_of_t json_cx instance)]
@@ -326,7 +326,7 @@ and _json_of_t_impl json_cx t =
         [
           (let json_key_map f map =
              JSON_Object
-               (Key_map.elements map |> Core_list.map ~f:(Utils_js.map_pair Key.string_of_key f))
+               (Key_map.elements map |> Base.List.map ~f:(Utils_js.map_pair Key.string_of_key f))
            in
            let json_pred_key_map = json_key_map (json_of_pred json_cx) in
            ( "OpenPred",
@@ -448,8 +448,8 @@ and _json_of_use_t_impl json_cx t =
           ( "typeArgs",
             match targs with
             | None -> JSON_Null
-            | Some ts -> JSON_Array (Core_list.map ~f:(_json_of_targ json_cx) ts) );
-          ("argTypes", JSON_Array (Core_list.map ~f:(json_of_funcallarg json_cx) args));
+            | Some ts -> JSON_Array (Base.List.map ~f:(_json_of_targ json_cx) ts) );
+          ("argTypes", JSON_Array (Base.List.map ~f:(json_of_funcallarg json_cx) args));
           ("type", _json_of_t json_cx t);
         ]
       | SuperT (_, _, Derived { own; proto; static }) ->
@@ -482,21 +482,21 @@ and _json_of_use_t_impl json_cx t =
       | SpecializeT (_, _, _, cache, targs_opt, tvar) ->
         [("cache", json_of_specialize_cache json_cx cache)]
         @ (match targs_opt with
-          | Some targs -> [("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs))]
+          | Some targs -> [("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs))]
           | None -> [])
         @ [("tvar", _json_of_t json_cx tvar)]
       | ThisSpecializeT (_, this, k) ->
         ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
       | VarianceCheckT (_, targs, polarity) ->
         [
-          ("types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs));
+          ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs));
           ("polarity", json_of_polarity json_cx polarity);
         ]
       | TypeAppVarianceCheckT (_, _, _, targs) ->
         [
           ( "typeArgs",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun (t1, t2) ->
                    JSON_Object [("t1", _json_of_t json_cx t1); ("t2", _json_of_t json_cx t2)])
                  targs) );
@@ -504,9 +504,9 @@ and _json_of_use_t_impl json_cx t =
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) ->
         [
           ("willFlip", JSON_Bool will_flip);
-          ("currentTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts1));
+          ("currentTypeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts1));
           ("currentUpper", _json_of_t json_cx t2);
-          ("currentUpperTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts2));
+          ("currentUpperTypeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts2));
         ]
       | LookupT (_, rstrict, _, propref, action) ->
         (match rstrict with
@@ -528,14 +528,14 @@ and _json_of_use_t_impl json_cx t =
             ( "shadowRead",
               JSON_Array
                 ( Nel.to_list ids
-                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
+                |> Base.List.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
           ]
         | ShadowWrite ids ->
           [
             ( "shadowWrite",
               JSON_Array
                 ( Nel.to_list ids
-                |> Core_list.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
+                |> Base.List.map ~f:(fun id -> JSON_Number (Properties.string_of_id id)) ) );
           ])
         @ [
             ("propref", json_of_propref json_cx propref);
@@ -556,7 +556,7 @@ and _json_of_use_t_impl json_cx t =
       | ObjFreezeT (_, t) -> [("type", _json_of_t json_cx t)]
       | ObjRestT (_, excludes, tvar) ->
         [
-          ("excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes));
+          ("excludedProps", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) excludes));
           ("resultType", _json_of_t json_cx tvar);
         ]
       | ObjSealT (_, t) -> [("type", _json_of_t json_cx t)]
@@ -633,7 +633,7 @@ and _json_of_use_t_impl json_cx t =
         [
           ("shape", JSON_Bool shape);
           ("config", _json_of_t json_cx config);
-          ("children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children));
+          ("children", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) children));
           ( "childrenSpread",
             match children_spread with
             | Some children_spread -> _json_of_t json_cx children_spread
@@ -647,7 +647,7 @@ and _json_of_use_t_impl json_cx t =
           ("shape", JSON_Bool shape);
           ("component", _json_of_t json_cx component);
           ("config", _json_of_t json_cx config);
-          ("children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children));
+          ("children", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) children));
           ( "childrenSpread",
             match children_spread with
             | Some children_spread -> _json_of_t json_cx children_spread
@@ -714,7 +714,7 @@ and _json_of_use_t_impl json_cx t =
                   JSON_Array
                     ( subst
                     |> SMap.elements
-                    |> Core_list.map ~f:(fun (x, k) ->
+                    |> Base.List.map ~f:(fun (x, k) ->
                            JSON_Array [JSON_String x; JSON_String (Key.string_of_key k)]) ) );
                 ("pred_t", _json_of_t_impl json_cx t);
               ] );
@@ -731,7 +731,7 @@ and _json_of_use_t_impl json_cx t =
         [
           ( "resolved",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun param ->
                    let (kind, t) =
                      match param with
@@ -744,7 +744,7 @@ and _json_of_use_t_impl json_cx t =
                  rrt_resolved) );
           ( "unresolved",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(fun param ->
                    let (kind, t) =
                      match param with
@@ -833,7 +833,7 @@ and json_of_sentinel json_cx = check_depth json_of_sentinel_impl json_cx
 and json_of_sentinel_impl json_cx = function
   | UnionEnum.One enum -> _json_of_enum json_cx enum
   | UnionEnum.Many enums ->
-    Hh_json.JSON_Array (Core_list.map ~f:(_json_of_enum json_cx) @@ UnionEnumSet.elements enums)
+    Hh_json.JSON_Array (Base.List.map ~f:(_json_of_enum json_cx) @@ UnionEnumSet.elements enums)
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
 
@@ -961,7 +961,7 @@ and json_of_funtype_impl
     JSON_Object
       ( [
           ("thisType", _json_of_t json_cx this_t);
-          ("paramTypes", JSON_Array (Core_list.map ~f:(fun (_, t) -> _json_of_t json_cx t) params));
+          ("paramTypes", JSON_Array (Base.List.map ~f:(fun (_, t) -> _json_of_t json_cx t) params));
         ]
       @ (match params_names (false, []) params with
         | None -> []
@@ -991,14 +991,14 @@ and json_of_funcalltype_impl
     json_cx
     { call_this_t; call_targs; call_args_tlist; call_tout; call_closure_t; call_strict_arity } =
   Hh_json.(
-    let arg_types = Core_list.map ~f:(json_of_funcallarg json_cx) call_args_tlist in
+    let arg_types = Base.List.map ~f:(json_of_funcallarg json_cx) call_args_tlist in
     JSON_Object
       [
         ("thisType", _json_of_t json_cx call_this_t);
         ( "typeArgs",
           match call_targs with
           | None -> JSON_Null
-          | Some ts -> JSON_Array (Core_list.map ~f:(_json_of_targ json_cx) ts) );
+          | Some ts -> JSON_Array (Base.List.map ~f:(_json_of_targ json_cx) ts) );
         ("argTypes", JSON_Array arg_types);
         ("tout", _json_of_t json_cx call_tout);
         ("closureIndex", int_ call_closure_t);
@@ -1031,7 +1031,7 @@ and json_of_insttype_impl json_cx insttype =
         ("classId", json_of_aloc ~offset_table:None insttype.class_id);
         ( "typeArgs",
           JSON_Array
-            (Core_list.map
+            (Base.List.map
                ~f:(fun (x, _, t, p) ->
                  JSON_Object
                    [
@@ -1055,7 +1055,7 @@ and json_of_selector_impl json_cx =
     | Elem key -> JSON_Object [("keyType", _json_of_t json_cx key)]
     | ObjRest excludes ->
       JSON_Object
-        [("excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes))]
+        [("excludedProps", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) excludes))]
     | ArrRest i -> JSON_Object [("index", JSON_Number (string_of_int i))]
     | Default -> JSON_Object [("default", JSON_Bool true)])
 
@@ -1078,7 +1078,7 @@ and json_of_destructor_impl json_cx =
             | Annot { make_exact } ->
               [("target", JSON_String "Annot"); ("makeExact", JSON_Bool make_exact)])
           @ [
-              ("spread", JSON_Array (Core_list.map ~f:(json_of_spread_operand json_cx) ts));
+              ("spread", JSON_Array (Base.List.map ~f:(json_of_spread_operand json_cx) ts));
               ( "head_slice",
                 match head_slice with
                 | None -> JSON_Null
@@ -1098,7 +1098,7 @@ and json_of_destructor_impl json_cx =
           ])
     | ValuesType -> JSON_Object [("values", JSON_Bool true)]
     | CallType args ->
-      JSON_Object [("args", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) args))]
+      JSON_Object [("args", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) args))]
     | TypeMap tmap -> json_of_type_map json_cx tmap
     | ReactElementPropsType -> JSON_Object [("reactElementProps", JSON_Bool true)]
     | ReactElementConfigType -> JSON_Object [("reactElementConfig", JSON_Bool true)]
@@ -1355,7 +1355,7 @@ and json_of_specialize_cache_impl json_cx cache =
         [
           ( "reasons",
             JSON_Array
-              (Core_list.map
+              (Base.List.map
                  ~f:(json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None)
                  rs) );
         ]))
@@ -1483,7 +1483,7 @@ let json_of_scope =
           ]))
 
 let json_of_env ?(size = 5000) ?(depth = 1000) cx env =
-  Hh_json.JSON_Array (Core_list.map ~f:(json_of_scope ~size ~depth cx) env)
+  Hh_json.JSON_Array (Base.List.map ~f:(json_of_scope ~size ~depth cx) env)
 
 (*****************************************************************)
 
@@ -1618,7 +1618,7 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "<this: %s>(%s) => %s"
              (kid this_t)
-             (String.concat "; " (Core_list.map ~f:(fun (_, t) -> kid t) params))
+             (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
              (kid return_t))
         t
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
@@ -1642,7 +1642,7 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "%s [%s] #%d"
              (kid c)
-             (String.concat "; " (Core_list.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
+             (String.concat "; " (Base.List.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
              id)
         t
     | ThisClassT (_, inst) -> p ~extra:(kid inst) t
@@ -1659,12 +1659,12 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "Array %s, %s"
              (kid elemt)
-             (spf "[%s]" (String.concat "; " (Core_list.map ~f:kid tup))))
+             (spf "[%s]" (String.concat "; " (Base.List.map ~f:kid tup))))
         t
     | DefT (_, trust, ArrT (TupleAT (_, tup))) ->
       p
         ~trust:(Some trust)
-        ~extra:(spf "Tuple [%s]" (String.concat ", " (Core_list.map ~f:kid tup)))
+        ~extra:(spf "Tuple [%s]" (String.concat ", " (Base.List.map ~f:kid tup)))
         t
     | DefT (_, trust, ArrT (ROArrayAT elemt)) ->
       p ~trust:(Some trust) ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
@@ -1680,7 +1680,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t
     | EvalT (arg, expr, id) -> p ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
     | TypeAppT (_, _, base, args) ->
-      p ~extra:(spf "%s, [%s]" (kid base) (String.concat "; " (Core_list.map ~f:kid args))) t
+      p ~extra:(spf "%s, [%s]" (kid base) (String.concat "; " (Base.List.map ~f:kid args))) t
     | ThisTypeAppT (_, base, this, args_opt) ->
       p
         ~reason:false
@@ -1692,27 +1692,27 @@ let rec dump_t_ (depth, tvars) cx t =
                 "%s, %s, [%s]"
                 (kid base)
                 (kid this)
-                (String.concat "; " (Core_list.map ~f:kid args))
+                (String.concat "; " (Base.List.map ~f:kid args))
             | None -> spf "%s, %s" (kid base) (kid this)
           end
         t
     | ExactT (_, arg) -> p ~extra:(kid arg) t
     | MaybeT (_, arg) -> p ~extra:(kid arg) t
     | IntersectionT (_, rep) ->
-      p ~extra:(spf "[%s]" (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
+      p ~extra:(spf "[%s]" (String.concat "; " (Base.List.map ~f:kid (InterRep.members rep)))) t
     | UnionT (_, rep) ->
       p
         ~extra:
           (spf
              "[%s]%s"
-             (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))
+             (String.concat "; " (Base.List.map ~f:kid (UnionRep.members rep)))
              (UnionRep.string_of_specialization rep))
         t
     | MergedT (_, uses) ->
       p
         ~extra:
           ( "["
-          ^ String.concat ", " (Core_list.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses)
+          ^ String.concat ", " (Base.List.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses)
           ^ "]" )
         t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
@@ -1729,7 +1729,7 @@ let rec dump_t_ (depth, tvars) cx t =
         ~extra:
           ( Context.find_exports cx exports_tmap
           |> SMap.bindings
-          |> Core_list.map ~f:(fun (name, (_, t)) -> kid t |> spf "%s: %s" name)
+          |> Base.List.map ~f:(fun (name, (_, t)) -> kid t |> spf "%s: %s" name)
           |> String.concat ", "
           |> spf "[%s]" )
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
@@ -1746,12 +1746,12 @@ let rec dump_t_ (depth, tvars) cx t =
              (kid arg)
              (String.concat
                 "; "
-                (Core_list.map
+                (Base.List.map
                    ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
                    (Key_map.elements p_pos)))
              (String.concat
                 "; "
-                (Core_list.map
+                (Base.List.map
                    ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
                    (Key_map.elements p_neg))))
     | ReposT (_, arg)
@@ -1783,7 +1783,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | Arg t -> kid t
     | SpreadArg t -> spf "...%s" (kid t)
   in
-  let tlist ts = spf "[%s]" (String.concat "; " (Core_list.map ~f:kid ts)) in
+  let tlist ts = spf "[%s]" (String.concat "; " (Base.List.map ~f:kid ts)) in
   let props map =
     spf
       "{%s}"
@@ -1803,11 +1803,11 @@ and dump_use_t_ (depth, tvars) cx t =
     | ShadowRead (_, ids) ->
       spf
         "ShadowRead [%s]"
-        (String.concat "; " (Nel.to_list ids |> Core_list.map ~f:Properties.string_of_id))
+        (String.concat "; " (Nel.to_list ids |> Base.List.map ~f:Properties.string_of_id))
     | ShadowWrite ids ->
       spf
         "ShadowWrite [%s]"
-        (String.concat "; " (Nel.to_list ids |> Core_list.map ~f:Properties.string_of_id))
+        (String.concat "; " (Nel.to_list ids |> Base.List.map ~f:Properties.string_of_id))
   in
   let lookup_action = function
     | ReadProp { tout; _ } -> spf "Read %s" (kid tout)
@@ -1818,7 +1818,7 @@ and dump_use_t_ (depth, tvars) cx t =
   in
   let specialize_cache = function
     | None -> "None"
-    | Some rs -> spf "Some [%s]" (String.concat "; " @@ Core_list.map ~f:(dump_reason cx) rs)
+    | Some rs -> spf "Some [%s]" (String.concat "; " @@ Base.List.map ~f:(dump_reason cx) rs)
   in
   let try_flow = function
     | UnionCases (use_op, t, _rep, ts) ->
@@ -1826,9 +1826,9 @@ and dump_use_t_ (depth, tvars) cx t =
         "(%s, %s, [%s])"
         (string_of_use_op use_op)
         (kid t)
-        (String.concat "; " (Core_list.map ~f:kid ts))
+        (String.concat "; " (Base.List.map ~f:kid ts))
     | IntersectionCases (ts, use_t) ->
-      spf "([%s], %s)" (String.concat "; " (Core_list.map ~f:kid ts)) (use_kid use_t)
+      spf "([%s], %s)" (String.concat "; " (Base.List.map ~f:kid ts)) (use_kid use_t)
   in
   let react_kit =
     React.(
@@ -1882,7 +1882,7 @@ and dump_use_t_ (depth, tvars) cx t =
             (spf
                "CreateElement (%s; %s%s) => %s"
                (kid config)
-               (String.concat "; " (Core_list.map ~f:kid children))
+               (String.concat "; " (Base.List.map ~f:kid children))
                (match children_spread with
                | Some children_spread -> spf "; ...%s" (kid children_spread)
                | None -> "")
@@ -1946,20 +1946,20 @@ and dump_use_t_ (depth, tvars) cx t =
         | Or -> "Or"
       in
       let resolved xs =
-        spf "[%s]" (String.concat "; " (Core_list.map ~f:slice (Nel.to_list xs)))
+        spf "[%s]" (String.concat "; " (Base.List.map ~f:slice (Nel.to_list xs)))
       in
       let resolve = function
         | Next -> "Next"
         | List0 (todo, j) ->
           spf
             "List0 ([%s], %s)"
-            (String.concat "; " (Core_list.map ~f:kid (Nel.to_list todo)))
+            (String.concat "; " (Base.List.map ~f:kid (Nel.to_list todo)))
             (join j)
         | List (todo, done_rev, j) ->
           spf
             "List ([%s], [%s], %s)"
-            (String.concat "; " (Core_list.map ~f:kid todo))
-            (String.concat "; " (Core_list.map ~f:resolved (Nel.to_list done_rev)))
+            (String.concat "; " (Base.List.map ~f:kid todo))
+            (String.concat "; " (Base.List.map ~f:resolved (Nel.to_list done_rev)))
             (join j)
       in
       let resolve_tool = function
@@ -1986,8 +1986,8 @@ and dump_use_t_ (depth, tvars) cx t =
             let { todo_rev; acc; spread_id; union_reason; curr_resolve_idx } = state in
             spf
               "{todo_rev=[%s]; acc=[%s]; spread_id=%s; curr_resolve_idx=%s; union_reason=%s}"
-              (String.concat "; " (Core_list.map ~f:spread_operand todo_rev))
-              (String.concat "; " (Core_list.map ~f:acc_element acc))
+              (String.concat "; " (Base.List.map ~f:spread_operand todo_rev))
+              (String.concat "; " (Base.List.map ~f:acc_element acc))
               (string_of_int spread_id)
               (string_of_int curr_resolve_idx)
               (Option.value_map union_reason ~default:"None" ~f:(dump_reason cx))
@@ -2059,7 +2059,7 @@ and dump_use_t_ (depth, tvars) cx t =
              "%s, <this: %s>(%s) => %s"
              (string_of_use_op use_op)
              (kid call_this_t)
-             (String.concat "; " (Core_list.map ~f:call_arg_kid call_args_tlist))
+             (String.concat "; " (Base.List.map ~f:call_arg_kid call_args_tlist))
              (kid call_tout))
         t
     | CallLatentPredT _ -> p t
@@ -2083,7 +2083,7 @@ and dump_use_t_ (depth, tvars) cx t =
           (spf
              "%s, {%s}"
              (kid arg)
-             (String.concat "; " (Core_list.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
+             (String.concat "; " (Base.List.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
     | ExportTypeT _ -> p t
     | AssertExportIsTypeT _ -> p t
     | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
@@ -2175,7 +2175,7 @@ and dump_use_t_ (depth, tvars) cx t =
               spf
                 "%s, [%s], %s"
                 (specialize_cache cache)
-                (String.concat "; " (Core_list.map ~f:kid args))
+                (String.concat "; " (Base.List.map ~f:kid args))
                 (kid ret)
             | None -> spf "%s, %s" (specialize_cache cache) (kid ret)
           end
@@ -2193,7 +2193,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | VarianceCheckT (_, args, pol) ->
       p
         ~extra:
-          (spf "[%s], %s" (String.concat "; " (Core_list.map ~f:kid args)) (Polarity.string pol))
+          (spf "[%s], %s" (String.concat "; " (Base.List.map ~f:kid args)) (Polarity.string pol))
         t
     | ConcretizeTypeAppsT _ -> p t
     | TypeAppVarianceCheckT _ -> p t
@@ -2211,7 +2211,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ExtendsUseT (_, _, nexts, l, u) ->
       p
         ~extra:
-          (spf "[%s], %s, %s" (String.concat "; " (Core_list.map ~f:kid nexts)) (kid l) (kid u))
+          (spf "[%s], %s, %s" (String.concat "; " (Base.List.map ~f:kid nexts)) (kid l) (kid u))
         t
     | DestructuringT (_, k, s, tout) ->
       p t ~extra:(spf "%s, %s, %s" (string_of_destruct_kind k) (string_of_selector s) (kid tout))
@@ -2945,14 +2945,14 @@ module Verbose = struct
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
       let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
-      let lines = Core_list.map ~f:add_prefix lines in
+      let lines = Base.List.map ~f:add_prefix lines in
       prerr_endline (String.concat delim lines)
     | None -> ()
 
   let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines : string list) =
     match Context.verbose cx with
     | Some _ ->
-      let lines = Core_list.map ~f:(fun line -> lazy line) lines in
+      let lines = Base.List.map ~f:(fun line -> lazy line) lines in
       print_if_verbose_lazy cx trace ~delim ~indent lines
     | None -> ()
 

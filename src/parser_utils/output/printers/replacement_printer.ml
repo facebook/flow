@@ -41,7 +41,7 @@ let mk_patch_ast_differ
   let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
   let offset loc = Offset_utils.offset offset_table loc in
   mk_loc_patch_ast_differ diff ast
-  |> Core_list.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
+  |> Base.List.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
 
 let mk_patch_ast_differ_unsafe diff ast file =
   with_content_of_file_input file @@ mk_patch_ast_differ diff ast

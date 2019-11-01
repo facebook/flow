@@ -127,7 +127,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
       let trace_array = Array.of_list trace in
       let gen_inserts first last =
         let len = last - first in
-        Core_list.sub new_list ~pos:first ~len
+        Base.List.sub new_list ~pos:first ~len
       in
       if k > trace_len - 1 then
         script
@@ -175,11 +175,11 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
     (* Deletes are added for every element of old_list that does not have a
        match point with new_list *)
     let deletes =
-      Core_list.map ~f:fst trace
+      Base.List.map ~f:fst trace
       |> ISet.of_list
       |> ISet.diff (ListUtils.range 0 n |> ISet.of_list)
       |> ISet.elements
-      |> Core_list.map ~f:(fun pos -> (pos, Delete old_arr.(pos)))
+      |> Base.List.map ~f:(fun pos -> (pos, Delete old_arr.(pos)))
     in
     deletes |> add_inserts (-1) |> List.sort change_compare |> convert_to_replace
   in
@@ -373,16 +373,16 @@ let program
             else
               List.nth old_list index |> trivial >>| fst >>| Loc.end_loc
           in
-          Core_list.map ~f:trivial lst
+          Base.List.map ~f:trivial lst
           |> all
-          >>| Core_list.map ~f:snd (* drop the loc *)
+          >>| Base.List.map ~f:snd (* drop the loc *)
           >>| (fun x -> Insert (break, x))
           |> both loc
-          >>| Core_list.return
-        | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Core_list.return
+          >>| Base.List.return
+        | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
       in
       let recurse_into_changes =
-        Core_list.map ~f:recurse_into_change %> all %> map ~f:List.concat
+        Base.List.map ~f:recurse_into_change %> all %> map ~f:List.concat
       in
       recurse_into_changes diffs)
   in
@@ -466,7 +466,7 @@ let program
       let whole_program_diff = list_diff algo stmts1 stmts2 in
       let split_len =
         all [imports_diff; body_diff]
-        >>| Core_list.map ~f:List.length
+        >>| Base.List.map ~f:List.length
         >>| List.fold_left ( + ) 0
         |> value ~default:max_int
       in

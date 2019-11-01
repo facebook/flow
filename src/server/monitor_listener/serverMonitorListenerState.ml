@@ -25,7 +25,7 @@ let defer_parallelizable_workload workload =
 let requeue_deferred_parallelizable_workloads () =
   let workloads = !deferred_parallelizable_workloads_rev in
   deferred_parallelizable_workloads_rev := [];
-  Core_list.iter workloads ~f:(fun workload ->
+  Base.List.iter workloads ~f:(fun workload ->
       WorkloadStream.requeue_parallelizable workload workload_stream)
 
 (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
@@ -130,7 +130,7 @@ let recheck_fetch ~process_updates ~get_forced =
   recheck_acc :=
     Lwt_stream.get_available recheck_stream
     (* Get all the files which have changed *)
-    |> Core_list.fold_left
+    |> Base.List.fold_left
          ~init:!recheck_acc
          ~f:(fun workload { files; callback; file_watcher_metadata; recheck_reason } ->
            let (is_empty_msg, workload) =

@@ -62,7 +62,7 @@ and dump_any_unsoundness_kind = function
   | WeakContext -> "WeakContext"
 
 and dump_list : 'a. ('a -> string) -> ?sep:string -> 'a list -> string =
- (fun f ?(sep = ", ") ls -> Core_list.map ~f ls |> String.concat sep)
+ (fun f ?(sep = ", ") ls -> Base.List.map ~f ls |> String.concat sep)
 
 and dump_param_opt = function
   | { prm_optional = true } -> "?"
@@ -175,7 +175,7 @@ and dump_symbol { provenance; def_loc; name; _ } =
 and dump_utility ~depth u =
   let ctor = Ty.string_of_utility_ctor u in
   match Ty.types_of_utility u with
-  | Some ts -> Core_list.map ~f:(dump_t ~depth) ts |> String.concat ", " |> spf "%s (%s)" ctor
+  | Some ts -> Base.List.map ~f:(dump_t ~depth) ts |> String.concat ", " |> spf "%s (%s)" ctor
   | None -> ctor
 
 and dump_t ?(depth = 10) t =
@@ -241,7 +241,7 @@ and dump_t ?(depth = 10) t =
 
 let dump_binding (v, ty) = Utils_js.spf "type %s = %s" (dump_tvar v) (dump_t ty)
 
-let dump_env_t s = Core_list.map ~f:dump_binding s |> String.concat "\n"
+let dump_env_t s = Base.List.map ~f:dump_binding s |> String.concat "\n"
 
 let string_of_polarity = function
   | Negative -> "Negative"
@@ -324,11 +324,11 @@ let json_of_t ~strip_root =
             ("literal", JSON_Bool arr_literal);
             ("type", json_of_t arr_elt_t);
           ]
-        | Tup ts -> [("types", JSON_Array (Core_list.map ~f:json_of_t ts))]
+        | Tup ts -> [("types", JSON_Array (Base.List.map ~f:json_of_t ts))]
         | Union (t0, t1, ts) ->
-          [("types", JSON_Array (Core_list.map ~f:json_of_t (t0 :: t1 :: ts)))]
+          [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
         | Inter (t0, t1, ts) ->
-          [("types", JSON_Array (Core_list.map ~f:json_of_t (t0 :: t1 :: ts)))]
+          [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
         | TypeAlias { ta_name; ta_tparams; ta_type } ->
           [
             ("name", json_of_symbol ta_name);
@@ -337,7 +337,7 @@ let json_of_t ~strip_root =
           ]
         | InlineInterface { if_extends; if_body } ->
           Hh_json.(
-            let extends = Core_list.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
+            let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
             [("extends", JSON_Array extends); ("body", JSON_Object (json_of_obj_t if_body))])
         | TypeOf b -> [("name", JSON_String (builtin_value b))]
         | Module (name, _) ->
@@ -358,7 +358,7 @@ let json_of_t ~strip_root =
   and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
     Hh_json.(
       [("typeParams", json_of_type_params fun_type_params)]
-      @ [("paramTypes", JSON_Array (Core_list.map ~f:(fun (_, t, _) -> json_of_t t) fun_params))]
+      @ [("paramTypes", JSON_Array (Base.List.map ~f:(fun (_, t, _) -> json_of_t t) fun_params))]
       @ [
           ( "paramNames",
             JSON_Array
@@ -388,17 +388,17 @@ let json_of_t ~strip_root =
         ("exact", JSON_Bool obj_exact);
         ("frozen", JSON_Bool obj_frozen);
         ("literal", JSON_Bool obj_literal);
-        ("props", JSON_Array (Core_list.map ~f:json_of_prop obj_props));
+        ("props", JSON_Array (Base.List.map ~f:json_of_prop obj_props));
       ])
   and json_of_type_params ps =
     Hh_json.(
       match ps with
       | None -> JSON_Null
-      | Some tparams -> JSON_Array (Core_list.map ~f:json_of_typeparam tparams))
+      | Some tparams -> JSON_Array (Base.List.map ~f:json_of_typeparam tparams))
   and json_of_targs targs_opt =
     Hh_json.(
       match targs_opt with
-      | Some targs -> [("typeArgs", JSON_Array (Core_list.map ~f:json_of_t targs))]
+      | Some targs -> [("typeArgs", JSON_Array (Base.List.map ~f:json_of_t targs))]
       | None -> [])
   and json_of_typeparam
       { tp_name : string; tp_bound : t option; tp_polarity : polarity; tp_default : t option } =

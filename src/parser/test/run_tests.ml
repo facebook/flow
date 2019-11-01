@@ -46,7 +46,7 @@ end = struct
     if should_color then
       C.cprint to_print
     else
-      let strings = Core_list.map ~f:snd to_print in
+      let strings = Base.List.map ~f:snd to_print in
       List.iter (Printf.printf "%s") strings
 
   type case_expectation =
