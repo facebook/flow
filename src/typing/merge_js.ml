@@ -802,6 +802,14 @@ module ContextOptimizer = struct
         SigHash.add_polarity sig_hash dicttype'.dict_polarity;
         dicttype'
 
+      method enum e =
+        let { enum_id; members; _ } = e in
+        SigHash.add_aloc sig_hash enum_id;
+        Base.List.iter
+          ~f:(SigHash.add sig_hash)
+          (SSet.elements members |> Base.List.stable_sort ~compare:String.compare);
+        e
+
       method! type_ cx pole t =
         SigHash.add_reason sig_hash (reason_of_t t);
         begin

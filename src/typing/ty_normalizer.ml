@@ -686,7 +686,10 @@ end = struct
           return Ty.(TypeOf FunProtoCall)
       | ModuleT (reason, exports, _) -> module_t env reason exports t
       | NullProtoT _ -> return Ty.Null
-      | DefT (_, _, CharSetT _) -> terr ~kind:UnsupportedTypeCtor (Some t))
+      | DefT (_, _, CharSetT _) -> terr ~kind:UnsupportedTypeCtor (Some t)
+      | DefT (_, _, EnumObjectT _)
+      | DefT (_, _, EnumT _) ->
+        terr ~kind:UnsupportedTypeCtor (Some t))
 
   (* Type variable normalization (input: a type variable `id`)
 

@@ -7691,7 +7691,9 @@ struct
     | DefT (_, _, SingletonStrT _)
     | DefT (_, _, SingletonNumT _)
     | DefT (_, _, SingletonBoolT _)
-    | DefT (_, _, CharSetT _) ->
+    | DefT (_, _, CharSetT _)
+    | DefT (_, _, EnumObjectT _)
+    | DefT (_, _, EnumT _) ->
       ()
     | ExistsT _ -> ()
     | InternalT (OptionalChainVoidT _) -> ()

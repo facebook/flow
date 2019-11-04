@@ -278,6 +278,8 @@ class virtual ['a] t =
         else
           ExplicitArg t''
 
+    method virtual enum : enum_t -> enum_t
+
     method def_type cx map_cx t =
       match t with
       | NumT _
@@ -315,6 +317,18 @@ class virtual ['a] t =
           t
         else
           ClassT t''
+      | EnumT enum ->
+        let enum' = self#enum enum in
+        if enum' == enum then
+          t
+        else
+          EnumT enum'
+      | EnumObjectT enum ->
+        let enum' = self#enum enum in
+        if enum' == enum then
+          t
+        else
+          EnumObjectT enum'
       | InstanceT (st, su, impl, instt) ->
         let st' = self#type_ cx map_cx st in
         let su' = self#type_ cx map_cx su in

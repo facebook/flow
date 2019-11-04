@@ -216,6 +216,15 @@ and _json_of_t_impl json_cx t =
           ("implements", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) implements));
           ("instance", json_of_insttype json_cx instance);
         ]
+      | DefT (_, _, EnumT enum)
+      | DefT (_, _, EnumObjectT enum) ->
+        let { enum_id; enum_name; members } = enum in
+        [
+          ("enum_id", JSON_String (ALoc.debug_to_string enum_id));
+          ("enum_name", JSON_String enum_name);
+          ( "members",
+            JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)) );
+        ]
       | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]
       | EvalT (t, defer_use_t, id) ->
         [
@@ -1668,6 +1677,9 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) ->
       p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string class_id)) t
     | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
+    | DefT (_, trust, EnumT { enum_id; enum_name; members = _ })
+    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _ }) ->
+      p ~trust:(Some trust) ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string enum_id)) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
     | OpaqueT _ -> p t

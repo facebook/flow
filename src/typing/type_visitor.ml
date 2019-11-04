@@ -115,7 +115,9 @@ class ['a] t =
       | EmptyT _
       | MixedT _
       | NullT
-      | VoidT ->
+      | VoidT
+      | EnumT _
+      | EnumObjectT _ ->
         acc
       | FunT (static, prototype, funtype) ->
         let acc = self#type_ cx pole acc static in

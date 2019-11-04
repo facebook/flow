@@ -214,6 +214,8 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, SingletonNumT _)
   | DefT (_, _, SingletonStrT _)
   | DefT (_, _, CharSetT _)
+  | DefT (_, _, EnumT _)
+  | DefT (_, _, EnumObjectT _)
   | AnyT _ ->
     acc
   (* Since MergedT only arises from context opt, we can be certain that its

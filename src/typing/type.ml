@@ -242,11 +242,20 @@ module rec TypeTerm : sig
         config: t;
         instance: t;
       }
+    (* Enum types *)
+    | EnumT of enum_t
+    | EnumObjectT of enum_t
 
   and defer_use_t =
     | LatentPredT of reason * predicate
     (* destructors that extract parts of various kinds of types *)
     | TypeDestructorT of use_op * reason * destructor
+
+  and enum_t = {
+    enum_id: ALoc.t;
+    enum_name: string;
+    members: SSet.t;
+  }
 
   and internal_t =
     (* toolkit for making choices *)
@@ -3418,6 +3427,8 @@ let string_of_def_ctor = function
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
   | EmptyT _ -> "EmptyT"
+  | EnumT _ -> "EnumT"
+  | EnumObjectT _ -> "EnumObjectT"
   | FunT _ -> "FunT"
   | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"

@@ -479,7 +479,9 @@ let rec extract_type cx this_t =
   | OpenPredT _
   | ShapeT _
   | ThisClassT _
-  | DefT (_, _, TypeT _) ->
+  | DefT (_, _, TypeT _)
+  | DefT (_, _, EnumObjectT _)
+  | DefT (_, _, EnumT _) ->
     FailureUnhandledType this_t
 
 let rec extract_members ?(exclude_proto_members = false) cx = function

@@ -221,7 +221,9 @@ class visitor =
       | DefT (_, t, SingletonStrT _)
       | DefT (_, t, SingletonBoolT _)
       | DefT (_, t, StrT _)
-      | DefT (_, t, VoidT) ->
+      | DefT (_, t, VoidT)
+      | DefT (_, t, EnumObjectT _)
+      | DefT (_, t, EnumT _) ->
         (Kind.Checked, Taint.of_trust cx t)
       (* Concrete uncovered constructors *)
       (* TODO: Rethink coverage and trust for these types *)
