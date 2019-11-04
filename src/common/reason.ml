@@ -111,7 +111,7 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | RUnionEnum
-  | REnum
+  | REnum of string (* name *)
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -251,7 +251,7 @@ let rec map_desc_locs f = function
   | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
   | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
   | RLogical (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
-  | ( RTemplateString | RUnknownString | RUnionEnum | REnum | RGetterSetterProperty | RThis
+  | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RGetterSetterProperty | RThis
     | RThisType | RExistential | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest
     | RConstructorReturn | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType
     | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype
@@ -567,7 +567,7 @@ let rec string_of_desc = function
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | RUnionEnum -> "enum"
-  | REnum -> "Enums are not yet implemented."
+  | REnum name -> spf "enum `%s`" name
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -1425,7 +1425,7 @@ let classification_of_reason r =
   | RPossiblyMissingPropFromObj _
   | RTrusted _
   | RPrivate _
-  | REnum ->
+  | REnum _ ->
     `Unclassified
 
 let is_nullish_reason r = classification_of_reason r = `Nullish

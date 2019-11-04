@@ -1894,25 +1894,26 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     | (loc, EnumDeclaration enum) ->
       if not @@ Context.enable_enums cx then
         Flow.add_output cx (Error_message.EExperimentalEnums loc);
-      EnumDeclaration.(
-        let { id = (name_loc, ident); body } = enum in
-        let { Ast.Identifier.name; _ } = ident in
-        let t = AnyT.untyped @@ mk_reason REnum loc in
-        let id' = ((name_loc, t), ident) in
-        Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
-        let use_op =
-          Op
-            (AssignVar { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t t })
-        in
-        Env.init_implicit_const
-          Scope.Entry.EnumNameBinding
-          cx
-          ~use_op
-          name
-          ~has_anno:false
-          t
-          name_loc;
-        (loc, EnumDeclaration { id = id'; body }))
+      let open EnumDeclaration in
+      let { id = (name_loc, ident); body } = enum in
+      let { Ast.Identifier.name; _ } = ident in
+      let reason = mk_reason (REnum name) loc in
+      let enum_t = mk_enum ~loc enum in
+      let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
+      let id' = ((name_loc, t), ident) in
+      Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
+      let use_op =
+        Op (AssignVar { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t t })
+      in
+      Env.init_implicit_const
+        Scope.Entry.EnumNameBinding
+        cx
+        ~use_op
+        name
+        ~has_anno:false
+        t
+        name_loc;
+      (loc, EnumDeclaration { id = id'; body })
     | ( loc,
         DeclareVariable
           { DeclareVariable.id = (id_loc, ({ Ast.Identifier.name; comments = _ } as id)); annot }
@@ -7311,3 +7312,25 @@ and warn_or_ignore_optional_chaining optional cx loc =
       Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
   else
     ()
+
+and mk_enum ~loc enum =
+  let open Ast.Statement.EnumDeclaration in
+  let { id = (_, { Ast.Identifier.name; _ }); body } = enum in
+  let name_of_initialized_member (type t) (member : (t, ALoc.t) InitializedMember.t) =
+    let (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); _ }) = member in
+    name
+  in
+  let name_of_defaulted_member (_, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) =
+    name
+  in
+  let member_names =
+    match body with
+    | BooleanBody { BooleanBody.members; _ } -> Base.List.map ~f:name_of_initialized_member members
+    | NumberBody { NumberBody.members; _ } -> Base.List.map ~f:name_of_initialized_member members
+    | StringBody { StringBody.members = StringBody.Initialized members; _ } ->
+      Base.List.map ~f:name_of_initialized_member members
+    | StringBody { StringBody.members = StringBody.Defaulted members; _ } ->
+      Base.List.map ~f:name_of_defaulted_member members
+    | SymbolBody { SymbolBody.members } -> Base.List.map ~f:name_of_defaulted_member members
+  in
+  { enum_id = loc; enum_name = name; members = SSet.of_list member_names }

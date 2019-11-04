@@ -12,5 +12,41 @@ References:
            ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- valid.js:8:10
 
-Found 1 error
+Cannot use `E` as a type. A name can be used as a type only if it refers to a type definition, an interface definition,
+or a class definition. To get the type of a non-class value, use `typeof`.
+
+   8| const a: E = E.A;
+               ^
+
+
+Error ---------------------------------------------------------------------------------------------------- valid.js:8:14
+
+Cannot get `E.A` because property `A` is missing in enum `E` [1].
+
+   valid.js:8:14
+   8| const a: E = E.A;
+                   ^^^
+
+References:
+   valid.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- valid.js:11:16
+
+Cannot use `E2` as a type. A name can be used as a type only if it refers to a type definition, an interface definition,
+or a class definition. To get the type of a non-class value, use `typeof`.
+
+   11| declare var x: E2;
+                      ^^
+
+
+
+Found 4 errors
