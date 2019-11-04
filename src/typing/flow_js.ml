@@ -2712,6 +2712,16 @@ struct
            that the check is guaranteed to fail (assuming the union doesn't
            degenerate to a singleton) *)
             rec_flow_t cx trace (l, result)
+        | (UnionT (r, rep), PredicateT (((MaybeP | NotP MaybeP) as p), t)) ->
+          if UnionRep.is_optimized_finally rep then
+            predicate cx trace t l p
+          else
+            (* Pre-flatten unions for better predicate filtering *)
+            let elts = UnionRep.members rep |> Type_mapper.union_flatten cx in
+            if UnionRep.contains_only_flattened_types elts then
+              predicate cx trace t (union_of_ts r elts) p
+            else
+              flow_all_in_union cx trace rep u
         | (UnionT (_, rep), _)
           when match u with
                (* For l.key !== sentinel when sentinel has a union type, don't split the union. This

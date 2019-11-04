@@ -109,7 +109,8 @@ let rec not_exists t =
   (* things that don't track truthiness pass through *)
   | t -> t
 
-let maybe = function
+let rec maybe = function
+  | UnionT (r, rep) -> recurse_into_union maybe (r, UnionRep.members rep)
   | MaybeT (r, _) ->
     UnionT
       ( r,
@@ -134,6 +135,7 @@ let maybe = function
     EmptyT.why reason |> with_trust bogus_trust
 
 let rec not_maybe = function
+  | UnionT (r, rep) -> recurse_into_union not_maybe (r, UnionRep.members rep)
   | MaybeT (_, t) -> t
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_maybe t
   | DefT (r, trust, (NullT | VoidT)) -> DefT (r, trust, EmptyT Bottom)

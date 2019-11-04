@@ -1685,6 +1685,8 @@ and UnionRep : sig
   val check_enum : t -> UnionEnumSet.t option
 
   val string_of_specialization : t -> string
+
+  val contains_only_flattened_types : TypeTerm.t list -> bool
 end = struct
   (* canonicalize a type w.r.t. enum membership *)
   let canon =
