@@ -78,6 +78,62 @@ module ObjectExpressionAcc = struct
       | x :: xs -> (x, xs))
 
   let proto { proto; _ } = proto
+
+  let mk_object_from_spread_acc cx acc reason ~default_proto =
+    let mk_object reason ?(proto = default_proto) ?(sealed = false) props =
+      Obj_type.mk_with_proto cx reason ~sealed ~props proto
+    in
+    let sealed = sealed acc in
+    match elements_rev acc with
+    | (Slice { slice_pmap }, []) ->
+      let sealed = sealed && not (SMap.is_empty slice_pmap) in
+      mk_object reason ~sealed ?proto:(proto acc) slice_pmap
+    | os ->
+      let (t, ts, head_slice) =
+        let (t, ts) = os in
+        (* We don't need to do this recursively because every pair of slices must be separated
+         * by a spread *)
+        match (t, ts) with
+        | (Spread t, ts) ->
+          let ts =
+            List.map
+              (function
+                | Spread t -> Object.Spread.Type t
+                | Slice { slice_pmap } ->
+                  Object.Spread.Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
+              ts
+          in
+          (t, ts, None)
+        | (Slice { slice_pmap = prop_map }, Spread t :: ts) ->
+          let head_slice = { Type.Object.Spread.reason; prop_map; dict = None } in
+          let ts =
+            List.map
+              (function
+                | Spread t -> Object.Spread.Type t
+                | Slice { slice_pmap } ->
+                  Object.Spread.Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
+              ts
+          in
+          (t, ts, Some head_slice)
+        | _ -> failwith "Invariant Violation: spread list has two slices in a row"
+      in
+      let seal = Obj_type.mk_seal reason sealed in
+      let target = Object.Spread.Value { make_seal = seal } in
+      let tool = Object.Resolve Object.Next in
+      let state =
+        {
+          Object.Spread.todo_rev = ts;
+          acc = Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice;
+          spread_id = Reason.mk_id ();
+          union_reason = None;
+          curr_resolve_idx = 0;
+        }
+      in
+      let tout = Tvar.mk cx reason in
+      let use_op = Op (ObjectSpread { op = reason }) in
+      let l = Flow.widen_obj_type cx ~use_op:unknown_use reason t in
+      Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
+      tout
 end
 
 let ident_name = Flow_ast_utils.name_of_ident
@@ -2659,10 +2715,6 @@ and object_ cx reason ?(allow_sealed = true) props =
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
-    (* Return an object with specified sealing. *)
-    let mk_object ?(proto = obj_proto) ?(sealed = false) props =
-      Obj_type.mk_with_proto cx reason ~sealed ~props proto
-    in
     (* Add property to object, using optional tout argument to SetElemT to wait
      for the write to happen. This defers any reads until writes have happened,
      to avoid race conditions. *)
@@ -2759,65 +2811,7 @@ and object_ cx reason ?(allow_sealed = true) props =
         (ObjectExpressionAcc.empty ~allow_sealed, [])
         props
     in
-    let acc_sealed = ObjectExpressionAcc.sealed acc in
-    let proto = ObjectExpressionAcc.proto acc in
-    let t =
-      match ObjectExpressionAcc.elements_rev acc with
-      | (ObjectExpressionAcc.Slice { slice_pmap }, []) ->
-        let sealed = acc_sealed && not (SMap.is_empty slice_pmap) in
-        mk_object ?proto ~sealed slice_pmap
-      | os ->
-        Object.(
-          Object.Spread.(
-            let (t, ts, head_slice) =
-              let (t, ts) = os in
-              (* We don't need to do this recursively because every pair of slices must be separated
-               * by a spread *)
-              match (t, ts) with
-              | (ObjectExpressionAcc.Spread t, ts) ->
-                let ts =
-                  List.map
-                    (function
-                      | ObjectExpressionAcc.Spread t -> Type t
-                      | ObjectExpressionAcc.Slice { slice_pmap } ->
-                        Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
-                    ts
-                in
-                (t, ts, None)
-              | ( ObjectExpressionAcc.Slice { slice_pmap = prop_map },
-                  ObjectExpressionAcc.Spread t :: ts ) ->
-                let head_slice = { Type.Object.Spread.reason; prop_map; dict = None } in
-                let ts =
-                  List.map
-                    (function
-                      | ObjectExpressionAcc.Spread t -> Type t
-                      | ObjectExpressionAcc.Slice { slice_pmap } ->
-                        Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
-                    ts
-                in
-                (t, ts, Some head_slice)
-              | _ -> failwith "Invariant Violation: spread list has two slices in a row"
-            in
-            let seal = Obj_type.mk_seal reason acc_sealed in
-            let target = Value { make_seal = seal } in
-            let tool = Resolve Next in
-            let state =
-              {
-                todo_rev = ts;
-                acc = Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
-                spread_id = Reason.mk_id ();
-                union_reason = None;
-                curr_resolve_idx = 0;
-              }
-            in
-            let tout = Tvar.mk cx reason in
-            let use_op = Op (ObjectSpread { op = reason }) in
-            let l = Flow.widen_obj_type cx ~use_op:unknown_use reason t in
-            Flow.flow
-              cx
-              (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
-            tout))
-    in
+    let t = ObjectExpressionAcc.mk_object_from_spread_acc cx acc reason ~default_proto:obj_proto in
     (t, List.rev rev_prop_asts))
 
 and variable cx kind ?if_uninitialized id init =
