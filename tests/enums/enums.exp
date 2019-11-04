@@ -33,6 +33,108 @@ References:
             ^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- enum-object.js:28:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:28:4
+   28|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:28:7
+   28|   (x: EO); // Error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:32:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:32:4
+   32|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:32:7
+   32|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:37:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:37:4
+   37|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:37:7
+   37|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:43:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:43:4
+   43|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:43:7
+   43|   (x: EO); // Error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:47:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:47:4
+   47|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:47:7
+   47|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:53:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:53:4
+   53|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:53:7
+   53|   (x: EO); // Error
+             ^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- error-access.js:9:1
 
 Cannot get `E.C` because property `C` is missing in enum `E` [1].
@@ -101,4 +203,4 @@ References:
 
 
 
-Found 6 errors
+Found 12 errors

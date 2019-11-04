@@ -88,7 +88,7 @@ let rec not_exists t =
         | BoolT (Some _)
         | SingletonStrT _
         | StrT (Literal _ | Truthy)
-        | ArrT _ | ObjT _ | InstanceT _ | FunT _ | SingletonNumT _
+        | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | SingletonNumT _
         | NumT (Literal _ | Truthy)
         | MixedT Mixed_truthy ) ) ->
     DefT (r, trust, EmptyT Bottom)
@@ -363,7 +363,7 @@ let object_ cx t =
         let reason = replace_desc_new_reason RUnion (reason_of_t t) in
         UnionT (reason, UnionRep.make (NullT.why r trust) obj [])
     end
-  | DefT (_, _, (ObjT _ | ArrT _ | NullT | InstanceT _))
+  | DefT (_, _, (ObjT _ | ArrT _ | NullT | InstanceT _ | EnumObjectT _))
   | AnyT _ ->
     t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
@@ -372,7 +372,7 @@ let object_ cx t =
 let not_object t =
   match t with
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
-  | DefT (_, trust, (ObjT _ | ArrT _ | NullT | InstanceT _)) ->
+  | DefT (_, trust, (ObjT _ | ArrT _ | NullT | InstanceT _ | EnumObjectT _)) ->
     DefT (reason_of_t t, trust, EmptyT Bottom)
   | _ -> t
 
