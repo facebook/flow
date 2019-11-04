@@ -612,7 +612,7 @@ module rec TypeTerm : sig
     | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * t_out
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
-    | OptionalChainT of reason * reason * (opt_use_t * t_out) Nel.t
+    | OptionalChainT of reason * reason * use_t * (* voids *) t_out
     | InvariantT of reason
     (* Function predicate uses *)
 
@@ -2525,7 +2525,7 @@ end = struct
     | ObjSealT (reason, _) -> reason
     | ObjTestProtoT (reason, _) -> reason
     | ObjTestT (reason, _, _) -> reason
-    | OptionalChainT (reason, _, _) -> reason
+    | OptionalChainT (reason, _, _, _) -> reason
     | OrT (reason, _, _) -> reason
     | PredicateT (_, t) -> reason_of_t t
     | ReactKitT (_, reason, _) -> reason
@@ -2695,7 +2695,7 @@ end = struct
     | ObjSealT (reason, t) -> ObjSealT (f reason, t)
     | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
     | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
-    | OptionalChainT (reason, lhs_reason, us) -> OptionalChainT (f reason, lhs_reason, us)
+    | OptionalChainT (reason, lhs_reason, us, vs) -> OptionalChainT (f reason, lhs_reason, us, vs)
     | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
     | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
     | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
@@ -2843,7 +2843,7 @@ end = struct
     | SentinelPropTestT (_, _, _, _, _, _)
     | IdxUnwrap (_, _)
     | IdxUnMaybeifyT (_, _)
-    | OptionalChainT (_, _, _)
+    | OptionalChainT (_, _, _, _)
     | InvariantT _
     | CallLatentPredT (_, _, _, _, _)
     | CallOpenPredT (_, _, _, _, _)

@@ -3493,500 +3493,765 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
    representation of the property chain. We can then walk that representation
    and emit constraints as we go along and omit the recursion.
 *)
-and subscript =
-  Ast.Expression.(
-    (* As long as we encounter AST nodes for optional subscript operations (which
-     require recursion on the LHS), prepend those nodes to acc and recursively
-     call `build_chain` on the LHS.
-
-     We also handle non-optional subscript operations here in order to have them
-     all in one place and so that the optional nodes can leverage the
-     non-optional pattern matching.
-  *)
-    let rec build_chain ~is_cond cx ((loc, e) as ex) acc =
-      let (opt_state, e') =
-        match e with
-        | OptionalCall
-            { OptionalCall.call = { Call.callee; targs = _; arguments = _ } as call; optional } ->
-          warn_or_ignore_optional_chaining optional cx loc;
-          begin
-            match callee with
-            | (_, Member _)
-            | (_, OptionalMember _) ->
-              Flow.add_output cx Error_message.(EOptionalChainingMethods loc)
-            | _ -> ()
-          end;
-          let opt_state =
-            if optional then
-              NewChain
-            else
-              ContinueChain
+and subscript ~is_cond cx ex =
+  let open Ast.Expression in
+  let factor_out_optional (loc, e) =
+    let (opt_state, e') =
+      match e with
+      | OptionalCall
+          { OptionalCall.call = { Call.callee; targs = _; arguments = _ } as call; optional } ->
+        warn_or_ignore_optional_chaining optional cx loc;
+        begin
+          match callee with
+          | (_, Member _)
+          | (_, OptionalMember _) ->
+            Flow.add_output cx Error_message.(EOptionalChainingMethods loc)
+          | _ -> ()
+        end;
+        let opt_state =
+          if optional then
+            NewChain
+          else
+            ContinueChain
+        in
+        (opt_state, Call call)
+      | OptionalMember { OptionalMember.member; optional } ->
+        warn_or_ignore_optional_chaining optional cx loc;
+        let opt_state =
+          if optional then
+            NewChain
+          else
+            ContinueChain
+        in
+        (opt_state, Member member)
+      | _ -> (NonOptional, e)
+    in
+    let call_ast call =
+      match opt_state with
+      | NewChain -> OptionalCall { OptionalCall.call; optional = true }
+      | ContinueChain -> OptionalCall { OptionalCall.call; optional = false }
+      | NonOptional -> Call call
+    in
+    let member_ast member =
+      match opt_state with
+      | NewChain -> OptionalMember { OptionalMember.member; optional = true }
+      | ContinueChain -> OptionalMember { OptionalMember.member; optional = false }
+      | NonOptional -> Member member
+    in
+    (e', opt_state, call_ast, member_ast)
+  in
+  let try_non_chain cx loc e ~call_ast ~member_ast =
+    (* Special cases where optional chaining doesn't occur *)
+    match e with
+    | Call
+        {
+          Call.callee =
+            ( callee_loc,
+              Identifier (id_loc, ({ Ast.Identifier.name = "require" as n; comments = _ } as name))
+            );
+          targs;
+          arguments;
+        }
+      when not (Env.local_scope_entry_exists n) ->
+      let targs =
+        Option.map targs (fun (args_loc, args) ->
+            (args_loc, snd (convert_tparam_instantiations cx SMap.empty args)))
+      in
+      let (lhs_t, arguments) =
+        match (targs, arguments) with
+        | ( None,
+            [
+              Expression
+                ( ( source_loc,
+                    Ast.Expression.Literal
+                      { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp );
+            ] ) ->
+          ( Import_export.require cx (source_loc, module_name) loc,
+            [Expression (expression cx lit_exp)] )
+        | ( None,
+            [
+              Expression
+                ( ( source_loc,
+                    TemplateLiteral
+                      {
+                        TemplateLiteral.quasis =
+                          [
+                            ( _,
+                              {
+                                TemplateLiteral.Element.value =
+                                  { TemplateLiteral.Element.cooked = module_name; _ };
+                                _;
+                              } );
+                          ];
+                        expressions = [];
+                      } ) as lit_exp );
+            ] ) ->
+          ( Import_export.require cx (source_loc, module_name) loc,
+            [Expression (expression cx lit_exp)] )
+        | (Some _, _) ->
+          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          Flow.add_output
+            cx
+            Error_message.(
+              ECallTypeArity
+                {
+                  call_loc = loc;
+                  is_new = false;
+                  reason_arity = Reason.(locationless_reason (RFunction RNormal));
+                  expected_arity = 0;
+                });
+          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
+        | _ ->
+          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
+          if not ignore_non_literals then
+            Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
+          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
+      in
+      let id_t = bogus_trust () |> MixedT.at callee_loc in
+      Some
+        ( (loc, lhs_t),
+          call_ast
+            {
+              Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
+              targs;
+              arguments;
+            } )
+    | Call
+        {
+          Call.callee =
+            ( callee_loc,
+              Identifier
+                (id_loc, ({ Ast.Identifier.name = "requireLazy" as n; comments = _ } as name)) );
+          targs;
+          arguments;
+        }
+      when not (Env.local_scope_entry_exists n) ->
+      let targs =
+        Option.map targs (fun (loc, args) ->
+            (loc, snd (convert_tparam_instantiations cx SMap.empty args)))
+      in
+      let (lhs_t, arguments) =
+        match (targs, arguments) with
+        | ( None,
+            [
+              Expression ((_, Array { Array.elements; comments = _ }) as elems_exp);
+              Expression callback_expr;
+            ] ) ->
+          (*
+           * From a static perspective (and as long as side-effects aren't
+           * considered in Flow), a requireLazy call can be viewed as an immediate
+           * call to require() for each of the modules, and then an immediate call
+           * to the requireLazy() callback with the results of each of the prior
+           * calls to require().
+           *
+           * TODO: requireLazy() is FB-specific. Let's find a way to either
+           *       generalize or toggle this only for the FB environment.
+           *)
+          let element_to_module_tvar tvars = function
+            | Some
+                (Expression
+                  ( source_loc,
+                    Ast.Expression.Literal
+                      { Ast.Literal.value = Ast.Literal.String module_name; _ } )) ->
+              let module_tvar = Import_export.require cx (source_loc, module_name) loc in
+              module_tvar :: tvars
+            | _ ->
+              Flow.add_output
+                cx
+                Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
+              tvars
           in
-          (opt_state, Call call)
-        | OptionalMember { OptionalMember.member; optional } ->
-          warn_or_ignore_optional_chaining optional cx loc;
-          let opt_state =
-            if optional then
-              NewChain
-            else
-              ContinueChain
+          let rev_module_tvars = List.fold_left element_to_module_tvar [] elements in
+          let module_tvars = List.rev_map (fun e -> Arg e) rev_module_tvars in
+          let (((_, callback_expr_t), _) as callback_ast) = expression cx callback_expr in
+          let reason = mk_reason (RCustom "requireLazy() callback") loc in
+          let use_op =
+            Op
+              (FunCall
+                 {
+                   op = mk_expression_reason ex;
+                   fn = mk_expression_reason callback_expr;
+                   args = [];
+                   local = true;
+                 })
           in
-          (opt_state, Member member)
-        | _ -> (NonOptional, e)
+          let _ = func_call cx reason ~use_op callback_expr_t None module_tvars in
+          ( NullT.at loc |> with_trust bogus_trust,
+            [Expression (expression cx elems_exp); Expression callback_ast] )
+        | (Some _, _) ->
+          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          Flow.add_output
+            cx
+            Error_message.(
+              ECallTypeArity
+                {
+                  call_loc = loc;
+                  is_new = false;
+                  reason_arity = Reason.(locationless_reason (RFunction RNormal));
+                  expected_arity = 0;
+                });
+          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
+        | _ ->
+          List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
+          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
+          (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
       in
-      let call_ast call =
-        match opt_state with
-        | NewChain -> OptionalCall { OptionalCall.call; optional = true }
-        | ContinueChain -> OptionalCall { OptionalCall.call; optional = false }
-        | NonOptional -> Call call
+      let id_t = bogus_trust () |> MixedT.at callee_loc in
+      Some
+        ( (loc, lhs_t),
+          call_ast
+            {
+              Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
+              targs;
+              arguments;
+            } )
+    | Call
+        {
+          Call.callee =
+            ( callee_loc,
+              Member
+                {
+                  Member._object =
+                    (_, Identifier (_, { Ast.Identifier.name = "Object"; comments = _ })) as obj;
+                  property =
+                    Member.PropertyIdentifier
+                      (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                } ) as expr;
+          targs;
+          arguments;
+        } ->
+      let (((_, obj_t), _) as obj_ast) = expression cx obj in
+      let (lhs_t, targs, arguments) =
+        static_method_call_Object cx loc callee_loc prop_loc expr obj_t name targs arguments
       in
-      let member_ast member =
-        match opt_state with
-        | NewChain -> OptionalMember { OptionalMember.member; optional = true }
-        | ContinueChain -> OptionalMember { OptionalMember.member; optional = false }
-        | NonOptional -> Member member
+      Some
+        ( (loc, lhs_t),
+          let t = bogus_trust () |> MixedT.at callee_loc in
+          call_ast
+            {
+              Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
+                ( (callee_loc, t),
+                  Member
+                    {
+                      Member._object = obj_ast;
+                      property = Member.PropertyIdentifier ((prop_loc, t), id);
+                    } );
+              targs;
+              arguments;
+            } )
+    | Call
+        {
+          Call.callee =
+            ( callee_loc,
+              Member
+                {
+                  Member._object = (super_loc, Super);
+                  property =
+                    Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+                } ) as callee;
+          targs;
+          arguments;
+        } ->
+      let reason = mk_reason (RMethodCall (Some name)) loc in
+      let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
+      let reason_prop = mk_reason (RProperty (Some name)) ploc in
+      let super = super_ cx super_loc in
+      let (targts, targs) = convert_targs cx targs in
+      let (argts, argument_asts) =
+        arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
       in
-      match e' with
-      | Call
-          {
-            Call.callee =
-              ( callee_loc,
-                Identifier
-                  (id_loc, ({ Ast.Identifier.name = "require" as n; comments = _ } as name)) );
-            targs;
-            arguments;
-          }
-        when not (Env.local_scope_entry_exists n) ->
-        let targs =
-          Option.map targs (fun (args_loc, args) ->
-              (args_loc, snd (convert_tparam_instantiations cx SMap.empty args)))
-        in
-        let (lhs_t, arguments) =
-          match (targs, arguments) with
-          | ( None,
-              [
-                Expression
-                  ( ( source_loc,
-                      Ast.Expression.Literal
-                        { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp );
-              ] ) ->
-            ( Import_export.require cx (source_loc, module_name) loc,
-              [Expression (expression cx lit_exp)] )
-          | ( None,
-              [
-                Expression
-                  ( ( source_loc,
-                      TemplateLiteral
-                        {
-                          TemplateLiteral.quasis =
-                            [
-                              ( _,
-                                {
-                                  TemplateLiteral.Element.value =
-                                    { TemplateLiteral.Element.cooked = module_name; _ };
-                                  _;
-                                } );
-                            ];
-                          expressions = [];
-                        } ) as lit_exp );
-              ] ) ->
-            ( Import_export.require cx (source_loc, module_name) loc,
-              [Expression (expression cx lit_exp)] )
-          | (Some _, _) ->
-            List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
-            Flow.add_output
-              cx
-              Error_message.(
-                ECallTypeArity
-                  {
-                    call_loc = loc;
-                    is_new = false;
-                    reason_arity = Reason.(locationless_reason (RFunction RNormal));
-                    expected_arity = 0;
-                  });
-            (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
-          | _ ->
-            List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
-            let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
-            if not ignore_non_literals then
-              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-            (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
-        in
-        let id_t = bogus_trust () |> MixedT.at callee_loc in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            call_ast
-              {
-                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-                targs;
-                arguments;
-              } ) )
-      | Call
-          {
-            Call.callee =
-              ( callee_loc,
-                Identifier
-                  (id_loc, ({ Ast.Identifier.name = "requireLazy" as n; comments = _ } as name)) );
-            targs;
-            arguments;
-          }
-        when not (Env.local_scope_entry_exists n) ->
-        let targs =
-          Option.map targs (fun (loc, args) ->
-              (loc, snd (convert_tparam_instantiations cx SMap.empty args)))
-        in
-        let (lhs_t, arguments) =
-          match (targs, arguments) with
-          | ( None,
-              [
-                Expression ((_, Array { Array.elements; comments = _ }) as elems_exp);
-                Expression callback_expr;
-              ] ) ->
-            (*
-             * From a static perspective (and as long as side-effects aren't
-             * considered in Flow), a requireLazy call can be viewed as an immediate
-             * call to require() for each of the modules, and then an immediate call
-             * to the requireLazy() callback with the results of each of the prior
-             * calls to require().
-             *
-             * TODO: requireLazy() is FB-specific. Let's find a way to either
-             *       generalize or toggle this only for the FB environment.
-             *)
-            let element_to_module_tvar tvars = function
-              | Some
-                  (Expression
-                    ( source_loc,
-                      Ast.Expression.Literal
-                        { Ast.Literal.value = Ast.Literal.String module_name; _ } )) ->
-                let module_tvar = Import_export.require cx (source_loc, module_name) loc in
-                module_tvar :: tvars
-              | _ ->
-                Flow.add_output
-                  cx
-                  Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-                tvars
+      Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
+      let prop_t = Tvar.mk cx reason_prop in
+      let lhs_t =
+        Tvar.mk_where cx reason (fun t ->
+            let funtype = mk_methodcalltype super targts argts t in
+            let use_op =
+              Op
+                (FunCallMethod
+                   {
+                     op = mk_expression_reason ex;
+                     fn = mk_expression_reason callee;
+                     prop = reason_prop;
+                     args = mk_initial_arguments_reason arguments;
+                     local = true;
+                   })
             in
-            let rev_module_tvars = List.fold_left element_to_module_tvar [] elements in
-            let module_tvars = List.rev_map (fun e -> Arg e) rev_module_tvars in
-            let (((_, callback_expr_t), _) as callback_ast) = expression cx callback_expr in
-            let reason = mk_reason (RCustom "requireLazy() callback") loc in
+            Flow.flow
+              cx
+              ( super,
+                MethodT
+                  (use_op, reason, reason_lookup, Named (reason_prop, name), funtype, Some prop_t)
+              ))
+      in
+      Some
+        ( (loc, lhs_t),
+          call_ast
+            {
+              Call.callee =
+                ( (callee_loc, prop_t),
+                  Member
+                    {
+                      Member._object = ((super_loc, super), Super);
+                      property = Member.PropertyIdentifier ((ploc, prop_t), id);
+                    } );
+              targs;
+              arguments = argument_asts;
+            } )
+    | Call
+        {
+          Call.callee = (lookup_loc, Member { Member._object; property }) as callee;
+          targs;
+          arguments;
+        } ->
+      (* method call *)
+      let (((_, ot), _) as _object) = expression cx _object in
+      let (targts, targs) = convert_targs cx targs in
+      let (argts, argument_asts) =
+        arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+      in
+      let ((prop_t, lhs_t), property) =
+        match property with
+        | Member.PropertyPrivateName
+            (prop_loc, (name_loc, ({ Ast.Identifier.name; comments = _ } as id))) ->
+          let reason_call = mk_reason (RMethodCall (Some name)) loc in
+          let use_op =
+            Op
+              (FunCallMethod
+                 {
+                   op = mk_expression_reason ex;
+                   fn = mk_expression_reason callee;
+                   prop = mk_reason (RProperty (Some name)) prop_loc;
+                   args = mk_initial_arguments_reason arguments;
+                   local = true;
+                 })
+          in
+          ( method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts,
+            Member.PropertyPrivateName (prop_loc, (name_loc, id)) )
+        | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
+          let reason_call = mk_reason (RMethodCall (Some name)) loc in
+          let use_op =
+            Op
+              (FunCallMethod
+                 {
+                   op = mk_expression_reason ex;
+                   fn = mk_expression_reason callee;
+                   prop = mk_reason (RProperty (Some name)) prop_loc;
+                   args = mk_initial_arguments_reason arguments;
+                   local = true;
+                 })
+          in
+          let ((prop_t, _) as x) =
+            method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts
+          in
+          (x, Member.PropertyIdentifier ((prop_loc, prop_t), id))
+        | Member.PropertyExpression expr ->
+          let reason_call = mk_reason (RMethodCall None) loc in
+          let reason_lookup = mk_reason (RProperty None) lookup_loc in
+          let (((_, elem_t), _) as expr) = expression cx expr in
+          ( ( bogus_trust () |> MixedT.at lookup_loc,
+              Tvar.mk_where cx reason_call (fun t ->
+                  let frame = Env.peek_frame () in
+                  let funtype = mk_methodcalltype ot targts argts t ~frame in
+                  Flow.flow cx (ot, CallElemT (reason_call, reason_lookup, elem_t, funtype))) ),
+            Member.PropertyExpression expr )
+      in
+      Some
+        ( (loc, lhs_t),
+          call_ast
+            {
+              Call.callee = ((lookup_loc, prop_t), Member { Member._object; property });
+              targs;
+              arguments = argument_asts;
+            } )
+    | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
+      let (targts, targs) = convert_targs cx targs in
+      let (argts, argument_asts) =
+        arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+      in
+      let reason = mk_reason (RFunctionCall RSuper) loc in
+      (* switch back env entries for this and super from undefined *)
+      define_internal cx reason "this";
+      define_internal cx reason "super";
+
+      let this = this_ cx loc in
+      let super = super_ cx super_loc in
+      let super_reason = reason_of_t super in
+      let lhs_t =
+        Tvar.mk_where cx reason (fun t ->
+            let funtype = mk_methodcalltype this targts argts t in
+            let propref = Named (super_reason, "constructor") in
             let use_op =
               Op
                 (FunCall
                    {
                      op = mk_expression_reason ex;
-                     fn = mk_expression_reason callback_expr;
-                     args = [];
-                     local = true;
-                   })
-            in
-            let _ = func_call cx reason ~use_op callback_expr_t None module_tvars in
-            ( NullT.at loc |> with_trust bogus_trust,
-              [Expression (expression cx elems_exp); Expression callback_ast] )
-          | (Some _, _) ->
-            List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
-            Flow.add_output
-              cx
-              Error_message.(
-                ECallTypeArity
-                  {
-                    call_loc = loc;
-                    is_new = false;
-                    reason_arity = Reason.(locationless_reason (RFunction RNormal));
-                    expected_arity = 0;
-                  });
-            (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
-          | _ ->
-            List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
-            Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-            (AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments)
-        in
-        let id_t = bogus_trust () |> MixedT.at callee_loc in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            call_ast
-              {
-                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-                targs;
-                arguments;
-              } ) )
-      | Call
-          {
-            Call.callee =
-              ( callee_loc,
-                Member
-                  {
-                    Member._object =
-                      (_, Identifier (_, { Ast.Identifier.name = "Object"; comments = _ })) as obj;
-                    property =
-                      Member.PropertyIdentifier
-                        (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                  } ) as expr;
-            targs;
-            arguments;
-          } ->
-        let (((_, obj_t), _) as obj_ast) = expression cx obj in
-        let (lhs_t, targs, arguments) =
-          static_method_call_Object cx loc callee_loc prop_loc expr obj_t name targs arguments
-        in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            let t = bogus_trust () |> MixedT.at callee_loc in
-            call_ast
-              {
-                Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
-                  ( (callee_loc, t),
-                    Member
-                      {
-                        Member._object = obj_ast;
-                        property = Member.PropertyIdentifier ((prop_loc, t), id);
-                      } );
-                targs;
-                arguments;
-              } ) )
-      | Call
-          {
-            Call.callee =
-              ( callee_loc,
-                Member
-                  {
-                    Member._object = (super_loc, Super);
-                    property =
-                      Member.PropertyIdentifier
-                        (ploc, ({ Ast.Identifier.name; comments = _ } as id));
-                  } ) as callee;
-            targs;
-            arguments;
-          } ->
-        let reason = mk_reason (RMethodCall (Some name)) loc in
-        let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
-        let reason_prop = mk_reason (RProperty (Some name)) ploc in
-        let super = super_ cx super_loc in
-        let (targts, targs) = convert_targs cx targs in
-        let (argts, argument_asts) =
-          arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-        in
-        Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
-        let prop_t = Tvar.mk cx reason_prop in
-        let lhs_t =
-          Tvar.mk_where cx reason (fun t ->
-              let funtype = mk_methodcalltype super targts argts t in
-              let use_op =
-                Op
-                  (FunCallMethod
-                     {
-                       op = mk_expression_reason ex;
-                       fn = mk_expression_reason callee;
-                       prop = reason_prop;
-                       args = mk_initial_arguments_reason arguments;
-                       local = true;
-                     })
-              in
-              Flow.flow
-                cx
-                ( super,
-                  MethodT
-                    (use_op, reason, reason_lookup, Named (reason_prop, name), funtype, Some prop_t)
-                ))
-        in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            call_ast
-              {
-                Call.callee =
-                  ( (callee_loc, prop_t),
-                    Member
-                      {
-                        Member._object = ((super_loc, super), Super);
-                        property = Member.PropertyIdentifier ((ploc, prop_t), id);
-                      } );
-                targs;
-                arguments = argument_asts;
-              } ) )
-      | Call
-          {
-            Call.callee = (lookup_loc, Member { Member._object; property }) as callee;
-            targs;
-            arguments;
-          } ->
-        (* method call *)
-        let (((_, ot), _) as _object) = expression cx _object in
-        let (targts, targs) = convert_targs cx targs in
-        let (argts, argument_asts) =
-          arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-        in
-        let ((prop_t, lhs_t), property) =
-          match property with
-          | Member.PropertyPrivateName
-              (prop_loc, (name_loc, ({ Ast.Identifier.name; comments = _ } as id))) ->
-            let reason_call = mk_reason (RMethodCall (Some name)) loc in
-            let use_op =
-              Op
-                (FunCallMethod
-                   {
-                     op = mk_expression_reason ex;
                      fn = mk_expression_reason callee;
-                     prop = mk_reason (RProperty (Some name)) prop_loc;
                      args = mk_initial_arguments_reason arguments;
                      local = true;
                    })
             in
-            ( method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts,
-              Member.PropertyPrivateName (prop_loc, (name_loc, id)) )
-          | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
-            let reason_call = mk_reason (RMethodCall (Some name)) loc in
-            let use_op =
-              Op
-                (FunCallMethod
-                   {
-                     op = mk_expression_reason ex;
-                     fn = mk_expression_reason callee;
-                     prop = mk_reason (RProperty (Some name)) prop_loc;
-                     args = mk_initial_arguments_reason arguments;
-                     local = true;
-                   })
-            in
-            let ((prop_t, _) as x) =
-              method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts
-            in
-            (x, Member.PropertyIdentifier ((prop_loc, prop_t), id))
-          | Member.PropertyExpression expr ->
-            let reason_call = mk_reason (RMethodCall None) loc in
-            let reason_lookup = mk_reason (RProperty None) lookup_loc in
-            let (((_, elem_t), _) as expr) = expression cx expr in
-            ( ( bogus_trust () |> MixedT.at lookup_loc,
-                Tvar.mk_where cx reason_call (fun t ->
-                    let frame = Env.peek_frame () in
-                    let funtype = mk_methodcalltype ot targts argts t ~frame in
-                    Flow.flow cx (ot, CallElemT (reason_call, reason_lookup, elem_t, funtype))) ),
-              Member.PropertyExpression expr )
-        in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            call_ast
-              {
-                Call.callee = ((lookup_loc, prop_t), Member { Member._object; property });
-                targs;
-                arguments = argument_asts;
-              } ) )
-      | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
-        let (targts, targs) = convert_targs cx targs in
-        let (argts, argument_asts) =
-          arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-        in
-        let reason = mk_reason (RFunctionCall RSuper) loc in
-        (* switch back env entries for this and super from undefined *)
-        define_internal cx reason "this";
-        define_internal cx reason "super";
-
-        let this = this_ cx loc in
-        let super = super_ cx super_loc in
-        let super_reason = reason_of_t super in
-        let lhs_t =
-          Tvar.mk_where cx reason (fun t ->
-              let funtype = mk_methodcalltype this targts argts t in
-              let propref = Named (super_reason, "constructor") in
-              let use_op =
-                Op
-                  (FunCall
-                     {
-                       op = mk_expression_reason ex;
-                       fn = mk_expression_reason callee;
-                       args = mk_initial_arguments_reason arguments;
-                       local = true;
-                     })
-              in
-              Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None)))
-        in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            call_ast
-              { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts } ) )
-      (******************************************)
-      (* See ~/www/static_upstream/core/ *)
-      | Call { Call.callee; targs; arguments } when is_call_to_invariant callee ->
-        (* TODO: require *)
-        let (((_, callee_t), _) as callee) = expression cx callee in
-        let targs =
-          Option.map targs (fun (loc, args) ->
-              (loc, snd (convert_tparam_instantiations cx SMap.empty args)))
-        in
-        (* NOTE: if an invariant expression throws abnormal control flow, the
+            Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None)))
+      in
+      Some
+        ( (loc, lhs_t),
+          call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts }
+        )
+    (******************************************)
+    (* See ~/www/static_upstream/core/ *)
+    | Call { Call.callee; targs; arguments } when is_call_to_invariant callee ->
+      (* TODO: require *)
+      let (((_, callee_t), _) as callee) = expression cx callee in
+      let targs =
+        Option.map targs (fun (loc, args) ->
+            (loc, snd (convert_tparam_instantiations cx SMap.empty args)))
+      in
+      (* NOTE: if an invariant expression throws abnormal control flow, the
             entire statement it was in is reconstructed in the typed AST as an
             expression statement containing just the invariant call. This should
             be ok for the most part since this is the most common way to call
             invariant. It's worth experimenting with whether people use invariant
             in other ways, and if not, restricting it to this pattern. *)
-        let arguments =
-          match (targs, arguments) with
-          | (None, []) ->
-            (* invariant() is treated like a throw *)
-            Env.reset_current_activation loc;
-            Abnormal.save Abnormal.Throw;
-            Abnormal.throw_expr_control_flow_exception
-              loc
-              ( (loc, VoidT.at loc |> with_trust bogus_trust),
-                Ast.Expression.Call { Call.callee; targs; arguments = [] } )
-              Abnormal.Throw
-          | ( None,
-              Expression
-                ( (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ })
-                as lit_exp )
-              :: arguments ) ->
-            (* invariant(false, ...) is treated like a throw *)
-            let arguments =
-              Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments
-            in
-            Env.reset_current_activation loc;
-            Abnormal.save Abnormal.Throw;
-            let lit_exp = expression cx lit_exp in
-            Abnormal.throw_expr_control_flow_exception
-              loc
-              ( (loc, VoidT.at loc |> with_trust bogus_trust),
-                Ast.Expression.Call
-                  { Call.callee; targs; arguments = Expression lit_exp :: arguments } )
-              Abnormal.Throw
-          | (None, Expression cond :: arguments) ->
-            let arguments =
-              Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments
-            in
-            let ((((_, cond_t), _) as cond), preds, _, xtypes) = predicates_of_condition cx cond in
-            let _ = Env.refine_with_preds cx loc preds xtypes in
-            let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
-            Flow.flow cx (cond_t, InvariantT reason);
-            Expression cond :: arguments
-          | (_, Spread _ :: _) ->
-            ignore (Base.List.map ~f:(expression_or_spread cx) arguments);
-            Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
-            List.map Tast_utils.error_mapper#expression_or_spread arguments
-          | (Some _, _) ->
-            ignore (Base.List.map ~f:(expression_or_spread cx) arguments);
-            Flow.add_output
-              cx
-              Error_message.(
-                ECallTypeArity
-                  {
-                    call_loc = loc;
-                    is_new = false;
-                    reason_arity = Reason.(locationless_reason (RFunction RNormal));
-                    expected_arity = 0;
-                  });
-            List.map Tast_utils.error_mapper#expression_or_spread arguments
+      let arguments =
+        match (targs, arguments) with
+        | (None, []) ->
+          (* invariant() is treated like a throw *)
+          Env.reset_current_activation loc;
+          Abnormal.save Abnormal.Throw;
+          Abnormal.throw_expr_control_flow_exception
+            loc
+            ( (loc, VoidT.at loc |> with_trust bogus_trust),
+              Ast.Expression.Call { Call.callee; targs; arguments = [] } )
+            Abnormal.Throw
+        | ( None,
+            Expression
+              ( (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ }) as
+              lit_exp )
+            :: arguments ) ->
+          (* invariant(false, ...) is treated like a throw *)
+          let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
+          Env.reset_current_activation loc;
+          Abnormal.save Abnormal.Throw;
+          let lit_exp = expression cx lit_exp in
+          Abnormal.throw_expr_control_flow_exception
+            loc
+            ( (loc, VoidT.at loc |> with_trust bogus_trust),
+              Ast.Expression.Call
+                { Call.callee; targs; arguments = Expression lit_exp :: arguments } )
+            Abnormal.Throw
+        | (None, Expression cond :: arguments) ->
+          let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
+          let ((((_, cond_t), _) as cond), preds, _, xtypes) = predicates_of_condition cx cond in
+          let _ = Env.refine_with_preds cx loc preds xtypes in
+          let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
+          Flow.flow cx (cond_t, InvariantT reason);
+          Expression cond :: arguments
+        | (_, Spread _ :: _) ->
+          ignore (Base.List.map ~f:(expression_or_spread cx) arguments);
+          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
+          List.map Tast_utils.error_mapper#expression_or_spread arguments
+        | (Some _, _) ->
+          ignore (Base.List.map ~f:(expression_or_spread cx) arguments);
+          Flow.add_output
+            cx
+            Error_message.(
+              ECallTypeArity
+                {
+                  call_loc = loc;
+                  is_new = false;
+                  reason_arity = Reason.(locationless_reason (RFunction RNormal));
+                  expected_arity = 0;
+                });
+          List.map Tast_utils.error_mapper#expression_or_spread arguments
+      in
+      let lhs_t = VoidT.at loc |> with_trust bogus_trust in
+      Some ((loc, lhs_t), call_ast { Call.callee; targs; arguments })
+    | Member
+        {
+          Member._object =
+            ( object_loc,
+              Identifier (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as id_name)) );
+          property =
+            Member.PropertyIdentifier
+              (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as exports_name));
+        }
+      when not (Env.local_scope_entry_exists "module") ->
+      let lhs_t = Import_export.get_module_exports cx loc in
+      let module_reason = mk_reason (RCustom "module") object_loc in
+      let module_t = MixedT.why module_reason |> with_trust bogus_trust in
+      let _object =
+        ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), id_name))
+      in
+      Some
+        ( (loc, lhs_t),
+          member_ast
+            { Member._object; property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name) }
+        )
+    | Member
+        {
+          Member._object =
+            ( object_loc,
+              Identifier
+                ( id_loc,
+                  { Ast.Identifier.name = "ReactGraphQL" | "ReactGraphQLLegacy"; comments = _ } )
+            );
+          property =
+            Member.PropertyIdentifier
+              (ploc, ({ Ast.Identifier.name = "Mixin"; comments = _ } as name));
+        } ->
+      let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
+      let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
+      Some
+        ( (loc, lhs_t),
+          (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
+          let t = AnyT.at Untyped object_loc in
+          let property = Member.PropertyIdentifier ((ploc, t), name) in
+          member_ast
+            { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } )
+    | Member
+        {
+          Member._object = (super_loc, Super);
+          property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+        } ->
+      let super = super_ cx super_loc in
+      let expr_reason = mk_reason (RProperty (Some name)) loc in
+      let lhs_t =
+        match Refinement.get cx (loc, e) loc with
+        | Some t -> t
+        | None ->
+          let prop_reason = mk_reason (RProperty (Some name)) ploc in
+          if Type_inference_hooks_js.dispatch_member_hook cx name ploc super then
+            Unsoundness.at InferenceHooks ploc
+          else
+            Tvar.mk_where cx expr_reason (fun tvar ->
+                let use_op = Op (GetProperty (mk_expression_reason ex)) in
+                Flow.flow
+                  cx
+                  (super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)))
+      in
+      let property = Member.PropertyIdentifier ((ploc, super), id) in
+      Some ((loc, lhs_t), member_ast { Member._object = ((super_loc, super), Super); property })
+    | _ -> None
+  in
+  let rec recur_chain ~is_cond cx ((loc, e) as ex) =
+    let (e', opt_state, call_ast, member_ast) = factor_out_optional ex in
+    (*
+      When traversing an optional chain, we need to track the "successful" types
+      (if all optional chain operators in the sequence filtered out null/void),
+      the nullish results if any, from the possibility of the optional chain
+      short-circuiting (there may be multiple sources of null, from multiple
+      chain operators in the chain) and the "actual"/final type of the overall
+      expression, which can be seen as a union of the successful type and all
+      possible nullish failure types.
+
+      The recur_chain function therefore returns a 3-tuple:
+        * T1: the type of the expression modulo optional chaining--i.e., the
+          type in the case where any optional chain tests succeed,
+        * T2: optionally, a type representing the union of all optional chain
+          *failures*, if they may exist
+        * exp: the typed AST expression, where the type of the node is the
+          "actual" type of the expression, including both chain failures and
+          chain successes.
+
+      So, if `a: ?{b?: {c: number}}`, and the checked expression is `a?.b?.c`,
+        then the output would be (T1, T2, T3, exp), where:
+        * T1 = number
+        * T2 = void, both from `a: ?{...}` and from `a: {b? : {...}}`
+        * exp = ast for `a?.b?.c` with type T1 U T2
+
+     Below are several helper functions for setting up this tuple in the
+     presence of chaining.
+     *)
+    let handle_chaining object_ ~get_result ~test_hooks ~get_opt_use ~get_reason =
+      match opt_state with
+      | NonOptional ->
+        (* Proceeding as normal: no need to worry about optionality, so T2 from
+          above is None. We're guaranteed that there are no optional chain
+          operators below this point in the chain, so we can call expression_
+          rather than recur_chain. *)
+        let (((_, obj_t), _) as object_ast) = expression cx object_ in
+        let reason = get_reason obj_t in
+        let lhs_t =
+          match test_hooks obj_t with
+          | Some hit -> hit
+          | None -> get_result reason obj_t
         in
-        let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-        (ex, lhs_t, acc, ((loc, lhs_t), call_ast { Call.callee; targs; arguments }))
+        (lhs_t, None, lhs_t, object_ast)
+      | NewChain ->
+        let (chain_t, voided_t, object_ast) = recur_chain ~is_cond:false cx object_ in
+        (* We've encountered an optional chaining operator.
+           We need to flow the "success" type of object_ into a OptionalChainT
+           type, which will "filter out" VoidT and NullT from the type of
+           object_ and flow them into `voided_out`, and then flow any non-void
+           type into a use_t created by applying an opt_use_t (representing the
+           operation that will occur on the upper bound) to a new "output" tvar.
+
+           This might not be the first optional chain operator in the chain, so
+           we need to take chain_t, which is equivalent to T1 above and
+           represents the result if any previous operator succeeded--this is the
+           type that we want to flow into the OptionalChainT, because if the
+           previous operator failed we wouldn't reach this point in the chain in
+           the first place. We also take voided_t, equivalent to T2 above and
+           representing any previous chain short-circuits, and it will
+           contribute to the failure/short-circuit output of this function,
+           `voided_out`.
+        *)
+        let reason = get_reason chain_t in
+        let lhs_reason = mk_expression_reason object_ in
+        let chain_reason = mk_reason ROptionalChain loc in
+        let mem_t =
+          match test_hooks chain_t with
+          | Some hit -> hit
+          | None -> Tvar.mk cx reason
+        in
+        let voided_out = Tvar.mk cx reason in
+        Flow.flow
+          cx
+          ( chain_t,
+            OptionalChainT
+              (chain_reason, lhs_reason, apply_opt_use (get_opt_use reason) mem_t, voided_out) );
+        Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, voided_out)) voided_t;
+        let lhs_t =
+          Tvar.mk_where cx reason (fun t ->
+              Flow.flow_t cx (mem_t, t);
+              Flow.flow_t cx (voided_out, t))
+        in
+        (mem_t, Some voided_out, lhs_t, object_ast)
+      | ContinueChain ->
+        let (chain_t, voided_t, object_ast) = recur_chain ~is_cond cx object_ in
+        (* We're looking at a non-optional call or member access, but one where
+           deeper in the chain there was an optional chaining operator. We don't
+           need to do anything special locally, but we do need to remember that
+           we might have short-circuited before getting here--that's the
+           voided_t parameter. We'll flow that type into the type of the overall
+           expression to account for that possibility.
+        *)
+        let reason = get_reason chain_t in
+        let res_t =
+          match test_hooks chain_t with
+          | Some hit -> hit
+          | None -> get_result reason chain_t
+        in
+        let lhs_t =
+          Tvar.mk_where cx reason (fun t ->
+              Flow.flow_t cx (res_t, t);
+              Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t)
+        in
+        (res_t, voided_t, lhs_t, object_ast)
+    in
+    let maybe_refine () =
+      match opt_state with
+      | NonOptional -> Refinement.get cx (loc, e) loc
+      | _ -> None
+    in
+    match try_non_chain cx loc e' ~call_ast ~member_ast with
+    | Some (((_, lhs_t), _) as res) ->
+      (* Nothing to do with respect to optional chaining, because we're in a
+         case where chaining isn't allowed. *)
+      (lhs_t, None, res)
+    | None ->
+      (match e' with
+      (* e1[e2] *)
+      | Member { Member._object; property = Member.PropertyExpression index } ->
+        let reason = mk_reason (RProperty None) loc in
+        let (((_, tind), _) as index) = expression cx index in
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        let opt_use = OptGetElemT (use_op, reason, tind) in
+        let get_mem_t _ obj_t =
+          match maybe_refine () with
+          | Some t -> t
+          | None ->
+            Tvar.mk_where cx reason (fun t ->
+                let use = apply_opt_use opt_use t in
+                Flow.flow cx (obj_t, use))
+        in
+        let test_hooks = Fn.const None in
+        let (filtered_out, voided_out, lhs_t, object_ast) =
+          handle_chaining
+            _object
+            ~get_result:get_mem_t
+            ~test_hooks
+            ~get_opt_use:(Fn.const opt_use)
+            ~get_reason:(Fn.const reason)
+        in
+        ( filtered_out,
+          voided_out,
+          ( (loc, lhs_t),
+            member_ast { Member._object = object_ast; property = Member.PropertyExpression index }
+          ) )
+      (* e.l *)
+      | Member
+          {
+            Member._object;
+            property =
+              Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+          } ->
+        let expr_reason = mk_expression_reason ex in
+        let prop_reason = mk_reason (RProperty (Some name)) ploc in
+        let use_op = Op (GetProperty expr_reason) in
+        let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
+        let test_hooks obj_t =
+          if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
+            Some (Unsoundness.at InferenceHooks ploc)
+          else
+            None
+        in
+        let get_mem_t _ obj_t =
+          match maybe_refine () with
+          | Some t -> t
+          | None ->
+            Tvar.mk_where cx expr_reason (fun t ->
+                let use = apply_opt_use opt_use t in
+                Flow.flow cx (obj_t, use))
+        in
+        let (filtered_out, voided_out, lhs_t, object_ast) =
+          handle_chaining
+            _object
+            ~get_result:get_mem_t
+            ~test_hooks
+            ~get_opt_use:(Fn.const opt_use)
+            ~get_reason:(Fn.const expr_reason)
+        in
+        let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
+        ( filtered_out,
+          voided_out,
+          ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
+      | Member
+          {
+            Member._object;
+            property =
+              Member.PropertyPrivateName (ploc, (_, { Ast.Identifier.name; comments = _ })) as
+              property;
+          } ->
+        let expr_reason = mk_reason (RPrivateProperty name) loc in
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        let opt_use = get_private_field_opt_use expr_reason ~use_op name in
+        let test_hooks obj_t =
+          if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
+            Some (Unsoundness.at InferenceHooks ploc)
+          else
+            None
+        in
+        let get_mem_t _ obj_t =
+          match maybe_refine () with
+          | Some t -> t
+          | None ->
+            Tvar.mk_where cx expr_reason (fun t ->
+                let use = apply_opt_use opt_use t in
+                Flow.flow cx (obj_t, use))
+        in
+        let (filtered_out, voided_out, lhs_t, object_ast) =
+          handle_chaining
+            _object
+            ~get_result:get_mem_t
+            ~test_hooks
+            ~get_opt_use:(Fn.const opt_use)
+            ~get_reason:(Fn.const expr_reason)
+        in
+        ( filtered_out,
+          voided_out,
+          ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
+      (* e1(e2...) *)
       | Call { Call.callee; targs; arguments } ->
         begin
           match callee with
@@ -4009,291 +4274,24 @@ and subscript =
                })
         in
         let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
-        begin
-          match opt_state with
-          | NonOptional ->
-            let (((_, f), _) as callee) = expression cx callee in
-            let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
-            let lhs_t = func_call cx reason ~use_op f targts argts in
-            (ex, lhs_t, acc, ((loc, lhs_t), exp callee))
-          | NewChain ->
-            let (((_, lhs_t), _) as calleee) = expression cx callee in
-            let reason = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
-            let tout = Tvar.mk cx reason in
-            let opt_use = func_call_opt_use reason ~use_op targts argts in
-            (callee, lhs_t, ref (loc, opt_use, tout) :: acc, ((loc, tout), exp calleee))
-          | ContinueChain ->
-            (* Hacky reason handling *)
-            let reason = mk_reason ROptionalChain loc in
-            let tout = Tvar.mk cx reason in
-            let opt_use = func_call_opt_use reason ~use_op targts argts in
-            let step = ref (loc, opt_use, tout) in
-            let (lhs, lhs_t, chain, (((_, f), _) as callee)) =
-              build_chain ~is_cond cx callee (step :: acc)
-            in
-            let reason = replace_desc_reason (RFunctionCall (desc_of_t f)) reason in
-            let tout = mod_reason_of_t (Fn.const reason) tout in
-            let opt_use = mod_reason_of_opt_use_t (Fn.const reason) opt_use in
-            step := (loc, opt_use, tout);
-            (lhs, lhs_t, chain, ((loc, tout), exp callee))
-        end
-      | Member { Member._object; property = Member.PropertyExpression index } ->
-        let reason = mk_reason (RProperty None) loc in
-        let (((_, tind), _) as index) = expression cx index in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let opt_use = OptGetElemT (use_op, reason, tind) in
-        begin
-          match opt_state with
-          | NonOptional ->
-            let (((_, tobj), _) as _object_ast) = expression cx _object in
-            let lhs_t =
-              match Refinement.get cx (loc, e) loc with
-              | Some t -> t
-              | None ->
-                Tvar.mk_where cx reason (fun t ->
-                    let use = apply_opt_use opt_use t in
-                    Flow.flow cx (tobj, use))
-            in
-            ( ex,
-              lhs_t,
-              acc,
-              ( (loc, lhs_t),
-                member_ast
-                  { Member._object = _object_ast; property = Member.PropertyExpression index } ) )
-          | NewChain ->
-            let tout = Tvar.mk cx reason in
-            let (((_, lhs_t), _) as _object_ast) = expression cx _object in
-            ( _object,
-              lhs_t,
-              ref (loc, opt_use, tout) :: acc,
-              ( (loc, tout),
-                member_ast
-                  { Member._object = _object_ast; property = Member.PropertyExpression index } ) )
-          | ContinueChain ->
-            let tout = Tvar.mk cx reason in
-            let (lhs, lhs_t, chain, _object_ast) =
-              build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc)
-            in
-            ( lhs,
-              lhs_t,
-              chain,
-              ( (loc, tout),
-                member_ast
-                  { Member._object = _object_ast; property = Member.PropertyExpression index } ) )
-        end
-      | Member
-          {
-            Member._object =
-              ( object_loc,
-                Identifier (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as id_name))
-              );
-            property =
-              Member.PropertyIdentifier
-                (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as exports_name));
-          }
-        when not (Env.local_scope_entry_exists "module") ->
-        let lhs_t = Import_export.get_module_exports cx loc in
-        let module_reason = mk_reason (RCustom "module") object_loc in
-        let module_t = MixedT.why module_reason |> with_trust bogus_trust in
-        let _object =
-          ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), id_name))
+        let get_opt_use reason = func_call_opt_use reason ~use_op targts argts in
+        let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
+        let get_result reason f =
+          Tvar.mk_where cx reason (fun t ->
+              let use = apply_opt_use (get_opt_use reason) t in
+              Flow.flow cx (f, use))
         in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            member_ast
-              {
-                Member._object;
-                property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name);
-              } ) )
-      | Member
-          {
-            Member._object =
-              ( object_loc,
-                Identifier
-                  ( id_loc,
-                    { Ast.Identifier.name = "ReactGraphQL" | "ReactGraphQLLegacy"; comments = _ }
-                  ) );
-            property =
-              Member.PropertyIdentifier
-                (ploc, ({ Ast.Identifier.name = "Mixin"; comments = _ } as name));
-          } ->
-        let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
-        let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
-        ( ex,
-          lhs_t,
-          acc,
-          ( (loc, lhs_t),
-            (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
-            let t = AnyT.at Untyped object_loc in
-            let property = Member.PropertyIdentifier ((ploc, t), name) in
-            member_ast
-              { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } ) )
-      | Member
-          {
-            Member._object = (super_loc, Super);
-            property =
-              Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
-          } ->
-        let super = super_ cx super_loc in
-        let expr_reason = mk_reason (RProperty (Some name)) loc in
-        let lhs_t =
-          match Refinement.get cx (loc, e) loc with
-          | Some t -> t
-          | None ->
-            let prop_reason = mk_reason (RProperty (Some name)) ploc in
-            if Type_inference_hooks_js.dispatch_member_hook cx name ploc super then
-              Unsoundness.at InferenceHooks ploc
-            else
-              Tvar.mk_where cx expr_reason (fun tvar ->
-                  let use_op = Op (GetProperty (mk_expression_reason ex)) in
-                  Flow.flow
-                    cx
-                    (super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)))
+        let test_hooks = Fn.const None in
+        let (filtered_out, voided_out, lhs_t, object_ast) =
+          handle_chaining callee ~get_result ~test_hooks ~get_opt_use ~get_reason
         in
-        let property = Member.PropertyIdentifier ((ploc, super), id) in
-        ( ex,
-          lhs_t,
-          acc,
-          ((loc, lhs_t), member_ast { Member._object = ((super_loc, super), Super); property }) )
-      | Member
-          {
-            Member._object;
-            property =
-              Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
-          } ->
-        let expr_reason = mk_expression_reason ex in
-        let prop_reason = mk_reason (RProperty (Some name)) ploc in
-        let use_op = Op (GetProperty expr_reason) in
-        begin
-          match opt_state with
-          | NonOptional ->
-            let (((_, tobj), _) as _object_ast) = expression cx _object in
-            let lhs_t =
-              if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj then
-                Unsoundness.at InferenceHooks ploc
-              else
-                match Refinement.get cx (loc, e) loc with
-                | Some t -> t
-                | None -> get_prop ~is_cond cx expr_reason ~use_op tobj (prop_reason, name)
-            in
-            let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
-            (ex, lhs_t, acc, ((loc, lhs_t), member_ast { Member._object = _object_ast; property }))
-          | NewChain ->
-            let (((_, lhs_t), _) as _object_ast) = expression cx _object in
-            let tout =
-              if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t then
-                Unsoundness.at InferenceHooks ploc
-              else
-                Tvar.mk cx expr_reason
-            in
-            let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
-            let property = Member.PropertyIdentifier ((ploc, tout), id) in
-            ( _object,
-              lhs_t,
-              ref (loc, opt_use, tout) :: acc,
-              ((loc, tout), member_ast { Member._object = _object_ast; property }) )
-          | ContinueChain ->
-            let tout = bogus_trust () |> MixedT.at ploc in
-            let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
-            let step = ref (loc, opt_use, tout) in
-            let (lhs, lhs_t, chain, (((_, tobj), _) as _object_ast)) =
-              build_chain ~is_cond cx _object (step :: acc)
-            in
-            let tout =
-              if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj then
-                tout
-              else
-                let tout = Tvar.mk cx expr_reason in
-                step := (loc, opt_use, tout);
-                tout
-            in
-            let property = Member.PropertyIdentifier ((ploc, tout), id) in
-            ( lhs,
-              lhs_t,
-              chain,
-              ((loc, tout), member_ast { Member._object = _object_ast; property }) )
-        end
-      | Member
-          {
-            Member._object;
-            property =
-              Member.PropertyPrivateName (ploc, (_, { Ast.Identifier.name; comments = _ })) as
-              property;
-          } ->
-        let expr_reason = mk_reason (RPrivateProperty name) loc in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        begin
-          match opt_state with
-          | NonOptional ->
-            let (((_, tobj), _) as _object_ast) = expression cx _object in
-            let lhs_t =
-              match Refinement.get cx (loc, e) loc with
-              | Some t -> t
-              | None ->
-                if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj then
-                  Unsoundness.at InferenceHooks ploc
-                else
-                  get_private_field cx expr_reason ~use_op tobj name
-            in
-            (ex, lhs_t, acc, ((loc, lhs_t), member_ast { Member._object = _object_ast; property }))
-          | NewChain ->
-            let (((_, lhs_t), _) as _object_ast) = expression cx _object in
-            let tout =
-              if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t then
-                Unsoundness.at InferenceHooks ploc
-              else
-                Tvar.mk cx expr_reason
-            in
-            let opt_use = get_private_field_opt_use expr_reason ~use_op name in
-            ( _object,
-              lhs_t,
-              ref (loc, opt_use, tout) :: acc,
-              ((loc, tout), member_ast { Member._object = _object_ast; property }) )
-          | ContinueChain ->
-            let tout = bogus_trust () |> MixedT.at ploc in
-            let opt_use = get_private_field_opt_use expr_reason ~use_op name in
-            let step = ref (loc, opt_use, tout) in
-            let (lhs, lhs_t, chain, (((_, tobj), _) as _object_ast)) =
-              build_chain ~is_cond cx _object (step :: acc)
-            in
-            let tout =
-              if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj then
-                tout
-              else
-                let tout = Tvar.mk cx expr_reason in
-                step := (loc, opt_use, tout);
-                tout
-            in
-            ( lhs,
-              lhs_t,
-              chain,
-              ((loc, tout), member_ast { Member._object = _object_ast; property }) )
-        end
+        (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
       | _ ->
-        let (((_, lhs_t), _) as ast) = expression cx ex in
-        (ex, lhs_t, acc, ast)
-    in
-    fun ~is_cond cx ex ->
-      let (lhs, lhs_t, chain, ast) = build_chain ~is_cond cx ex [] in
-      begin
-        match chain with
-        | [] -> ()
-        | hd :: tl ->
-          let (hd_loc, _, _) = !hd in
-          let chain =
-            Nel.map
-              (fun step ->
-                let (_, use, t) = !step in
-                (use, t))
-              (hd, tl)
-          in
-          let reason = mk_reason ROptionalChain hd_loc in
-          let lhs_reason = mk_expression_reason lhs in
-          Flow.flow cx (lhs_t, OptionalChainT (reason, lhs_reason, chain))
-      end;
-      ast)
+        let (((_, t), _) as res) = expression cx ex in
+        (t, None, res))
+  in
+  let (_, _, ast) = recur_chain ~is_cond cx ex in
+  ast
 
 (* Handles function calls that appear in conditional contexts. The main
    distinction from the case handled in `expression_` is that we also return

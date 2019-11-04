@@ -1942,15 +1942,13 @@ struct
         (*********************)
         (* optional chaining *)
         (*********************)
-        | (DefT (r, _, (NullT | VoidT)), OptionalChainT (r', lhs_reason, chain)) ->
+        | (DefT (r, _, (NullT | VoidT)), OptionalChainT (r', lhs_reason, _, void_out)) ->
           Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:true;
-          Nel.iter
-            (fun (_, t_out) -> rec_flow_t cx trace (InternalT (OptionalChainVoidT r), t_out))
-            chain
-        | (InternalT (OptionalChainVoidT _), OptionalChainT (r', lhs_reason, chain)) ->
+          rec_flow_t cx trace (InternalT (OptionalChainVoidT r), void_out)
+        | (InternalT (OptionalChainVoidT _), OptionalChainT (r', lhs_reason, _, void_out)) ->
           Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:false;
-          Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (l, t_out)) chain
-        | (_, OptionalChainT (r', lhs_reason, chain))
+          rec_flow_t cx trace (l, void_out)
+        | (_, OptionalChainT (r', lhs_reason, t_out, _))
           when match l with
                | MaybeT _
                | OptionalT _
@@ -1968,14 +1966,7 @@ struct
               | AnyT _ ->
                 true
               | _ -> false);
-          let lhs_t = ref l in
-          Nel.iter
-            (fun (opt_use, t_out) ->
-              let t_out' = Tvar.mk cx (reason_of_t t_out) in
-              rec_flow cx trace (!lhs_t, apply_opt_use opt_use t_out');
-              rec_flow_t cx trace (t_out', t_out);
-              lhs_t := t_out')
-            chain
+          rec_flow cx trace (l, t_out)
         | (InternalT (OptionalChainVoidT r), u) ->
           rec_flow cx trace (DefT (r, bogus_trust (), VoidT), u)
         (*************)

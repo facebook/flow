@@ -1310,16 +1310,13 @@ class virtual ['a] t_with_uses =
           t
         else
           IdxUnMaybeifyT (r, t'')
-      | OptionalChainT (r, lhs_r, uses) ->
-        let uses' =
-          Nel.map
-            (fun (use, tout) -> (self#opt_use_type cx map_cx use, self#type_ cx map_cx tout))
-            uses
-        in
-        if uses' == uses then
+      | OptionalChainT (r1, r2, t_out, void_out) ->
+        let t_out' = self#use_type cx map_cx t_out in
+        let void_out' = self#type_ cx map_cx void_out in
+        if t_out' == t_out && void_out' == void_out then
           t
         else
-          OptionalChainT (r, lhs_r, uses')
+          OptionalChainT (r1, r2, t_out', void_out')
       | InvariantT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in

@@ -511,11 +511,9 @@ class ['a] t =
       | IdxUnwrap (_, tout)
       | IdxUnMaybeifyT (_, tout) ->
         self#type_ cx pole_TODO acc tout
-      | OptionalChainT (_, _, uses) ->
-        Nel.fold_left
-          (fun acc (use, tout) -> self#use_type_ cx acc (apply_opt_use use tout))
-          acc
-          uses
+      | OptionalChainT (_, _, tout, void_out) ->
+        let acc = self#use_type_ cx acc tout in
+        self#type_ cx pole_TODO acc void_out
       | InvariantT _ -> acc
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->
