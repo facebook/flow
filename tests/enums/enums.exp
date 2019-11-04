@@ -1,3 +1,56 @@
+Error ---------------------------------------------------------------------------------------------- error-access.js:9:1
+
+Cannot get `E.C` because property `C` is missing in enum `E` [1].
+
+   error-access.js:9:1
+   9| E.C;
+      ^^^
+
+References:
+   error-access.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- error-coercion.js:9:19
+
+Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2].
+
+   error-coercion.js:9:19
+   9| const a: string = E.A;
+                        ^^^
+
+References:
+   error-coercion.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+   error-coercion.js:9:10
+   9| const a: string = E.A;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:12:14
+
+Cannot assign `'B'` to `b` because string [1] is incompatible with `E` [2].
+
+   error-coercion.js:12:14
+   12| const b: E = 'B';
+                    ^^^ [1]
+
+References:
+   error-coercion.js:12:10
+   12| const b: E = 'B';
+                ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- error-reassign.js:4:1
 
 Cannot reassign enum `E` [1].
@@ -12,23 +65,5 @@ References:
            ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- valid.js:8:14
 
-Cannot get `E.A` because property `A` is missing in enum `E` [1].
-
-   valid.js:8:14
-   8| const a: E = E.A;
-                   ^^^
-
-References:
-   valid.js:3:1
-      v-------
-   3| enum E {
-   4|   A,
-   5|   B,
-   6| }
-      ^ [1]
-
-
-
-Found 2 errors
+Found 4 errors

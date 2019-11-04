@@ -6005,6 +6005,23 @@ struct
           let statics = Tvar.mk cx reason in
           rec_flow cx trace (instance, GetStaticsT (reason, statics));
           rec_flow cx trace (statics, u)
+        (*********)
+        (* enums *)
+        (*********)
+        | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
+            GetPropT (use_op, _, Named (reason_prop, name), tout) ) ->
+          if not @@ SSet.mem name members then
+            (* TODO(T54652940): Add custom error for incorrect member access *)
+            add_output
+              cx
+              ~trace
+              (Error_message.EPropNotFound (Some name, (reason_prop, enum_reason), use_op));
+          let enum_type = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+          rec_flow_t cx trace (enum_type, tout)
+        | ( DefT (_, _, EnumT { enum_id = id1; _ }),
+            UseT (_, DefT (_, _, EnumT { enum_id = id2; _ })) )
+          when ALoc.concretize_equal (Context.aloc_tables cx) id1 id2 ->
+          ()
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
        Such tests are always non-strict, in that we don't immediately report an
