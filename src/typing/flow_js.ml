@@ -4495,6 +4495,10 @@ struct
           rec_flow cx trace (it, BecomeT (r, t))
         | (DefT (_, _, TypeT (_, l)), UseT (use_op, DefT (_, _, TypeT (_, u)))) ->
           rec_unify cx trace ~use_op ~unify_any:true l u
+        | (DefT (lreason, trust, EnumObjectT enum), UseT (use_op, DefT (_r, _, TypeT (_, t)))) ->
+          (* an enum object value annotation becomes the enum type *)
+          let enum_type = mk_enum_type ~loc:(aloc_of_reason lreason) ~trust enum in
+          rec_unify cx trace ~use_op enum_type t
         (* non-class/function values used in annotations are errors *)
         | (_, UseT (_, DefT (reason_use, _, TypeT _))) ->
           add_output cx ~trace Error_message.(EValueUsedAsType { reason_use })
@@ -7956,6 +7960,7 @@ struct
 
   and is_type = function
     | DefT (_, _, ClassT _)
+    | DefT (_, _, EnumObjectT _)
     | ThisClassT (_, _)
     | DefT (_, _, TypeT _)
     | AnyT _ ->

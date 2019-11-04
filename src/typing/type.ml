@@ -3955,6 +3955,11 @@ let apply_opt_use opt_use t_out =
   | OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
 
+let mk_enum_type ~loc ~trust enum =
+  let { enum_name; _ } = enum in
+  let reason = mk_reason (RType enum_name) loc in
+  DefT (reason, trust, EnumT enum)
+
 module TypeParams : sig
   val to_list : typeparams -> typeparam list
 
