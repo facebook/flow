@@ -43,11 +43,12 @@ end = struct
     Sys.os_type <> "Win32" && Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
 
   let print to_print =
-    if should_color then
+    ( if should_color then
       C.cprint to_print
     else
       let strings = Base.List.map ~f:snd to_print in
-      List.iter (Printf.printf "%s") strings
+      List.iter (Printf.printf "%s") strings );
+    flush stdout
 
   type case_expectation =
     | Module of string
