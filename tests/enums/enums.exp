@@ -1,3 +1,38 @@
+Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
+
+Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2].
+
+   enum-object.js:16:2
+   16| (F: EO); // Error: types are incompatible
+        ^
+
+References:
+   enum-object.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [1]
+   enum-object.js:16:5
+   16| (F: EO); // Error: types are incompatible
+           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:19:1
+
+Cannot reference type `EO` [1] from a value position.
+
+   enum-object.js:19:1
+   19| EO.A;
+       ^^
+
+References:
+   enum-object.js:14:6
+   14| type EO = typeof E;
+            ^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- error-access.js:9:1
 
 Cannot get `E.C` because property `C` is missing in enum `E` [1].
@@ -66,4 +101,4 @@ References:
 
 
 
-Found 4 errors
+Found 6 errors

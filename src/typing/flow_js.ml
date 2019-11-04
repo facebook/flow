@@ -6008,6 +6008,10 @@ struct
         (*********)
         (* enums *)
         (*********)
+        | ( DefT (_, _, EnumObjectT { enum_id = id1; _ }),
+            UseT (_, DefT (_, _, EnumObjectT { enum_id = id2; _ })) )
+          when ALoc.concretize_equal (Context.aloc_tables cx) id1 id2 ->
+          ()
         | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
             GetPropT (use_op, _, Named (reason_prop, name), tout) ) ->
           if not @@ SSet.mem name members then
