@@ -2,6 +2,7 @@
   (name flow_common_lwt)
   (wrapped false)
   (libraries
+    base
     imported_core
     lwt
     lwt.unix
