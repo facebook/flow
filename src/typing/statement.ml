@@ -1035,6 +1035,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let r = DescFormat.type_reason name name_loc in
       let (typeparams, typeparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
       let (underlying_t, impltype_ast) = Anno.convert_opt cx typeparams_map impltype in
+      Option.iter underlying_t ~f:(Flow.check_polarity cx Polarity.Positive);
+      let (super_t, supertype_ast) = Anno.convert_opt cx typeparams_map supertype in
+      Option.iter super_t ~f:(Flow.check_polarity cx Polarity.Positive);
       let opaque_type_args =
         Base.List.map
           ~f:(fun { name; reason; polarity; _ } ->
@@ -1042,12 +1045,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             (name, reason, t, polarity))
           (TypeParams.to_list typeparams)
       in
-      let (super_t, supertype_ast) = Anno.convert_opt cx typeparams_map supertype in
       let opaquetype =
         { underlying_t; super_t; opaque_id = name_loc; opaque_type_args; opaque_name = name }
       in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
-      Flow.check_polarity cx Polarity.Positive t;
       let type_ =
         poly_type_of_tparams
           (Context.make_nominal cx)

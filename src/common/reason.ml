@@ -200,7 +200,6 @@ type 'loc virtual_reason_desc =
   | RSuperOf of 'loc virtual_reason_desc
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
-  | RVarianceCheck of 'loc virtual_reason_desc
   | RPredicateOf of 'loc virtual_reason_desc
   | RPredicateCall of 'loc virtual_reason_desc
   | RPredicateCallNeg of 'loc virtual_reason_desc
@@ -290,7 +289,6 @@ let rec map_desc_locs f = function
   | RSuperOf desc -> RSuperOf (map_desc_locs f desc)
   | RFrozen desc -> RFrozen (map_desc_locs f desc)
   | RBound desc -> RBound (map_desc_locs f desc)
-  | RVarianceCheck desc -> RVarianceCheck (map_desc_locs f desc)
   | RPredicateOf desc -> RPredicateOf (map_desc_locs f desc)
   | RPredicateCall desc -> RPredicateCall (map_desc_locs f desc)
   | RPredicateCallNeg desc -> RPredicateCallNeg (map_desc_locs f desc)
@@ -670,7 +668,6 @@ let rec string_of_desc = function
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
-  | RVarianceCheck d -> spf "variance check: %s" (string_of_desc d)
   | RPredicateOf d -> spf "predicate of %s" (string_of_desc d)
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
   | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
@@ -1401,7 +1398,6 @@ let classification_of_reason r =
   | RSuperOf _
   | RFrozen _
   | RBound _
-  | RVarianceCheck _
   | RPredicateOf _
   | RPredicateCall _
   | RPredicateCallNeg _

@@ -3380,11 +3380,12 @@ struct
           rec_flow_t cx trace (t_, tvar)
         | (DefT (_, _, PolyT { tparams = tps; _ }), VarianceCheckT (_, ts, polarity)) ->
           variance_check cx ~trace polarity (Nel.to_list tps, ts)
-        (* When we are checking the polarity of a super class where the super class has no type
-       args, we end up generating this constraint. Since it has no type args, we never resolve to
-       a PolyT, but we still want to check the polarity in this case. *)
-        | (DefT (_, _, ClassT _), VarianceCheckT (_, [], polarity)) ->
-          CheckPolarity.check_polarity cx ~trace polarity l
+        | (ThisClassT _, VarianceCheckT (_, [], _)) ->
+          (* We will emit this constraint when walking an extends clause which does
+           * not have explicit type arguments. The class has an implicit this type
+           * parameter which needs to be specialized to the inheriting class, but
+           * that is uninteresting for the variance check machinery. *)
+          ()
         | ( DefT (_, _, PolyT { tparams_loc; tparams; _ }),
             TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ) ->
           let minimum_arity = poly_minimum_arity tparams in
