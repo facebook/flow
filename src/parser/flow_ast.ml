@@ -718,7 +718,7 @@ and Statement : sig
 
     and ('M, 'T) specifier =
       | ImportNamedSpecifiers of ('M, 'T) named_specifier list
-      | ImportNamespaceSpecifier of ('M * ('M, 'M) Identifier.t)
+      | ImportNamespaceSpecifier of ('M * ('M, 'T) Identifier.t)
 
     and ('M, 'T) named_specifier = {
       kind: importKind option;

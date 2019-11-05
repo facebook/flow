@@ -3867,6 +3867,16 @@ unqualified-type-annotation.js = {
       "end":16
     },
     {
+      "name":"Types",
+      "type":"{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typical: type Typical = {|x: number, y: number|}, +Tyrannosaurus: class Tyrannosaurus, +default: number|}",
+      "func_details":null,
+      "path":"unqualified-type-annotation.js",
+      "line":3,
+      "endline":3,
+      "start":13,
+      "end":17
+    },
+    {
       "name":"Typesafe",
       "type":"interface Typesafety",
       "func_details":null,

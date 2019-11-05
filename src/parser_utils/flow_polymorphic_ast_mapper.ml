@@ -866,9 +866,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | BodyBlock body -> BodyBlock ((this#on_loc_annot * this#block) body)
         | BodyExpression expr -> BodyExpression (this#expression expr))
 
-    method function_identifier (ident : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
-      this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
-
     method t_function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
 
@@ -958,9 +955,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method import_default_specifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
-    method import_namespace_specifier (id : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t
+    method import_namespace_specifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t
         =
-      this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
+      this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
     method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
       Ast.JSX.(
@@ -1278,11 +1275,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             let annot' = this#type_annotation_hint annot in
             Identifier { Identifier.name = name'; annot = annot'; optional }
           | Expression e -> Expression (this#pattern_expression e) ))
-
-    method pattern_identifier ?kind (ident : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t
-        =
-      ignore kind;
-      this#identifier ident
 
     method t_pattern_identifier ?kind (ident : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =

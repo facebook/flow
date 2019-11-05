@@ -210,8 +210,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method function_expression : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
-    method function_identifier : ('M, 'M) Flow_ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
-
     method function_param : ('M, 'T) Flow_ast.Function.Param.t -> ('N, 'U) Ast.Function.Param.t
 
     method function_params : ('M, 'T) Flow_ast.Function.Params.t -> ('N, 'U) Ast.Function.Params.t
@@ -258,7 +256,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier ->
       ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier
 
-    method import_namespace_specifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
+    method import_namespace_specifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method import_specifier :
       ('M, 'T) Ast.Statement.ImportDeclaration.specifier ->
@@ -411,11 +409,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('N, 'U) Ast.Pattern.t
 
     method pattern_expression : ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
-
-    method pattern_identifier :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'M) Ast.Identifier.t ->
-      ('N, 'N) Ast.Identifier.t
 
     method pattern_literal :
       ?kind:Ast.Statement.VariableDeclaration.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t

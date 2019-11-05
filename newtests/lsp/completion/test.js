@@ -593,7 +593,10 @@ export default suite(
       }).verifyAllLSPMessagesInStep(
         [
           (() => {
-            const expectedSubstrings = ['"newText":"Typologies."'];
+            const expectedSubstrings = [
+              '"newText":"Typologies."',
+              '"newText":"Types."',
+            ];
 
             return `textDocument/completion{${expectedSubstrings.join(',')}}`;
           })(),

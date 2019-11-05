@@ -2357,8 +2357,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             |> List.split
           in
           (named_specifiers, Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers_ast))
-        | Some (ImportDeclaration.ImportNamespaceSpecifier (_, local)) as specifiers ->
-          let local_name = ident_name local in
+        | Some
+            (ImportDeclaration.ImportNamespaceSpecifier
+              ( loc_with_star,
+                (local_loc, ({ Flow_ast.Identifier.name = local_name; _ } as local_id)) )) ->
           let import_reason =
             let import_reason_desc =
               match importKind with
@@ -2368,27 +2370,30 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             in
             mk_reason import_reason_desc import_loc
           in
-          ( begin
-              match importKind with
-              | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
-              | ImportDeclaration.ImportTypeof ->
-                let bind_reason = repos_reason (fst local) import_reason in
-                let module_ns_t =
-                  Import_export.import_ns cx import_reason (fst source, module_name)
-                in
-                let module_ns_typeof =
-                  Tvar.mk_where cx bind_reason (fun t ->
-                      Context.add_imported_t cx local_name t;
-                      Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t)))
-                in
-                [(import_loc, local_name, module_ns_typeof, None)]
-              | ImportDeclaration.ImportValue ->
-                let reason = mk_reason (RModule module_name) import_loc in
-                let module_ns_t = Import_export.import_ns cx reason (fst source, module_name) in
-                Context.add_imported_t cx local_name module_ns_t;
-                [(fst local, local_name, module_ns_t, None)]
-            end,
-            specifiers )
+          begin
+            match importKind with
+            | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+            | ImportDeclaration.ImportTypeof ->
+              let bind_reason = repos_reason local_loc import_reason in
+              let module_ns_t =
+                Import_export.import_ns cx import_reason (fst source, module_name)
+              in
+              let module_ns_typeof =
+                Tvar.mk_where cx bind_reason (fun t ->
+                    Context.add_imported_t cx local_name t;
+                    Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t)))
+              in
+              let local_ast = ((local_loc, module_ns_typeof), local_id) in
+              ( [(import_loc, local_name, module_ns_typeof, None)],
+                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast)) )
+            | ImportDeclaration.ImportValue ->
+              let reason = mk_reason (RModule module_name) import_loc in
+              let module_ns_t = Import_export.import_ns cx reason (fst source, module_name) in
+              Context.add_imported_t cx local_name module_ns_t;
+              let local_ast = ((local_loc, module_ns_t), local_id) in
+              ( [(local_loc, local_name, module_ns_t, None)],
+                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast)) )
+          end
         | None -> ([], None)
       in
       let (specifiers, default_ast) =
