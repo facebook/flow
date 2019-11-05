@@ -371,8 +371,10 @@ let autocomplete_id
   let (results, errors) =
     names_and_locs
     |> SMap.bindings
-    |> List.map (fun (name, loc) ->
-           ((name, loc), Type.TypeScheme.{ tparams; type_ = LocMap.find loc types }))
+    |> Base.List.filter_map ~f:(fun (name, loc) ->
+           (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
+           Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
+               ((name, loc), Type.TypeScheme.{ tparams; type_ })))
     |> Ty_normalizer.from_schemes
          ~options:ty_normalizer_options
          ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)

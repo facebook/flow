@@ -595,7 +595,88 @@ export default suite(
           (() => {
             const expectedResponse = {
               isIncomplete: false,
-              items: [],
+              items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'x',
+                  kind: 6,
+                  detail: 'any',
+                  inlineDetail: 'any',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'f',
+                  kind: 3,
+                  detail: '<Typaram>() => void',
+                  inlineDetail: '()',
+                  itemType: 'void',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typologies',
+                  kind: 6,
+                  detail:
+                    '{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typic...',
+                  inlineDetail:
+                    '{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typic...',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typography',
+                  kind: 7,
+                  detail: 'class Typewriter',
+                  inlineDetail: 'class Typewriter',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typnotism',
+                  kind: 13,
+                  detail: 'type Typnotism = number',
+                  inlineDetail: 'type Typnotism = number',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typhoons',
+                  kind: 6,
+                  detail: 'string',
+                  inlineDetail: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typhoon',
+                  kind: 13,
+                  detail: 'type ./type-exports.js = string',
+                  inlineDetail: 'type ./type-exports.js = string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typewriter',
+                  kind: 7,
+                  detail: 'class Typewriter',
+                  inlineDetail: 'class Typewriter',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typesafe',
+                  kind: 8,
+                  detail: 'interface Typesafety',
+                  inlineDetail: 'interface Typesafety',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Tycoon',
+                  kind: 6,
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1,
+                },
+              ],
             };
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
