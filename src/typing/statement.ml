@@ -4067,24 +4067,9 @@ and subscript ~is_cond cx ex =
      Below are several helper functions for setting up this tuple in the
      presence of chaining.
      *)
-    let handle_chaining object_ ~get_result ~test_hooks ~get_opt_use ~get_reason =
-      match opt_state with
-      | NonOptional ->
-        (* Proceeding as normal: no need to worry about optionality, so T2 from
-          above is None. We're guaranteed that there are no optional chain
-          operators below this point in the chain, so we can call expression_
-          rather than recur_chain. *)
-        let (((_, obj_t), _) as object_ast) = expression cx object_ in
-        let reason = get_reason obj_t in
-        let lhs_t =
-          match test_hooks obj_t with
-          | Some hit -> hit
-          | None -> get_result reason obj_t
-        in
-        (lhs_t, None, lhs_t, object_ast)
-      | NewChain ->
-        let (chain_t, voided_t, object_ast) = recur_chain ~is_cond:false cx object_ in
-        (* We've encountered an optional chaining operator.
+    let handle_new_chain
+        lhs_reason (chain_t, voided_t, object_ast) ~get_reason ~test_hooks ~get_opt_use =
+      (* We've encountered an optional chaining operator.
            We need to flow the "success" type of object_ into a OptionalChainT
            type, which will "filter out" VoidT and NullT from the type of
            object_ and flow them into `voided_out`, and then flow any non-void
@@ -4099,53 +4084,80 @@ and subscript ~is_cond cx ex =
            the first place. We also take voided_t, equivalent to T2 above and
            representing any previous chain short-circuits, and it will
            contribute to the failure/short-circuit output of this function,
-           `voided_out`.
-        *)
-        let reason = get_reason chain_t in
-        let lhs_reason = mk_expression_reason object_ in
-        let chain_reason = mk_reason ROptionalChain loc in
-        let mem_t =
-          match test_hooks chain_t with
-          | Some hit -> hit
-          | None -> Tvar.mk cx reason
-        in
-        let voided_out = Tvar.mk cx reason in
-        Flow.flow
-          cx
-          ( chain_t,
-            OptionalChainT
-              (chain_reason, lhs_reason, apply_opt_use (get_opt_use reason) mem_t, voided_out) );
-        Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, voided_out)) voided_t;
-        let lhs_t =
-          Tvar.mk_where cx reason (fun t ->
-              Flow.flow_t cx (mem_t, t);
-              Flow.flow_t cx (voided_out, t))
-        in
-        (mem_t, Some voided_out, lhs_t, object_ast)
-      | ContinueChain ->
-        let (chain_t, voided_t, object_ast) = recur_chain ~is_cond cx object_ in
-        (* We're looking at a non-optional call or member access, but one where
-           deeper in the chain there was an optional chaining operator. We don't
-           need to do anything special locally, but we do need to remember that
-           we might have short-circuited before getting here--that's the
-           voided_t parameter. We'll flow that type into the type of the overall
-           expression to account for that possibility.
-        *)
-        let reason = get_reason chain_t in
-        let res_t =
-          match test_hooks chain_t with
-          | Some hit -> hit
-          | None -> get_result reason chain_t
-        in
-        let lhs_t =
-          Tvar.mk_where cx reason (fun t ->
-              Flow.flow_t cx (res_t, t);
-              Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t)
-        in
-        (res_t, voided_t, lhs_t, object_ast)
+           `voided_out`. *)
+      let reason = get_reason chain_t in
+      let chain_reason = mk_reason ROptionalChain loc in
+      let mem_t =
+        match test_hooks chain_t with
+        | Some hit -> hit
+        | None -> Tvar.mk cx reason
+      in
+      let voided_out = Tvar.mk cx reason in
+      Flow.flow
+        cx
+        ( chain_t,
+          OptionalChainT
+            (chain_reason, lhs_reason, apply_opt_use (get_opt_use reason) mem_t, voided_out) );
+      Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, voided_out)) voided_t;
+      let lhs_t =
+        Tvar.mk_where cx reason (fun t ->
+            Flow.flow_t cx (mem_t, t);
+            Flow.flow_t cx (voided_out, t))
+      in
+      (mem_t, Some voided_out, lhs_t, object_ast)
     in
-    let maybe_refine () =
-      match opt_state with
+    let handle_continue_chain (chain_t, voided_t, object_ast) ~get_result ~test_hooks ~get_reason =
+      (* We're looking at a non-optional call or member access, but one where
+         deeper in the chain there was an optional chaining operator. We don't
+         need to do anything special locally, but we do need to remember that
+         we might have short-circuited before getting here--that's the
+         voided_t parameter. We'll flow that type into the type of the overall
+         expression to account for that possibility.
+      *)
+      let reason = get_reason chain_t in
+      let res_t =
+        match test_hooks chain_t with
+        | Some hit -> hit
+        | None -> get_result reason chain_t
+      in
+      let lhs_t =
+        match voided_t with
+        | Some voided_t ->
+          let lhs_tvar = Tvar.mk cx reason in
+          Flow.flow_t cx (res_t, lhs_tvar);
+          Flow.flow_t cx (voided_t, lhs_tvar);
+          lhs_tvar
+        | None -> res_t
+      in
+      (res_t, voided_t, lhs_t, object_ast)
+    in
+    let handle_chaining opt object_ ~get_result ~test_hooks ~get_opt_use ~get_reason =
+      match opt with
+      | NonOptional ->
+        (* Proceeding as normal: no need to worry about optionality, so T2 from
+          above is None. We don't need to consider optional short-circuiting, so
+          we can call expression_ rather than recur_chain. *)
+        let (((_, obj_t), _) as object_ast) = expression cx object_ in
+        let reason = get_reason obj_t in
+        let lhs_t =
+          match test_hooks obj_t with
+          | Some hit -> hit
+          | None -> get_result reason obj_t
+        in
+        (lhs_t, None, lhs_t, object_ast)
+      | NewChain ->
+        let lhs_reason = mk_expression_reason object_ in
+        handle_new_chain
+          lhs_reason
+          (recur_chain ~is_cond:false cx object_)
+          ~get_reason
+          ~test_hooks
+          ~get_opt_use
+      | ContinueChain ->
+        handle_continue_chain (recur_chain ~is_cond cx object_) ~get_result ~test_hooks ~get_reason
+    in
+    let maybe_refine (loc, e) opt =
+      match opt with
       | NonOptional -> Refinement.get cx (loc, e) loc
       | _ -> None
     in
@@ -4163,7 +4175,7 @@ and subscript ~is_cond cx ex =
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
         let opt_use = OptGetElemT (use_op, reason, tind) in
         let get_mem_t _ obj_t =
-          match maybe_refine () with
+          match maybe_refine (loc, e) opt_state with
           | Some t -> t
           | None ->
             Tvar.mk_where cx reason (fun t ->
@@ -4173,6 +4185,7 @@ and subscript ~is_cond cx ex =
         let test_hooks = Fn.const None in
         let (filtered_out, voided_out, lhs_t, object_ast) =
           handle_chaining
+            opt_state
             _object
             ~get_result:get_mem_t
             ~test_hooks
@@ -4202,7 +4215,7 @@ and subscript ~is_cond cx ex =
             None
         in
         let get_mem_t _ obj_t =
-          match maybe_refine () with
+          match maybe_refine (loc, e) opt_state with
           | Some t -> t
           | None ->
             Tvar.mk_where cx expr_reason (fun t ->
@@ -4211,6 +4224,7 @@ and subscript ~is_cond cx ex =
         in
         let (filtered_out, voided_out, lhs_t, object_ast) =
           handle_chaining
+            opt_state
             _object
             ~get_result:get_mem_t
             ~test_hooks
@@ -4238,7 +4252,7 @@ and subscript ~is_cond cx ex =
             None
         in
         let get_mem_t _ obj_t =
-          match maybe_refine () with
+          match maybe_refine (loc, e) opt_state with
           | Some t -> t
           | None ->
             Tvar.mk_where cx expr_reason (fun t ->
@@ -4247,6 +4261,7 @@ and subscript ~is_cond cx ex =
         in
         let (filtered_out, voided_out, lhs_t, object_ast) =
           handle_chaining
+            opt_state
             _object
             ~get_result:get_mem_t
             ~test_hooks
@@ -4288,7 +4303,7 @@ and subscript ~is_cond cx ex =
         in
         let test_hooks = Fn.const None in
         let (filtered_out, voided_out, lhs_t, object_ast) =
-          handle_chaining callee ~get_result ~test_hooks ~get_opt_use ~get_reason
+          handle_chaining opt_state callee ~get_result ~test_hooks ~get_opt_use ~get_reason
         in
         (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
       | _ ->
