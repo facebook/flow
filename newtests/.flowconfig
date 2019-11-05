@@ -9,6 +9,7 @@
 .*/newtests/types-first-lazy-ide1/errorsWithFlowPragma.js
 .*/newtests/types-first-lazy-ide2/errorsWithFlowPragma.js
 .*/newtests/lsp/completion/jsx.js
+.*/newtests/lsp/completion/unqualified-type-annotation.js
 
 [options]
 suppress_comment=.*\\$FlowFixMe

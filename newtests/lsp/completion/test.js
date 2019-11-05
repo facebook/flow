@@ -580,5 +580,28 @@ export default suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('textDocument/completion in an unqualified type annotation', [
+      addFile('type-exports.js'),
+      addFile('unqualified-type-annotation.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/unqualified-type-annotation.js',
+        },
+        position: {line: 27, character: 18},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 );
