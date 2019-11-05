@@ -2211,7 +2211,7 @@ end = struct
                    all_dependent_files
                    1
                in
-               Hh_logger.info "Merge prep"))
+               ()))
     in
     Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
