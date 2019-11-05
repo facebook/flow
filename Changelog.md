@@ -1,3 +1,8 @@
+### 0.111.3
+
+Notable bug fixes:
+* 0.111.2 did not include the commit that bumped the Flow version inside of Flow. (@jbrown215 was a clown)
+
 ### 0.111.2
 
 Notable bug fixes:
