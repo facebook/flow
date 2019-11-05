@@ -2929,7 +2929,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
        of calling include_dependencies_and_dependents is to compute components. *)
       let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge_or_check in
-      let dependency_graph = Dependency_info.dependency_graph dependency_info in
       let recheck_reasons = [LspProt.Full_init] in
       let%lwt (updated_errors, coverage, _, sig_new_or_changed, _, _, merge_internal_error) =
         merge
