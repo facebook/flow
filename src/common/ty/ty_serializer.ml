@@ -235,7 +235,7 @@ and type_param tp =
   >>| fun default ->
   ( Loc.none,
     {
-      T.ParameterDeclaration.TypeParam.name = id_from_string tp.tp_name;
+      T.TypeParam.name = id_from_string tp.tp_name;
       bound =
         (match bound with
         | Some t -> T.Available t

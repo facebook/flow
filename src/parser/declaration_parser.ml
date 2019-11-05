@@ -226,17 +226,17 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 match (in_export env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
                 | (true, T_LESS_THAN) ->
-                  let typeParams = Type.type_parameter_declaration env in
+                  let tparams = Type.type_params env in
                   let id =
                     if Peek.token env = T_LPAREN then
                       None
                     else
                       Some (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
                   in
-                  (typeParams, id)
+                  (tparams, id)
                 | _ ->
                   let id = Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env in
-                  (Type.type_parameter_declaration env, Some id)
+                  (Type.type_params env, Some id)
               in
               let params = function_params ~await:async ~yield:generator env in
               let (return, predicate) = Type.annotation_and_predicate_opt env in

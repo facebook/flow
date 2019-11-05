@@ -274,7 +274,7 @@ module Eval (Env : EvalEnv) = struct
 
   and type_params =
     let type_param tps tparam =
-      Ast.Type.ParameterDeclaration.TypeParam.(
+      Ast.Type.TypeParam.(
         let (_, { name = (_, { Ast.Identifier.name = x; comments = _ }); bound; default; _ }) =
           tparam
         in

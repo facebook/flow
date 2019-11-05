@@ -16,9 +16,9 @@ module type TYPE = sig
 
   val type_identifier : env -> (Loc.t, Loc.t) Ast.Identifier.t
 
-  val type_parameter_declaration : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
+  val type_params : env -> (Loc.t, Loc.t) Ast.Type.TypeParams.t option
 
-  val type_parameter_instantiation : env -> (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option
+  val type_args : env -> (Loc.t, Loc.t) Ast.Type.TypeArgs.t option
 
   val generic : env -> Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
 
@@ -374,7 +374,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and _function env =
     let start_loc = Peek.loc env in
-    let tparams = type_parameter_declaration env in
+    let tparams = type_params env in
     let params = function_param_list env in
     function_with_params env start_loc tparams params
 
@@ -400,7 +400,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         env
     in
     let method_property env start_loc static key =
-      let tparams = type_parameter_declaration env in
+      let tparams = type_params env in
       let value = methodish env start_loc tparams in
       let value = (fst value, Type.Function (snd value)) in
       Type.Object.(
@@ -422,7 +422,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            let tparams = type_parameter_declaration env in
+            let tparams = type_params env in
             let value = methodish env (Peek.loc env) tparams in
             Type.Object.CallProperty.{ value; static = static <> None })
           env
@@ -526,7 +526,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
-                let tparams = type_parameter_declaration env in
+                let tparams = type_params env in
                 let value =
                   let (fn_loc, fn) = methodish env start_loc tparams in
                   (fn_loc, Type.Function fn)
@@ -845,9 +845,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (name, bound))
       env
 
-  and type_parameter_declaration =
+  and type_params =
     let rec params env ~require_default acc =
-      Type.ParameterDeclaration.TypeParam.(
+      Type.TypeParam.(
         let (loc, (variance, name, bound, default, require_default)) =
           with_loc
             (fun env ->
@@ -892,7 +892,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       ) else
         None
 
-  and type_parameter_instantiation =
+  and type_args =
     let rec args env acc =
       match Peek.token env with
       | T_EOF
@@ -942,7 +942,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (fun env ->
           let id = (fst id, Type.Generic.Identifier.Unqualified id) in
           let (_id_loc, id) = identifier env id in
-          let targs = type_parameter_instantiation env in
+          let targs = type_args env in
           { Type.Generic.id; targs })
         env
 
@@ -997,9 +997,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   let type_identifier = wrap type_identifier
 
-  let type_parameter_declaration = wrap type_parameter_declaration
+  let type_params = wrap type_params
 
-  let type_parameter_instantiation = wrap type_parameter_instantiation
+  let type_args = wrap type_args
 
   let _object ~is_class env = wrap (_object ~is_class ~allow_exact:false ~allow_spread:false) env
 

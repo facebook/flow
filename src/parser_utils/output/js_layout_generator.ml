@@ -1692,8 +1692,7 @@ and class_implements implements =
              ~sep:(Atom ",")
              (List.map
                 (fun (loc, { Ast.Class.Implements.id; targs }) ->
-                  source_location_with_comments
-                    (loc, fuse [identifier id; option type_parameter_instantiation targs]))
+                  source_location_with_comments (loc, fuse [identifier id; option type_args targs]))
                 implements);
          ])
 
@@ -1722,7 +1721,7 @@ and class_base { Ast.Class.id; body; tparams; extends; implements; classDecorato
                    space;
                    source_location_with_comments
                      ?comments
-                     (loc, fuse [expression expr; option type_parameter_instantiation targs]);
+                     (loc, fuse [expression expr; option type_args targs]);
                  ])
           | None -> None
         end;
@@ -2363,7 +2362,7 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
 and type_param
     ( _,
       {
-        Ast.Type.ParameterDeclaration.TypeParam.name = (loc, { Ast.Identifier.name; comments = _ });
+        Ast.Type.TypeParam.name = (loc, { Ast.Identifier.name; comments = _ });
         bound;
         variance = variance_;
         default;
@@ -2398,7 +2397,7 @@ and type_parameter_instantiation_with_implicit (loc, args) =
             (Base.List.map ~f:explicit_or_implicit args);
         ] )
 
-and type_parameter_instantiation (loc, args) =
+and type_args (loc, args) =
   source_location_with_comments
     (loc, group [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_ args)])
 
@@ -2694,7 +2693,7 @@ and type_generic { Ast.Type.Generic.id; targs } =
         source_location_with_comments
           (loc, fuse [generic_identifier qualification; Atom "."; identifier id]))
   in
-  fuse [generic_identifier id; option type_parameter_instantiation targs]
+  fuse [generic_identifier id; option type_args targs]
 
 and type_with_parens t =
   let module T = Ast.Type in

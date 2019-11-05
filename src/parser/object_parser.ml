@@ -200,7 +200,7 @@ module Object
               let (sig_loc, (tparams, params, return)) =
                 with_loc
                   (fun env ->
-                    let tparams = Type.type_parameter_declaration env in
+                    let tparams = Type.type_params env in
                     let params =
                       let (yield, await) =
                         match (async, generator) with
@@ -419,7 +419,7 @@ module Object
       with_loc
         (fun env ->
           let id = Type.type_identifier env in
-          let targs = Type.type_parameter_instantiation env in
+          let targs = Type.type_args env in
           { Ast.Class.Implements.id; targs })
         env
     in
@@ -433,7 +433,7 @@ module Object
   let class_extends =
     with_loc (fun env ->
         let expr = Expression.left_hand_side (env |> with_allow_yield false) in
-        let targs = Type.type_parameter_instantiation env in
+        let targs = Type.type_args env in
         { Class.Extends.expr; targs })
 
   let rec _class env =
@@ -654,7 +654,7 @@ module Object
               let (sig_loc, (tparams, params, return)) =
                 with_loc
                   (fun env ->
-                    let tparams = Type.type_parameter_declaration env in
+                    let tparams = Type.type_params env in
                     let params =
                       let (yield, await) =
                         match (async, generator) with
@@ -762,7 +762,7 @@ module Object
           | (true, false) -> None
           | _ -> Some (Parse.identifier tmp_env)
         in
-        let tparams = Type.type_parameter_declaration env in
+        let tparams = Type.type_params env in
         let (body, extends, implements) = _class env in
         let trailing =
           match id with
@@ -797,7 +797,7 @@ module Object
             (None, None)
           | _ ->
             let id = Some (Parse.identifier env) in
-            let tparams = Type.type_parameter_declaration env in
+            let tparams = Type.type_params env in
             (id, tparams)
         in
         let trailing =

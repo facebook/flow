@@ -925,7 +925,7 @@ module Expression
                       let env = env |> with_allow_await await |> with_allow_yield yield in
                       Some (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
                   in
-                  (id, Type.type_parameter_declaration env)
+                  (id, Type.type_params env)
               in
               (* #sec-function-definitions-static-semantics-early-errors *)
               let env = env |> with_allow_super No_super in
@@ -1326,7 +1326,7 @@ module Expression
       let (sig_loc, (tparams, params, return, predicate)) =
         with_loc
           (fun env ->
-            let tparams = Type.type_parameter_declaration env in
+            let tparams = Type.type_params env in
             (* Disallow all fancy features for identifier => body *)
             if Peek.is_identifier env && tparams = None then
               let ((loc, _) as name) =

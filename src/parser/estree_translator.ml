@@ -805,7 +805,7 @@ with type t = Impl.t = struct
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
           ("superClass", option expression super);
-          ("superTypeParameters", option type_parameter_instantiation super_targs);
+          ("superTypeParameters", option type_args super_targs);
           ("implements", array_of_list class_implements implements);
           ("decorators", array_of_list class_decorator classDecorators);
         ]
@@ -815,7 +815,7 @@ with type t = Impl.t = struct
       node
         "ClassImplements"
         loc
-        [("id", identifier id); ("typeParameters", option type_parameter_instantiation targs)]
+        [("id", identifier id); ("typeParameters", option type_args targs)]
     and class_body (loc, { Class.Body.body }) =
       node "ClassBody" loc [("body", array_of_list class_element body)]
     and class_element =
@@ -965,10 +965,7 @@ with type t = Impl.t = struct
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
-      node
-        "InterfaceExtends"
-        loc
-        [("id", id); ("typeParameters", option type_parameter_instantiation targs)]
+      node "InterfaceExtends" loc [("id", id); ("typeParameters", option type_args targs)]
     and pattern =
       Pattern.(
         function
@@ -1364,10 +1361,7 @@ with type t = Impl.t = struct
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
       in
-      node
-        "GenericTypeAnnotation"
-        loc
-        [("id", id); ("typeParameters", option type_parameter_instantiation targs)]
+      node "GenericTypeAnnotation" loc [("id", id); ("typeParameters", option type_args targs)]
     and union_type (loc, ts) = node "UnionTypeAnnotation" loc [("types", array_of_list _type ts)]
     and intersection_type (loc, ts) =
       node "IntersectionTypeAnnotation" loc [("types", array_of_list _type ts)]
@@ -1400,7 +1394,7 @@ with type t = Impl.t = struct
     and type_param
         ( loc,
           {
-            Type.ParameterDeclaration.TypeParam.name = (_, { Identifier.name; comments = _ });
+            Type.TypeParam.name = (_, { Identifier.name; comments = _ });
             bound;
             variance = tp_var;
             default;
@@ -1416,7 +1410,7 @@ with type t = Impl.t = struct
           ("variance", option variance tp_var);
           ("default", option _type default);
         ]
-    and type_parameter_instantiation (loc, targs) =
+    and type_args (loc, targs) =
       node "TypeParameterInstantiation" loc [("params", array_of_list _type targs)]
     and type_parameter_instantiation_with_implicit (loc, targs) =
       node

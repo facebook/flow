@@ -144,14 +144,13 @@ class mapper_type_printing_hardcoded_fixes =
           (loc_f, Flow_ast.Type.Function nf)
         | _ -> t)
 
-    method! type_parameter_instantiation (pi : ('loc, 'loc) Flow_ast.Type.ParameterInstantiation.t)
-        =
-      let (loc, targs) = pi in
-      let targs' = Base.List.map ~f:this#type_generic_normalize targs in
-      if targs' == targs then
-        pi
+    method! type_args (targs : ('loc, 'loc) Flow_ast.Type.TypeArgs.t) =
+      let (loc, ts) = targs in
+      let ts' = Base.List.map ~f:this#type_generic_normalize ts in
+      if ts' == ts then
+        targs
       else
-        (loc, targs')
+        (loc, ts')
   end
 
 let patch_up_type_ast = (new mapper_type_printing_hardcoded_fixes)#type_

@@ -132,7 +132,7 @@ and Type : sig
     end
 
     type ('M, 'T) t = {
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
       return: ('M, 'T) Type.t;
     }
@@ -156,7 +156,7 @@ and Type : sig
 
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Type.TypeArgs.t option;
     }
     [@@deriving show]
   end
@@ -294,25 +294,25 @@ and Type : sig
     | Available of ('M, 'T) Type.annotation
   [@@deriving show]
 
-  module ParameterDeclaration : sig
-    module TypeParam : sig
-      type ('M, 'T) t = 'T * ('M, 'T) t'
+  module TypeParam : sig
+    type ('M, 'T) t = 'T * ('M, 'T) t'
 
-      and ('M, 'T) t' = {
-        name: ('M, 'T) Identifier.t;
-        bound: ('M, 'T) Type.annotation_or_hint;
-        variance: 'M Variance.t option;
-        default: ('M, 'T) Type.t option;
-      }
-      [@@deriving show]
-    end
+    and ('M, 'T) t' = {
+      name: ('M, 'T) Identifier.t;
+      bound: ('M, 'T) Type.annotation_or_hint;
+      variance: 'M Variance.t option;
+      default: ('M, 'T) Type.t option;
+    }
+    [@@deriving show]
+  end
 
+  module TypeParams : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = ('M, 'T) TypeParam.t list [@@deriving show]
   end
 
-  module ParameterInstantiation : sig
+  module TypeArgs : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = ('M, 'T) Type.t list [@@deriving show]
@@ -379,7 +379,7 @@ and Statement : sig
   module TypeAlias : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       right: ('M, 'T) Type.t;
     }
     [@@deriving show]
@@ -388,7 +388,7 @@ and Statement : sig
   module OpaqueType : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       impltype: ('M, 'T) Type.t option;
       supertype: ('M, 'T) Type.t option;
     }
@@ -593,7 +593,7 @@ and Statement : sig
   module Interface : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       extends: ('M * ('M, 'T) Type.Generic.t) list;
       body: 'M * ('M, 'T) Type.Object.t;
     }
@@ -603,7 +603,7 @@ and Statement : sig
   module DeclareClass : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
-      tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+      tparams: ('M, 'T) Type.TypeParams.t option;
       body: 'M * ('M, 'T) Type.Object.t;
       extends: ('M * ('M, 'T) Type.Generic.t) option;
       mixins: ('M * ('M, 'T) Type.Generic.t) list;
@@ -1422,7 +1422,7 @@ and Class : sig
 
     and ('M, 'T) t' = {
       expr: ('M, 'T) Expression.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Type.TypeArgs.t option;
     }
     [@@deriving show]
   end
@@ -1432,7 +1432,7 @@ and Class : sig
 
     and ('M, 'T) t' = {
       id: ('M, 'T) Identifier.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Type.TypeArgs.t option;
     }
     [@@deriving show]
   end
@@ -1459,7 +1459,7 @@ and Class : sig
   type ('M, 'T) t = {
     id: ('M, 'T) Identifier.t option;
     body: ('M, 'T) Class.Body.t;
-    tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+    tparams: ('M, 'T) Type.TypeParams.t option;
     extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Class.Implements.t list;
     classDecorators: ('M, 'T) Decorator.t list;
@@ -1504,7 +1504,7 @@ and Function : sig
     generator: bool;
     predicate: ('M, 'T) Type.Predicate.t option;
     return: ('M, 'T) Type.annotation_or_hint;
-    tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+    tparams: ('M, 'T) Type.TypeParams.t option;
     (* Location of the signature portion of a function, e.g.
      * function foo(): void {}
      * ^^^^^^^^^^^^^^^^^^^^

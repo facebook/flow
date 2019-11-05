@@ -32,7 +32,7 @@ type node =
   | Params of (Loc.t, Loc.t) Flow_ast.Function.Params.t
   | Variance of Loc.t Flow_ast.Variance.t
   | Type of (Loc.t, Loc.t) Flow_ast.Type.t
-  | TypeParam of (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.TypeParam.t
+  | TypeParam of (Loc.t, Loc.t) Flow_ast.Type.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t

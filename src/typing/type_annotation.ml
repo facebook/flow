@@ -1508,69 +1508,69 @@ and mk_nominal_type cx reason tparams_map (c, targs) =
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
 and mk_type_param_declarations cx ?(tparams_map = SMap.empty) tparams =
-  Ast.Type.ParameterDeclaration.(
-    let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
-      let {
-        TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ }) as id;
-        bound;
-        variance;
-        default;
-      } =
-        type_param
-      in
-      let reason = mk_annot_reason (RType name) name_loc in
-      let (bound, bound_ast) =
-        match bound with
-        | Ast.Type.Missing loc ->
-          let t = DefT (reason, infer_trust cx, MixedT Mixed_everything) in
-          (t, Ast.Type.Missing (loc, t))
-        | Ast.Type.Available (bound_loc, u) ->
-          let (bound, bound_ast) = mk_type cx tparams_map reason (Some u) in
-          let bound_ast =
-            match bound_ast with
-            | Some ast -> Ast.Type.Available (bound_loc, ast)
-            | None -> Ast.Type.Missing (bound_loc, bound)
-          in
-          (bound, bound_ast)
-      in
-      let (default, default_ast) =
-        match default with
-        | None -> (None, None)
-        | Some default ->
-          let (t, default_ast) = mk_type cx tparams_map reason (Some default) in
-          Flow.flow_t cx (Flow.subst cx bounds_map t, Flow.subst cx bounds_map bound);
-          (Some t, default_ast)
-      in
-      let polarity = polarity variance in
-      let tparam = { reason; name; bound; polarity; default } in
-      let t = BoundT (reason, name, polarity) in
-      let name_ast =
-        let (loc, id_name) = id in
-        ((loc, t), id_name)
-      in
-      let ast =
-        ( (loc, t),
-          { TypeParam.name = name_ast; bound = bound_ast; variance; default = default_ast } )
-      in
-      let tparams = tparam :: tparams in
-      ( tparams,
-        SMap.add name t tparams_map,
-        SMap.add name (Flow.subst cx bounds_map bound) bounds_map,
-        ast :: rev_asts )
+  let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
+    let {
+      Ast.Type.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ }) as id;
+      bound;
+      variance;
+      default;
+    } =
+      type_param
     in
-    match tparams with
-    | None -> (None, tparams_map, None)
-    | Some (tparams_loc, tparams) ->
-      let (rev_tparams, tparams_map, _, rev_asts) =
-        List.fold_left add_type_param ([], tparams_map, SMap.empty, []) tparams
-      in
-      let tparams_ast = Some (tparams_loc, List.rev rev_asts) in
-      let tparams =
-        match List.rev rev_tparams with
-        | [] -> None
-        | hd :: tl -> Some (tparams_loc, (hd, tl))
-      in
-      (tparams, tparams_map, tparams_ast))
+    let reason = mk_annot_reason (RType name) name_loc in
+    let (bound, bound_ast) =
+      match bound with
+      | Ast.Type.Missing loc ->
+        let t = DefT (reason, infer_trust cx, MixedT Mixed_everything) in
+        (t, Ast.Type.Missing (loc, t))
+      | Ast.Type.Available (bound_loc, u) ->
+        let (bound, bound_ast) = mk_type cx tparams_map reason (Some u) in
+        let bound_ast =
+          match bound_ast with
+          | Some ast -> Ast.Type.Available (bound_loc, ast)
+          | None -> Ast.Type.Missing (bound_loc, bound)
+        in
+        (bound, bound_ast)
+    in
+    let (default, default_ast) =
+      match default with
+      | None -> (None, None)
+      | Some default ->
+        let (t, default_ast) = mk_type cx tparams_map reason (Some default) in
+        Flow.flow_t cx (Flow.subst cx bounds_map t, Flow.subst cx bounds_map bound);
+        (Some t, default_ast)
+    in
+    let polarity = polarity variance in
+    let tparam = { reason; name; bound; polarity; default } in
+    let t = BoundT (reason, name, polarity) in
+    let name_ast =
+      let (loc, id_name) = id in
+      ((loc, t), id_name)
+    in
+    let ast =
+      ( (loc, t),
+        { Ast.Type.TypeParam.name = name_ast; bound = bound_ast; variance; default = default_ast }
+      )
+    in
+    let tparams = tparam :: tparams in
+    ( tparams,
+      SMap.add name t tparams_map,
+      SMap.add name (Flow.subst cx bounds_map bound) bounds_map,
+      ast :: rev_asts )
+  in
+  match tparams with
+  | None -> (None, tparams_map, None)
+  | Some (tparams_loc, tparams) ->
+    let (rev_tparams, tparams_map, _, rev_asts) =
+      List.fold_left add_type_param ([], tparams_map, SMap.empty, []) tparams
+    in
+    let tparams_ast = Some (tparams_loc, List.rev rev_asts) in
+    let tparams =
+      match List.rev rev_tparams with
+      | [] -> None
+      | hd :: tl -> Some (tparams_loc, (hd, tl))
+    in
+    (tparams, tparams_map, tparams_ast)
 
 and type_identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc then

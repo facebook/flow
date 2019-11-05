@@ -517,17 +517,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_cast : ('M, 'T) Ast.Expression.TypeCast.t -> ('N, 'U) Ast.Expression.TypeCast.t
 
-    method type_parameter_declaration_opt :
-      ('M, 'T) Ast.Type.ParameterDeclaration.t option ->
-      (('N, 'U) Ast.Type.ParameterDeclaration.t option -> 'a) ->
-      'a
+    method type_params_opt :
+      ('M, 'T) Ast.Type.TypeParams.t option -> (('N, 'U) Ast.Type.TypeParams.t option -> 'a) -> 'a
 
-    method type_parameter_declaration_type_param :
-      ('M, 'T) Ast.Type.ParameterDeclaration.TypeParam.t ->
-      ('N, 'U) Ast.Type.ParameterDeclaration.TypeParam.t
+    method type_param : ('M, 'T) Ast.Type.TypeParam.t -> ('N, 'U) Ast.Type.TypeParam.t
 
-    method type_parameter_instantiation :
-      ('M, 'T) Flow_ast.Type.ParameterInstantiation.t -> ('N, 'U) Ast.Type.ParameterInstantiation.t
+    method type_args : ('M, 'T) Flow_ast.Type.TypeArgs.t -> ('N, 'U) Ast.Type.TypeArgs.t
 
     method type_parameter_instantiation_with_implicit :
       ('M, 'T) Flow_ast.Expression.TypeParameterInstantiation.t ->

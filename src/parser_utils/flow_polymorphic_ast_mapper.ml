@@ -189,7 +189,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let { id; body; tparams; extends; implements; classDecorators; comments } = cls in
         let id' = Option.map ~f:this#class_identifier id in
         let comments' = Option.map ~f:this#syntax comments in
-        this#type_parameter_declaration_opt tparams (fun tparams' ->
+        this#type_params_opt tparams (fun tparams' ->
             let extends' = Option.map ~f:this#class_extends extends in
             let body' = this#class_body body in
             let implements' = Base.List.map ~f:this#class_implements implements in
@@ -208,7 +208,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Class.Extends.(
         let (annot, { expr; targs }) = extends in
         let expr' = this#expression expr in
-        let targs' = Option.map ~f:this#type_parameter_instantiation targs in
+        let targs' = Option.map ~f:this#type_args targs in
         (this#on_loc_annot annot, { expr = expr'; targs = targs' }))
 
     method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t
@@ -302,7 +302,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Statement.DeclareClass.(
         let { id = ident; tparams; body; extends; mixins; implements } = decl in
         let id' = this#class_identifier ident in
-        this#type_parameter_declaration_opt tparams (fun tparams' ->
+        this#type_params_opt tparams (fun tparams' ->
             let body' =
               let (a, b) = body in
               (this#on_loc_annot a, this#object_type b)
@@ -324,7 +324,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Class.Implements.(
         let (annot, { id = id_; targs }) = implements in
         let id' = this#t_identifier id_ in
-        let targs' = Option.map ~f:this#type_parameter_instantiation targs in
+        let targs' = Option.map ~f:this#type_args targs in
         (this#on_loc_annot annot, { id = id'; targs = targs' }))
 
     method declare_export_declaration
@@ -615,7 +615,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let { params = (params_annot, { Params.params = ps; rest = rpo }); return; tparams } =
           ft
         in
-        this#type_parameter_declaration_opt tparams (fun tparams' ->
+        this#type_params_opt tparams (fun tparams' ->
             let ps' = Base.List.map ~f:this#function_param_type ps in
             let rpo' = Option.map ~f:this#function_rest_param_type rpo in
             let return' = this#type_ return in
@@ -703,11 +703,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let id' = this#t_identifier id_ in
           Qualified (this#on_loc_annot annot, { qualification = qualification'; id = id' }))
 
-    method type_parameter_instantiation (pi : ('M, 'T) Ast.Type.ParameterInstantiation.t)
-        : ('N, 'U) Ast.Type.ParameterInstantiation.t =
-      let (annot, targs) = pi in
-      let targs' = Base.List.map ~f:this#type_ targs in
-      (this#on_loc_annot annot, targs')
+    method type_args (targs : ('M, 'T) Ast.Type.TypeArgs.t) : ('N, 'U) Ast.Type.TypeArgs.t =
+      let (annot, ts) = targs in
+      let ts' = Base.List.map ~f:this#type_ ts in
+      (this#on_loc_annot annot, ts')
 
     method type_parameter_instantiation_with_implicit
         (pi : ('M, 'T) Ast.Expression.TypeParameterInstantiation.t)
@@ -716,27 +715,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let targs' = Base.List.map ~f:this#explicit_or_implicit targs in
       (this#on_loc_annot annot, targs')
 
-    method type_parameter_declaration_opt
-        : 'a. ('M, 'T) Ast.Type.ParameterDeclaration.t option ->
-          (('N, 'U) Ast.Type.ParameterDeclaration.t option -> 'a) -> 'a =
-      fun pd f ->
-        let pd' =
+    method type_params_opt
+        : 'a. ('M, 'T) Ast.Type.TypeParams.t option ->
+          (('N, 'U) Ast.Type.TypeParams.t option -> 'a) -> 'a =
+      fun tparams f ->
+        let tparams' =
           Option.map
-            ~f:(fun pd ->
-              let (annot, type_params) = pd in
-              let type_params' =
-                Base.List.map ~f:this#type_parameter_declaration_type_param type_params
-              in
-              (this#on_loc_annot annot, type_params'))
-            pd
+            ~f:(fun tparams ->
+              let (annot, tps) = tparams in
+              let tps' = Base.List.map ~f:this#type_param tps in
+              (this#on_loc_annot annot, tps'))
+            tparams
         in
-        f pd'
+        f tparams'
 
-    method type_parameter_declaration_type_param
-        (type_param : ('M, 'T) Ast.Type.ParameterDeclaration.TypeParam.t)
-        : ('N, 'U) Ast.Type.ParameterDeclaration.TypeParam.t =
-      Ast.Type.ParameterDeclaration.TypeParam.(
-        let (annot, { name; bound; variance; default }) = type_param in
+    method type_param (tparam : ('M, 'T) Ast.Type.TypeParam.t) : ('N, 'U) Ast.Type.TypeParam.t =
+      Ast.Type.TypeParam.(
+        let (annot, { name; bound; variance; default }) = tparam in
         let name' = this#t_identifier name in
         let bound' = this#type_annotation_hint bound in
         let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
@@ -748,7 +743,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Type.Generic.(
         let { id; targs } = gt in
         let id' = this#generic_identifier_type id in
-        let targs' = Option.map ~f:this#type_parameter_instantiation targs in
+        let targs' = Option.map ~f:this#type_args targs in
         { id = id'; targs = targs' })
 
     method type_predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t)
@@ -821,7 +816,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           expr
         in
         let ident' = Option.map ~f:this#t_function_identifier ident in
-        this#type_parameter_declaration_opt tparams (fun tparams' ->
+        this#type_params_opt tparams (fun tparams' ->
             let params' = this#function_params params in
             let return' = this#type_annotation_hint return in
             let body' = this#function_body body in
@@ -894,7 +889,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Statement.Interface.(
         let { id = ident; tparams; extends; body } = interface in
         let id' = this#class_identifier ident in
-        this#type_parameter_declaration_opt tparams (fun tparams' ->
+        this#type_params_opt tparams (fun tparams' ->
             let extends' = Base.List.map ~f:(this#on_loc_annot * this#generic_type) extends in
             let body' = (this#on_loc_annot * this#object_type) body in
             { id = id'; tparams = tparams'; extends = extends'; body = body' }))
@@ -1217,7 +1212,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Statement.OpaqueType.(
         let { id; tparams; impltype; supertype } = otype in
         let id' = this#t_identifier id in
-        this#type_parameter_declaration_opt tparams (fun tparams' ->
+        this#type_params_opt tparams (fun tparams' ->
             let impltype' = Option.map ~f:this#type_ impltype in
             let supertype' = Option.map ~f:this#type_ supertype in
             { id = id'; tparams = tparams'; impltype = impltype'; supertype = supertype' }))
@@ -1518,7 +1513,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Statement.TypeAlias.(
         let { id; tparams; right } = stuff in
         let id' = this#t_identifier id in
-        this#type_parameter_declaration_opt tparams (fun tparams' ->
+        this#type_params_opt tparams (fun tparams' ->
             let right' = this#type_ right in
             { id = id'; tparams = tparams'; right = right' }))
 

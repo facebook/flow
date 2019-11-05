@@ -207,7 +207,7 @@ type node =
   | Params of (Loc.t, Loc.t) Ast.Function.Params.t
   | Variance of Loc.t Ast.Variance.t
   | Type of (Loc.t, Loc.t) Flow_ast.Type.t
-  | TypeParam of (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t
+  | TypeParam of (Loc.t, Loc.t) Ast.Type.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
@@ -695,7 +695,7 @@ let program
         None
       else
         let id = diff_if_changed_nonopt_fn identifier id1 id2 in
-        let tparams = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
+        let tparams = diff_if_changed_opt type_params tparams1 tparams2 in
         let params = diff_if_changed_ret_opt function_params params1 params2 in
         let params =
           match (is_arrow, params1, params2, params) with
@@ -863,7 +863,7 @@ let program
       let { expr = expr1; targs = targs1 } = extends1 in
       let { expr = expr2; targs = targs2 } = extends2 in
       let expr_diff = diff_if_changed expression expr1 expr2 |> Option.return in
-      let targs_diff = diff_if_changed_opt type_parameter_instantiation targs1 targs2 in
+      let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
       join_diff_list [expr_diff; targs_diff])
   and interface
       (intf1 : (Loc.t, Loc.t) Ast.Statement.Interface.t)
@@ -872,7 +872,7 @@ let program
       let { id = id1; tparams = tparams1; extends = extends1; body = (_loc1, body1) } = intf1 in
       let { id = id2; tparams = tparams2; extends = extends2; body = (_loc2, body2) } = intf2 in
       let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
-      let tparams_diff = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
+      let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
       let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
       let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
       join_diff_list [id_diff; tparams_diff; extends_diff; body_diff])
@@ -1714,7 +1714,7 @@ let program
       let { id = id1; targs = targs1 } = gt1 in
       let { id = id2; targs = targs2 } = gt2 in
       let id_diff = diff_if_changed_ret_opt generic_identifier_type id1 id2 in
-      let targs_diff = diff_if_changed_opt type_parameter_instantiation targs1 targs2 in
+      let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
       join_diff_list [id_diff; targs_diff])
   and generic_type_with_loc
       ((_loc1, gt1) : Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
@@ -1827,9 +1827,9 @@ let program
     let (_, t_args1) = pi1 in
     let (_, t_args2) = pi2 in
     diff_and_recurse_no_trivial type_or_implicit t_args1 t_args2
-  and type_parameter_instantiation
-      (pi1 : (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t)
-      (pi2 : (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t) : node change list option =
+  and type_args
+      (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) :
+      node change list option =
     let (_, t_args1) = pi1 in
     let (_, t_args2) = pi2 in
     diff_and_recurse_nonopt_no_trivial type_ t_args1 t_args2
@@ -1874,7 +1874,7 @@ let program
       } =
         ft2
       in
-      let tparams_diff = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
+      let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
       let params_diff = diff_and_recurse_no_trivial function_param_type params1 params2 in
       let rest_diff = diff_if_changed_opt function_rest_param_type rest1 rest2 in
       let return_diff = diff_if_changed type_ return1 return2 |> Option.return in
@@ -1886,7 +1886,7 @@ let program
       let { id = id1; tparams = t_params1; right = right1 } = t_alias1 in
       let { id = id2; tparams = t_params2; right = right2 } = t_alias2 in
       let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
-      let t_params_diff = diff_if_changed_opt type_parameter_declaration t_params1 t_params2 in
+      let t_params_diff = diff_if_changed_opt type_params t_params1 t_params2 in
       let right_diff = diff_if_changed type_ right1 right2 |> Option.return in
       join_diff_list [id_diff; t_params_diff; right_diff])
   and opaque_type
@@ -1900,21 +1900,20 @@ let program
         o_type2
       in
       let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
-      let t_params_diff = diff_if_changed_opt type_parameter_declaration t_params1 t_params2 in
+      let t_params_diff = diff_if_changed_opt type_params t_params1 t_params2 in
       let supertype_diff = diff_if_changed_nonopt_fn type_ supertype1 supertype2 in
       let impltype_diff = diff_if_changed_nonopt_fn type_ impltype1 impltype2 in
       join_diff_list [id_diff; t_params_diff; supertype_diff; impltype_diff])
-  and type_parameter_declaration
-      (pd1 : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t)
-      (pd2 : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t) : node change list option =
+  and type_params
+      (pd1 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) (pd2 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) :
+      node change list option =
     let (_, t_params1) = pd1 in
     let (_, t_params2) = pd2 in
-    diff_and_recurse_nonopt_no_trivial type_parameter_declaration_type_param t_params1 t_params2
-  and type_parameter_declaration_type_param
-      ((loc1, t_param1) : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t)
-      ((_, t_param2) : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t) : node change list
-      =
-    Ast.Type.ParameterDeclaration.TypeParam.(
+    diff_and_recurse_nonopt_no_trivial type_param t_params1 t_params2
+  and type_param
+      ((loc1, t_param1) : (Loc.t, Loc.t) Ast.Type.TypeParam.t)
+      ((_, t_param2) : (Loc.t, Loc.t) Ast.Type.TypeParam.t) : node change list =
+    Ast.Type.TypeParam.(
       let { name = name1; bound = bound1; variance = variance1; default = default1 } = t_param1 in
       let { name = name2; bound = bound2; variance = variance2; default = default2 } = t_param2 in
       let variance_diff = diff_if_changed_ret_opt variance variance1 variance2 in

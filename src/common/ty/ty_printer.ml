@@ -73,7 +73,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     count_calls ~counter:size ~default:crop_atom (fun () -> type_impl ~depth t)
   and type_impl ~depth (t : Ty.t) =
     match t with
-    | TVar (v, ts) -> type_reference ~depth (type_var v) ts
+    | TVar (v, targs) -> type_reference ~depth (type_var v) targs
     | Bound (_, name) -> Atom name
     | Any k -> any ~depth k
     | Top -> Atom "mixed"
@@ -135,14 +135,14 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
       ]
   and type_var (RVar i) = Atom (varname i)
   and type_generic ~depth g =
-    let ({ name; _ }, _, params) = g in
+    let ({ name; _ }, _, targs) = g in
     let name = identifier name in
-    type_reference ~depth name params
-  and type_reference ~depth name params =
-    let params = option (type_parameter_instantiation ~depth) params in
-    fuse [name; params]
-  and type_parameter_instantiation ~depth params =
-    list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (counted_map (type_ ~depth) params)
+    type_reference ~depth name targs
+  and type_reference ~depth name targs =
+    let targs = option (type_args ~depth) targs in
+    fuse [name; targs]
+  and type_args ~depth targs =
+    list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (counted_map (type_ ~depth) targs)
   and identifier name = Atom name
   and any ~depth kind =
     let kind =

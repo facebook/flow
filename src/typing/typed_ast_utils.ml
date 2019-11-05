@@ -26,44 +26,43 @@ class type_parameter_mapper =
     method annot_with_tparams : 'a. (Type.typeparam list -> 'a) -> 'a = (fun f -> f bound_tparams)
 
     (* Imperatively adds type parameter to bound_tparams environment. *)
-    method! type_parameter_declaration_type_param tparam =
-      let res = super#type_parameter_declaration_type_param tparam in
+    method! type_param tparam =
+      let res = super#type_param tparam in
       (* Recover the Type.typeparams corresponding to AST type parameters *)
       let tparam =
-        Ast.Type.ParameterDeclaration.(
-          let ( _,
-                {
-                  TypeParam.name = ((_, t), { Ast.Identifier.name; comments = _ });
-                  bound;
-                  variance;
-                  default;
-                } ) =
-            tparam
-          in
-          let reason = Type.reason_of_t t in
-          let bound =
-            match bound with
-            | Ast.Type.Missing _ -> Type.MixedT.make reason |> Type.with_trust Trust.bogus_trust
-            | Ast.Type.Available (_, ((_, t), _)) -> t
-          in
-          let polarity =
-            Ast.Variance.(
-              match variance with
-              | Some (_, Plus) -> Polarity.Positive
-              | Some (_, Minus) -> Polarity.Negative
-              | None -> Polarity.Neutral)
-          in
-          let default = Option.map default ~f:(fun ((_, t), _) -> t) in
-          { Type.reason; name; bound; polarity; default })
+        let ( _,
+              {
+                Ast.Type.TypeParam.name = ((_, t), { Ast.Identifier.name; comments = _ });
+                bound;
+                variance;
+                default;
+              } ) =
+          tparam
+        in
+        let reason = Type.reason_of_t t in
+        let bound =
+          match bound with
+          | Ast.Type.Missing _ -> Type.MixedT.make reason |> Type.with_trust Trust.bogus_trust
+          | Ast.Type.Available (_, ((_, t), _)) -> t
+        in
+        let polarity =
+          Ast.Variance.(
+            match variance with
+            | Some (_, Plus) -> Polarity.Positive
+            | Some (_, Minus) -> Polarity.Negative
+            | None -> Polarity.Neutral)
+        in
+        let default = Option.map default ~f:(fun ((_, t), _) -> t) in
+        { Type.reason; name; bound; polarity; default }
       in
       bound_tparams <- tparam :: bound_tparams;
       res
 
     (* Record and restore the parameter environment around nodes that might
      update it. *)
-    method! type_parameter_declaration_opt pd f =
+    method! type_params_opt pd f =
       let originally_bound_tparams = bound_tparams in
-      let res = super#type_parameter_declaration_opt pd f in
+      let res = super#type_params_opt pd f in
       bound_tparams <- originally_bound_tparams;
       res
 

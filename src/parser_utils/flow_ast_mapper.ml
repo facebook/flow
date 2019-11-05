@@ -300,7 +300,7 @@ class ['loc] mapper =
       Ast.Class.Extends.(
         let { expr; targs } = extends in
         let expr' = this#expression expr in
-        let targs' = map_opt this#type_parameter_instantiation targs in
+        let targs' = map_opt this#type_args targs in
         if expr == expr' && targs == targs' then
           extends
         else
@@ -390,7 +390,7 @@ class ['loc] mapper =
       Ast.Statement.DeclareClass.(
         let { id = ident; tparams; body; extends; mixins; implements } = decl in
         let id' = this#class_identifier ident in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let body' = map_loc this#object_type body in
         let extends' = map_opt (map_loc this#generic_type) extends in
         let mixins' = ListUtils.ident_map (map_loc this#generic_type) mixins in
@@ -747,7 +747,7 @@ class ['loc] mapper =
         let ps' = ListUtils.ident_map this#function_param_type ps in
         let rpo' = map_opt this#function_rest_param_type rpo in
         let return' = this#type_ return in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         if ps' == ps && rpo' == rpo && return' == return && tparams' == tparams then
           ft
         else
@@ -848,34 +848,31 @@ class ['loc] mapper =
       else
         (loc, targs')
 
-    method type_parameter_instantiation (pi : ('loc, 'loc) Ast.Type.ParameterInstantiation.t) =
-      let (loc, targs) = pi in
-      let targs' = ListUtils.ident_map this#type_ targs in
-      if targs' == targs then
-        pi
+    method type_args (targs : ('loc, 'loc) Ast.Type.TypeArgs.t) =
+      let (loc, ts) = targs in
+      let ts' = ListUtils.ident_map this#type_ ts in
+      if ts' == ts then
+        targs
       else
-        (loc, targs')
+        (loc, ts')
 
-    method type_parameter_declaration (pd : ('loc, 'loc) Ast.Type.ParameterDeclaration.t) =
-      let (loc, type_params) = pd in
-      let type_params' =
-        ListUtils.ident_map this#type_parameter_declaration_type_param type_params
-      in
-      if type_params' == type_params then
-        pd
+    method type_params (tparams : ('loc, 'loc) Ast.Type.TypeParams.t) =
+      let (loc, tps) = tparams in
+      let tps' = ListUtils.ident_map this#type_param tps in
+      if tps' == tps then
+        tparams
       else
-        (loc, type_params')
+        (loc, tps')
 
-    method type_parameter_declaration_type_param
-        (type_param : ('loc, 'loc) Ast.Type.ParameterDeclaration.TypeParam.t) =
-      Ast.Type.ParameterDeclaration.TypeParam.(
-        let (loc, { name; bound; variance; default }) = type_param in
+    method type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
+      Ast.Type.TypeParam.(
+        let (loc, { name; bound; variance; default }) = tparam in
         let name' = this#identifier name in
         let bound' = this#type_annotation_hint bound in
         let variance' = this#variance variance in
         let default' = map_opt this#type_ default in
         if name' == name && bound' == bound && variance' == variance && default' == default then
-          type_param
+          tparam
         else
           (loc, { name = name'; bound = bound'; variance = variance'; default = default' }))
 
@@ -883,7 +880,7 @@ class ['loc] mapper =
       Ast.Type.Generic.(
         let { id; targs } = gt in
         let id' = this#generic_identifier_type id in
-        let targs' = map_opt this#type_parameter_instantiation targs in
+        let targs' = map_opt this#type_args targs in
         if id' == id && targs' == targs then
           gt
         else
@@ -981,7 +978,7 @@ class ['loc] mapper =
         let return' = this#type_annotation_hint return in
         let body' = this#function_body_any body in
         (* TODO: walk predicate *)
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         if
           ident == ident'
           && params == params'
@@ -1051,7 +1048,7 @@ class ['loc] mapper =
       Ast.Statement.Interface.(
         let { id = ident; tparams; extends; body } = interface in
         let id' = this#class_identifier ident in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
         let body' = map_loc this#object_type body in
         if id' == ident && tparams' == tparams && extends' == extends && body' == body then
@@ -1445,7 +1442,7 @@ class ['loc] mapper =
       Ast.Statement.OpaqueType.(
         let { id; tparams; impltype; supertype } = otype in
         let id' = this#identifier id in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let impltype' = map_opt this#type_ impltype in
         let supertype' = map_opt this#type_ supertype in
         if
@@ -1812,7 +1809,7 @@ class ['loc] mapper =
       Ast.Statement.TypeAlias.(
         let { id; tparams; right } = stuff in
         let id' = this#identifier id in
-        let tparams' = map_opt this#type_parameter_declaration tparams in
+        let tparams' = map_opt this#type_params tparams in
         let right' = this#type_ right in
         if id == id' && right == right' && tparams == tparams' then
           stuff

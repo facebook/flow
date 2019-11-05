@@ -27,16 +27,16 @@ module T = struct
   and decl =
     (* type definitions *)
     | Type of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         right: type_;
       }
     | OpaqueType of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         impltype: type_ option;
         supertype: type_ option;
       }
     | Interface of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic list;
         body: Loc.t * object_type;
       }
@@ -109,7 +109,7 @@ module T = struct
 
   and function_t =
     | FUNCTION of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         params: function_params;
         return: little_annotation;
       }
@@ -120,13 +120,13 @@ module T = struct
 
   and class_t =
     | CLASS of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic option;
         implements: class_implement list;
         body: Loc.t * (Loc.t * class_element_t) list;
       }
     | DECLARE_CLASS of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic option;
         mixins: generic list;
         implements: class_implement list;
@@ -568,7 +568,7 @@ module T = struct
     | ( loc,
         FUNCTION
           {
-            tparams : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+            tparams : (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
             params : function_params;
             return : little_annotation;
           } ) ->

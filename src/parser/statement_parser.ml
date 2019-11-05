@@ -586,7 +586,7 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.semicolon env;
@@ -614,7 +614,7 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     let supertype =
       match Peek.token env with
       | T_COLON ->
@@ -652,7 +652,7 @@ module Statement
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeInterface;
     Expect.token env T_INTERFACE;
     let id = Type.type_identifier env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     let { Ast.Type.Interface.extends; body } = Type.interface_helper env in
     Statement.Interface.{ id; tparams; body; extends }
 
@@ -688,7 +688,7 @@ module Statement
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
-      let tparams = Type.type_parameter_declaration env in
+      let tparams = Type.type_params env in
       let extends =
         if Expect.maybe env T_EXTENDS then
           Some (Type.generic env)
@@ -724,7 +724,7 @@ module Statement
     Expect.token env T_FUNCTION;
     let id = Parse.identifier env in
     let start_sig_loc = Peek.loc env in
-    let tparams = Type.type_parameter_declaration env in
+    let tparams = Type.type_params env in
     let params = Type.function_param_list env in
     Expect.token env T_COLON;
     let return = Type._type env in
@@ -1086,12 +1086,12 @@ module Statement
         | T_VAR
         (* not using Peek.is_class here because it would guard all of the
       * cases *)
-
+        
         | T_AT
         | T_CLASS
         (* not using Peek.is_function here because it would guard all of the
       * cases *)
-
+        
         | T_ASYNC
         | T_FUNCTION
         | T_ENUM ->
@@ -1562,7 +1562,7 @@ module Statement
               | T_COMMA
               (* Importing the exported value named "type." This is not a type-import.
                * `import type from "ModuleName";` *)
-
+              
               | T_IDENTIFIER { raw = "from"; _ } ->
                 with_default ImportValue env
               | T_MULT ->

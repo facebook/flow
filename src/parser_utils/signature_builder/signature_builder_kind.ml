@@ -87,7 +87,7 @@ type t =
   | FunctionDef of {
       generator: bool;
       async: bool;
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       params: (Loc.t, Loc.t) Ast.Function.Params.t;
       return: (Loc.t, Loc.t) Ast.Type.annotation_or_hint;
       body: (Loc.t, Loc.t) Ast.Function.body;
@@ -98,30 +98,30 @@ type t =
       predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
     }
   | ClassDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       body: (Loc.t, Loc.t) Ast.Class.Body.t;
       super: (Loc.t, Loc.t) Ast.Expression.t option;
-      super_targs: (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option;
+      super_targs: (Loc.t, Loc.t) Ast.Type.TypeArgs.t option;
       implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
     }
   | DeclareClassDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       body: Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t;
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) option;
       mixins: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
       implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
     }
   | TypeDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       right: (Loc.t, Loc.t) Ast.Type.t;
     }
   | OpaqueTypeDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       impltype: (Loc.t, Loc.t) Ast.Type.t option;
       supertype: (Loc.t, Loc.t) Ast.Type.t option;
     }
   | InterfaceDef of {
-      tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+      tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       body: Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t;
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
     }

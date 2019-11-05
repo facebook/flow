@@ -265,18 +265,15 @@ class insert_variance_mapper =
   object (this)
     inherit useless_mapper as super
 
-    method! type_parameter_declaration_type_param
-        (type_param : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t) =
-      Ast.Type.ParameterDeclaration.TypeParam.(
-        let ((loc, type_param') as orig) =
-          super#type_parameter_declaration_type_param type_param
-        in
-        let { variance; _ } = type_param' in
+    method! type_param (tparam : (Loc.t, Loc.t) Ast.Type.TypeParam.t) =
+      Ast.Type.TypeParam.(
+        let ((loc, tparam') as orig) = super#type_param tparam in
+        let { variance; _ } = tparam' in
         let variance' = this#variance_ loc variance in
         if variance == variance' then
           orig
         else
-          (loc, { type_param' with variance = variance' }))
+          (loc, { tparam' with variance = variance' }))
 
     (* New variance method with a different type signature that allows us to insert a loc *)
     method variance_ (loc : Loc.t) (variance : Loc.t Ast.Variance.t option) =
