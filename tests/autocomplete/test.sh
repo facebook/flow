@@ -214,3 +214,7 @@ assert_ok \
 printf "normalize-2.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty normalize-2.js 5 10 < normalize-2.js
+
+printf "unqualified-type-annotation.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty unqualified-type-annotation.js 28 19 < unqualified-type-annotation.js
