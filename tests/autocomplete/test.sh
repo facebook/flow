@@ -218,3 +218,11 @@ assert_ok \
 printf "unqualified-type-annotation.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty unqualified-type-annotation.js 28 19 < unqualified-type-annotation.js
+
+printf "qualified-type-annotation.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation.js 5 23 < qualified-type-annotation.js
+
+printf "qualified-type-annotation-require.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation-require.js 5 23 < qualified-type-annotation-require.js

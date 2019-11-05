@@ -3948,3 +3948,5 @@ unqualified-type-annotation.js = {
     }
   ]
 }
+qualified-type-annotation.js = {"result":[]}
+qualified-type-annotation-require.js = {"result":[]}
