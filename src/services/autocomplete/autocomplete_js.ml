@@ -16,6 +16,7 @@ type autocomplete_type =
       include_this: bool;
     }
   | Actype
+  | Acqualifiedtype of Type.t
   | Acmem of string * Type.t
   | Acjsx of string * SSet.t * Type.t
 
@@ -165,10 +166,16 @@ class process_request_searcher (from_trigger_character : bool) =
 
     method! generic_identifier_type id =
       let open Flow_ast.Type.Generic.Identifier in
-      (match id with
-      | Unqualified ((loc, _), { Flow_ast.Identifier.name; _ }) when is_autocomplete name ->
-        this#find loc Actype
-      | _ -> ());
+      begin
+        match id with
+        | Unqualified ((loc, _), { Flow_ast.Identifier.name; _ }) when is_autocomplete name ->
+          this#find loc Actype
+        | Qualified (_, { qualification; id = ((loc, _), { Flow_ast.Identifier.name; _ }) })
+          when is_autocomplete name ->
+          let qualification_type = type_of_qualification qualification in
+          this#find loc (Acqualifiedtype qualification_type)
+        | _ -> ()
+      end;
       id
   end
 

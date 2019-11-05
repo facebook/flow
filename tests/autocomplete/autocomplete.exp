@@ -3948,5 +3948,71 @@ unqualified-type-annotation.js = {
     }
   ]
 }
-qualified-type-annotation.js = {"result":[]}
-qualified-type-annotation-require.js = {"result":[]}
+qualified-type-annotation.js = {
+  "result":[
+    {
+      "name":"Typesafety",
+      "type":"interface Typesafety",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Typical",
+      "type":"type Typical = {|x: number, y: number|}",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Tyrannosaurus",
+      "type":"class Tyrannosaurus",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    }
+  ]
+}
+qualified-type-annotation-require.js = {
+  "result":[
+    {
+      "name":"Typesafety",
+      "type":"interface Typesafety",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Typical",
+      "type":"type Typical = {|x: number, y: number|}",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    },
+    {
+      "name":"Tyrannosaurus",
+      "type":"class Tyrannosaurus",
+      "func_details":null,
+      "path":"",
+      "line":0,
+      "endline":0,
+      "start":1,
+      "end":0
+    }
+  ]
+}

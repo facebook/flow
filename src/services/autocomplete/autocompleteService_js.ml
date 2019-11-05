@@ -557,19 +557,32 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
-let exports_types =
+let is_type_export =
   let open Ty in
   function
-  | Module _ -> true
-  (* workaround while the ty normalizer sometimes renders modules as objects *)
-  | Obj { obj_props; _ }
-    when List.exists
-           (function
-             | NamedProp (_, Field (TypeAlias _, _)) -> true
-             | _ -> false)
-           obj_props ->
+  | InterfaceDecl _
+  | InlineInterface _
+  | ClassDecl _
+  | TypeAlias _ ->
     true
   | _ -> false
+
+let type_exports_of_module_ty ~ac_loc =
+  let open Ty in
+  function
+  | Module (_, { exports; _ }) ->
+    Base.List.filter_map exports ~f:(fun (name, ty) ->
+        if is_type_export ty then
+          Some (autocomplete_create_result (name, ac_loc) (ty, Loc.none))
+        else
+          None)
+  (* workaround while the ty normalizer sometimes renders modules as objects *)
+  | Obj { obj_props; _ } ->
+    Base.List.filter_map obj_props ~f:(function
+        | NamedProp (name, Field (ty, _)) when is_type_export ty ->
+          Some (autocomplete_create_result (name, ac_loc) (ty, Loc.none))
+        | _ -> None)
+  | _ -> []
 
 let autocomplete_unqualified_type
     ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast ~broader_context =
@@ -613,7 +626,7 @@ let autocomplete_unqualified_type
            | Ok (Ty.ClassDecl _ as ty) ->
              let result = autocomplete_create_result (name, ac_loc) (ty, loc) in
              (result :: results, errors)
-           | Ok ty when exports_types ty ->
+           | Ok ty when type_exports_of_module_ty ~ac_loc ty <> [] ->
              let result =
                autocomplete_create_result (name, ac_loc) (ty, loc) ~insert_text:(name ^ ".")
              in
@@ -642,6 +655,43 @@ let autocomplete_unqualified_type
         ])
   in
   Ok (results, Some json_data_to_log)
+
+let autocomplete_qualified_type
+    ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~broader_context ~qtype =
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let qtype_scheme = Type.TypeScheme.{ tparams; type_ = qtype } in
+  let module_ty_res =
+    Ty_normalizer.from_scheme
+      ~options:ty_normalizer_options
+      ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+      qtype_scheme
+  in
+  let json_data =
+    let open Hh_json in
+    [("ac_type", JSON_String "Acqualifiedtype"); ("broader_context", JSON_String broader_context)]
+  in
+  match module_ty_res with
+  | Error err ->
+    let json_data_to_log =
+      let open Hh_json in
+      JSON_Object
+        ( ("result", JSON_String "FAILURE_NORMALIZER")
+        :: ("count", JSON_Number "0")
+        :: ("errors", JSON_Array [JSON_String (Ty_normalizer.error_to_string err)])
+        :: json_data )
+    in
+    Ok ([], Some json_data_to_log)
+  | Ok module_ty ->
+    let results = type_exports_of_module_ty ~ac_loc module_ty in
+    let json_data_to_log =
+      let open Hh_json in
+      JSON_Object
+        ( ("result", JSON_String "SUCCESS")
+        :: ("count", JSON_Number (results |> List.length |> string_of_int))
+        :: ("errors", JSON_Array [])
+        :: json_data )
+    in
+    Ok (results, Some json_data_to_log)
 
 let autocomplete_get_results
     ~reader cx file_sig typed_ast trigger_character docblock ~broader_context =
@@ -698,6 +748,16 @@ let autocomplete_get_results
       ~typed_ast
       ~file_sig
       ~broader_context
+  | Some (tparams, ac_loc, Acqualifiedtype qtype) ->
+    autocomplete_qualified_type
+      ~reader
+      ~cx
+      ~ac_loc
+      ~file_sig
+      ~typed_ast
+      ~tparams
+      ~broader_context
+      ~qtype
   | None ->
     let json_data_to_log =
       Hh_json.(
