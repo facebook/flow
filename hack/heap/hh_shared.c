@@ -2027,7 +2027,7 @@ CAMLprim value hh_get_size(value key) {
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Long_val(Entry_size(hashtbl[slot].addr->header)));
+  CAMLreturn(Val_long(Entry_size(hashtbl[slot].addr->header)));
 }
 
 /*****************************************************************************/
