@@ -3498,16 +3498,8 @@ and subscript ~is_cond cx ex =
   let factor_out_optional (loc, e) =
     let (opt_state, e') =
       match e with
-      | OptionalCall
-          { OptionalCall.call = { Call.callee; targs = _; arguments = _ } as call; optional } ->
+      | OptionalCall { OptionalCall.call; optional } ->
         warn_or_ignore_optional_chaining optional cx loc;
-        begin
-          match callee with
-          | (_, Member _)
-          | (_, OptionalMember _) ->
-            Flow.add_output cx Error_message.(EOptionalChainingMethods loc)
-          | _ -> ()
-        end;
         let opt_state =
           if optional then
             NewChain
@@ -3801,73 +3793,6 @@ and subscript ~is_cond cx ex =
               targs;
               arguments = argument_asts;
             } )
-    | Call
-        {
-          Call.callee = (lookup_loc, Member { Member._object; property }) as callee;
-          targs;
-          arguments;
-        } ->
-      (* method call *)
-      let (((_, ot), _) as _object) = expression cx _object in
-      let (targts, targs) = convert_call_targs_opt cx targs in
-      let (argts, argument_asts) =
-        arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-      in
-      let ((prop_t, lhs_t), property) =
-        match property with
-        | Member.PropertyPrivateName
-            (prop_loc, (name_loc, ({ Ast.Identifier.name; comments = _ } as id))) ->
-          let reason_call = mk_reason (RMethodCall (Some name)) loc in
-          let use_op =
-            Op
-              (FunCallMethod
-                 {
-                   op = mk_expression_reason ex;
-                   fn = mk_expression_reason callee;
-                   prop = mk_reason (RProperty (Some name)) prop_loc;
-                   args = mk_initial_arguments_reason arguments;
-                   local = true;
-                 })
-          in
-          ( method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts,
-            Member.PropertyPrivateName (prop_loc, (name_loc, id)) )
-        | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
-          let reason_call = mk_reason (RMethodCall (Some name)) loc in
-          let use_op =
-            Op
-              (FunCallMethod
-                 {
-                   op = mk_expression_reason ex;
-                   fn = mk_expression_reason callee;
-                   prop = mk_reason (RProperty (Some name)) prop_loc;
-                   args = mk_initial_arguments_reason arguments;
-                   local = true;
-                 })
-          in
-          let ((prop_t, _) as x) =
-            method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts
-          in
-          (x, Member.PropertyIdentifier ((prop_loc, prop_t), id))
-        | Member.PropertyExpression expr ->
-          let reason_call = mk_reason (RMethodCall None) loc in
-          let reason_lookup = mk_reason (RProperty None) lookup_loc in
-          let (((_, elem_t), _) as expr) = expression cx expr in
-          ( ( bogus_trust () |> MixedT.at lookup_loc,
-              Tvar.mk_where cx reason_call (fun t ->
-                  let frame = Env.peek_frame () in
-                  let funtype = mk_methodcalltype ot targts argts t ~frame in
-                  Flow.flow cx (ot, CallElemT (reason_call, reason_lookup, elem_t, CallM funtype)))
-            ),
-            Member.PropertyExpression expr )
-      in
-      Some
-        ( (loc, lhs_t),
-          call_ast
-            {
-              Call.callee = ((lookup_loc, prop_t), Member { Member._object; property });
-              targs;
-              arguments = argument_asts;
-            } )
     | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, argument_asts) =
@@ -4067,8 +3992,23 @@ and subscript ~is_cond cx ex =
      Below are several helper functions for setting up this tuple in the
      presence of chaining.
      *)
+    let join_optional_branches voided filtered =
+      match voided with
+      | None -> filtered
+      | Some void ->
+        Tvar.mk_where cx (reason_of_t filtered) (fun t ->
+            Flow.flow_t cx (filtered, t);
+            Flow.flow_t cx (void, t))
+    in
     let handle_new_chain
-        lhs_reason (chain_t, voided_t, object_ast) ~get_reason ~test_hooks ~get_opt_use =
+        lhs_reason
+        loc
+        (chain_t, voided_t, object_ast)
+        ~this_reason
+        ~subexpressions
+        ~get_reason
+        ~test_hooks
+        ~get_opt_use =
       (* We've encountered an optional chaining operator.
            We need to flow the "success" type of object_ into a OptionalChainT
            type, which will "filter out" VoidT and NullT from the type of
@@ -4084,7 +4024,22 @@ and subscript ~is_cond cx ex =
            the first place. We also take voided_t, equivalent to T2 above and
            representing any previous chain short-circuits, and it will
            contribute to the failure/short-circuit output of this function,
-           `voided_out`. *)
+           `voided_out`.
+
+           Method calls need a little bit of extra support, because MethodT
+           acts as both a lookup and a call. Suppose `a: ?{b?: () => number}`
+           and `a?.b?.().` We need to generate a funcalltype for the call to
+           () => number, and funcalltypes include the receiver ("this") of the
+           call. However, we don't want the receiver to be the type of `a`,
+           ?{b?: () => number}, because before calling the method, we've
+           already filtered out the nullish case on `a`. The receiver instead
+           should be {b?: () => number} (not optional). The bind_t parameter is
+           (if present) the receiver of the method call, and is included in the
+           OptionalChainT; see the rules in flow_js for how it's used, but
+           essentially the successfully filtered receiver of the function call
+           is flowed into it, and it is used as the `this`-parameter of the
+           calltype that the method call will flow into. *)
+      let (subexpression_types, subexpression_asts) = subexpressions () in
       let reason = get_reason chain_t in
       let chain_reason = mk_reason ROptionalChain loc in
       let mem_t =
@@ -4092,21 +4047,26 @@ and subscript ~is_cond cx ex =
         | Some hit -> hit
         | None -> Tvar.mk cx reason
       in
-      let voided_out = Tvar.mk cx reason in
+      let voided_out =
+        Tvar.mk_where cx reason (fun t ->
+            Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t)
+      in
+      let this_t = Tvar.mk cx this_reason in
+      let opt_use = get_opt_use subexpression_types reason this_t in
       Flow.flow
         cx
         ( chain_t,
-          OptionalChainT
-            (chain_reason, lhs_reason, apply_opt_use (get_opt_use reason) mem_t, voided_out) );
-      Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, voided_out)) voided_t;
+          OptionalChainT (chain_reason, lhs_reason, this_t, apply_opt_use opt_use mem_t, voided_out)
+        );
       let lhs_t =
         Tvar.mk_where cx reason (fun t ->
             Flow.flow_t cx (mem_t, t);
             Flow.flow_t cx (voided_out, t))
       in
-      (mem_t, Some voided_out, lhs_t, object_ast)
+      (mem_t, Some voided_out, lhs_t, object_ast, subexpression_asts)
     in
-    let handle_continue_chain (chain_t, voided_t, object_ast) ~get_result ~test_hooks ~get_reason =
+    let handle_continue_chain
+        (chain_t, voided_t, object_ast) ~subexpressions ~get_result ~test_hooks ~get_reason =
       (* We're looking at a non-optional call or member access, but one where
          deeper in the chain there was an optional chaining operator. We don't
          need to do anything special locally, but we do need to remember that
@@ -4114,47 +4074,58 @@ and subscript ~is_cond cx ex =
          voided_t parameter. We'll flow that type into the type of the overall
          expression to account for that possibility.
       *)
+      let (subexpression_types, subexpression_asts) = subexpressions () in
       let reason = get_reason chain_t in
       let res_t =
         match test_hooks chain_t with
         | Some hit -> hit
-        | None -> get_result reason chain_t
+        | None -> get_result subexpression_types reason chain_t
       in
-      let lhs_t =
-        match voided_t with
-        | Some voided_t ->
-          let lhs_tvar = Tvar.mk cx reason in
-          Flow.flow_t cx (res_t, lhs_tvar);
-          Flow.flow_t cx (voided_t, lhs_tvar);
-          lhs_tvar
-        | None -> res_t
-      in
-      (res_t, voided_t, lhs_t, object_ast)
+      let lhs_t = join_optional_branches voided_t res_t in
+      (res_t, voided_t, lhs_t, object_ast, subexpression_asts)
     in
-    let handle_chaining opt object_ ~get_result ~test_hooks ~get_opt_use ~get_reason =
+    let handle_chaining
+        opt
+        object_
+        loc
+        ~this_reason
+        ~subexpressions
+        ~get_result
+        ~test_hooks
+        ~get_opt_use
+        ~get_reason =
       match opt with
       | NonOptional ->
         (* Proceeding as normal: no need to worry about optionality, so T2 from
           above is None. We don't need to consider optional short-circuiting, so
           we can call expression_ rather than recur_chain. *)
         let (((_, obj_t), _) as object_ast) = expression cx object_ in
+        let (subexpression_types, subexpression_asts) = subexpressions () in
         let reason = get_reason obj_t in
         let lhs_t =
           match test_hooks obj_t with
           | Some hit -> hit
-          | None -> get_result reason obj_t
+          | None -> get_result subexpression_types reason obj_t
         in
-        (lhs_t, None, lhs_t, object_ast)
+        (lhs_t, None, lhs_t, object_ast, subexpression_asts)
       | NewChain ->
         let lhs_reason = mk_expression_reason object_ in
         handle_new_chain
           lhs_reason
+          loc
           (recur_chain ~is_cond:false cx object_)
+          ~subexpressions
+          ~this_reason
           ~get_reason
           ~test_hooks
           ~get_opt_use
       | ContinueChain ->
-        handle_continue_chain (recur_chain ~is_cond cx object_) ~get_result ~test_hooks ~get_reason
+        handle_continue_chain
+          (recur_chain ~is_cond cx object_)
+          ~subexpressions
+          ~get_result
+          ~test_hooks
+          ~get_reason
     in
     let maybe_refine (loc, e) opt =
       match opt with
@@ -4167,29 +4138,94 @@ and subscript ~is_cond cx ex =
          case where chaining isn't allowed. *)
       (lhs_t, None, res)
     | None ->
-      (match e' with
+      let (e', method_receiver_and_state) =
+        (* If we're looking at a call, look "one level deeper" to see if the
+           next element of the chain is an member access, in which case we're
+           looking at an optional method call and we need to process both
+           "levels" at once.  Similar to the call to factor_out_optional above,
+           we then factor out the optionality of the member lookup component of
+           the method call. However, we can skip this if the callee is optional
+           and the call is non-optional--this means that the callee is in
+           parentheses, so we can treat it as a regular GetProp followed by a
+           regular Call instead of using the special method call machinery. Such
+           a case would look like this:
+
+             callee
+            vvvvvvvvv
+           (obj?.meth)()
+            ^^^
+             member._object
+       *)
+        match (e', opt_state) with
+        | ( Call
+              ( {
+                  Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
+                  targs = _;
+                  arguments = _;
+                } as call ),
+            (NewChain | ContinueChain) ) ->
+          warn_or_ignore_optional_chaining optional cx loc;
+          let receiver_ast member = OptionalMember { OptionalMember.member; optional } in
+          let member_opt =
+            if optional then
+              (* In this case:
+
+                 callee
+                vvvvvvvvv
+                obj?.meth() (or obj?.meth?.())
+                ^^^
+                 member._object
+
+               There may or may not be other links in the chain earlier than obj, and the call
+               to meth() may be optional itself (e.g. obj?.meth?.()) -- this has already been
+               factored out.
+              *)
+              NewChain
+            else
+              (* In this case:
+
+                          callee
+                         vvvvvvvv
+              other_obj?.obj.meth() (or other_obj?.obj.meth?.())
+                         ^^^
+                          member._object
+              *)
+              ContinueChain
+          in
+          ( Call { call with Call.callee = (callee_loc, Member member) },
+            Some (member_opt, member, receiver_ast) )
+        | (Call { Call.callee = (_, Member member); targs = _; arguments = _ }, _) ->
+          (e', Some (NonOptional, member, (fun member -> Member member)))
+        | _ -> (e', None)
+      in
+      (match (e', method_receiver_and_state) with
       (* e1[e2] *)
-      | Member { Member._object; property = Member.PropertyExpression index } ->
+      | (Member { Member._object; property = Member.PropertyExpression index }, _) ->
         let reason = mk_reason (RProperty None) loc in
-        let (((_, tind), _) as index) = expression cx index in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let opt_use = OptGetElemT (use_op, reason, tind) in
-        let get_mem_t _ obj_t =
+        let get_opt_use tind _ _ = OptGetElemT (use_op, reason, tind) in
+        let get_mem_t tind reason obj_t =
           match maybe_refine (loc, e) opt_state with
           | Some t -> t
           | None ->
             Tvar.mk_where cx reason (fun t ->
-                let use = apply_opt_use opt_use t in
+                let use = apply_opt_use (get_opt_use tind reason obj_t) t in
                 Flow.flow cx (obj_t, use))
         in
-        let test_hooks = Fn.const None in
-        let (filtered_out, voided_out, lhs_t, object_ast) =
+        let eval_index () =
+          let (((_, tind), _) as index) = expression cx index in
+          (tind, index)
+        in
+        let (filtered_out, voided_out, lhs_t, object_ast, index) =
           handle_chaining
             opt_state
             _object
+            loc
+            ~this_reason:(mk_expression_reason _object)
+            ~subexpressions:eval_index
             ~get_result:get_mem_t
-            ~test_hooks
-            ~get_opt_use:(Fn.const opt_use)
+            ~test_hooks:(Fn.const None)
+            ~get_opt_use
             ~get_reason:(Fn.const reason)
         in
         ( filtered_out,
@@ -4198,12 +4234,13 @@ and subscript ~is_cond cx ex =
             member_ast { Member._object = object_ast; property = Member.PropertyExpression index }
           ) )
       (* e.l *)
-      | Member
-          {
-            Member._object;
-            property =
-              Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
-          } ->
+      | ( Member
+            {
+              Member._object;
+              property =
+                Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+            },
+          _ ) ->
         let expr_reason = mk_expression_reason ex in
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
         let use_op = Op (GetProperty expr_reason) in
@@ -4214,7 +4251,7 @@ and subscript ~is_cond cx ex =
           else
             None
         in
-        let get_mem_t _ obj_t =
+        let get_mem_t () _ obj_t =
           match maybe_refine (loc, e) opt_state with
           | Some t -> t
           | None ->
@@ -4222,26 +4259,31 @@ and subscript ~is_cond cx ex =
                 let use = apply_opt_use opt_use t in
                 Flow.flow cx (obj_t, use))
         in
-        let (filtered_out, voided_out, lhs_t, object_ast) =
+        let (filtered_out, voided_out, lhs_t, object_ast, _) =
           handle_chaining
             opt_state
             _object
+            loc
+            ~subexpressions:(Fn.const ((), ()))
+            ~this_reason:(mk_expression_reason _object)
             ~get_result:get_mem_t
             ~test_hooks
-            ~get_opt_use:(Fn.const opt_use)
+            ~get_opt_use:(fun _ _ _ -> opt_use)
             ~get_reason:(Fn.const expr_reason)
         in
         let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
         ( filtered_out,
           voided_out,
           ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
-      | Member
-          {
-            Member._object;
-            property =
-              Member.PropertyPrivateName (ploc, (_, { Ast.Identifier.name; comments = _ })) as
-              property;
-          } ->
+      (* e.#l *)
+      | ( Member
+            {
+              Member._object;
+              property =
+                Member.PropertyPrivateName (ploc, (_, { Ast.Identifier.name; comments = _ })) as
+                property;
+            },
+          _ ) ->
         let expr_reason = mk_reason (RPrivateProperty name) loc in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
         let opt_use = get_private_field_opt_use expr_reason ~use_op name in
@@ -4251,7 +4293,7 @@ and subscript ~is_cond cx ex =
           else
             None
         in
-        let get_mem_t _ obj_t =
+        let get_mem_t () _ obj_t =
           match maybe_refine (loc, e) opt_state with
           | Some t -> t
           | None ->
@@ -4259,30 +4301,208 @@ and subscript ~is_cond cx ex =
                 let use = apply_opt_use opt_use t in
                 Flow.flow cx (obj_t, use))
         in
-        let (filtered_out, voided_out, lhs_t, object_ast) =
+        let (filtered_out, voided_out, lhs_t, object_ast, _) =
           handle_chaining
             opt_state
             _object
+            loc
+            ~this_reason:(mk_expression_reason _object)
+            ~subexpressions:(Fn.const ((), ()))
             ~get_result:get_mem_t
             ~test_hooks
-            ~get_opt_use:(Fn.const opt_use)
+            ~get_opt_use:(fun _ _ _ -> opt_use)
             ~get_reason:(Fn.const expr_reason)
         in
         ( filtered_out,
           voided_out,
           ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
-      (* e1(e2...) *)
-      | Call { Call.callee; targs; arguments } ->
-        begin
-          match callee with
-          | (_, OptionalMember _) ->
-            Flow.add_output cx Error_message.(EOptionalChainingMethods loc)
-          | _ -> ()
-        end;
+      (* Method calls: e.l(), e.#l(), and e1[e2]() *)
+      | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments },
+          Some (member_opt, ({ Member._object; property } as receiver), receiver_ast) ) ->
         let (targts, targs) = convert_call_targs_opt cx targs in
-        let (argts, argument_asts) =
-          arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+        let expr_reason = mk_expression_reason ex in
+        let ( filtered_out,
+              lookup_voided_out,
+              call_voided_out,
+              member_lhs_t,
+              prop_t,
+              object_ast,
+              property,
+              argument_asts ) =
+          match property with
+          | Member.PropertyPrivateName
+              (prop_loc, (_, ({ Ast.Identifier.name; comments = _ } as id)))
+          | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
+            let reason_call = mk_reason (RMethodCall (Some name)) loc in
+            let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
+            let use_op =
+              Op
+                (FunCallMethod
+                   {
+                     op = expr_reason;
+                     fn = mk_expression_reason (lookup_loc, receiver_ast receiver);
+                     prop = reason_prop;
+                     args = mk_initial_arguments_reason arguments;
+                     local = true;
+                   })
+            in
+            let prop_t = Tvar.mk cx reason_prop in
+            let call_voided_out = Tvar.mk cx reason_call in
+            let get_opt_use argts _ this_t =
+              method_call_opt_use
+                opt_state
+                ~this_t
+                ~prop_t
+                ~voided_out:call_voided_out
+                reason_call
+                ~use_op
+                prop_loc
+                (callee, name)
+                loc
+                targts
+                argts
+            in
+            let test_hooks obj_t =
+              if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc obj_t then
+                Some (Unsoundness.at InferenceHooks prop_loc)
+              else
+                None
+            in
+            let get_mem_t argts reason obj_t =
+              Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
+              match maybe_refine (loc, callee_expr) member_opt with
+              | Some f ->
+                Env.havoc_heap_refinements ();
+                Tvar.mk_where cx reason_call (fun t ->
+                    let frame = Env.peek_frame () in
+                    let app =
+                      mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity:true
+                    in
+                    Flow.unify cx f prop_t;
+                    let call_t =
+                      match opt_state with
+                      | NewChain ->
+                        let chain_reason = mk_reason ROptionalChain loc in
+                        let lhs_reason = mk_expression_reason callee in
+                        OptionalChainT
+                          (chain_reason, lhs_reason, obj_t, CallT (use_op, reason_call, app), t)
+                      | _ -> CallT (use_op, reason_call, app)
+                    in
+                    Flow.flow cx (f, call_t))
+              | None ->
+                Tvar.mk_where cx reason_call (fun t ->
+                    let use = apply_opt_use (get_opt_use argts reason obj_t) t in
+                    Flow.flow cx (obj_t, use))
+            in
+            let eval_args () =
+              arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+            in
+            let this_reason = mk_expression_reason callee in
+            let (filtered_out, lookup_voided_out, member_lhs_t, object_ast, argument_asts) =
+              handle_chaining
+                member_opt
+                _object
+                lookup_loc
+                ~this_reason
+                ~subexpressions:eval_args
+                ~get_result:get_mem_t
+                ~test_hooks
+                ~get_opt_use
+                ~get_reason:(Fn.const expr_reason)
+            in
+            let prop_ast =
+              match property with
+              | Member.PropertyExpression _ ->
+                Utils_js.assert_false "unexpected property expression"
+              | Member.PropertyPrivateName (_, (name_loc, _)) ->
+                Member.PropertyPrivateName (prop_loc, (name_loc, id))
+              | Member.PropertyIdentifier _ -> Member.PropertyIdentifier ((prop_loc, prop_t), id)
+            in
+            ( filtered_out,
+              lookup_voided_out,
+              call_voided_out,
+              member_lhs_t,
+              prop_t,
+              object_ast,
+              prop_ast,
+              argument_asts )
+          | Member.PropertyExpression expr ->
+            let reason_call = mk_reason (RMethodCall None) loc in
+            let reason_lookup = mk_reason (RProperty None) lookup_loc in
+            let call_voided_out = Tvar.mk cx expr_reason in
+            let prop_t = Tvar.mk cx reason_lookup in
+            let get_opt_use (argts, elem_t) _ this_t =
+              elem_call_opt_use
+                opt_state
+                ~this_t
+                ~prop_t
+                ~voided_out:call_voided_out
+                ~reason_call
+                ~reason_lookup
+                ~reason_expr:expr_reason
+                ~reason_chain:(mk_reason ROptionalChain loc)
+                targts
+                argts
+                elem_t
+            in
+            let get_mem_t arg_and_elem_ts reason obj_t =
+              Tvar.mk_where cx reason_call (fun t ->
+                  let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
+                  Flow.flow cx (obj_t, use);
+                  Flow.flow_t cx (obj_t, prop_t))
+            in
+            let eval_args_and_expr () =
+              let (((_, elem_t), _) as expr) = expression cx expr in
+              let (argts, argument_asts) =
+                arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+              in
+              ((argts, elem_t), (argument_asts, expr))
+            in
+            let this_reason = mk_expression_reason callee in
+            let ( filtered_out,
+                  lookup_voided_out,
+                  member_lhs_t,
+                  object_ast,
+                  (argument_asts, expr_ast) ) =
+              handle_chaining
+                member_opt
+                _object
+                lookup_loc
+                ~this_reason
+                ~subexpressions:eval_args_and_expr
+                ~get_result:get_mem_t
+                ~test_hooks:(Fn.const None)
+                ~get_opt_use
+                ~get_reason:(Fn.const expr_reason)
+            in
+            ( filtered_out,
+              lookup_voided_out,
+              call_voided_out,
+              member_lhs_t,
+              prop_t,
+              object_ast,
+              Member.PropertyExpression expr_ast,
+              argument_asts )
         in
+        let voided_out = join_optional_branches lookup_voided_out call_voided_out in
+        let lhs_t =
+          Tvar.mk_where cx (reason_of_t member_lhs_t) (fun t ->
+              Flow.flow_t cx (member_lhs_t, t);
+              Flow.flow_t cx (voided_out, t))
+        in
+        ( filtered_out,
+          Some voided_out,
+          ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee =
+                  ((lookup_loc, prop_t), receiver_ast { Member._object = object_ast; property });
+                targs;
+                arguments = argument_asts;
+              } ) )
+      (* e1(e2...) *)
+      | (Call { Call.callee; targs; arguments }, None) ->
+        let (targts, targs) = convert_call_targs_opt cx targs in
         let use_op =
           Op
             (FunCall
@@ -4293,18 +4513,28 @@ and subscript ~is_cond cx ex =
                  local = true;
                })
         in
-        let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
-        let get_opt_use reason = func_call_opt_use reason ~use_op targts argts in
+        let get_opt_use argts reason _ = func_call_opt_use reason ~use_op targts argts in
         let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
-        let get_result reason f =
+        let get_result argts reason f =
           Tvar.mk_where cx reason (fun t ->
-              let use = apply_opt_use (get_opt_use reason) t in
+              let use = apply_opt_use (get_opt_use argts reason f) t in
               Flow.flow cx (f, use))
         in
+        let eval_args () = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
         let test_hooks = Fn.const None in
-        let (filtered_out, voided_out, lhs_t, object_ast) =
-          handle_chaining opt_state callee ~get_result ~test_hooks ~get_opt_use ~get_reason
+        let (filtered_out, voided_out, lhs_t, object_ast, argument_asts) =
+          handle_chaining
+            opt_state
+            callee
+            loc
+            ~subexpressions:eval_args
+            ~this_reason:(mk_expression_reason ex)
+            ~get_result
+            ~test_hooks
+            ~get_opt_use
+            ~get_reason
         in
+        let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
         (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
       | _ ->
         let (((_, t), _) as res) = expression cx ex in
@@ -4382,6 +4612,35 @@ and func_call cx reason ~use_op ?(call_strict_arity = true) func_t targts argts 
   let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity targts argts in
   Tvar.mk_where cx reason (fun t -> Flow.flow cx (func_t, apply_opt_use opt_use t))
 
+and method_call_opt_use
+    opt_state
+    ~voided_out
+    ~prop_t
+    ~this_t
+    reason
+    ~use_op
+    ?(call_strict_arity = true)
+    prop_loc
+    (expr, name)
+    chain_loc
+    targts
+    argts =
+  Env.havoc_heap_refinements ();
+  let (expr_loc, _) = expr in
+  let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
+  let frame = Env.peek_frame () in
+  let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
+  let app = mk_opt_methodcalltype this_t targts argts frame call_strict_arity in
+  let propref = Named (reason_prop, name) in
+  let action =
+    match opt_state with
+    | NewChain ->
+      let chain_reason = mk_reason ROptionalChain chain_loc in
+      OptChainM (chain_reason, mk_expression_reason expr, prop_t, app, voided_out)
+    | _ -> OptCallM app
+  in
+  OptMethodT (use_op, reason, reason_expr, propref, action, Some prop_t)
+
 (* returns (type of method itself, type returned from method) *)
 and method_call
     cx reason ~use_op ?(call_strict_arity = true) prop_loc (expr, obj_t, name) targts argts =
@@ -4414,6 +4673,28 @@ and method_call
           Flow.flow
             cx
             (obj_t, MethodT (use_op, reason, reason_expr, propref, CallM app, Some prop_t))) )
+
+and elem_call_opt_use
+    opt_state
+    ~voided_out
+    ~this_t
+    ~prop_t
+    ~reason_call
+    ~reason_lookup
+    ~reason_expr
+    ~reason_chain
+    targts
+    argts
+    elem_t =
+  Env.havoc_heap_refinements ();
+  let frame = Env.peek_frame () in
+  let app = mk_opt_methodcalltype this_t targts argts frame true in
+  let action =
+    match opt_state with
+    | NewChain -> OptChainM (reason_chain, reason_expr, prop_t, app, voided_out)
+    | _ -> OptCallM app
+  in
+  OptCallElemT (reason_call, reason_lookup, elem_t, action)
 
 and identifier_ cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc then

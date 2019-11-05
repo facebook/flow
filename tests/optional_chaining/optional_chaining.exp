@@ -721,14 +721,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
 
-Flow does not yet support method or property calls in optional chains.
-
-   9| (foo?.bar?.(): empty);
-       ^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
-
 Cannot cast `foo?.bar?.()` to empty because:
  - null or undefined [1] is incompatible with empty [2].
  - null or undefined [3] is incompatible with empty [2].
@@ -755,17 +747,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
 
-Flow does not yet support method or property calls in optional chains.
+Cannot call `foo.bar` because property `bar` is missing in null or undefined [1].
 
+   method_calls.js:10:2
    10| (foo.bar?.(): empty);
         ^^^^^^^^^^^
+
+References:
+   method_calls.js:7:18
+    7| declare var foo: ?X;
+                        ^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
 
-Cannot call `foo.bar` because:
- - null or undefined [1] is not a function.
- - property `bar` is missing in null or undefined [2].
+Cannot cast `foo.bar?.()` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
 
    method_calls.js:10:2
    10| (foo.bar?.(): empty);
@@ -775,34 +773,12 @@ References:
    method_calls.js:4:8
     4|   bar: ?(() => number),
               ^^^^^^^^^^^^^^^ [1]
-   method_calls.js:7:18
-    7| declare var foo: ?X;
-                        ^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
-
-Cannot cast `foo.bar?.()` to empty because number [1] is incompatible with empty [2].
-
-   method_calls.js:10:2
-   10| (foo.bar?.(): empty);
-        ^^^^^^^^^^^
-
-References:
-   method_calls.js:4:16
-    4|   bar: ?(() => number),
-                      ^^^^^^ [1]
    method_calls.js:10:15
    10| (foo.bar?.(): empty);
                      ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
-
-Flow does not yet support method or property calls in optional chains.
-
-   11| (foo?.bar(): empty);
-        ^^^^^^^^^^
+   method_calls.js:4:16
+    4|   bar: ?(() => number),
+                      ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
@@ -843,14 +819,6 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
 
-Flow does not yet support method or property calls in optional chains.
-
-   12| ((foo?.bar)(): empty);
-        ^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
-
 Cannot call `foo?.bar` because:
  - null or undefined [1] is not a function.
  - null or undefined [2] is not a function.
@@ -883,6 +851,201 @@ References:
    method_calls.js:12:16
    12| ((foo?.bar)(): empty);
                       ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:15:16
+
+Cannot assign `a.b?.()?.c?.d` to `y` because:
+ - null or undefined [1] is incompatible with empty [2].
+ - null or undefined [3] is incompatible with empty [2].
+ - null or undefined [4] is incompatible with empty [2].
+ - number [5] is incompatible with empty [2].
+
+   method_calls.js:15:16
+   15| var y: empty = a.b?.()?.c?.d;
+                      ^^^^^^^^^^^^^
+
+References:
+   method_calls.js:14:21
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   method_calls.js:15:8
+   15| var y: empty = a.b?.()?.c?.d;
+              ^^^^^ [2]
+   method_calls.js:14:29
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                   ^^^^^^^^^^^^^^^^^^ [3]
+   method_calls.js:14:34
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                        ^^^^^^^^^^^^ [4]
+   method_calls.js:14:39
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                             ^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:16:16
+
+Cannot assign `a.c?.d?.e` to `x` because:
+ - null or undefined [1] is incompatible with empty [2].
+ - null or undefined [3] is incompatible with empty [2].
+ - number [4] is incompatible with empty [2].
+
+   method_calls.js:16:16
+   16| var x: empty = a.c?.d?.e;
+                      ^^^^^^^^^
+
+References:
+   method_calls.js:14:53
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                                           ^^^^^^^^^^^^^^^^^ [1]
+   method_calls.js:16:8
+   16| var x: empty = a.c?.d?.e;
+              ^^^^^ [2]
+   method_calls.js:14:58
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                                                ^^^^^^^^^^^ [3]
+   method_calls.js:14:62
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                                                    ^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:17:16
+
+Cannot assign `a.d?.e.f().g` to `w` because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   method_calls.js:17:16
+   17| var w: empty = a.d?.e.f().g;
+                      ^^^^^^^^^^^^
+
+References:
+   method_calls.js:14:75
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   method_calls.js:17:8
+   17| var w: empty = a.d?.e.f().g;
+              ^^^^^ [2]
+   method_calls.js:14:94
+   14| declare var a: { b: ?(() => ?{c: ?{d: number}}), c: ?{d: ?{e:number}}, d: ?{e: {f: () => {g: number}}} };
+                                                                                                    ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:20:16
+
+Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because:
+ - undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+ - number [4] is incompatible with empty [2].
+
+   method_calls.js:20:16
+   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method_calls.js:19:27
+   19| declare var b: {onClick?: () => number};
+                                 ^^^^^^^^^^^^ [1]
+   method_calls.js:20:8
+   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
+              ^^^^^ [2]
+   method_calls.js:19:33
+   19| declare var b: {onClick?: () => number};
+                                       ^^^^^^ [3]
+   method_calls.js:20:53
+   20| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
+                                                           ^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:23:16
+
+Cannot assign `c?.[0]?.()?.[0]?.[0]` to `z` because:
+ - null or undefined [1] is incompatible with empty [2].
+ - null or undefined [3] is incompatible with empty [2].
+ - null or undefined [4] is incompatible with empty [2].
+ - null or undefined [5] is incompatible with empty [2].
+ - number [6] is incompatible with empty [2].
+
+   method_calls.js:23:16
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+                      ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method_calls.js:22:16
+   22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   method_calls.js:23:8
+   23| var z: empty = c?.[0]?.()?.[0]?.[0]
+              ^^^^^ [2]
+   method_calls.js:22:31
+   22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
+                                     ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   method_calls.js:22:38
+   22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
+                                            ^^^^^^^^^^^^^^ [4]
+   method_calls.js:22:23
+   22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   method_calls.js:22:45
+   22| declare var c: ?Array<?(() => ?Array<?Array<number>>)>;
+                                                   ^^^^^^ [6]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:43:3
+
+This use of optional chaining (`?.`) is unnecessary because `cc` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   method_calls.js:43:3
+   43|   cc?.c();
+         ^^^^^
+
+References:
+   method_calls.js:43:3
+   43|   cc?.c();
+         ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:43:3
+
+Cannot call `cc?.c` because undefined [1] is not a function.
+
+   method_calls.js:43:3
+   43|   cc?.c();
+         ^^^^^^^
+
+References:
+   method_calls.js:40:15
+   40| type P = {c?: () => void, b?: {c?: {d: number}}};
+                     ^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:47:21
+
+Cannot get `cc.b.c` because property `c` is missing in undefined [1].
+
+   method_calls.js:47:21
+   47|   var xxx: number = cc.b.c.d;
+                           ^^^^^^
+
+References:
+   method_calls.js:40:31
+   40| type P = {c?: () => void, b?: {c?: {d: number}}};
+                                     ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- method_calls.js:47:21
+
+Cannot get `cc.b.c.d` because property `d` is missing in undefined [1].
+
+   method_calls.js:47:21
+   47|   var xxx: number = cc.b.c.d;
+                           ^^^^^^^^
+
+References:
+   method_calls.js:40:36
+   40| type P = {c?: () => void, b?: {c?: {d: number}}};
+                                          ^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- private_properties.js:6:6
@@ -1622,4 +1785,4 @@ References:
 
 
 
-Found 123 errors
+Found 140 errors

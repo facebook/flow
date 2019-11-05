@@ -691,8 +691,12 @@ and _json_of_use_t_impl json_cx t =
         ]
       | IdxUnwrap (_, t_out) -> [("t_out", _json_of_t json_cx t_out)]
       | IdxUnMaybeifyT (_, t_out) -> [("t_out", _json_of_t json_cx t_out)]
-      | OptionalChainT (_, _, out, void_out) ->
-        [("t_out", _json_of_use_t json_cx out); ("voidt_out", _json_of_t json_cx void_out)]
+      | OptionalChainT (_, _, this, out, void_out) ->
+        [
+          ("this", _json_of_t json_cx this);
+          ("t_out", _json_of_use_t json_cx out);
+          ("voidt_out", _json_of_t json_cx void_out);
+        ]
       | InvariantT _ -> []
       | CallLatentPredT (_, sense, offset, l, t) ->
         [
@@ -1010,8 +1014,17 @@ and json_of_funcalltype_impl
 
 and json_of_methodaction json_cx = check_depth json_of_methodaction_impl json_cx
 
-and json_of_methodaction_impl json_cx = function
-  | CallM funtype -> json_of_funcalltype json_cx funtype
+and json_of_methodaction_impl json_cx =
+  Hh_json.(
+    function
+    | CallM funtype -> json_of_funcalltype json_cx funtype
+    | ChainM (_, _, this, t_out, void_out) ->
+      JSON_Object
+        [
+          ("this", _json_of_t json_cx this);
+          ("t_out", json_of_funcalltype json_cx t_out);
+          ("voidt_out", _json_of_t json_cx void_out);
+        ])
 
 and json_of_funcallarg json_cx = check_depth json_of_funcallarg_impl json_cx
 
@@ -2136,7 +2149,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjSealT _ -> p t
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
-    | OptionalChainT (_, _, t', void_t) -> p ~extra:(spf "%s, %s" (use_kid t') (kid void_t)) t
+    | OptionalChainT (_, _, _, t', void_t) -> p ~extra:(spf "%s, %s" (use_kid t') (kid void_t)) t
     | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t

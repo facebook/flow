@@ -1324,13 +1324,14 @@ class virtual ['a] t_with_uses =
           t
         else
           IdxUnMaybeifyT (r, t'')
-      | OptionalChainT (r1, r2, t_out, void_out) ->
+      | OptionalChainT (r1, r2, this, t_out, void_out) ->
+        let this' = self#type_ cx map_cx this in
         let t_out' = self#use_type cx map_cx t_out in
         let void_out' = self#type_ cx map_cx void_out in
-        if t_out' == t_out && void_out' == void_out then
+        if t_out' == t_out && void_out' == void_out && this' == this then
           t
         else
-          OptionalChainT (r1, r2, t_out', void_out')
+          OptionalChainT (r1, r2, this', t_out', void_out')
       | InvariantT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
@@ -1411,6 +1412,14 @@ class virtual ['a] t_with_uses =
           t
         else
           OptCallT (op, r, funcall')
+      | OptMethodT (op, r1, r2, propref, opt_action, tout) ->
+        let opt_action' = self#opt_method_action cx map_cx opt_action in
+        let tout' = OptionUtils.ident_map (self#type_ cx map_cx) tout in
+        let propref' = self#prop_ref cx map_cx propref in
+        if propref == propref' && opt_action == opt_action' && tout == tout' then
+          t
+        else
+          OptMethodT (op, r1, r2, propref', opt_action', tout')
       | OptGetPropT (use_op, r, prop) ->
         let prop' = self#prop_ref cx map_cx prop in
         if prop' == prop then
@@ -1435,6 +1444,13 @@ class virtual ['a] t_with_uses =
           t
         else
           OptGetElemT (use_op, r, t'')
+      | OptCallElemT (r1, r2, t', action) ->
+        let t'' = self#type_ cx map_cx t' in
+        let action' = self#opt_method_action cx map_cx action in
+        if t'' == t' && action' == action then
+          t
+        else
+          OptCallElemT (r1, r2, t'', action')
 
     method private opt_fun_call_type cx map_cx ((this, targs, args, clos, strict) as t) =
       let this' = self#type_ cx map_cx this in
@@ -1569,6 +1585,14 @@ class virtual ['a] t_with_uses =
           t
         else
           OptCallM funtype'
+      | OptChainM (r, lhs_r, this, funtype, void_out) ->
+        let this' = self#type_ cx map_cx this in
+        let funtype' = self#opt_fun_call_type cx map_cx funtype in
+        let void_out' = self#type_ cx map_cx void_out in
+        if funtype' == funtype && void_out' == void_out && this' == this then
+          t
+        else
+          OptChainM (r, lhs_r, this', funtype', void_out')
 
     method method_action cx map_cx t =
       match t with
@@ -1578,6 +1602,14 @@ class virtual ['a] t_with_uses =
           t
         else
           CallM funtype'
+      | ChainM (r, lhs_r, this, funtype, void_out) ->
+        let this' = self#type_ cx map_cx this in
+        let funtype' = self#fun_call_type cx map_cx funtype in
+        let void_out' = self#type_ cx map_cx void_out in
+        if funtype' == funtype && void_out' == void_out && this' == this then
+          t
+        else
+          ChainM (r, lhs_r, this', funtype', void_out')
 
     method fun_call_type cx map_cx t =
       let {

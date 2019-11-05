@@ -513,7 +513,8 @@ class ['a] t =
       | IdxUnwrap (_, tout)
       | IdxUnMaybeifyT (_, tout) ->
         self#type_ cx pole_TODO acc tout
-      | OptionalChainT (_, _, tout, void_out) ->
+      | OptionalChainT (_, _, this, tout, void_out) ->
+        let acc = self#type_ cx pole_TODO acc this in
         let acc = self#use_type_ cx acc tout in
         self#type_ cx pole_TODO acc void_out
       | InvariantT _ -> acc
@@ -751,10 +752,18 @@ class ['a] t =
     method private method_action cx acc =
       function
       | CallM call -> self#fun_call_type cx acc call
+      | ChainM (_, _, this, call, void_out) ->
+        let acc = self#type_ cx pole_TODO acc this in
+        let acc = self#fun_call_type cx acc call in
+        self#type_ cx pole_TODO acc void_out
 
     method private opt_method_action cx acc =
       function
       | OptCallM call -> self#opt_fun_call_type cx acc call
+      | OptChainM (_, _, this, call, void_out) ->
+        let acc = self#type_ cx pole_TODO acc this in
+        let acc = self#opt_fun_call_type cx acc call in
+        self#type_ cx pole_TODO acc void_out
 
     method private propref cx acc =
       function

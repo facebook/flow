@@ -1943,13 +1943,13 @@ struct
         (*********************)
         (* optional chaining *)
         (*********************)
-        | (DefT (r, _, (NullT | VoidT)), OptionalChainT (r', lhs_reason, _, void_out)) ->
+        | (DefT (r, _, (NullT | VoidT)), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
           Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:true;
           rec_flow_t cx trace (InternalT (OptionalChainVoidT r), void_out)
-        | (InternalT (OptionalChainVoidT _), OptionalChainT (r', lhs_reason, _, void_out)) ->
+        | (InternalT (OptionalChainVoidT _), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
           Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:false;
           rec_flow_t cx trace (l, void_out)
-        | (_, OptionalChainT (r', lhs_reason, t_out, _))
+        | (_, OptionalChainT (r', lhs_reason, this, t_out, _))
           when match l with
                | MaybeT _
                | OptionalT _
@@ -1967,6 +1967,7 @@ struct
               | AnyT _ ->
                 true
               | _ -> false);
+          rec_flow_t cx trace (l, this);
           rec_flow cx trace (l, t_out)
         | (InternalT (OptionalChainVoidT r), u) ->
           rec_flow cx trace (DefT (r, bogus_trust (), VoidT), u)
@@ -4607,6 +4608,10 @@ struct
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (any, prop_t)) prop_t;
           rec_flow_t cx trace (any, call_tout)
+        | (AnyT _, MethodT (use_op, reason_op, _, _, (ChainM _ as chain), prop_t)) ->
+          let any = AnyT.untyped reason_op in
+          Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (any, prop_t)) prop_t;
+          rec_flow cx trace (any, apply_method_action use_op reason_op chain)
         (*************************)
         (* statics can be read   *)
         (*************************)

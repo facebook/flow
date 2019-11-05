@@ -621,7 +621,7 @@ module rec TypeTerm : sig
     | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * t_out
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
-    | OptionalChainT of reason * reason * use_t * (* voids *) t_out
+    | OptionalChainT of reason * reason * (* this *) t * use_t * (* voids *) t_out
     | InvariantT of reason
     (* Function predicate uses *)
 
@@ -749,19 +749,26 @@ module rec TypeTerm : sig
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
     | OptCallT of use_op * reason * opt_funcalltype
+    | OptMethodT of
+        use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t option
     | OptGetPropT of use_op * reason * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of reason * ident * propref
     | OptGetElemT of use_op * reason * t
+    | OptCallElemT of (* call *) reason * (* lookup *) reason * t * opt_method_action
 
   and opt_state =
     | NonOptional
     | NewChain
     | ContinueChain
 
-  and method_action = CallM of funcalltype
+  and method_action =
+    | CallM of funcalltype
+    | ChainM of reason * reason * t * funcalltype * t_out
 
-  and opt_method_action = OptCallM of opt_funcalltype
+  and opt_method_action =
+    | OptCallM of opt_funcalltype
+    | OptChainM of reason * reason * t * opt_funcalltype * t_out
 
   and specialize_cache = reason list option
 
@@ -1799,13 +1806,13 @@ end = struct
         (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
         | OpenT _
         (* some types may not be evaluated yet; TODO *)
-
+        
         | EvalT _
         | TypeAppT _
         | KeysT _
         | IntersectionT _
         (* other types might wrap parts that are accessible directly *)
-
+        
         | OpaqueT _
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->
@@ -2540,7 +2547,7 @@ end = struct
     | ObjSealT (reason, _) -> reason
     | ObjTestProtoT (reason, _) -> reason
     | ObjTestT (reason, _, _) -> reason
-    | OptionalChainT (reason, _, _, _) -> reason
+    | OptionalChainT (reason, _, _, _, _) -> reason
     | OrT (reason, _, _) -> reason
     | PredicateT (_, t) -> reason_of_t t
     | ReactKitT (_, reason, _) -> reason
@@ -2710,7 +2717,8 @@ end = struct
     | ObjSealT (reason, t) -> ObjSealT (f reason, t)
     | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
     | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
-    | OptionalChainT (reason, lhs_reason, us, vs) -> OptionalChainT (f reason, lhs_reason, us, vs)
+    | OptionalChainT (reason, lhs_reason, this, us, vs) ->
+      OptionalChainT (f reason, lhs_reason, this, us, vs)
     | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
     | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
     | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
@@ -2752,11 +2760,14 @@ end = struct
 
   and mod_reason_of_opt_use_t f = function
     | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
+    | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
+      OptMethodT (op, f r1, r2, ref, action, prop_tout)
     | OptGetPropT (use_op, reason, n) -> OptGetPropT (use_op, f reason, n)
     | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
       OptGetPrivatePropT (use_op, f reason, name, bindings, static)
     | OptTestPropT (reason, id, n) -> OptTestPropT (f reason, id, n)
     | OptGetElemT (use_op, reason, it) -> OptGetElemT (use_op, f reason, it)
+    | OptCallElemT (r1, r2, elt, call) -> OptCallElemT (f r1, r2, elt, call)
 
   let rec util_use_op_of_use_t :
             'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
@@ -2858,7 +2869,7 @@ end = struct
     | SentinelPropTestT (_, _, _, _, _, _)
     | IdxUnwrap (_, _)
     | IdxUnMaybeifyT (_, _)
-    | OptionalChainT (_, _, _, _)
+    | OptionalChainT (_, _, _, _, _)
     | InvariantT _
     | CallLatentPredT (_, _, _, _, _)
     | CallOpenPredT (_, _, _, _, _)
@@ -3922,6 +3933,8 @@ let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 let mk_opt_functioncalltype reason targs args clos strict =
   (global_this reason, targs, args, clos, strict)
 
+let mk_opt_methodcalltype this targs args clos strict = (this, targs, args, clos, strict)
+
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
    "forgeting" any properties: so to extend an object type with optional
@@ -3956,14 +3969,19 @@ let create_intersection rep = IntersectionT (locationless_reason (RCustom "inter
 let apply_opt_action action t_out =
   match action with
   | OptCallM f -> CallM (apply_opt_funcalltype f t_out)
+  | OptChainM (exp_reason, lhs_reason, this, f, vs) ->
+    ChainM (exp_reason, lhs_reason, this, apply_opt_funcalltype f t_out, vs)
 
 let apply_opt_use opt_use t_out =
   match opt_use with
+  | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
+    MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
   | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
   | OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
+  | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type ~loc ~trust enum =
   let { enum_name; _ } = enum in
@@ -3973,6 +3991,8 @@ let mk_enum_type ~loc ~trust enum =
 let apply_method_action use_op reason_call action =
   match action with
   | CallM app -> CallT (use_op, reason_call, app)
+  | ChainM (exp_reason, lhs_reason, this, app, vs) ->
+    OptionalChainT (exp_reason, lhs_reason, this, CallT (use_op, reason_call, app), vs)
 
 module TypeParams : sig
   val to_list : typeparams -> typeparam list
