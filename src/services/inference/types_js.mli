@@ -16,7 +16,7 @@ val init :
 val calc_deps :
   options:Options.t ->
   profiling:Profiling_js.running ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   components:File_key.t Nel.t list ->
   FilenameSet.t ->
   (FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t) Lwt.t
@@ -90,8 +90,8 @@ val debug_determine_what_to_recheck :
   options:Options.t ->
   is_file_checked:(File_key.t -> bool) ->
   ide_open_files:SSet.t Lazy.t ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
-  all_dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
+  implementation_dependency_graph:FilenameSet.t FilenameMap.t ->
   checked_files:CheckedSet.t ->
   freshparsed:FilenameSet.t ->
   unparsed_set:FilenameSet.t ->
@@ -113,8 +113,8 @@ val debug_include_dependencies_and_dependents :
   profiling:Profiling_js.running ->
   unchanged_checked:CheckedSet.t ->
   input:CheckedSet.t ->
-  all_dependency_graph:FilenameSet.t FilenameMap.t ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
+  implementation_dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   sig_dependent_files:FilenameSet.t ->
   all_dependent_files:FilenameSet.t ->
   (CheckedSet.t * CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t

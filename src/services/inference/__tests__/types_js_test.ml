@@ -117,16 +117,17 @@ let make_options () =
 let prepare_freshparsed freshparsed =
   freshparsed |> List.map make_fake_file_key |> FilenameSet.of_list
 
-let make_checked_files ~all_dependency_graph =
-  (* Get all the files from the all_dependency_graph and consider them focused *)
+let make_checked_files ~implementation_dependency_graph =
+  (* Get all the files from the implementation_dependency_graph and consider them focused *)
   (* All files must be present as keys, even if they have no values. *)
-  let focused_set = all_dependency_graph |> FilenameMap.keys |> FilenameSet.of_list in
+  let focused_set = implementation_dependency_graph |> FilenameMap.keys |> FilenameSet.of_list in
   CheckedSet.add ~focused:focused_set CheckedSet.empty
 
-let determine_what_to_recheck ~profiling ~dependency_graph ~all_dependency_graph ~freshparsed =
-  let dependency_graph = make_dependency_graph dependency_graph in
-  let all_dependency_graph = make_dependency_graph all_dependency_graph in
-  let checked_files = make_checked_files ~all_dependency_graph in
+let determine_what_to_recheck
+    ~profiling ~sig_dependency_graph ~implementation_dependency_graph ~freshparsed =
+  let sig_dependency_graph = make_dependency_graph sig_dependency_graph in
+  let implementation_dependency_graph = make_dependency_graph implementation_dependency_graph in
+  let checked_files = make_checked_files ~implementation_dependency_graph in
   let freshparsed = prepare_freshparsed freshparsed in
   let options = make_options () in
   let is_file_checked _ = true in
@@ -142,7 +143,7 @@ let determine_what_to_recheck ~profiling ~dependency_graph ~all_dependency_graph
           FilenameSet.add file acc
         else
           acc)
-      all_dependency_graph
+      implementation_dependency_graph
       FilenameSet.empty
   in
   Types_js.debug_determine_what_to_recheck
@@ -150,8 +151,8 @@ let determine_what_to_recheck ~profiling ~dependency_graph ~all_dependency_graph
     ~options
     ~is_file_checked
     ~ide_open_files:(lazy SSet.empty)
-    ~dependency_graph
-    ~all_dependency_graph
+    ~sig_dependency_graph
+    ~implementation_dependency_graph
     ~checked_files
     ~freshparsed
     ~unparsed_set:FilenameSet.empty
@@ -163,8 +164,8 @@ let determine_what_to_recheck ~profiling ~dependency_graph ~all_dependency_graph
 
 let include_dependencies_and_dependents
     ~profiling
-    ~dependency_graph
-    ~all_dependency_graph
+    ~sig_dependency_graph
+    ~implementation_dependency_graph
     ~input_focused
     ~input_dependents
     ~input_dependencies =
@@ -176,15 +177,15 @@ let include_dependencies_and_dependents
       CheckedSet.empty
   in
   let changed_files = CheckedSet.focused input in
-  let dependency_graph = make_dependency_graph dependency_graph in
-  let all_dependency_graph = make_dependency_graph all_dependency_graph in
-  let checked_files = make_checked_files ~all_dependency_graph in
+  let sig_dependency_graph = make_dependency_graph sig_dependency_graph in
+  let implementation_dependency_graph = make_dependency_graph implementation_dependency_graph in
+  let checked_files = make_checked_files ~implementation_dependency_graph in
   let unchanged_checked = make_unchanged_checked checked_files changed_files in
   let options = make_options () in
   let (sig_dependent_files, all_dependent_files) =
     Pure_dep_graph_operations.calc_all_dependents
-      ~dependency_graph
-      ~all_dependency_graph
+      ~sig_dependency_graph
+      ~implementation_dependency_graph
       changed_files
   in
   Types_js.debug_include_dependencies_and_dependents
@@ -192,8 +193,8 @@ let include_dependencies_and_dependents
     ~profiling
     ~unchanged_checked
     ~input
-    ~all_dependency_graph
-    ~dependency_graph
+    ~implementation_dependency_graph
+    ~sig_dependency_graph
     ~sig_dependent_files
     ~all_dependent_files
 
@@ -221,10 +222,10 @@ let tests =
          >::: [
                 "simple_test"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
                          in
                          let freshparsed = ["b"] in
@@ -236,8 +237,8 @@ let tests =
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~freshparsed
                          in
                          let expected_to_merge =
@@ -255,10 +256,10 @@ let tests =
                          Lwt.return_unit);
                 "long_chain"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
@@ -270,8 +271,8 @@ let tests =
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~freshparsed
                          in
                          let expected_to_merge =
@@ -295,10 +296,10 @@ let tests =
                          Lwt.return_unit);
                 "long_chain_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", []); ("b", []); ("c", []); ("d", []); ("e", [])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
@@ -310,8 +311,8 @@ let tests =
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~freshparsed
                          in
                          let expected_to_merge =
@@ -331,10 +332,10 @@ let tests =
                          Lwt.return_unit);
                 "simple_cycle"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", ["e"]); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [("a", ["e"]); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
@@ -346,8 +347,8 @@ let tests =
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~freshparsed
                          in
                          let expected_to_merge =
@@ -371,10 +372,10 @@ let tests =
                          Lwt.return_unit);
                 "simple_cycle_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", []); ("b", []); ("c", []); ("d", []); ("e", [])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [("a", ["e"]); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
@@ -386,8 +387,8 @@ let tests =
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~freshparsed
                          in
                          let expected_to_merge =
@@ -410,18 +411,18 @@ let tests =
          >::: [
                 "simple"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
                          in
                          let%lwt (to_merge, to_check, to_merge_or_check, _components, _recheck_set)
                              =
                            include_dependencies_and_dependents
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~input_focused:["b"]
                              ~input_dependents:[]
                              ~input_dependencies:[]
@@ -441,18 +442,18 @@ let tests =
                          Lwt.return_unit);
                 "long_chain_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", []); ("b", []); ("c", []); ("d", []); ("e", [])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let%lwt (to_merge, to_check, to_merge_or_check, _components, _recheck_set)
                              =
                            include_dependencies_and_dependents
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~input_focused:["a"]
                              ~input_dependents:[]
                              ~input_dependencies:[]
@@ -472,10 +473,10 @@ let tests =
                          Lwt.return_unit);
                 "cycle"
                 %>:: test_with_profiling (fun ctxt profiling ->
-                         let dependency_graph =
+                         let sig_dependency_graph =
                            [("a", ["b"]); ("b", ["c"]); ("c", ["a"]); ("d", ["c"]); ("e", [])]
                          in
-                         let all_dependency_graph =
+                         let implementation_dependency_graph =
                            [
                              ("a", ["b"]);
                              ("b", ["c"]);
@@ -488,8 +489,8 @@ let tests =
                              =
                            include_dependencies_and_dependents
                              ~profiling
-                             ~dependency_graph
-                             ~all_dependency_graph
+                             ~sig_dependency_graph
+                             ~implementation_dependency_graph
                              ~input_focused:["a"]
                              ~input_dependents:[]
                              ~input_dependencies:[]

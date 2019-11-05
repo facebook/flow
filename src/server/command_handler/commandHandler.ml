@@ -209,7 +209,7 @@ let collect_rage ~options ~reader ~env ~files =
     file ^ ":" ^ deps ^ "\n"
   in
   let dependencies =
-    Dependency_info.all_dependency_graph env.ServerEnv.dependency_info
+    Dependency_info.implementation_dependency_graph env.ServerEnv.dependency_info
     |> Utils_js.FilenameMap.bindings
     |> Base.List.map ~f:dependency_to_string
     |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
@@ -339,9 +339,9 @@ let output_dependencies ~env root strip_root types_only outfile =
   in
   let dep_graph =
     if types_only then
-      Dependency_info.dependency_graph
+      Dependency_info.sig_dependency_graph
     else
-      Dependency_info.all_dependency_graph
+      Dependency_info.implementation_dependency_graph
   in
   let graph = serialize_graph (dep_graph env.ServerEnv.dependency_info) in
   Hh_logger.info "printing dependency graph to %s\n" outfile;
@@ -356,9 +356,9 @@ let get_cycle ~env fn types_only =
   let dependency_info = env.ServerEnv.dependency_info in
   let dependency_graph =
     if types_only then
-      Dependency_info.dependency_graph dependency_info
+      Dependency_info.sig_dependency_graph dependency_info
     else
-      Dependency_info.all_dependency_graph dependency_info
+      Dependency_info.implementation_dependency_graph dependency_info
   in
   Lwt.return
     (Ok

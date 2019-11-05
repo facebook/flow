@@ -65,7 +65,7 @@ val merge_runner :
   intermediate_result_callback:('a merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
   recheck_set:FilenameSet.t ->
   'a merge_results Lwt.t
@@ -77,7 +77,7 @@ val merge :
   intermediate_result_callback:(acc merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
   recheck_set:FilenameSet.t ->
   acc merge_results Lwt.t

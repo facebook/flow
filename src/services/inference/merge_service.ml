@@ -455,7 +455,7 @@ let merge_runner
     ~intermediate_result_callback
     ~options
     ~workers
-    ~dependency_graph
+    ~sig_dependency_graph
     ~component_map
     ~recheck_set =
   let num_workers = Options.max_workers options in
@@ -487,7 +487,7 @@ let merge_runner
     Merge_stream.create
       ~num_workers
       ~arch:(Options.arch options)
-      ~dependency_graph
+      ~sig_dependency_graph
       ~leader_map
       ~component_map
       ~recheck_leader_set

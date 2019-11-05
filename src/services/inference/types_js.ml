@@ -501,10 +501,10 @@ let error_set_of_internal_error file (loc, internal_error) =
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
   |> Flow_error.ErrorSet.singleton
 
-let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
+let calc_deps ~options ~profiling ~sig_dependency_graph ~components to_merge =
   with_timer_lwt ~options "CalcDeps" profiling (fun () ->
-      let dependency_graph =
-        Pure_dep_graph_operations.filter_dependency_graph dependency_graph to_merge
+      let sig_dependency_graph =
+        Pure_dep_graph_operations.filter_dependency_graph sig_dependency_graph to_merge
       in
       let components = List.filter (Nel.exists (fun f -> FilenameSet.mem f to_merge)) components in
       if Options.should_profile options then Sort_js.log components;
@@ -516,7 +516,7 @@ let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
           FilenameMap.empty
           components
       in
-      Lwt.return (dependency_graph, component_map))
+      Lwt.return (sig_dependency_graph, component_map))
 
 (* The input passed in basically tells us what the caller wants to typecheck.
  * However, due to laziness, it's possible that certain dependents or dependencies have not been
@@ -533,8 +533,8 @@ let include_dependencies_and_dependents
     ~profiling
     ~unchanged_checked
     ~input
-    ~all_dependency_graph
-    ~dependency_graph
+    ~implementation_dependency_graph
+    ~sig_dependency_graph
     ~sig_dependent_files
     ~all_dependent_files =
   with_timer_lwt ~options "PruneDeps" profiling (fun () ->
@@ -542,7 +542,7 @@ let include_dependencies_and_dependents
        * the dependencies of dependencies, since we need to check transitive dependencies *)
       let preliminary_to_merge =
         Pure_dep_graph_operations.calc_direct_dependencies
-          all_dependency_graph
+          implementation_dependency_graph
           (CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files input))
       in
       (* So we want to prune our dependencies to only the dependencies which changed. However, two
@@ -552,7 +552,7 @@ let include_dependencies_and_dependents
        before we can prune. *)
       (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
        cycles *)
-      let components = Sort_js.topsort ~roots:preliminary_to_merge dependency_graph in
+      let components = Sort_js.topsort ~roots:preliminary_to_merge sig_dependency_graph in
       let dependencies =
         List.fold_left
           (fun dependencies component ->
@@ -605,10 +605,11 @@ let include_dependencies_and_dependents
            * doing a costly union, but if we change how to_check or to_merge is computed we should be
            * sure to change this as well. *)
           let to_merge_or_check = CheckedSet.add ~dependencies to_check in
-          (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with to_merge on
-         dependency_graph, we would get exactly the same components. Later, we will filter
-         dependency_graph to just to_merge, and correspondingly filter components as well. This will
-         work out because every component is either entirely inside to_merge or entirely outside. *)
+          (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with
+           * to_merge on sig_dependency_graph, we would get exactly the same components. Later, we
+           * will filter sig_dependency_graph to just to_merge, and correspondingly filter
+           * components as well. This will work out because every component is either entirely
+           * inside to_merge or entirely outside. *)
           (to_merge, to_check, to_merge_or_check)
         else
           let to_merge = CheckedSet.add ~dependents:all_dependent_files definitely_to_merge in
@@ -657,7 +658,7 @@ let run_merge_service
     ~options
     ~profiling
     ~workers
-    ~dependency_graph
+    ~sig_dependency_graph
     ~component_map
     ~recheck_set
     acc =
@@ -670,7 +671,7 @@ let run_merge_service
           ~intermediate_result_callback
           ~options
           ~workers
-          ~dependency_graph
+          ~sig_dependency_graph
           ~component_map
           ~recheck_set
       in
@@ -839,7 +840,7 @@ let merge
     ~to_merge
     ~components
     ~recheck_set
-    ~dependency_graph
+    ~sig_dependency_graph
     ~deleted
     ~unparsed_set
     ~persistent_connections
@@ -869,8 +870,8 @@ let merge
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let files_to_merge = CheckedSet.all to_merge in
-  let%lwt (dependency_graph, component_map) =
-    calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge
+  let%lwt (sig_dependency_graph, component_map) =
+    calc_deps ~options ~profiling ~sig_dependency_graph ~components files_to_merge
   in
   Hh_logger.info "Merging";
   let%lwt ( ( merge_errors,
@@ -896,7 +897,7 @@ let merge
         ~options
         ~profiling
         ~workers
-        ~dependency_graph
+        ~sig_dependency_graph
         ~component_map
         ~recheck_set
         (merge_errors, warnings, suppressions, coverage, None)
@@ -975,13 +976,15 @@ let check_files
             slowest_file := Some file
           )
         in
-        let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+        let implementation_dependency_graph =
+          Dependency_info.implementation_dependency_graph dependency_info
+        in
         (* skip dependents whenever none of their dependencies have new or changed signatures *)
         let dependents_to_check =
           FilenameSet.filter (fun f ->
               (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
               || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-                 @@ FilenameMap.find_unsafe f all_dependency_graph
+                 @@ FilenameMap.find_unsafe f implementation_dependency_graph
               ||
               ( incr skipped_count;
                 false ))
@@ -1355,8 +1358,8 @@ let is_file_tracked_and_checked ~reader filename =
  * *)
 let focused_files_and_dependents_to_infer
     ~is_file_checked
-    ~all_dependency_graph
-    ~dependency_graph
+    ~implementation_dependency_graph
+    ~sig_dependency_graph
     ~input_focused
     ~input_dependencies
     ~sig_dependent_files
@@ -1372,7 +1375,10 @@ let focused_files_and_dependents_to_infer
   let focused = CheckedSet.focused input in
   (* Roots is the set of all focused files and all dependent files. *)
   let (_sig_dependents, roots) =
-    Pure_dep_graph_operations.calc_all_dependents ~dependency_graph ~all_dependency_graph focused
+    Pure_dep_graph_operations.calc_all_dependents
+      ~sig_dependency_graph
+      ~implementation_dependency_graph
+      focused
   in
   let dependents = FilenameSet.diff roots focused in
   let dependencies = CheckedSet.dependencies input in
@@ -1431,15 +1437,17 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~
           ~sig_dependent_files:FilenameSet.empty
           ~all_dependent_files:FilenameSet.empty
       | Some input_focused ->
-        let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-        let dependency_graph = Dependency_info.dependency_graph dependency_info in
+        let implementation_dependency_graph =
+          Dependency_info.implementation_dependency_graph dependency_info
+        in
+        let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
         let is_file_checked =
           is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
         in
         focused_files_and_dependents_to_infer
           ~is_file_checked
-          ~all_dependency_graph
-          ~dependency_graph
+          ~implementation_dependency_graph
+          ~sig_dependency_graph
           ~input_focused
           ~input_dependencies:None
           ~sig_dependent_files:FilenameSet.empty
@@ -1567,8 +1575,8 @@ module Recheck : sig
     options:Options.t ->
     is_file_checked:(File_key.t -> bool) ->
     ide_open_files:SSet.t Lazy.t ->
-    dependency_graph:FilenameSet.t FilenameMap.t ->
-    all_dependency_graph:FilenameSet.t FilenameMap.t ->
+    sig_dependency_graph:FilenameSet.t FilenameMap.t ->
+    implementation_dependency_graph:FilenameSet.t FilenameMap.t ->
     checked_files:CheckedSet.t ->
     freshparsed:FilenameSet.t ->
     unparsed_set:FilenameSet.t ->
@@ -1992,8 +2000,8 @@ end = struct
       ~options
       ~is_file_checked
       ~ide_open_files
-      ~dependency_graph
-      ~all_dependency_graph
+      ~sig_dependency_graph
+      ~implementation_dependency_graph
       ~checked_files
       ~freshparsed
       ~unparsed_set
@@ -2013,8 +2021,8 @@ end = struct
           else
             Lwt.return
               (Pure_dep_graph_operations.calc_all_dependents
-                 ~dependency_graph
-                 ~all_dependency_graph
+                 ~sig_dependency_graph
+                 ~implementation_dependency_graph
                  direct_dependent_files))
     in
     let acceptable_files_to_focus =
@@ -2082,8 +2090,8 @@ end = struct
             let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
             focused_files_and_dependents_to_infer
               ~is_file_checked
-              ~all_dependency_graph
-              ~dependency_graph
+              ~implementation_dependency_graph
+              ~sig_dependency_graph
               ~input_focused
               ~input_dependencies
               ~sig_dependent_files
@@ -2101,8 +2109,8 @@ end = struct
         ~profiling
         ~unchanged_checked
         ~input
-        ~all_dependency_graph
-        ~dependency_graph
+        ~implementation_dependency_graph
+        ~sig_dependency_graph
         ~sig_dependent_files
         ~all_dependent_files
     in
@@ -2135,8 +2143,10 @@ end = struct
       intermediate_values
     in
     let dependency_info = env.ServerEnv.dependency_info in
-    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-    let dependency_graph = Dependency_info.dependency_graph dependency_info in
+    let implementation_dependency_graph =
+      Dependency_info.implementation_dependency_graph dependency_info
+    in
+    let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
     let is_file_checked =
       is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
     in
@@ -2146,8 +2156,8 @@ end = struct
         ~options
         ~is_file_checked
         ~ide_open_files:(lazy (Persistent_connection.get_opened_files env.ServerEnv.connections))
-        ~dependency_graph
-        ~all_dependency_graph
+        ~sig_dependency_graph
+        ~implementation_dependency_graph
         ~checked_files:env.ServerEnv.checked_files
         ~freshparsed
         ~unparsed_set
@@ -2195,7 +2205,7 @@ end = struct
         ~to_merge
         ~components
         ~recheck_set
-        ~dependency_graph
+        ~sig_dependency_graph
         ~deleted
         ~unparsed_set
         ~persistent_connections:(Some env.ServerEnv.connections)
@@ -2900,16 +2910,18 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       let%lwt (input, sig_dependent_files, all_dependent_files) =
         files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info
       in
-      let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-      let dependency_graph = Dependency_info.dependency_graph dependency_info in
+      let implementation_dependency_graph =
+        Dependency_info.implementation_dependency_graph dependency_info
+      in
+      let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
       let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set) =
         include_dependencies_and_dependents
           ~options
           ~profiling
           ~unchanged_checked:CheckedSet.empty
           ~input
-          ~all_dependency_graph
-          ~dependency_graph
+          ~implementation_dependency_graph
+          ~sig_dependency_graph
           ~sig_dependent_files
           ~all_dependent_files
       in
@@ -2930,7 +2942,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~to_merge
           ~components
           ~recheck_set
-          ~dependency_graph
+          ~sig_dependency_graph
           ~deleted:FilenameSet.empty
           ~unparsed_set:FilenameSet.empty
           ~persistent_connections:None

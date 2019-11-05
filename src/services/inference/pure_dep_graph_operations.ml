@@ -49,8 +49,8 @@ let calc_all_dependencies dependency_graph files = closure dependency_graph file
 
    A file is a dependent of `files` whenever its code depends on any file whose *signature*, in
    turn, directly or transitively depends on `files`.  *)
-let calc_all_dependents ~dependency_graph ~all_dependency_graph files =
-  let rev_dependency_graph = reverse dependency_graph in
+let calc_all_dependents ~sig_dependency_graph ~implementation_dependency_graph files =
+  let rev_dependency_graph = reverse sig_dependency_graph in
   let all_sig_dependents = closure rev_dependency_graph files in
   let all_dependents =
     FilenameMap.fold
@@ -62,7 +62,7 @@ let calc_all_dependents ~dependency_graph ~all_dependency_graph files =
           FilenameSet.add f acc
         else
           acc)
-      all_dependency_graph
+      implementation_dependency_graph
       all_sig_dependents
   in
   (all_sig_dependents, all_dependents)

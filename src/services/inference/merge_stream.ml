@@ -95,7 +95,7 @@ let is_done stream = stream.blocked_components = 0
 let create
     ~num_workers
     ~arch
-    ~dependency_graph
+    ~sig_dependency_graph
     ~leader_map
     ~component_map
     ~recheck_leader_set
@@ -138,7 +138,7 @@ let create
                 node.blocking <- node.blocking + 1
               ))
           dep_fs)
-      dependency_graph
+      sig_dependency_graph
   in
   let stream =
     {

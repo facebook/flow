@@ -70,12 +70,14 @@ let get_all_dependents ~reader options workers env file_key content =
       ~root_modules:(Modulename.Set.singleton modulename)
   in
   let dependency_info = !env.ServerEnv.dependency_info in
-  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-  let dependency_graph = Dependency_info.dependency_graph dependency_info in
+  let implementation_dependency_graph =
+    Dependency_info.implementation_dependency_graph dependency_info
+  in
+  let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
   let (_sig_dependents, all_dependents) =
     Pure_dep_graph_operations.calc_all_dependents
-      ~dependency_graph
-      ~all_dependency_graph
+      ~sig_dependency_graph
+      ~implementation_dependency_graph
       direct_deps
   in
   Lwt.return all_dependents
