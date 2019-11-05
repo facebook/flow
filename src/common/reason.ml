@@ -226,6 +226,7 @@ type 'loc virtual_reason_desc =
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
+  | RWidenedObjProp of 'loc virtual_reason_desc
 [@@deriving eq]
 
 and reason_desc_function =
@@ -307,6 +308,7 @@ let rec map_desc_locs f = function
   | (RReactSFC | RReactConfig) as r -> r
   | RPossiblyMissingPropFromObj (propname, desc) ->
     RPossiblyMissingPropFromObj (propname, map_desc_locs f desc)
+  | RWidenedObjProp desc -> RWidenedObjProp (map_desc_locs f desc)
 
 type 'loc virtual_reason = {
   test_id: int option;
@@ -698,6 +700,7 @@ let rec string_of_desc = function
   | RReactConfig -> "config of React component"
   | RPossiblyMissingPropFromObj (propname, desc) ->
     spf "possibly missing property `%s` in %s" propname (string_of_desc desc)
+  | RWidenedObjProp desc -> string_of_desc desc
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
@@ -1423,6 +1426,7 @@ let classification_of_reason r =
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj _
+  | RWidenedObjProp _
   | RTrusted _
   | RPrivate _
   | REnum ->

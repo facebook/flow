@@ -174,6 +174,7 @@ type 'loc virtual_reason_desc =
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
+  | RWidenedObjProp of 'loc virtual_reason_desc
 
 and reason_desc_function =
   | RAsync
