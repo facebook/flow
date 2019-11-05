@@ -1,3 +1,8 @@
+### 0.111.2
+
+Notable bug fixes:
+* Spread performance improvements that can prevent timeouts in extreme cases. 
+
 ### 0.111.1
 
 New features:
