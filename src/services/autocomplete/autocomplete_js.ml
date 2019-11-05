@@ -11,13 +11,13 @@ type ident_type =
 
 type autocomplete_type =
   | Acid of {
-      ac_loc: ALoc.t;
       id_type: ident_type;
       include_super: bool;
       include_this: bool;
     }
-  | Acmem of string * ALoc.t * Type.t
-  | Acjsx of string * SSet.t * ALoc.t * Type.t
+  | Actype
+  | Acmem of string * Type.t
+  | Acjsx of string * SSet.t * Type.t
 
 let autocomplete_suffix = "AUTO332"
 
@@ -37,27 +37,34 @@ let type_of_jsx_name =
     | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
       t)
 
-exception Found of Type.typeparam list * autocomplete_type
+let type_of_qualification =
+  Flow_ast.Type.Generic.Identifier.(
+    function
+    | Unqualified ((_, t), _)
+    | Qualified (_, { id = ((_, t), _); _ }) ->
+      t)
 
-class searcher (from_trigger_character : bool) =
+exception Found of Type.typeparam list * ALoc.t * autocomplete_type
+
+class process_request_searcher (from_trigger_character : bool) =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper as super
 
-    method find x =
+    method find loc x =
       match x with
       | Acid _ when from_trigger_character -> ()
-      | _ -> this#annot_with_tparams (fun tparams -> raise (Found (tparams, x)))
+      | _ -> this#annot_with_tparams (fun tparams -> raise (Found (tparams, loc, x)))
 
     method! t_identifier (((ac_loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
       if is_autocomplete name then
         this#find
-          (Acid { ac_loc; id_type = NormalIdent; include_super = false; include_this = false });
+          ac_loc
+          (Acid { id_type = NormalIdent; include_super = false; include_this = false });
       ident
 
     method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
       if is_autocomplete name then
-        this#find
-          (Acid { ac_loc; id_type = JSXIdent; include_super = false; include_this = false });
+        this#find ac_loc (Acid { id_type = JSXIdent; include_super = false; include_this = false });
       ident
 
     method! member expr =
@@ -67,7 +74,7 @@ class searcher (from_trigger_character : bool) =
         match property with
         | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
           when is_autocomplete name ->
-          this#find (Acmem (name, prop_loc, obj_t))
+          this#find prop_loc (Acmem (name, obj_t))
         | _ -> ()
       end;
       super#member expr
@@ -88,7 +95,7 @@ class searcher (from_trigger_character : bool) =
                         _;
                       } ))
                 when is_autocomplete name ->
-                this#find (Acmem (name, prop_loc, obj_t))
+                this#find prop_loc (Acmem (name, obj_t))
               | _ -> ())
             properties
         | _ -> ()
@@ -127,7 +134,7 @@ class searcher (from_trigger_character : bool) =
       in
       Option.iter
         ~f:(fun (attribute_name, loc, component_t) ->
-          this#find (Acjsx (attribute_name, used_attr_names, loc, component_t)))
+          this#find loc (Acjsx (attribute_name, used_attr_names, component_t)))
         found;
       super#jsx_opening_element elt
 
@@ -143,18 +150,26 @@ class searcher (from_trigger_character : bool) =
 
     method! class_body x =
       try super#class_body x
-      with Found (tparams, Acid id) ->
-        raise (Found (tparams, Acid { id with include_super = true; include_this = true }))
+      with Found (tparams, loc, Acid id) ->
+        raise (Found (tparams, loc, Acid { id with include_super = true; include_this = true }))
 
     method! function_expression x =
       try super#function_expression x
-      with Found (tparams, Acid id) ->
-        raise (Found (tparams, Acid { id with include_this = true }))
+      with Found (tparams, loc, Acid id) ->
+        raise (Found (tparams, loc, Acid { id with include_this = true }))
 
     method! function_declaration x =
       try super#function_declaration x
-      with Found (tparams, Acid id) ->
-        raise (Found (tparams, Acid { id with include_this = true }))
+      with Found (tparams, loc, Acid id) ->
+        raise (Found (tparams, loc, Acid { id with include_this = true }))
+
+    method! generic_identifier_type id =
+      let open Flow_ast.Type.Generic.Identifier in
+      (match id with
+      | Unqualified ((loc, _), { Flow_ast.Identifier.name; _ }) when is_autocomplete name ->
+        this#find loc Actype
+      | _ -> ());
+      id
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =
@@ -169,9 +184,9 @@ let autocomplete_jsx _cx ac_name _ac_loc _class_t = is_autocomplete ac_name
 
 let process_location ~trigger_character ~typed_ast =
   try
-    ignore ((new searcher (trigger_character <> None))#program typed_ast);
+    ignore ((new process_request_searcher (trigger_character <> None))#program typed_ast);
     None
-  with Found (tparams, res) -> Some (tparams, res)
+  with Found (tparams, loc, res) -> Some (tparams, loc, res)
 
 let autocomplete_set_hooks ~trigger_character =
   Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None));

@@ -597,28 +597,6 @@ export default suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'this',
-                  inlineDetail: 'this',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'x',
-                  kind: 6,
-                  detail: 'any',
-                  inlineDetail: 'any',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'f',
-                  kind: 3,
-                  detail: '<Typaram>() => void',
-                  inlineDetail: '()',
-                  itemType: 'void',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'Typologies',
                   kind: 6,
                   detail:
@@ -626,33 +604,19 @@ export default suite(
                   inlineDetail:
                     '{|+Typesafety: interface Typesafety, +Typhoon: string, +Typhoons: string, +Typic...',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typologies.',
+                  },
                 },
                 {
                   label: 'Typography',
                   kind: 7,
                   detail: 'class Typewriter',
                   inlineDetail: 'class Typewriter',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'Typnotism',
-                  kind: 13,
-                  detail: 'type Typnotism = number',
-                  inlineDetail: 'type Typnotism = number',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'Typhoons',
-                  kind: 6,
-                  detail: 'string',
-                  inlineDetail: 'string',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'Typhoon',
-                  kind: 13,
-                  detail: 'type ./type-exports.js = string',
-                  inlineDetail: 'type ./type-exports.js = string',
                   insertTextFormat: 1,
                 },
                 {
@@ -670,14 +634,50 @@ export default suite(
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'Tycoon',
-                  kind: 6,
-                  detail: 'number',
-                  inlineDetail: 'number',
+                  label: 'Typhoon',
+                  kind: 13,
+                  detail: 'type ./type-exports.js = string',
+                  inlineDetail: 'type ./type-exports.js = string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typnotism',
+                  kind: 13,
+                  detail: 'type Typnotism = number',
+                  inlineDetail: 'type Typnotism = number',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Tyrant',
+                  kind: 13,
+                  detail: 'type Tyrant = string',
+                  inlineDetail: 'type Tyrant = string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Tympanic',
+                  kind: 13,
+                  detail: 'type Tympanic = number',
+                  inlineDetail: 'type Tympanic = number',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typeset',
+                  kind: 8,
+                  detail: 'interface Typeset',
+                  inlineDetail: 'interface Typeset',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'Typaram',
+                  kind: 25,
+                  detail: 'Typaram',
+                  inlineDetail: 'Typaram',
                   insertTextFormat: 1,
                 },
               ],
             };
+
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],

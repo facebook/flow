@@ -312,20 +312,7 @@ let collect_types ~reader locs typed_ast =
   Pervasives.ignore (collector#program typed_ast);
   collector#collected_types
 
-(* env is all visible bound names at cursor *)
-let autocomplete_id
-    ~reader
-    ~cx
-    ~ac_loc
-    ~ac_trigger
-    ~id_type
-    ~file_sig
-    ~typed_ast
-    ~include_super
-    ~include_this
-    ~tparams
-    ~broader_context =
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
   let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
   let open Scope_api.With_Loc in
   (* get the innermost scope enclosing the requested location *)
@@ -368,16 +355,32 @@ let autocomplete_id
       SMap.empty
   in
   let types = collect_types ~reader (LocSet.of_list (SMap.values names_and_locs)) typed_ast in
+  names_and_locs
+  |> SMap.bindings
+  |> Base.List.filter_map ~f:(fun (name, loc) ->
+         (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
+         Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
+             ((name, loc), Type.TypeScheme.{ tparams; type_ })))
+  |> Ty_normalizer.from_schemes
+       ~options:ty_normalizer_options
+       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+
+(* env is all visible bound names at cursor *)
+let autocomplete_id
+    ~reader
+    ~cx
+    ~ac_loc
+    ~ac_trigger
+    ~id_type
+    ~file_sig
+    ~typed_ast
+    ~include_super
+    ~include_this
+    ~tparams
+    ~broader_context =
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let (results, errors) =
-    names_and_locs
-    |> SMap.bindings
-    |> Base.List.filter_map ~f:(fun (name, loc) ->
-           (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
-           Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
-               ((name, loc), Type.TypeScheme.{ tparams; type_ })))
-    |> Ty_normalizer.from_schemes
-         ~options:ty_normalizer_options
-         ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+    local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
     |> List.fold_left
          (fun (results, errors) ((name, loc), normalization_result) ->
            match normalization_result with
@@ -491,11 +494,160 @@ let autocomplete_jsx
       ~tparams
       ~broader_context)
 
+(* TODO(vijayramamurthy) think about how to break this file down into smaller modules *)
+(* NOTE: excludes classes, because we'll get those from local_value_identifiers *)
+class local_type_identifiers_searcher =
+  object (this)
+    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot x = x
+
+    method on_type_annot x = x
+
+    val mutable ids = []
+
+    method ids = ids
+
+    method add_id id = ids <- id :: ids
+
+    method! type_alias (Flow_ast.Statement.TypeAlias.{ id; _ } as x) =
+      this#add_id id;
+      x
+
+    method! opaque_type (Flow_ast.Statement.OpaqueType.{ id; _ } as x) =
+      this#add_id id;
+      x
+
+    method! interface (Flow_ast.Statement.Interface.{ id; _ } as x) =
+      this#add_id id;
+      x
+
+    method! import_declaration _ x =
+      let open Flow_ast.Statement.ImportDeclaration in
+      let { importKind; specifiers; default; _ } = x in
+      let binds_type = function
+        | ImportType
+        | ImportTypeof ->
+          true
+        | ImportValue -> false
+      in
+      let declaration_binds_type = binds_type importKind in
+      if declaration_binds_type then Option.iter default ~f:this#add_id;
+      Option.iter specifiers ~f:(function
+          | ImportNamedSpecifiers specifiers ->
+            List.iter
+              (fun { kind; local; remote } ->
+                let specifier_binds_type =
+                  match kind with
+                  | None -> declaration_binds_type
+                  | Some k -> binds_type k
+                in
+                if specifier_binds_type then this#add_id (Option.value local ~default:remote))
+              specifiers
+          | ImportNamespaceSpecifier _ -> ( (* namespaces can't be types *) ));
+      x
+  end
+
+let local_type_identifiers ~typed_ast ~cx ~file_sig =
+  let search = new local_type_identifiers_searcher in
+  Pervasives.ignore (search#program typed_ast);
+  search#ids
+  |> List.map (fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
+  |> Ty_normalizer.from_types
+       ~options:ty_normalizer_options
+       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+
+let exports_types =
+  let open Ty in
+  function
+  | Module _ -> true
+  (* workaround while the ty normalizer sometimes renders modules as objects *)
+  | Obj { obj_props; _ }
+    when List.exists
+           (function
+             | NamedProp (_, Field (TypeAlias _, _)) -> true
+             | _ -> false)
+           obj_props ->
+    true
+  | _ -> false
+
+let autocomplete_unqualified_type
+    ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast ~broader_context =
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let tparam_results =
+    List.map
+      Type.(
+        fun { name; _ } ->
+          {
+            res_loc = ac_loc;
+            res_kind = Some Lsp.Completion.TypeParameter;
+            res_name = name;
+            res_ty = (Loc.none, name);
+            func_details = None;
+            res_insert_text = None;
+          })
+      tparams
+  in
+  let (tparam_and_tident_results, tparam_and_tident_errors) =
+    local_type_identifiers ~typed_ast ~cx ~file_sig
+    |> List.fold_left
+         (fun (results, errors) ((name, loc), ty_result) ->
+           match ty_result with
+           | Ok ty ->
+             let result =
+               autocomplete_create_result (name, ac_loc) (ty, loc_of_aloc ~reader loc)
+             in
+             (result :: results, errors)
+           | Error error -> (results, error :: errors))
+         (tparam_results, [])
+  in
+  (* The value-level identifiers we suggest in type autocompletion:
+      - classes
+      - modules (followed by a dot) *)
+  let (results, errors) =
+    local_value_identifiers ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
+    |> List.fold_left
+         (fun (results, errors) ((name, loc), ty_res) ->
+           match ty_res with
+           | Error error -> (results, error :: errors)
+           | Ok (Ty.ClassDecl _ as ty) ->
+             let result = autocomplete_create_result (name, ac_loc) (ty, loc) in
+             (result :: results, errors)
+           | Ok ty when exports_types ty ->
+             let result =
+               autocomplete_create_result (name, ac_loc) (ty, loc) ~insert_text:(name ^ ".")
+             in
+             (result :: results, errors)
+           | Ok _ -> (results, errors))
+         (tparam_and_tident_results, tparam_and_tident_errors)
+  in
+  let json_data_to_log =
+    Hh_json.(
+      let result_str =
+        match (results, errors) with
+        | (_, []) -> "SUCCESS"
+        | ([], _) -> "FAILURE_NORMALIZER"
+        | (_, _) -> "PARTIAL"
+      in
+      JSON_Object
+        [
+          ("ac_type", JSON_String "Actype");
+          ("result", JSON_String result_str);
+          ("count", JSON_Number (results |> List.length |> string_of_int));
+          ( "errors",
+            JSON_Array
+              (Base.List.rev_map errors ~f:(fun err ->
+                   JSON_String (Ty_normalizer.error_to_string err))) );
+          ("broader_context", JSON_String broader_context);
+        ])
+  in
+  Ok (results, Some json_data_to_log)
+
 let autocomplete_get_results
     ~reader cx file_sig typed_ast trigger_character docblock ~broader_context =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~typed_ast with
-  | Some (tparams, Acid { ac_loc; id_type; include_super; include_this }) ->
+  | Some (tparams, ac_loc, Acid { id_type; include_super; include_this }) ->
     autocomplete_id
       ~reader
       ~cx
@@ -508,7 +660,7 @@ let autocomplete_get_results
       ~include_this
       ~tparams
       ~broader_context
-  | Some (tparams, Acmem (ac_name, ac_loc, this)) ->
+  | Some (tparams, ac_loc, Acmem (ac_name, this)) ->
     autocomplete_member
       ~reader
       ~exclude_proto_members:false
@@ -523,7 +675,7 @@ let autocomplete_get_results
       docblock
       ~tparams
       ~broader_context
-  | Some (tparams, Acjsx (ac_name, used_attr_names, ac_loc, cls)) ->
+  | Some (tparams, ac_loc, Acjsx (ac_name, used_attr_names, cls)) ->
     autocomplete_jsx
       ~reader
       cx
@@ -536,6 +688,15 @@ let autocomplete_get_results
       trigger_character
       docblock
       ~tparams
+      ~broader_context
+  | Some (tparams, ac_loc, Actype) ->
+    autocomplete_unqualified_type
+      ~reader
+      ~cx
+      ~tparams
+      ~ac_loc
+      ~typed_ast
+      ~file_sig
       ~broader_context
   | None ->
     let json_data_to_log =
