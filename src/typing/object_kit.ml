@@ -29,6 +29,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
 
   exception CannotSpreadError of Error_message.t
 
+  let is_widened_reason_desc r =
+    match desc_of_reason r with
+    | RWidenedObjProp _ -> true
+    | _ -> false
+
   let widen_obj_type cx ?trace ~use_op reason t =
     match t with
     | OpenT (r, id) ->
@@ -783,10 +788,17 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let widen_type cx trace reason ~use_op t1 t2 =
             match (t1, t2) with
             | (t1, t2) when is_subset (t2, t1) -> (t1, false)
-            | (OpenT _, t2) ->
+            | (OpenT (r1, _), OpenT (r2, _))
+              when is_widened_reason_desc r1 && is_widened_reason_desc r2 ->
+              rec_unify cx trace ~use_op t1 t2;
+              (t1, false)
+            | (OpenT (r, _), t2) when is_widened_reason_desc r ->
               rec_flow_t cx trace ~use_op (t2, t1);
               (t1, false)
             | (t1, t2) ->
+              let reason =
+                replace_desc_new_reason (RWidenedObjProp (desc_of_reason reason)) reason
+              in
               ( Tvar.mk_where cx reason (fun t ->
                     rec_flow_t cx trace ~use_op (t1, t);
                     rec_flow_t cx trace ~use_op (t2, t)),
