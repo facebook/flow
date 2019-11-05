@@ -843,8 +843,7 @@ let merge
     ~deleted
     ~unparsed_set
     ~persistent_connections
-    ~recheck_reasons
-    ~prep_merge =
+    ~recheck_reasons =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions } = errors in
   let%lwt intermediate_result_callback =
     let persistent_connections =
@@ -859,13 +858,6 @@ let merge
       ~persistent_connections
       ~recheck_reasons
       suppressions
-  in
-  let%lwt () =
-    match prep_merge with
-    | None -> Lwt.return_unit
-    | Some callback ->
-      (* call supplied function to calculate closure of modules to merge *)
-      with_timer_lwt ~options "MakeMergeInput" profiling (fun () -> Lwt.return (callback ()))
   in
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
@@ -2181,6 +2173,17 @@ end = struct
               top_cycle,
               time_to_merge,
               merge_internal_error ) =
+      let n = FilenameSet.cardinal all_dependent_files in
+      if n > 0 then Hh_logger.info "recheck %d dependent files:" n;
+
+      let _ =
+        FilenameSet.fold
+          (fun f i ->
+            Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
+            i + 1)
+          all_dependent_files
+          1
+      in
       merge
         ~transaction
         ~reader
@@ -2197,21 +2200,6 @@ end = struct
         ~unparsed_set
         ~persistent_connections:(Some env.ServerEnv.connections)
         ~recheck_reasons
-        ~prep_merge:
-          (Some
-             (fun () ->
-               let n = FilenameSet.cardinal all_dependent_files in
-               if n > 0 then Hh_logger.info "recheck %d dependent files:" n;
-
-               let _ =
-                 FilenameSet.fold
-                   (fun f i ->
-                     Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
-                     i + 1)
-                   all_dependent_files
-                   1
-               in
-               ()))
     in
     Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
@@ -2947,7 +2935,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~unparsed_set:FilenameSet.empty
           ~persistent_connections:None
           ~recheck_reasons
-          ~prep_merge:None
       in
       Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
