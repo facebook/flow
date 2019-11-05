@@ -745,6 +745,7 @@ let poly_minimum_arity =
 module M__flow
     (ReactJs : React_kit.REACT)
     (AssertGround : Flow_common.ASSERT_GROUND)
+    (CheckPolarity : Flow_common.CHECK_POLARITY)
     (TrustChecking : Flow_common.TRUST_CHECKING)
     (CustomFunKit : Custom_fun_kit.CUSTOM_FUN)
     (ObjectKit : Object_kit.OBJECT) =
@@ -3383,7 +3384,7 @@ struct
        args, we end up generating this constraint. Since it has no type args, we never resolve to
        a PolyT, but we still want to check the polarity in this case. *)
         | (DefT (_, _, ClassT _), VarianceCheckT (_, [], polarity)) ->
-          check_polarity cx ~trace polarity l
+          CheckPolarity.check_polarity cx ~trace polarity l
         | ( DefT (_, _, PolyT { tparams_loc; tparams; _ }),
             TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ) ->
           let minimum_arity = poly_minimum_arity tparams in
@@ -7704,138 +7705,13 @@ struct
           | ReactConfigType default_props ->
             ReactKitT (use_op, reason, React.GetConfigType (default_props, tout)) )
 
-  (* TODO: flesh this out *)
-  and check_polarity cx ?trace polarity = function
-    (* base case *)
-    | BoundT (reason, name, tp_polarity) ->
-      if not (Polarity.compat (tp_polarity, polarity)) then
-        add_output
-          cx
-          ?trace
-          (Error_message.EPolarityMismatch
-             { reason; name; expected_polarity = tp_polarity; actual_polarity = polarity })
-    | OpenT _
-    | DefT (_, _, NumT _)
-    | DefT (_, _, StrT _)
-    | DefT (_, _, BoolT _)
-    | DefT (_, _, EmptyT _)
-    | DefT (_, _, MixedT _)
-    | AnyT _
-    | DefT (_, _, NullT)
-    | DefT (_, _, VoidT)
-    | DefT (_, _, SingletonStrT _)
-    | DefT (_, _, SingletonNumT _)
-    | DefT (_, _, SingletonBoolT _)
-    | DefT (_, _, CharSetT _)
-    | DefT (_, _, EnumObjectT _)
-    | DefT (_, _, EnumT _) ->
-      ()
-    | ExistsT _ -> ()
-    | InternalT (OptionalChainVoidT _) -> ()
-    | OptionalT { reason = _; type_ = t; use_desc = _ }
-    | ExactT (_, t)
-    | MaybeT (_, t)
-    | ReposT (_, t)
-    | InternalT (ReposUpperT (_, t)) ->
-      check_polarity cx ?trace polarity t
-    | DefT (_, _, ClassT t) -> check_polarity cx ?trace polarity t
-    | DefT (_, _, TypeT (_, t)) -> check_polarity cx ?trace polarity t
-    | DefT (_, _, InstanceT (static, super, _, instance)) ->
-      check_polarity cx ?trace polarity static;
-      check_polarity cx ?trace polarity super;
-      check_polarity_propmap cx ?trace polarity instance.own_props;
-      check_polarity_propmap cx ?trace ~skip_ctor:true polarity instance.proto_props
-    | DefT (_, _, FunT (_, _, func)) ->
-      let f = check_polarity cx ?trace (Polarity.inv polarity) in
-      List.iter (fun (_, t) -> f t) func.params;
-      Option.iter ~f:(fun (_, _, t) -> f t) func.rest_param;
-      check_polarity cx ?trace polarity func.return_t
-    | DefT (_, _, ArrT (ArrayAT (elemt, _))) -> check_polarity cx ?trace Polarity.Neutral elemt
-    | DefT (_, _, ArrT (TupleAT (_, tuple_types))) ->
-      List.iter (check_polarity cx ?trace Polarity.Neutral) tuple_types
-    | DefT (_, _, ArrT (ROArrayAT elemt)) -> check_polarity cx ?trace polarity elemt
-    | DefT (_, _, ObjT obj) ->
-      check_polarity_propmap cx ?trace polarity obj.props_tmap;
-      (match obj.dict_t with
-      | Some { key; value; dict_polarity; _ } ->
-        check_polarity cx ?trace Polarity.Neutral key;
-        check_polarity cx ?trace (Polarity.mult (polarity, dict_polarity)) value
-      | None -> ())
-    | DefT (_, _, IdxWrapper obj) -> check_polarity cx ?trace polarity obj
-    | UnionT (_, rep) -> List.iter (check_polarity cx ?trace polarity) (UnionRep.members rep)
-    | IntersectionT (_, rep) ->
-      List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
-    | DefT (_, _, PolyT { tparams = xs; t_out = t; _ }) ->
-      Nel.iter (check_polarity_typeparam cx ?trace polarity) xs;
-      check_polarity cx ?trace polarity t
-    | ThisTypeAppT (_, c, _, None) -> check_polarity cx ?trace Polarity.Positive c
-    | ThisTypeAppT (_, c, _, Some ts)
-    | TypeAppT (_, _, c, ts) ->
-      check_polarity cx ?trace Polarity.Positive c;
-      check_polarity_typeapp cx ?trace polarity c ts
-    | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
-      check_polarity cx ?trace Polarity.Negative config;
-      check_polarity cx ?trace Polarity.Positive instance
-    | OpaqueT (_, opaquetype) ->
-      Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
-      Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.super_t
-    | ShapeT t -> check_polarity cx ?trace polarity t
-    | KeysT (_, t) -> check_polarity cx ?trace Polarity.Positive t
-    | ThisClassT _
-    | ModuleT _
-    | AnnotT _
-    | MatchingPropT _
-    | NullProtoT _
-    | ObjProtoT _
-    | FunProtoT _
-    | FunProtoApplyT _
-    | FunProtoBindT _
-    | FunProtoCallT _
-    | EvalT _
-    | InternalT (ExtendsT _)
-    | InternalT (ChoiceKitT _)
-    | TypeDestructorTriggerT _
-    | CustomFunT _
-    | OpenPredT _
-    | MergedT _ ->
-      ()
-
-  (* TODO *)
-  and check_polarity_propmap cx ?trace ?(skip_ctor = false) polarity id =
-    let pmap = Context.find_props cx id in
-    SMap.iter
-      (fun x p ->
-        if skip_ctor && x = "constructor" then
-          ()
-        else
-          check_polarity_prop cx ?trace polarity p)
-      pmap
-
-  and check_polarity_prop cx ?trace polarity = function
-    | Field (_, t, p) -> check_polarity cx ?trace (Polarity.mult (polarity, p)) t
-    | Get (_, t) -> check_polarity cx ?trace polarity t
-    | Set (_, t) -> check_polarity cx ?trace (Polarity.inv polarity) t
-    | GetSet (_, t1, _, t2) ->
-      check_polarity cx ?trace polarity t1;
-      check_polarity cx ?trace (Polarity.inv polarity) t2
-    | Method (_, t) -> check_polarity cx ?trace polarity t
-
-  and check_polarity_typeparam cx ?trace polarity tp =
-    let polarity = Polarity.mult (polarity, tp.polarity) in
-    check_polarity cx ?trace polarity tp.bound;
-    Option.iter ~f:(check_polarity cx ?trace polarity) tp.default
-
-  and check_polarity_typeapp cx ?trace polarity c ts =
-    let reason = update_desc_reason (fun desc -> RVarianceCheck desc) (reason_of_t c) in
-    flow_opt cx ?trace (c, VarianceCheckT (reason, ts, polarity))
-
   and variance_check cx ?trace polarity = function
     | ([], _)
     | (_, []) ->
       (* ignore typeapp arity mismatch, since it's handled elsewhere *)
       ()
     | (tp :: tps, t :: ts) ->
-      check_polarity cx ?trace (Polarity.mult (polarity, tp.polarity)) t;
+      CheckPolarity.check_polarity cx ?trace (Polarity.mult (polarity, tp.polarity)) t;
       variance_check cx ?trace polarity (tps, ts)
 
   (* Instantiate a polymorphic definition given tparam instantiations in a Call or
@@ -11456,16 +11332,18 @@ struct
     | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
   include AssertGround
+  include CheckPolarity
   include TrustChecking
 end
 
 module rec FlowJs : Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
   module AssertGround = Assert_ground.Kit (FlowJs)
+  module CheckPolarity = Check_polarity.Kit (FlowJs)
   module TrustKit = Trust_checking.TrustKit (FlowJs)
   module CustomFun = Custom_fun_kit.Kit (FlowJs)
   module ObjectKit = Object_kit.Kit (FlowJs)
-  include M__flow (React) (AssertGround) (TrustKit) (CustomFun) (ObjectKit)
+  include M__flow (React) (AssertGround) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit)
 
   let add_output = add_output
 
