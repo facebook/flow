@@ -2201,7 +2201,7 @@ end = struct
           (Some
              (fun () ->
                let n = FilenameSet.cardinal all_dependent_files in
-               if n > 0 then Hh_logger.info "remerge %d dependent files:" n;
+               if n > 0 then Hh_logger.info "recheck %d dependent files:" n;
 
                let _ =
                  FilenameSet.fold
