@@ -2193,8 +2193,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | TODO (msg, _) -> [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
       in
       let features =
-        text "Failed to build a typed interface for this module. "
-        :: text "The exports of this module must be annotated with types. "
+        text "Cannot build a typed interface for this module. "
+        :: text "You should annotate the exports of this module with types. "
         :: features
       in
       Normal { features })
