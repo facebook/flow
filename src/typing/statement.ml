@@ -165,33 +165,33 @@ let is_call_to_invariant callee =
   | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "invariant"; _ })) -> true
   | _ -> false
 
-let convert_tparam_instantiations cx tparams_map instantiations =
-  Ast.Expression.TypeParameterInstantiation.(
-    let rec loop ts tasts cx tparams_map = function
-      | [] -> (List.rev ts, List.rev tasts)
-      | ast :: asts ->
-        begin
-          match ast with
-          | Explicit ast ->
-            let (((_, t), _) as tast) = Anno.convert cx tparams_map ast in
-            loop (ExplicitArg t :: ts) (Explicit tast :: tasts) cx tparams_map asts
-          | Implicit loc ->
-            let reason = mk_reason RImplicitInstantiation loc in
-            let id = Tvar.mk_no_wrap cx reason in
-            loop
-              (ImplicitArg (reason, id) :: ts)
-              (Implicit (loc, OpenT (reason, id)) :: tasts)
-              cx
-              tparams_map
-              asts
-        end
-    in
-    loop [] [] cx tparams_map instantiations)
+let convert_call_targs =
+  let open Ast.Expression.CallTypeArg in
+  let rec loop ts tasts cx tparams_map = function
+    | [] -> (List.rev ts, List.rev tasts)
+    | ast :: asts ->
+      begin
+        match ast with
+        | Explicit ast ->
+          let (((_, t), _) as tast) = Anno.convert cx tparams_map ast in
+          loop (ExplicitArg t :: ts) (Explicit tast :: tasts) cx tparams_map asts
+        | Implicit loc ->
+          let reason = mk_reason RImplicitInstantiation loc in
+          let id = Tvar.mk_no_wrap cx reason in
+          loop
+            (ImplicitArg (reason, id) :: ts)
+            (Implicit (loc, OpenT (reason, id)) :: tasts)
+            cx
+            tparams_map
+            asts
+      end
+  in
+  (fun cx tparams_map call_targs -> loop [] [] cx tparams_map call_targs)
 
-let convert_targs cx = function
+let convert_call_targs_opt cx = function
   | None -> (None, None)
   | Some (loc, args) ->
-    let (targts, targs_ast) = convert_tparam_instantiations cx SMap.empty args in
+    let (targts, targs_ast) = convert_call_targs cx SMap.empty args in
     (Some targts, Some (loc, targs_ast))
 
 class return_finder =
@@ -3038,7 +3038,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         } ->
       let targts_opt =
         Option.map targs (fun (targts_loc, args) ->
-            (targts_loc, convert_tparam_instantiations cx SMap.empty args))
+            (targts_loc, convert_call_targs cx SMap.empty args))
       in
       let (argts, arges) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
       let id_t = identifier cx name callee_loc in
@@ -3104,8 +3104,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           comments;
         } ->
       let targts =
-        Option.map targs (fun (loc, args) ->
-            (loc, convert_tparam_instantiations cx SMap.empty args))
+        Option.map targs (fun (loc, args) -> (loc, convert_call_targs cx SMap.empty args))
       in
       let args = Base.List.map ~f:(expression_or_spread cx) arguments in
       let result =
@@ -3152,7 +3151,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         Tast_utils.error_mapper#expression ex)
     | New { New.callee; targs; arguments; comments } ->
       let (((_, class_), _) as callee_ast) = expression cx callee in
-      let (targts, targs_ast) = convert_targs cx targs in
+      let (targts, targs_ast) = convert_call_targs_opt cx targs in
       let (argts, arguments_ast) =
         arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
       in
@@ -3555,7 +3554,7 @@ and subscript ~is_cond cx ex =
       when not (Env.local_scope_entry_exists n) ->
       let targs =
         Option.map targs (fun (args_loc, args) ->
-            (args_loc, snd (convert_tparam_instantiations cx SMap.empty args)))
+            (args_loc, snd (convert_call_targs cx SMap.empty args)))
       in
       let (lhs_t, arguments) =
         match (targs, arguments) with
@@ -3628,8 +3627,7 @@ and subscript ~is_cond cx ex =
         }
       when not (Env.local_scope_entry_exists n) ->
       let targs =
-        Option.map targs (fun (loc, args) ->
-            (loc, snd (convert_tparam_instantiations cx SMap.empty args)))
+        Option.map targs (fun (loc, args) -> (loc, snd (convert_call_targs cx SMap.empty args)))
       in
       let (lhs_t, arguments) =
         match (targs, arguments) with
@@ -3757,7 +3755,7 @@ and subscript ~is_cond cx ex =
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
       let super = super_ cx super_loc in
-      let (targts, targs) = convert_targs cx targs in
+      let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, argument_asts) =
         arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
       in
@@ -3806,7 +3804,7 @@ and subscript ~is_cond cx ex =
         } ->
       (* method call *)
       let (((_, ot), _) as _object) = expression cx _object in
-      let (targts, targs) = convert_targs cx targs in
+      let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, argument_asts) =
         arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
       in
@@ -3865,7 +3863,7 @@ and subscript ~is_cond cx ex =
               arguments = argument_asts;
             } )
     | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
-      let (targts, targs) = convert_targs cx targs in
+      let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, argument_asts) =
         arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
       in
@@ -3903,8 +3901,7 @@ and subscript ~is_cond cx ex =
       (* TODO: require *)
       let (((_, callee_t), _) as callee) = expression cx callee in
       let targs =
-        Option.map targs (fun (loc, args) ->
-            (loc, snd (convert_tparam_instantiations cx SMap.empty args)))
+        Option.map targs (fun (loc, args) -> (loc, snd (convert_call_targs cx SMap.empty args)))
       in
       (* NOTE: if an invariant expression throws abnormal control flow, the
             entire statement it was in is reconstructed in the typed AST as an
@@ -4259,7 +4256,7 @@ and subscript ~is_cond cx ex =
             Flow.add_output cx Error_message.(EOptionalChainingMethods loc)
           | _ -> ()
         end;
-        let (targts, targs) = convert_targs cx targs in
+        let (targts, targs) = convert_call_targs_opt cx targs in
         let (argts, argument_asts) =
           arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
         in
@@ -4309,7 +4306,7 @@ and predicated_call_expression cx loc call =
    - the returned type
 *)
 and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; arguments } =
-  let (targts, targ_asts) = convert_targs cx targs in
+  let (targts, targ_asts) = convert_call_targs_opt cx targs in
   let args =
     arguments
     |> Base.List.map ~f:(function
@@ -6332,7 +6329,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         None,
         [Expression e_ast] )
     | ( "defineProperty",
-        (None | Some (_, [Ast.Expression.TypeParameterInstantiation.Explicit _])),
+        (None | Some (_, [Ast.Expression.CallTypeArg.Explicit _])),
         [
           Expression e;
           Expression
@@ -6342,9 +6339,9 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       let (ty, targs) =
         match targs with
         | None -> (Tvar.mk cx reason, None)
-        | Some (targs_loc, [Ast.Expression.TypeParameterInstantiation.Explicit targ]) ->
+        | Some (targs_loc, [Ast.Expression.CallTypeArg.Explicit targ]) ->
           let (((_, ty), _) as targ) = Anno.convert cx SMap.empty targ in
-          (ty, Some (targs_loc, [Ast.Expression.TypeParameterInstantiation.Explicit targ]))
+          (ty, Some (targs_loc, [Ast.Expression.CallTypeArg.Explicit targ]))
         | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
       in
       let loc = aloc_of_reason reason in
@@ -6399,9 +6396,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
      have been mutated elsewhere *)
     | ("freeze", ((None | Some (_, [_])) as targs), [Expression ((arg_loc, Object _) as e)]) ->
       let targs =
-        Option.map
-          ~f:(fun (loc, targs) -> (loc, convert_tparam_instantiations cx SMap.empty targs))
-          targs
+        Option.map ~f:(fun (loc, targs) -> (loc, convert_call_targs cx SMap.empty targs)) targs
       in
       let (((_, arg_t), _) as e_ast) = expression cx e in
       let arg_t = Object_freeze.freeze_object cx arg_loc arg_t in
@@ -6421,7 +6416,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
         | "freeze" ),
         Some (targs_loc, targs),
         _ ) ->
-      let targs = snd (convert_tparam_instantiations cx SMap.empty targs) in
+      let targs = snd (convert_call_targs cx SMap.empty targs) in
       let args = Base.List.map ~f:(fun arg -> snd (expression_or_spread cx arg)) args in
       let arity =
         if m = "freeze" || m = "defineProperty" then
@@ -6442,7 +6437,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       (AnyT.at AnyError loc, Some (targs_loc, targs), args)
     (* TODO *)
     | _ ->
-      let (targts, targ_asts) = convert_targs cx targs in
+      let (targts, targ_asts) = convert_call_targs_opt cx targs in
       let (argts, arg_asts) = args |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
       let reason = mk_reason (RMethodCall (Some m)) loc in
       let use_op =

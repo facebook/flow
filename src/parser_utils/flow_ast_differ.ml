@@ -1320,12 +1320,7 @@ let program
         new2
       in
       let comments = syntax_opt loc comments1 comments2 in
-      let targs =
-        diff_if_changed_ret_opt
-          (diff_if_changed_opt type_parameter_instantiation_with_implicit)
-          targs1
-          targs2
-      in
+      let targs = diff_if_changed_ret_opt (diff_if_changed_opt call_type_args) targs1 targs2 in
       let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
       let callee = Some (diff_if_changed expression callee1 callee2) in
       join_diff_list [comments; targs; args; callee])
@@ -1355,15 +1350,24 @@ let program
     Ast.Expression.Call.(
       let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
       let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
-      let targs =
-        diff_if_changed_ret_opt
-          (diff_if_changed_opt type_parameter_instantiation_with_implicit)
-          targs1
-          targs2
-      in
+      let targs = diff_if_changed_ret_opt (diff_if_changed_opt call_type_args) targs1 targs2 in
       let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
       let callee = Some (diff_if_changed expression callee1 callee2) in
       join_diff_list [targs; args; callee])
+  and call_type_arg
+      (t1 : (Loc.t, Loc.t) Ast.Expression.CallTypeArg.t)
+      (t2 : (Loc.t, Loc.t) Ast.Expression.CallTypeArg.t) : node change list option =
+    Ast.Expression.CallTypeArg.(
+      match (t1, t2) with
+      | (Explicit type1, Explicit type2) -> Some (diff_if_changed type_ type1 type2)
+      | (Implicit _, Implicit _) -> Some []
+      | _ -> None)
+  and call_type_args
+      (pi1 : (Loc.t, Loc.t) Ast.Expression.CallTypeArgs.t)
+      (pi2 : (Loc.t, Loc.t) Ast.Expression.CallTypeArgs.t) : node change list option =
+    let (_, t_args1) = pi1 in
+    let (_, t_args2) = pi2 in
+    diff_and_recurse_no_trivial call_type_arg t_args1 t_args2
   and expression_or_spread
       (expr1 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
       (expr2 : (Loc.t, Loc.t) Ast.Expression.expression_or_spread) : node change list option =
@@ -1811,22 +1815,6 @@ let program
   and tuple_type (tp1 : (Loc.t, Loc.t) Ast.Type.t list) (tp2 : (Loc.t, Loc.t) Ast.Type.t list) :
       node change list option =
     diff_and_recurse_nonopt_no_trivial type_ tp1 tp2
-  and type_or_implicit
-      (t1 : (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
-      (t2 : (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
-      : node change list option =
-    Ast.Expression.TypeParameterInstantiation.(
-      match (t1, t2) with
-      | (Explicit type1, Explicit type2) -> Some (diff_if_changed type_ type1 type2)
-      | (Implicit _, Implicit _) -> Some []
-      | _ -> None)
-  and type_parameter_instantiation_with_implicit
-      (pi1 : (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.t)
-      (pi2 : (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.t) : node change list option
-      =
-    let (_, t_args1) = pi1 in
-    let (_, t_args2) = pi2 in
-    diff_and_recurse_no_trivial type_or_implicit t_args1 t_args2
   and type_args
       (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) :
       node change list option =

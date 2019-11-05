@@ -250,7 +250,7 @@ class ['loc] mapper =
       Ast.Expression.Call.(
         let { callee; targs; arguments } = expr in
         let callee' = this#expression callee in
-        let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
+        let targs' = map_opt this#call_type_args targs in
         let arguments' = this#call_arguments arguments in
         if callee == callee' && targs == targs' && arguments == arguments' then
           expr
@@ -268,6 +268,25 @@ class ['loc] mapper =
           expr
         else
           { expr with call = call' })
+
+    method call_type_args (targs : ('loc, 'loc) Ast.Expression.CallTypeArgs.t) =
+      let (loc, ts) = targs in
+      let ts' = ListUtils.ident_map this#call_type_arg ts in
+      if ts' == ts then
+        targs
+      else
+        (loc, ts')
+
+    method call_type_arg t =
+      let open Ast.Expression.CallTypeArg in
+      match t with
+      | Explicit x ->
+        let x' = this#type_ x in
+        if x' == x then
+          t
+        else
+          Explicit x'
+      | Implicit _ -> t
 
     method catch_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) = map_loc this#block body
 
@@ -839,15 +858,6 @@ class ['loc] mapper =
 
     method variance (variance : 'loc Ast.Variance.t option) = variance
 
-    method type_parameter_instantiation_with_implicit
-        (pi : ('loc, 'loc) Ast.Expression.TypeParameterInstantiation.t) =
-      let (loc, targs) = pi in
-      let targs' = ListUtils.ident_map this#type_or_implicit targs in
-      if targs' == targs then
-        pi
-      else
-        (loc, targs')
-
     method type_args (targs : ('loc, 'loc) Ast.Type.TypeArgs.t) =
       let (loc, ts) = targs in
       let ts' = ListUtils.ident_map this#type_ ts in
@@ -936,17 +946,6 @@ class ['loc] mapper =
             t
           else
             (loc, Tuple ts'))
-
-    method type_or_implicit t =
-      Ast.Expression.TypeParameterInstantiation.(
-        match t with
-        | Explicit x ->
-          let x' = this#type_ x in
-          if x' == x then
-            t
-          else
-            Explicit x'
-        | Implicit _ -> t)
 
     method type_annotation (annot : ('loc, 'loc) Ast.Type.annotation) =
       let (loc, a) = annot in
@@ -1359,7 +1358,7 @@ class ['loc] mapper =
       Ast.Expression.New.(
         let { callee; targs; arguments; comments } = expr in
         let callee' = this#expression callee in
-        let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
+        let targs' = map_opt this#call_type_args targs in
         let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
         let comments' = this#syntax_opt comments in
         if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'

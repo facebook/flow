@@ -518,7 +518,7 @@ with type t = Impl.t = struct
             loc
             [
               ("callee", expression callee);
-              ("typeArguments", option type_parameter_instantiation_with_implicit targs);
+              ("typeArguments", option call_type_args targs);
               ("arguments", array_of_list expression_or_spread arguments);
             ]
         | (loc, Call call) -> node "CallExpression" loc (call_node_properties call)
@@ -1180,18 +1180,6 @@ with type t = Impl.t = struct
         | BigIntLiteral n -> bigint_literal_type (loc, n)
         | BooleanLiteral b -> boolean_literal_type (loc, b)
         | Exists -> exists_type loc)
-    and implicit loc =
-      generic_type
-        ( loc,
-          {
-            Type.Generic.id =
-              Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_"));
-            targs = None;
-          } )
-    and explicit_or_implicit_targ x =
-      match x with
-      | Expression.TypeParameterInstantiation.Explicit t -> _type t
-      | Expression.TypeParameterInstantiation.Implicit loc -> implicit loc
     and any_type loc = node "AnyTypeAnnotation" loc []
     and mixed_type loc = node "MixedTypeAnnotation" loc []
     and empty_type loc = node "EmptyTypeAnnotation" loc []
@@ -1412,11 +1400,19 @@ with type t = Impl.t = struct
         ]
     and type_args (loc, targs) =
       node "TypeParameterInstantiation" loc [("params", array_of_list _type targs)]
-    and type_parameter_instantiation_with_implicit (loc, targs) =
-      node
-        "TypeParameterInstantiation"
-        loc
-        [("params", array_of_list explicit_or_implicit_targ targs)]
+    and call_type_args (loc, targs) =
+      node "TypeParameterInstantiation" loc [("params", array_of_list call_type_arg targs)]
+    and call_type_arg x =
+      match x with
+      | Expression.CallTypeArg.Explicit t -> _type t
+      | Expression.CallTypeArg.Implicit loc ->
+        generic_type
+          ( loc,
+            {
+              Type.Generic.id =
+                Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_"));
+              targs = None;
+            } )
     and jsx_element (loc, { JSX.openingElement; closingElement; children = (_loc, children) }) =
       node
         "JSXElement"
@@ -1573,7 +1569,7 @@ with type t = Impl.t = struct
     and call_node_properties { Expression.Call.callee; targs; arguments } =
       [
         ("callee", expression callee);
-        ("typeArguments", option type_parameter_instantiation_with_implicit targs);
+        ("typeArguments", option call_type_args targs);
         ("arguments", array_of_list expression_or_spread arguments);
       ]
     and member_node_properties { Expression.Member._object; property } =

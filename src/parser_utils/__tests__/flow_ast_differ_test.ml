@@ -195,14 +195,14 @@ class useless_mapper =
         | Some (loc, Minus) -> Some (loc, Plus)
         | _ -> variance)
 
-    method! type_parameter_instantiation_with_implicit (loc, targs) =
-      Ast.Expression.TypeParameterInstantiation.(
-        let f targ =
-          match targ with
-          | Explicit targ' -> Explicit (this#type_ targ')
-          | Implicit loc -> Explicit (loc, Ast.Type.Any)
-        in
-        (loc, Base.List.map ~f targs))
+    method! call_type_args (loc, targs) =
+      let open Ast.Expression.CallTypeArg in
+      let f targ =
+        match targ with
+        | Explicit targ' -> Explicit (this#type_ targ')
+        | Implicit loc -> Explicit (loc, Ast.Type.Any)
+      in
+      (loc, Base.List.map ~f targs)
 
     method! function_param_type (fpt : (Loc.t, Loc.t) Ast.Type.Function.Param.t) =
       Ast.Type.Function.Param.(
@@ -631,12 +631,12 @@ class insert_typecast_mapper =
           { Ast.Expression.TypeCast.annot = (loc, (loc, Type.Any)); expression } )
   end
 
-class insert_type_param_instantiation =
+class insert_call_type_args =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! type_parameter_instantiation_with_implicit (loc, targs) =
-      Ast.Expression.TypeParameterInstantiation.(loc, Explicit (loc, Ast.Type.Any) :: targs)
+    method! call_type_args (loc, targs) =
+      (loc, Ast.Expression.CallTypeArg.Explicit (loc, Ast.Type.Any) :: targs)
   end
 
 class add_comment_mapper =
@@ -1067,7 +1067,7 @@ let tests =
            ~edits:[((0, 11), "(new foo<any>())")]
            ~source
            ~expected:"(new foo<any>())"
-           ~mapper:(new insert_type_param_instantiation) );
+           ~mapper:(new insert_call_type_args) );
          ( "new_type_param_implicit"
          >:: fun ctxt ->
          let source = "new foo<_>()" in

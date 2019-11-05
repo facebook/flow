@@ -164,7 +164,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Expression.Call.(
         let { callee; targs; arguments } = expr in
         let callee' = this#expression callee in
-        let targs' = Option.map ~f:this#type_parameter_instantiation_with_implicit targs in
+        let targs' = Option.map ~f:this#call_type_args targs in
         let arguments' = Base.List.map ~f:this#expression_or_spread arguments in
         { callee = callee'; targs = targs'; arguments = arguments' })
 
@@ -174,6 +174,19 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let { call; optional } = expr in
         let call' = this#call annot call in
         { call = call'; optional })
+
+    method call_type_args (pi : ('M, 'T) Ast.Expression.CallTypeArgs.t)
+        : ('N, 'U) Ast.Expression.CallTypeArgs.t =
+      let (annot, targs) = pi in
+      let targs' = Base.List.map ~f:this#call_type_arg targs in
+      (this#on_loc_annot annot, targs')
+
+    method call_type_arg (x : ('M, 'T) Ast.Expression.CallTypeArg.t)
+        : ('N, 'U) Ast.Expression.CallTypeArg.t =
+      Ast.Expression.CallTypeArg.(
+        match x with
+        | Explicit t -> Explicit (this#type_ t)
+        | Implicit t -> Implicit (this#implicit t))
 
     method catch_clause (clause : ('M, 'T) Ast.Statement.Try.CatchClause.t')
         : ('N, 'U) Ast.Statement.Try.CatchClause.t' =
@@ -708,13 +721,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let ts' = Base.List.map ~f:this#type_ ts in
       (this#on_loc_annot annot, ts')
 
-    method type_parameter_instantiation_with_implicit
-        (pi : ('M, 'T) Ast.Expression.TypeParameterInstantiation.t)
-        : ('N, 'U) Ast.Expression.TypeParameterInstantiation.t =
-      let (annot, targs) = pi in
-      let targs' = Base.List.map ~f:this#explicit_or_implicit targs in
-      (this#on_loc_annot annot, targs')
-
     method type_params_opt
         : 'a. ('M, 'T) Ast.Type.TypeParams.t option ->
           (('N, 'U) Ast.Type.TypeParams.t option -> 'a) -> 'a =
@@ -784,14 +790,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             Tuple ts' )
 
     method implicit (t : 'T) : 'U = this#on_type_annot t
-
-    method explicit_or_implicit
-        (x : ('M, 'T) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
-        : ('N, 'U) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation =
-      Ast.Expression.TypeParameterInstantiation.(
-        match x with
-        | Explicit t -> Explicit (this#type_ t)
-        | Implicit t -> Implicit (this#implicit t))
 
     method type_annotation ((annot, t_annot) : ('M, 'T) Ast.Type.annotation) =
       (this#on_loc_annot annot, this#type_ t_annot)
@@ -1153,7 +1151,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Expression.New.(
         let { callee; targs; arguments; comments } = expr in
         let callee' = this#expression callee in
-        let targs' = Option.map ~f:this#type_parameter_instantiation_with_implicit targs in
+        let targs' = Option.map ~f:this#call_type_args targs in
         let arguments' = Base.List.map ~f:this#expression_or_spread arguments in
         let comments' = Option.map ~f:this#syntax comments in
         { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' })

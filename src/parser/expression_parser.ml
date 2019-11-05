@@ -665,7 +665,7 @@ module Expression
         (* Parameterized call syntax is ambiguous, so we fall back to
            standard parsing if it fails. *)
         Try.or_else env ~fallback:left (fun env ->
-            let targs = type_parameter_instantiation env in
+            let targs = call_type_args env in
             arguments ?targs env)
       | _ -> left
 
@@ -718,7 +718,7 @@ module Expression
              standard parsing if it fails. *)
           let error_callback _ _ = raise Try.Rollback in
           let env = env |> with_error_callback error_callback in
-          Try.or_else env ~fallback:None type_parameter_instantiation
+          Try.or_else env ~fallback:None call_type_args
         else
           None
       in
@@ -732,7 +732,7 @@ module Expression
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
       (Loc.btwn start_loc end_loc, Expression.(New New.{ callee; targs; arguments; comments }))
 
-  and type_parameter_instantiation =
+  and call_type_args =
     let args env acc =
       let rec args_helper env acc =
         match Peek.token env with
@@ -745,8 +745,8 @@ module Expression
             | T_IDENTIFIER { value = "_"; _ } ->
               let loc = Peek.loc env in
               Expect.identifier env "_";
-              Expression.TypeParameterInstantiation.Implicit loc
-            | _ -> Expression.TypeParameterInstantiation.Explicit (Type._type env)
+              Expression.CallTypeArg.Implicit loc
+            | _ -> Expression.CallTypeArg.Explicit (Type._type env)
           in
           let acc = t :: acc in
           if Peek.token env <> T_GREATER_THAN then Expect.token env T_COMMA;

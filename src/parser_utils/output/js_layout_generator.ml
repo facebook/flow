@@ -925,7 +925,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
         @@ group
              [
                fuse_with_space [Atom "new"; callee_layout];
-               option type_parameter_instantiation_with_implicit targs;
+               option call_type_args targs;
                new_list
                  ~wrap:(Atom "(", Atom ")")
                  ~sep:(Atom ",")
@@ -1068,7 +1068,7 @@ and call ?(optional = false) ~precedence ~ctxt call_node =
                   new_list
                     ~wrap:(Atom less_than, Atom ">")
                     ~sep:(Atom ",")
-                    (Base.List.map ~f:explicit_or_implicit args);
+                    (Base.List.map ~f:call_type_arg args);
                 ] ),
           "(" )
     in
@@ -2386,16 +2386,18 @@ and type_parameter (loc, params) =
         [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:type_param params)]
     )
 
-and type_parameter_instantiation_with_implicit (loc, args) =
+and call_type_args (loc, args) =
   source_location_with_comments
     ( loc,
       group
-        [
-          new_list
-            ~wrap:(Atom "<", Atom ">")
-            ~sep:(Atom ",")
-            (Base.List.map ~f:explicit_or_implicit args);
-        ] )
+        [new_list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (Base.List.map ~f:call_type_arg args)]
+    )
+
+and call_type_arg (x : (Loc.t, Loc.t) Ast.Expression.CallTypeArg.t) =
+  let open Ast.Expression.CallTypeArg in
+  match x with
+  | Implicit _ -> Atom "_"
+  | Explicit t -> type_ t
 
 and type_args (loc, args) =
   source_location_with_comments
@@ -2739,13 +2741,6 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
           else
             "false" )
       | T.Exists -> Atom "*" )
-
-and explicit_or_implicit
-    (x : (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation) =
-  Ast.Expression.TypeParameterInstantiation.(
-    match x with
-    | Implicit _ -> Atom "_"
-    | Explicit t -> type_ t)
 
 and interface_declaration_base
     ~def { Ast.Statement.Interface.id; tparams; body = (loc, obj); extends } =

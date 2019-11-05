@@ -31,6 +31,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method call : 'T -> ('M, 'T) Ast.Expression.Call.t -> ('N, 'U) Ast.Expression.Call.t
 
+    method call_type_args :
+      ('M, 'T) Ast.Expression.CallTypeArgs.t -> ('N, 'U) Ast.Expression.CallTypeArgs.t
+
+    method call_type_arg :
+      ('M, 'T) Ast.Expression.CallTypeArg.t -> ('N, 'U) Ast.Expression.CallTypeArg.t
+
     method catch_clause :
       ('M, 'T) Ast.Statement.Try.CatchClause.t' -> ('N, 'U) Ast.Statement.Try.CatchClause.t'
 
@@ -149,10 +155,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method enum_string_member :
       (Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
       (Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
-
-    method explicit_or_implicit :
-      ('M, 'T) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation ->
-      ('N, 'U) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation
 
     method export_default_declaration :
       'M ->
@@ -523,10 +525,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method type_param : ('M, 'T) Ast.Type.TypeParam.t -> ('N, 'U) Ast.Type.TypeParam.t
 
     method type_args : ('M, 'T) Flow_ast.Type.TypeArgs.t -> ('N, 'U) Ast.Type.TypeArgs.t
-
-    method type_parameter_instantiation_with_implicit :
-      ('M, 'T) Flow_ast.Expression.TypeParameterInstantiation.t ->
-      ('N, 'U) Ast.Expression.TypeParameterInstantiation.t
 
     method type_predicate : ('M, 'T) Flow_ast.Type.Predicate.t -> ('N, 'U) Ast.Type.Predicate.t
 
