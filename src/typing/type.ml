@@ -444,7 +444,7 @@ module rec TypeTerm : sig
     (* The last position is an optional type that probes into the type of the
        method called. This will be primarily used for type-table bookkeeping. *)
     | MethodT of
-        use_op * (* call *) reason * (* lookup *) reason * propref * funcalltype * t option
+        use_op * (* call *) reason * (* lookup *) reason * propref * method_action * t option
     (* Similar to the last element of the MethodT *)
     | SetPropT of use_op * reason * propref * set_mode * write_ctx * t * t option
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
@@ -466,7 +466,7 @@ module rec TypeTerm : sig
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
     | GetElemT of use_op * reason * t * t
-    | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
+    | CallElemT of (* call *) reason * (* lookup *) reason * t * method_action
     | GetStaticsT of reason * t_out
     | GetProtoT of reason * t_out
     | SetProtoT of reason * t
@@ -759,6 +759,10 @@ module rec TypeTerm : sig
     | NewChain
     | ContinueChain
 
+  and method_action = CallM of funcalltype
+
+  and opt_method_action = OptCallM of opt_funcalltype
+
   and specialize_cache = reason list option
 
   and predicate =
@@ -1014,7 +1018,7 @@ module rec TypeTerm : sig
   and elem_action =
     | ReadElem of t
     | WriteElem of t * t option (* tout *) * set_mode
-    | CallElem of reason (* call *) * funcalltype
+    | CallElem of reason * method_action
 
   and propref =
     | Named of reason * name
@@ -1795,13 +1799,13 @@ end = struct
         (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
         | OpenT _
         (* some types may not be evaluated yet; TODO *)
-        
+
         | EvalT _
         | TypeAppT _
         | KeysT _
         | IntersectionT _
         (* other types might wrap parts that are accessible directly *)
-        
+
         | OpaqueT _
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->
@@ -3949,6 +3953,10 @@ let apply_opt_funcalltype (this, targs, args, clos, strict) t_out =
 
 let create_intersection rep = IntersectionT (locationless_reason (RCustom "intersection"), rep)
 
+let apply_opt_action action t_out =
+  match action with
+  | OptCallM f -> CallM (apply_opt_funcalltype f t_out)
+
 let apply_opt_use opt_use t_out =
   match opt_use with
   | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
@@ -3961,6 +3969,10 @@ let mk_enum_type ~loc ~trust enum =
   let { enum_name; _ } = enum in
   let reason = mk_reason (RType enum_name) loc in
   DefT (reason, trust, EnumT enum)
+
+let apply_method_action use_op reason_call action =
+  match action with
+  | CallM app -> CallT (use_op, reason_call, app)
 
 module TypeParams : sig
   val to_list : typeparams -> typeparam list

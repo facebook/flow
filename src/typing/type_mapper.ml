@@ -818,14 +818,14 @@ class virtual ['a] t_with_uses =
           t
         else
           CallT (op, r, funcall')
-      | MethodT (op, r1, r2, prop, funcall, prop_t) ->
+      | MethodT (op, r1, r2, prop, action, prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
-        let funcall' = self#fun_call_type cx map_cx funcall in
+        let action' = self#method_action cx map_cx action in
         let prop_t' = OptionUtils.ident_map (self#type_ cx map_cx) prop_t in
-        if prop' == prop && funcall' == funcall && prop_t' == prop_t then
+        if prop' == prop && action' == action && prop_t' == prop_t then
           t
         else
-          MethodT (op, r1, r2, prop', funcall', prop_t')
+          MethodT (op, r1, r2, prop', action', prop_t')
       | SetPropT (use_op, r, prop, mode, i, t', prop_t) ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
@@ -887,7 +887,7 @@ class virtual ['a] t_with_uses =
           GetElemT (use_op, r, t1', t2')
       | CallElemT (r1, r2, t', funcall) ->
         let t'' = self#type_ cx map_cx t' in
-        let funcall' = self#fun_call_type cx map_cx funcall in
+        let funcall' = self#method_action cx map_cx funcall in
         if t' == t'' && funcall' == funcall then
           t
         else
@@ -1482,7 +1482,7 @@ class virtual ['a] t_with_uses =
         else
           WriteElem (tin', tout', mode)
       | CallElem (r, funcall) ->
-        let funcall' = self#fun_call_type cx map_cx funcall in
+        let funcall' = self#method_action cx map_cx funcall in
         if funcall' == funcall then
           t
         else
@@ -1560,6 +1560,24 @@ class virtual ['a] t_with_uses =
           t
         else
           ResolveSpreadsToCallT (funcalltype', t'')
+
+    method private opt_method_action cx map_cx t =
+      match t with
+      | OptCallM funtype ->
+        let funtype' = self#opt_fun_call_type cx map_cx funtype in
+        if funtype' == funtype then
+          t
+        else
+          OptCallM funtype'
+
+    method method_action cx map_cx t =
+      match t with
+      | CallM funtype ->
+        let funtype' = self#fun_call_type cx map_cx funtype in
+        if funtype' == funtype then
+          t
+        else
+          CallM funtype'
 
     method fun_call_type cx map_cx t =
       let {

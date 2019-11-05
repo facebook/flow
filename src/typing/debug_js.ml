@@ -422,7 +422,7 @@ and _json_of_use_t_impl json_cx t =
       | MethodT (_, _, _, propref, funtype, _) ->
         [
           ("propRef", json_of_propref json_cx propref);
-          ("funType", json_of_funcalltype json_cx funtype);
+          ("funType", json_of_methodaction json_cx funtype);
         ]
       | ReposLowerT (_, use_desc, use_t) ->
         [("type", _json_of_use_t json_cx use_t); ("useDesc", JSON_Bool use_desc)]
@@ -443,10 +443,10 @@ and _json_of_use_t_impl json_cx t =
       | SetElemT (_, _, indext, _, elemt, _)
       | GetElemT (_, _, indext, elemt) ->
         [("indexType", _json_of_t json_cx indext); ("elemType", _json_of_t json_cx elemt)]
-      | CallElemT (_, _, indext, funtype) ->
+      | CallElemT (_, _, indext, action) ->
         [
           ("indexType", _json_of_t json_cx indext);
-          ("funType", json_of_funcalltype json_cx funtype);
+          ("funType", json_of_methodaction json_cx action);
         ]
       | GetStaticsT (_, t) -> [("type", _json_of_t json_cx t)]
       | GetProtoT (_, t)
@@ -584,7 +584,7 @@ and _json_of_use_t_impl json_cx t =
           (match action with
           | ReadElem t -> ("readElem", _json_of_t json_cx t)
           | WriteElem (t, _, _) -> ("writeElem", _json_of_t json_cx t)
-          | CallElem (_, funtype) -> ("callElem", json_of_funcalltype json_cx funtype));
+          | CallElem (_, action) -> ("callElem", json_of_methodaction json_cx action));
         ]
       | MakeExactT (_, cont) -> _json_of_cont json_cx cont
       | CJSRequireT (_, export, _) -> [("export", _json_of_t json_cx export)]
@@ -1007,6 +1007,11 @@ and json_of_funcalltype_impl
         ("closureIndex", int_ call_closure_t);
         ("strictArity", JSON_Bool call_strict_arity);
       ])
+
+and json_of_methodaction json_cx = check_depth json_of_methodaction_impl json_cx
+
+and json_of_methodaction_impl json_cx = function
+  | CallM funtype -> json_of_funcalltype json_cx funtype
 
 and json_of_funcallarg json_cx = check_depth json_of_funcallarg_impl json_cx
 
@@ -2057,7 +2062,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertImportIsValueT _ -> p t
     | BecomeT (_, arg) -> p ~extra:(kid arg) t
     | BindT _ -> p t
-    | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
+    | CallElemT (_, _, _, _) -> p t
     | CallT (use_op, _, { call_args_tlist; call_tout; call_this_t; _ }) ->
       p
         ~extra:

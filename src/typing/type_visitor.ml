@@ -240,7 +240,7 @@ class ['a] t =
         self#fun_call_type cx acc fn
       | MethodT (_, _, _, p, fn, prop_t) ->
         let acc = self#propref cx acc p in
-        let acc = self#fun_call_type cx acc fn in
+        let acc = self#method_action cx acc fn in
         let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
         acc
       | SetPropT (_, _, p, _, _, t, prop_t) ->
@@ -274,7 +274,7 @@ class ['a] t =
         acc
       | CallElemT (_, _, t, fn) ->
         let acc = self#type_ cx pole_TODO acc t in
-        let acc = self#fun_call_type cx acc fn in
+        let acc = self#method_action cx acc fn in
         acc
       | GetStaticsT (_, t)
       | GetProtoT (_, t)
@@ -742,6 +742,20 @@ class ['a] t =
       let acc = self#type_ cx pole_TODO acc call_tout in
       acc
 
+    method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _, _) =
+      let acc = self#type_ cx pole_TODO acc call_this_t in
+      let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
+      let acc = self#list (self#call_arg cx) acc call_args_tlist in
+      acc
+
+    method private method_action cx acc =
+      function
+      | CallM call -> self#fun_call_type cx acc call
+
+    method private opt_method_action cx acc =
+      function
+      | OptCallM call -> self#opt_fun_call_type cx acc call
+
     method private propref cx acc =
       function
       | Named _ -> acc
@@ -792,7 +806,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in
         acc
-      | CallElem (_, fn) -> self#fun_call_type cx acc fn
+      | CallElem (_, fn) -> self#method_action cx acc fn
 
     method private cont cx acc =
       function

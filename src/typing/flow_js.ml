@@ -4204,8 +4204,8 @@ struct
             args
             (ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
         | ( CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
-            MethodT (use_op, reason_call, _, Named (_, "call"), calltype, _) ) ->
-          rec_flow cx trace (l, CallT (use_op, reason_call, calltype))
+            MethodT (use_op, reason_call, _, Named (_, "call"), action, _) ) ->
+          rec_flow cx trace (l, apply_method_action use_op reason_call action)
         (* Custom functions are still functions, so they have all the prototype properties *)
         | (CustomFunT (r, _), _) when function_like_op u -> rec_flow cx trace (FunProtoT r, u)
         (*********************************************)
@@ -4549,7 +4549,7 @@ struct
                 rec_flow
                   cx
                   trace
-                  (this, MethodT (use_op, reason_op, reason_o, propref, funtype, None)))
+                  (this, MethodT (use_op, reason_op, reason_o, propref, CallM funtype, None)))
           in
           (* return this *)
           rec_flow cx trace (ret, ObjTestT (annot_reason ~annot_loc reason_op, this, t))
@@ -4601,7 +4601,8 @@ struct
           rec_flow_t cx trace (AnyT.untyped reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
        parameter is an AnyT. *)
-        | (AnyT _, MethodT (use_op, reason_op, _, _, { call_args_tlist; call_tout; _ }, prop_t)) ->
+        | ( AnyT _,
+            MethodT (use_op, reason_op, _, _, CallM { call_args_tlist; call_tout; _ }, prop_t) ) ->
           let any = AnyT.untyped reason_op in
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (any, prop_t)) prop_t;
@@ -4813,8 +4814,8 @@ struct
         (* ... and their methods called *)
         (********************************)
         | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
-            MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x), funtype, prop_t)
-          ) ->
+            MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x), action, prop_t) )
+          ->
           (* TODO: closure *)
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
@@ -4833,7 +4834,7 @@ struct
          `CallT` will set its own ops during the call. if `funt` is something
          else, then something like `VoidT ~> CallT` doesn't need the op either
          because we want to point at the call and undefined thing. *)
-          rec_flow cx trace (funt, CallT (use_op, reason_call, funtype))
+          rec_flow cx trace (funt, apply_method_action use_op reason_call action)
         | (DefT (_, _, InstanceT _), MethodT (_, reason_call, _, Computed _, _, _)) ->
           (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
@@ -5169,13 +5170,13 @@ struct
         (********************************)
         | (DefT (_, _, ObjT _), MethodT (_, _, _, Named (_, "constructor"), _, _)) -> ()
         | ( DefT (reason_obj, _, ObjT o),
-            MethodT (use_op, reason_call, reason_lookup, propref, funtype, prop_t) ) ->
+            MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t) ) ->
           let t =
             Tvar.mk_where cx reason_lookup (fun tout ->
                 read_obj_prop cx trace ~use_op o propref reason_obj reason_lookup tout)
           in
           Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (t, prop_t)) prop_t;
-          rec_flow cx trace (t, CallT (use_op, reason_call, funtype))
+          rec_flow cx trace (t, apply_method_action use_op reason_call action)
         (******************************************)
         (* strings may have their characters read *)
         (******************************************)
@@ -5197,8 +5198,8 @@ struct
         | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), GetElemT (use_op, reason_op, key, tout)) ->
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem tout))
         | ( (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
-            CallElemT (reason_call, reason_lookup, key, ft) ) ->
-          let action = CallElem (reason_call, ft) in
+            CallElemT (reason_call, reason_lookup, key, action) ) ->
+          let action = CallElem (reason_call, action) in
           rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
         | (_, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action)) ->
           elem_action_on_obj cx trace ~use_op l obj reason_op action
@@ -10853,7 +10854,8 @@ struct
         trace
         (tin, UseT (use_op, VoidT.why (reason_of_t value) |> with_trust literal_trust));
       Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
-    | (CallElem (reason_call, ft), _) -> rec_flow cx trace (value, CallT (use_op, reason_call, ft))
+    | (CallElem (reason_call, action), _) ->
+      rec_flow cx trace (value, apply_method_action use_op reason_call action)
 
   and string_key s reason =
     let key_reason = replace_desc_reason (RPropertyIsAString s) reason in

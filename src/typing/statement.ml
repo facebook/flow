@@ -3780,8 +3780,12 @@ and subscript ~is_cond cx ex =
               cx
               ( super,
                 MethodT
-                  (use_op, reason, reason_lookup, Named (reason_prop, name), funtype, Some prop_t)
-              ))
+                  ( use_op,
+                    reason,
+                    reason_lookup,
+                    Named (reason_prop, name),
+                    CallM funtype,
+                    Some prop_t ) ))
       in
       Some
         ( (loc, lhs_t),
@@ -3852,7 +3856,8 @@ and subscript ~is_cond cx ex =
               Tvar.mk_where cx reason_call (fun t ->
                   let frame = Env.peek_frame () in
                   let funtype = mk_methodcalltype ot targts argts t ~frame in
-                  Flow.flow cx (ot, CallElemT (reason_call, reason_lookup, elem_t, funtype))) ),
+                  Flow.flow cx (ot, CallElemT (reason_call, reason_lookup, elem_t, CallM funtype)))
+            ),
             Member.PropertyExpression expr )
       in
       Some
@@ -3890,7 +3895,9 @@ and subscript ~is_cond cx ex =
                      local = true;
                    })
             in
-            Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None)))
+            Flow.flow
+              cx
+              (super, MethodT (use_op, reason, super_reason, propref, CallM funtype, None)))
       in
       Some
         ( (loc, lhs_t),
@@ -4389,8 +4396,9 @@ and method_call
           let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
           let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
           let propref = Named (reason_prop, name) in
-          Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app, Some prop_t)))
-    )
+          Flow.flow
+            cx
+            (obj_t, MethodT (use_op, reason, reason_expr, propref, CallM app, Some prop_t))) )
 
 and identifier_ cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc then
@@ -5331,11 +5339,12 @@ and jsx_desugar cx name component_t props attributes children locs =
                 reason,
                 reason_createElement,
                 Named (reason_createElement, "createElement"),
-                mk_methodcalltype
-                  react
-                  None
-                  ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
-                  tvar,
+                CallM
+                  (mk_methodcalltype
+                     react
+                     None
+                     ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
+                     tvar),
                 None ) ))
   | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
     let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
