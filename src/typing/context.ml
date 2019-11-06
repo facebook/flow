@@ -547,9 +547,9 @@ let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
   cx.sig_cx.nominal_ids <- ISet.empty;
-  cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0;
 
   (* still 176 bytes :/ *)
+  cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0;
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.voidable_checks <- [];
@@ -557,6 +557,7 @@ let clear_intermediates cx =
   cx.sig_cx.computed_property_states <- IMap.empty;
   cx.sig_cx.optional_chains_useful <- ALocMap.empty;
   cx.sig_cx.invariants_useful <- ALocMap.empty;
+  cx.sig_cx.type_asserts_map <- ALocMap.empty;
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -710,7 +711,6 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
-  sig_cx.type_asserts_map <- ALocMap.union sig_cx.type_asserts_map sig_cx_other.type_asserts_map;
   ()
 
 (* Find the constraints of a type variable in the graph.
