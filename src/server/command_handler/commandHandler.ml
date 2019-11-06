@@ -64,29 +64,64 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~broader_co
     | File_input.FileName _ -> failwith "Not implemented"
     | File_input.FileContent (_, content) -> (File_input.filename_of_file_input file_input, content)
   in
-  Autocomplete_js.autocomplete_set_hooks trigger_character;
   let path = File_key.SourceFile path in
+  Autocomplete_js.autocomplete_set_hooks trigger_character;
   let%lwt check_contents_result =
     Types_js.basic_check_contents ~options ~env ~profiling content path
   in
-  let%lwt autocomplete_result =
-    map_error ~f:(fun str -> (str, None)) check_contents_result
-    %>>= fun (cx, info, file_sig, tast) ->
-    Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
-        try_with_json (fun () ->
-            Lwt.return
-              (AutocompleteService_js.autocomplete_get_results
-                 ~reader
-                 cx
-                 file_sig
-                 tast
-                 trigger_character
-                 info
-                 ~broader_context)))
-  in
-  let (results, json_data_to_log) = split_result autocomplete_result in
   Autocomplete_js.autocomplete_unset_hooks ();
-  Lwt.return (results, json_data_to_log)
+  let initial_json_props =
+    let open Hh_json in
+    [
+      ("ac_trigger", JSON_String (Option.value trigger_character ~default:"None"));
+      ("broader_context", JSON_String broader_context);
+    ]
+  in
+  match check_contents_result with
+  | Error err ->
+    let json_data_to_log =
+      let open Hh_json in
+      JSON_Object
+        ( ("errors", JSON_Array [JSON_String err])
+        :: ("result", JSON_String "FAILURE_CHECK_CONTENTS")
+        :: ("count", JSON_Number "0")
+        :: initial_json_props )
+    in
+    Lwt.return (Error err, Some json_data_to_log)
+  | Ok (cx, info, file_sig, tast) ->
+    Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
+        try_with_json2 (fun () ->
+            let (ac_type_string, results_res) =
+              AutocompleteService_js.autocomplete_get_results
+                ~reader
+                cx
+                file_sig
+                tast
+                trigger_character
+            in
+            let (results, errors_to_log, response) =
+              let open AutocompleteService_js in
+              match results_res with
+              | AcResult { results; errors_to_log } -> (results, errors_to_log, Ok results)
+              | AcFatalError error -> ([], [error], Error error)
+            in
+            let result_string =
+              match (results, errors_to_log) with
+              | (_, []) -> "SUCCESS"
+              | ([], _ :: _) -> "FAILURE"
+              | (_ :: _, _ :: _) -> "PARTIAL"
+            in
+            let json_data_to_log =
+              let open Hh_json in
+              JSON_Object
+                ( ("ac_type", JSON_String ac_type_string)
+                :: ("result", JSON_String result_string)
+                :: ("count", JSON_Number (results |> List.length |> string_of_int))
+                :: ("errors", JSON_Array (List.map (fun s -> JSON_String s) errors_to_log))
+                :: ("docblock", Docblock.json_of_docblock info)
+                :: initial_json_props )
+            in
+            Lwt.return (response, Some json_data_to_log)))
 
 let check_file ~options ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in

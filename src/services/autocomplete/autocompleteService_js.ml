@@ -198,80 +198,63 @@ let ty_normalizer_options =
       merge_bot_and_any_kinds = true;
     }
 
+type autocomplete_service_result =
+  | AcResult of {
+      results: ServerProt.Response.complete_autocomplete_result list;
+      errors_to_log: string list;
+    }
+  | AcFatalError of string
+
 let autocomplete_member
     ~reader
     ~exclude_proto_members
     ?(exclude_keys = SSet.empty)
-    ~ac_type
     ?compute_insert_text
     cx
     file_sig
     typed_ast
     this
-    ac_name
     ac_loc
-    ac_trigger
-    docblock
-    ~broader_context
     ~tparams =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let result = Members.extract ~exclude_proto_members cx this in
-  Hh_json.(
-    let (result_str, t) =
-      Members.(
-        match result with
-        | Success _ -> ("SUCCESS", this)
-        | SuccessModule _ -> ("SUCCESS", this)
-        | FailureNullishType -> ("FAILURE_NULLABLE", this)
-        | FailureAnyType -> ("FAILURE_NO_COVERAGE", this)
-        | FailureUnhandledType t -> ("FAILURE_UNHANDLED_TYPE", t)
-        | FailureUnhandledMembers t -> ("FAILURE_UNHANDLED_MEMBERS", t))
+  match Members.to_command_result result with
+  | Error error -> AcFatalError error
+  | Ok result_map ->
+    let file = Context.file cx in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
+    let rev_result =
+      SMap.fold
+        (fun name (_id_loc, type_) acc ->
+          if (not (autocomplete_is_valid_member name)) || SSet.mem name exclude_keys then
+            acc
+          else
+            let loc = Type.loc_of_t type_ |> loc_of_aloc ~reader in
+            let scheme = Type.TypeScheme.{ tparams; type_ } in
+            ((name, loc), scheme) :: acc)
+        result_map
+        []
     in
-    let json_data_to_log =
-      JSON_Object
-        [
-          ("ac_type", JSON_String ac_type);
-          ("ac_name", JSON_String ac_name);
-          (* don't need to strip root for logging *)
-            ("ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc));
-          ("ac_trigger", JSON_String (Option.value ac_trigger ~default:"None"));
-          ("loc", Reason.json_of_loc ~offset_table:None ac_loc);
-          ("docblock", Docblock.json_of_docblock docblock);
-          ("result", JSON_String result_str);
-          ("type", Debug_js.json_of_t ~depth:3 cx t);
-          ("broader_context", JSON_String broader_context);
-        ]
+    let (results, errors_to_log) =
+      rev_result
+      |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
+      |> Base.List.fold_left
+           ~init:([], [])
+           ~f:(fun (results, errors_to_log) ((name, ty_loc), ty_res) ->
+             match ty_res with
+             | Ok ty ->
+               let result =
+                 autocomplete_create_result
+                   ?insert_text:(Option.map ~f:(fun f -> f name) compute_insert_text)
+                   (name, ac_loc)
+                   (ty, ty_loc)
+               in
+               (result :: results, errors_to_log)
+             | Error err ->
+               let error_to_log = Ty_normalizer.error_to_string err in
+               (results, error_to_log :: errors_to_log))
     in
-    match Members.to_command_result result with
-    | Error error -> Error (error, Some json_data_to_log)
-    | Ok result_map ->
-      let file = Context.file cx in
-      let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
-      let rev_result =
-        SMap.fold
-          (fun name (_id_loc, type_) acc ->
-            if (not (autocomplete_is_valid_member name)) || SSet.mem name exclude_keys then
-              acc
-            else
-              let loc = Type.loc_of_t type_ |> loc_of_aloc ~reader in
-              let scheme = Type.TypeScheme.{ tparams; type_ } in
-              ((name, loc), scheme) :: acc)
-          result_map
-          []
-      in
-      let result =
-        rev_result
-        |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
-        |> Base.List.rev_filter_map ~f:(function
-               | ((name, ty_loc), Ok ty) ->
-                 Some
-                   (autocomplete_create_result
-                      ?insert_text:(Option.map ~f:(fun f -> f name) compute_insert_text)
-                      (name, ac_loc)
-                      (ty, ty_loc))
-               | _ -> None)
-      in
-      Ok (result, Some json_data_to_log))
+    AcResult { results; errors_to_log }
 
 (* turns typed AST into normal AST so we can run Scope_builder on it *)
 (* TODO(vijayramamurthy): make scope builder polymorphic *)
@@ -367,22 +350,12 @@ let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id
-    ~reader
-    ~cx
-    ~ac_loc
-    ~ac_trigger
-    ~id_type
-    ~file_sig
-    ~typed_ast
-    ~include_super
-    ~include_this
-    ~tparams
-    ~broader_context =
+    ~reader ~cx ~ac_loc ~id_type ~file_sig ~typed_ast ~include_super ~include_this ~tparams =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let (results, errors) =
+  let (results, errors_to_log) =
     local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
     |> List.fold_left
-         (fun (results, errors) ((name, loc), normalization_result) ->
+         (fun (results, errors_to_log) ((name, loc), normalization_result) ->
            match normalization_result with
            | Ok ty ->
              let result =
@@ -391,30 +364,11 @@ let autocomplete_id
                  (name, ac_loc)
                  (ty, loc)
              in
-             (result :: results, errors)
-           | Error error -> (results, error :: errors))
+             (result :: results, errors_to_log)
+           | Error err ->
+             let error_to_log = Ty_normalizer.error_to_string err in
+             (results, error_to_log :: errors_to_log))
          ([], [])
-  in
-  let json_data_to_log =
-    Hh_json.(
-      let result_str =
-        match (results, errors) with
-        | (_, []) -> "SUCCESS"
-        | ([], _) -> "FAILURE_NORMALIZER"
-        | (_, _) -> "PARTIAL"
-      in
-      JSON_Object
-        [
-          ("ac_type", JSON_String "Acid");
-          ("ac_trigger", JSON_String (Option.value ac_trigger ~default:"None"));
-          ("result", JSON_String result_str);
-          ("count", JSON_Number (results |> List.length |> string_of_int));
-          ( "errors",
-            JSON_Array
-              (Base.List.rev_map errors ~f:(fun err ->
-                   JSON_String (Ty_normalizer.error_to_string err))) );
-          ("broader_context", JSON_String broader_context);
-        ])
   in
   (* "this" is legal inside classes and (non-arrow) functions *)
   let results =
@@ -446,53 +400,36 @@ let autocomplete_id
     else
       results
   in
-  Ok (results, Some json_data_to_log)
+  AcResult { results; errors_to_log }
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx
+let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams =
+  let open Flow_js in
+  let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
+  let props_object =
+    Tvar.mk_where cx reason (fun tvar ->
+        let use_op = Type.Op Type.UnknownUse in
+        flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
+  in
+  (* The `children` prop (if it exists) is set with the contents between the opening and closing
+   * elements, rather than through an explicit `children={...}` attribute, so we should exclude
+   * it from the autocomplete results, along with already used attribute names. *)
+  let exclude_keys = SSet.add "children" used_attr_names in
+  (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
+  autocomplete_member
     ~reader
+    ~exclude_proto_members:true
+    ~exclude_keys
+    ~compute_insert_text:(fun name -> name ^ "=")
     cx
     file_sig
     typed_ast
-    cls
-    ac_name
-    ~used_attr_names
+    props_object
     ac_loc
-    ac_trigger
-    docblock
     ~tparams
-    ~broader_context =
-  Flow_js.(
-    let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
-    let props_object =
-      Tvar.mk_where cx reason (fun tvar ->
-          let use_op = Type.Op Type.UnknownUse in
-          flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
-    in
-    (* The `children` prop (if it exists) is set with the contents between the opening and closing
-     * elements, rather than through an explicit `children={...}` attribute, so we should exclude
-     * it from the autocomplete results, along with already used attribute names. *)
-    let exclude_keys = SSet.add "children" used_attr_names in
-    (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
-    autocomplete_member
-      ~reader
-      ~exclude_proto_members:true
-      ~exclude_keys
-      ~ac_type:"Acjsx"
-      ~compute_insert_text:(fun name -> name ^ "=")
-      cx
-      file_sig
-      typed_ast
-      props_object
-      ac_name
-      ac_loc
-      ac_trigger
-      docblock
-      ~tparams
-      ~broader_context)
 
 (* TODO(vijayramamurthy) think about how to break this file down into smaller modules *)
 (* NOTE: excludes classes, because we'll get those from local_value_identifiers *)
@@ -584,8 +521,7 @@ let type_exports_of_module_ty ~ac_loc =
         | _ -> None)
   | _ -> []
 
-let autocomplete_unqualified_type
-    ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast ~broader_context =
+let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let tparam_results =
     List.map
@@ -601,63 +537,46 @@ let autocomplete_unqualified_type
           })
       tparams
   in
-  let (tparam_and_tident_results, tparam_and_tident_errors) =
+  let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =
     local_type_identifiers ~typed_ast ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors) ((name, loc), ty_result) ->
+         (fun (results, errors_to_log) ((name, loc), ty_result) ->
            match ty_result with
            | Ok ty ->
              let result =
                autocomplete_create_result (name, ac_loc) (ty, loc_of_aloc ~reader loc)
              in
-             (result :: results, errors)
-           | Error error -> (results, error :: errors))
+             (result :: results, errors_to_log)
+           | Error err ->
+             let error_to_log = Ty_normalizer.error_to_string err in
+             (results, error_to_log :: errors_to_log))
          (tparam_results, [])
   in
   (* The value-level identifiers we suggest in type autocompletion:
       - classes
       - modules (followed by a dot) *)
-  let (results, errors) =
+  let (results, errors_to_log) =
     local_value_identifiers ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors) ((name, loc), ty_res) ->
+         (fun (results, errors_to_log) ((name, loc), ty_res) ->
            match ty_res with
-           | Error error -> (results, error :: errors)
+           | Error err ->
+             let error_to_log = Ty_normalizer.error_to_string err in
+             (results, error_to_log :: errors_to_log)
            | Ok (Ty.ClassDecl _ as ty) ->
              let result = autocomplete_create_result (name, ac_loc) (ty, loc) in
-             (result :: results, errors)
+             (result :: results, errors_to_log)
            | Ok ty when type_exports_of_module_ty ~ac_loc ty <> [] ->
              let result =
                autocomplete_create_result (name, ac_loc) (ty, loc) ~insert_text:(name ^ ".")
              in
-             (result :: results, errors)
-           | Ok _ -> (results, errors))
-         (tparam_and_tident_results, tparam_and_tident_errors)
+             (result :: results, errors_to_log)
+           | Ok _ -> (results, errors_to_log))
+         (tparam_and_tident_results, tparam_and_tident_errors_to_log)
   in
-  let json_data_to_log =
-    Hh_json.(
-      let result_str =
-        match (results, errors) with
-        | (_, []) -> "SUCCESS"
-        | ([], _) -> "FAILURE_NORMALIZER"
-        | (_, _) -> "PARTIAL"
-      in
-      JSON_Object
-        [
-          ("ac_type", JSON_String "Actype");
-          ("result", JSON_String result_str);
-          ("count", JSON_Number (results |> List.length |> string_of_int));
-          ( "errors",
-            JSON_Array
-              (Base.List.rev_map errors ~f:(fun err ->
-                   JSON_String (Ty_normalizer.error_to_string err))) );
-          ("broader_context", JSON_String broader_context);
-        ])
-  in
-  Ok (results, Some json_data_to_log)
+  AcResult { results; errors_to_log }
 
-let autocomplete_qualified_type
-    ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~broader_context ~qtype =
+let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let qtype_scheme = Type.TypeScheme.{ tparams; type_ = qtype } in
   let module_ty_res =
@@ -666,106 +585,45 @@ let autocomplete_qualified_type
       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       qtype_scheme
   in
-  let json_data =
-    let open Hh_json in
-    [("ac_type", JSON_String "Acqualifiedtype"); ("broader_context", JSON_String broader_context)]
-  in
   match module_ty_res with
-  | Error err ->
-    let json_data_to_log =
-      let open Hh_json in
-      JSON_Object
-        ( ("result", JSON_String "FAILURE_NORMALIZER")
-        :: ("count", JSON_Number "0")
-        :: ("errors", JSON_Array [JSON_String (Ty_normalizer.error_to_string err)])
-        :: json_data )
-    in
-    Ok ([], Some json_data_to_log)
+  | Error err -> AcResult { results = []; errors_to_log = [Ty_normalizer.error_to_string err] }
   | Ok module_ty ->
-    let results = type_exports_of_module_ty ~ac_loc module_ty in
-    let json_data_to_log =
-      let open Hh_json in
-      JSON_Object
-        ( ("result", JSON_String "SUCCESS")
-        :: ("count", JSON_Number (results |> List.length |> string_of_int))
-        :: ("errors", JSON_Array [])
-        :: json_data )
-    in
-    Ok (results, Some json_data_to_log)
+    AcResult { results = type_exports_of_module_ty ~ac_loc module_ty; errors_to_log = [] }
 
-let autocomplete_get_results
-    ~reader cx file_sig typed_ast trigger_character docblock ~broader_context =
+let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~typed_ast with
   | Some (tparams, ac_loc, Acid { id_type; include_super; include_this }) ->
-    autocomplete_id
-      ~reader
-      ~cx
-      ~ac_loc
-      ~ac_trigger:trigger_character
-      ~id_type
-      ~file_sig
-      ~typed_ast
-      ~include_super
-      ~include_this
-      ~tparams
-      ~broader_context
-  | Some (tparams, ac_loc, Acmem (ac_name, this)) ->
-    autocomplete_member
-      ~reader
-      ~exclude_proto_members:false
-      ~ac_type:"Acmem"
-      cx
-      file_sig
-      typed_ast
-      this
-      ac_name
-      ac_loc
-      trigger_character
-      docblock
-      ~tparams
-      ~broader_context
+    ( "Acid",
+      autocomplete_id
+        ~reader
+        ~cx
+        ~ac_loc
+        ~id_type
+        ~file_sig
+        ~typed_ast
+        ~include_super
+        ~include_this
+        ~tparams )
+  | Some (tparams, ac_loc, Acmem this) ->
+    ( "Acmem",
+      autocomplete_member
+        ~reader
+        ~exclude_proto_members:false
+        cx
+        file_sig
+        typed_ast
+        this
+        ac_loc
+        ~tparams )
   | Some (tparams, ac_loc, Acjsx (ac_name, used_attr_names, cls)) ->
-    autocomplete_jsx
-      ~reader
-      cx
-      file_sig
-      typed_ast
-      cls
-      ac_name
-      ~used_attr_names
-      ac_loc
-      trigger_character
-      docblock
-      ~tparams
-      ~broader_context
+    ( "Acjsx",
+      autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams
+    )
   | Some (tparams, ac_loc, Actype) ->
-    autocomplete_unqualified_type
-      ~reader
-      ~cx
-      ~tparams
-      ~ac_loc
-      ~typed_ast
-      ~file_sig
-      ~broader_context
+    ("Actype", autocomplete_unqualified_type ~reader ~cx ~tparams ~ac_loc ~typed_ast ~file_sig)
   | Some (tparams, ac_loc, Acqualifiedtype qtype) ->
-    autocomplete_qualified_type
-      ~reader
-      ~cx
-      ~ac_loc
-      ~file_sig
-      ~typed_ast
-      ~tparams
-      ~broader_context
-      ~qtype
+    ( "Acqualifiedtype",
+      autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )
   | None ->
-    let json_data_to_log =
-      Hh_json.(
-        JSON_Object
-          [
-            ("ac_type", JSON_String "None");
-            ("ac_trigger", JSON_String (Option.value trigger_character ~default:"None"));
-            ("broader_context", JSON_String broader_context);
-          ])
-    in
-    Ok ([], Some json_data_to_log)
+    ("None", AcResult { results = []; errors_to_log = ["Autocomplete token not found in AST"] })

@@ -5,17 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type autocomplete_service_result =
+  | AcResult of {
+      results: ServerProt.Response.complete_autocomplete_result list;
+      errors_to_log: string list;
+    }
+  | AcFatalError of string
+
 val autocomplete_get_results :
   reader:Parsing_heaps.Reader.reader ->
   Context.t ->
   File_sig.With_Loc.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   string option ->
-  Docblock.t ->
-  broader_context:string ->
-  ( ServerProt.Response.complete_autocomplete_result list * Hh_json.json option,
-    string * Hh_json.json option )
-  result
+  string * autocomplete_service_result
 
 val add_autocomplete_token : string -> int -> int -> string * string
 

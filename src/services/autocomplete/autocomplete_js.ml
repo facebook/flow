@@ -17,7 +17,7 @@ type autocomplete_type =
     }
   | Actype
   | Acqualifiedtype of Type.t
-  | Acmem of string * Type.t
+  | Acmem of Type.t
   | Acjsx of string * SSet.t * Type.t
 
 let autocomplete_suffix = "AUTO332"
@@ -75,7 +75,7 @@ class process_request_searcher (from_trigger_character : bool) =
         match property with
         | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
           when is_autocomplete name ->
-          this#find prop_loc (Acmem (name, obj_t))
+          this#find prop_loc (Acmem obj_t)
         | _ -> ()
       end;
       super#member expr
@@ -96,7 +96,7 @@ class process_request_searcher (from_trigger_character : bool) =
                         _;
                       } ))
                 when is_autocomplete name ->
-                this#find prop_loc (Acmem (name, obj_t))
+                this#find prop_loc (Acmem obj_t)
               | _ -> ())
             properties
         | _ -> ()
