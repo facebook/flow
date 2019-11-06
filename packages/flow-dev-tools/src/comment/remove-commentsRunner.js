@@ -53,7 +53,6 @@ async function removeUnusedErrorSuppressions(
   errors: Array<FlowLoc>,
   flowBinPath: string,
 ): Promise<void> {
-  console.log(filename);
   const contentsString = await readFile(filename);
   const contents = await removeUnusedErrorSuppressionsFromText(
     Buffer.from(contentsString, 'utf8'),
