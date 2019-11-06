@@ -566,19 +566,20 @@ let clear_intermediates cx =
    in other sig contexts. This saves a lot of shared memory as well as
    deserialization time. *)
 let clear_master_shared cx master_cx =
-  set_graph cx (graph cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)));
-  set_trust_graph
-    cx
-    (trust_graph cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)));
-  set_property_maps
-    cx
-    ( property_maps cx
-    |> Type.Properties.Map.filter (fun id _ ->
-           not (Type.Properties.Map.mem id master_cx.property_maps)) );
-  set_call_props
-    cx
-    (call_props cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)));
-  set_evaluated cx (evaluated cx |> IMap.filter (fun id _ -> not (IMap.mem id master_cx.evaluated)))
+  let module PMap = Type.Properties.Map in
+  let module EMap = Type.Exports.Map in
+  cx.sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) cx.sig_cx.graph;
+  cx.sig_cx.trust_graph <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) cx.sig_cx.trust_graph;
+  cx.sig_cx.property_maps <-
+    PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) cx.sig_cx.property_maps;
+  cx.sig_cx.call_props <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) cx.sig_cx.call_props;
+  cx.sig_cx.evaluated <-
+    IMap.filter (fun id _ -> not (IMap.mem id master_cx.evaluated)) cx.sig_cx.evaluated;
+  cx.sig_cx.export_maps <-
+    EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) cx.sig_cx.export_maps;
+  ()
 
 let test_prop_hit cx id =
   cx.sig_cx.test_prop_hits_and_misses <- IMap.add id Hit cx.sig_cx.test_prop_hits_and_misses
