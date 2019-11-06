@@ -494,7 +494,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            (* Note: T_LBRACKET has already been consumed *)
+            Expect.token env T_LBRACKET;
             let id =
               if Peek.ith_token ~i:1 env = T_COLON then (
                 let id = identifier_name env in
@@ -517,7 +517,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            (* Note: First T_LBRACKET has already been consumed *)
+            Expect.token env T_LBRACKET;
             Expect.token env T_LBRACKET;
             let id = identifier_name env in
             Expect.token env T_RBRACKET;
@@ -581,12 +581,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     in
     let rec properties ~is_class ~allow_inexact ~allow_spread ~exact env ((props, inexact) as acc)
         =
+      (* no `static ...A` *)
       assert (not (is_class && allow_spread));
 
-      (* no `static ...A` *)
+      (* allow_inexact implies allow_spread *)
       assert ((not allow_inexact) || allow_spread);
 
-      (* allow_inexact implies allow_spread *)
       let start_loc = Peek.loc env in
       match Peek.token env with
       | T_EOF -> (List.rev props, inexact)
@@ -703,8 +703,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           start_loc
       | T_LBRACKET ->
         error_unexpected_proto env proto;
-        Expect.token env T_LBRACKET;
-        (match Peek.token env with
+        (match Peek.ith_token ~i:1 env with
         | T_LBRACKET ->
           error_unexpected_variance env variance;
           internal_slot env start_loc static
