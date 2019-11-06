@@ -28,7 +28,7 @@ val of_loc : Loc.t -> t
  *   - This also implies that locations with `None` as the source cannot be abstractified. This
  *     could be relaxed in the future if necessary.
  * *)
-val abstractify : table -> t -> t
+val abstractify : table -> reverse_table -> t -> t
 
 (* Takes an ALoc.t with a concrete underlying representation and finds
  * the existing abstract representation for it from a reverse table

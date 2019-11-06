@@ -134,18 +134,23 @@ type t = Repr.t
 
 let of_loc = Repr.of_loc
 
-let abstractify table loc =
+let abstractify table rev_table loc =
   match Repr.kind loc with
   | Repr.Abstract -> failwith "Cannot abstractify a location which is already abstract"
   | Repr.ALocNone -> loc
   | Repr.Concrete ->
-    let underlying_loc = Repr.to_loc_exn loc in
+    let underlying_loc = Repr.to_loc_exn loc |> RelativeLoc.of_loc in
     let source = Repr.source loc in
     if source <> Some table.file then
-      failwith "abstractify: File mismatch between location and table"
-    else
-      ResizableArray.push table.map (RelativeLoc.of_loc underlying_loc);
-    let key = ResizableArray.size table.map - 1 in
+      failwith "abstractify: File mismatch between location and table";
+    let key =
+      try Hashtbl.find rev_table underlying_loc
+      with Not_found ->
+        let key = ResizableArray.size table.map in
+        ResizableArray.push table.map underlying_loc;
+        Hashtbl.add rev_table underlying_loc key;
+        key
+    in
     Repr.of_key source key
 
 let to_loc_exn = Repr.to_loc_exn
