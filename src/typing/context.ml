@@ -671,6 +671,8 @@ let has_export cx id name = find_exports cx id |> SMap.mem name
 let set_export cx id name t = find_exports cx id |> SMap.add name t |> add_export_map cx id
 
 (* constructors *)
+let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
+
 let generate_property_map cx pmap =
   let id = Reason.mk_id () in
   add_nominal_id cx (id :> int);
@@ -678,13 +680,12 @@ let generate_property_map cx pmap =
   add_property_map cx id pmap;
   id
 
-let make_source_property_map cx pmap loc =
+let make_source_property_map cx pmap aloc =
   (* To prevent cases where we might compare a concrete and an abstract
      aloc (like in a cycle) we abstractify all incoming alocs before adding
      them to the map. The only exception is for library files, which have only
      concrete definitions and by definition cannot appear in cycles. *)
-  let loc = ALoc.lookup_key_if_possible cx.rev_aloc_table loc in
-  let id = Type.Properties.id_of_aloc loc in
+  let id = make_aloc_id cx aloc |> Type.Properties.id_of_aloc_id in
   add_property_map cx id pmap;
   id
 

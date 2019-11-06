@@ -220,7 +220,7 @@ and _json_of_t_impl json_cx t =
       | DefT (_, _, EnumObjectT enum) ->
         let { enum_id; enum_name; members } = enum in
         [
-          ("enum_id", JSON_String (ALoc.debug_to_string enum_id));
+          ("enum_id", JSON_String (ALoc.debug_to_string (enum_id :> ALoc.t)));
           ("enum_name", JSON_String enum_name);
           ( "members",
             JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)) );
@@ -298,7 +298,7 @@ and _json_of_t_impl json_cx t =
         in
         [
           ("type", t);
-          ("id", JSON_String (ALoc.debug_to_string opaquetype.opaque_id));
+          ("id", JSON_String (ALoc.debug_to_string (opaquetype.opaque_id :> ALoc.t)));
           ("supertype", st);
         ]
       | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export }, is_strict) ->
@@ -1049,7 +1049,7 @@ and json_of_insttype_impl json_cx insttype =
     in
     JSON_Object
       [
-        ("classId", json_of_aloc ~offset_table:None insttype.class_id);
+        ("classId", json_of_aloc ~offset_table:None (insttype.class_id :> ALoc.t));
         ( "typeArgs",
           JSON_Array
             (Base.List.map
@@ -1454,7 +1454,7 @@ let json_of_scope =
         let pmap = Context.find_props json_cx.cx c.class_private_fields in
         JSON_Object
           [
-            ("class_id", JSON_String (ALoc.debug_to_string c.class_binding_id));
+            ("class_id", JSON_String (ALoc.debug_to_string (c.class_binding_id :> ALoc.t)));
             ("class_private_fields", json_of_pmap json_cx pmap);
           ]
       in
@@ -1693,11 +1693,14 @@ let rec dump_t_ (depth, tvars) cx t =
       p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
     | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
     | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) ->
-      p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string class_id)) t
+      p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
     | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
     | DefT (_, trust, EnumT { enum_id; enum_name; members = _ })
     | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _ }) ->
-      p ~trust:(Some trust) ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string enum_id)) t
+      p
+        ~trust:(Some trust)
+        ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t)))
+        t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
     | OpaqueT _ -> p t
@@ -2327,7 +2330,7 @@ let string_of_scope_entry =
         function
         | Value r -> spf "Value %s" (string_of_value_binding cx r)
         | Type r -> spf "Type %s" (string_of_type_binding cx r)
-        | Class r -> spf "Class %s" (ALoc.debug_to_string r.class_binding_id)))
+        | Class r -> spf "Class %s" (ALoc.debug_to_string (r.class_binding_id :> ALoc.t))))
 
 let string_of_scope_entries cx entries =
   let strings =

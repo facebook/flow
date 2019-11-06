@@ -312,7 +312,11 @@ let to_string_no_source loc =
   else
     Loc.to_string_no_source (Repr.to_loc_exn loc)
 
-let lookup_key_if_possible rev_table loc =
+type id = t
+
+let id_none = none
+
+let id_of_aloc rev_table loc =
   match Repr.kind loc with
   | Repr.Abstract
   | Repr.ALocNone ->
@@ -327,6 +331,8 @@ let lookup_key_if_possible rev_table loc =
         | None -> failwith "Unexpectedly encountered a location without a source"
       end
     | None -> loc)
+
+let equal_id a b = quick_compare a b = 0
 
 let reverse_table table = ResizableArray.to_hashtbl table.map
 

@@ -252,7 +252,7 @@ module rec TypeTerm : sig
     | TypeDestructorT of use_op * reason * destructor
 
   and enum_t = {
-    enum_id: ALoc.t;
+    enum_id: ALoc.id;
     enum_name: string;
     members: SSet.t;
   }
@@ -1058,13 +1058,13 @@ module rec TypeTerm : sig
 
   (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
-    class_binding_id: ALoc.t;
+    class_binding_id: ALoc.id;
     class_private_fields: Properties.id;
     class_private_static_fields: Properties.id;
   }
 
   and insttype = {
-    class_id: ALoc.t;
+    class_id: ALoc.id;
     type_args: (string * reason * t * Polarity.t) list;
     own_props: Properties.id;
     proto_props: Properties.id;
@@ -1080,7 +1080,7 @@ module rec TypeTerm : sig
     | InterfaceKind of { inline: bool }
 
   and opaquetype = {
-    opaque_id: ALoc.t;
+    opaque_id: ALoc.id;
     underlying_t: t option;
     super_t: t option;
     opaque_type_args: (string * reason * t * Polarity.t) list;
@@ -1489,7 +1489,7 @@ and Properties : sig
 
   val id_as_int : id -> int option
 
-  val id_of_aloc : ALoc.t -> id
+  val id_of_aloc_id : ALoc.id -> id
 
   val fake_id : id
 
@@ -1515,13 +1515,13 @@ end = struct
      see the object twice between the merge and check phases, we still hit
      the object to object fast path when checking *)
   type id =
-    | Source of ALoc.t
+    | Source of ALoc.id
     | Generated of int
 
-  let compare_id id1 id2 =
-    match (id1, id2) with
-    | (Source loc1, Source loc2) -> ALoc.quick_compare loc1 loc2
-    | (Generated i1, Generated i2) -> i1 - i2
+  let compare_id a b =
+    match (a, b) with
+    | (Source a, Source b) -> ALoc.quick_compare (a :> ALoc.t) (b :> ALoc.t)
+    | (Generated a, Generated b) -> a - b
     | (Source _, Generated _) -> -1
     | (Generated _, Source _) -> 1
 
@@ -1567,13 +1567,13 @@ end = struct
 
   let generate_id = Reason.mk_id %> id_of_int
 
-  let id_of_aloc loc = Source loc
+  let id_of_aloc_id aloc_id = Source aloc_id
 
   let fake_id = Generated 0
 
   let string_of_id = function
     | Generated id -> string_of_int id
-    | Source id -> string_of_aloc id
+    | Source id -> string_of_aloc (id :> ALoc.t)
 
   let extract_named_exports pmap =
     SMap.fold

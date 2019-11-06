@@ -961,7 +961,7 @@ let rec convert cx tparams_map =
       let (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact }) = body in
       let reason = mk_annot_reason RInterfaceType loc in
       let (iface_sig, extend_asts) =
-        let id = ALoc.none in
+        let id = ALoc.id_none in
         let (extends, extend_asts) =
           extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
         in
@@ -1781,7 +1781,7 @@ let mk_interface_sig cx reason decl =
     let self = Tvar.mk cx reason in
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx tparams in
     let (iface_sig, extends_ast) =
-      let id = id_loc in
+      let id = Context.make_aloc_id cx id_loc in
       let (extends, extends_ast) =
         extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
       in
@@ -1847,7 +1847,7 @@ let mk_declare_class_sig =
       let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
       let (_, tparams, tparams_map) = Class_type_sig.add_this self cx reason tparams tparams_map in
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
-        let id = id_loc in
+        let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =
           match extends with
           | Some (loc, { Ast.Type.Generic.id; targs }) ->

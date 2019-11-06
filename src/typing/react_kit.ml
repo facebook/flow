@@ -1113,7 +1113,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           in
           let insttype =
             {
-              class_id = ALoc.none;
+              class_id = ALoc.id_none;
               type_args = [];
               (* TODO: props are actually installed on the prototype *)
               own_props = Context.generate_property_map cx props;

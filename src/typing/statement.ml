@@ -1045,8 +1045,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             (name, reason, t, polarity))
           (TypeParams.to_list typeparams)
       in
+      let opaque_id = Context.make_aloc_id cx name_loc in
       let opaquetype =
-        { underlying_t; super_t; opaque_id = name_loc; opaque_type_args; opaque_name = name }
+        { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name }
       in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
       let type_ =
@@ -1955,7 +1956,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let { id = (name_loc, ident); body } = enum in
       let { Ast.Identifier.name; _ } = ident in
       let reason = mk_reason (REnum name) loc in
-      let enum_t = mk_enum ~loc enum in
+      let enum_t = mk_enum cx ~loc enum in
       let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
       let id' = ((name_loc, t), ident) in
       Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
@@ -6890,7 +6891,7 @@ and mk_class_sig =
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
       let (self', tparams, tparams_map) = add_this self cx reason tparams tparams_map in
       let (class_sig, extends_ast, implements_ast) =
-        let id = name_loc in
+        let id = Context.make_aloc_id cx name_loc in
         let (extends, extends_ast) = mk_extends cx tparams_map extends in
         let (implements, implements_ast) =
           implements
@@ -7613,7 +7614,7 @@ and warn_or_ignore_optional_chaining optional cx loc =
   else
     ()
 
-and mk_enum ~loc enum =
+and mk_enum cx ~loc enum =
   let open Ast.Statement.EnumDeclaration in
   let { id = (_, { Ast.Identifier.name; _ }); body } = enum in
   let name_of_initialized_member (type t) (member : (t, ALoc.t) InitializedMember.t) =
@@ -7623,6 +7624,7 @@ and mk_enum ~loc enum =
   let name_of_defaulted_member (_, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) =
     name
   in
+  let enum_id = Context.make_aloc_id cx loc in
   let member_names =
     match body with
     | BooleanBody { BooleanBody.members; _ } -> Base.List.map ~f:name_of_initialized_member members
@@ -7633,4 +7635,4 @@ and mk_enum ~loc enum =
       Base.List.map ~f:name_of_defaulted_member members
     | SymbolBody { SymbolBody.members } -> Base.List.map ~f:name_of_defaulted_member members
   in
-  { enum_id = loc; enum_name = name; members = SSet.of_list member_names }
+  { enum_id; enum_name = name; members = SSet.of_list member_names }

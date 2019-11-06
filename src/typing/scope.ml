@@ -174,7 +174,7 @@ module Entry = struct
   let string_of_kind = function
     | Value v -> string_of_value_kind v.kind
     | Type _ -> "type"
-    | Class c -> spf "Class %s" (ALoc.debug_to_string c.Type.class_binding_id)
+    | Class c -> spf "Class %s" (ALoc.debug_to_string (c.Type.class_binding_id :> ALoc.t))
 
   let kind_of_value (value : value_binding) = value.kind
 

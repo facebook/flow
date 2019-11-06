@@ -804,7 +804,7 @@ module ContextOptimizer = struct
 
       method enum e =
         let { enum_id; members; _ } = e in
-        SigHash.add_aloc sig_hash enum_id;
+        SigHash.add_aloc sig_hash (enum_id :> ALoc.t);
         Base.List.iter
           ~f:(SigHash.add sig_hash)
           (SSet.elements members |> Base.List.stable_sort ~compare:String.compare);
@@ -822,12 +822,10 @@ module ContextOptimizer = struct
         | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
         | OpenT _ -> super#type_ cx pole t
         | DefT (_, _, InstanceT (_, _, _, { class_id; _ })) ->
-          let id = class_id in
-          SigHash.add_aloc sig_hash id;
+          SigHash.add_aloc sig_hash (class_id :> ALoc.t);
           super#type_ cx pole t
         | OpaqueT (_, { opaque_id; _ }) ->
-          let id = opaque_id in
-          SigHash.add_aloc sig_hash id;
+          SigHash.add_aloc sig_hash (opaque_id :> ALoc.t);
           super#type_ cx pole t
         | AnyT (r, src) when Unsoundness.banned_in_exports src && Option.is_some export_reason ->
           self#warn_dynamic_exports cx r (Option.value_exn export_reason);

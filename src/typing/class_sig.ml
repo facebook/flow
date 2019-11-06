@@ -46,7 +46,7 @@ module Make (F : Func_sig.S) = struct
   }
 
   type t = {
-    id: ALoc.t;
+    id: ALoc.id;
     tparams: Type.typeparams;
     tparams_map: Type.t SMap.t;
     super: super;

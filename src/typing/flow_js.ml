@@ -2306,7 +2306,7 @@ struct
          * are compatible with each other. If there are no type args, this doesn't do anything *)
         | ( OpaqueT (lreason, { opaque_id = id1; opaque_type_args = ltargs; _ }),
             UseT (use_op, OpaqueT (ureason, { opaque_id = id2; opaque_type_args = utargs; _ })) )
-          when ALoc.concretize_equal (Context.aloc_tables cx) id1 id2 ->
+          when ALoc.equal_id id1 id2 ->
           flow_type_args cx trace ~use_op lreason ureason ltargs utargs
         (* Repositioning should happen before opaque types are considered so that we can
          * have the "most recent" location when we do look at the opaque type *)
@@ -4476,12 +4476,7 @@ struct
                 try_ts_on_failure,
                 l,
                 (DefT (_, _, InstanceT (_, _, _, instance_super)) as u) ) ) ->
-          if
-            ALoc.concretize_equal
-              (Context.aloc_tables cx)
-              instance.class_id
-              instance_super.class_id
-          then
+          if ALoc.equal_id instance.class_id instance_super.class_id then
             let { type_args = tmap1; _ } = instance in
             let { type_args = tmap2; _ } = instance_super in
             let ureason =
@@ -4713,7 +4708,7 @@ struct
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
             SetPrivatePropT (use_op, reason_op, x, mode, scope :: scopes, static, tin, prop_tout)
           ) ->
-          if scope.class_binding_id != instance.class_id then
+          if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
             rec_flow
               cx
               trace
@@ -4782,7 +4777,7 @@ struct
             (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
             GetPrivatePropT (use_op, reason_op, x, scope :: scopes, static, tout) ) ->
-          if scope.class_binding_id <> instance.class_id then
+          if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
             rec_flow cx trace (l, GetPrivatePropT (use_op, reason_op, x, scopes, static, tout))
           else
             let map =
@@ -6028,7 +6023,7 @@ struct
         (*********)
         | ( DefT (_, _, EnumObjectT { enum_id = id1; _ }),
             UseT (_, DefT (_, _, EnumObjectT { enum_id = id2; _ })) )
-          when ALoc.concretize_equal (Context.aloc_tables cx) id1 id2 ->
+          when ALoc.equal_id id1 id2 ->
           ()
         | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
             GetPropT (use_op, _, Named (reason_prop, name), tout) ) ->
@@ -6042,7 +6037,7 @@ struct
           rec_flow_t cx trace (enum_type, tout)
         | ( DefT (_, _, EnumT { enum_id = id1; _ }),
             UseT (_, DefT (_, _, EnumT { enum_id = id2; _ })) )
-          when ALoc.concretize_equal (Context.aloc_tables cx) id1 id2 ->
+          when ALoc.equal_id id1 id2 ->
           ()
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
@@ -9361,8 +9356,7 @@ struct
         DefT (reason, _, InstanceT (_, super_c, _, instance_c)),
         (InternalT (ExtendsT (_, c, DefT (_, _, InstanceT (_, _, _, instance_a)))) as right) ) ->
       (* TODO: intersection *)
-      if ALoc.concretize_equal (Context.aloc_tables cx) instance_a.class_id instance_c.class_id
-      then
+      if ALoc.equal_id instance_a.class_id instance_c.class_id then
         rec_flow_t cx trace (c, result)
       else
         (* Recursively check whether super(C) extends A, with enough context. **)
@@ -9405,8 +9399,7 @@ struct
     | ( false,
         DefT (reason, _, InstanceT (_, super_c, _, instance_c)),
         (InternalT (ExtendsT (_, _, DefT (_, _, InstanceT (_, _, _, instance_a)))) as right) ) ->
-      if ALoc.concretize_equal (Context.aloc_tables cx) instance_a.class_id instance_c.class_id
-      then
+      if ALoc.equal_id instance_a.class_id instance_c.class_id then
         ()
       else
         let u = PredicateT (NotP (LeftP (InstanceofTest, right)), result) in
