@@ -1404,6 +1404,15 @@ class virtual ['a] t_with_uses =
           t
         else
           CreateObjWithComputedPropT { reason; value = value'; tout_tvar = (r, id') }
+      | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
+        let resolved' = ListUtils.ident_map (self#type_ cx map_cx) resolved in
+        let unresolved' = ListUtils.ident_map (self#type_ cx map_cx) unresolved in
+        let upper' = self#use_type cx map_cx upper in
+        if resolved == resolved' && unresolved == unresolved' && upper == upper' then
+          t
+        else
+          ResolveUnionT
+            { reason; resolved = resolved'; unresolved = unresolved'; upper = upper'; id }
 
     method private opt_use_type cx map_cx t =
       match t with
