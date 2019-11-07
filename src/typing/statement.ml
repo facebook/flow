@@ -79,14 +79,14 @@ module ObjectExpressionAcc = struct
 
   let proto { proto; _ } = proto
 
-  let mk_object_from_spread_acc cx acc reason ~default_proto =
+  let mk_object_from_spread_acc cx acc reason ~default_proto ~empty_unsealed =
     let mk_object reason ?(proto = default_proto) ?(sealed = false) props =
       Obj_type.mk_with_proto cx reason ~sealed ~props proto
     in
     let sealed = sealed acc in
     match elements_rev acc with
     | (Slice { slice_pmap }, []) ->
-      let sealed = sealed && not (SMap.is_empty slice_pmap) in
+      let sealed = sealed && not (SMap.is_empty slice_pmap && empty_unsealed) in
       mk_object reason ~sealed ?proto:(proto acc) slice_pmap
     | os ->
       let (t, ts, head_slice) =
@@ -2832,7 +2832,14 @@ and object_ cx reason ?(allow_sealed = true) props =
         (ObjectExpressionAcc.empty ~allow_sealed, [])
         props
     in
-    let t = ObjectExpressionAcc.mk_object_from_spread_acc cx acc reason ~default_proto:obj_proto in
+    let t =
+      ObjectExpressionAcc.mk_object_from_spread_acc
+        cx
+        acc
+        reason
+        ~default_proto:obj_proto
+        ~empty_unsealed:true
+    in
     (t, List.rev rev_prop_asts))
 
 and variable cx kind ?if_uninitialized id init =
@@ -5481,45 +5488,9 @@ and jsx_mk_props cx reason c name attributes children =
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
     let proto = ObjProtoT reason_props in
-    (* Return an object with specified sealing. *)
-    let mk_object ?(sealed = false) props =
-      Obj_type.mk_with_proto cx reason_props ~sealed ~props proto
-    in
-    (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
-     not sealed. *)
-    let mk_spread from_obj to_obj ~assert_exact =
-      let use_op = Op (ObjectSpread { op = reason_of_t from_obj }) in
-      Tvar.mk_where cx reason_props (fun t ->
-          Flow.flow
-            cx
-            (to_obj, ObjAssignToT (use_op, reason_props, from_obj, t, ObjAssign { assert_exact })))
-    in
-    (* When there's no result, return a new object with specified sealing. When
-     there's result, copy a new object into it, sealing the result when
-     necessary.
-
-     When building an object incrementally, only the final call to this function
-     may be with sealed=true, so we will always have an unsealed object to copy
-     properties to. *)
-    let eval_props ?(sealed = false) (map, result) =
-      match result with
-      | None -> mk_object ~sealed map
-      | Some result ->
-        let result =
-          if not (SMap.is_empty map) then
-            mk_spread (mk_object map) result ~assert_exact:false
-          else
-            result
-        in
-        if not sealed then
-          result
-        else
-          Tvar.mk_where cx reason_props (fun t ->
-              Flow.flow cx (result, ObjSealT (reason_props, t)))
-    in
-    let (sealed, map, result, atts) =
+    let (acc, atts) =
       List.fold_left
-        (fun (sealed, map, result, atts) att ->
+        (fun (acc, atts) att ->
           match att with
           (* All attributes with a non-namespaced name that are not a react ignored
            * attribute. *)
@@ -5561,7 +5532,11 @@ and jsx_mk_props cx reason c name attributes children =
                 | None ->
                   (DefT (mk_reason RBoolean attr_loc, bogus_trust (), BoolT (Some true)), None)
             in
-            let p = Field (Some id_loc, atype, Polarity.Neutral) in
+            let acc =
+              ObjectExpressionAcc.add_prop
+                (Properties.add_field aname Polarity.Neutral (Some id_loc) atype)
+                acc
+            in
             let att =
               Opening.Attribute
                 ( attr_loc,
@@ -5571,30 +5546,27 @@ and jsx_mk_props cx reason c name attributes children =
                     value;
                   } )
             in
-            (sealed, SMap.add aname p map, result, att :: atts)
+            (acc, att :: atts)
           (* Do nothing for namespaced attributes or ignored React attributes. *)
           | Opening.Attribute _ ->
             (* TODO: attributes with namespaced names *)
-            (sealed, map, result, atts)
+            (acc, atts)
           (* <element {...spread} /> *)
           | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument }) ->
             let (((_, spread), _) as argument) = expression cx argument in
-            let obj = eval_props (map, result) in
-            let result =
-              mk_spread spread obj ~assert_exact:(not (SMap.is_empty map && result = None))
-            in
+            let acc = ObjectExpressionAcc.add_spread spread acc in
             let att = Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument }) in
-            (sealed, SMap.empty, Some result, att :: atts))
-        (true, SMap.empty, None, [])
+            (acc, att :: atts))
+        (ObjectExpressionAcc.empty ~allow_sealed:true, [])
         attributes
     in
     let attributes = List.rev atts in
-    let map =
+    let acc =
       match children with
-      | [] -> map
+      | [] -> acc
       (* We add children to the React.createElement() call for React. Not to the
        * props as other JSX users may support. *)
-      | _ when is_react -> map
+      | _ when is_react -> acc
       | _ ->
         let arr =
           Tvar.mk_where cx reason (fun tout ->
@@ -5610,10 +5582,18 @@ and jsx_mk_props cx reason c name attributes children =
                 children
                 (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)))
         in
-        let p = Field (None, arr, Polarity.Neutral) in
-        SMap.add "children" p map
+        ObjectExpressionAcc.add_prop
+          (Properties.add_field "children" Polarity.Neutral None arr)
+          acc
     in
-    let t = eval_props ~sealed (map, result) in
+    let t =
+      ObjectExpressionAcc.mk_object_from_spread_acc
+        cx
+        acc
+        reason_props
+        ~default_proto:proto
+        ~empty_unsealed:false
+    in
     (t, attributes))
 
 and jsx_desugar cx name component_t props attributes children locs =
