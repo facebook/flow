@@ -242,7 +242,33 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
         Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode info options
       in
       let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
-      Lwt.return (errors, parse_result, info))
+      match parse_result with
+      | Parsing_service_js.Parse_ok parse_ok ->
+        (* TODO: errors gets dropped *)
+        let (ast, file_sig) = Parsing_service_js.basic parse_ok in
+        Lwt.return (Ok (ast, file_sig), info)
+      | Parsing_service_js.Parse_fail fails ->
+        let errors =
+          match fails with
+          | Parsing_service_js.Parse_error err ->
+            let err = Inference_utils.error_of_parse_error ~source_file:filename err in
+            Flow_error.ErrorSet.add err errors
+          | Parsing_service_js.Docblock_errors errs ->
+            List.fold_left
+              (fun errors err ->
+                let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
+                Flow_error.ErrorSet.add err errors)
+              errors
+              errs
+          | Parsing_service_js.File_sig_error err ->
+            let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
+            Flow_error.ErrorSet.add err errors
+        in
+        Lwt.return (Error errors, info)
+      | Parsing_service_js.Parse_skip
+          (Parsing_service_js.Skip_non_flow_file | Parsing_service_js.Skip_resource_file) ->
+        (* should never happen *)
+        Lwt.return (Error errors, info))
 
 (* commit providers for old and new modules, collect errors. *)
 let (commit_modules, commit_modules_from_saved_state) =
@@ -1140,15 +1166,14 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename =
-  let%lwt (errors, parse_result, info) =
+  let%lwt (parse_result, info) =
     parse_contents ~options ~profiling ~check_syntax filename contents
   in
   let reader = State_reader.create () in
   let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
   match parse_result with
-  | Parsing_service_js.Parse_ok parse_ok ->
+  | Ok (ast, file_sig) ->
     (* override docblock info *)
-    let (ast, file_sig) = Parsing_service_js.basic parse_ok in
     let info = Docblock.set_flow_mode_for_ide_command info in
     (* merge *)
     let%lwt (cx, typed_ast) =
@@ -1222,30 +1247,7 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
         Errors.ConcreteLocPrintableErrorSet.empty
     in
     Lwt.return (Some (cx, ast, file_sig, typed_ast), errors, warnings, info)
-  | Parsing_service_js.Parse_fail fails ->
-    let errors =
-      match fails with
-      | Parsing_service_js.Parse_error err ->
-        let err = Inference_utils.error_of_parse_error ~source_file:filename err in
-        Flow_error.ErrorSet.add err errors
-      | Parsing_service_js.Docblock_errors errs ->
-        List.fold_left
-          (fun errors err ->
-            let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
-            Flow_error.ErrorSet.add err errors)
-          errors
-          errs
-      | Parsing_service_js.File_sig_error err ->
-        let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-        Flow_error.ErrorSet.add err errors
-    in
-    let errors =
-      errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
-    in
-    Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
-  | Parsing_service_js.Parse_skip
-      (Parsing_service_js.Skip_non_flow_file | Parsing_service_js.Skip_resource_file) ->
-    (* should never happen *)
+  | Error errors ->
     let errors =
       errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
     in
