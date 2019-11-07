@@ -2563,9 +2563,47 @@ struct
         (********************************)
         (* union and intersection types *)
         (********************************)
-
+        (* We don't want to miss any union optimizations because of unevaluated type destructors, so
+           if our union contains any of these problematic types, we force it to resolve its elements before
+           considering its upper bound *)
+        | (_, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
+          let continue resolved =
+            match unresolved with
+            | [] -> rec_flow cx trace (union_of_ts reason resolved, upper)
+            | next :: rest ->
+              rec_flow
+                cx
+                trace
+                (next, ResolveUnionT { reason; resolved; unresolved = rest; upper; id })
+          in
+          let reason_elemt = reason_of_t l in
+          let pos = Base.List.length resolved in
+          (* Union resolution can fall prey to the same sort of infinite recursion that array spreads can, so
+          we can use the same constant folding guard logic that arrays do. To more fully understand how that works,
+          see the comment there *)
+          ConstFoldExpansion.guard id (reason_elemt, pos) (function
+              | 0 -> continue (l :: resolved)
+              (* Unions are idempotent, so we can just skip any duplicated elements *)
+              | 1 -> continue resolved
+              | _ -> ())
+        | (UnionT (reason, rep), upper)
+          when UnionRep.members rep |> List.exists is_union_resolvable ->
+          (* We can't guarantee that  tvars or typeapps get resolved, even though we'd like to believe they will. Instead,
+             we separate out all the eval types from the union, resolve them, and then rejoin them with the other types once
+             they have been resolved. *)
+          let (evals, resolved) = UnionRep.members rep |> List.partition is_union_resolvable in
+          begin
+            match evals with
+            | first :: unresolved ->
+              rec_flow
+                cx
+                trace
+                (first, ResolveUnionT { reason; resolved; unresolved; upper; id = Reason.mk_id () })
+            (* No evals, but we can't get here *)
+            | [] -> ()
+          end
         (* Don't split the union type into its constituent members. Instead,
-       reposition the entire union type. *)
+        reposition the entire union type. *)
         | (UnionT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout)) ->
@@ -8669,6 +8707,10 @@ struct
          rep
          ~find_resolved:(Context.find_resolved cx)
          ~find_props:(Context.find_props cx)
+
+  and is_union_resolvable = function
+    | EvalT _ -> true
+    | _ -> false
 
   and quick_mem_result cx trace reason_op use_op l rep = function
     | UnionRep.Yes ->

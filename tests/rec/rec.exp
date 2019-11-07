@@ -146,6 +146,14 @@ References:
                        ^^^ [6]
 
 
+Error ------------------------------------------------------------------------------- recursive_react_component.js:21:11
+
+Cannot resolve name `DoesntMatter`.
+
+   21|   return <DoesntMatter
+                 ^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
 Cannot cast `p.x` to string because number [1] is incompatible with string [2].
@@ -287,4 +295,4 @@ References:
 
 
 
-Found 23 errors
+Found 24 errors
