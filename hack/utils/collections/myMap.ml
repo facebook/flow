@@ -12,7 +12,7 @@ module type S = MyMap_sig.S
 module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
   include Map.Make (Ord)
 
-  let get x t = (try Some (find x t) with Not_found -> None)
+  let get = find_opt
 
   let has_key x m =
     try
