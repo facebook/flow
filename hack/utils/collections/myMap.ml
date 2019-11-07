@@ -14,11 +14,7 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
 
   let get = find_opt
 
-  let has_key x m =
-    try
-      let _ = find x m in
-      true
-    with Not_found -> false
+  let has_key = mem
 
   let find_unsafe = find
 
