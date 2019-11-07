@@ -1278,18 +1278,21 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let flags = { frozen = true; sealed = Sealed; exact = true } in
           let x = Nel.one { Object.reason; props = SMap.empty; dict = None; flags } in
           resolved cx trace use_op reason resolve_tool tool tout x
-        (* mixed is treated as {[string]: mixed} except in type spread, where it's treated as
-         * {}. Any JavaScript value may be treated as an object and so this is safe.
+        (* mixed is treated as {[string]: mixed} except in type spread and react config checking, where
+         * it's treated as {}. Any JavaScript value may be treated as an object so this is safe.
          *
          * We ought to use {} for everything since it is a more sound representation
-         * of `mixed` as an object.
+         * of `mixed` as an object. The fact that we don't today is technical debt that we should
+         * clean up.
          *)
         | DefT (r, _, MixedT _) as t ->
           let flags = { frozen = true; sealed = Sealed; exact = true } in
           let x =
             match tool with
             | ObjectWiden _
-            | Spread _ ->
+            | Spread _
+            | ObjectRep
+            | ReactConfig _ ->
               Nel.one { Object.reason; props = SMap.empty; dict = None; flags }
             | _ ->
               Nel.one
