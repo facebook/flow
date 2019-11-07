@@ -789,6 +789,14 @@ and _json_of_use_t_impl json_cx t =
           ("value", _json_of_t json_cx value);
           ("tout", _json_of_t json_cx (OpenT tout_tvar));
         ]
+      | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
+        [
+          ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
+          ("unresolved", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) unresolved));
+          ("resolved", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) resolved));
+          ("upper", _json_of_use_t json_cx upper);
+          ("id", JSON_Number (string_of_int id));
+        ]
       | ModuleExportsAssignT (_, assign, t_out) ->
         [("assign", _json_of_t json_cx assign); ("t_out", _json_of_t json_cx t_out)] ))
 
@@ -2244,6 +2252,16 @@ and dump_use_t_ (depth, tvars) cx t =
       p t ~extra:(spf "%s, %s, %s" (string_of_destruct_kind k) (string_of_selector s) (kid tout))
     | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
       p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
+    | ResolveUnionT { resolved; unresolved; upper; id; _ } ->
+      p
+        t
+        ~extra:
+          (spf
+             "%d [%s], [%s], %s"
+             id
+             (String.concat "; " (Base.List.map ~f:kid resolved))
+             (String.concat "; " (Base.List.map ~f:kid unresolved))
+             (use_kid upper))
     | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =

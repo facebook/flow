@@ -615,6 +615,11 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#type_ cx pole_TODO acc tout in
         acc
+      | ResolveUnionT { reason = _; resolved; unresolved; upper; id = _ } ->
+        let acc = List.fold_left (self#type_ cx pole_TODO) acc resolved in
+        let acc = List.fold_left (self#type_ cx pole_TODO) acc unresolved in
+        let acc = self#use_type_ cx acc upper in
+        acc
 
     (* The default behavior here could be fleshed out a bit, to look up the graph,
      handle Resolved and Unresolved cases, etc. *)

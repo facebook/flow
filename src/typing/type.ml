@@ -730,6 +730,14 @@ module rec TypeTerm : sig
         value: t;
         tout_tvar: tvar;
       }
+    (* Used to delay union lower bound handling until all the types in the union have been processed themselves *)
+    | ResolveUnionT of {
+        reason: reason;
+        unresolved: t list;
+        resolved: t list;
+        upper: use_t;
+        id: ident;
+      }
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
@@ -2580,6 +2588,7 @@ end = struct
       reason
     | DestructuringT (reason, _, _, _) -> reason
     | CreateObjWithComputedPropT { reason; value = _; tout_tvar = _ } -> reason
+    | ResolveUnionT { reason; _ } -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2757,6 +2766,8 @@ end = struct
     | DestructuringT (reason, a, s, t) -> DestructuringT (f reason, a, s, t)
     | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
       CreateObjWithComputedPropT { reason = f reason; value; tout_tvar }
+    | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
+      ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
 
   and mod_reason_of_opt_use_t f = function
     | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2880,7 +2891,8 @@ end = struct
     | ReactInToProps _
     | DestructuringT _
     | ModuleExportsAssignT _
-    | CreateObjWithComputedPropT _ ->
+    | CreateObjWithComputedPropT _
+    | ResolveUnionT _ ->
       nope u
 
   let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)
@@ -3692,6 +3704,7 @@ let string_of_use_ctor = function
   | ReactInToProps _ -> "ReactInToProps"
   | DestructuringT _ -> "DestructuringT"
   | CreateObjWithComputedPropT _ -> "CreateObjWithComputedPropT"
+  | ResolveUnionT _ -> "ResolveUnionT"
   | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
 
 let string_of_binary_test = function

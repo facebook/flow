@@ -6929,7 +6929,8 @@ struct
     | (_, ObjKitT _)
     | (_, ReposLowerT _)
     | (_, ReposUseT _)
-    | (_, UnifyT _) ->
+    | (_, UnifyT _)
+    | (_, ResolveUnionT _) ->
       false
     | (Bottom, _) -> true
     (* After this line, flavor is always Zeroed. *)
@@ -7182,6 +7183,7 @@ struct
     | ImportTypeT _
     | ImportTypeofT _
     | IntersectionPreprocessKitT _
+    | ResolveUnionT _
     | LookupT _
     | MatchPropT _
     | MakeExactT _
