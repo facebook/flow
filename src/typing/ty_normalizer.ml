@@ -566,7 +566,7 @@ end = struct
       let env = Env.descend env in
       match t with
       | OpenT (_, id) -> type_variable ~env id
-      | BoundT (reason, name, _) -> bound_t ~env reason name
+      | BoundT (reason, name) -> bound_t ~env reason name
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env t id d
       | ExactT (_, t) -> exact_t ~env t

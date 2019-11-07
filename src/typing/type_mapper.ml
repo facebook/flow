@@ -1044,12 +1044,13 @@ class virtual ['a] t_with_uses =
           t
         else
           ThisSpecializeT (r, this', k')
-      | VarianceCheckT (r, tlist, p) ->
-        let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-        if tlist' == tlist then
+      | VarianceCheckT (r, tparams, targs, p) ->
+        let tparams' = SMap.ident_map (self#type_param cx map_cx) tparams in
+        let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in
+        if tparams' == tparams && targs' == targs then
           t
         else
-          VarianceCheckT (r, tlist', p)
+          VarianceCheckT (r, tparams', targs', p)
       | TypeAppVarianceCheckT (use_op, r1, r2, tpairlist) ->
         let tpairlist' =
           ListUtils.ident_map

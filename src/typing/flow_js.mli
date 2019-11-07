@@ -66,7 +66,8 @@ val generate_tests : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -
 
 val match_this_binding : Type.t SMap.t -> (Type.t -> bool) -> bool
 
-val check_polarity : Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
+val check_polarity :
+  Context.t -> ?trace:Trace.t -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
 
 (* selectors *)
 

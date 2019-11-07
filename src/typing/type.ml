@@ -69,7 +69,7 @@ module rec TypeTerm : sig
        substitution, but otherwise works in much the same way as usual. *)
     | EvalT of t * defer_use_t * int
     (* bound type variable *)
-    | BoundT of reason * string * Polarity.t
+    | BoundT of reason * string
     (* existential type variable *)
     | ExistsT of reason
     (* this-abstracted class *)
@@ -518,7 +518,7 @@ module rec TypeTerm : sig
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
-    | VarianceCheckT of reason * t list * Polarity.t
+    | VarianceCheckT of reason * typeparam SMap.t * t list * Polarity.t
     | TypeAppVarianceCheckT of use_op * reason * reason * (t * t) list
     (* In TypeAppT (c, ts) ~> TypeAppT (c, ts) we need to check both cs against
      * each other which means that we must concretize them first. *)
@@ -2445,7 +2445,7 @@ end = struct
     | OpenT (reason, _) -> reason
     | AnnotT (reason, _, _) -> reason
     | MergedT (reason, _) -> reason
-    | BoundT (reason, _, _) -> reason
+    | BoundT (reason, _) -> reason
     | InternalT (ChoiceKitT (reason, _)) -> reason
     | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
     | CustomFunT (reason, _) -> reason
@@ -2570,7 +2570,7 @@ end = struct
     | ToStringT (reason, _) -> reason
     | UnaryMinusT (reason, _) -> reason
     | UnifyT (_, t) -> reason_of_t t
-    | VarianceCheckT (reason, _, _) -> reason
+    | VarianceCheckT (reason, _, _, _) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
     | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
     | CondT (reason, _, _, _) -> reason
@@ -2603,7 +2603,7 @@ end = struct
     | OpenT (reason, id) -> OpenT (f reason, id)
     | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
     | MergedT (reason, uses) -> MergedT (f reason, uses)
-    | BoundT (reason, name, polarity) -> BoundT (f reason, name, polarity)
+    | BoundT (reason, name) -> BoundT (f reason, name)
     | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
     | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->
       TypeDestructorTriggerT (use_op, f reason, repos, d, t)
@@ -2745,7 +2745,8 @@ end = struct
     | ToStringT (reason, t) -> ToStringT (f reason, t)
     | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
     | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
-    | VarianceCheckT (reason, ts, polarity) -> VarianceCheckT (f reason, ts, polarity)
+    | VarianceCheckT (reason, tparams, targs, polarity) ->
+      VarianceCheckT (f reason, tparams, targs, polarity)
     | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
     | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
@@ -2839,7 +2840,7 @@ end = struct
     | NullishCoalesceT (_, _, _)
     | NotT (_, _)
     | ThisSpecializeT (_, _, _)
-    | VarianceCheckT (_, _, _)
+    | VarianceCheckT (_, _, _, _)
     | LookupT (_, _, _, _, _)
     | ObjFreezeT (_, _)
     | ObjRestT (_, _, _)

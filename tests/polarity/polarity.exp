@@ -82,6 +82,20 @@ References:
                ^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- method.js:3:16
+
+Cannot use `X` [1] in an input/output position because `X` [1] is expected to occur only in output positions.
+
+   method.js:3:16
+   3|   x: <+X>(x: F<X>) => void; 
+                     ^
+
+References:
+   method.js:3:8
+   3|   x: <+X>(x: F<X>) => void; 
+             ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ obj.js:2:25
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
@@ -195,4 +209,4 @@ References:
 
 
 
-Found 14 errors
+Found 15 errors

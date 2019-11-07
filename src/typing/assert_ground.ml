@@ -336,9 +336,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                         ( _,
                           _,
                           TypeT
-                            ( _,
-                              EvalT ((BoundT (_, s, _) as t), TypeDestructorT (_, _, destructor), _)
-                            ) );
+                            (_, EvalT ((BoundT (_, s) as t), TypeDestructorT (_, _, destructor), _))
+                        );
                     _;
                   } ) ->
             if (new type_finder t)#destructor cx false destructor then

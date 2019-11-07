@@ -256,8 +256,7 @@ and _json_of_t_impl json_cx t =
         | Some targs -> [("typeArgs", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs))]
         | None -> [])
         @ [("thisArg", _json_of_t json_cx this); ("type", _json_of_t json_cx t)]
-      | BoundT (_, name, polarity) ->
-        [("name", JSON_String name); ("polarity", json_of_polarity json_cx polarity)]
+      | BoundT (_, name) -> [("name", JSON_String name)]
       | ExistsT _ -> []
       | ExactT (_, t) -> [("type", _json_of_t json_cx t)]
       | MaybeT (_, t) -> [("type", _json_of_t json_cx t)]
@@ -496,7 +495,7 @@ and _json_of_use_t_impl json_cx t =
         @ [("tvar", _json_of_t json_cx tvar)]
       | ThisSpecializeT (_, this, k) ->
         ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
-      | VarianceCheckT (_, targs, polarity) ->
+      | VarianceCheckT (_, _, targs, polarity) ->
         [
           ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs));
           ("polarity", json_of_polarity json_cx polarity);
@@ -1667,7 +1666,7 @@ let rec dump_t_ (depth, tvars) cx t =
              id)
         t
     | ThisClassT (_, inst) -> p ~extra:(kid inst) t
-    | BoundT (_, name, _) -> p ~extra:name t
+    | BoundT (_, name) -> p ~extra:name t
     | ExistsT _ -> p t
     | DefT (_, trust, ObjT { props_tmap; _ }) ->
       p ~trust:(Some trust) t ~extra:(Properties.string_of_id props_tmap)
@@ -2217,7 +2216,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
     | UnaryMinusT _ -> p t
     | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
-    | VarianceCheckT (_, args, pol) ->
+    | VarianceCheckT (_, _, args, pol) ->
       p
         ~extra:
           (spf "[%s], %s" (String.concat "; " (Base.List.map ~f:kid args)) (Polarity.string pol))

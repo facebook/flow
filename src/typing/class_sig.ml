@@ -514,12 +514,11 @@ module Make (F : Func_sig.S) = struct
       match tparams with
       | None -> Flow.mk_instance cx reason self
       | _ ->
+        let open Type in
         let targs =
           Base.List.map
-            ~f:(fun tp ->
-              let { Type.reason; name; polarity; _ } = tp in
-              Type.BoundT (reason, name, polarity))
-            (Type.TypeParams.to_list tparams)
+            ~f:(fun tp -> BoundT (tp.Type.reason, tp.name))
+            (TypeParams.to_list tparams)
         in
         Type.typeapp self targs
     in
@@ -546,9 +545,7 @@ module Make (F : Func_sig.S) = struct
       let tparams_nel = Option.value_exn (Nel.of_list tparams_lst) in
       Some (loc, tparams_nel)
     in
-    ( rec_instance_type,
-      tparams,
-      SMap.add "this" (Type.BoundT (this_reason, "this", Polarity.Positive)) tparams_map )
+    (rec_instance_type, tparams, SMap.add "this" (Type.BoundT (this_reason, "this")) tparams_map)
 
   let remove_this x =
     if structural x then
@@ -739,16 +736,23 @@ module Make (F : Func_sig.S) = struct
    flipped off for interface/declare class currently. *)
   let classtype cx ?(check_polarity = true) x =
     let this = thistype cx x in
+    begin
+      match x.tparams with
+      | Some (_, tps) when check_polarity ->
+        (* TODO: use tparams_map instead of calculating this here *)
+        let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.Type.name tp acc) SMap.empty tps in
+        Flow.check_polarity cx tparams Polarity.Positive this
+      | _ -> ()
+    end;
     let { tparams; _ } = remove_this x in
-    Type.(
-      if check_polarity then Flow.check_polarity cx Polarity.Positive this;
-      let t =
-        if structural x then
-          class_type ~structural:true this
-        else
-          this_class_type this
-      in
-      poly_type_of_tparams (Context.make_nominal cx) tparams t)
+    let open Type in
+    let t =
+      if structural x then
+        class_type ~structural:true this
+      else
+        this_class_type this
+    in
+    poly_type_of_tparams (Context.make_nominal cx) tparams t
 
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =

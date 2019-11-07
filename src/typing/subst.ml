@@ -69,7 +69,7 @@ let substituter =
       else
         let t_out =
           match t with
-          | BoundT (tp_reason, name, _) ->
+          | BoundT (tp_reason, name) ->
             let annot_loc = aloc_of_reason tp_reason in
             begin
               match SMap.get name map with

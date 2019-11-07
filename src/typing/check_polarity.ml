@@ -11,15 +11,20 @@ exception UnexpectedType of string
 
 module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
   (* TODO: flesh this out *)
-  let rec check_polarity cx ?trace polarity = function
+  let rec check_polarity cx ?trace tparams polarity = function
     (* base case *)
-    | BoundT (reason, name, tp_polarity) ->
-      if not (Polarity.compat (tp_polarity, polarity)) then
-        Flow.add_output
-          cx
-          ?trace
-          (Error_message.EPolarityMismatch
-             { reason; name; expected_polarity = tp_polarity; actual_polarity = polarity })
+    | BoundT (reason, name) ->
+      begin
+        match SMap.get name tparams with
+        | None -> ()
+        | Some tp ->
+          if not (Polarity.compat (tp.polarity, polarity)) then
+            Flow.add_output
+              cx
+              ?trace
+              (Error_message.EPolarityMismatch
+                 { reason; name; expected_polarity = tp.polarity; actual_polarity = polarity })
+      end
     (* No need to walk into tvars, since we're looking for BoundT types, which
      * will certainly never appear in the bounds of a tvar. *)
     | OpenT _ -> ()
@@ -56,8 +61,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | OptionalT { type_ = t; _ }
     | ExactT (_, t)
     | MaybeT (_, t) ->
-      check_polarity cx ?trace polarity t
-    | DefT (_, _, ClassT t) -> check_polarity cx ?trace polarity t
+      check_polarity cx ?trace tparams polarity t
+    | DefT (_, _, ClassT t) -> check_polarity cx ?trace tparams polarity t
     | DefT (_, _, InstanceT (static, super, implements, i)) ->
       let {
         class_id = _;
@@ -72,12 +77,12 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       } =
         i
       in
-      check_polarity cx ?trace polarity static;
-      check_polarity cx ?trace polarity super;
-      List.iter (check_polarity cx ?trace polarity) implements;
-      check_polarity_propmap cx ?trace polarity own_props;
-      check_polarity_propmap cx ?trace ~skip_ctor:true polarity proto_props;
-      Option.iter call_t ~f:(check_polarity_call cx ?trace polarity)
+      check_polarity cx ?trace tparams polarity static;
+      check_polarity cx ?trace tparams polarity super;
+      List.iter (check_polarity cx ?trace tparams polarity) implements;
+      check_polarity_propmap cx ?trace tparams polarity own_props;
+      check_polarity_propmap cx ?trace ~skip_ctor:true tparams polarity proto_props;
+      Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
     (* We can ignore the statics and prototype of function annotations, since
      * they will always be "uninteresting," never containing a BoundT. *)
     | DefT (_, _, FunT (_static, _prototype, f)) ->
@@ -95,49 +100,60 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       } =
         f
       in
-      let check_inv = check_polarity cx ?trace (Polarity.inv polarity) in
+      let check_inv = check_polarity cx ?trace tparams (Polarity.inv polarity) in
       List.iter (fun (_, t) -> check_inv t) params;
       Option.iter ~f:(fun (_, _, t) -> check_inv t) rest_param;
-      check_polarity cx ?trace polarity return_t
+      check_polarity cx ?trace tparams polarity return_t
     | DefT (_, _, ArrT (ArrayAT (_, Some _))) as t ->
       (* This representation signifies a literal, which is not a type. *)
       raise (UnexpectedType (Debug_js.dump_t cx t))
-    | DefT (_, _, ArrT (ArrayAT (t, None))) -> check_polarity cx ?trace Polarity.Neutral t
+    | DefT (_, _, ArrT (ArrayAT (t, None))) -> check_polarity cx ?trace tparams Polarity.Neutral t
     | DefT (_, _, ArrT (TupleAT (_, ts))) ->
-      List.iter (check_polarity cx ?trace Polarity.Neutral) ts
-    | DefT (_, _, ArrT (ROArrayAT t)) -> check_polarity cx ?trace polarity t
+      List.iter (check_polarity cx ?trace tparams Polarity.Neutral) ts
+    | DefT (_, _, ArrT (ROArrayAT t)) -> check_polarity cx ?trace tparams polarity t
     | DefT (_, _, ObjT o) ->
       let { flags = _; dict_t; props_tmap; proto_t; call_t } = o in
-      check_polarity_propmap cx ?trace polarity props_tmap;
-      Option.iter dict_t ~f:(check_polarity_dict cx ?trace polarity);
-      check_polarity cx ?trace polarity proto_t;
-      Option.iter call_t ~f:(check_polarity_call cx ?trace polarity)
-    | UnionT (_, rep) -> List.iter (check_polarity cx ?trace polarity) (UnionRep.members rep)
+      check_polarity_propmap cx ?trace tparams polarity props_tmap;
+      Option.iter dict_t ~f:(check_polarity_dict cx ?trace tparams polarity);
+      check_polarity cx ?trace tparams polarity proto_t;
+      Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
+    | UnionT (_, rep) ->
+      List.iter (check_polarity cx ?trace tparams polarity) (UnionRep.members rep)
     | IntersectionT (_, rep) ->
-      List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
-    | DefT (_, _, PolyT { tparams = xs; t_out = t; _ }) ->
-      Nel.iter (check_polarity_typeparam cx ?trace polarity) xs;
-      check_polarity cx ?trace polarity t
+      List.iter (check_polarity cx ?trace tparams polarity) (InterRep.members rep)
+    | DefT (_, _, PolyT { tparams = tps; t_out = t; _ }) ->
+      (* We might encounter a polymorphic function type or method inside of an
+       * annotation. A newly introduced type parameter's bound or default might
+       * refer to one of the tparams we're looking for. *)
+      let tparams =
+        Nel.fold_left
+          (fun acc tp ->
+            check_polarity_typeparam cx ?trace acc polarity tp;
+            SMap.add tp.name tp acc)
+          tparams
+          tps
+      in
+      check_polarity cx ?trace tparams polarity t
     | ThisTypeAppT (_, _, _, None) ->
       (* Perhaps surprisingly, there is nothing to do here. This type is used
        * specifically for the extends clause of a class declaration. The root
        * type of the extended class is looked up from the environment, and will
        * not contain any type parameters in scope -- only concrete types. *)
       ()
-    | ThisTypeAppT (_, c, _, Some ts)
-    | TypeAppT (_, _, c, ts) ->
+    | ThisTypeAppT (_, c, _, Some targs)
+    | TypeAppT (_, _, c, targs) ->
       (* Type arguments in a typeapp might contain a BoundT, but the root type
        * which defines the type parameters is not necessarily resolved at this
        * point. We need to know the polarity of the type parameters in order to
        * know the position of any found BoundTs. This constraint will continue
        * checking the type args once the root type is resolved. *)
       let reason = reason_of_t c in
-      Flow.flow_opt cx ?trace (c, VarianceCheckT (reason, ts, polarity))
+      Flow.flow_opt cx ?trace (c, VarianceCheckT (reason, tparams, targs, polarity))
     | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
-      check_polarity cx ?trace (Polarity.inv polarity) config;
-      check_polarity cx ?trace polarity instance
-    | ShapeT t -> check_polarity cx ?trace polarity t
-    | KeysT (_, t) -> check_polarity cx ?trace Polarity.Positive t
+      check_polarity cx ?trace tparams (Polarity.inv polarity) config;
+      check_polarity cx ?trace tparams polarity instance
+    | ShapeT t -> check_polarity cx ?trace tparams polarity t
+    | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     (* TODO *)
     | CustomFunT _
     | EvalT _ ->
@@ -150,37 +166,40 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       | MergedT _ ) as t ->
       raise (UnexpectedType (Debug_js.dump_t cx t))
 
-  and check_polarity_propmap cx ?trace ?(skip_ctor = false) polarity id =
+  and check_polarity_propmap cx ?trace ?(skip_ctor = false) tparams polarity id =
     let pmap = Context.find_props cx id in
     SMap.iter
       (fun x p ->
         if skip_ctor && x = "constructor" then
           ()
         else
-          check_polarity_prop cx ?trace polarity p)
+          check_polarity_prop cx ?trace tparams polarity p)
       pmap
 
-  and check_polarity_prop cx ?trace polarity = function
-    | Field (_, t, p) -> check_polarity cx ?trace (Polarity.mult (polarity, p)) t
-    | Get (_, t) -> check_polarity cx ?trace polarity t
-    | Set (_, t) -> check_polarity cx ?trace (Polarity.inv polarity) t
+  and check_polarity_prop cx ?trace tparams polarity = function
+    | Field (_, t, p) -> check_polarity cx ?trace tparams (Polarity.mult (polarity, p)) t
+    | Get (_, t) -> check_polarity cx ?trace tparams polarity t
+    | Set (_, t) -> check_polarity cx ?trace tparams (Polarity.inv polarity) t
     | GetSet (_, t1, _, t2) ->
-      check_polarity cx ?trace polarity t1;
-      check_polarity cx ?trace (Polarity.inv polarity) t2
-    | Method (_, t) -> check_polarity cx ?trace polarity t
+      check_polarity cx ?trace tparams polarity t1;
+      check_polarity cx ?trace tparams (Polarity.inv polarity) t2
+    | Method (_, t) -> check_polarity cx ?trace tparams polarity t
 
-  and check_polarity_dict cx ?trace polarity d =
+  and check_polarity_dict cx ?trace tparams polarity d =
     let { dict_name = _; key; value; dict_polarity } = d in
-    check_polarity cx ?trace Polarity.Neutral key;
-    check_polarity cx ?trace (Polarity.mult (polarity, dict_polarity)) value
+    check_polarity cx ?trace tparams Polarity.Neutral key;
+    check_polarity cx ?trace tparams (Polarity.mult (polarity, dict_polarity)) value
 
-  and check_polarity_call cx ?trace polarity id =
+  and check_polarity_call cx ?trace tparams polarity id =
     let t = Context.find_call cx id in
-    check_polarity cx ?trace polarity t
+    check_polarity cx ?trace tparams polarity t
 
-  and check_polarity_typeparam cx ?trace polarity tp =
+  and check_polarity_typeparam cx ?trace tparams polarity tp =
     let { reason = _; name = _; bound; polarity = tp_polarity; default } = tp in
-    let check_mult = check_polarity cx ?trace (Polarity.mult (polarity, tp_polarity)) in
+    let check_mult =
+      let polarity = Polarity.mult (polarity, tp_polarity) in
+      check_polarity cx ?trace tparams polarity
+    in
     check_mult bound;
     Option.iter ~f:check_mult default
 end

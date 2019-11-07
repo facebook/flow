@@ -332,7 +332,10 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc this in
         let acc = self#cont cx acc k in
         acc
-      | VarianceCheckT (_, ts, _) -> List.fold_left (self#type_ cx pole_TODO) acc ts
+      | VarianceCheckT (_, tparams, targs, _) ->
+        let acc = self#smap (self#type_param cx pole_TODO) acc tparams in
+        let acc = List.fold_left (self#type_ cx pole_TODO) acc targs in
+        acc
       | TypeAppVarianceCheckT (_, _, _, ts) ->
         List.fold_left
           (fun acc (a, b) ->

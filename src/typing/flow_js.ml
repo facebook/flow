@@ -3379,9 +3379,10 @@ struct
               ts
           in
           rec_flow_t cx trace (t_, tvar)
-        | (DefT (_, _, PolyT { tparams = tps; _ }), VarianceCheckT (_, ts, polarity)) ->
-          variance_check cx ~trace polarity (Nel.to_list tps, ts)
-        | (ThisClassT _, VarianceCheckT (_, [], _)) ->
+        | (DefT (_, _, PolyT { tparams = tps; _ }), VarianceCheckT (_, tparams, targs, polarity))
+          ->
+          variance_check cx ~trace tparams polarity (Nel.to_list tps, targs)
+        | (ThisClassT _, VarianceCheckT (_, _, [], _)) ->
           (* We will emit this constraint when walking an extends clause which does
            * not have explicit type arguments. The class has an implicit this type
            * parameter which needs to be specialized to the inheriting class, but
@@ -7707,14 +7708,14 @@ struct
           | ReactConfigType default_props ->
             ReactKitT (use_op, reason, React.GetConfigType (default_props, tout)) )
 
-  and variance_check cx ?trace polarity = function
+  and variance_check cx ?trace tparams polarity = function
     | ([], _)
     | (_, []) ->
       (* ignore typeapp arity mismatch, since it's handled elsewhere *)
       ()
     | (tp :: tps, t :: ts) ->
-      CheckPolarity.check_polarity cx ?trace (Polarity.mult (polarity, tp.polarity)) t;
-      variance_check cx ?trace polarity (tps, ts)
+      CheckPolarity.check_polarity cx ?trace tparams (Polarity.mult (polarity, tp.polarity)) t;
+      variance_check cx ?trace tparams polarity (tps, ts)
 
   (* Instantiate a polymorphic definition given tparam instantiations in a Call or
    * New expression. *)
@@ -7890,9 +7891,7 @@ struct
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
     | DefT (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
-      let targs =
-        typeparams |> Nel.map (fun tp -> BoundT (tp.reason, tp.name, tp.polarity)) |> Nel.to_list
-      in
+      let targs = typeparams |> Nel.map (fun tp -> BoundT (tp.reason, tp.name)) |> Nel.to_list in
       let tapp = typeapp ~implicit:true t targs in
       Some (poly_type (Context.make_nominal cx) tparams_loc typeparams (class_type tapp))
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t

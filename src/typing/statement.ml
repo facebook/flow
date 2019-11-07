@@ -989,8 +989,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               right;
             } ) ) as stmt ->
       let r = DescFormat.type_reason name name_loc in
-      let (typeparams, typeparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (((_, t), _) as right_ast) = Anno.convert cx typeparams_map right in
+      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
       let t =
         let mod_reason = update_desc_reason (fun desc -> RTypeAlias (name, true, desc)) in
         let rec loop = function
@@ -1003,10 +1003,17 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let type_ =
         poly_type_of_tparams
           (Context.make_nominal cx)
-          typeparams
+          tparams
           (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t)))
       in
-      Flow.check_polarity cx Polarity.Positive t;
+      begin
+        match tparams with
+        | None -> ()
+        | Some (_, tps) ->
+          (* TODO: use tparams_map *)
+          let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.name tp acc) SMap.empty tps in
+          Flow.check_polarity cx tparams Polarity.Positive t
+      end;
 
       Env.init_type cx name type_ name_loc;
       let type_alias_ast =
@@ -1033,17 +1040,24 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               supertype;
             } ) ) as stmt ->
       let r = DescFormat.type_reason name name_loc in
-      let (typeparams, typeparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (underlying_t, impltype_ast) = Anno.convert_opt cx typeparams_map impltype in
-      Option.iter underlying_t ~f:(Flow.check_polarity cx Polarity.Positive);
-      let (super_t, supertype_ast) = Anno.convert_opt cx typeparams_map supertype in
-      Option.iter super_t ~f:(Flow.check_polarity cx Polarity.Positive);
+      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
+      let (super_t, supertype_ast) = Anno.convert_opt cx tparams_map supertype in
+      begin
+        match tparams with
+        | None -> ()
+        | Some (_, tps) ->
+          (* TODO: use tparams_map *)
+          let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.name tp acc) SMap.empty tps in
+          Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
+          Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
+      end;
       let opaque_type_args =
         Base.List.map
           ~f:(fun { name; reason; polarity; _ } ->
-            let t = SMap.find_unsafe name typeparams_map in
+            let t = SMap.find_unsafe name tparams_map in
             (name, reason, t, polarity))
-          (TypeParams.to_list typeparams)
+          (TypeParams.to_list tparams)
       in
       let opaque_id = Context.make_aloc_id cx name_loc in
       let opaquetype =
@@ -1053,14 +1067,14 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let type_ =
         poly_type_of_tparams
           (Context.make_nominal cx)
-          typeparams
+          tparams
           (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
       in
       Flow.(
         let () =
           match (underlying_t, super_t) with
           | (Some l, Some u) ->
-            generate_tests cx (TypeParams.to_list typeparams) (fun map_ ->
+            generate_tests cx (TypeParams.to_list tparams) (fun map_ ->
                 flow_t cx (subst cx map_ l, subst cx map_ u))
             |> ignore
           | _ -> ()
@@ -7221,7 +7235,7 @@ and mk_func_sig =
             let acc = super#type_ cx pole acc t in
             tparams <- old_tparams;
             acc
-          | BoundT (_, name, _) when not (List.exists (fun x -> x = name) tparams) ->
+          | BoundT (_, name) when not (List.exists (fun x -> x = name) tparams) ->
             Loc_collections.ALocSet.add (TypeUtil.loc_of_t t) acc
           | _ -> super#type_ cx pole acc t
       end

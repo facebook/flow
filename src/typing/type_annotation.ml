@@ -1542,7 +1542,7 @@ and mk_type_param_declarations cx ?(tparams_map = SMap.empty) tparams =
     in
     let polarity = polarity variance in
     let tparam = { reason; name; bound; polarity; default } in
-    let t = BoundT (reason, name, polarity) in
+    let t = BoundT (reason, name) in
     let name_ast =
       let (loc, id_name) = id in
       ((loc, t), id_name)

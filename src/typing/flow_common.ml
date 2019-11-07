@@ -15,7 +15,8 @@ module type ASSERT_GROUND = sig
 end
 
 module type CHECK_POLARITY = sig
-  val check_polarity : Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
+  val check_polarity :
+    Context.t -> ?trace:Trace.t -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
 end
 
 module type TRUST_CHECKING = sig
@@ -31,8 +32,6 @@ end
 
 module type S = sig
   val add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit
-
-  val check_polarity : Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
 
   val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> int -> Type.t
 
@@ -139,6 +138,8 @@ module type S = sig
     Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 
   include ASSERT_GROUND
+
+  include CHECK_POLARITY
 
   include TRUST_CHECKING
 end
