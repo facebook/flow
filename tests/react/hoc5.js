@@ -8,7 +8,7 @@ import * as React from 'react';
 function hoc<Props, Component: React.ComponentType<Props>>(
   WrappedComponent: Component,
 ): React.ComponentType<React.ElementConfig<Component>> {
-  return props => <WrappedComponent {...props} />;
+  return (props: Props) => <WrappedComponent {...props} />;
 }
 
 class MyComponent1 extends React.Component<{foo: string, bar: number}> {
