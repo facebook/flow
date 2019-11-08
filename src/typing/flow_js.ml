@@ -1943,12 +1943,21 @@ struct
         (*********************)
         (* optional chaining *)
         (*********************)
-        | (DefT (r, _, (NullT | VoidT)), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
+        | (DefT (_, _, VoidT), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
           Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:true;
-          rec_flow_t cx trace (InternalT (OptionalChainVoidT r), void_out)
-        | (InternalT (OptionalChainVoidT _), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
-          Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:false;
           rec_flow_t cx trace (l, void_out)
+        | (DefT (r, trust, NullT), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
+          let void =
+            match desc_of_reason r with
+            | RNull ->
+              (* to avoid error messages like "null is incompatible with null",
+                 give VoidT that arise from `null` annotations a new description
+                 explaining why it is void and not null *)
+              DefT (replace_desc_reason RVoidedNull r, trust, VoidT)
+            | _ -> DefT (r, trust, VoidT)
+          in
+          Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:true;
+          rec_flow_t cx trace (void, void_out)
         | (_, OptionalChainT (r', lhs_reason, this, t_out, _))
           when match l with
                | MaybeT _
@@ -1969,8 +1978,6 @@ struct
               | _ -> false);
           rec_flow_t cx trace (l, this);
           rec_flow cx trace (l, t_out)
-        | (InternalT (OptionalChainVoidT r), u) ->
-          rec_flow cx trace (DefT (r, bogus_trust (), VoidT), u)
         (*************)
         (* invariant *)
         (*************)
@@ -7374,7 +7381,6 @@ struct
     | MergedT _
     | OpenPredT _
     | InternalT (ReposUpperT _)
-    | InternalT (OptionalChainVoidT _)
     | MatchingPropT _
     | ShapeT _
     | OptionalT _

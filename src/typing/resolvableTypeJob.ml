@@ -202,7 +202,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
     collect_of_type ?log_unresolved cx acc t
-  | InternalT (OptionalChainVoidT _) -> acc
   | DefT (_, _, NumT _)
   | DefT (_, _, StrT _)
   | DefT (_, _, BoolT _)

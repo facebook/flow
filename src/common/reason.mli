@@ -20,6 +20,7 @@ type 'loc virtual_reason_desc =
   | REmpty
   | RVoid
   | RNull
+  | RVoidedNull
   | RSymbol
   | RExports
   | RNullOrVoid

@@ -263,7 +263,6 @@ module rec TypeTerm : sig
     (* util for deciding subclassing relations *)
     | ExtendsT of reason * t * t
     | ReposUpperT of reason * t
-    | OptionalChainVoidT of reason
 
   and internal_use_op =
     | CopyEnv
@@ -2473,7 +2472,6 @@ end = struct
     | MatchingPropT (reason, _, _) -> reason
     | OpaqueT (reason, _) -> reason
     | OpenPredT { reason; m_pos = _; m_neg = _; base_t = _ } -> reason
-    | InternalT (OptionalChainVoidT reason) -> reason
     | ReposT (reason, _) -> reason
     | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
     | ShapeT t -> reason_of_t t
@@ -2639,7 +2637,6 @@ end = struct
     | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
     | OpenPredT { reason; base_t; m_pos; m_neg } ->
       OpenPredT { reason = f reason; base_t; m_pos; m_neg }
-    | InternalT (OptionalChainVoidT reason) -> InternalT (OptionalChainVoidT (f reason))
     | ReposT (reason, t) -> ReposT (f reason, t)
     | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
     | ShapeT t -> ShapeT (mod_reason_of_t f t)
@@ -3505,7 +3502,6 @@ let string_of_ctor = function
   | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
-  | InternalT (OptionalChainVoidT _) -> "OptionalChainVoidT"
   | ReposT _ -> "ReposT"
   | InternalT (ReposUpperT _) -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"

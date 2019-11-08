@@ -70,6 +70,7 @@ type 'loc virtual_reason_desc =
   | REmpty
   | RVoid
   | RNull
+  | RVoidedNull
   | RSymbol
   | RExports
   | RNullOrVoid
@@ -239,13 +240,13 @@ type reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty
-    | RVoid | RNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
-    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
-    | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
-    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
-    | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
-      ) as r ->
+    | RVoid | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _
+    | RStringLit _ | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit
+    | RObjectType | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit
+    | RArrayType | RROArrayType | RTupleType | RTupleElement | RTupleLength _
+    | RTupleOutOfBoundsAccess | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType
+    | RFunctionUnusedArgument | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _
+    | RJSXElement _ | RJSXText | RFbt ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
@@ -521,6 +522,7 @@ let rec string_of_desc = function
   | RAnyExplicit -> "explicit 'any'"
   | RVoid -> "undefined"
   | RNull -> "null"
+  | RVoidedNull -> "undefined (result of null short-circuiting an optional chain)"
   | RNullOrVoid -> "null or undefined"
   | RSymbol -> "symbol"
   | RExports -> "exports"
@@ -1280,6 +1282,7 @@ let classification_of_reason r =
     `Scalar
   | RVoid
   | RNull
+  | RVoidedNull
   | RNullOrVoid ->
     `Nullish
   | RArray
