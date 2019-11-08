@@ -844,6 +844,11 @@ class ['a] t =
         acc
       | TryFlow (_, spec) -> self#try_flow_spec cx acc spec
 
+    method private goal_id cx pole acc id =
+      match Context.goals cx |> IMap.find_opt id with
+      | None -> acc
+      | Some t -> self#type_ cx pole acc t
+
     method private type_graph cx (seen, acc) id =
       Graph_explorer.(
         let seen' = ISet.add id seen in
@@ -851,7 +856,7 @@ class ['a] t =
           (seen, acc)
         else
           let graph = Context.type_graph cx in
-          let acc = (seen', self#eval_id cx pole_TODO acc id) in
+          let acc = (seen', self#goal_id cx pole_TODO acc id) in
           match Tbl.find graph id with
           | exception Not_found -> acc (* shouldn't happen *)
           | Unexplored { rev_deps = deps }

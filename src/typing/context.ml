@@ -93,6 +93,8 @@ type sig_t = {
   mutable export_maps: Type.Exports.map;
   (* map from evaluation ids to types *)
   mutable evaluated: Type.t IMap.t;
+  (* map from goal ids to types *)
+  mutable goal_map: Type.t IMap.t;
   (* graph tracking full resolution of types *)
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
@@ -218,6 +220,7 @@ let make_sig () =
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
     evaluated = IMap.empty;
+    goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
     envs = IMap.empty;
@@ -330,6 +333,8 @@ let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
 let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
 
 let evaluated cx = cx.sig_cx.evaluated
+
+let goals cx = cx.sig_cx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
 
@@ -523,6 +528,8 @@ let set_envs cx envs = cx.sig_cx.envs <- envs
 
 let set_evaluated cx evaluated = cx.sig_cx.evaluated <- evaluated
 
+let set_goals cx goals = cx.sig_cx.goal_map <- goals
+
 let set_graph cx graph = cx.sig_cx.graph <- graph
 
 let set_trust_graph cx trust_graph = cx.sig_cx.trust_graph <- trust_graph
@@ -558,6 +565,7 @@ let clear_intermediates cx =
   cx.sig_cx.optional_chains_useful <- ALocMap.empty;
   cx.sig_cx.invariants_useful <- ALocMap.empty;
   cx.sig_cx.type_asserts_map <- ALocMap.empty;
+  cx.sig_cx.goal_map <- IMap.empty;
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with

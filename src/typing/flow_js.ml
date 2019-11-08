@@ -8317,7 +8317,7 @@ struct
   and create_goal cx tvar =
     let i = mk_id () in
     Graph_explorer.node (Context.type_graph cx) i;
-    Context.set_evaluated cx (IMap.add i tvar (Context.evaluated cx));
+    Context.set_goals cx (IMap.add i tvar (Context.goals cx));
     i
 
   (* Let id be the identifier associated with a tvar that is not yet
@@ -8359,7 +8359,7 @@ struct
     let fully_resolve_ids = connect_id_to_bindings cx id bindings in
     ISet.iter
       (fun id ->
-        match IMap.find_opt id (Context.evaluated cx) with
+        match IMap.find_opt id (Context.goals cx) with
         | None -> ()
         | Some tvar -> trigger cx trace reason tvar)
       fully_resolve_ids;
