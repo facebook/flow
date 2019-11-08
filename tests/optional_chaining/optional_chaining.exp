@@ -622,6 +622,153 @@ References:
          ^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- deletion.js:9:8
+
+Cannot delete `x?.a` because undefined [1] is incompatible with number [2].
+
+   deletion.js:9:8
+   9| delete x?.a; // error from writing undefined to number, otherwise ok
+             ^^^^
+
+References:
+   deletion.js:9:1
+   9| delete x?.a; // error from writing undefined to number, otherwise ok
+      ^^^^^^^^^^^ [1]
+   deletion.js:3:21
+   3| declare var x: ?{a: number, b?: {c: number}};
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:10:8
+
+Cannot delete `x?.b?.c` because undefined [1] is incompatible with number [2].
+
+   deletion.js:10:8
+   10| delete x?.b?.c; // error from writing undefined to number, otherwise ok
+              ^^^^^^^
+
+References:
+   deletion.js:10:1
+   10| delete x?.b?.c; // error from writing undefined to number, otherwise ok
+       ^^^^^^^^^^^^^^ [1]
+   deletion.js:3:37
+    3| declare var x: ?{a: number, b?: {c: number}};
+                                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:12:8
+
+Cannot delete `z.d?.c` because undefined [1] is incompatible with number [2].
+
+   deletion.js:12:8
+   12| delete z.d?.c; // error from writing undefined to number, otherwise ok
+              ^^^^^^
+
+References:
+   deletion.js:12:1
+   12| delete z.d?.c; // error from writing undefined to number, otherwise ok
+       ^^^^^^^^^^^^^ [1]
+   deletion.js:5:25
+    5| declare var z: {d: ?{c: number}}
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:13:8
+
+This use of optional chaining (`?.`) is unnecessary because `z` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   deletion.js:13:8
+   13| delete z?.d; // unnecessary chain
+              ^^^^
+
+References:
+   deletion.js:13:8
+   13| delete z?.d; // unnecessary chain
+              ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:15:8
+
+This use of optional chaining (`?.`) is unnecessary because `w?.g` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   deletion.js:15:8
+   15| delete w?.g?.e; // one unnecessary chain
+              ^^^^^^^
+
+References:
+   deletion.js:15:8
+   15| delete w?.g?.e; // one unnecessary chain
+              ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:16:8
+
+This use of optional chaining (`?.`) is unnecessary because `w2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   deletion.js:16:8
+   16| delete w2?.g?.e; // two unnecessary chains
+              ^^^^^
+
+References:
+   deletion.js:16:8
+   16| delete w2?.g?.e; // two unnecessary chains
+              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:16:8
+
+This use of optional chaining (`?.`) is unnecessary because `w2?.g` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   deletion.js:16:8
+   16| delete w2?.g?.e; // two unnecessary chains
+              ^^^^^^^^
+
+References:
+   deletion.js:16:8
+   16| delete w2?.g?.e; // two unnecessary chains
+              ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
+
+Cannot cast `a.a` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   deletion.js:20:2
+   20| (a.a: empty); // don't refine a.a to definitely exist
+        ^^^
+
+References:
+   deletion.js:18:21
+   18| declare var a: ?{a: ?number}
+                           ^^^^^^^ [1]
+   deletion.js:20:7
+   20| (a.a: empty); // don't refine a.a to definitely exist
+             ^^^^^ [2]
+   deletion.js:18:22
+   18| declare var a: ?{a: ?number}
+                            ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:20:2
+
+Cannot get `a.a` because property `a` is missing in null or undefined [1].
+
+   deletion.js:20:2
+   20| (a.a: empty); // don't refine a.a to definitely exist
+        ^^^
+
+References:
+   deletion.js:18:16
+   18| declare var a: ?{a: ?number}
+                      ^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
 
 Cannot cast `x1?.()` to empty because:
@@ -1785,4 +1932,4 @@ References:
 
 
 
-Found 140 errors
+Found 150 errors
