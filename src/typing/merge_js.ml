@@ -699,7 +699,7 @@ module ContextOptimizer = struct
             Option.iter
               ~f:(fun id_int ->
                 let stable_id =
-                  if Context.mem_nominal_id cx id_int then
+                  if Context.mem_nominal_prop_id cx id_int then
                     IMap.find id_int stable_props_ids
                   else
                     id_int
@@ -713,7 +713,7 @@ module ContextOptimizer = struct
             Option.iter
               ~f:(fun id_int ->
                 let stable_id =
-                  if Context.mem_nominal_id cx id_int then (
+                  if Context.mem_nominal_prop_id cx id_int then (
                     let stable_id = self#fresh_stable_id in
                     stable_props_ids <- IMap.add id_int stable_id stable_props_ids;
                     stable_id
@@ -837,7 +837,7 @@ module ContextOptimizer = struct
           t'
         | DefT (_, _, PolyT { id = poly_id; _ }) ->
           let id =
-            if Context.mem_nominal_id cx poly_id then
+            if Context.mem_nominal_poly_id cx poly_id then
               match IMap.find_opt poly_id stable_poly_ids with
               | None ->
                 let id = self#fresh_stable_id in

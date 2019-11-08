@@ -104,8 +104,10 @@ type sig_t = {
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
   (* We track nominal ids in the context to help decide when the types exported by a module have
-     meaningfully changed: see Merge_js.ContextOptimizer. **)
-  mutable nominal_ids: ISet.t;
+     meaningfully changed: see Merge_js.ContextOptimizer. We care about two different types of
+     nominal ids, one for object properties and one for polymorphic types. **)
+  mutable nominal_prop_ids: ISet.t;
+  mutable nominal_poly_ids: ISet.t;
   (* map from TypeAssert assertion locations to the type being asserted *)
   mutable type_asserts_map: (type_assert_kind * ALoc.t) ALocMap.t;
   mutable errors: Flow_error.ErrorSet.t;
@@ -225,7 +227,8 @@ let make_sig () =
     all_unresolved = IMap.empty;
     envs = IMap.empty;
     module_map = SMap.empty;
-    nominal_ids = ISet.empty;
+    nominal_poly_ids = ISet.empty;
+    nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
@@ -362,7 +365,9 @@ let find_module cx m = find_module_sig (sig_cx cx) m
 let find_tvar cx id =
   (try IMap.find id cx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
 
-let mem_nominal_id cx id = ISet.mem id cx.sig_cx.nominal_ids
+let mem_nominal_poly_id cx id = ISet.mem id cx.sig_cx.nominal_poly_ids
+
+let mem_nominal_prop_id cx id = ISet.mem id cx.sig_cx.nominal_prop_ids
 
 let graph cx = graph_sig cx.sig_cx
 
@@ -506,7 +511,11 @@ let add_tvar cx id bounds = cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.grap
 
 let add_trust_var cx id bounds = cx.sig_cx.trust_graph <- IMap.add id bounds cx.sig_cx.trust_graph
 
-let add_nominal_id cx id = cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
+let add_nominal_prop_id cx id =
+  cx.sig_cx.nominal_prop_ids <- ISet.add id cx.sig_cx.nominal_prop_ids
+
+let add_nominal_poly_id cx id =
+  cx.sig_cx.nominal_poly_ids <- ISet.add id cx.sig_cx.nominal_poly_ids
 
 let add_type_assert cx k v =
   cx.sig_cx.type_asserts_map <- ALocMap.add k v cx.sig_cx.type_asserts_map
@@ -553,7 +562,8 @@ let set_module_map cx module_map = cx.sig_cx.module_map <- module_map
 let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
-  cx.sig_cx.nominal_ids <- ISet.empty;
+  cx.sig_cx.nominal_poly_ids <- ISet.empty;
+  cx.sig_cx.nominal_prop_ids <- ISet.empty;
 
   (* still 176 bytes :/ *)
   cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0;
@@ -685,7 +695,7 @@ let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
 
 let generate_property_map cx pmap =
   let id = Reason.mk_id () in
-  add_nominal_id cx (id :> int);
+  add_nominal_prop_id cx (id :> int);
   let id = Type.Properties.id_of_int id in
   add_property_map cx id pmap;
   id
@@ -711,7 +721,7 @@ let make_export_map cx tmap =
 
 let make_nominal cx =
   let nominal = Reason.mk_id () in
-  add_nominal_id cx nominal;
+  add_nominal_poly_id cx nominal;
   nominal
 
 (* Copy context from cx_other to cx *)
