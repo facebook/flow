@@ -755,7 +755,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           in
           let add_dict dict (reason, props, _, flags) = (reason, props, Some dict, flags) in
           let rec next todo shape =
-            match SMap.choose todo with
+            match SMap.choose_opt todo with
             | None ->
               let reason = replace_desc_reason RObjectType reason_op in
               let proto = ObjProtoT (locationless_reason RObjectClassName) in
@@ -830,7 +830,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | Unknown e -> Unknown e
         in
         let get_prop x (_, props, dict, _) =
-          match SMap.get x props with
+          match SMap.find_opt x props with
           | Some _ as p -> p
           | None ->
             Option.map dict (fun { key; value; dict_polarity; _ } ->
@@ -1214,7 +1214,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           in
           let add_dict dict (reason, props, _, flags) = (reason, props, Some dict, flags) in
           let rec next todo prop_types =
-            match SMap.choose todo with
+            match SMap.choose_opt todo with
             | None ->
               let prop_types = Some (Known prop_types) in
               map_spec

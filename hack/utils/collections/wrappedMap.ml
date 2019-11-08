@@ -7,16 +7,10 @@
  *
  *)
 
-module type S = MyMap_sig.S
+module type S = WrappedMap_sig.S
 
 module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
   include Map.Make (Ord)
-
-  let get = find_opt
-
-  let has_key = mem
-
-  let find_unsafe = find
 
   let union ?combine x y =
     let combine =
@@ -39,7 +33,7 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
         env
         ~init:empty
         ~f:(fun env map (key, v2) ->
-          let v1opt = get key s1 in
+          let v1opt = find_opt key s1 in
           let (env, vopt) = combine env key v1opt (Some v2) in
           let map =
             match vopt with
@@ -53,7 +47,7 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
       env
       ~init:map
       ~f:(fun env map (key, v1) ->
-        let v2opt = get key s2 in
+        let v2opt = find_opt key s2 in
         match v2opt with
         | None ->
           let (env, vopt) = combine env key (Some v1) None in
@@ -79,14 +73,14 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
 
   let keys m = fold (fun k _ acc -> k :: acc) m []
 
-  let ordered_keys m = List.map fst (bindings m)
+  let ordered_keys m = Base.List.map ~f:fst (bindings m)
 
   let values m = fold (fun _ v acc -> v :: acc) m []
 
-  let elements m = fold (fun k v acc -> (k, v) :: acc) m []
-
   let fold_env env f m init =
     fold (fun key v (env, acc) -> f env key v acc) m (env, init)
+
+  let elements m = fold (fun k v acc -> (k, v) :: acc) m []
 
   let map_env f env m =
     fold_env
@@ -96,15 +90,6 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
         (env, add key v map))
       m
       empty
-
-  let choose x = (try Some (choose x) with Not_found -> None)
-
-  let max_binding x = (try Some (max_binding x) with Not_found -> None)
-
-  let from_keys keys ~f =
-    List.fold_left begin
-                     fun acc key -> add key (f key) acc
-                   end empty keys
 
   let of_list elts =
     List.fold_left
@@ -124,7 +109,7 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
     | None -> add key new_value map
     | Some combine ->
       begin
-        match get key map with
+        match find_opt key map with
         | None -> add key new_value map
         | Some old_value -> add key (combine old_value new_value) map
       end

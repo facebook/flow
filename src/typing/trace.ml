@@ -82,7 +82,7 @@ let rec_trace ~max lower upper parent =
 let concat_trace = List.concat
 
 (* used to index trace nodes *)
-module TraceMap : MyMap.S with type key = t = MyMap.Make (struct
+module TraceMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
   type key = t
 
   type t = key
@@ -184,7 +184,7 @@ let reasons_of_trace ?(level = 0) trace =
           ( if parent = [] then
             ""
           else
-            match TraceMap.get parent tmap with
+            match TraceMap.find_opt parent tmap with
             | Some i -> spf " (from path %d)" (i + 1)
             | None -> " (from [not shown])" );
       ]

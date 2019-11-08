@@ -910,4 +910,4 @@ module JsonKey = struct
 end
 
 module JSet = Set.Make (JsonKey)
-module JMap = MyMap.Make (JsonKey)
+module JMap = WrappedMap.Make (JsonKey)

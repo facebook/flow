@@ -89,7 +89,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
   (* When a property is optional due to widening (see possibly_missing_prop), we want to make sure
    * that the reason it is missing persists through interactions with other optional properties.
    *
-   * This function preserves the possibly missing prop reason if it existed on both 
+   * This function preserves the possibly missing prop reason if it existed on both
    * of the optional properties. Otherwise, we have an explicit optional property, which
    * is better to use.
    *)
@@ -1200,7 +1200,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let flags = { frozen = false; exact = false; sealed = Sealed } in
         let (id, dict) =
           let props = Context.find_props cx id in
-          match (SMap.get "$key" props, SMap.get "$value" props) with
+          match (SMap.find_opt "$key" props, SMap.find_opt "$value" props) with
           | (Some (Field (_, key, polarity)), Some (Field (_, value, polarity')))
             when polarity = polarity' ->
             let props = props |> SMap.remove "$key" |> SMap.remove "$value" in

@@ -62,7 +62,7 @@ module Set : sig
 end
 
 module Map : sig
-  include module type of Reordered_argument_map (MyMap.Make (S))
+  include module type of Reordered_argument_map (WrappedMap.Make (S))
 
   val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
 

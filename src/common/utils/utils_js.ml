@@ -16,7 +16,7 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 let exe_name = Filename.basename Sys.executable_name
 
 module FilenameSet = Set.Make (File_key)
-module FilenameMap = MyMap.Make (File_key)
+module FilenameMap = WrappedMap.Make (File_key)
 
 let debug_string_of_filename_set set =
   set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
@@ -246,7 +246,7 @@ let ordinal = function
    explicit, and is implemented by simply passing the arguments in the correct
    order to Map.union.
 *)
-module Augmentable (M : MyMap.S) = struct
+module Augmentable (M : WrappedMap.S) = struct
   let augment map ~with_bindings = M.union with_bindings map
 end
 

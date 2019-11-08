@@ -46,7 +46,7 @@ module ArgSpec = struct
 
   let apply_arg name arg_type f (values, main) =
     let (values, main) = f (values, main) in
-    let value = (try Some (SMap.find_unsafe name values : string list) with Not_found -> None) in
+    let value = (try Some (SMap.find name values : string list) with Not_found -> None) in
     (values, main (arg_type.parse ~name value))
 
   let pop_anon spec =
@@ -334,7 +334,7 @@ let rec parse values spec = function
 and parse_flag values spec arg args =
   let flags = spec.ArgSpec.flags in
   try
-    let flag = SMap.find_unsafe arg flags in
+    let flag = SMap.find arg flags in
     match flag.ArgSpec.arg_count with
     | ArgSpec.No_Arg ->
       let values = SMap.add arg ["true"] values in

@@ -217,7 +217,7 @@ let file_dependencies ~audit ~reader file =
   in
   SSet.fold
     (fun mref (sig_files, all_files) ->
-      let m = SMap.find_unsafe mref resolved_modules in
+      let m = SMap.find mref resolved_modules in
       match implementation_file ~reader m ~audit:Expensive.ok with
       | Some f ->
         if SSet.mem mref sig_require_set then

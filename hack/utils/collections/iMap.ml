@@ -7,7 +7,7 @@
  *
  *)
 
-include MyMap.Make (IntKey)
+include WrappedMap.Make (IntKey)
 
 let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
  (fun pp_data -> make_pp Format.pp_print_int pp_data)

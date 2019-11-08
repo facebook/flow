@@ -234,7 +234,7 @@ and _json_of_t_impl json_cx t =
         @
         let evaluated = Context.evaluated json_cx.cx in
         begin
-          match IMap.get id evaluated with
+          match IMap.find_opt id evaluated with
           | None -> []
           | Some t -> [("result", _json_of_t json_cx t)]
         end
@@ -1296,7 +1296,7 @@ and json_of_node_impl json_cx id =
   Hh_json.(
     JSON_Object
       (let json_cx = { json_cx with stack = ISet.add id json_cx.stack } in
-       match IMap.find_unsafe id (Context.graph json_cx.cx) with
+       match IMap.find id (Context.graph json_cx.cx) with
        | Constraint.Goto id -> [("kind", JSON_String "Goto")] @ [("id", int_ id)]
        | Constraint.Root root ->
          [("kind", JSON_String "Root")] @ [("root", json_of_root json_cx root)]))

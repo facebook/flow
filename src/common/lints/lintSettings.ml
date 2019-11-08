@@ -48,11 +48,11 @@ let set_all entries settings =
 let get_default settings = settings.default_value
 
 let get_value lint_kind settings =
-  LintMap.get lint_kind settings.explicit_values
+  LintMap.find_opt lint_kind settings.explicit_values
   |> Option.value_map ~f:fst ~default:settings.default_value
 
 let get_loc lint_kind settings =
-  LintMap.get lint_kind settings.explicit_values |> Option.value_map ~f:snd ~default:None
+  LintMap.find_opt lint_kind settings.explicit_values |> Option.value_map ~f:snd ~default:None
 
 let is_explicit lint_kind settings = LintMap.mem lint_kind settings.explicit_values
 

@@ -24,7 +24,7 @@ module type S = sig
     val compare : t -> t -> int
   end
 
-  module DefMap : MyMap_sig.S with type key = Def.t
+  module DefMap : WrappedMap_sig.S with type key = Def.t
 
   type use_def_map = Def.t L.LMap.t
 

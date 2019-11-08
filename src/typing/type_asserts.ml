@@ -94,7 +94,7 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
   Base.List.iter2_exn
     ~f:(fun cx typed_ast ->
       let file = Context.file cx in
-      let file_sig = FilenameMap.find_unsafe file file_sigs in
+      let file_sig = FilenameMap.find file file_sigs in
       let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
       Loc_collections.ALocMap.iter (check_valid_call ~genv) (Context.type_asserts_map cx))
     cxs

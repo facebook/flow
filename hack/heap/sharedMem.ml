@@ -931,7 +931,7 @@ module type NoCache = sig
 
   module KeySet : Set.S with type elt = key
 
-  module KeyMap : MyMap.S with type key = key
+  module KeyMap : WrappedMap.S with type key = key
 
   val add : key -> t -> unit
 
@@ -1006,7 +1006,7 @@ struct
   module New = New (Raw) (Key) (Value)
   module Old = Old (Raw) (Key) (Value) (New.WithLocalChanges)
   module KeySet = Set.Make (UserKeyType)
-  module KeyMap = MyMap.Make (UserKeyType)
+  module KeyMap = WrappedMap.Make (UserKeyType)
 
   type key = UserKeyType.t
 

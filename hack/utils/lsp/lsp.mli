@@ -1010,5 +1010,5 @@ module IdSet : sig
 end
 
 module IdMap : sig
-  include module type of MyMap.Make (IdKey)
+  include module type of WrappedMap.Make (IdKey)
 end

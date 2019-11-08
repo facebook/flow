@@ -43,4 +43,4 @@ let tmp () =
   (res, "__tmp" ^ string_of_int res)
 
 module Set = Set.Make (S)
-module Map = MyMap.Make (S)
+module Map = WrappedMap.Make (S)

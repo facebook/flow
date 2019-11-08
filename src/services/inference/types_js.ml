@@ -29,7 +29,7 @@ let update_errset map file errset =
     map
   else
     let errset =
-      match FilenameMap.get file map with
+      match FilenameMap.find_opt file map with
       | Some prev_errset -> Flow_error.ErrorSet.union prev_errset errset
       | None -> errset
     in
@@ -43,7 +43,7 @@ let update_coverage = FilenameMap.union ~combine:(fun _ _ -> Option.return)
 
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
-  match FilenameMap.get file map with
+  match FilenameMap.find_opt file map with
   | Some prev_errset ->
     let new_errset =
       Flow_error.ErrorSet.filter
@@ -413,7 +413,7 @@ end = struct
 
   let get_from_cache ~root_file =
     let { entries; size } = !cache in
-    match FilenameMap.get root_file entries with
+    match FilenameMap.find_opt root_file entries with
     | None -> None
     | Some entry ->
       let entry = { entry with last_hit = Unix.gettimeofday () } in
@@ -704,7 +704,7 @@ let run_merge_service
       let (errs, warnings, suppressions, coverage, first_internal_error) =
         List.fold_left
           (fun acc (file, result) ->
-            let component = FilenameMap.find_unsafe file component_map in
+            let component = FilenameMap.find file component_map in
             let acc = Nel.fold_left remove_old_results acc component in
             add_new_results ~record_slow_file:(fun _ _ -> ()) acc file result)
           acc
@@ -777,7 +777,7 @@ let mk_intermediate_result_callback
                       let warns_acc =
                         let acc =
                           Option.value
-                            (FilenameMap.get file warns_acc)
+                            (FilenameMap.find_opt file warns_acc)
                             ~default:ConcreteLocPrintableErrorSet.empty
                         in
                         let acc =
@@ -1010,7 +1010,7 @@ let check_files
           FilenameSet.filter (fun f ->
               (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
               || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-                 @@ FilenameMap.find_unsafe f implementation_dependency_graph
+                 @@ FilenameMap.find f implementation_dependency_graph
               ||
               ( incr skipped_count;
                 false ))

@@ -331,7 +331,7 @@ val opt_annot_reason : ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_re
 (* create a new reason with annot_loc = loc: same as mk_reason followed by annot_reason *)
 val mk_annot_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
 
-module ReasonMap : MyMap.S with type key = reason
+module ReasonMap : WrappedMap.S with type key = reason
 
 val mk_expression_reason : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
 

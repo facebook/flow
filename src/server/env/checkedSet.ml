@@ -85,7 +85,7 @@ let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
 let diff a b =
   FilenameMap.filter
     (fun k kind1 ->
-      let kind2 = FilenameMap.get k b in
+      let kind2 = FilenameMap.find_opt k b in
       match (kind1, kind2) with
       | (_, None) -> true (* Key doesn't exist in b, so keep k around *)
       | (_, Some Focused) -> false (* Focused removes anything *)

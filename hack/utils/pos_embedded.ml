@@ -547,17 +547,17 @@ let print_verbose_absolute p =
 
 let print_verbose_relative p = print_verbose_absolute (to_absolute p)
 
-module Map = MyMap.Make (struct
+module Map = WrappedMap.Make (struct
   type path = t
 
-  (* The definition below needs to refer to the t in the outer scope, but MyMap
+  (* The definition below needs to refer to the t in the outer scope, but WrappedMap
    * expects a module with a type of name t, so we define t in a second step *)
   type t = path
 
   let compare = compare
 end)
 
-module AbsolutePosMap = MyMap.Make (struct
+module AbsolutePosMap = WrappedMap.Make (struct
   type t = absolute
 
   let compare = compare

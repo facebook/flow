@@ -72,7 +72,7 @@ let substituter =
           | BoundT (tp_reason, name) ->
             let annot_loc = aloc_of_reason tp_reason in
             begin
-              match SMap.get name map with
+              match SMap.find_opt name map with
               | None -> t
               | Some (ReposT (_, param_t)) when name = "this" ->
                 ReposT (annot_reason ~annot_loc tp_reason, param_t)

@@ -15,7 +15,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     (* base case *)
     | BoundT (reason, name) ->
       begin
-        match SMap.get name tparams with
+        match SMap.find_opt name tparams with
         | None -> ()
         | Some tp ->
           if not (Polarity.compat (tp.polarity, polarity)) then

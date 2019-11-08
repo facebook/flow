@@ -122,7 +122,7 @@ let parse_stat stat_contents =
            | _ -> stats)
   in
   let get key =
-    match SMap.get key stats with
+    match SMap.find_opt key stats with
     | Some stat -> Ok stat
     | None -> Error (spf "Failed to find %S in memory.stat" key)
   in

@@ -427,7 +427,7 @@ struct
         ignore kind;
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
         begin
-          match SMap.get x ssa_env with
+          match SMap.find_opt x ssa_env with
           | Some { val_ref; havoc } ->
             val_ref := Val.one loc;
             Havoc.(havoc.locs <- loc :: havoc.locs)
@@ -437,7 +437,7 @@ struct
 
       (* read *)
       method any_identifier (loc : L.t) (x : string) =
-        match SMap.get x ssa_env with
+        match SMap.find_opt x ssa_env with
         | Some { val_ref; _ } -> values <- L.LMap.add loc !val_ref values
         | None -> ()
 

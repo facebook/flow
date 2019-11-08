@@ -7,6 +7,6 @@
  *
  *)
 
-module type S = MyMap_sig.S
+module type S = WrappedMap_sig.S
 
 module Make (Ord : Map.OrderedType) : S with type key = Ord.t

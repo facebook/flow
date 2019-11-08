@@ -116,7 +116,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
   else
     let print_imports module_name =
       if SMap.mem module_name requirements_map then (
-        let requirements = SMap.find_unsafe module_name requirements_map in
+        let requirements = SMap.find module_name requirements_map in
         Printf.printf "Imports for module '%s':\n" module_name;
         List.iter
           (fun (req, locs) ->

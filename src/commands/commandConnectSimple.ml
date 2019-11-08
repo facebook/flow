@@ -50,7 +50,7 @@ let wait_on_server_restart ic =
     (* Server has exited and hung up on us *)
     ()
 
-module SockMap = MyMap.Make (struct
+module SockMap = WrappedMap.Make (struct
   type t = Unix.sockaddr
 
   let compare = Pervasives.compare
@@ -65,7 +65,7 @@ end)
 let connections = ref SockMap.empty
 
 let open_connection ~timeout ~client_handshake sockaddr =
-  match SockMap.get sockaddr !connections with
+  match SockMap.find_opt sockaddr !connections with
   | Some conn -> conn
   | None ->
     let conn =
@@ -85,7 +85,7 @@ let open_connection ~timeout ~client_handshake sockaddr =
       conn)
 
 let close_connection sockaddr =
-  match SockMap.get sockaddr !connections with
+  match SockMap.find_opt sockaddr !connections with
   | None -> ()
   | Some (ic, _) ->
     connections := SockMap.remove sockaddr !connections;

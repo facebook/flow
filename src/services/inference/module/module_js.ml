@@ -36,7 +36,7 @@ let choose_provider_and_warn_about_duplicates =
         in
         FilenameMap.add
           f
-          (match FilenameMap.get f acc with
+          (match FilenameMap.find_opt f acc with
           | Some errset -> w :: errset
           | None -> [w])
           acc)
@@ -186,7 +186,7 @@ and file_exists path =
     Sys.file_exists path
   else
     let files =
-      match SMap.get dir !files_in_dir with
+      match SMap.find_opt dir !files_in_dir with
       | Some files -> files
       | None ->
         let files =
@@ -321,7 +321,7 @@ module Node = struct
     lazy_seq
       [
         lazy
-          (match SMap.get dir node_modules_containers with
+          (match SMap.find_opt dir node_modules_containers with
           | Some existing_node_modules_dirs ->
             lazy_seq
               ( Files.node_resolver_dirnames file_options
@@ -625,7 +625,7 @@ let find_resolved_module ~reader ~audit file r =
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit file
   in
-  SMap.find_unsafe r resolved_modules
+  SMap.find r resolved_modules
 
 let checked_file ~reader ~audit f =
   let info = f |> Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
@@ -744,7 +744,7 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
           let errmap =
             FilenameSet.fold
               (fun f acc ->
-                match FilenameMap.get f acc with
+                match FilenameMap.find_opt f acc with
                 | Some _ -> acc
                 | None -> FilenameMap.add f [] acc)
               ps

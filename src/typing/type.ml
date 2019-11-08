@@ -1477,7 +1477,7 @@ and Properties : sig
 
   type id
 
-  module Map : MyMap.S with type key = id
+  module Map : WrappedMap.S with type key = id
 
   module Set : Set.S with type elt = id
 
@@ -1533,7 +1533,7 @@ end = struct
     | (Source _, Generated _) -> -1
     | (Generated _, Source _) -> 1
 
-  module Map : MyMap.S with type key = id = MyMap.Make (struct
+  module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type t = id
 
     let compare = compare_id
@@ -1551,7 +1551,7 @@ end = struct
 
   let add_getter x loc get_t map =
     let p =
-      match SMap.get x map with
+      match SMap.find_opt x map with
       | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
       | _ -> Get (loc, get_t)
     in
@@ -1559,7 +1559,7 @@ end = struct
 
   let add_setter x loc set_t map =
     let p =
-      match SMap.get x map with
+      match SMap.find_opt x map with
       | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
       | _ -> Set (loc, set_t)
     in
@@ -1613,7 +1613,7 @@ and Exports : sig
 
   type id
 
-  module Map : MyMap.S with type key = id
+  module Map : WrappedMap.S with type key = id
 
   type map = t Map.t
 
@@ -1625,7 +1625,7 @@ end = struct
 
   type id = int
 
-  module Map : MyMap.S with type key = id = MyMap.Make (struct
+  module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type key = id
 
     type t = key
@@ -1736,7 +1736,7 @@ end = struct
       | _ -> false)
 
   (* disjoint unions are stored as singleton type maps *)
-  module UnionEnumMap = MyMap.Make (UnionEnum)
+  module UnionEnumMap = WrappedMap.Make (UnionEnum)
 
   type finally_optimized_rep =
     | UnionEnum of UnionEnumSet.t
@@ -1891,7 +1891,7 @@ end = struct
         | [] -> Some idx
         | (enum, t) :: values ->
           begin
-            match UnionEnumMap.get enum idx with
+            match UnionEnumMap.find_opt enum idx with
             | None -> unique_values (UnionEnumMap.add enum t idx) values
             | Some t' ->
               if TypeUtil.reasonless_eq t t' then
@@ -2012,13 +2012,13 @@ end = struct
         if acc <> Unknown then
           acc
         else
-          match SMap.get key prop_map with
+          match SMap.find_opt key prop_map with
           | Some p ->
             begin
               match canon_prop find_resolved p with
               | Some enum ->
                 begin
-                  match UnionEnumMap.get enum idx with
+                  match UnionEnumMap.find_opt enum idx with
                   | Some t' -> Conditional t'
                   | None ->
                     if partial then
@@ -2151,7 +2151,7 @@ and TypeSet : (Set.S with type elt = TypeTerm.t) = Set.Make (struct
   let compare = Pervasives.compare
 end)
 
-and TypeMap : (MyMap.S with type key = TypeTerm.t) = MyMap.Make (struct
+and TypeMap : (WrappedMap.S with type key = TypeTerm.t) = WrappedMap.Make (struct
   type key = TypeTerm.t
 
   type t = key
@@ -2167,7 +2167,7 @@ and UseTypeSet : (Set.S with type elt = TypeTerm.use_t) = Set.Make (struct
   let compare = Pervasives.compare
 end)
 
-and UseTypeMap : (MyMap.S with type key = TypeTerm.use_t) = MyMap.Make (struct
+and UseTypeMap : (WrappedMap.S with type key = TypeTerm.use_t) = WrappedMap.Make (struct
   type key = TypeTerm.use_t
 
   type t = key

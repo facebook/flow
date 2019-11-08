@@ -16,7 +16,7 @@ module type S = sig
    * expose these results in user output or make typecheker behavior depend on it. *)
   val debug_to_string : ?include_source:bool -> t -> string
 
-  module LMap : MyMap.S with type key = t
+  module LMap : WrappedMap.S with type key = t
 
   module LSet : Set.S with type elt = t
 end
@@ -30,7 +30,7 @@ module LocS : S with type t = Loc.t = struct
 
   let debug_to_string = Loc.debug_to_string
 
-  module LMap = MyMap.Make (Loc)
+  module LMap = WrappedMap.Make (Loc)
   module LSet = Set.Make (Loc)
 end
 
@@ -43,6 +43,6 @@ module ALocS : S with type t = ALoc.t = struct
 
   let debug_to_string = ALoc.debug_to_string
 
-  module LMap = MyMap.Make (ALoc)
+  module LMap = WrappedMap.Make (ALoc)
   module LSet = Set.Make (ALoc)
 end

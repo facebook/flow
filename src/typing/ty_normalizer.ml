@@ -155,7 +155,7 @@ end = struct
   let find_tvar root_id =
     State.(
       let%map st = get in
-      IMap.get root_id st.tvar_cache)
+      IMap.find_opt root_id st.tvar_cache)
 
   (* Lookup a type parameter T in the current environment. There are three outcomes:
      1. T appears in env and for its first occurence locations match. This means it
@@ -410,7 +410,7 @@ end = struct
             super#on_t env t
           | Bound (_, name) ->
             begin
-              match SMap.get name env with
+              match SMap.find_opt name env with
               | Some t' -> t'
               | None -> super#on_t env t
             end
@@ -454,7 +454,7 @@ end = struct
           if File_key.to_string current_source = def_source then
             Ty.Local
           else
-            Ty.Remote { Ty.imported_as = ALocMap.get def_loc env.Env.imported_names }
+            Ty.Remote { Ty.imported_as = ALocMap.find_opt def_loc env.Env.imported_names }
         | Some (JsonFile _)
         | Some (ResourceFile _) ->
           Ty.Local
@@ -1578,7 +1578,7 @@ end = struct
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
       let evaluated = Context.evaluated cx in
-      match IMap.get id evaluated with
+      match IMap.find_opt id evaluated with
       | Some t -> type__ ~env t
       | None -> type_destructor_unevaluated ~env t d
     (* fallback *)
@@ -1627,7 +1627,7 @@ end = struct
     let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
     let t' =
-      match IMap.get id evaluated with
+      match IMap.find_opt id evaluated with
       | Some evaled_t -> evaled_t
       | None -> t
     in

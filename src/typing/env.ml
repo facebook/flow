@@ -597,7 +597,7 @@ let promote_to_const_like cx loc =
     let writes =
       ALocSet.fold
         (fun use acc ->
-          match ALocMap.get use values with
+          match ALocMap.find_opt use values with
           | None -> (* use is a write *) acc
           | Some write_locs ->
             (* use is a read *)
@@ -1411,7 +1411,7 @@ let refine_with_preds cx loc preds orig_types =
           acc))
     (* for heap refinements, we just add new entries *)
     | _ ->
-      let orig_type = Key_map.find_unsafe key orig_types in
+      let orig_type = Key_map.find key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
       let change = refine_expr key loc refi_type orig_type in
       Changeset.add_refi change acc

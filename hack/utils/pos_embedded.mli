@@ -135,9 +135,9 @@ val make_from_lnum_bol_cnum :
   pos_end:int * int * int ->
   t
 
-module Map : MyMap.S with type key = t
+module Map : WrappedMap.S with type key = t
 
-module AbsolutePosMap : MyMap.S with type key = absolute
+module AbsolutePosMap : WrappedMap.S with type key = absolute
 
 val print_verbose_absolute : absolute -> string
 

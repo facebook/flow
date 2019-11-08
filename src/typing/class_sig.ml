@@ -243,7 +243,7 @@ module Make (F : Func_sig.S) = struct
               s.fields );
           proto_fields = SMap.remove name s.proto_fields;
           methods =
-            (match SMap.get name s.methods with
+            (match SMap.find_opt name s.methods with
             | Some fsigs -> SMap.add name (Nel.cons func_info fsigs) s.methods
             | None -> SMap.add name (Nel.one func_info) s.methods);
           getters = SMap.remove name s.getters;
@@ -489,7 +489,7 @@ module Make (F : Func_sig.S) = struct
     let type_args =
       Base.List.map
         ~f:(fun { Type.name; reason; polarity; _ } ->
-          let t = SMap.find_unsafe name s.tparams_map in
+          let t = SMap.find name s.tparams_map in
           (name, reason, t, polarity))
         (Type.TypeParams.to_list s.tparams)
     in
@@ -602,7 +602,7 @@ module Make (F : Func_sig.S) = struct
         let static_proto = Type.NullProtoT static_reason in
         (super, static_proto)
       | Class { extends; mixins; _ } ->
-        let this = SMap.find_unsafe "this" tparams_with_this in
+        let this = SMap.find "this" tparams_with_this in
         let (extends_t, static_proto) =
           match extends with
           | Explicit (annot_loc, c, targs) ->
@@ -714,7 +714,7 @@ module Make (F : Func_sig.S) = struct
       in
       SMap.iter
         (fun x p1 ->
-          match SMap.get x proto with
+          match SMap.find_opt x proto with
           | None -> ()
           | Some p2 ->
             let use_op =
@@ -776,7 +776,7 @@ module Make (F : Func_sig.S) = struct
           | (_, Annot _) -> ()
           | (_, Infer (fsig, set_asts)) -> method_ this super ~set_asts fsig
         in
-        let this = SMap.find_unsafe "this" x.tparams_map in
+        let this = SMap.find "this" x.tparams_map in
         let static = Type.class_type this in
         let (super, static_super) =
           let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in

@@ -1034,13 +1034,13 @@ module Verifier (Env : EvalEnv) = struct
         Deps.bot
     | Dep.DynamicImport loc ->
       begin
-        match LocMap.get loc dynamic_imports with
+        match LocMap.find_opt loc dynamic_imports with
         | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
         | Some source -> Deps.import_star Kind.Sort.Value source
       end
     | Dep.DynamicRequire loc ->
       begin
-        match LocMap.get loc dynamic_requires with
+        match LocMap.find_opt loc dynamic_requires with
         | None -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
         | Some source -> Deps.require source
       end
@@ -1050,7 +1050,7 @@ module Verifier (Env : EvalEnv) = struct
     | Dep.Local local ->
       let (sort, x) = local in
       begin
-        match SMap.get x env with
+        match SMap.find_opt x env with
         | Some entries ->
           let validate = Kind.validator sort in
           Loc_collections.LocMap.fold

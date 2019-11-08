@@ -182,7 +182,7 @@ let to_loc_with_tables tables loc =
          | Some x -> x
          | None -> failwith "Unexpectedly encountered a location without a source"
        in
-       Lazy.force (Utils_js.FilenameMap.find_unsafe source tables))
+       Lazy.force (Utils_js.FilenameMap.find source tables))
   in
   to_loc aloc_table loc
 

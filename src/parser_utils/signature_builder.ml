@@ -377,7 +377,7 @@ class type_hoister =
 
     method private update_binding (x, id, expr) =
       this#update_acc (fun env ->
-          match SMap.get x env with
+          match SMap.find_opt x env with
           | None -> env
           | Some u ->
             SMap.add

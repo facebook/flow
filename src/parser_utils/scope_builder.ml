@@ -84,7 +84,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       | [] -> None
       | hd :: rest ->
         begin
-          match SMap.get x hd with
+          match SMap.find_opt x hd with
           | Some def -> Some def
           | None -> get x rest
         end

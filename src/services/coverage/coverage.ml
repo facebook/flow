@@ -147,7 +147,7 @@ class visitor =
       if id != root_id then
         self#tvar cx root_id
       else
-        match IMap.get root_id tvar_cache with
+        match IMap.find_opt root_id tvar_cache with
         | Some Started -> (Kind.Any, Taint.Tainted)
         | Some (Done cov) -> cov
         | None ->
@@ -246,7 +246,7 @@ class visitor =
     method private eval_t cx t id =
       let evaluated = Context.evaluated cx in
       let t =
-        match IMap.get id evaluated with
+        match IMap.find_opt id evaluated with
         | Some cached -> cached
         | None -> t
       in

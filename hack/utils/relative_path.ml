@@ -126,7 +126,7 @@ module Set = struct
 end
 
 module Map = struct
-  include Reordered_argument_map (MyMap.Make (S))
+  include Reordered_argument_map (WrappedMap.Make (S))
 
   let pp pp_data = make_pp pp pp_data
 

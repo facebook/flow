@@ -214,7 +214,7 @@ let log_pushed_errors ~end_state ~errors_reason =
   List.iter triggers ~f:(fun trigger -> log ~ux:PushedErrors ~trigger ~start_state ~end_state)
 
 let log ~end_state ~ux ~id =
-  Option.iter (IMap.get id internal_state.pending_interactions) ~f:(fun interaction ->
+  Option.iter (IMap.find_opt id internal_state.pending_interactions) ~f:(fun interaction ->
       internal_state.pending_interactions <- IMap.remove id internal_state.pending_interactions;
       let { start_state; trigger } = interaction in
       log ~ux ~trigger ~start_state ~end_state)
@@ -222,7 +222,7 @@ let log ~end_state ~ux ~id =
 let rec gc ~get_state oldest_allowed =
   let s = internal_state in
   if s.lowest_pending_id < s.next_id then
-    match IMap.get s.lowest_pending_id s.pending_interactions with
+    match IMap.find_opt s.lowest_pending_id s.pending_interactions with
     | None ->
       s.lowest_pending_id <- s.lowest_pending_id + 1;
       gc ~get_state oldest_allowed

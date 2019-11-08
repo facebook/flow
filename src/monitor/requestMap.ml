@@ -27,7 +27,7 @@ let add ~request ~client =
 let remove ~request_id =
   (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
-      let ret = SMap.get request_id !map in
+      let ret = SMap.find_opt request_id !map in
       map := SMap.remove request_id !map;
       Lwt.return ret)
 

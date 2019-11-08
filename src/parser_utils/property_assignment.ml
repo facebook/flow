@@ -47,7 +47,7 @@ let filter_uninitialized
   let ssa_env = SMap.map Ssa_builder.With_ALoc.Val.simplify ssa_env in
   Base.List.filter
     ~f:(fun id ->
-      match SMap.get (Flow_ast_utils.name_of_ident id) ssa_env with
+      match SMap.find_opt (Flow_ast_utils.name_of_ident id) ssa_env with
       | Some write_locs -> not_definitively_initialized write_locs
       | None -> true)
     properties
@@ -89,7 +89,7 @@ class property_assignment (property_names : SSet.t) =
       Loc_collections.ALocMap.empty
 
     method metadata_of_read_loc (read_loc : ALoc.t) : string option =
-      Loc_collections.ALocMap.get read_loc read_loc_metadata
+      Loc_collections.ALocMap.find_opt read_loc read_loc_metadata
 
     method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) = ident
 

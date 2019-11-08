@@ -38,4 +38,4 @@ module Key = struct
 end
 
 module Set = Set.Make (Key)
-module Map = MyMap.Make (Key)
+module Map = WrappedMap.Make (Key)

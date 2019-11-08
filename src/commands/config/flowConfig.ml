@@ -229,7 +229,7 @@ module Opts = struct
               key
               ( (line_num, value)
               ::
-              (match SMap.get key map with
+              (match SMap.find_opt key map with
               | Some values -> values
               | None -> []) )
               map
@@ -303,7 +303,7 @@ module Opts = struct
   let enum values =
     opt (fun str ->
         let values = Base.List.fold_left ~f:map_add ~init:SMap.empty values in
-        match SMap.get str values with
+        match SMap.find_opt str values with
         | Some v -> Ok v
         | None ->
           Error
@@ -597,7 +597,7 @@ module Opts = struct
       | [] -> Ok (raw_opts, config)
       | (key, f) :: rest ->
         let acc =
-          match SMap.get key raw_opts with
+          match SMap.find_opt key raw_opts with
           | None -> Ok (raw_opts, config)
           | Some values ->
             f values config
@@ -958,7 +958,7 @@ let parse =
               let rollout_name = Str.matched_group 1 line in
               let group_name = Str.matched_group 2 line in
               let line = Str.matched_group 3 line in
-              match SMap.get rollout_name config.rollouts with
+              match SMap.find_opt rollout_name config.rollouts with
               | None -> Error (line_num, spf "Unknown rollout %S" rollout_name)
               | Some { enabled_group; disabled_groups } ->
                 if enabled_group = group_name then

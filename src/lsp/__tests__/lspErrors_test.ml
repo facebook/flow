@@ -88,7 +88,7 @@ let smap_of_error_list error_list =
   List.fold_right
     (fun error map ->
       let existing =
-        match SMap.get error.uri map with
+        match SMap.find_opt error.uri map with
         | None -> []
         | Some existing -> existing
       in

@@ -63,7 +63,7 @@ module WrappedKey = struct
       IdKey.compare x.message_id y.message_id
 end
 
-module WrappedMap = MyMap.Make (WrappedKey)
+module WrappedMap = WrappedMap.Make (WrappedKey)
 
 type server_conn = {
   ic: Timeout.in_channel;
@@ -894,7 +894,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
         None )
   in
   let open_files = get_open_files state in
-  let existing_open_file_info = Option.bind open_files (SMap.get uri) in
+  let existing_open_file_info = Option.bind open_files (SMap.find_opt uri) in
   match existing_open_file_info with
   | Some { o_ast = Some o_ast; _ } ->
     (* We've already parsed this file since it last changed. No need to parse again *)
@@ -1947,7 +1947,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         (* Only set the live non-parse errors if the file is still open. If it's been closed since
          * the request was sent, then we will just ignore the response *)
         let all = group_errors_by_uri ~default_uri:uri ~errors ~warnings in
-        let errors_for_uri = SMap.get uri all |> Option.value ~default:[] in
+        let errors_for_uri = SMap.find_opt uri all |> Option.value ~default:[] in
         Option.iter
           metadata.LspProt.interaction_tracking_id
           ~f:(log_interaction ~ux:LspInteraction.PushedLiveNonParseErrors state);

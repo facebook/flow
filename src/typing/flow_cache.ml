@@ -265,7 +265,7 @@ let summarize_flow_constraint () =
             (string_of_use_ctor u)
             (string_of_reason (reason_of_use_t u))
         in
-        match SMap.get key map with
+        match SMap.find_opt key map with
         | None -> SMap.add key 0 map
         | Some i -> SMap.add key (i + 1) map)
       !FlowConstraint.cache

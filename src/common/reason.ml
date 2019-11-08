@@ -898,7 +898,7 @@ let opt_annot_reason ?annot_loc reason =
 
 let mk_annot_reason desc annot_loc = annot_reason ~annot_loc (mk_reason desc annot_loc)
 
-module ReasonMap = MyMap.Make (struct
+module ReasonMap = WrappedMap.Make (struct
   type t = reason
 
   let compare = Pervasives.compare

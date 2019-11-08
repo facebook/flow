@@ -44,4 +44,4 @@ val tmp : unit -> t
 
 module Set : module type of Set.Make (S)
 
-module Map : module type of MyMap.Make (S)
+module Map : module type of WrappedMap.Make (S)

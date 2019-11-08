@@ -620,7 +620,7 @@ let rec convert cx tparams_map =
          environment: a this type in class C is bounded by C. *)
             check_type_arg_arity cx loc t_ast targs 0 (fun () ->
                 reconstruct_ast
-                  (Flow.reposition cx loc ~annot_loc:loc (SMap.find_unsafe "this" tparams_map))
+                  (Flow.reposition cx loc ~annot_loc:loc (SMap.find "this" tparams_map))
                   None)
           else (
             Flow.add_output cx (Error_message.EUnexpectedThisType loc);
@@ -794,7 +794,7 @@ let rec convert cx tparams_map =
         (* in-scope type vars *)
         | _ when SMap.mem name tparams_map ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-              let t = Flow.reposition cx loc ~annot_loc:loc (SMap.find_unsafe name tparams_map) in
+              let t = Flow.reposition cx loc ~annot_loc:loc (SMap.find name tparams_map) in
               reconstruct_ast t None)
         | "$Pred" ->
           let fun_reason = mk_annot_reason (RCustom "abstract predicate function") loc in

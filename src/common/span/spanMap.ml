@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module SpanMap = MyMap.Make (struct
+module SpanMap = WrappedMap.Make (struct
   type t = Loc.t
 
   let compare l0 l1 = Loc.span_compare l1 l0

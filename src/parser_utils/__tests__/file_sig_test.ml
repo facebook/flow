@@ -54,7 +54,7 @@ let assert_some opt ~f =
 
 let assert_singleton_smap ~ctxt key map =
   assert_equal ~ctxt 1 (SMap.cardinal map);
-  SMap.find_unsafe key map
+  SMap.find key map
 
 let assert_singleton_nel nel =
   match nel with
@@ -756,7 +756,7 @@ let tests =
          let modules = declare_modules in
          assert_equal ~ctxt 1 (SMap.cardinal modules);
          let (loc, { requires; module_kind; type_exports_named; type_exports_star; info = () }) =
-           SMap.find_unsafe "foo" modules
+           SMap.find "foo" modules
          in
          assert_substring_equal ~ctxt source source loc;
          assert_equal ~ctxt 0 (List.length requires);
@@ -769,7 +769,7 @@ let tests =
            let source = "declare module foo { declare export type bar = string }" in
            let { declare_modules; _ } = visit source in
            assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
-           let (_, { type_exports_named; _ }) = SMap.find_unsafe "foo" declare_modules in
+           let (_, { type_exports_named; _ }) = SMap.find "foo" declare_modules in
            assert_equal ~ctxt 1 (List.length type_exports_named);
            let loc =
              match List.assoc "bar" type_exports_named with
@@ -782,7 +782,7 @@ let tests =
          let source = "declare module foo { declare export default ty }" in
          let { declare_modules; _ } = visit source in
          assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
-         let (_, { module_kind; _ }) = SMap.find_unsafe "foo" declare_modules in
+         let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
          assert_es module_kind ~assert_named:(fun named ->
              assert_equal ~ctxt 1 (List.length named);
              match List.assoc "default" named with
@@ -794,7 +794,7 @@ let tests =
          let source = "declare module foo { declare export default function bar(): void }" in
          let { declare_modules; _ } = visit source in
          assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
-         let (_, { module_kind; _ }) = SMap.find_unsafe "foo" declare_modules in
+         let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
          assert_es module_kind ~assert_named:(fun named ->
              assert_equal ~ctxt 1 (List.length named);
              match List.assoc "default" named with
@@ -807,7 +807,7 @@ let tests =
          let source = "declare module foo { declare export function bar(): void }" in
          let { declare_modules; _ } = visit source in
          assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
-         let (_, { module_kind; _ }) = SMap.find_unsafe "foo" declare_modules in
+         let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
          assert_es module_kind ~assert_named:(fun named ->
              assert_equal ~ctxt 1 (List.length named);
              let loc =
@@ -821,7 +821,7 @@ let tests =
          let source = "declare module foo { declare export * from 'bar' }" in
          let { declare_modules; _ } = visit source in
          assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
-         let (_, { module_kind; _ }) = SMap.find_unsafe "foo" declare_modules in
+         let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
          assert_es module_kind ~assert_star:(function
              | [(_, ExportStar { star_loc; source = (source_loc, "bar") })] ->
                assert_substring_equal ~ctxt "*" source star_loc;
@@ -832,7 +832,7 @@ let tests =
          let source = "declare module foo { declare module.exports: ty }" in
          let { declare_modules; _ } = visit source in
          assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
-         let (_, { module_kind; _ }) = SMap.find_unsafe "foo" declare_modules in
+         let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
          (* TODO use o0nly the location of `module.exports` *)
          assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (21, 47))) );
          ( "err_indeterminate_clobber_after_export"

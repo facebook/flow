@@ -49,19 +49,19 @@ let parse_status raw_status_contents =
   in
   {
     rss_anon =
-      SMap.get "RssAnon" stats
+      SMap.find_opt "RssAnon" stats
       |> Option.value_map ~default:0 ~f:humanReadableToBytes;
     rss_file =
-      SMap.get "RssFile" stats
+      SMap.find_opt "RssFile" stats
       |> Option.value_map ~default:0 ~f:humanReadableToBytes;
     rss_shmem =
-      SMap.get "RssShmem" stats
+      SMap.find_opt "RssShmem" stats
       |> Option.value_map ~default:0 ~f:humanReadableToBytes;
     rss_total =
-      SMap.get "VmRSS" stats
+      SMap.find_opt "VmRSS" stats
       |> Option.value_map ~default:0 ~f:humanReadableToBytes;
     rss_hwm =
-      SMap.get "VmHWM" stats
+      SMap.find_opt "VmHWM" stats
       |> Option.value_map ~default:0 ~f:humanReadableToBytes;
   }
 

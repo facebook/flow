@@ -51,7 +51,7 @@ let regenerate ~reader =
                 |> Flow_error.make_error_printable
               in
               let file_warnings =
-                FilenameMap.get source_file warnings
+                FilenameMap.find_opt source_file warnings
                 |> Option.value ~default:ConcreteLocPrintableErrorSet.empty
                 |> ConcreteLocPrintableErrorSet.add err
               in

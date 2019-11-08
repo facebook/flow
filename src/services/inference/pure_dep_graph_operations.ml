@@ -14,7 +14,7 @@ type dependency_graph = FilenameSet.t FilenameMap.t
 let closure =
   let rec helper graph =
     FilenameSet.fold (fun file acc ->
-        match FilenameMap.get file graph with
+        match FilenameMap.find_opt file graph with
         | Some files ->
           let files = FilenameSet.diff files acc in
           let acc = FilenameSet.union files acc in
@@ -33,7 +33,7 @@ let reverse graph =
 let calc_direct_dependencies dependency_graph files =
   FilenameSet.fold
     (fun file acc ->
-      match FilenameMap.get file dependency_graph with
+      match FilenameMap.find_opt file dependency_graph with
       | Some files -> FilenameSet.union files acc
       | None -> acc)
     files
@@ -72,7 +72,7 @@ let calc_all_dependents ~sig_dependency_graph ~implementation_dependency_graph f
 let filter_dependency_graph dependency_graph files =
   FilenameSet.fold
     (fun f ->
-      let fs = FilenameMap.find_unsafe f dependency_graph |> FilenameSet.inter files in
+      let fs = FilenameMap.find f dependency_graph |> FilenameSet.inter files in
       FilenameMap.add f fs)
     files
     FilenameMap.empty

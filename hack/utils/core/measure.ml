@@ -80,7 +80,7 @@
 
 module List = Hh_core.List
 
-module FloatMap = MyMap.Make (struct
+module FloatMap = WrappedMap.Make (struct
   type t = float
 
   let compare = compare
@@ -151,7 +151,7 @@ let get_record = function
 let track_distribution ?record name ~bucket_size =
   let record = get_record record in
   let entry =
-    match SMap.get name !record with
+    match SMap.find_opt name !record with
     | None -> new_entry
     | Some entry -> entry
   in
@@ -165,7 +165,7 @@ let update_distribution ~weight value = function
   | Some { bucket_size; buckets } ->
     let bucket = round_down ~bucket_size value in
     let bucket_count =
-      match FloatMap.get bucket buckets with
+      match FloatMap.find_opt bucket buckets with
       | None -> weight
       | Some count -> count +. weight
     in
@@ -182,7 +182,7 @@ let sample ?record ?(weight = 1.0) name value =
     min;
     distribution;
   } =
-    match SMap.get name !record with
+    match SMap.find_opt name !record with
     | None -> new_entry
     | Some entry -> entry
   in
@@ -271,7 +271,7 @@ let time (type a) ?record name (f : unit -> a) : a =
 
 let get_helper f ?record name =
   let record = get_record record in
-  match SMap.get name !record with
+  match SMap.find_opt name !record with
   | None -> None
   | Some entry -> Some (f entry)
 
@@ -299,7 +299,7 @@ let print_entry_stats ?record ?print_raw name =
   let print_raw = Option.value print_raw ~default:prerr_endline in
   let record = get_record record in
   let prefix = Printf.sprintf "%s stats --" name in
-  match SMap.get name !record with
+  match SMap.find_opt name !record with
   | None
   | Some { count = 0.0; _ } ->
     Printf.ksprintf print_raw "%s NO DATA" prefix
@@ -324,7 +324,7 @@ let print_stats ?record ?print_raw () =
 let rec print_buckets ~low ~high ~bucket_size buckets =
   if low <= high then (
     let count =
-      match FloatMap.get low buckets with
+      match FloatMap.find_opt low buckets with
       | None -> 0.0
       | Some count -> count
     in
@@ -336,7 +336,7 @@ let rec print_buckets ~low ~high ~bucket_size buckets =
 let print_entry_distribution ?record name =
   let record = get_record record in
   Printf.eprintf "%s distribution -- " name;
-  match SMap.get name !record with
+  match SMap.find_opt name !record with
   | None
   | Some { count = 0.0; _ } ->
     prerr_endline "NO DATA"

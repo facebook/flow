@@ -105,5 +105,5 @@ module LintKind = struct
   let compare = compare
 end
 
-module LintMap = MyMap.Make (LintKind)
+module LintMap = WrappedMap.Make (LintKind)
 module LintSet = Set.Make (LintKind)

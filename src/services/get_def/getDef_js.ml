@@ -33,7 +33,7 @@ let extract_member_def ~reader cx this name =
   let result =
     match Members.extract cx this |> Members.to_command_result with
     | Ok result_map ->
-      (match SMap.get name result_map with
+      (match SMap.find_opt name result_map with
       | Some (None, t) -> Def (Type.loc_of_t t |> loc_of_aloc ~reader)
       | Some (Some x, _) -> Def (loc_of_aloc ~reader x)
       | None -> Def_error (spf "failed to find member %s in members map" name))

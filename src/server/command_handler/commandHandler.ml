@@ -403,7 +403,7 @@ let get_cycle ~env fn types_only =
         (* Restrict dep graph to only in-cycle files *)
         Nel.fold_left
           (fun acc f ->
-            Option.fold (FilenameMap.get f dependency_graph) ~init:acc ~f:(fun acc deps ->
+            Option.fold (FilenameMap.find_opt f dependency_graph) ~init:acc ~f:(fun acc deps ->
                 let subdeps =
                   FilenameSet.filter (fun f -> Nel.mem ~equal:File_key.equal f component) deps
                 in
@@ -550,7 +550,7 @@ let get_imports ~options ~reader module_names =
         let mlocs =
           SMap.fold
             (fun mref locs acc ->
-              let m = SMap.find_unsafe mref resolved_modules in
+              let m = SMap.find mref resolved_modules in
               Modulename.Map.add m locs acc)
             requires
             Modulename.Map.empty
@@ -1251,7 +1251,7 @@ let (enqueue_did_open_files, handle_persistent_did_open_notification) =
     pending := Nel.fold_left (fun acc (fn, content) -> SMap.add fn content acc) !pending files
   in
   let get_and_clear_did_open_files () : (string * string) list =
-    let ret = SMap.elements !pending in
+    let ret = SMap.bindings !pending in
     pending := SMap.empty;
     ret
   in
@@ -1643,7 +1643,7 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
           let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
           uri
           >>| fun uri ->
-          let lst = Option.value ~default:[] (SMap.get uri map) in
+          let lst = Option.value ~default:[] (SMap.find_opt uri map) in
           (* This reverses the list *)
           SMap.add uri (edit :: lst) map
         end
@@ -1758,7 +1758,7 @@ let handle_live_errors_request =
     (* Immediately store the latest metadata *)
     uri_to_latest_metadata_map := SMap.add uri metadata !uri_to_latest_metadata_map;
     fun ~client ~profiling ~env ->
-      let latest_metadata = SMap.find_unsafe uri !uri_to_latest_metadata_map in
+      let latest_metadata = SMap.find uri !uri_to_latest_metadata_map in
       if latest_metadata <> metadata then
         (* A more recent request for live errors has come in for this file. So let's cancel
          * this one and let the later one handle it *)
@@ -1824,7 +1824,7 @@ let handle_live_errors_request =
         in
         (* If we've successfully run and there isn't a more recent request for this URI,
          * then remove the entry from the map *)
-        (match SMap.get uri !uri_to_latest_metadata_map with
+        (match SMap.find_opt uri !uri_to_latest_metadata_map with
         | Some latest_metadata when latest_metadata = metadata ->
           uri_to_latest_metadata_map := SMap.remove uri !uri_to_latest_metadata_map
         | _ -> ());

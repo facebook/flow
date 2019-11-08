@@ -264,7 +264,7 @@ let graph_sig sig_cx = sig_cx.graph
 let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 let find_module_sig sig_cx m =
-  (try SMap.find_unsafe m sig_cx.module_map with Not_found -> raise (Module_not_found m))
+  (try SMap.find m sig_cx.module_map with Not_found -> raise (Module_not_found m))
 
 (* modules *)
 
@@ -338,24 +338,24 @@ let file cx = cx.file
 let aloc_tables cx = cx.aloc_tables
 
 let find_props cx id =
-  try Type.Properties.Map.find_unsafe id cx.sig_cx.property_maps
+  try Type.Properties.Map.find id cx.sig_cx.property_maps
   with Not_found -> raise (Props_not_found id)
 
 let find_call cx id =
-  (try IMap.find_unsafe id cx.sig_cx.call_props with Not_found -> raise (Call_not_found id))
+  (try IMap.find id cx.sig_cx.call_props with Not_found -> raise (Call_not_found id))
 
 let find_exports cx id =
-  try Type.Exports.Map.find_unsafe id cx.sig_cx.export_maps
+  try Type.Exports.Map.find id cx.sig_cx.export_maps
   with Not_found -> raise (Exports_not_found id)
 
 let find_require cx loc =
-  try ALocMap.find_unsafe loc cx.require_map
+  try ALocMap.find loc cx.require_map
   with Not_found -> raise (Require_not_found (ALoc.debug_to_string ~include_source:true loc))
 
 let find_module cx m = find_module_sig (sig_cx cx) m
 
 let find_tvar cx id =
-  (try IMap.find_unsafe id cx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
+  (try IMap.find id cx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
 
 let mem_nominal_id cx id = ISet.mem id cx.sig_cx.nominal_ids
 
@@ -662,7 +662,7 @@ let fold_real_props cx id f = find_real_props cx id |> SMap.fold f
 
 let has_prop cx id x = find_props cx id |> SMap.mem x
 
-let get_prop cx id x = find_props cx id |> SMap.get x
+let get_prop cx id x = find_props cx id |> SMap.find_opt x
 
 let set_prop cx id x p = find_props cx id |> SMap.add x p |> add_property_map cx id
 
@@ -734,7 +734,7 @@ and find_constraints cx id =
    root during traversal to speed up future traversals. *)
 and find_root cx id =
   Constraint.(
-    match IMap.get id (graph cx) with
+    match IMap.find_opt id (graph cx) with
     | Some (Goto next_id) ->
       let (root_id, root) = find_root cx next_id in
       if root_id != next_id then
@@ -764,7 +764,7 @@ let rec find_resolved cx = function
 
 let rec find_trust_root cx (id : Trust_constraint.ident) =
   Trust_constraint.(
-    match IMap.get id (trust_graph cx) with
+    match IMap.find_opt id (trust_graph cx) with
     | Some (TrustGoto next_id) ->
       let (root_id, root) = find_trust_root cx next_id in
       if root_id != next_id then Trust_constraint.new_goto root_id |> add_trust_var cx id;

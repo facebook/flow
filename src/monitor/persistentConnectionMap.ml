@@ -13,7 +13,7 @@ let map = ref IMap.empty
 
 let add ~client_id ~client = map := IMap.add client_id client !map
 
-let get ~client_id = IMap.get client_id !map
+let get ~client_id = IMap.find_opt client_id !map
 
 let remove ~client_id = map := IMap.remove client_id !map
 

@@ -139,7 +139,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
         type_matches_locs ~reader cx into_type def_info name
         >>| function
         | false -> None
-        | true -> LocMap.get obj_loc (Lazy.force prop_loc_map)
+        | true -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map)
       in
       !potential_matching_literals
       |> Base.List.map ~f:get_prop_loc_if_relevant

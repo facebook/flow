@@ -1311,4 +1311,4 @@ module IdKey = struct
 end
 
 module IdSet = Set.Make (IdKey)
-module IdMap = MyMap.Make (IdKey)
+module IdMap = WrappedMap.Make (IdKey)

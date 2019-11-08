@@ -269,7 +269,7 @@ let get_def_loc_from_extracted_type cx extracted_type name =
   |> Members.extract_members cx
   |> Members.to_command_result
   >>| fun map ->
-  match SMap.get name map with
+  match SMap.find_opt name map with
   | None -> None
   (* Currently some types (e.g. spreads) do not contain locations for their properties. For now
    * we'll just treat them as if the properties do not exist, but once this is fixed this case

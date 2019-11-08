@@ -136,8 +136,8 @@ let havoc_call_env =
       if func_frame = 0 || call_frame = 0 || Changeset.is_empty changeset then
         ()
       else
-        let func_env = IMap.get func_frame (Context.envs cx) in
-        let call_env = IMap.get call_frame (Context.envs cx) in
+        let func_env = IMap.find_opt func_frame (Context.envs cx) in
+        let call_env = IMap.find_opt call_frame (Context.envs cx) in
         Option.iter (Option.both func_env call_env) ~f:(fun (func_env, call_env) ->
             overlapped_call_scopes func_env call_env
             |> List.iter (fun ({ id; _ } as scope) ->
@@ -148,7 +148,7 @@ let havoc_call_env =
 
 (* visit an optional evaluated type at an evaluation id *)
 let visit_eval_id cx id f =
-  match IMap.get id (Context.evaluated cx) with
+  match IMap.find_opt id (Context.evaluated cx) with
   | None -> ()
   | Some t -> f t
 
@@ -301,7 +301,7 @@ end
  * to stop doing constant folding.
  *)
 
-module ConstFoldMap = MyMap.Make (struct
+module ConstFoldMap = WrappedMap.Make (struct
   type t = reason * int
 
   let compare = Pervasives.compare
@@ -312,10 +312,10 @@ module ConstFoldExpansion : sig
 end = struct
   let rmaps : int ConstFoldMap.t IMap.t ref = ref IMap.empty
 
-  let get_rmap id = IMap.get id !rmaps |> Option.value ~default:ConstFoldMap.empty
+  let get_rmap id = IMap.find_opt id !rmaps |> Option.value ~default:ConstFoldMap.empty
 
   let increment reason_with_pos rmap =
-    match ConstFoldMap.get reason_with_pos rmap with
+    match ConstFoldMap.find_opt reason_with_pos rmap with
     | None -> (0, ConstFoldMap.add reason_with_pos 1 rmap)
     | Some count -> (count, ConstFoldMap.add reason_with_pos (count + 1) rmap)
 
@@ -700,7 +700,7 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
     let none = mk_argmap mk_bot params in
     List.fold_left
       (fun maps ({ name; _ } as p) ->
-        let bots = Base.List.map ~f:(SMap.add name (SMap.find_unsafe name none)) maps in
+        let bots = Base.List.map ~f:(SMap.add name (SMap.find name none)) maps in
         let bounds = Base.List.map ~f:(fun m -> SMap.add name (mk_bound cx m p) m) maps in
         bots @ bounds)
       [arg_map]
@@ -728,7 +728,7 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
 let inherited_method x = x <> "constructor"
 
 let match_this_binding map f =
-  match SMap.find_unsafe "this" map with
+  match SMap.find "this" map with
   | ReposT (_, t) -> f t
   | _ -> failwith "not a this binding"
 
@@ -1274,7 +1274,7 @@ struct
               | ReExport ->
                 (* Re-exports do not overwrite named exports from the local module. Further, they do
                  * not need to be checked, as the original module has already performed the check. *)
-                SMap.get name acc |> Option.value ~default:export
+                SMap.find_opt name acc |> Option.value ~default:export
               | ExportType ->
                 (* If it's of the form `export type` then check to make sure it's actually a type. *)
                 let (loc, t) = export in
@@ -1510,7 +1510,7 @@ struct
             | Some t -> t
             | None ->
               let exports_tmap = Context.find_exports cx exports.exports_tmap in
-              (match SMap.get "default" exports_tmap with
+              (match SMap.find_opt "default" exports_tmap with
               | Some (_, t) -> t
               | None ->
                 (*
@@ -1567,7 +1567,7 @@ struct
           in
           let has_every_named_export = exports.has_every_named_export in
           let import_t =
-            match (import_kind, SMap.get export_name exports_tmap) with
+            match (import_kind, SMap.find_opt export_name exports_tmap) with
             | (ImportType, Some t) ->
               Tvar.mk_where cx reason (fun tvar ->
                   rec_flow cx trace (t, ImportTypeT (reason, export_name, tvar)))
@@ -1591,7 +1591,7 @@ struct
               t
             | (_, None) ->
               let num_exports = SMap.cardinal exports_tmap in
-              let has_default_export = SMap.get "default" exports_tmap <> None in
+              let has_default_export = SMap.find_opt "default" exports_tmap <> None in
               let msg =
                 if num_exports = 1 && has_default_export then
                   Error_message.EOnlyDefaultExport (reason, module_name, export_name)
@@ -2435,7 +2435,7 @@ struct
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
           let fields = SMap.union own_props proto_props in
-          (match SMap.get x fields with
+          (match SMap.find_opt x fields with
           | Some _ -> ()
           | None ->
             let err = Error_message.EPropNotFound (Some x, (reason_op, reason_o), use_op) in
@@ -3319,7 +3319,7 @@ struct
             else
               p_neg
           in
-          (match Key_map.get key preds with
+          (match Key_map.find_opt key preds with
           | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
           | _ -> rec_flow_t cx trace (unrefined_t, fresh_t))
         (* Any other flow to `CallOpenPredT` does not actually refine the
@@ -4322,7 +4322,7 @@ struct
                 let reason_prop = replace_desc_reason (RProperty (Some s)) ureason in
                 Named (reason_prop, s)
               in
-              match SMap.get s lflds with
+              match SMap.find_opt s lflds with
               | Some lp -> rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
               | _ ->
                 let strict =
@@ -4693,7 +4693,7 @@ struct
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
           let pmap = SMap.union own_props proto_props in
-          (match SMap.get x pmap with
+          (match SMap.find_opt x pmap with
           | None ->
             (* If there are unknown mixins, the lookup should become nonstrict, as
            the searched-for property may be found in a mixin. *)
@@ -4759,7 +4759,7 @@ struct
               else
                 scope.class_private_fields
             in
-            (match SMap.get x (Context.find_props cx map) with
+            (match SMap.find_opt x (Context.find_props cx map) with
             | None ->
               add_output
                 cx
@@ -4825,7 +4825,7 @@ struct
               else
                 scope.class_private_fields
             in
-            (match SMap.get x (Context.find_props cx map) with
+            (match SMap.find_opt x (Context.find_props cx map) with
             | None ->
               add_output
                 cx
@@ -6329,10 +6329,10 @@ struct
            * last looked. See comment above `find` in `find_or_intro_shadow_prop`.
            *)
           let p =
-            match SMap.get x pmap with
+            match SMap.find_opt x pmap with
             | Some p -> p
             | None ->
-              (match SMap.get (internal_name x) pmap with
+              (match SMap.find_opt (internal_name x) pmap with
               | Some p ->
                 (* unshadow *)
                 pmap
@@ -7535,7 +7535,7 @@ struct
 
   and eval_latent_pred cx ?trace reason curr_t p i =
     let evaluated = Context.evaluated cx in
-    match IMap.get i evaluated with
+    match IMap.find_opt i evaluated with
     | None ->
       Tvar.mk_where cx reason (fun tvar ->
           Context.set_evaluated cx (IMap.add i tvar evaluated);
@@ -7612,7 +7612,7 @@ struct
         | Unresolved _ -> t)
       | _ -> t
     in
-    match (t, IMap.get id evaluated) with
+    match (t, IMap.find_opt id evaluated) with
     (* The OpenT branch is a correct implementation of type destructors for all
      * types. However, because it adds a constraint to both sides of a type we may
      * end up doing some work twice. So as an optimization for concrete types
@@ -8359,7 +8359,7 @@ struct
     let fully_resolve_ids = connect_id_to_bindings cx id bindings in
     ISet.iter
       (fun id ->
-        match IMap.get id (Context.evaluated cx) with
+        match IMap.find_opt id (Context.evaluated cx) with
         | None -> ()
         | Some tvar -> trigger cx trace reason tvar)
       fully_resolve_ids;
@@ -8813,7 +8813,7 @@ struct
     rec_flow cx trace (l, LookupT (reason_op, strict, [], propref, action))
 
   and access_prop cx trace reason_prop reason_op strict super x pmap action =
-    match SMap.get x pmap with
+    match SMap.find_opt x pmap with
     | Some p ->
       perform_lookup_action
         cx
@@ -9069,7 +9069,7 @@ struct
           in
           let exists_checks = Context.exists_checks cx in
           let exists_check =
-            ALocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty
+            ALocMap.find_opt loc exists_checks |> Option.value ~default:ExistsCheck.empty
           in
           let exists_check =
             match Type_filter.maybe t with
@@ -11068,7 +11068,7 @@ struct
          like UnionT. We want to recurse to pick up that logic, but must be
          careful as the union may refer back to the tvar itself, causing a loop.
          To break the loop, we pass down a map of "already seen" tvars. *)
-            (match IMap.get id seen with
+            (match IMap.find_opt id seen with
             | Some t -> t
             | None ->
               (* Create a fresh tvar which can be passed in `seen` *)

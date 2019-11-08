@@ -1055,7 +1055,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let opaque_type_args =
         Base.List.map
           ~f:(fun { name; reason; polarity; _ } ->
-            let t = SMap.find_unsafe name tparams_map in
+            let t = SMap.find name tparams_map in
             (name, reason, t, polarity))
           (TypeParams.to_list tparams)
       in
@@ -7545,7 +7545,7 @@ and check_default_pattern cx left right =
   let update_excuses update_fun =
     let exists_excuses = Context.exists_excuses cx in
     let exists_excuse =
-      Loc_collections.ALocMap.get left_loc exists_excuses
+      Loc_collections.ALocMap.find_opt left_loc exists_excuses
       |> Option.value ~default:ExistsCheck.empty
       |> update_fun
     in

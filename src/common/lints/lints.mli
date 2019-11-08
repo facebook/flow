@@ -43,6 +43,6 @@ val string_of_kind : lint_kind -> string
 
 val kinds_of_string : string -> lint_kind list option
 
-module LintMap : MyMap.S with type key = lint_kind
+module LintMap : WrappedMap.S with type key = lint_kind
 
 module LintSet : Set.S with type elt = lint_kind

@@ -499,7 +499,7 @@ module Friendly = struct
           match message_feature with
           | Inline inlines -> (next_id, loc_to_id, id_to_loc, Inline inlines :: message)
           | Reference (inlines, loc) ->
-            (match LocMap.get loc loc_to_id with
+            (match LocMap.find_opt loc loc_to_id with
             | Some id -> (next_id, loc_to_id, id_to_loc, Reference (inlines, id) :: message)
             | None ->
               let id = next_id in
@@ -1320,7 +1320,7 @@ module Cli_output = struct
       default_style "\n";
     ]
 
-  module FileKeyMap = MyMap.Make (File_key)
+  module FileKeyMap = WrappedMap.Make (File_key)
 
   type tag_kind =
     | Open of Loc.position
@@ -1399,7 +1399,7 @@ module Cli_output = struct
         | [] ->
           let color =
             Option.value_map
-              (IMap.get id custom_colors)
+              (IMap.find_opt id custom_colors)
               ~f:(fun custom -> CustomColor custom)
               ~default:(Color 0)
           in
@@ -1448,7 +1448,7 @@ module Cli_output = struct
            * custom_colors then we add a custom color. Otherwise we add a color
            * based on the current rank and update similar rank-based colors. *)
           let colors =
-            match IMap.get id custom_colors with
+            match IMap.find_opt id custom_colors with
             | Some custom -> IMap.add id (CustomColor custom) colors
             | None ->
               (* Increment the colors of all open references by the color of this tag.
@@ -1476,7 +1476,7 @@ module Cli_output = struct
             match tag_kind with
             | Close -> color_acc
             | Open _ ->
-              (match IMap.get tag_id colors with
+              (match IMap.find_opt tag_id colors with
               | None -> max color_acc (0 + 1)
               | Some (Color tag_color) -> max color_acc (tag_color + 1)
               | Some (CustomColor _) -> color_acc)
@@ -1517,7 +1517,7 @@ module Cli_output = struct
       and update_colors (Opened opened) colors color =
         IMap.fold
           (fun open_id opened colors ->
-            let open_color = Option.value (IMap.get open_id colors) ~default:(Color 0) in
+            let open_color = Option.value (IMap.find_opt open_id colors) ~default:(Color 0) in
             match open_color with
             | CustomColor _ -> colors
             | Color open_color ->
@@ -1535,7 +1535,7 @@ module Cli_output = struct
             match loc.source with
             | None -> (colors, file_tags)
             | Some source ->
-              let tags = Option.value (FileKeyMap.get source file_tags) ~default:[] in
+              let tags = Option.value (FileKeyMap.find_opt source file_tags) ~default:[] in
               let (colors, tags) =
                 add_tags colors (Opened IMap.empty) id loc.start loc._end tags []
               in
@@ -1566,7 +1566,7 @@ module Cli_output = struct
       | _ -> failwith "unreachable")
 
   let get_tty_color id colors =
-    get_tty_color_internal (Option.value (IMap.get id colors) ~default:(Color 0))
+    get_tty_color_internal (Option.value (IMap.find_opt id colors) ~default:(Color 0))
 
   (* Gets the Tty color from a stack of ids. This function will ignore
    * CustomColor `Root if there are other colors on the stack. *)
@@ -1574,7 +1574,7 @@ module Cli_output = struct
     match ids with
     | [] -> None
     | id :: ids ->
-      (match Option.value (IMap.get id colors) ~default:(Color 0) with
+      (match Option.value (IMap.find_opt id colors) ~default:(Color 0) with
       | CustomColor `Root ->
         Option.value_map
           (get_tty_color_from_stack ids colors)
@@ -1953,7 +1953,7 @@ module Cli_output = struct
                   [loc1; loc2]
               in
               (* Add the new locs to our FileKeyMap. *)
-              let locs = Option.value (FileKeyMap.get source acc) ~default:[] in
+              let locs = Option.value (FileKeyMap.find_opt source acc) ~default:[] in
               (max max_line loc._end.line, FileKeyMap.add source (new_locs @ locs) acc))
           (0, FileKeyMap.empty)
           locs
@@ -2025,10 +2025,12 @@ module Cli_output = struct
               | None -> failwith "expected loc to have a source"
               | Some source ->
                 let line_references =
-                  Option.value (FileKeyMap.get source file_line_references) ~default:IMap.empty
+                  Option.value
+                    (FileKeyMap.find_opt source file_line_references)
+                    ~default:IMap.empty
                 in
                 let references =
-                  Option.value (IMap.get loc.start.line line_references) ~default:[]
+                  Option.value (IMap.find_opt loc.start.line line_references) ~default:[]
                 in
                 let references = (id, loc.start) :: references in
                 let line_references = IMap.add loc.start.line references line_references in
@@ -2093,9 +2095,9 @@ module Cli_output = struct
             (* Used by read_lines_in_file. *)
             let filename = file_of_source (Some file_key) in
             (* Get some data structures associated with this file. *)
-            let tags = Option.value (FileKeyMap.get file_key tags) ~default:[] in
+            let tags = Option.value (FileKeyMap.find_opt file_key tags) ~default:[] in
             let line_references =
-              Option.value (FileKeyMap.get file_key file_line_references) ~default:IMap.empty
+              Option.value (FileKeyMap.find_opt file_key file_line_references) ~default:IMap.empty
             in
             (* Fold all the locs for this file into code frames. *)
             let (_, _, code_frames) =
@@ -2162,7 +2164,7 @@ module Cli_output = struct
                              let code_line = List.rev code_line in
                              (* Create the gutter text. *)
                              let gutter =
-                               match IMap.get n line_references with
+                               match IMap.find_opt n line_references with
                                | None -> [default_style (String.make gutter_width ' ')]
                                | Some (width, references) when width < gutter_width ->
                                  default_style (String.make (gutter_width - width) ' ')
@@ -2230,7 +2232,7 @@ module Cli_output = struct
         | None -> failwith "expected loc to have a source"
         | Some file_key -> file_key
       in
-      let root_code_frame = FileKeyMap.get root_file_key code_frames in
+      let root_code_frame = FileKeyMap.find_opt root_file_key code_frames in
       let code_frames = FileKeyMap.remove root_file_key code_frames in
       (* If we only have a root code frame then only render that. *)
       if FileKeyMap.is_empty code_frames then
@@ -2454,7 +2456,7 @@ module Cli_output = struct
       let (next_id, loc_to_id, id_to_loc, primary_loc_ids) =
         LocSet.fold
           (fun loc (next_id, loc_to_id, id_to_loc, primary_loc_ids) ->
-            match LocMap.get loc loc_to_id with
+            match LocMap.find_opt loc loc_to_id with
             (* If there is a reference for this primary location then don't alter
              * our loc_to_id or id_to_loc maps. *)
             | Some id -> (next_id, loc_to_id, id_to_loc, ISet.add id primary_loc_ids)
@@ -2475,7 +2477,7 @@ module Cli_output = struct
        * for the root location and record its id. If a reference already exists
        * then we will not higlight our root location any differently! *)
       let (next_id, loc_to_id, id_to_loc, root_id, custom_root_color) =
-        match LocMap.get root_loc loc_to_id with
+        match LocMap.find_opt root_loc loc_to_id with
         | Some id -> (next_id, loc_to_id, id_to_loc, Some id, false)
         | None ->
           let id = -1 * next_id in

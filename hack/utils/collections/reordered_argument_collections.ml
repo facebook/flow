@@ -7,7 +7,7 @@
  *
  *)
 
-module Reordered_argument_map (S : MyMap.S) = struct
+module Reordered_argument_map (S : WrappedMap.S) = struct
   include S
 
   let add m ~key ~data = add key data m
@@ -16,9 +16,9 @@ module Reordered_argument_map (S : MyMap.S) = struct
 
   let fold m ~init ~f = fold f m init
 
-  let get m k = get k m
+  let find_opt m k = find_opt k m
 
-  let find_unsafe m k = find_unsafe k m
+  let find m k = find k m
 
   let iter m ~f = iter f m
 

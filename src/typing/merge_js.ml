@@ -7,7 +7,7 @@
 
 type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program
 
-module RequireMap = MyMap.Make (struct
+module RequireMap = WrappedMap.Make (struct
   (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
   type t = string * File_key.t
 
@@ -152,7 +152,7 @@ let detect_sketchy_null_checks cx =
   let detect_function exists_excuses loc exists_check =
     ExistsCheck.(
       let exists_excuse =
-        Loc_collections.ALocMap.get loc exists_excuses |> Option.value ~default:empty
+        Loc_collections.ALocMap.find_opt loc exists_excuses |> Option.value ~default:empty
       in
       match exists_check.null_loc with
       | None -> ()
@@ -292,7 +292,7 @@ let detect_non_voidable_properties cx =
     let pmap = Context.find_props cx property_map in
     SMap.iter (fun name errors ->
         let should_error =
-          match SMap.get name pmap with
+          match SMap.find_opt name pmap with
           | Some (Type.Field (_, t, _)) -> not @@ is_voidable ISet.empty t
           | _ -> true
         in
@@ -407,7 +407,7 @@ let merge_component
           else
             lint_severities
         in
-        let file_sig = FilenameMap.find_unsafe filename file_sigs in
+        let file_sig = FilenameMap.find filename file_sigs in
         let tast =
           Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
         in
@@ -425,27 +425,27 @@ let merge_component
   Reqs.(
     reqs.impls
     |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_impl_require cx (sig_cx, m, loc, cx_to)) locs);
 
     reqs.dep_impls
     |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
 
     reqs.res
     |> RequireMap.iter (fun (f, fn_to) locs ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_res_require cx (loc, f, cx_to)) locs);
 
     reqs.decls
     |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m, cx_to)) locs);
 
     reqs.unchecked
     |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+           let cx_to = FilenameMap.find fn_to impl_cxs in
            ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs);
 
     (* Post-merge errors.
@@ -648,7 +648,7 @@ module ContextOptimizer = struct
         let (root_id, _) = Context.find_constraints cx id in
         if id == root_id then (
           if IMap.mem id reduced_graph then (
-            let stable_id = IMap.find_unsafe root_id stable_tvar_ids in
+            let stable_id = IMap.find root_id stable_tvar_ids in
             SigHash.add_int sig_hash stable_id;
             id
           ) else
@@ -674,7 +674,7 @@ module ContextOptimizer = struct
         let (root_id, constr) = Context.find_trust_constraints cx id in
         if id == root_id then (
           if IMap.mem id reduced_trust_graph then (
-            let stable_id = IMap.find_unsafe root_id stable_trust_var_ids in
+            let stable_id = IMap.find root_id stable_trust_var_ids in
             SigHash.add_int sig_hash stable_id;
             id
           ) else
@@ -700,7 +700,7 @@ module ContextOptimizer = struct
               ~f:(fun id_int ->
                 let stable_id =
                   if Context.mem_nominal_id cx id_int then
-                    IMap.find_unsafe id_int stable_props_ids
+                    IMap.find id_int stable_props_ids
                   else
                     id_int
                 in
@@ -732,7 +732,7 @@ module ContextOptimizer = struct
 
       method call_prop cx pole id =
         if IMap.mem id reduced_call_props then
-          let stable_id = IMap.find_unsafe id stable_call_prop_ids in
+          let stable_id = IMap.find id stable_call_prop_ids in
           let () = SigHash.add_int sig_hash stable_id in
           id
         else
@@ -783,13 +783,13 @@ module ContextOptimizer = struct
 
       method eval_id cx pole id =
         if IMap.mem id reduced_evaluated then (
-          let stable_id = IMap.find_unsafe id stable_eval_ids in
+          let stable_id = IMap.find id stable_eval_ids in
           SigHash.add_int sig_hash stable_id;
           id
         ) else
           let stable_id = self#fresh_stable_id in
           stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
-          match IMap.get id (Context.evaluated cx) with
+          match IMap.find_opt id (Context.evaluated cx) with
           | None -> id
           | Some t ->
             reduced_evaluated <- IMap.add id t reduced_evaluated;
@@ -835,7 +835,7 @@ module ContextOptimizer = struct
         | DefT (_, _, PolyT { id = poly_id; _ }) ->
           let id =
             if Context.mem_nominal_id cx poly_id then
-              match IMap.get poly_id stable_poly_ids with
+              match IMap.find_opt poly_id stable_poly_ids with
               | None ->
                 let id = self#fresh_stable_id in
                 stable_poly_ids <- IMap.add poly_id id stable_poly_ids;

@@ -33,7 +33,7 @@ let register_lock lock_file =
 let _operations lock_file op : bool =
   try
     let fd =
-      match SMap.get lock_file !lock_fds with
+      match SMap.find_opt lock_file !lock_fds with
       | None -> register_lock lock_file
       | Some (fd, st) ->
         let identical_file =
@@ -93,7 +93,7 @@ let blocking_grab_then_release lock_file =
  * Gets the server instance-unique integral fd for a given lock file.
  *)
 let fd_of lock_file : int =
-  match SMap.get lock_file !lock_fds with
+  match SMap.find_opt lock_file !lock_fds with
   | None -> -1
   | Some fd -> Obj.magic fd
 
