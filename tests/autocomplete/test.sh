@@ -226,3 +226,7 @@ assert_ok \
 printf "qualified-type-annotation-require.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation-require.js 5 23 < qualified-type-annotation-require.js
+
+printf "inherited-class-properties.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty inherited-class-properties.js 16 13 < inherited-class-properties.js

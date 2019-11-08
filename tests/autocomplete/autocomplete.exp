@@ -4016,3 +4016,37 @@ qualified-type-annotation-require.js = {
     }
   ]
 }
+inherited-class-properties.js = {
+  "result":[
+    {
+      "name":"bar",
+      "type":"\"bar\"",
+      "func_details":null,
+      "path":"inherited-class-properties.js",
+      "line":8,
+      "endline":8,
+      "start":9,
+      "end":13
+    },
+    {
+      "name":"baz",
+      "type":"\"baz\"",
+      "func_details":null,
+      "path":"inherited-class-properties.js",
+      "line":12,
+      "endline":12,
+      "start":9,
+      "end":13
+    },
+    {
+      "name":"foo",
+      "type":"\"oof\"",
+      "func_details":null,
+      "path":"inherited-class-properties.js",
+      "line":13,
+      "endline":13,
+      "start":9,
+      "end":13
+    }
+  ]
+}
