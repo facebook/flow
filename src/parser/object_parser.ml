@@ -756,10 +756,10 @@ module Object
         let decorators = decorators @ decorator_list env in
         let leading = Peek.comments env in
         Expect.token env T_CLASS;
-        let tmp_env = env |> with_no_let true in
         let id =
-          match (in_export env, Peek.is_identifier tmp_env) with
-          | (true, false) -> None
+          let tmp_env = env |> with_no_let true in
+          match (in_export env, Peek.token tmp_env) with
+          | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
           | _ -> Some (Parse.identifier tmp_env)
         in
         let tparams = Type.type_params env in
