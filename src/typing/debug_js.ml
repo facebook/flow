@@ -347,8 +347,7 @@ and _json_of_t_impl json_cx t =
         ]
       | ReposT (_, t)
       | InternalT (ReposUpperT (_, t)) ->
-        [("type", _json_of_t json_cx t)]
-      | InternalT (OptionalChainVoidT _) -> [] ))
+        [("type", _json_of_t json_cx t)] ))
 
 and _json_of_import_kind =
   Hh_json.(
@@ -1792,7 +1791,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | ReposT (_, arg)
     | InternalT (ReposUpperT (_, arg)) ->
       p ~extra:(kid arg) t
-    | InternalT (OptionalChainVoidT _) -> p t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =

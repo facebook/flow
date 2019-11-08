@@ -98,9 +98,7 @@ class ['a] t =
       | ReposT (_, t)
       | InternalT (ReposUpperT (_, t)) ->
         self#type_ cx pole acc t
-      | AnyT _
-      | InternalT (OptionalChainVoidT _) ->
-        acc
+      | AnyT _ -> acc
       | OptionalT { reason = _; type_ = t; use_desc = _ }
       | MaybeT (_, t) ->
         self#type_ cx pole acc t

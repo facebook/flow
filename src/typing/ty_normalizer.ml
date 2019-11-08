@@ -569,7 +569,7 @@ end = struct
       | EvalT (t, d, id) -> eval_t ~env t id d
       | ExactT (_, t) -> exact_t ~env t
       | CustomFunT (_, f) -> custom_fun ~env f
-      | InternalT i -> internal_t ~env t i
+      | InternalT i -> internal_t t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
       | DefT (_, _, MixedT _) -> return Ty.Top
       | AnyT (_, kind) -> return (Ty.Any (any_t kind))
@@ -1461,14 +1461,13 @@ end = struct
       | Complex OneOfType -> return (builtin_t "React$PropType$OneOfType")
       | Complex Shape -> return (builtin_t "React$PropType$Shape"))
 
-  and internal_t ~env t =
+  and internal_t t =
     Type.(
       function
       | ChoiceKitT _
       | ExtendsT _
       | ReposUpperT _ ->
-        terr ~kind:BadInternalT (Some t)
-      | OptionalChainVoidT r -> type__ ~env (DefT (r, bogus_trust (), VoidT)))
+        terr ~kind:BadInternalT (Some t))
 
   and param_bound ~env = function
     | T.DefT (_, _, T.MixedT _) -> return None

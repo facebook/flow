@@ -240,7 +240,6 @@ class virtual ['a] t =
         else
           InternalT (ReposUpperT (r, t''))
       | AnyT _ -> t
-      | InternalT (OptionalChainVoidT _) -> t
       | OptionalT { reason; type_ = t'; use_desc } ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
