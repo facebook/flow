@@ -230,3 +230,7 @@ assert_ok \
 printf "inherited-class-properties.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty inherited-class-properties.js 16 13 < inherited-class-properties.js
+
+printf "function-added-properties.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty function-added-properties.js 6 5 < function-added-properties.js

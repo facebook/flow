@@ -4050,3 +4050,87 @@ inherited-class-properties.js = {
     }
   ]
 }
+function-added-properties.js = {
+  "result":[
+    {
+      "name":"bar",
+      "type":"string",
+      "func_details":null,
+      "path":"function-added-properties.js",
+      "line":4,
+      "endline":4,
+      "start":1,
+      "end":7
+    },
+    {
+      "name":"baz",
+      "type":"string",
+      "func_details":null,
+      "path":"function-added-properties.js",
+      "line":5,
+      "endline":5,
+      "start":1,
+      "end":17
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":80,
+      "endline":80,
+      "start":5,
+      "end":40
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":81,
+      "endline":81,
+      "start":5,
+      "end":36
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: mixed) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"mixed"}]},
+      "path":"[LIB] core.js",
+      "line":82,
+      "endline":82,
+      "start":5,
+      "end":46
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":83,
+      "endline":83,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":84,
+      "endline":84,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
+      "path":"[LIB] core.js",
+      "line":85,
+      "endline":85,
+      "start":5,
+      "end":20
+    }
+  ]
+}
