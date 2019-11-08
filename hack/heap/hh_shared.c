@@ -818,7 +818,11 @@ static void memfd_reserve(char * mem, size_t sz) {
 
 static void memfd_reserve(char *mem, size_t sz) {
   off_t offset = (off_t)(mem - shared_mem);
-  if(posix_fallocate(memfd, offset, sz)) {
+  int err;
+  do {
+    err = posix_fallocate(memfd, offset, sz);
+  } while (err == EINTR);
+  if (err) {
     raise_out_of_shared_memory();
   }
 }
