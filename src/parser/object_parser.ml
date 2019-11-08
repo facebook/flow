@@ -764,11 +764,7 @@ module Object
         in
         let tparams = Type.type_params env in
         let (body, extends, implements) = _class env in
-        let trailing =
-          match id with
-          | None -> Peek.comments env
-          | _ -> []
-        in
+        let trailing = Peek.comments env in
         Ast.Statement.ClassDeclaration
           {
             Class.id;
@@ -800,12 +796,8 @@ module Object
             let tparams = Type.type_params env in
             (id, tparams)
         in
-        let trailing =
-          match id with
-          | None -> Peek.comments env
-          | _ -> []
-        in
         let (body, extends, implements) = _class env in
+        let trailing = Peek.comments env in
         Ast.Expression.Class
           {
             Class.id;
