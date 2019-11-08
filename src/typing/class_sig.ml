@@ -545,7 +545,7 @@ module Make (F : Func_sig.S) = struct
       let tparams_nel = Option.value_exn (Nel.of_list tparams_lst) in
       Some (loc, tparams_nel)
     in
-    (rec_instance_type, tparams, SMap.add "this" (Type.BoundT (this_reason, "this")) tparams_map)
+    (tparams, SMap.add "this" (Type.BoundT (this_reason, "this")) tparams_map)
 
   let remove_this x =
     if structural x then

@@ -79,7 +79,7 @@ module NormalizerMonad : sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
-    tparams:Type.typeparam list ->
+    tparams:(ALoc.t * string) list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
@@ -169,21 +169,19 @@ end = struct
      3. The type parameter is not in env. Do the default action.
   *)
   let lookup_tparam ~default env t tp_name tp_loc =
-    Type.(
-      let pred { name; reason; _ } = name = tp_name && Reason.def_aloc_of_reason reason = tp_loc in
-      match List.find_opt pred env.Env.tparams with
-      | Some _ ->
-        (* If we care about shadowing of type params, then flag an error *)
-        if Env.flag_shadowed_type_params env then
-          let shadow_pred { name; _ } = name = tp_name in
-          match List.find_opt shadow_pred env.Env.tparams with
-          | Some { reason; _ } when Reason.def_aloc_of_reason reason <> tp_loc ->
-            terr ~kind:ShadowTypeParam (Some t)
-          | Some _ -> return (Ty.Bound (tp_loc, tp_name))
-          | None -> assert false
-        else
-          return (Ty.Bound (tp_loc, tp_name))
-      | None -> default t)
+    let pred (loc, name) = name = tp_name && loc = tp_loc in
+    match List.find_opt pred env.Env.tparams with
+    | Some _ ->
+      (* If we care about shadowing of type params, then flag an error *)
+      if Env.flag_shadowed_type_params env then
+        let shadow_pred (_, name) = name = tp_name in
+        match List.find_opt shadow_pred env.Env.tparams with
+        | Some (loc, _) when loc <> tp_loc -> terr ~kind:ShadowTypeParam (Some t)
+        | Some _ -> return (Ty.Bound (tp_loc, tp_name))
+        | None -> assert false
+      else
+        return (Ty.Bound (tp_loc, tp_name))
+    | None -> default t
 
   (**************)
   (* Type ctors *)
@@ -1043,7 +1041,7 @@ end = struct
       Ty.InlineInterface { Ty.if_extends; if_body }
 
   and class_t =
-    let rec go ~env ps ty =
+    let go ~env ps ty =
       match ty with
       | Ty.Generic (name, kind, _) ->
         begin
@@ -1068,17 +1066,12 @@ end = struct
       | Ty.Union _
       | Ty.Inter _ ->
         return (Ty.Utility (Ty.Class ty))
-      | Ty.Bound (loc, bname) ->
-        let pred Type.{ name; reason; _ } =
-          name = bname && Reason.def_aloc_of_reason reason = loc
-        in
-        begin
-          match List.find_opt pred env.Env.tparams with
-          | Some Type.{ bound; _ } ->
-            let%bind b = type__ ~env bound in
-            go ~env ps b
-          | _ -> terr ~kind:BadClassT ~msg:"bound" None
-        end
+      | Ty.Bound (bloc, bname) ->
+        let pred (loc, name) = name = bname && loc = bloc in
+        if List.exists pred env.Env.tparams then
+          return (Ty.Utility (Ty.Class (Ty.Bound (bloc, bname))))
+        else
+          terr ~kind:BadClassT ~msg:"bound" None
       | ty -> terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
     in
     fun ~env t ps ->
@@ -1100,9 +1093,11 @@ end = struct
   and poly_ty ~env t typeparams =
     let (env, results) =
       Nel.fold_left
-        (fun (env, rs) typeparam ->
-          let r = type_param ~env typeparam in
-          (Env.add_typeparam env typeparam, r :: rs))
+        (fun (env, rs) tp ->
+          let r = type_param ~env tp in
+          let loc = Reason.def_aloc_of_reason tp.T.reason in
+          let name = tp.T.name in
+          (Env.add_typeparam env (loc, name), r :: rs))
         (env, [])
         typeparams
     in

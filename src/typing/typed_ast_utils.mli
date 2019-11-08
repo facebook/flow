@@ -13,7 +13,7 @@ class type_parameter_mapper :
 
     method on_type_annot : ALoc.t * Type.t -> ALoc.t * Type.t
 
-    method annot_with_tparams : 'a. (Type.typeparam list -> 'a) -> 'a
+    method annot_with_tparams : 'a. ((ALoc.t * string) list -> 'a) -> 'a
   end
 
 val find_exact_match_annotation :

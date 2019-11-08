@@ -525,16 +525,15 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let tparam_results =
     List.map
-      Type.(
-        fun { name; _ } ->
-          {
-            res_loc = ac_loc;
-            res_kind = Some Lsp.Completion.TypeParameter;
-            res_name = name;
-            res_ty = (Loc.none, name);
-            func_details = None;
-            res_insert_text = None;
-          })
+      (fun (_, name) ->
+        {
+          res_loc = ac_loc;
+          res_kind = Some Lsp.Completion.TypeParameter;
+          res_name = name;
+          res_ty = (Loc.none, name);
+          func_details = None;
+          res_insert_text = None;
+        })
       tparams
   in
   let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =

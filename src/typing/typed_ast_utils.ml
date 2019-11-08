@@ -10,6 +10,10 @@ module ALocMap = Loc_collections.ALocMap
 
 (* TODO(nmote) come up with a consistent story for abstract/concrete locations in this module *)
 
+let mk_bound_t loc name =
+  let reason = Reason.(mk_annot_reason (RType name) loc) in
+  Type.BoundT (reason, name)
+
 class type_parameter_mapper =
   object
     inherit
@@ -21,41 +25,17 @@ class type_parameter_mapper =
 
     (* Since the mapper wasn't originally written to pass an accumulator value
      through the calls, we're maintaining this accumulator imperatively. *)
-    val mutable bound_tparams : Type.typeparam list = []
+    val mutable bound_tparams : (ALoc.t * string) list = []
 
-    method annot_with_tparams : 'a. (Type.typeparam list -> 'a) -> 'a = (fun f -> f bound_tparams)
+    method annot_with_tparams : 'a. ((ALoc.t * string) list -> 'a) -> 'a =
+      (fun f -> f bound_tparams)
 
     (* Imperatively adds type parameter to bound_tparams environment. *)
     method! type_param tparam =
       let res = super#type_param tparam in
-      (* Recover the Type.typeparams corresponding to AST type parameters *)
-      let tparam =
-        let ( _,
-              {
-                Ast.Type.TypeParam.name = ((_, t), { Ast.Identifier.name; comments = _ });
-                bound;
-                variance;
-                default;
-              } ) =
-          tparam
-        in
-        let reason = Type.reason_of_t t in
-        let bound =
-          match bound with
-          | Ast.Type.Missing _ -> Type.MixedT.make reason |> Type.with_trust Trust.bogus_trust
-          | Ast.Type.Available (_, ((_, t), _)) -> t
-        in
-        let polarity =
-          Ast.Variance.(
-            match variance with
-            | Some (_, Plus) -> Polarity.Positive
-            | Some (_, Minus) -> Polarity.Negative
-            | None -> Polarity.Neutral)
-        in
-        let default = Option.map default ~f:(fun ((_, t), _) -> t) in
-        { Type.reason; name; bound; polarity; default }
-      in
-      bound_tparams <- tparam :: bound_tparams;
+      let (_, { Ast.Type.TypeParam.name; _ }) = tparam in
+      let (id_loc, { Ast.Identifier.name; comments = _ }) = name in
+      bound_tparams <- (id_loc, name) :: bound_tparams;
       res
 
     (* Record and restore the parameter environment around nodes that might
@@ -71,18 +51,9 @@ class type_parameter_mapper =
     method! class_ cls =
       let this_tparam =
         Ast.Class.(
-          let { body = ((body_loc, self_t), _); id; _ } = cls in
-          let name =
-            Option.value_map ~f:Flow_ast_utils.name_of_ident id ~default:"<<anonymous class>>"
-          in
-          let name_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
-          {
-            Type.name = "this";
-            reason = Reason.mk_reason (Reason.RType name) name_loc;
-            bound = self_t;
-            polarity = Polarity.Positive;
-            default = None;
-          })
+          let { body = (body_loc, _); id; _ } = cls in
+          let id_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
+          (id_loc, "this"))
       in
       let originally_bound_tparams = bound_tparams in
       bound_tparams <- this_tparam :: bound_tparams;
@@ -100,6 +71,13 @@ module ExactMatchQuery = struct
   class exact_match_searcher (target_loc : ALoc.t) =
     object (self)
       inherit type_parameter_mapper as super
+
+      method! type_param_identifier id =
+        let (loc, { Ast.Identifier.name; comments = _ }) = id in
+        if target_loc = loc then
+          self#annot_with_tparams (found (mk_bound_t loc name))
+        else
+          super#type_param_identifier id
 
       method! on_type_annot annot =
         let (loc, t) = annot in
@@ -125,6 +103,7 @@ module Type_at_pos = struct
 
   (* Kinds of nodes that "type-at-pos" is interested in:
    * - identifiers              (handled in t_identifier)
+   * - type parameters          (handled in type_param_identifier)
    * - literal object keys      (handled in object_key)
    * - `this`, `super`          (handled in expression)
    * - private property names   (handled in expression)
@@ -135,7 +114,7 @@ module Type_at_pos = struct
 
       method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
-      method find_loc : 'a. ALoc.t -> Type.t -> Type.typeparam list -> 'a =
+      method find_loc : 'a. ALoc.t -> Type.t -> (ALoc.t * string) list -> 'a =
         (fun loc t tparams -> raise (Found (loc, { Type.TypeScheme.tparams; type_ = t })))
 
       method! t_identifier (((loc, t), _) as id) =
@@ -149,6 +128,13 @@ module Type_at_pos = struct
           self#annot_with_tparams (self#find_loc loc t)
         else
           super#jsx_identifier id
+
+      method! type_param_identifier id =
+        let (loc, { Ast.Identifier.name; comments = _ }) = id in
+        if self#covers_target loc then
+          self#annot_with_tparams (self#find_loc loc (mk_bound_t loc name))
+        else
+          super#type_param_identifier id
 
       method! object_key key =
         Ast.Expression.Object.Property.(

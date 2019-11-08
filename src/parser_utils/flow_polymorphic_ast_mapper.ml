@@ -238,7 +238,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Class.Body.(
         let (annot, { body }) = cls_body in
         let body' = Base.List.map ~f:this#class_element body in
-        (this#on_type_annot annot, { body = body' }))
+        (this#on_loc_annot annot, { body = body' }))
 
     method class_element (elem : ('M, 'T) Ast.Class.Body.element) : ('N, 'U) Ast.Class.Body.element
         =
@@ -738,12 +738,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method type_param (tparam : ('M, 'T) Ast.Type.TypeParam.t) : ('N, 'U) Ast.Type.TypeParam.t =
       Ast.Type.TypeParam.(
         let (annot, { name; bound; variance; default }) = tparam in
-        let name' = this#t_identifier name in
+        let name' = this#type_param_identifier name in
         let bound' = this#type_annotation_hint bound in
         let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
         let default' = Option.map ~f:this#type_ default in
-        ( this#on_type_annot annot,
+        ( this#on_loc_annot annot,
           { name = name'; bound = bound'; variance = variance'; default = default' } ))
+
+    method type_param_identifier (id : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
+      this#identifier id
 
     method generic_type (gt : ('M, 'T) Ast.Type.Generic.t) : ('N, 'U) Ast.Type.Generic.t =
       Ast.Type.Generic.(

@@ -45,7 +45,7 @@ let type_of_qualification =
     | Qualified (_, { id = ((_, t), _); _ }) ->
       t)
 
-exception Found of Type.typeparam list * ALoc.t * autocomplete_type
+exception Found of (ALoc.t * string) list * ALoc.t * autocomplete_type
 
 class process_request_searcher (from_trigger_character : bool) =
   object (this)

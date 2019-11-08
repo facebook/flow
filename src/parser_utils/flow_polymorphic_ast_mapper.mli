@@ -524,6 +524,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_param : ('M, 'T) Ast.Type.TypeParam.t -> ('N, 'U) Ast.Type.TypeParam.t
 
+    method type_param_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
+
     method type_args : ('M, 'T) Flow_ast.Type.TypeArgs.t -> ('N, 'U) Ast.Type.TypeArgs.t
 
     method type_predicate : ('M, 'T) Flow_ast.Type.Predicate.t -> ('N, 'U) Ast.Type.Predicate.t

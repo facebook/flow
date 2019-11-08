@@ -157,7 +157,7 @@ module type S = sig
     Type.typeparams ->
     Type.t SMap.t ->
     (* tparams_map *)
-    Type.t * Type.typeparams * Type.t SMap.t
+    Type.typeparams * Type.t SMap.t
 
   val to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 

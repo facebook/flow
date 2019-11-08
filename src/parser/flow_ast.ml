@@ -295,10 +295,10 @@ and Type : sig
   [@@deriving show]
 
   module TypeParam : sig
-    type ('M, 'T) t = 'T * ('M, 'T) t'
+    type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
-      name: ('M, 'T) Identifier.t;
+      name: ('M, 'M) Identifier.t;
       bound: ('M, 'T) Type.annotation_or_hint;
       variance: 'M Variance.t option;
       default: ('M, 'T) Type.t option;
@@ -1441,8 +1441,7 @@ and Class : sig
   end
 
   module Body : sig
-    (* 'T annotation on class body is used to store class's "this" type *)
-    type ('M, 'T) t = 'T * ('M, 'T) t'
+    type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = { body: ('M, 'T) element list }
 

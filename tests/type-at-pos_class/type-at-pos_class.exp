@@ -284,7 +284,7 @@ class-3.js:10:9 = {
   "end":9
 }
 class-bound.js:4:6 = {
-  "type":"type C<T: R<any>> = Class<R<any>>",
+  "type":"type C<T: R<any>> = Class<T>",
   "reasons":[],
   "loc":{
     "source":"class-bound.js",
@@ -479,7 +479,7 @@ class-statics.js:4:10 = {
   "end":10
 }
 class-statics.js:8:10 = {
-  "type":"() => Class<B>",
+  "type":"() => Class<this>",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -494,7 +494,7 @@ class-statics.js:8:10 = {
   "end":10
 }
 class-statics.js:9:7 = {
-  "type":"Class<B>",
+  "type":"Class<this>",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -599,7 +599,7 @@ class-statics-poly.js:8:10 = {
   "end":10
 }
 class-statics-poly.js:9:7 = {
-  "type":"Class<B<T>>",
+  "type":"Class<this>",
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",

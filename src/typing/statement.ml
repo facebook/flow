@@ -6883,7 +6883,7 @@ and mk_class_sig =
         } ->
       let classDecorators_ast = warn_or_ignore_decorators cx classDecorators in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (self', tparams, tparams_map) = add_this self cx reason tparams tparams_map in
+      let (tparams, tparams_map) = add_this self cx reason tparams tparams_map in
       let (class_sig, extends_ast, implements_ast) =
         let id = Context.make_aloc_id cx name_loc in
         let (extends, extends_ast) = mk_extends cx tparams_map extends in
@@ -7110,9 +7110,7 @@ and mk_class_sig =
         fun class_t ->
           {
             Ast.Class.id = Option.map ~f:(fun (loc, name) -> ((loc, class_t), name)) id;
-            body =
-              ( (body_loc, self'),
-                { Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements } );
+            body = (body_loc, { Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements });
             tparams = tparams_ast;
             extends = extends_ast;
             implements = implements_ast;

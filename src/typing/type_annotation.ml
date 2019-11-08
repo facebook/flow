@@ -1545,10 +1545,10 @@ and mk_type_param_declarations cx ?(tparams_map = SMap.empty) tparams =
     let t = BoundT (reason, name) in
     let name_ast =
       let (loc, id_name) = id in
-      ((loc, t), id_name)
+      (loc, id_name)
     in
     let ast =
-      ( (loc, t),
+      ( loc,
         { Ast.Type.TypeParam.name = name_ast; bound = bound_ast; variance; default = default_ast }
       )
     in
@@ -1845,7 +1845,7 @@ let mk_declare_class_sig =
       in
       let self = Tvar.mk cx reason in
       let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
-      let (_, tparams, tparams_map) = Class_type_sig.add_this self cx reason tparams tparams_map in
+      let (tparams, tparams_map) = Class_type_sig.add_this self cx reason tparams tparams_map in
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =
