@@ -551,8 +551,8 @@ CAMLprim value hh_hash_used_slots(void) {
   CAMLlocal1(connector);
 
   connector = caml_alloc_tuple(2);
-  Field(connector, 0) = Val_long(*hcounter_filled);
-  Field(connector, 1) = Val_long(*hcounter);
+  Store_field(connector, 0, Val_long(*hcounter_filled));
+  Store_field(connector, 1, Val_long(*hcounter));
 
   CAMLreturn(connector);
 }
@@ -1078,12 +1078,12 @@ CAMLprim value hh_shared_init(
 #endif
 
   connector = caml_alloc_tuple(6);
-  Field(connector, 0) = Val_handle(memfd);
-  Field(connector, 1) = config_global_size_val;
-  Field(connector, 2) = config_heap_size_val;
-  Field(connector, 3) = config_dep_table_pow_val;
-  Field(connector, 4) = config_hash_table_pow_val;
-  Field(connector, 5) = num_workers_val;
+  Store_field(connector, 0, Val_handle(memfd));
+  Store_field(connector, 1, config_global_size_val);
+  Store_field(connector, 2, config_heap_size_val);
+  Store_field(connector, 3, config_dep_table_pow_val);
+  Store_field(connector, 4, config_hash_table_pow_val);
+  Store_field(connector, 5, num_workers_val);
 
   CAMLreturn(connector);
 }
@@ -1531,15 +1531,15 @@ CAMLprim value hh_get_dep(value ocaml_key) {
         slotval = table[slotval.s.next.num];
 
         cell = caml_alloc_tuple(2);
-        Field(cell, 0) = Val_long(slotval.s.key.num);
-        Field(cell, 1) = result;
+        Store_field(cell, 0, Val_long(slotval.s.key.num));
+        Store_field(cell, 1, result);
         result = cell;
       }
 
       // The tail of the list is special, "next" is really a value.
       cell = caml_alloc_tuple(2);
-      Field(cell, 0) = Val_long(slotval.s.next.num);
-      Field(cell, 1) = result;
+      Store_field(cell, 0, Val_long(slotval.s.next.num));
+      Store_field(cell, 1, result);
       result = cell;
 
       // We are done!
@@ -1801,12 +1801,12 @@ static value write_at(unsigned int slot, value data) {
     size_t alloc_size = 0;
     size_t orig_size = 0;
     hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
-    Field(result, 0) = Val_long(alloc_size);
-    Field(result, 1) = Val_long(orig_size);
+    Store_field(result, 0, Val_long(alloc_size));
+    Store_field(result, 1, Val_long(orig_size));
     __sync_fetch_and_add(hcounter_filled, 1);
   } else {
-    Field(result, 0) = Min_long;
-    Field(result, 1) = Min_long;
+    Store_field(result, 0, Min_long);
+    Store_field(result, 1, Min_long);
   }
   CAMLreturn(result);
 }
@@ -2324,7 +2324,7 @@ value Val_some(value v)
     CAMLparam1(v);
     CAMLlocal1(some);
     some = caml_alloc_small(1, 0);
-    Field(some, 0) = v;
+    Store_field(some, 0, v);
     CAMLreturn(some);
 }
 
@@ -2897,8 +2897,8 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
 
   for (size_t i = 0; i < count; i++) {
     cell = caml_alloc_tuple(2);
-    Field(cell, 0) = Val_long(values[i]);
-    Field(cell, 1) = result;
+    Store_field(cell, 0, Val_long(values[i]));
+    Store_field(cell, 1, result);
     result = cell;
   }
   CAMLreturn(result);
