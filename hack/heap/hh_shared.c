@@ -2334,7 +2334,9 @@ value Val_some(value v)
 
 // ------------------------ START OF SQLITE3 SECTION --------------------------
 
-void assert_sql_with_line(
+#define assert_sql(db, x, y) (assert_sql_with_line((db), (x), (y), __LINE__))
+
+static void assert_sql_with_line(
   sqlite3 *db,
   int result,
   int correct_result,
