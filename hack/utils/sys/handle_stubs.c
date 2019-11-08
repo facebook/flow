@@ -7,7 +7,7 @@
  *
  */
 
-
+#define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/unixsupport.h>
 #include <caml/intext.h>

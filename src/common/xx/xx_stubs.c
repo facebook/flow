@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
@@ -21,7 +22,7 @@ static struct custom_operations xx_state_ops = {
 };
 
 static value alloc_xx_state(XXH64_state_t state) {
-  value v = alloc_custom(&xx_state_ops, sizeof(XXH64_state_t), 0, 1);
+  value v = caml_alloc_custom(&xx_state_ops, sizeof(XXH64_state_t), 0, 1);
   State_val(v) = state;
   return v;
 }
