@@ -445,7 +445,8 @@ let rec convert cx tparams_map =
               | ([t; DefT (_, _, SingletonStrT key)], targs) ->
                 let reason = mk_reason (RType "$PropertyType") loc in
                 reconstruct_ast
-                  (EvalT (t, TypeDestructorT (use_op reason, reason, PropertyType key), mk_id ()))
+                  (EvalT
+                     (t, TypeDestructorT (use_op reason, reason, PropertyType key), Eval.mk_id ()))
                   targs
               | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast)
         (* $ElementType<T, string> acts as the type of the string elements in object
@@ -456,7 +457,7 @@ let rec convert cx tparams_map =
               | ([t; e], targs) ->
                 let reason = mk_reason (RType "$ElementType") loc in
                 reconstruct_ast
-                  (EvalT (t, TypeDestructorT (use_op reason, reason, ElementType e), mk_id ()))
+                  (EvalT (t, TypeDestructorT (use_op reason, reason, ElementType e), Eval.mk_id ()))
                   targs
               | _ -> assert false)
         (* $NonMaybeType<T> acts as the type T without null and void *)
@@ -466,7 +467,7 @@ let rec convert cx tparams_map =
               let t = List.hd ts in
               let reason = mk_reason (RType "$NonMaybeType") loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, NonMaybeType), mk_id ()))
+                (EvalT (t, TypeDestructorT (use_op reason, reason, NonMaybeType), Eval.mk_id ()))
                 targs)
         (* $Shape<T> matches the shape of T *)
         | "$Shape" ->
@@ -488,7 +489,7 @@ let rec convert cx tparams_map =
                    ( t1,
                      TypeDestructorT
                        (use_op reason, reason, RestType (Type.Object.Rest.IgnoreExactAndOwn, t2)),
-                     mk_id () ))
+                     Eval.mk_id () ))
                 targs)
         (* $ReadOnly<T> *)
         | "$ReadOnly" ->
@@ -497,7 +498,7 @@ let rec convert cx tparams_map =
               let t = List.hd ts in
               let reason = mk_reason (RType "$ReadOnly") loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, ReadOnlyType), mk_id ()))
+                (EvalT (t, TypeDestructorT (use_op reason, reason, ReadOnlyType), Eval.mk_id ()))
                 targs)
         (* $Keys<T> is the set of keys of T *)
         | "$Keys" ->
@@ -512,7 +513,7 @@ let rec convert cx tparams_map =
               let t = List.hd ts in
               let reason = mk_reason (RType "$Values") loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, ValuesType), mk_id ()))
+                (EvalT (t, TypeDestructorT (use_op reason, reason, ValuesType), Eval.mk_id ()))
                 targs)
         | "$Exact" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -532,7 +533,7 @@ let rec convert cx tparams_map =
                 (EvalT
                    ( t1,
                      TypeDestructorT (use_op reason, reason, RestType (Type.Object.Rest.Sound, t2)),
-                     mk_id () ))
+                     Eval.mk_id () ))
                 targs)
         (* $Exports<'M'> is the type of the exports of module 'M' *)
         (* TODO: use `import typeof` instead when that lands **)
@@ -558,7 +559,7 @@ let rec convert cx tparams_map =
           | (fn :: args, targs) ->
             let reason = mk_reason RFunctionCallType loc in
             reconstruct_ast
-              (EvalT (fn, TypeDestructorT (use_op reason, reason, CallType args), mk_id ()))
+              (EvalT (fn, TypeDestructorT (use_op reason, reason, CallType args), Eval.mk_id ()))
               targs
           | _ -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast)
         | "$TupleMap" ->
@@ -571,7 +572,9 @@ let rec convert cx tparams_map =
               let reason = mk_reason RTupleMap loc in
               reconstruct_ast
                 (EvalT
-                   (t1, TypeDestructorT (use_op reason, reason, TypeMap (TupleMap t2)), mk_id ()))
+                   ( t1,
+                     TypeDestructorT (use_op reason, reason, TypeMap (TupleMap t2)),
+                     Eval.mk_id () ))
                 targs)
         | "$ObjMap" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
@@ -583,7 +586,9 @@ let rec convert cx tparams_map =
               let reason = mk_reason RObjectMap loc in
               reconstruct_ast
                 (EvalT
-                   (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap t2)), mk_id ()))
+                   ( t1,
+                     TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap t2)),
+                     Eval.mk_id () ))
                 targs)
         | "$ObjMapi" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
@@ -595,7 +600,9 @@ let rec convert cx tparams_map =
               let reason = mk_reason RObjectMapi loc in
               reconstruct_ast
                 (EvalT
-                   (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi t2)), mk_id ()))
+                   ( t1,
+                     TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi t2)),
+                     Eval.mk_id () ))
                 targs)
         | "$CharSet" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -682,7 +689,7 @@ let rec convert cx tparams_map =
                 (EvalT
                    ( props,
                      TypeDestructorT (use_op reason, reason, ReactConfigType default_props),
-                     mk_id () ))
+                     Eval.mk_id () ))
                 targs)
         | "React$PropType$Primitive" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -748,7 +755,10 @@ let rec convert cx tparams_map =
               let t = List.hd ts in
               let reason = mk_reason (RType "React$ElementProps") loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, ReactElementPropsType), mk_id ()))
+                (EvalT
+                   ( t,
+                     TypeDestructorT (use_op reason, reason, ReactElementPropsType),
+                     Eval.mk_id () ))
                 targs)
         | "React$ElementConfig" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -757,7 +767,9 @@ let rec convert cx tparams_map =
               let reason = mk_reason (RType "React$ElementConfig") loc in
               reconstruct_ast
                 (EvalT
-                   (t, TypeDestructorT (use_op reason, reason, ReactElementConfigType), mk_id ()))
+                   ( t,
+                     TypeDestructorT (use_op reason, reason, ReactElementConfigType),
+                     Eval.mk_id () ))
                 targs)
         | "React$ElementRef" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -765,7 +777,8 @@ let rec convert cx tparams_map =
               let t = List.hd ts in
               let reason = mk_reason (RType "React$ElementRef") loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, ReactElementRefType), mk_id ()))
+                (EvalT
+                   (t, TypeDestructorT (use_op reason, reason, ReactElementRefType), Eval.mk_id ()))
                 targs)
         | "$Facebookism$Idx" -> mk_custom_fun cx loc t_ast targs ident Idx
         | "$Facebookism$TypeAssertIs" when Context.type_asserts cx ->
@@ -843,7 +856,7 @@ let rec convert cx tparams_map =
                 let idx = Pervasives.int_of_float f in
                 let reason = mk_reason (RCustom "refined type") loc in
                 let pred = LatentP (fun_pred_t, idx) in
-                reconstruct_ast (EvalT (base_t, LatentPredT (reason, pred), mk_id ())) targs
+                reconstruct_ast (EvalT (base_t, LatentPredT (reason, pred), Eval.mk_id ())) targs
               | _ -> error_type cx loc (Error_message.ERefineAnnot loc) t_ast)
         | "$Trusted" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -1394,7 +1407,7 @@ and convert_object =
             EvalT
               ( l,
                 TypeDestructorT (unknown_use, reason, SpreadType (target, ts, head_slice)),
-                mk_id () ))
+                Eval.mk_id () ))
       in
       (t, List.rev rev_prop_asts))
 

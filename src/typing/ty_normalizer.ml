@@ -1573,7 +1573,7 @@ end = struct
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
       let evaluated = Context.evaluated cx in
-      match IMap.find_opt id evaluated with
+      match T.Eval.Map.find_opt id evaluated with
       | Some t -> type__ ~env t
       | None -> type_destructor_unevaluated ~env t d
     (* fallback *)
@@ -1622,7 +1622,7 @@ end = struct
     let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
     let t' =
-      match IMap.find_opt id evaluated with
+      match T.Eval.Map.find_opt id evaluated with
       | Some evaled_t -> evaled_t
       | None -> t
     in

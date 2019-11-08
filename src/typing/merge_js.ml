@@ -605,7 +605,7 @@ module ContextOptimizer = struct
 
       val mutable reduced_export_maps = Exports.Map.empty
 
-      val mutable reduced_evaluated = IMap.empty
+      val mutable reduced_evaluated = Eval.Map.empty
 
       val mutable export_reason = None
 
@@ -782,19 +782,22 @@ module ContextOptimizer = struct
           id
 
       method eval_id cx pole id =
-        if IMap.mem id reduced_evaluated then (
-          let stable_id = IMap.find id stable_eval_ids in
-          SigHash.add_int sig_hash stable_id;
+        if Eval.Map.mem id reduced_evaluated then (
+          Eval.id_as_int id
+          |> Base.Option.iter ~f:(fun int_id ->
+                 IMap.find int_id stable_eval_ids |> SigHash.add_int sig_hash);
           id
         ) else
           let stable_id = self#fresh_stable_id in
-          stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
-          match IMap.find_opt id (Context.evaluated cx) with
+          Eval.id_as_int id
+          |> Base.Option.iter ~f:(fun int_id ->
+                 stable_eval_ids <- IMap.add int_id stable_id stable_eval_ids);
+          match Eval.Map.find_opt id (Context.evaluated cx) with
           | None -> id
           | Some t ->
-            reduced_evaluated <- IMap.add id t reduced_evaluated;
+            reduced_evaluated <- Eval.Map.add id t reduced_evaluated;
             let t' = self#type_ cx pole t in
-            reduced_evaluated <- IMap.add id t' reduced_evaluated;
+            reduced_evaluated <- Eval.Map.add id t' reduced_evaluated;
             id
 
       method! dict_type cx pole dicttype =

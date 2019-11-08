@@ -67,7 +67,7 @@ module rec TypeTerm : sig
        When defer_use_t is evaluated, id points to a tvar containing the result
        of evaluation. The explicit form simplifies other tasks, like
        substitution, but otherwise works in much the same way as usual. *)
-    | EvalT of t * defer_use_t * int
+    | EvalT of t * defer_use_t * Eval.id
     (* bound type variable *)
     | BoundT of reason * string
     (* existential type variable *)
@@ -1606,6 +1606,38 @@ end = struct
       function
       | Field (loc, t, polarity) -> Field (loc, f k t, polarity)
       | p -> p)
+end
+
+and Eval : sig
+  type id
+
+  val compare_id : id -> id -> int
+
+  val mk_id : unit -> id
+
+  val string_of_id : id -> string
+
+  val id_as_int : id -> int option
+
+  module Map : WrappedMap.S with type key = id
+end = struct
+  type id = int
+
+  let compare_id = compare
+
+  let mk_id = Reason.mk_id
+
+  let string_of_id = string_of_int
+
+  let id_as_int = Base.Option.return
+
+  module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
+    type key = id
+
+    type t = key
+
+    let compare = compare_id
+  end)
 end
 
 and Exports : sig

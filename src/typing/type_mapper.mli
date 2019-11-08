@@ -22,7 +22,7 @@ class virtual ['a] t :
 
     method virtual enum : Type.enum_t -> Type.enum_t
 
-    method virtual eval_id : Context.t -> 'a -> int -> int
+    method virtual eval_id : Context.t -> 'a -> Type.Eval.id -> Type.Eval.id
 
     method export_types : Context.t -> 'a -> Type.exporttypes -> Type.exporttypes
 

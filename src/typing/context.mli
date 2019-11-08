@@ -137,7 +137,7 @@ val esproposal_optional_chaining : t -> Options.esproposal_feature_mode
 
 val esproposal_nullish_coalescing : t -> Options.esproposal_feature_mode
 
-val evaluated : t -> Type.t IMap.t
+val evaluated : t -> Type.t Type.Eval.Map.t
 
 val goals : t -> Type.t IMap.t
 
@@ -307,7 +307,7 @@ val remove_tvar : t -> Constraint.ident -> unit
 
 val set_envs : t -> env IMap.t -> unit
 
-val set_evaluated : t -> Type.t IMap.t -> unit
+val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 
 val set_goals : t -> Type.t IMap.t -> unit
 

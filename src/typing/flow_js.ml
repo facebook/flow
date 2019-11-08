@@ -148,7 +148,7 @@ let havoc_call_env =
 
 (* visit an optional evaluated type at an evaluation id *)
 let visit_eval_id cx id f =
-  match IMap.find_opt id (Context.evaluated cx) with
+  match Eval.Map.find_opt id (Context.evaluated cx) with
   | None -> ()
   | Some t -> f t
 
@@ -5413,7 +5413,7 @@ struct
         | (DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout)) ->
           let f x =
             let use_op = Frame (TupleMapFunCompatibility { value = reason_of_t x }, use_op) in
-            EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ())
+            EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), Eval.mk_id ())
           in
           let arrtype =
             match arrtype with
@@ -5428,7 +5428,9 @@ struct
           rec_flow_t cx trace (t, tout)
         | (_, MapTypeT (use_op, reason, TupleMap funt, tout)) ->
           let iter = get_builtin cx ~trace "$iterate" reason in
-          let elemt = EvalT (iter, TypeDestructorT (use_op, reason, CallType [l]), mk_id ()) in
+          let elemt =
+            EvalT (iter, TypeDestructorT (use_op, reason, CallType [l]), Eval.mk_id ())
+          in
           let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
         | (DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectMap funt, tout)) ->
@@ -5439,7 +5441,9 @@ struct
               | _ -> (t, false)
             in
             let use_op = Frame (ObjMapFunCompatibility { value = reason_of_t t }, use_op) in
-            let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [t]), mk_id ()) in
+            let t =
+              EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [t]), Eval.mk_id ())
+            in
             if opt then
               optional t
             else
@@ -5478,7 +5482,7 @@ struct
                 (ObjMapiFunCompatibility { key = reason_of_t key; value = reason_of_t t }, use_op)
             in
             let t =
-              EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [key; t]), mk_id ())
+              EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [key; t]), Eval.mk_id ())
             in
             if opt then
               optional t
@@ -7535,10 +7539,10 @@ struct
 
   and eval_latent_pred cx ?trace reason curr_t p i =
     let evaluated = Context.evaluated cx in
-    match IMap.find_opt i evaluated with
+    match Eval.Map.find_opt i evaluated with
     | None ->
       Tvar.mk_where cx reason (fun tvar ->
-          Context.set_evaluated cx (IMap.add i tvar evaluated);
+          Context.set_evaluated cx (Eval.Map.add i tvar evaluated);
           flow_opt cx ?trace (curr_t, RefineT (reason, p, tvar)))
     | Some it -> it
 
@@ -7612,7 +7616,7 @@ struct
         | Unresolved _ -> t)
       | _ -> t
     in
-    match (t, IMap.find_opt id evaluated) with
+    match (t, Eval.Map.find_opt id evaluated) with
     (* The OpenT branch is a correct implementation of type destructors for all
      * types. However, because it adds a constraint to both sides of a type we may
      * end up doing some work twice. So as an optimization for concrete types
@@ -7627,7 +7631,7 @@ struct
     | ((OpenT _ | MergedT _), None) ->
       ( false,
         Tvar.mk_where cx reason (fun tvar ->
-            Context.set_evaluated cx (IMap.add id tvar evaluated);
+            Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
             let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
             rec_flow_t cx trace (t, x);
             rec_flow_t cx trace (x, t)) )
@@ -7635,14 +7639,14 @@ struct
     | (AnnotT (r, t, use_desc), None) ->
       ( true,
         Tvar.mk_where cx reason (fun tvar ->
-            Context.set_evaluated cx (IMap.add id tvar evaluated);
+            Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
             let repos = Some (r, use_desc) in
             let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
             rec_flow_t cx trace (t, x)) )
     | (_, None) ->
       ( true,
         Tvar.mk_where cx reason (fun tvar ->
-            Context.set_evaluated cx (IMap.add id tvar evaluated);
+            Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
             eval_destructor cx ~trace use_op reason t d tvar) )
 
   and eval_destructor cx ~trace use_op reason t d tout =

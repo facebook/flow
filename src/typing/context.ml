@@ -92,7 +92,7 @@ type sig_t = {
   (* modules point to mutable export maps *)
   mutable export_maps: Type.Exports.map;
   (* map from evaluation ids to types *)
-  mutable evaluated: Type.t IMap.t;
+  mutable evaluated: Type.t Type.Eval.Map.t;
   (* map from goal ids to types *)
   mutable goal_map: Type.t IMap.t;
   (* graph tracking full resolution of types *)
@@ -219,7 +219,7 @@ let make_sig () =
     property_maps = Type.Properties.Map.empty;
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
-    evaluated = IMap.empty;
+    evaluated = Type.Eval.Map.empty;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
@@ -585,7 +585,9 @@ let clear_master_shared cx master_cx =
   cx.sig_cx.call_props <-
     IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) cx.sig_cx.call_props;
   cx.sig_cx.evaluated <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.evaluated)) cx.sig_cx.evaluated;
+    Type.Eval.Map.filter
+      (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
+      cx.sig_cx.evaluated;
   cx.sig_cx.export_maps <-
     EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) cx.sig_cx.export_maps;
   ()
@@ -717,7 +719,7 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.property_maps <- Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
   sig_cx.call_props <- IMap.union sig_cx_other.call_props sig_cx.call_props;
   sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
-  sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
+  sig_cx.evaluated <- Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
   ()

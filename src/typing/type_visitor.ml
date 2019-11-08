@@ -656,7 +656,7 @@ class ['a] t =
       Context.find_exports cx id |> self#smap visit_pair acc
 
     method eval_id cx pole acc id =
-      match IMap.find_opt id (Context.evaluated cx) with
+      match Eval.Map.find_opt id (Context.evaluated cx) with
       | None -> acc
       | Some t -> self#type_ cx pole acc t
 

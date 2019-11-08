@@ -246,7 +246,7 @@ class visitor =
     method private eval_t cx t id =
       let evaluated = Context.evaluated cx in
       let t =
-        match IMap.find_opt id evaluated with
+        match Eval.Map.find_opt id evaluated with
         | Some cached -> cached
         | None -> t
       in

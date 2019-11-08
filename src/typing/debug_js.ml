@@ -234,7 +234,7 @@ and _json_of_t_impl json_cx t =
         @
         let evaluated = Context.evaluated json_cx.cx in
         begin
-          match IMap.find_opt id evaluated with
+          match Eval.Map.find_opt id evaluated with
           | None -> []
           | Some t -> [("result", _json_of_t json_cx t)]
         end
@@ -1712,7 +1712,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
     | OpaqueT _ -> p t
     | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t
-    | EvalT (arg, expr, id) -> p ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
+    | EvalT (arg, expr, id) ->
+      p ~extra:(spf "%s, %s" (defer_use expr (kid arg)) (Eval.string_of_id id)) t
     | TypeAppT (_, _, base, args) ->
       p ~extra:(spf "%s, [%s]" (kid base) (String.concat "; " (Base.List.map ~f:kid args))) t
     | ThisTypeAppT (_, base, this, args_opt) ->

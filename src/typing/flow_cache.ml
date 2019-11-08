@@ -108,11 +108,11 @@ let repos_cache = ref Repos_cache.empty
 module Eval = struct
   type id_cache_key = Type.t * Type.defer_use_t
 
-  type repos_cache_key = Type.t * Type.defer_use_t * int
+  type repos_cache_key = Type.t * Type.defer_use_t * Type.Eval.id
 
-  let eval_id_cache : (int, Type.t) Hashtbl.t = Hashtbl.create 0
+  let eval_id_cache : (Type.Eval.id, Type.t) Hashtbl.t = Hashtbl.create 0
 
-  let id_cache : (id_cache_key, int) Hashtbl.t = Hashtbl.create 0
+  let id_cache : (id_cache_key, Type.Eval.id) Hashtbl.t = Hashtbl.create 0
 
   let repos_cache : (repos_cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
 
@@ -122,7 +122,7 @@ module Eval = struct
       (match Hashtbl.find_opt eval_id_cache i with
       | Some t -> t
       | None ->
-        let i = mk_id () in
+        let i = Type.Eval.mk_id () in
         Hashtbl.add eval_id_cache i t;
         EvalT (t, defer_use, i))
     | _ ->
@@ -131,7 +131,7 @@ module Eval = struct
         match Hashtbl.find_opt id_cache cache_key with
         | Some i -> i
         | None ->
-          let i = mk_id () in
+          let i = Type.Eval.mk_id () in
           Hashtbl.add id_cache cache_key i;
           i
       in

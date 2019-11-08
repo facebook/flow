@@ -33,7 +33,8 @@ end
 module type S = sig
   val add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit
 
-  val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> int -> Type.t
+  val eval_evalt :
+    Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
   val eval_selector :
     Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
@@ -88,7 +89,7 @@ module type S = sig
     reason ->
     Type.t ->
     Type.destructor ->
-    int ->
+    Type.Eval.id ->
     bool * Type.t
 
   val reposition :

@@ -757,7 +757,7 @@ class virtual ['a] t =
 
     method virtual props : Context.t -> 'a -> Properties.id -> Properties.id
 
-    method virtual eval_id : Context.t -> 'a -> int -> int
+    method virtual eval_id : Context.t -> 'a -> Eval.id -> Eval.id
 
     method prop cx map_cx prop =
       match prop with
