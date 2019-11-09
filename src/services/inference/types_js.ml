@@ -1976,8 +1976,7 @@ end = struct
       FilenameSet.diff env.ServerEnv.unparsed to_remove |> FilenameSet.union unparsed_set
     in
     let cannot_skip_direct_dependents =
-      (not (Options.allow_skip_direct_dependents options))
-      || resolved_requires_changed_in_commit_modules
+      resolved_requires_changed_in_commit_modules
       || resolved_requires_changed_in_reresolve_direct_dependents
       || deleted_count > 0
       || not (FilenameSet.is_empty unparsed_set)
