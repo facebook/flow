@@ -135,13 +135,13 @@ References:
              ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- error-access.js:9:1
+Error --------------------------------------------------------------------------------------------- error-access.js:9:11
 
-Cannot get `E.C` because property `C` is missing in enum `E` [1].
+Cannot access `E.C` [1] because `C` is not a member of enum `E` [2]
 
-   error-access.js:9:1
-   9| E.C;
-      ^^^
+   error-access.js:9:11
+   9| const x = E.C;
+                ^^^ [1]
 
 References:
    error-access.js:3:1
@@ -150,7 +150,7 @@ References:
    4|   A,
    5|   B,
    6| }
-      ^ [1]
+      ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- error-coercion.js:9:19

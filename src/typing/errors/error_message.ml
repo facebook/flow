@@ -308,6 +308,12 @@ and 'loc t' =
       computed_property_reason: 'loc virtual_reason;
       union_reason: 'loc virtual_reason;
     }
+  (* enums *)
+  | EEnumInvalidMemberAccess of {
+      member_name: string;
+      access_reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -743,6 +749,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         computed_property_reason = map_reason computed_property_reason;
         union_reason = map_reason union_reason;
       }
+  | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
+    EEnumInvalidMemberAccess
+      {
+        member_name;
+        access_reason = map_reason access_reason;
+        enum_reason = map_reason enum_reason;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -904,7 +917,8 @@ let util_use_op_of_msg nope util = function
   | EInexactMayOverwriteIndexer _
   | EExponentialSpread _
   | EComputedPropertyWithMultipleLowerBounds _
-  | EComputedPropertyWithUnion _ ->
+  | EComputedPropertyWithUnion _
+  | EEnumInvalidMemberAccess _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1068,6 +1082,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
         Some loc))
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
+  | EEnumInvalidMemberAccess { access_reason; _ } -> Some (poly_loc_of_reason access_reason)
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EFunctionCallExtraArg _
@@ -2779,6 +2794,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ref computed_property_reason;
         text "?";
         text " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+      ]
+    in
+    Normal { features }
+  | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
+    let features =
+      [
+        text "Cannot access ";
+        ref access_reason;
+        text " because ";
+        code member_name;
+        text " is not a member of ";
+        ref enum_reason;
       ]
     in
     Normal { features }

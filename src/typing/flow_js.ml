@@ -6076,15 +6076,17 @@ struct
           when ALoc.equal_id id1 id2 ->
           ()
         | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
-            GetPropT (use_op, _, Named (reason_prop, name), tout) ) ->
-          if not @@ SSet.mem name members then
-            (* TODO(T54652940): Add custom error for incorrect member access *)
+            GetPropT (_, access_reason, Named (_, member_name), tout) ) ->
+          if SSet.mem member_name members then
+            let enum_type = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+            rec_flow_t cx trace (enum_type, tout)
+          else (
             add_output
               cx
               ~trace
-              (Error_message.EPropNotFound (Some name, (reason_prop, enum_reason), use_op));
-          let enum_type = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
-          rec_flow_t cx trace (enum_type, tout)
+              (Error_message.EEnumInvalidMemberAccess { member_name; access_reason; enum_reason });
+            rec_flow_t cx trace (AnyT.error access_reason, tout)
+          )
         | ( DefT (_, _, EnumT { enum_id = id1; _ }),
             UseT (_, DefT (_, _, EnumT { enum_id = id2; _ })) )
           when ALoc.equal_id id1 id2 ->

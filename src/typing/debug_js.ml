@@ -2979,6 +2979,12 @@ let dump_error_message =
         "EComputedPropertyWithUnion (%s) (%s)"
         (dump_reason cx computed_property_reason)
         (dump_reason cx union_reason)
+    | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
+      spf
+        "EEnumInvalidMemberAccess (%s) (%s) (%s)"
+        member_name
+        (dump_reason cx access_reason)
+        (dump_reason cx enum_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =
