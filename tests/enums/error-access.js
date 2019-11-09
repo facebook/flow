@@ -9,3 +9,6 @@ enum E {
 const x = E.C;
 // As it is the result of an error, `x` is `any`
 (x: boolean);
+
+// Error: computed access
+E["A"];

@@ -6084,9 +6084,16 @@ struct
             add_output
               cx
               ~trace
-              (Error_message.EEnumInvalidMemberAccess { member_name; access_reason; enum_reason });
+              (Error_message.EEnumInvalidMemberAccess
+                 { member_name = Some member_name; access_reason; enum_reason });
             rec_flow_t cx trace (AnyT.error access_reason, tout)
           )
+        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, access_reason, _, _)) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EEnumInvalidMemberAccess
+               { member_name = None; access_reason; enum_reason })
         | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, _))
         | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, _)) ->
           add_output

@@ -2982,7 +2982,7 @@ let dump_error_message =
     | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
       spf
         "EEnumInvalidMemberAccess (%s) (%s) (%s)"
-        member_name
+        (Option.value ~default:"<None>" member_name)
         (dump_reason cx access_reason)
         (dump_reason cx enum_reason)
     | EEnumModification { loc; enum_reason } ->

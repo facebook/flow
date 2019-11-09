@@ -310,7 +310,7 @@ and 'loc t' =
     }
   (* enums *)
   | EEnumInvalidMemberAccess of {
-      member_name: string;
+      member_name: string option;
       access_reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
@@ -2807,14 +2807,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EEnumInvalidMemberAccess { member_name; access_reason; enum_reason } ->
     let features =
-      [
-        text "Cannot access ";
-        ref access_reason;
-        text " because ";
-        code member_name;
-        text " is not a member of ";
-        ref enum_reason;
-      ]
+      [text "Cannot access "; ref access_reason]
+      @
+      match member_name with
+      | Some name -> [text " because "; code name; text " is not a member of "; ref enum_reason]
+      | None ->
+        [text " on "; ref enum_reason; text " because computed access is not allowed on enums."]
     in
     Normal { features }
   | EEnumModification { loc; enum_reason } ->
