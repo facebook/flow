@@ -314,6 +314,10 @@ and 'loc t' =
       access_reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
+  | EEnumModification of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -756,6 +760,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         access_reason = map_reason access_reason;
         enum_reason = map_reason enum_reason;
       }
+  | EEnumModification { loc; enum_reason } ->
+    EEnumModification { loc = f loc; enum_reason = map_reason enum_reason }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -918,7 +924,8 @@ let util_use_op_of_msg nope util = function
   | EExponentialSpread _
   | EComputedPropertyWithMultipleLowerBounds _
   | EComputedPropertyWithUnion _
-  | EEnumInvalidMemberAccess _ ->
+  | EEnumInvalidMemberAccess _
+  | EEnumModification _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1083,6 +1090,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
   | EEnumInvalidMemberAccess { access_reason; _ } -> Some (poly_loc_of_reason access_reason)
+  | EEnumModification { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EFunctionCallExtraArg _
@@ -2806,6 +2814,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code member_name;
         text " is not a member of ";
         ref enum_reason;
+      ]
+    in
+    Normal { features }
+  | EEnumModification { loc; enum_reason } ->
+    let features =
+      [
+        text "Cannot change ";
+        ref (mk_reason (RCustom "member") loc);
+        text " of ";
+        ref enum_reason;
+        text " because enums are frozen.";
       ]
     in
     Normal { features }

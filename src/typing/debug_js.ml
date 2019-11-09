@@ -2985,6 +2985,8 @@ let dump_error_message =
         member_name
         (dump_reason cx access_reason)
         (dump_reason cx enum_reason)
+    | EEnumModification { loc; enum_reason } ->
+      spf "EEnumModification (%s) (%s)" (string_of_aloc loc) (dump_reason cx enum_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

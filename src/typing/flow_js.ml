@@ -6087,6 +6087,12 @@ struct
               (Error_message.EEnumInvalidMemberAccess { member_name; access_reason; enum_reason });
             rec_flow_t cx trace (AnyT.error access_reason, tout)
           )
+        | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, _))
+        | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, _)) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EEnumModification { loc = aloc_of_reason op_reason; enum_reason })
         | ( DefT (_, _, EnumT { enum_id = id1; _ }),
             UseT (_, DefT (_, _, EnumT { enum_id = id2; _ })) )
           when ALoc.equal_id id1 id2 ->
