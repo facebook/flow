@@ -888,7 +888,7 @@ with type t = Impl.t = struct
       Statement.EnumDeclaration.(
         let enum_body =
           match body with
-          | BooleanBody { BooleanBody.members; explicitType } ->
+          | (loc, BooleanBody { BooleanBody.members; explicitType }) ->
             node
               "EnumBooleanBody"
               loc
@@ -900,7 +900,7 @@ with type t = Impl.t = struct
                     members );
                 ("explicitType", bool explicitType);
               ]
-          | NumberBody { NumberBody.members; explicitType } ->
+          | (loc, NumberBody { NumberBody.members; explicitType }) ->
             node
               "EnumNumberBody"
               loc
@@ -915,7 +915,7 @@ with type t = Impl.t = struct
                     members );
                 ("explicitType", bool explicitType);
               ]
-          | StringBody { StringBody.members; explicitType } ->
+          | (loc, StringBody { StringBody.members; explicitType }) ->
             let members =
               match members with
               | StringBody.Defaulted defaulted_members ->
@@ -936,7 +936,7 @@ with type t = Impl.t = struct
               "EnumStringBody"
               loc
               [("members", array members); ("explicitType", bool explicitType)]
-          | SymbolBody { SymbolBody.members } ->
+          | (loc, SymbolBody { SymbolBody.members }) ->
             node
               "EnumSymbolBody"
               loc

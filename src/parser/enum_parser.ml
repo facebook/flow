@@ -219,11 +219,8 @@ end = struct
     ) else
       None
 
-  let declaration =
+  let enum_body ~enum_name ~name_loc =
     with_loc (fun env ->
-        Expect.token env T_ENUM;
-        let id = Parse.identifier env in
-        let (id_loc, { Identifier.name = enum_name; _ }) = id in
         let explicit_type = parse_explicit_type ~enum_name env in
         Expect.token env T_LCURLY;
         let members = enum_members ~enum_name ~explicit_type empty_acc env in
@@ -277,10 +274,18 @@ end = struct
                   members.defaulted_members;
                 NumberBody { NumberBody.members = members.number_members; explicitType = false }
               | _ ->
-                error_at env (id_loc, Parse_error.EnumInconsistentMemberValues { enum_name });
+                error_at env (name_loc, Parse_error.EnumInconsistentMemberValues { enum_name });
                 empty ()
             end
         in
         Expect.token env T_RCURLY;
+        body)
+
+  let declaration =
+    with_loc (fun env ->
+        Expect.token env T_ENUM;
+        let id = Parse.identifier env in
+        let (name_loc, { Identifier.name = enum_name; _ }) = id in
+        let body = enum_body ~enum_name ~name_loc env in
         Statement.EnumDeclaration { id; body })
 end

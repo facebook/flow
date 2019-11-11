@@ -435,10 +435,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let { id; body } = enum in
         let body' =
           match body with
-          | BooleanBody boolean_body -> BooleanBody (this#enum_boolean_body boolean_body)
-          | NumberBody number_body -> NumberBody (this#enum_number_body number_body)
-          | StringBody string_body -> StringBody (this#enum_string_body string_body)
-          | SymbolBody symbol_body -> SymbolBody (this#enum_symbol_body symbol_body)
+          | (annot, BooleanBody boolean_body) ->
+            (this#on_loc_annot annot, BooleanBody (this#enum_boolean_body boolean_body))
+          | (annot, NumberBody number_body) ->
+            (this#on_loc_annot annot, NumberBody (this#enum_number_body number_body))
+          | (annot, StringBody string_body) ->
+            (this#on_loc_annot annot, StringBody (this#enum_string_body string_body))
+          | (annot, SymbolBody symbol_body) ->
+            (this#on_loc_annot annot, SymbolBody (this#enum_symbol_body symbol_body))
         in
         { id = this#t_identifier id; body = body' })
 

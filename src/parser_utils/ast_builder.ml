@@ -296,21 +296,21 @@ module Statements = struct
 
     let defaulted_member ?(loc = Loc.none) id = (loc, { DefaultedMember.id })
 
-    let boolean_body ?(explicit_type = false) members =
-      BooleanBody { BooleanBody.members; explicitType = explicit_type }
+    let boolean_body ?(loc = Loc.none) ?(explicit_type = false) members =
+      (loc, BooleanBody { BooleanBody.members; explicitType = explicit_type })
 
-    let number_body ?(explicit_type = false) members =
-      NumberBody { NumberBody.members; explicitType = explicit_type }
+    let number_body ?(loc = Loc.none) ?(explicit_type = false) members =
+      (loc, NumberBody { NumberBody.members; explicitType = explicit_type })
 
-    let string_defaulted_body ?(explicit_type = false) members =
+    let string_defaulted_body ?(loc = Loc.none) ?(explicit_type = false) members =
       let members = StringBody.Defaulted members in
-      StringBody { StringBody.members; explicitType = explicit_type }
+      (loc, StringBody { StringBody.members; explicitType = explicit_type })
 
-    let string_initialized_body ?(explicit_type = false) members =
+    let string_initialized_body ?(loc = Loc.none) ?(explicit_type = false) members =
       let members = StringBody.Initialized members in
-      StringBody { StringBody.members; explicitType = explicit_type }
+      (loc, StringBody { StringBody.members; explicitType = explicit_type })
 
-    let symbol_body members = SymbolBody { SymbolBody.members }
+    let symbol_body ?(loc = Loc.none) members = (loc, SymbolBody { SymbolBody.members })
   end
 end
 

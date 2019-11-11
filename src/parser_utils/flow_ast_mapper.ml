@@ -547,14 +547,14 @@ class ['loc] mapper =
         let id' = this#identifier ident in
         let body' =
           match body with
-          | BooleanBody boolean_body ->
-            id this#enum_boolean_body boolean_body body (fun body -> BooleanBody body)
-          | NumberBody number_body ->
-            id this#enum_number_body number_body body (fun body -> NumberBody body)
-          | StringBody string_body ->
-            id this#enum_string_body string_body body (fun body -> StringBody body)
-          | SymbolBody symbol_body ->
-            id this#enum_symbol_body symbol_body body (fun body -> SymbolBody body)
+          | (loc, BooleanBody boolean_body) ->
+            id this#enum_boolean_body boolean_body body (fun body -> (loc, BooleanBody body))
+          | (loc, NumberBody number_body) ->
+            id this#enum_number_body number_body body (fun body -> (loc, NumberBody body))
+          | (loc, StringBody string_body) ->
+            id this#enum_string_body string_body body (fun body -> (loc, StringBody body))
+          | (loc, SymbolBody symbol_body) ->
+            id this#enum_symbol_body symbol_body body (fun body -> (loc, SymbolBody body))
         in
         if ident == id' && body == body' then
           enum

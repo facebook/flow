@@ -1773,21 +1773,21 @@ and enum_declaration { Ast.Statement.EnumDeclaration.id; body } =
     in
     let body =
       match body with
-      | BooleanBody { BooleanBody.members; explicitType } ->
+      | (_, BooleanBody { BooleanBody.members; explicitType }) ->
         fuse
           [
             representation_type "boolean" explicitType;
             pretty_space;
             wrap_body @@ Base.List.map ~f:boolean_member members;
           ]
-      | NumberBody { NumberBody.members; explicitType } ->
+      | (_, NumberBody { NumberBody.members; explicitType }) ->
         fuse
           [
             representation_type "number" explicitType;
             pretty_space;
             wrap_body @@ Base.List.map ~f:number_member members;
           ]
-      | StringBody { StringBody.members; explicitType } ->
+      | (_, StringBody { StringBody.members; explicitType }) ->
         fuse
           [
             representation_type "string" explicitType;
@@ -1798,7 +1798,7 @@ and enum_declaration { Ast.Statement.EnumDeclaration.id; body } =
             | StringBody.Defaulted members -> Base.List.map ~f:defaulted_member members
             | StringBody.Initialized members -> Base.List.map ~f:string_member members );
           ]
-      | SymbolBody { SymbolBody.members } ->
+      | (_, SymbolBody { SymbolBody.members }) ->
         fuse
           [
             representation_type "symbol" true;

@@ -582,7 +582,9 @@ and Statement : sig
       body: 'M body;
     }
 
-    and 'M body =
+    and 'M body = 'M * 'M body'
+
+    and 'M body' =
       | BooleanBody of 'M BooleanBody.t
       | NumberBody of 'M NumberBody.t
       | StringBody of 'M StringBody.t

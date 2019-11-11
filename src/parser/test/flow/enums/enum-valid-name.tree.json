@@ -17,8 +17,8 @@
       },
       "body":{
         "type":"EnumStringBody",
-        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":1}},
-        "range":[0,13],
+        "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":2,"column":1}},
+        "range":[10,13],
         "members":[],
         "explicitType":false
       }

@@ -7712,12 +7712,14 @@ and mk_enum cx ~loc enum =
   let enum_id = Context.make_aloc_id cx loc in
   let member_names =
     match body with
-    | BooleanBody { BooleanBody.members; _ } -> Base.List.map ~f:name_of_initialized_member members
-    | NumberBody { NumberBody.members; _ } -> Base.List.map ~f:name_of_initialized_member members
-    | StringBody { StringBody.members = StringBody.Initialized members; _ } ->
+    | (_, BooleanBody { BooleanBody.members; _ }) ->
       Base.List.map ~f:name_of_initialized_member members
-    | StringBody { StringBody.members = StringBody.Defaulted members; _ } ->
+    | (_, NumberBody { NumberBody.members; _ }) ->
+      Base.List.map ~f:name_of_initialized_member members
+    | (_, StringBody { StringBody.members = StringBody.Initialized members; _ }) ->
+      Base.List.map ~f:name_of_initialized_member members
+    | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
       Base.List.map ~f:name_of_defaulted_member members
-    | SymbolBody { SymbolBody.members } -> Base.List.map ~f:name_of_defaulted_member members
+    | (_, SymbolBody { SymbolBody.members }) -> Base.List.map ~f:name_of_defaulted_member members
   in
   { enum_id; enum_name = name; members = SSet.of_list member_names }
