@@ -116,6 +116,8 @@ val max_header_tokens : config -> int
 
 val max_literal_length : config -> int
 
+val max_seconds_for_check_per_worker : config -> float
+
 val max_workers : config -> int
 
 val merge_timeout : config -> int option

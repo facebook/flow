@@ -967,116 +967,194 @@ let merge
       time_to_merge,
       first_internal_error )
 
-let check_files
-    ~reader
-    ~options
-    ~profiling
-    ~workers
-    ~errors
-    ~updated_errors
-    ~coverage
-    ~to_check
-    ~direct_dependent_files
-    ~sig_new_or_changed
-    ~dependency_info
-    ~persistent_connections
-    ~recheck_reasons
-    ~cannot_skip_direct_dependents =
-  match Options.arch options with
-  | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0, None, None, None)
-  | Options.TypesFirst ->
-    with_timer_lwt ~options "Check" profiling (fun () ->
-        Hh_logger.info "Check prep";
-        Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
-        let focused_to_check = CheckedSet.focused to_check in
-        let merged_dependents = CheckedSet.dependents to_check in
-        let skipped_count = ref 0 in
-        let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
-        let record_slow_file file time =
-          (num_slow_files :=
-             match !num_slow_files with
-             | None -> Some 1
-             | Some n -> Some (n + 1));
-          if time > !slowest_time then (
-            slowest_time := time;
-            slowest_file := Some file
-          )
-        in
-        let implementation_dependency_graph =
-          Dependency_info.implementation_dependency_graph dependency_info
-        in
-        (* skip dependents whenever none of their dependencies have new or changed signatures *)
-        let dependents_to_check =
-          FilenameSet.filter (fun f ->
-              (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
-              || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-                 @@ FilenameMap.find f implementation_dependency_graph
-              ||
-              ( incr skipped_count;
-                false ))
-          @@ merged_dependents
-        in
-        Hh_logger.info
-          "Check will skip %d of %d files"
-          !skipped_count
-          (* We can just add these counts without worrying about files which are in both sets. We
-           * got these both from a CheckedSet. CheckedSet's representation ensures that a single
-           * file cannot have more than one kind. *)
-          (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
-        let files = FilenameSet.union focused_to_check dependents_to_check in
-        let%lwt intermediate_result_callback =
-          mk_intermediate_result_callback
-            ~reader
-            ~options
-            ~profiling
-            ~persistent_connections
-            ~recheck_reasons
-            updated_errors.ServerEnv.suppressions
-        in
-        Hh_logger.info "Checking files";
+module Check_files : sig
+  val check_files :
+    reader:Parsing_heaps.Mutator_reader.reader ->
+    options:Options.t ->
+    profiling:Profiling_js.running ->
+    workers:MultiWorkerLwt.worker list option ->
+    errors:ServerEnv.errors ->
+    updated_errors:ServerEnv.errors ->
+    coverage:Coverage_response.file_coverage Utils_js.FilenameMap.t ->
+    to_check:CheckedSet.t ->
+    direct_dependent_files:Utils_js.FilenameSet.t ->
+    sig_new_or_changed:Utils_js.FilenameSet.t ->
+    dependency_info:Dependency_info.t ->
+    persistent_connections:Persistent_connection.t option ->
+    recheck_reasons:LspProt.recheck_reason list ->
+    cannot_skip_direct_dependents:bool ->
+    ( ServerEnv.errors
+    * Coverage_response.file_coverage Utils_js.FilenameMap.t
+    * float
+    * int
+    * string option
+    * int option
+    * string option )
+    Lwt.t
+end = struct
+  (* Check as many files as it can before it hits the timeout. The timeout is soft,
+   * so the file which exceeds the timeout won't be canceled. We expect most buckets
+   * to not hit the timeout *)
+  let rec job_helper ~reader ~options ~start_time acc = function
+    | [] -> (acc, [])
+    | unfinished_files
+      when Unix.gettimeofday () -. start_time > Options.max_seconds_for_check_per_worker options ->
+      Hh_logger.debug
+        "Bucket timed out! %d files finished, %d files unfinished"
+        (List.length acc)
+        (List.length unfinished_files);
+      (acc, unfinished_files)
+    | file :: rest ->
+      let result = Merge_service.check options ~reader file in
+      job_helper ~reader ~options ~start_time (result :: acc) rest
 
-        let check_start_time = Unix.gettimeofday () in
-        let job =
-          List.fold_left (fun acc file -> Merge_service.check options ~reader file :: acc)
-        in
-        let merge new_acc acc =
-          intermediate_result_callback (lazy new_acc);
-          List.rev_append new_acc acc
-        in
-        let progress_fn ~total ~start ~length:_ =
-          MonitorRPC.status_update
-            ServerStatus.(Checking_progress { total = Some total; finished = start })
-        in
-        let max_size = Options.max_files_checked_per_worker options in
-        let%lwt ret =
-          MultiWorkerLwt.call
-            workers
-            ~job
-            ~neutral:[]
-            ~merge
-            ~next:(MultiWorkerLwt.next ~progress_fn ~max_size workers (FilenameSet.elements files))
-        in
-        let { ServerEnv.merge_errors; warnings; _ } = errors in
-        let suppressions = updated_errors.ServerEnv.suppressions in
-        let (merge_errors, warnings, suppressions, coverage, first_internal_error) =
-          List.fold_left
-            (fun acc (file, result) ->
-              let acc = remove_old_results acc file in
-              add_new_results ~record_slow_file acc file result)
-            (merge_errors, warnings, suppressions, coverage, None)
-            ret
-        in
-        let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
-        Hh_logger.info "Done";
-        let errors = { errors with ServerEnv.merge_errors; warnings; suppressions } in
-        Lwt.return
-          ( errors,
-            coverage,
-            time_to_check_merged,
-            !skipped_count,
-            Option.map ~f:File_key.to_string !slowest_file,
-            !num_slow_files,
-            Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
+  let job ~reader ~options acc files =
+    let start_time = Unix.gettimeofday () in
+    job_helper ~reader ~options ~start_time acc files
+
+  (* A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
+   * when a bucket times out *)
+  let mk_next ~intermediate_result_callback ~max_size ~workers ~files =
+    let total_count = List.length files in
+    let todo = ref (files, total_count) in
+    let finished_count = ref 0 in
+    let num_workers = max 1 (Option.value_map workers ~default:1 ~f:List.length) in
+    let status_update () =
+      MonitorRPC.status_update
+        ServerStatus.(Checking_progress { total = Some total_count; finished = !finished_count })
+    in
+    let next () =
+      let (remaining_files, remaining_count) = !todo in
+      (* When we get near the end of the file list, start using smaller buckets in order
+       * to spread the work across the available workers *)
+      let bucket_size =
+        if remaining_count >= max_size * num_workers then
+          max_size
+        else
+          (remaining_count / num_workers) + 1
+      in
+      let (bucket, remaining_files) = Base.List.split_n remaining_files bucket_size in
+      let bucket_size = List.length bucket in
+      todo := (remaining_files, remaining_count - bucket_size);
+      if bucket_size = 0 then
+        Bucket.Done
+      else
+        Bucket.Job bucket
+    in
+    let merge (finished_file_accs, unfinished_files) acc =
+      intermediate_result_callback (lazy finished_file_accs);
+      let (remaining_files, remaining_count) = !todo in
+      todo :=
+        ( List.rev_append unfinished_files remaining_files,
+          remaining_count + List.length unfinished_files );
+      finished_count := !finished_count + List.length finished_file_accs;
+      status_update ();
+      List.rev_append finished_file_accs acc
+    in
+    (next, merge)
+
+  let check_files
+      ~reader
+      ~options
+      ~profiling
+      ~workers
+      ~errors
+      ~updated_errors
+      ~coverage
+      ~to_check
+      ~direct_dependent_files
+      ~sig_new_or_changed
+      ~dependency_info
+      ~persistent_connections
+      ~recheck_reasons
+      ~cannot_skip_direct_dependents =
+    match Options.arch options with
+    | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0, None, None, None)
+    | Options.TypesFirst ->
+      with_timer_lwt ~options "Check" profiling (fun () ->
+          Hh_logger.info "Check prep";
+          Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
+          let focused_to_check = CheckedSet.focused to_check in
+          let merged_dependents = CheckedSet.dependents to_check in
+          let skipped_count = ref 0 in
+          let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
+          let record_slow_file file time =
+            (num_slow_files :=
+               match !num_slow_files with
+               | None -> Some 1
+               | Some n -> Some (n + 1));
+            if time > !slowest_time then (
+              slowest_time := time;
+              slowest_file := Some file
+            )
+          in
+          let implementation_dependency_graph =
+            Dependency_info.implementation_dependency_graph dependency_info
+          in
+          (* skip dependents whenever none of their dependencies have new or changed signatures *)
+          let dependents_to_check =
+            FilenameSet.filter (fun f ->
+                (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
+                || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
+                   @@ FilenameMap.find f implementation_dependency_graph
+                ||
+                ( incr skipped_count;
+                  false ))
+            @@ merged_dependents
+          in
+          Hh_logger.info
+            "Check will skip %d of %d files"
+            !skipped_count
+            (* We can just add these counts without worrying about files which are in both sets. We
+             * got these both from a CheckedSet. CheckedSet's representation ensures that a single
+             * file cannot have more than one kind. *)
+            (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
+          let files = FilenameSet.union focused_to_check dependents_to_check in
+          let%lwt intermediate_result_callback =
+            mk_intermediate_result_callback
+              ~reader
+              ~options
+              ~profiling
+              ~persistent_connections
+              ~recheck_reasons
+              updated_errors.ServerEnv.suppressions
+          in
+          Hh_logger.info "Checking files";
+
+          let check_start_time = Unix.gettimeofday () in
+          let max_size = Options.max_files_checked_per_worker options in
+          let (next, merge) =
+            mk_next
+              ~intermediate_result_callback
+              ~max_size
+              ~workers
+              ~files:(FilenameSet.elements files)
+          in
+          let%lwt ret =
+            MultiWorkerLwt.call workers ~job:(job ~reader ~options) ~neutral:[] ~merge ~next
+          in
+          let { ServerEnv.merge_errors; warnings; _ } = errors in
+          let suppressions = updated_errors.ServerEnv.suppressions in
+          let (merge_errors, warnings, suppressions, coverage, first_internal_error) =
+            List.fold_left
+              (fun acc (file, result) ->
+                let acc = remove_old_results acc file in
+                add_new_results ~record_slow_file acc file result)
+              (merge_errors, warnings, suppressions, coverage, None)
+              ret
+          in
+          let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
+          Hh_logger.info "Done";
+          let errors = { errors with ServerEnv.merge_errors; warnings; suppressions } in
+          Lwt.return
+            ( errors,
+              coverage,
+              time_to_check_merged,
+              !skipped_count,
+              Option.map ~f:File_key.to_string !slowest_file,
+              !num_slow_files,
+              Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
+end
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
@@ -2034,10 +2112,10 @@ end = struct
           match Options.lazy_mode options with
           | Options.NON_LAZY_MODE
           (* Non lazy mode treats every file as focused. *)
-          
+
           | Options.LAZY_MODE_WATCHMAN
           (* Watchman mode treats every modified file as focused *)
-          
+
           | Options.LAZY_MODE_FILESYSTEM ->
             (* FS mode treats every modified file as focused *)
             let old_focus_targets = CheckedSet.focused checked_files in
@@ -2221,7 +2299,7 @@ end = struct
               slowest_file,
               num_slow_files,
               check_internal_error ) =
-      check_files
+      Check_files.check_files
         ~reader
         ~options
         ~profiling
@@ -2952,7 +3030,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
       let%lwt (errors, coverage, _, _, _, _, check_internal_error) =
-        check_files
+        Check_files.check_files
           ~reader
           ~options
           ~profiling
