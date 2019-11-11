@@ -40,6 +40,71 @@ assert_errors() {
   assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_ERRS" "$@"
 }
 
+# Query utilities
+
+query_at_pos() {
+  local query=$1
+  local file=$2
+  local line=$3
+  local col=$4
+  shift 4
+  local flags=("$@")
+
+  printf "%s:%s:%s\n" "$file" "$line" "$col"
+  echo "Flags:" "${flags[@]}"
+  assert_ok "$FLOW" "$query" "$file" "$line" "$col" --strip-root "${flags[@]}"
+  printf "\n"
+}
+
+# Utility to create queries that involve specific locations (line, column)
+#
+# This function performs 'query' on all locations (line, col) in 'file' that
+# have a ^ in comments at location (line+1, col).
+#
+# E.g.
+#   type A = number;
+#   //   ^
+#
+# You can also pass in flags after the ^:
+# //   ^ --expand-type-aliases
+#
+# Invoke this passing the query name, the file, and any additional flags to be
+# applied to every query in the file, e.g.
+#
+#   query_in_file "type-at-pos" "file.js" --pretty --json
+#
+queries_in_file() {
+  local query=$1
+  local file=$2
+  shift 2
+  local arg_flags_array=("$@")
+
+  awk '/^\/\/.*\^/{ print NR }' "$file" | while read -r line; do
+    local linep="$line""p"
+    # Compute the column of the query
+    local col
+    col=$(
+      sed -n "$linep" "$file" | \
+      awk -F'^' '{ print $1}' | \
+      wc -c
+    )
+    col="$((col))" # trim wc's whitespaces
+    # Read line flags into an array (space separation)
+    local line_flags_array=()
+    IFS=" " read -r -a line_flags_array <<< "$(
+      sed -n "$linep" "$file" | \
+      awk -F'^' '{ print $2 }'
+    )"
+    if [ -n "$col" ]; then
+      # Get line above
+      ((line--))
+      # Aggregate flags
+      local all_flags=("${arg_flags_array[@]}" "${line_flags_array[@]}")
+      query_at_pos "$query" "$file" "$line" "$col" "${all_flags[@]}"
+    fi
+  done
+}
+
 show_skipping_stats_classic() {
   printf "\\n========Skipping stats========\\n"
   grep -o "Merge skipped [0-9]\+ of [0-9]\+ modules" $1 | tail -n 1
