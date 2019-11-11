@@ -436,7 +436,19 @@ module Object
         let targs = Type.type_args env in
         { Class.Extends.expr; targs })
 
-  let rec _class env =
+  let rec _class ?(decorators = []) env ~optional_id =
+    (* 10.2.1 says all parts of a class definition are strict *)
+    let env = env |> with_strict true in
+    let decorators = decorators @ decorator_list env in
+    let leading = Peek.comments env in
+    Expect.token env T_CLASS;
+    let id =
+      let tmp_env = env |> with_no_let true in
+      match (optional_id, Peek.token tmp_env) with
+      | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
+      | _ -> Some (Parse.identifier tmp_env)
+    in
+    let tparams = Type.type_params env in
     let extends =
       if Expect.maybe env T_EXTENDS then
         Some (class_extends env)
@@ -452,7 +464,9 @@ module Object
         []
     in
     let body = class_body env in
-    (body, extends, implements)
+    let trailing = Peek.comments env in
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    (id, body, extends, implements, tparams, decorators, comments)
 
   and check_property_name env loc name static =
     if String.equal name "constructor" || (String.equal name "prototype" && static) then
@@ -751,61 +765,19 @@ module Object
   let class_declaration env decorators =
     with_loc
       (fun env ->
-        (* 10.2.1 says all parts of a class definition are strict *)
-        let env = env |> with_strict true in
-        let decorators = decorators @ decorator_list env in
-        let leading = Peek.comments env in
-        Expect.token env T_CLASS;
-        let id =
-          let tmp_env = env |> with_no_let true in
-          match (in_export env, Peek.token tmp_env) with
-          | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
-          | _ -> Some (Parse.identifier tmp_env)
+        let optional_id = in_export env in
+        let (id, body, extends, implements, tparams, decorators, comments) =
+          _class env ~decorators ~optional_id
         in
-        let tparams = Type.type_params env in
-        let (body, extends, implements) = _class env in
-        let trailing = Peek.comments env in
         Ast.Statement.ClassDeclaration
-          {
-            Class.id;
-            body;
-            tparams;
-            extends;
-            implements;
-            classDecorators = decorators;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments })
       env
 
   let class_expression =
     with_loc (fun env ->
-        (* 10.2.1 says all parts of a class expression are strict *)
-        let env = env |> with_strict true in
-        let decorators = decorator_list env in
-        let leading = Peek.comments env in
-        Expect.token env T_CLASS;
-        let (id, tparams) =
-          match Peek.token env with
-          | T_EXTENDS
-          | T_IMPLEMENTS
-          | T_LESS_THAN
-          | T_LCURLY ->
-            (None, None)
-          | _ ->
-            let id = Some (Parse.identifier env) in
-            let tparams = Type.type_params env in
-            (id, tparams)
+        let (id, body, extends, implements, tparams, decorators, comments) =
+          _class env ~optional_id:true
         in
-        let (body, extends, implements) = _class env in
-        let trailing = Peek.comments env in
         Ast.Expression.Class
-          {
-            Class.id;
-            body;
-            tparams;
-            extends;
-            implements;
-            classDecorators = decorators;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments })
 end
