@@ -243,7 +243,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   and function_param_with_id env =
     with_loc
       (fun env ->
+        Eat.push_lex_mode env Lex_mode.NORMAL;
         let name = Parse.identifier env in
+        Eat.pop_lex_mode env;
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
         let optional = Expect.maybe env T_PLING in
         Expect.token env T_COLON;
