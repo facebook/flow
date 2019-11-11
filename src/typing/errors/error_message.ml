@@ -243,6 +243,7 @@ and 'loc t' =
   | EParseError of 'loc * Parse_error.t
   | EDocblockError of 'loc * docblock_error
   | EImplicitInexactObject of 'loc
+  | EAmbiguousObjectType of 'loc
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of 'loc * string
   | EUntypedImport of 'loc * string
@@ -669,6 +670,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EParseError (loc, p) -> EParseError (f loc, p)
   | EDocblockError (loc, e) -> EDocblockError (f loc, e)
   | EImplicitInexactObject loc -> EImplicitInexactObject (f loc)
+  | EAmbiguousObjectType loc -> EAmbiguousObjectType (f loc)
   | EUntypedTypeImport (loc, s) -> EUntypedTypeImport (f loc, s)
   | EUntypedImport (loc, s) -> EUntypedImport (f loc, s)
   | ENonstrictImport loc -> ENonstrictImport (f loc)
@@ -875,6 +877,7 @@ let util_use_op_of_msg nope util = function
   | EParseError (_, _)
   | EDocblockError (_, _)
   | EImplicitInexactObject _
+  | EAmbiguousObjectType _
   | EUntypedTypeImport (_, _)
   | EUntypedImport (_, _)
   | ENonstrictImport _
@@ -1012,6 +1015,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnusedSuppression loc
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
+  | EAmbiguousObjectType loc
   | EParseError (loc, _)
   | EInvalidLHSInAssignment loc
   | EInvalidTypeof (loc, _)
@@ -1121,6 +1125,7 @@ let kind_of_msg =
     | EInexactSpread _ -> LintError Lints.InexactSpread
     | ESignatureVerification _ -> LintError Lints.SignatureVerificationFailure
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
+    | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | ENonArraySpread _ -> LintError Lints.NonArraySpread
     | EBadExportPosition _
@@ -2419,6 +2424,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EAmbiguousObjectType _ ->
+    let features =
+      [
+        text "Please write this object type as explicitly exact (use ";
+        code "{|";
+        text " and ";
+        code "|}";
+        text " instead of ";
+        code "{";
+        text " and ";
+        code "}";
+        text ") or as explicitly inexact (add ";
+        code "...";
+        text " to the end of the list of properties).";
+      ]
+    in
+    Normal { features }
   | EUntypedTypeImport (_, module_name) ->
     let features =
       [
@@ -2799,6 +2821,7 @@ let is_lint_error = function
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
+  | EAmbiguousObjectType _
   | EUninitializedInstanceProperty _
   | ENonArraySpread _ ->
     true

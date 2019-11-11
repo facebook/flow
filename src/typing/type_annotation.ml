@@ -954,8 +954,10 @@ let rec convert cx tparams_map =
       let exact_by_default = Context.exact_by_default cx in
       let exact_type = exact || ((not inexact) && exact_by_default) in
       let (t, properties) = convert_object cx tparams_map loc ~exact:exact_type properties in
-      if (not exact) && (not inexact) && not exact_by_default then
-        Flow.add_output cx Error_message.(EImplicitInexactObject loc);
+      if (not exact) && not inexact then (
+        Flow.add_output cx Error_message.(EAmbiguousObjectType loc);
+        if not exact_by_default then Flow.add_output cx Error_message.(EImplicitInexactObject loc)
+      );
       ((loc, t), Object { Object.exact; properties; inexact })
     | (loc, Interface { Interface.extends; body }) ->
       let (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact }) = body in

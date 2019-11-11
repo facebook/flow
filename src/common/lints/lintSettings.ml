@@ -27,6 +27,7 @@ let ignored_by_all =
     Lints.DynamicExport;
     Lints.DeprecatedUtility;
     Lints.ImplicitInexactObject;
+    Lints.AmbiguousObjectType;
     Lints.UninitializedInstanceProperty;
   ]
 

@@ -38,6 +38,7 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | NonArraySpread
+  | AmbiguousObjectType
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
@@ -66,6 +67,7 @@ let string_of_kind = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | NonArraySpread -> "non-array-spread"
+  | AmbiguousObjectType -> "ambiguous-object-type"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -95,6 +97,7 @@ let kinds_of_string = function
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
+  | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | "non-array-spread" -> Some [NonArraySpread]
   | _ -> None
