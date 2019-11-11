@@ -50,6 +50,32 @@ module rec Parse : PARSER = struct
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
   module JSX = Jsx_parser.JSX (Parse)
 
+  let identifier ?restricted_error env =
+    (match Peek.token env with
+    (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
+       lists them out. It is always disallowed in strict mode *)
+    | T_LET when in_strict_mode env -> error env Parse_error.StrictReservedWord
+    | T_LET when no_let env -> error_unexpected env
+    | T_LET -> ()
+    (* `allow_await` means that `await` is allowed to be a keyword,
+        which makes it illegal to use as an identifier.
+        https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+    | T_AWAIT when allow_await env -> error env Parse_error.UnexpectedReserved
+    | T_AWAIT -> ()
+    (* `allow_yield` means that `yield` is allowed to be a keyword,
+        which makes it illegal to use as an identifier.
+        https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+    | T_YIELD when allow_yield env -> error env Parse_error.UnexpectedReserved
+    | T_YIELD when in_strict_mode env -> error env Parse_error.StrictReservedWord
+    | T_YIELD -> ()
+    | t when token_is_strict_reserved t -> strict_error env Parse_error.StrictReservedWord
+    | t when token_is_reserved t -> error_unexpected env
+    | t ->
+      (match restricted_error with
+      | Some err when token_is_restricted t -> strict_error env err
+      | _ -> ()));
+    identifier_name env
+
   let rec program env =
     let stmts = module_body_with_directives env (fun _ -> false) in
     let end_loc = Peek.loc env in
@@ -262,44 +288,6 @@ module rec Parse : PARSER = struct
   and is_assignable_lhs = Expression.is_assignable_lhs
 
   and number = Expression.number
-
-  and assert_identifier_name_is_identifier
-      ?restricted_error env (loc, { Ast.Identifier.name; comments = _ }) =
-    match name with
-    | "let" ->
-      (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
-       * lists them out. It is always disallowed in strict mode *)
-      if in_strict_mode env then
-        strict_error_at env (loc, Parse_error.StrictReservedWord)
-      else if no_let env then
-        error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
-    | "await" ->
-      (* `allow_await` means that `await` is allowed to be a keyword,
-         which makes it illegal to use as an identifier.
-         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_await env then error_at env (loc, Parse_error.UnexpectedReserved)
-    | "yield" ->
-      (* `allow_yield` means that `yield` is allowed to be a keyword,
-         which makes it illegal to use as an identifier.
-         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_yield env then
-        error_at env (loc, Parse_error.UnexpectedReserved)
-      else
-        strict_error_at env (loc, Parse_error.StrictReservedWord)
-    | _ when is_strict_reserved name -> strict_error_at env (loc, Parse_error.StrictReservedWord)
-    | _ when is_reserved name ->
-      error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
-    | _ ->
-      begin
-        match restricted_error with
-        | Some err when is_restricted name -> strict_error_at env (loc, err)
-        | _ -> ()
-      end
-
-  and identifier ?restricted_error env =
-    let id = identifier_name env in
-    assert_identifier_name_is_identifier ?restricted_error env id;
-    id
 
   and identifier_with_type =
     let with_loc_helper no_optional restricted_error env =

@@ -458,6 +458,47 @@ let is_keyword = function
     true
   | _ -> false
 
+let token_is_keyword =
+  Token.(
+    function
+    | T_IDENTIFIER { raw; _ } when is_keyword raw -> true
+    | T_AWAIT
+    | T_BREAK
+    | T_CASE
+    | T_CATCH
+    | T_CLASS
+    | T_CONST
+    | T_CONTINUE
+    | T_DEBUGGER
+    | T_DEFAULT
+    | T_DELETE
+    | T_DO
+    | T_ELSE
+    | T_EXPORT
+    | T_EXTENDS
+    | T_FINALLY
+    | T_FOR
+    | T_FUNCTION
+    | T_IF
+    | T_IMPORT
+    | T_IN
+    | T_INSTANCEOF
+    | T_NEW
+    | T_RETURN
+    | T_SUPER
+    | T_SWITCH
+    | T_THIS
+    | T_THROW
+    | T_TRY
+    | T_TYPEOF
+    | T_VAR
+    | T_VOID
+    | T_WHILE
+    | T_WITH
+    | T_YIELD ->
+      true
+    | _ -> false)
+
 (* #sec-future-reserved-words *)
 let is_future_reserved = function
   | "enum" -> true
@@ -520,6 +561,18 @@ let is_reserved str_val =
   | "null"
   | "true"
   | "false" ->
+    true
+  | _ -> false
+
+let token_is_reserved t =
+  token_is_keyword t
+  || token_is_future_reserved t
+  ||
+  match t with
+  | Token.T_IDENTIFIER { raw = "null" | "true" | "false"; _ }
+  | Token.T_NULL
+  | Token.T_TRUE
+  | Token.T_FALSE ->
     true
   | _ -> false
 

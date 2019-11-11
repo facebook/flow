@@ -49,9 +49,6 @@ module type PARSER = sig
   val identifier_with_type :
     env -> ?no_optional:bool -> Parse_error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
 
-  val assert_identifier_name_is_identifier :
-    ?restricted_error:Parse_error.t -> env -> (Loc.t, Loc.t) Identifier.t -> unit
-
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
 
   val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
