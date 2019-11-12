@@ -229,6 +229,7 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
       let (parse_ok, unparsed, unchanged, local_errors) = collate_parse_results ~options results in
       Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
 
+(* TODO: make this always return errors and deal with check_syntax at the caller *)
 let parse_contents ~options ~profiling ~check_syntax filename contents =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
       (* always enable types when checking an individual file *)
@@ -243,8 +244,10 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
       in
       let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
       match parse_result with
-      | Parsing_service_js.Parse_ok parse_ok ->
-        (* TODO: errors gets dropped *)
+      | Parsing_service_js.Parse_ok (parse_ok, _parse_errors) ->
+        (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
+           and they'll hit the Parse_fail case instead when ~check_syntax:true *)
+        (* TODO: docblock errors get dropped *)
         let (ast, file_sig) = Parsing_service_js.basic parse_ok in
         Lwt.return (Ok (ast, file_sig), info)
       | Parsing_service_js.Parse_fail fails ->

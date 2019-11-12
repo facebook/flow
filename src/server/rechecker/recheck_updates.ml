@@ -25,7 +25,9 @@ let is_incompatible_package_json ~reader =
     | None -> true (* Failed to read package.json *)
     | Some content ->
       (try
-         let ast = Parsing_service_js.parse_json_file ~fail:true content filename in
+         let (ast, _parse_errors) =
+           Parsing_service_js.parse_json_file ~fail:true content filename
+         in
          Module_js.package_incompatible ~reader filename_str ast
        with _ -> true)
     (* Failed to parse package.json *)
