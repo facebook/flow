@@ -233,7 +233,7 @@ module rec TypeTerm : sig
         tparams_loc: ALoc.t;
         tparams: typeparam Nel.t;
         t_out: t;
-        id: int;
+        id: Poly.id;
       }
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
@@ -1634,6 +1634,42 @@ end = struct
     type key = id
 
     type t = key
+
+    let compare = compare_id
+  end)
+end
+
+and Poly : sig
+  type id
+
+  val compare_id : id -> id -> int
+
+  val mk_id : unit -> id
+
+  val string_of_id : id -> string
+
+  val id_as_int : id -> int option
+
+  val id_of_int : int -> id
+
+  module Set : Set.S with type elt = id
+end = struct
+  type id = int
+
+  let compare_id = compare
+
+  let mk_id = Reason.mk_id
+
+  let string_of_id = string_of_int
+
+  let id_as_int = Base.Option.return
+
+  let id_of_int id = id
+
+  module Set : Set.S with type elt = id = Set.Make (struct
+    type elt = id
+
+    type t = elt
 
     let compare = compare_id
   end)

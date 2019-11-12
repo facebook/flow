@@ -240,7 +240,7 @@ and _json_of_t_impl json_cx t =
         end
       | DefT (_, _, PolyT { tparams; t_out = t; id; _ }) ->
         [
-          ("id", JSON_Number (string_of_int id));
+          ("id", JSON_Number (Poly.string_of_id id));
           ( "typeParams",
             JSON_Array (Base.List.map ~f:(json_of_typeparam json_cx) (Nel.to_list tparams)) );
           ("type", _json_of_t json_cx t);
@@ -1667,10 +1667,10 @@ let rec dump_t_ (depth, tvars) cx t =
         ~trust:(Some trust)
         ~extra:
           (spf
-             "%s [%s] #%d"
+             "%s [%s] #%s"
              (kid c)
              (String.concat "; " (Base.List.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
-             id)
+             (Poly.string_of_id id))
         t
     | ThisClassT (_, inst) -> p ~extra:(kid inst) t
     | BoundT (_, name) -> p ~extra:name t

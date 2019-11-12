@@ -836,18 +836,20 @@ module ContextOptimizer = struct
           SigHash.add_type sig_hash t';
           t'
         | DefT (_, _, PolyT { id = poly_id; _ }) ->
-          let id =
-            if Context.mem_nominal_poly_id cx poly_id then
-              match IMap.find_opt poly_id stable_poly_ids with
-              | None ->
-                let id = self#fresh_stable_id in
-                stable_poly_ids <- IMap.add poly_id id stable_poly_ids;
-                id
-              | Some id -> id
-            else
-              poly_id
-          in
-          SigHash.add_int sig_hash id;
+          if Context.mem_nominal_poly_id cx poly_id then
+            Poly.id_as_int poly_id
+            |> Base.Option.iter ~f:(fun poly_id ->
+                   let id =
+                     match IMap.find_opt poly_id stable_poly_ids with
+                     | None ->
+                       let id = self#fresh_stable_id in
+                       stable_poly_ids <- IMap.add poly_id id stable_poly_ids;
+                       id
+                     | Some id -> id
+                   in
+                   SigHash.add_int sig_hash id)
+          else
+            Poly.id_as_int poly_id |> Base.Option.iter ~f:(SigHash.add_int sig_hash);
           super#type_ cx pole t
         | _ ->
           let t' = super#type_ cx pole t in

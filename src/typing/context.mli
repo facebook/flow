@@ -163,7 +163,7 @@ val find_tvar : t -> Constraint.ident -> Constraint.node
 
 val mem_nominal_prop_id : t -> Constraint.ident -> bool
 
-val mem_nominal_poly_id : t -> Constraint.ident -> bool
+val mem_nominal_poly_id : t -> Type.Poly.id -> bool
 
 val graph : t -> Constraint.node IMap.t
 
@@ -295,7 +295,7 @@ val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
 val add_nominal_prop_id : t -> Constraint.ident -> unit
 
-val add_nominal_poly_id : t -> Constraint.ident -> unit
+val add_nominal_poly_id : t -> Type.Poly.id -> unit
 
 val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 
@@ -407,7 +407,7 @@ val make_call_prop : t -> Type.t -> int
 
 val make_export_map : t -> Type.Exports.t -> Type.Exports.id
 
-val make_nominal : t -> int
+val make_nominal : t -> Type.Poly.id
 
 val find_constraints : t -> Constraint.ident -> Constraint.ident * Constraint.constraints
 

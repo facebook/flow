@@ -66,7 +66,7 @@ end
 
 (* Cache that maps TypeApp(Poly (...id), ts) to its result. *)
 module Subst = struct
-  type cache_key = int * Type.t list
+  type cache_key = Type.Poly.id * Type.t list
 
   type cache_value_el =
     | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
