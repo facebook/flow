@@ -186,9 +186,3 @@ let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
     %>>= fun refs_by_file ->
     apply_rename_to_files ~reader refs_by_file new_name
     %>>= (fun (edits : (Loc.t * string) list) -> Lwt.return @@ Ok (Some edits))
-
-let refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant :
-    refactor_result =
-  match refactor_variant with
-  | ServerProt.Request.RENAME new_name ->
-    rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name

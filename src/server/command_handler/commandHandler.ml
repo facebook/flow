@@ -750,7 +750,9 @@ let handle_refactor
   ServerProt.Response.(
     let env = ref env in
     let%lwt result =
-      Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+      match refactor_variant with
+      | ServerProt.Request.RENAME new_name ->
+        Refactor_service.rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name
     in
     let env = !env in
     let result =
@@ -1640,10 +1642,9 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
   let { Rename.textDocument; position; newName } = params in
   let file_input = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client in
   let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
-  let refactor_variant = ServerProt.Request.RENAME newName in
   let env = ref env in
   let%lwt result =
-    Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+    Refactor_service.rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name:newName
   in
   let env = !env in
   let edits_to_response (edits : (Loc.t * string) list) =

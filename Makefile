@@ -127,6 +127,7 @@ MODULES=\
   src/services/inference\
   src/services/inference/module\
   src/services/flowFileGen\
+  src/services/refactor\
   src/services/references\
   src/services/saved_state\
   src/services/type_info\
