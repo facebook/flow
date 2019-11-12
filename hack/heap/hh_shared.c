@@ -987,7 +987,7 @@ static void set_sizes(
 
   size_t page_size = getpagesize();
 
-  global_size_b = config_global_size;
+  global_size_b = sizeof(global_storage[0]) + config_global_size;
   heap_size = config_heap_size;
 
   dep_size        = 1ul << config_dep_table_pow;
@@ -1241,7 +1241,7 @@ void hh_shared_store(value data) {
 
   assert_master();                               // only the master can store
   assert(global_storage[0] == 0);                // Is it clear?
-  assert(size < global_size_b - sizeof(value));  // Do we have enough space?
+  assert(size < global_size_b - sizeof(global_storage[0])); // Do we have enough space?
 
   global_storage[0] = size;
   memfd_reserve((char *)&global_storage[1], size);
