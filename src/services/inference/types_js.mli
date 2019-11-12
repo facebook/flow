@@ -50,7 +50,11 @@ val type_contents :
   (* contents *)
   File_key.t ->
   (* fake file-/module name *)
-  ( Context.t * Docblock.t * File_sig.With_Loc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program,
+  ( Context.t
+    * Docblock.t
+    * File_sig.With_Loc.t
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+    * (Loc.t * Parse_error.t) list,
     string )
   result
   Lwt.t

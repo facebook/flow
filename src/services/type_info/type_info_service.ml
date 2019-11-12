@@ -23,7 +23,7 @@ let type_at_pos
   Types_js.type_contents ~options ~env ~profiling content file
   >|= function
   | Error str -> Error (str, None)
-  | Ok (cx, _info, file_sig, typed_ast) ->
+  | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
     let loc = Loc.make file line col in
     let (json_data, loc, ty) =
       let mk_data result_str loc ty_json =
@@ -110,7 +110,7 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
   Types_js.type_contents ~options ~env ~profiling content file
-  >|= map ~f:(fun (cx, _info, file_sig, tast) ->
+  >|= map ~f:(fun (cx, _info, file_sig, tast, _parse_errors) ->
           let abs_file_sig = File_sig.abstractify_locs file_sig in
           Query_types.dump_types
             ~printer
@@ -129,7 +129,7 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
       Docblock.is_flow docblock
   in
   Types_js.type_contents ~options ~env ~profiling content file
-  >|= map ~f:(fun (cx, _, _, tast) ->
+  >|= map ~f:(fun (cx, _, _, tast, _parse_errors) ->
           Coverage.covered_types cx ~should_check ~check_trust:trust tast)
 
 let suggest ~options ~env ~profiling file_name file_content =

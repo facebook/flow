@@ -27,6 +27,24 @@ let convert_errors ~errors ~warnings ~suppressed_errors =
   else
     ServerProt.Response.ERRORS { errors; warnings; suppressed_errors }
 
+let json_of_parse_error =
+  let int x = Hh_json.JSON_Number (string_of_int x) in
+  let position p = Hh_json.JSON_Object [("line", int p.Loc.line); ("column", int p.Loc.column)] in
+  let location loc =
+    Hh_json.JSON_Object [("start", position loc.Loc.start); ("end", position loc.Loc._end)]
+  in
+  fun (loc, err) ->
+    Hh_json.JSON_Object
+      [("loc", location loc); ("message", Hh_json.JSON_String (Parse_error.PP.error err))]
+
+let fold_json_of_parse_errors parse_errors acc =
+  match parse_errors with
+  | err :: _ ->
+    ("parse_error", json_of_parse_error err)
+    :: ("parse_error_count", Hh_json.JSON_Number (parse_errors |> List.length |> string_of_int))
+    :: acc
+  | [] -> acc
+
 let get_status ~reader genv env client_root =
   let options = genv.ServerEnv.options in
   let server_root = Options.root options in
@@ -86,7 +104,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~broader_co
         :: initial_json_props )
     in
     Lwt.return (Error err, Some json_data_to_log)
-  | Ok (cx, info, file_sig, tast) ->
+  | Ok (cx, info, file_sig, tast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let (ac_type_string, results_res) =
@@ -109,17 +127,17 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~broader_co
               | ([], _ :: _) -> "FAILURE"
               | (_ :: _, _ :: _) -> "PARTIAL"
             in
-            let json_data_to_log =
+            let json_props_to_log =
               let open Hh_json in
-              JSON_Object
-                ( ("ac_type", JSON_String ac_type_string)
-                :: ("result", JSON_String result_string)
-                :: ("count", JSON_Number (results |> List.length |> string_of_int))
-                :: ("errors", JSON_Array (List.map (fun s -> JSON_String s) errors_to_log))
-                :: ("docblock", Docblock.json_of_docblock info)
-                :: initial_json_props )
+              ("ac_type", JSON_String ac_type_string)
+              :: ("result", JSON_String result_string)
+              :: ("count", JSON_Number (results |> List.length |> string_of_int))
+              :: ("errors", JSON_Array (List.map (fun s -> JSON_String s) errors_to_log))
+              :: ("docblock", Docblock.json_of_docblock info)
+              :: initial_json_props
+              |> fold_json_of_parse_errors parse_errors
             in
-            Lwt.return (response, Some json_data_to_log)))
+            Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))))
 
 let check_file ~options ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in
@@ -476,47 +494,46 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
   match check_result with
   | Error msg ->
     Lwt.return (Error msg, Some (Hh_json.JSON_Object [("error", Hh_json.JSON_String msg)]))
-  | Ok (cx, _, file_sig, typed_ast) ->
+  | Ok (cx, _, file_sig, typed_ast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
         try_with_json2 (fun () ->
             Lwt.return
               ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
               |> fun (result, request_history) ->
               let open GetDef_js.Get_def_result in
-              let request_history =
-                ( "request_history",
-                  Hh_json.JSON_Array
-                    (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) )
+              let json_props =
+                [
+                  ( "request_history",
+                    Hh_json.JSON_Array
+                      (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) );
+                ]
+                |> fold_json_of_parse_errors parse_errors
               in
               match result with
               | Def loc ->
                 ( Ok loc,
                   Some
-                    (Hh_json.JSON_Object
-                       [request_history; ("result", Hh_json.JSON_String "SUCCESS")]) )
+                    (Hh_json.JSON_Object (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
+                )
               | Partial (loc, msg) ->
                 ( Ok loc,
                   Some
                     (Hh_json.JSON_Object
-                       [
-                         request_history;
-                         ("result", Hh_json.JSON_String "PARTIAL_FAILURE");
-                         ("error", Hh_json.JSON_String msg);
-                       ]) )
+                       ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
+                       :: ("error", Hh_json.JSON_String msg)
+                       :: json_props )) )
               | Bad_loc ->
                 ( Ok Loc.none,
                   Some
-                    (Hh_json.JSON_Object
-                       [request_history; ("result", Hh_json.JSON_String "BAD_LOC")]) )
+                    (Hh_json.JSON_Object (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
+                )
               | Def_error msg ->
                 ( Error msg,
                   Some
                     (Hh_json.JSON_Object
-                       [
-                         request_history;
-                         ("result", Hh_json.JSON_String "FAILURE");
-                         ("error", Hh_json.JSON_String msg);
-                       ]) ) )))
+                       ( ("result", Hh_json.JSON_String "FAILURE")
+                       :: ("error", Hh_json.JSON_String msg)
+                       :: json_props )) ) )))
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
