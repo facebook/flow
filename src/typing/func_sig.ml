@@ -109,7 +109,7 @@ module Make (F : Func_params.S) = struct
       }
     in
     let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
-    let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in
+    let t = poly_type_of_tparams (Context.generate_poly_id cx) tparams t in
     Flow.unify cx t knot;
     t
 
@@ -127,7 +127,7 @@ module Make (F : Func_params.S) = struct
               dummy_prototype,
               mk_boundfunctiontype params_tlist ~rest_param ~def_reason ~params_names return_t ) )
     in
-    poly_type_of_tparams (Context.make_nominal cx) tparams t
+    poly_type_of_tparams (Context.generate_poly_id cx) tparams t
 
   let gettertype ({ return_t; _ } : t) = return_t
 

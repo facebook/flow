@@ -293,10 +293,6 @@ val add_tvar : t -> Constraint.ident -> Constraint.node -> unit
 
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
-val add_nominal_prop_id : t -> Constraint.ident -> unit
-
-val add_nominal_poly_id : t -> Type.Poly.id -> unit
-
 val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
@@ -407,7 +403,9 @@ val make_call_prop : t -> Type.t -> int
 
 val make_export_map : t -> Type.Exports.t -> Type.Exports.id
 
-val make_nominal : t -> Type.Poly.id
+val generate_poly_id : t -> Type.Poly.id
+
+val make_source_poly_id : t -> ALoc.t -> Type.Poly.id
 
 val find_constraints : t -> Constraint.ident -> Constraint.ident * Constraint.constraints
 

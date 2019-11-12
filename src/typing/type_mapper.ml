@@ -353,7 +353,8 @@ class virtual ['a] t =
         if tparamlist == tparamlist' && t' == t'' then
           t
         else
-          PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Context.make_nominal cx }
+          PolyT
+            { tparams_loc; tparams = tparamlist'; t_out = t''; id = Context.generate_poly_id cx }
       | IdxWrapper t' ->
         let t'' = self#type_ cx map_cx t' in
         if t' == t'' then

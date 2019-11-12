@@ -1614,27 +1614,21 @@ and Poly : sig
 
   val compare_id : id -> id -> int
 
-  val mk_id : unit -> id
-
-  val string_of_id : id -> string
-
-  val id_as_int : id -> int option
+  val equal_id : id -> id -> bool
 
   val id_of_int : int -> id
 
+  val id_as_int : id -> int option
+
+  val id_of_aloc_id : ALoc.id -> id
+
+  val string_of_id : id -> string
+
+  val generate_id : unit -> id
+
   module Set : Set.S with type elt = id
 end = struct
-  type id = int
-
-  let compare_id = compare
-
-  let mk_id = Reason.mk_id
-
-  let string_of_id = string_of_int
-
-  let id_as_int = Base.Option.return
-
-  let id_of_int id = id
+  include Source_or_generated_id
 
   module Set : Set.S with type elt = id = Set.Make (struct
     type elt = id

@@ -719,10 +719,12 @@ let make_export_map cx tmap =
   add_export_map cx id tmap;
   id
 
-let make_nominal cx =
-  let nominal = Type.Poly.mk_id () in
+let generate_poly_id cx =
+  let nominal = Type.Poly.generate_id () in
   add_nominal_poly_id cx nominal;
   nominal
+
+let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
 (* Copy context from cx_other to cx *)
 let merge_into sig_cx sig_cx_other =

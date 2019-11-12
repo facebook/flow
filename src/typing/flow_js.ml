@@ -3393,7 +3393,7 @@ struct
           rec_flow
             cx
             trace
-            ( poly_type (Context.make_nominal cx) tparams_loc xs (this_class_type instance),
+            ( poly_type (Context.generate_poly_id cx) tparams_loc xs (this_class_type instance),
               UseT (unknown_use, tvar) )
         | (AnyT (_, src), MixinT (r, tvar)) -> rec_flow_t cx trace (AnyT.why src r, tvar)
         (* TODO: it is conceivable that other things (e.g. functions) could also be
@@ -3541,8 +3541,8 @@ struct
 
         (* some shortcuts **)
         | (DefT (_, _, PolyT { id = id1; _ }), UseT (_, DefT (_, _, PolyT { id = id2; _ })))
-          when id1 = id2 ->
-          ()
+          when Poly.equal_id id1 id2 ->
+          if Context.is_verbose cx then prerr_endline "PolyT ~> PolyT fast path"
         | ( DefT
               (r1, _, PolyT { tparams_loc = tparams_loc1; tparams = params1; t_out = t1; id = id1 }),
             UseT
@@ -7961,7 +7961,7 @@ struct
     | DefT (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
       let targs = typeparams |> Nel.map (fun tp -> BoundT (tp.reason, tp.name)) |> Nel.to_list in
       let tapp = typeapp ~implicit:true t targs in
-      Some (poly_type (Context.make_nominal cx) tparams_loc typeparams (class_type tapp))
+      Some (poly_type (Context.generate_poly_id cx) tparams_loc typeparams (class_type tapp))
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
     | ThisClassT (r, i) -> Some (fix_this_class cx trace reason (r, i))

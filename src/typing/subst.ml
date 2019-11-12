@@ -125,7 +125,8 @@ let substituter =
               DefT
                 ( reason,
                   trust,
-                  PolyT { tparams_loc; tparams = xs; t_out = inner_; id = Context.make_nominal cx }
+                  PolyT
+                    { tparams_loc; tparams = xs; t_out = inner_; id = Context.generate_poly_id cx }
                 )
             else
               t

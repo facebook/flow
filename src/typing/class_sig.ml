@@ -752,7 +752,7 @@ module Make (F : Func_sig.S) = struct
       else
         this_class_type this
     in
-    poly_type_of_tparams (Context.make_nominal cx) tparams t
+    poly_type_of_tparams (Context.generate_poly_id cx) tparams t
 
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =

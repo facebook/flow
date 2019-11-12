@@ -1002,7 +1002,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       let type_ =
         poly_type_of_tparams
-          (Context.make_nominal cx)
+          (Context.generate_poly_id cx)
           tparams
           (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t)))
       in
@@ -1066,7 +1066,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
       let type_ =
         poly_type_of_tparams
-          (Context.make_nominal cx)
+          (Context.generate_poly_id cx)
           tparams
           (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
       in

@@ -966,7 +966,7 @@ let rec convert cx tparams_map =
                   def_reason = reason;
                 } ) )
       in
-      let t = poly_type_of_tparams (Context.make_nominal cx) tparams ft in
+      let t = poly_type_of_tparams (Context.make_source_poly_id cx loc) tparams ft in
       ( (loc, t),
         Function
           {
