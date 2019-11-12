@@ -1069,7 +1069,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                       (fun t ->
                         let use_op = unknown_use in
                         let destructor = Bind knot.this in
-                        let id = Eval.mk_id () in
+                        let id = Eval.generate_id () in
                         ignore (mk_type_destructor cx ~trace use_op reason_op t destructor id);
                         EvalT (t, TypeDestructorT (use_op, reason_op, destructor), id))
                       v

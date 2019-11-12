@@ -1516,21 +1516,7 @@ end = struct
 
   type t = Property.t SMap.t
 
-  (* In order to minimize the frequency with which we unnecessarily compare
-     equivalent objects, we assign all objects created at the top level of a
-     source program an id of their location instead of an int. This way, if we
-     see the object twice between the merge and check phases, we still hit
-     the object to object fast path when checking *)
-  type id =
-    | Source of ALoc.id
-    | Generated of int
-
-  let compare_id a b =
-    match (a, b) with
-    | (Source a, Source b) -> ALoc.quick_compare (a :> ALoc.t) (b :> ALoc.t)
-    | (Generated a, Generated b) -> a - b
-    | (Source _, Generated _) -> -1
-    | (Generated _, Source _) -> 1
+  include Source_or_generated_id
 
   module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type t = id
@@ -1566,21 +1552,7 @@ end = struct
 
   let add_method x loc t = SMap.add x (Method (loc, t))
 
-  let id_of_int i = Generated i
-
-  let id_as_int = function
-    | Generated i -> Some i
-    | _ -> None
-
-  let generate_id = Reason.mk_id %> id_of_int
-
-  let id_of_aloc_id aloc_id = Source aloc_id
-
-  let fake_id = Generated 0
-
-  let string_of_id = function
-    | Generated id -> string_of_int id
-    | Source id -> string_of_aloc (id :> ALoc.t)
+  let fake_id = id_of_int 0
 
   let extract_named_exports pmap =
     SMap.fold
@@ -1612,23 +1584,21 @@ and Eval : sig
 
   val compare_id : id -> id -> int
 
-  val mk_id : unit -> id
-
-  val string_of_id : id -> string
+  val id_of_int : int -> id
 
   val id_as_int : id -> int option
 
+  val id_of_aloc_id : ALoc.id -> id
+
+  val string_of_id : id -> string
+
+  val generate_id : unit -> id
+
+  val equal_id : id -> id -> bool
+
   module Map : WrappedMap.S with type key = id
 end = struct
-  type id = int
-
-  let compare_id = compare
-
-  let mk_id = Reason.mk_id
-
-  let string_of_id = string_of_int
-
-  let id_as_int = Base.Option.return
+  include Source_or_generated_id
 
   module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type key = id

@@ -813,6 +813,8 @@ struct
         (********)
         (* eval *)
         (********)
+        | (EvalT (_, _, id1), UseT (_, EvalT (_, _, id2))) when Type.Eval.equal_id id1 id2 ->
+          if Context.is_verbose cx then prerr_endline "EvalT ~> EvalT fast path"
         | (EvalT (t, TypeDestructorT (use_op', reason, d), id), _) ->
           let (_, result) = mk_type_destructor cx ~trace use_op' reason t d id in
           rec_flow cx trace (result, u)
@@ -5420,7 +5422,7 @@ struct
         | (DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout)) ->
           let f x =
             let use_op = Frame (TupleMapFunCompatibility { value = reason_of_t x }, use_op) in
-            EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), Eval.mk_id ())
+            EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), Eval.generate_id ())
           in
           let arrtype =
             match arrtype with
@@ -5436,7 +5438,7 @@ struct
         | (_, MapTypeT (use_op, reason, TupleMap funt, tout)) ->
           let iter = get_builtin cx ~trace "$iterate" reason in
           let elemt =
-            EvalT (iter, TypeDestructorT (use_op, reason, CallType [l]), Eval.mk_id ())
+            EvalT (iter, TypeDestructorT (use_op, reason, CallType [l]), Eval.generate_id ())
           in
           let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
@@ -5449,7 +5451,7 @@ struct
             in
             let use_op = Frame (ObjMapFunCompatibility { value = reason_of_t t }, use_op) in
             let t =
-              EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [t]), Eval.mk_id ())
+              EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [t]), Eval.generate_id ())
             in
             if opt then
               optional t
@@ -5489,7 +5491,8 @@ struct
                 (ObjMapiFunCompatibility { key = reason_of_t key; value = reason_of_t t }, use_op)
             in
             let t =
-              EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [key; t]), Eval.mk_id ())
+              EvalT
+                (funt, TypeDestructorT (use_op, reason_op, CallType [key; t]), Eval.generate_id ())
             in
             if opt then
               optional t

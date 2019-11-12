@@ -159,7 +159,7 @@ let substituter =
                * so we can point at the op which instantiated the types that
                * were substituted. *)
               let use_op = Option.value use_op ~default:op in
-              EvalT (x', TypeDestructorT (use_op, r, d'), Eval.mk_id ())
+              EvalT (x', TypeDestructorT (use_op, r, d'), Eval.generate_id ())
           (* We only want to change the EvalT id if the rest of the EvalT actually changed *)
           | EvalT (t', dt, _id) ->
             let t'' = self#type_ cx map_cx t' in
@@ -167,7 +167,7 @@ let substituter =
             if t' == t'' && dt == dt' then
               t
             else
-              EvalT (t'', dt', Eval.mk_id ())
+              EvalT (t'', dt', Eval.generate_id ())
           | ModuleT _
           | InternalT (ExtendsT _) ->
             failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)

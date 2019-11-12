@@ -122,7 +122,7 @@ module Eval = struct
       (match Hashtbl.find_opt eval_id_cache i with
       | Some t -> t
       | None ->
-        let i = Type.Eval.mk_id () in
+        let i = Type.Eval.generate_id () in
         Hashtbl.add eval_id_cache i t;
         EvalT (t, defer_use, i))
     | _ ->
@@ -131,7 +131,7 @@ module Eval = struct
         match Hashtbl.find_opt id_cache cache_key with
         | Some i -> i
         | None ->
-          let i = Type.Eval.mk_id () in
+          let i = Type.Eval.generate_id () in
           Hashtbl.add id_cache cache_key i;
           i
       in
