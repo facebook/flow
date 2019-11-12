@@ -66,9 +66,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~broader_co
   in
   let path = File_key.SourceFile path in
   Autocomplete_js.autocomplete_set_hooks trigger_character;
-  let%lwt check_contents_result =
-    Types_js.basic_check_contents ~options ~env ~profiling content path
-  in
+  let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling content path in
   Autocomplete_js.autocomplete_unset_hooks ();
   let initial_json_props =
     let open Hh_json in
@@ -473,7 +471,7 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
   let loc = Loc.make file line col in
   let%lwt check_result =
     File_input.content_of_file_input file_input
-    %>>= (fun content -> Types_js.basic_check_contents ~options ~env ~profiling content file)
+    %>>= (fun content -> Types_js.type_contents ~options ~env ~profiling content file)
   in
   match check_result with
   | Error msg ->

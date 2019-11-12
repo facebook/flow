@@ -1243,22 +1243,23 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 (* Another special case, similar assumptions as above. *)
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename =
-  let%lwt (parse_result, info) =
-    parse_contents ~options ~profiling ~check_syntax filename contents
-  in
+let merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig) =
+  with_timer_lwt ~options "MergeContents" profiling (fun () ->
+      let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
+      Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig))
+
+let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
+  let%lwt (parse_result, info) =
+    parse_contents ~options ~profiling ~check_syntax:true filename contents
+  in
+  (* override docblock info *)
+  let info = Docblock.set_flow_mode_for_ide_command info in
   match parse_result with
   | Ok (ast, file_sig) ->
-    (* override docblock info *)
-    let info = Docblock.set_flow_mode_for_ide_command info in
-    (* merge *)
     let%lwt (cx, typed_ast) =
-      with_timer_lwt ~options "MergeContents" profiling (fun () ->
-          let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-          Lwt.return
-            (Merge_service.merge_contents_context ~reader options filename ast info file_sig))
+      merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
     in
     let errors = Context.errors cx in
     let errors =
@@ -1324,36 +1325,34 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       else
         Errors.ConcreteLocPrintableErrorSet.empty
     in
-    Lwt.return (Some (cx, ast, file_sig, typed_ast), errors, warnings, info)
+    Lwt.return (Some (cx, ast, file_sig, typed_ast), errors, warnings)
   | Error errors ->
     let errors =
       errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
     in
-    Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
+    Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
-let typecheck_contents ~options ~env ~profiling contents filename =
-  let%lwt (cx_opt, errors, warnings, _info) =
-    typecheck_contents_ ~options ~env ~check_syntax:true ~profiling contents filename
-  in
-  Lwt.return (cx_opt, errors, warnings)
-
-let basic_check_contents ~options ~env ~profiling contents filename =
+let type_contents ~options ~env ~profiling contents filename =
   try%lwt
-    let%lwt (cx_opt, _errors, _warnings, info) =
-      typecheck_contents_ ~options ~env ~check_syntax:false ~profiling contents filename
+    let reader = State_reader.create () in
+    let%lwt (parse_result, info) =
+      parse_contents ~options ~profiling ~check_syntax:false filename contents
     in
-    let (cx, file_sig, typed_ast) =
-      match cx_opt with
-      | Some (cx, _, file_sig, typed_ast) -> (cx, file_sig, typed_ast)
-      | None -> failwith "Couldn't parse file"
-    in
-    Lwt.return (Ok (cx, info, file_sig, typed_ast))
+    (* override docblock info *)
+    let info = Docblock.set_flow_mode_for_ide_command info in
+    match parse_result with
+    | Ok (ast, file_sig) ->
+      let%lwt (cx, typed_ast) =
+        merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
+      in
+      Lwt.return (Ok (cx, info, file_sig, typed_ast))
+    | Error _ -> failwith "Couldn't parse file"
   with
   | Lwt.Canceled as exn -> raise exn
   | exn ->
     let exn = Exception.wrap exn in
     let e = Exception.to_string exn in
-    Hh_logger.error "Uncaught exception in basic_check_contents\n%s" e;
+    Hh_logger.error "Uncaught exception in type_contents\n%s" e;
     Lwt.return (Error e)
 
 let init_package_heap ~options ~profiling ~reader parsed =
@@ -2112,10 +2111,10 @@ end = struct
           match Options.lazy_mode options with
           | Options.NON_LAZY_MODE
           (* Non lazy mode treats every file as focused. *)
-
+          
           | Options.LAZY_MODE_WATCHMAN
           (* Watchman mode treats every modified file as focused *)
-
+          
           | Options.LAZY_MODE_FILESYSTEM ->
             (* FS mode treats every modified file as focused *)
             let old_focus_targets = CheckedSet.focused checked_files in

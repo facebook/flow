@@ -42,7 +42,7 @@ val full_check :
   ServerEnv.env ->
   (ServerEnv.env * string option) Lwt.t
 
-val basic_check_contents :
+val type_contents :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
