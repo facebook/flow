@@ -414,6 +414,31 @@ module Object
       in
       (loc, expr, errs)
 
+  let check_property_name env loc name static =
+    if String.equal name "constructor" || (String.equal name "prototype" && static) then
+      error_at env (loc, Parse_error.InvalidFieldName { name; static; private_ = false })
+
+  let check_private_names env seen_names private_name (kind : [ `Field | `Getter | `Setter ]) =
+    let (loc, (_, { Identifier.name; comments = _ })) = private_name in
+    if String.equal name "constructor" then
+      let () =
+        error_at env (loc, Parse_error.InvalidFieldName { name; static = false; private_ = true })
+      in
+      seen_names
+    else
+      match SMap.find_opt name seen_names with
+      | Some seen ->
+        begin
+          match (kind, seen) with
+          | (`Getter, `Setter)
+          | (`Setter, `Getter) ->
+            (* one getter and one setter are allowed as long as it's not used as a field *)
+            ()
+          | _ -> error_at env (loc, Parse_error.DuplicatePrivateFields name)
+        end;
+        SMap.add name `Field seen_names
+      | None -> SMap.add name kind seen_names
+
   let rec class_implements env acc =
     let implement =
       with_loc
@@ -436,19 +461,8 @@ module Object
         let targs = Type.type_args env in
         { Class.Extends.expr; targs })
 
-  let rec _class ?(decorators = []) env ~optional_id =
-    (* 10.2.1 says all parts of a class definition are strict *)
-    let env = env |> with_strict true in
-    let decorators = decorators @ decorator_list env in
-    let leading = Peek.comments env in
-    Expect.token env T_CLASS;
-    let id =
-      let tmp_env = env |> with_no_let true in
-      match (optional_id, Peek.token tmp_env) with
-      | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
-      | _ -> Some (Parse.identifier tmp_env)
-    in
-    let tparams = Type.type_params env in
+  (* https://tc39.es/ecma262/#prod-ClassHeritage *)
+  let class_heritage env =
     let extends =
       if Expect.maybe env T_EXTENDS then
         Some (class_extends env)
@@ -463,125 +477,11 @@ module Object
       ) else
         []
     in
-    let body = class_body env in
-    let trailing = Peek.comments env in
-    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-    (id, body, extends, implements, tparams, decorators, comments)
-
-  and check_property_name env loc name static =
-    if String.equal name "constructor" || (String.equal name "prototype" && static) then
-      error_at env (loc, Parse_error.InvalidFieldName { name; static; private_ = false })
-
-  and check_private_names env seen_names private_name (kind : [ `Field | `Getter | `Setter ]) =
-    let (loc, (_, { Identifier.name; comments = _ })) = private_name in
-    if String.equal name "constructor" then
-      let () =
-        error_at env (loc, Parse_error.InvalidFieldName { name; static = false; private_ = true })
-      in
-      seen_names
-    else
-      match SMap.find_opt name seen_names with
-      | Some seen ->
-        begin
-          match (kind, seen) with
-          | (`Getter, `Setter)
-          | (`Setter, `Getter) ->
-            (* one getter and one setter are allowed as long as it's not used as a field *)
-            ()
-          | _ -> error_at env (loc, Parse_error.DuplicatePrivateFields name)
-        end;
-        SMap.add name `Field seen_names
-      | None -> SMap.add name kind seen_names
-
-  and class_body =
-    let rec elements env seen_constructor private_names acc =
-      match Peek.token env with
-      | T_EOF
-      | T_RCURLY ->
-        List.rev acc
-      | T_SEMICOLON ->
-        (* Skip empty elements *)
-        Expect.token env T_SEMICOLON;
-        elements env seen_constructor private_names acc
-      | _ ->
-        let element = class_element env in
-        let (seen_constructor', private_names') =
-          match element with
-          | Ast.Class.Body.Method (loc, m) ->
-            Ast.Class.Method.(
-              begin
-                match m.kind with
-                | Constructor ->
-                  if m.static then
-                    (seen_constructor, private_names)
-                  else (
-                    if seen_constructor then error_at env (loc, Parse_error.DuplicateConstructor);
-                    (true, private_names)
-                  )
-                | Method ->
-                  ( seen_constructor,
-                    begin
-                      match m.key with
-                      | Ast.Expression.Object.Property.PrivateName _ ->
-                        error_at env (loc, Parse_error.PrivateMethod);
-                        private_names
-                      | _ -> private_names
-                    end )
-                | Get ->
-                  let private_names =
-                    match m.key with
-                    | Ast.Expression.Object.Property.PrivateName name ->
-                      check_private_names env private_names name `Getter
-                    | _ -> private_names
-                  in
-                  (seen_constructor, private_names)
-                | Set ->
-                  let private_names =
-                    match m.key with
-                    | Ast.Expression.Object.Property.PrivateName name ->
-                      check_private_names env private_names name `Setter
-                    | _ -> private_names
-                  in
-                  (seen_constructor, private_names)
-              end)
-          | Ast.Class.Body.Property (_, { Ast.Class.Property.key; static; _ }) ->
-            Ast.Expression.Object.Property.(
-              begin
-                match key with
-                | Identifier (loc, { Identifier.name; comments = _ })
-                | Literal (loc, { Literal.value = Literal.String name; _ }) ->
-                  check_property_name env loc name static
-                | Literal _
-                | Computed _ ->
-                  ()
-                | PrivateName _ ->
-                  failwith "unexpected PrivateName in Property, expected a PrivateField"
-              end;
-              (seen_constructor, private_names))
-          | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.key; _ }) ->
-            let private_names = check_private_names env private_names key `Field in
-            (seen_constructor, private_names)
-        in
-        elements env seen_constructor' private_names' (element :: acc)
-    in
-    fun env ->
-      with_loc
-        (fun env ->
-          if Expect.maybe env T_LCURLY then (
-            enter_class env;
-            let body = elements env false SMap.empty [] in
-            exit_class env;
-            Expect.token env T_RCURLY;
-            { Ast.Class.Body.body }
-          ) else (
-            Expect.error env T_LCURLY;
-            { Ast.Class.Body.body = [] }
-          ))
-        env
+    (extends, implements)
 
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
-  and class_element =
+  let class_element =
     let get env start_loc decorators static =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
@@ -761,6 +661,111 @@ module Object
       | (_, _, _) ->
         let (_, key) = key ~class_body:true env in
         init env start_loc decorators key async generator static variance
+
+  let class_body =
+    let rec elements env seen_constructor private_names acc =
+      match Peek.token env with
+      | T_EOF
+      | T_RCURLY ->
+        List.rev acc
+      | T_SEMICOLON ->
+        (* Skip empty elements *)
+        Expect.token env T_SEMICOLON;
+        elements env seen_constructor private_names acc
+      | _ ->
+        let element = class_element env in
+        let (seen_constructor', private_names') =
+          match element with
+          | Ast.Class.Body.Method (loc, m) ->
+            Ast.Class.Method.(
+              begin
+                match m.kind with
+                | Constructor ->
+                  if m.static then
+                    (seen_constructor, private_names)
+                  else (
+                    if seen_constructor then error_at env (loc, Parse_error.DuplicateConstructor);
+                    (true, private_names)
+                  )
+                | Method ->
+                  ( seen_constructor,
+                    begin
+                      match m.key with
+                      | Ast.Expression.Object.Property.PrivateName _ ->
+                        error_at env (loc, Parse_error.PrivateMethod);
+                        private_names
+                      | _ -> private_names
+                    end )
+                | Get ->
+                  let private_names =
+                    match m.key with
+                    | Ast.Expression.Object.Property.PrivateName name ->
+                      check_private_names env private_names name `Getter
+                    | _ -> private_names
+                  in
+                  (seen_constructor, private_names)
+                | Set ->
+                  let private_names =
+                    match m.key with
+                    | Ast.Expression.Object.Property.PrivateName name ->
+                      check_private_names env private_names name `Setter
+                    | _ -> private_names
+                  in
+                  (seen_constructor, private_names)
+              end)
+          | Ast.Class.Body.Property (_, { Ast.Class.Property.key; static; _ }) ->
+            Ast.Expression.Object.Property.(
+              begin
+                match key with
+                | Identifier (loc, { Identifier.name; comments = _ })
+                | Literal (loc, { Literal.value = Literal.String name; _ }) ->
+                  check_property_name env loc name static
+                | Literal _
+                | Computed _ ->
+                  ()
+                | PrivateName _ ->
+                  failwith "unexpected PrivateName in Property, expected a PrivateField"
+              end;
+              (seen_constructor, private_names))
+          | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.key; _ }) ->
+            let private_names = check_private_names env private_names key `Field in
+            (seen_constructor, private_names)
+        in
+        elements env seen_constructor' private_names' (element :: acc)
+    in
+    fun env ->
+      with_loc
+        (fun env ->
+          if Expect.maybe env T_LCURLY then (
+            enter_class env;
+            let body = elements env false SMap.empty [] in
+            exit_class env;
+            Expect.token env T_RCURLY;
+            { Ast.Class.Body.body }
+          ) else (
+            Expect.error env T_LCURLY;
+            { Ast.Class.Body.body = [] }
+          ))
+        env
+
+  let _class ?(decorators = []) env ~optional_id =
+    (* 10.2.1 says all parts of a class definition are strict *)
+    let env = env |> with_strict true in
+    let decorators = decorators @ decorator_list env in
+    let leading = Peek.comments env in
+    Expect.token env T_CLASS;
+    let id =
+      let tmp_env = env |> with_no_let true in
+      match (optional_id, Peek.token tmp_env) with
+      | (true, (T_EXTENDS | T_IMPLEMENTS | T_LESS_THAN | T_LCURLY)) -> None
+      | _ -> Some (Parse.identifier tmp_env)
+    in
+    let tparams = Type.type_params env in
+    let (extends, implements) = class_heritage env in
+    let body = class_body env in
+    let trailing = Peek.comments env in
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    (id, body, extends, implements, tparams, decorators, comments)
 
   let class_declaration env decorators =
     with_loc
