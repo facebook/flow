@@ -1,3 +1,23 @@
+### 0.112.0
+
+Likely to cause new Flow errors:
+* JSX expressions now use the new spread semantics added in v0.111.0
+* Attempting to write to or update a read-only property using operator assignment is now a type error
+
+New Features:
+* New `ambiguous-object-type` lint warning against use of `{}` object types (prefer `{||}` or `{...}` instead, even when `exact-by-default` is enabled).
+* Improved support for optional chaining
+
+Notable bug fixes:
+* Malformed type annotations no longer trigger the `unclear-type` lint error
+* Builtin classes can no longer be extended
+
+Misc:
+* Improved performance for utility types and refinements in unions
+* Various improvements to autocomplete and get-def IDE services
+* Add `useDeferredValue` and `useTransition` to React library definitions
+* Add `bytesWritten` funciton to library definition (thanks @farzonl)
+
 ### 0.111.3
 
 Notable bug fixes:
@@ -6,7 +26,7 @@ Notable bug fixes:
 ### 0.111.2
 
 Notable bug fixes:
-* Spread performance improvements that can prevent timeouts in extreme cases. 
+* Spread performance improvements that can prevent timeouts in extreme cases.
 
 ### 0.111.1
 
