@@ -7,7 +7,7 @@
 
 (* Non-empty list *)
 
-type 'a t = 'a * 'a list
+type 'a t = 'a * 'a list [@@deriving show]
 
 let to_list (x, xs) = x :: xs
 
