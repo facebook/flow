@@ -81,6 +81,7 @@ module Opts = struct
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
+    max_seconds_for_check_per_worker: float;
     max_workers: int;
     merge_timeout: int option;
     minimal_merge: bool;
@@ -180,6 +181,7 @@ module Opts = struct
       max_header_tokens = 10;
       max_files_checked_per_worker = 100;
       max_literal_length = 100;
+      max_seconds_for_check_per_worker = 5.0;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
       minimal_merge = false;
@@ -576,6 +578,8 @@ module Opts = struct
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
       ( "experimental.types_first.max_files_checked_per_worker",
         uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v }) );
+      ( "experimental.types_first.max_seconds_for_check_per_worker",
+        uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v }) );
     ]
 
   let parse =
@@ -1175,6 +1179,8 @@ let lsp_code_actions c = c.options.Opts.lsp_code_actions
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
 let max_header_tokens c = c.options.Opts.max_header_tokens
+
+let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_per_worker
 
 let max_workers c = c.options.Opts.max_workers
 
