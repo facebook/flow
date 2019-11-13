@@ -163,7 +163,7 @@ let getdef_from_typed_ast ~options ~reader ~cx ~is_legit_require ~typed_ast = fu
     NOTE:
     The Member, Type, and Require cases could take us to a different file.
     Since none of these will ever return Chain, we do not need to call
-    basic_check_contents again to get info about the new file.
+    type_contents again to get info about the new file.
     If you break this serendipitous invariant, you'll probably need to add logic
     to deal with updating what file we're looking at.
   *)

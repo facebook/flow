@@ -20,7 +20,7 @@ let type_at_pos
     content
     line
     col =
-  Types_js.basic_check_contents ~options ~env ~profiling content file
+  Types_js.type_contents ~options ~env ~profiling content file
   >|= function
   | Error str -> Error (str, None)
   | Ok (cx, _info, file_sig, typed_ast) ->
@@ -109,7 +109,7 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
 let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
-  Types_js.basic_check_contents ~options ~env ~profiling content file
+  Types_js.type_contents ~options ~env ~profiling content file
   >|= map ~f:(fun (cx, _info, file_sig, tast) ->
           let abs_file_sig = File_sig.abstractify_locs file_sig in
           Query_types.dump_types
@@ -128,7 +128,7 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
       let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in
-  Types_js.basic_check_contents ~options ~env ~profiling content file
+  Types_js.type_contents ~options ~env ~profiling content file
   >|= map ~f:(fun (cx, _, _, tast) ->
           Coverage.covered_types cx ~should_check ~check_trust:trust tast)
 
