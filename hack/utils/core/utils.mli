@@ -17,7 +17,7 @@ type callstack = Callstack of string
 
 val debug : bool ref
 
-val profile : bool ref
+val profile_log : bool ref
 
 val log : (string -> unit) ref
 

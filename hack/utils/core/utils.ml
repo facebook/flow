@@ -16,7 +16,7 @@ let () = Random.self_init ()
 
 let debug = ref false
 
-let profile = ref false
+let profile_log = ref false
 
 let log = ref (fun (_ : string) -> ())
 

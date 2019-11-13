@@ -250,7 +250,7 @@ let unix_worker_main restore (state, controller_fd) (ic, oc) =
   ignore Marshal.(from_bytes (to_bytes dummy_closure [Closures]) 0);
 
   let in_fd = Daemon.descr_of_in_channel ic in
-  if !Utils.profile then Utils.log := prerr_endline;
+  if !Utils.profile_log then Utils.log := prerr_endline;
   try
     while true do
       (* Wait for an incoming job : is there something to read?
