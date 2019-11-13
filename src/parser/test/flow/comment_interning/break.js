@@ -1,15 +1,15 @@
 function break_with_label() {
-  foo: for (var i = 0; i < 10; i++) {
+  foo: for (;;) {
     /* 1.1 leading on break */
-    break /* 1.2 leading on label */ foo /* 1.3 trailing */;
+    break /* 1.2 leading on label */ foo /* 1.3 trailing on label */;
     /* 1.4 trailing */
   }
 }
 
 function break_without_label() {
-  for (var i = 0; i < 10; i++) {
+  for (;;) {
     /* 2.1 leading */
-    break;
-    /* 2.2 trailing */
+    break /* 2.2 internal */;
+    /* 2.3 trailing */
   }
 }
