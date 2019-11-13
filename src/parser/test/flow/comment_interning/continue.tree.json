@@ -50,9 +50,9 @@
                     "trailingComments":[
                       {
                         "type":"Block",
-                        "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":39}},
-                        "range":[98,124],
-                        "value":" 1.2 leading on label "
+                        "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":22}},
+                        "range":[153,171],
+                        "value":" 1.4 trailing "
                       }
                     ],
                     "leadingComments":[
@@ -138,9 +138,9 @@
                   "trailingComments":[
                     {
                       "type":"Block",
-                      "loc":{"source":null,"start":{"line":12,"column":13},"end":{"line":12,"column":31}},
-                      "range":[263,281],
-                      "value":" 2.2 internal "
+                      "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":22}},
+                      "range":[287,305],
+                      "value":" 2.3 trailing "
                     }
                   ],
                   "leadingComments":[

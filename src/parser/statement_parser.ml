@@ -138,7 +138,7 @@ module Statement
 
   and break env =
     let leading = Peek.comments env in
-    let (loc, (label, trailing)) =
+    let (loc, label) =
       with_loc
         (fun env ->
           Expect.token env T_BREAK;
@@ -150,11 +150,11 @@ module Statement
               if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
               Some label
           in
-          let trailingComments = Peek.comments env in
           Eat.semicolon env;
-          (label, trailingComments))
+          label)
         env
     in
+    let trailing = Peek.comments env in
     if label = None && not (in_loop env || in_switch env) then
       error_at env (loc, Parse_error.IllegalBreak);
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
@@ -162,12 +162,10 @@ module Statement
 
   and continue env =
     let leading = Peek.comments env in
-    let trailingComments = ref [] in
     let (loc, label) =
       with_loc
         (fun env ->
           Expect.token env T_CONTINUE;
-          trailingComments := Peek.comments env;
           let label =
             if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env then
               None
@@ -181,7 +179,7 @@ module Statement
         env
     in
     if not (in_loop env) then error_at env (loc, Parse_error.IllegalContinue);
-    let trailing = !trailingComments in
+    let trailing = Peek.comments env in
     ( loc,
       Statement.Continue
         {
