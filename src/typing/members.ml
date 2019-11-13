@@ -402,9 +402,8 @@ let rec extract_type cx this_t =
   | OptionalT { reason = _; type_ = ty; use_desc = _ }
   | MaybeT (_, ty) ->
     extract_type cx ty
-  | DefT (_, _, (NullT | VoidT))
-  | AnyT _ ->
-    FailureAnyType
+  | DefT (_, _, (NullT | VoidT)) -> FailureNullishType
+  | AnyT _ -> FailureAnyType
   | DefT (_, _, InstanceT _) as t -> Success t
   | DefT (_, _, ObjT _) as t -> Success t
   | ExactT (_, t) -> extract_type cx t
