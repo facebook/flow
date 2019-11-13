@@ -244,12 +244,12 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
       in
       let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
       match parse_result with
-      | Parsing_service_js.Parse_ok (parse_ok, _parse_errors) ->
+      | Parsing_service_js.Parse_ok (parse_ok, parse_errors) ->
         (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
            and they'll hit the Parse_fail case instead when ~check_syntax:true *)
         (* TODO: docblock errors get dropped *)
         let (ast, file_sig) = Parsing_service_js.basic parse_ok in
-        Lwt.return (Ok (ast, file_sig), info)
+        Lwt.return (Ok (ast, file_sig, parse_errors), info)
       | Parsing_service_js.Parse_fail fails ->
         let errors =
           match fails with
@@ -1260,7 +1260,7 @@ let typecheck_contents ~options ~env ~profiling contents filename =
   (* override docblock info *)
   let info = Docblock.set_flow_mode_for_ide_command info in
   match parse_result with
-  | Ok (ast, file_sig) ->
+  | Ok (ast, file_sig, _parse_errors) ->
     let%lwt (cx, typed_ast) =
       merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
     in
@@ -1344,11 +1344,11 @@ let type_contents ~options ~env ~profiling contents filename =
     (* override docblock info *)
     let info = Docblock.set_flow_mode_for_ide_command info in
     match parse_result with
-    | Ok (ast, file_sig) ->
+    | Ok (ast, file_sig, parse_errors) ->
       let%lwt (cx, typed_ast) =
         merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
       in
-      Lwt.return (Ok (cx, info, file_sig, typed_ast))
+      Lwt.return (Ok (cx, info, file_sig, typed_ast, parse_errors))
     | Error _ -> failwith "Couldn't parse file"
   with
   | Lwt.Canceled as exn -> raise exn
