@@ -10,11 +10,13 @@ type ident_type =
   | JSXIdent
 
 type autocomplete_type =
+  | Acempty (* no results, like binding indentifiers, strings or comments *)
   | Acid of {
       id_type: ident_type;
       include_super: bool;
       include_this: bool;
     }
+  | Ackey (* object key, not supported yet *)
   | Actype
   | Acqualifiedtype of Type.t
   | Acmem of Type.t
@@ -29,6 +31,12 @@ let is_autocomplete x =
   &&
   let suffix = String.sub x (String.length x - suffix_len) suffix_len in
   suffix = autocomplete_suffix
+
+let identifier_is_autocomplete ((loc, _), { Flow_ast.Identifier.name; _ }) =
+  if is_autocomplete name then
+    Some loc
+  else
+    None
 
 let type_of_jsx_name =
   Flow_ast.JSX.(
@@ -51,17 +59,23 @@ class process_request_searcher (from_trigger_character : bool) =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper as super
 
-    method find loc x =
-      match x with
-      | Acid _ when from_trigger_character -> ()
-      | _ -> this#annot_with_tparams (fun tparams -> raise (Found (tparams, loc, x)))
+    method find : 'a. ALoc.t -> autocomplete_type -> 'a =
+      fun loc x ->
+        let x =
+          match x with
+          | Acid _ when from_trigger_character ->
+            (* space is a trigger character, so this avoids completing immediately following
+               a space ('.' is also a trigger, but it'd be an Acmem for member expressions) *)
+            Acempty
+          | _ -> x
+        in
+        this#annot_with_tparams (fun tparams -> raise (Found (tparams, loc, x)))
 
-    method! t_identifier (((ac_loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
-      if is_autocomplete name then
-        this#find
-          ac_loc
-          (Acid { id_type = NormalIdent; include_super = false; include_this = false });
-      ident
+    method! t_identifier ident =
+      match identifier_is_autocomplete ident with
+      | Some loc ->
+        this#find loc (Acid { id_type = NormalIdent; include_super = false; include_this = false })
+      | None -> ident
 
     method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
       if is_autocomplete name then
@@ -103,10 +117,17 @@ class process_request_searcher (from_trigger_character : bool) =
       end;
       super#pattern ?kind pat
 
-    method! t_pattern_identifier ?kind x =
+    method! t_pattern_identifier ?kind ident =
       match kind with
-      | None -> super#t_pattern_identifier ?kind x
-      | Some _ -> x
+      | None -> super#t_pattern_identifier ?kind ident
+      | Some _ ->
+        (* binding identifiers *)
+        (match identifier_is_autocomplete ident with
+        | Some loc ->
+          (* don't offer suggestions for bindings, because this is where names are created,
+             so existing names aren't useful. *)
+          this#find loc Acempty
+        | None -> ident)
 
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
@@ -140,7 +161,10 @@ class process_request_searcher (from_trigger_character : bool) =
       super#jsx_opening_element elt
 
     (* we don't currently autocomplete object keys *)
-    method! object_key_identifier x = x
+    method! object_key_identifier x =
+      match identifier_is_autocomplete x with
+      | Some loc -> this#find loc Ackey
+      | None -> x
 
     (* prevent shorthand properties from triggering autocomplete on object keys *)
     method! object_property prop =
