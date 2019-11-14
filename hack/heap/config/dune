@@ -7,8 +7,8 @@
 (rule
   (targets c_flags.sexp c_library_flags.sexp)
   (deps
-    (env_var EXTRA_INCLUDE_PATHS)
-    (env_var EXTRA_LIB_PATHS)
-    (env_var EXTRA_NATIVE_LIBRARIES)
-    (env_var EXTRA_LINK_OPTS))
+    (env_var HACK_EXTRA_INCLUDE_PATHS)
+    (env_var HACK_EXTRA_LIB_PATHS)
+    (env_var HACK_EXTRA_NATIVE_LIBRARIES)
+    (env_var HACK_EXTRA_LINK_OPTS))
   (action (run ./discover.exe)))

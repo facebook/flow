@@ -4,15 +4,15 @@ https://jbuilder.readthedocs.io/en/latest/configurator.html *)
 module C = Configurator.V1
 
 (* cmake should have prepared some information for us in the env:
-  EXTRA_INCLUDE_PATHS
-  EXTRA_LIB_PATHS
-  EXTRA_NATIVE_LIBRARIES
-  EXTRA_LINK_OPTS
+  HACK_EXTRA_INCLUDE_PATHS
+  HACK_EXTRA_LIB_PATHS
+  HACK_EXTRA_NATIVE_LIBRARIES
+  HACK_EXTRA_LINK_OPTS
 *)
 let query_env s =
   match Sys.getenv s with
   | "" -> []
-  | s -> String.split_on_char ' ' s
+  | s -> String.split_on_char ';' s
   | exception Not_found -> []
 
 let abs =
@@ -27,13 +27,15 @@ let abs =
 
 let process_env () =
   let includes =
-    query_env "EXTRA_INCLUDE_PATHS" |> List.map (fun s -> "-I" ^ abs s)
+    query_env "HACK_EXTRA_INCLUDE_PATHS" |> List.map (fun s -> "-I" ^ abs s)
   in
-  let dirs = query_env "EXTRA_LIB_PATHS" |> List.map (fun s -> "-L" ^ abs s) in
+  let dirs =
+    query_env "HACK_EXTRA_LIB_PATHS" |> List.map (fun s -> "-L" ^ abs s)
+  in
   let names =
-    query_env "EXTRA_NATIVE_LIBRARIES" |> List.map (fun s -> "-l" ^ s)
+    query_env "HACK_EXTRA_NATIVE_LIBRARIES" |> List.map (fun s -> "-l" ^ s)
   in
-  let opaque_opts = query_env "EXTRA_LINK_OPTS" in
+  let opaque_opts = query_env "HACK_EXTRA_LINK_OPTS" in
   (includes, dirs @ names @ opaque_opts)
 
 let () =
