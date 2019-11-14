@@ -1246,7 +1246,7 @@ and json_of_pred_impl json_cx p =
       | SingletonBoolP (_, value) -> [("value", JSON_Bool value)]
       | SingletonStrP (_, _, str) -> [("value", JSON_String str)]
       | SingletonNumP (_, _, (_, raw)) -> [("value", JSON_String raw)]
-      | PropExistsP (key, _) -> [("propName", JSON_String key)]
+      | PropExistsP key -> [("propName", JSON_String key)]
       | ExistsP _
       | VoidP
       | NullP

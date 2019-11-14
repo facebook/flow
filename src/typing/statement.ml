@@ -6430,7 +6430,7 @@ and predicates_of_condition cx e =
         begin
           match Refinement.key ~allow_optional:false _object with
           | Some name ->
-            let predicate = PropExistsP (prop_name, Some prop_loc) in
+            let predicate = PropExistsP prop_name in
             out |> add_predicate name obj_t predicate true
           | None -> out
         end

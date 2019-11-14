@@ -801,8 +801,8 @@ module rec TypeTerm : sig
     | SymbolP (* symbol *)
     | VoidP (* undefined *)
     | ArrP (* Array.isArray *)
-    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b", loc), tout))` *)
-    | PropExistsP of string * ALoc.t option (* Location of the property in the existence check *)
+    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
+    | PropExistsP of string
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
     | LatentP of t * index
@@ -3759,7 +3759,7 @@ let rec string_of_predicate = function
   | SymbolP -> "symbol"
   (* Array.isArray *)
   | ArrP -> "array"
-  | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
+  | PropExistsP key -> spf "prop `%s` is truthy" key
   | LatentP (OpenT (_, id), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t, i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 

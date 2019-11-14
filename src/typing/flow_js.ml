@@ -9235,12 +9235,8 @@ struct
       update_sketchy_null cx loc l;
       let filtered = Type_filter.not_exists l in
       rec_flow_t cx trace (filtered, t)
-    | PropExistsP (key, loc) ->
-      update_sketchy_null cx loc l;
-      prop_exists_test cx trace key true l t
-    | NotP (PropExistsP (key, loc)) ->
-      update_sketchy_null cx loc l;
-      prop_exists_test cx trace key false l t
+    | PropExistsP key -> prop_exists_test cx trace key true l t
+    | NotP (PropExistsP key) -> prop_exists_test cx trace key false l t
     (* unreachable *)
     | NotP (NotP _)
     | NotP (AndP _)
