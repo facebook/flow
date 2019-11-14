@@ -234,3 +234,19 @@ assert_ok \
 printf "function-added-properties.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty function-added-properties.js 6 5 < function-added-properties.js
+
+printf "comments.js (line) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 3 8 < comments.js
+
+printf "comments.js (block) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 5 8 < comments.js
+
+printf "literal.js (inside string) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 3 16 < literal.js
+
+printf "literal.js (inside regex) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 5 16 < literal.js

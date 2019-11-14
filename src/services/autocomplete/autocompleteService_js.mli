@@ -10,6 +10,7 @@ type autocomplete_service_result =
       results: ServerProt.Response.complete_autocomplete_result list;
       errors_to_log: string list;
     }
+  | AcEmpty of string
   | AcFatalError of string
 
 val autocomplete_get_results :
@@ -18,6 +19,7 @@ val autocomplete_get_results :
   File_sig.With_Loc.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   string option ->
+  Loc.t ->
   string * autocomplete_service_result
 
 val add_autocomplete_token : string -> int -> int -> string * string
