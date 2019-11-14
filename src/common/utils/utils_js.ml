@@ -340,3 +340,24 @@ let get_next_power_of_two x =
       f (y * 2)
   in
   f 1
+
+(* Simple utility to log the amount of time an operation takes.
+ *
+ * Usage:
+ * Given some expression `foo bar baz` whose evaluation you want to time, transform it to
+ * `debug_time "some_identifying_string" (lazy (foo bar baz))`
+ *)
+let debug_time name x =
+  let start_time = Unix.gettimeofday () in
+  let (lazy result) = x in
+  let end_time = Unix.gettimeofday () in
+  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
+  result
+
+(* Same as above, but displays the time taken for the resulting `Lwt.t` to yield a result *)
+let debug_time_lwt name x =
+  let start_time = Unix.gettimeofday () in
+  let%lwt result = Lazy.force x in
+  let end_time = Unix.gettimeofday () in
+  Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
+  Lwt.return result
