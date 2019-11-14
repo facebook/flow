@@ -249,9 +249,7 @@ module Object
                   ~start_loc:(fst id)
                   (fun env ->
                     Expect.token env T_ASSIGN;
-                    let left =
-                      Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id)
-                    in
+                    let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
                     let right = Parse.assignment env in
                     Ast.Expression.Assignment
                       { Ast.Expression.Assignment.operator = None; left; right })
@@ -259,8 +257,7 @@ module Object
               in
               let errs =
                 {
-                  if_expr =
-                    [(assignment_loc, Parse_error.Unexpected (Token.quote_token_value "="))];
+                  if_expr = [(assignment_loc, Parse_error.Unexpected (Token.quote_token_value "="))];
                   if_patt = [];
                 }
               in
@@ -319,19 +316,14 @@ module Object
             match Peek.ith_token ~i:1 env with
             | T_ASSIGN
             (* { async = true } (destructuring) *)
-            
             | T_COLON
             (* { async: true } *)
-            
             | T_LESS_THAN
             (* { async<T>() {} } *)
-            
             | T_LPAREN
             (* { async() {} } *)
-            
             | T_COMMA
             (* { async, other, shorthand } *)
-            
             | T_RCURLY (* { async } *) ->
               false
             | _ -> Declaration.async env
@@ -375,10 +367,7 @@ module Object
         let errs =
           match rest_trailing_comma with
           | Some loc ->
-            {
-              errs with
-              if_patt = (loc, Parse_error.TrailingCommaAfterRestElement) :: errs.if_patt;
-            }
+            { errs with if_patt = (loc, Parse_error.TrailingCommaAfterRestElement) :: errs.if_patt }
           | None -> errs
         in
         (List.rev props, Pattern_cover.rev_errors errs)

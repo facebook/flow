@@ -356,7 +356,6 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     match Peek.ith_token ~i:1 env with
     | T_PLING
     (* optional param *)
-    
     | T_COLON ->
       ParamList (function_param_list_without_parens env [])
     | _ ->
@@ -581,8 +580,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           (loc, Parse_error.InvalidFieldName { name; static = is_static; private_ = false })
       | _ -> ()
     in
-    let rec properties ~is_class ~allow_inexact ~allow_spread ~exact env ((props, inexact) as acc)
-        =
+    let rec properties ~is_class ~allow_inexact ~allow_spread ~exact env ((props, inexact) as acc) =
       (* no `static ...A` *)
       assert (not (is_class && allow_spread));
 

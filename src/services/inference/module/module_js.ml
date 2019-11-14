@@ -285,8 +285,7 @@ module Node = struct
           [
             lazy (path_if_exists ~file_options resolution_acc path);
             lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
-            lazy
-              (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
+            lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
           ]
 
   let resolve_relative ~options ~reader ((loc : ALoc.t), _) ?resolution_acc root_path rel_path =
@@ -396,21 +395,13 @@ module Node = struct
                import_str);
         ]
 
-  let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str
-      =
+  let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str =
     let candidates = module_name_candidates ~options import_str in
     let rec choose_candidate = function
       | [] -> None
       | candidate :: candidates ->
         let resolved =
-          resolve_import
-            ~options
-            ~reader
-            node_modules_containers
-            file
-            loc
-            ?resolution_acc
-            candidate
+          resolve_import ~options ~reader node_modules_containers file loc ?resolution_acc candidate
         in
         (match resolved with
         | None -> choose_candidate candidates
@@ -469,8 +460,7 @@ module Haste : MODULE_SYSTEM = struct
         (Options.haste_paths_blacklist options)
     in
     fun options name ->
-      matched_haste_paths_whitelist options name
-      && not (matched_haste_paths_blacklist options name)
+      matched_haste_paths_whitelist options name && not (matched_haste_paths_blacklist options name)
 
   let haste_name =
     let reduce_name name (regexp, template) = Str.global_replace regexp template name in
@@ -483,9 +473,7 @@ module Haste : MODULE_SYSTEM = struct
         Modulename.String (short_module_name_of file)
       else if Options.haste_use_name_reducers options then
         (* Standardize \ to / in path for Windows *)
-        let normalized_file_name =
-          Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
-        in
+        let normalized_file_name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
         if is_haste_file options normalized_file_name then
           Modulename.String (haste_name options normalized_file_name)
         else
@@ -901,9 +889,7 @@ let calc_old_modules =
     old_modules
   in
   fun workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted ->
-    let%lwt old_file_module_assoc =
-      calc_modules_helper ~reader workers new_or_changed_or_deleted
-    in
+    let%lwt old_file_module_assoc = calc_modules_helper ~reader workers new_or_changed_or_deleted in
     Lwt.return (calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc)
 
 module IntroduceFiles : sig

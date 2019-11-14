@@ -32,7 +32,7 @@ end = struct
 
   let regexp loc pattern flags =
     let regexp =
-      try Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [|string pattern; string flags|]
+      try Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [| string pattern; string flags |]
       with _ ->
         translation_errors := (loc, Parse_error.InvalidRegExp) :: !translation_errors;
 
@@ -40,7 +40,7 @@ end = struct
          * too lazy to write a JS regexp parser in Ocaml, so we didn't know
          * the pattern was invalid. We'll recover with an empty pattern.
          *)
-        Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [|string ""; string flags|]
+        Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [| string ""; string flags |]
     in
     Js.Unsafe.inject regexp
 end

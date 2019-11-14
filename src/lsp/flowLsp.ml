@@ -194,8 +194,8 @@ let get_open_files (state : state) : open_file_info SMap.t option =
   | Disconnected denv -> Some denv.d_ienv.i_open_files
   | _ -> None
 
-let update_open_file (uri : string) (open_file_info : open_file_info option) (state : state) :
-    state =
+let update_open_file (uri : string) (open_file_info : open_file_info option) (state : state) : state
+    =
   let update_ienv ienv =
     match open_file_info with
     | Some open_file_info ->
@@ -454,8 +454,8 @@ let show_status
             i_outstanding_local_handlers;
           })))
 
-let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata)
-    : unit =
+let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata) :
+    unit =
   let _bytesWritten =
     Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) (request, metadata)
   in
@@ -538,8 +538,7 @@ let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_en
   let (message, shortMessage, progress, total) =
     match (reason, env.d_server_status) with
     | (CommandConnectSimple.Server_missing, _) -> ("Flow: Server starting", None, None, None)
-    | (CommandConnectSimple.Server_socket_missing, _) ->
-      ("Flow: Server starting?", None, None, None)
+    | (CommandConnectSimple.Server_socket_missing, _) -> ("Flow: Server starting?", None, None, None)
     | (CommandConnectSimple.(Build_id_mismatch Server_exited), _) ->
       ("Flow: Server was wrong version and exited", None, None, None)
     | (CommandConnectSimple.(Build_id_mismatch (Client_should_error _)), _) ->
@@ -667,9 +666,7 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
       (state, Some uri)
     | (_, NotificationMessage (DidCloseNotification params)) ->
       let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
-      let state =
-        state |> update_errors (LspErrors.clear_all_live_errors_and_send to_stdout uri)
-      in
+      let state = state |> update_errors (LspErrors.clear_all_live_errors_and_send to_stdout uri) in
       (state, None)
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
@@ -765,8 +762,8 @@ let dismiss_tracks (state : state) : state =
     let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
     to_stdout json
   in
-  let cancel_request_from_server (server_id : int) (wrapped : wrapped_id) (_request : lsp_request)
-      : unit =
+  let cancel_request_from_server (server_id : int) (wrapped : wrapped_id) (_request : lsp_request) :
+      unit =
     if server_id = wrapped.server_id then
       let id = encode_wrapped wrapped in
       let notification = CancelRequestNotification { CancelRequest.id } in
@@ -921,8 +918,7 @@ let show_recheck_progress (cenv : connected_env) : state =
       let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
       let message = "Flow: " ^ ServerStatus.string_of_status ~use_emoji:true server_status in
       (MessageType.WarningMessage, message, shortMessage, progress, total)
-    | (true, _, _) ->
-      (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
+    | (true, _, _) -> (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
     | (false, _, Some { ServerProt.Response.lazy_mode = mode; checked_files; total_files })
       when checked_files < total_files && mode <> Options.NON_LAZY_MODE ->
       let message =
@@ -939,8 +935,8 @@ let show_recheck_progress (cenv : connected_env) : state =
   Connected
     { cenv with c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv }
 
-let do_documentSymbol
-    flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params) : state =
+let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params)
+    : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
   (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
   let (state, (ast, _live_parse_errors)) = parse_and_cache flowconfig_name state uri in
@@ -1203,9 +1199,7 @@ let do_rage flowconfig_name (state : state) : Rage.result =
         items
     in
     (* CLIENT. This includes the client's perception of the server state. *)
-    let items =
-      add_string items ("LSP adapter state: " ^ RagePrint.string_of_state state ^ "\n")
-    in
+    let items = add_string items ("LSP adapter state: " ^ RagePrint.string_of_state state ^ "\n") in
     (* DONE! *)
     items)
 
@@ -1878,11 +1872,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         | LspToServer _ ->
           (* We'll just send a telemetry notification, since the client wasn't expecting a response *)
           let text =
-            Printf.sprintf
-              "%s [%i]\n%s"
-              exception_constructor
-              Lsp.Error.Code.unknownErrorCode
-              stack
+            Printf.sprintf "%s [%i]\n%s" exception_constructor Lsp.Error.Code.unknownErrorCode stack
           in
           Some
             (NotificationMessage

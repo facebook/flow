@@ -46,10 +46,7 @@ let properties_of_object = function
   | (loc, _) -> Error (loc, "Expected an object literal")
 
 let parse ast : 'a t_or_error =
-  statement_of_program ast
-  >>= object_of_statement
-  >>= properties_of_object
-  >>= fun properties ->
+  statement_of_program ast >>= object_of_statement >>= properties_of_object >>= fun properties ->
   Ast.(
     Expression.Object.(
       let extract_property package = function

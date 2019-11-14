@@ -511,8 +511,7 @@ let add_tvar cx id bounds = cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.grap
 
 let add_trust_var cx id bounds = cx.sig_cx.trust_graph <- IMap.add id bounds cx.sig_cx.trust_graph
 
-let add_nominal_prop_id cx id =
-  cx.sig_cx.nominal_prop_ids <- ISet.add id cx.sig_cx.nominal_prop_ids
+let add_nominal_prop_id cx id = cx.sig_cx.nominal_prop_ids <- ISet.add id cx.sig_cx.nominal_prop_ids
 
 let add_nominal_poly_id cx id =
   cx.sig_cx.nominal_poly_ids <- Type.Poly.Set.add id cx.sig_cx.nominal_poly_ids

@@ -102,8 +102,7 @@ let of_lines base_settings =
     | [left; right] ->
       let left = left |> String.trim in
       let right = right |> String.trim in
-      parse_value label right
-      >>= fun value ->
+      parse_value label right >>= fun value ->
       begin
         match left with
         | "all" -> Ok (AllSetting (of_default value))
@@ -136,8 +135,7 @@ let of_lines base_settings =
   let rec loop acc = function
     | [] -> Ok acc
     | line :: lines ->
-      parse_line line
-      >>= fun result ->
+      parse_line line >>= fun result ->
       begin
         match result with
         | EntryList (keys, value) ->
@@ -172,8 +170,7 @@ let of_lines base_settings =
     (* Artificially locate the lines to detect unused lines *)
     let located_lines = Base.List.map ~f:locate_fun lint_lines in
     let settings = loop base_settings located_lines in
-    settings
-    >>= fun settings ->
+    settings >>= fun settings ->
     let used_locs =
       fold
         (fun _kind (_enabled, loc) acc ->

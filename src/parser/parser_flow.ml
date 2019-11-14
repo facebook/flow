@@ -230,7 +230,6 @@ module rec Parse : PARSER = struct
       | T_STATIC
       | T_EXPORT
       (* TODO *)
-      
       | T_ELLIPSIS ->
         error_unexpected ~expected:"the start of a statement" env;
         Eat.token env;

@@ -224,8 +224,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let targs' = Option.map ~f:this#type_args targs in
         (this#on_loc_annot annot, { expr = expr'; targs = targs' }))
 
-    method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t
-        =
+    method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t =
       Ast.Class.Decorator.(
         let (annot, { expression }) = dec in
         let expression' = this#expression expression in
@@ -257,8 +256,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let decorators' = Base.List.map ~f:this#class_decorator decorators in
         { kind; key = key'; value = value'; static; decorators = decorators' })
 
-    method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t'
-        =
+    method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
       Ast.Class.Property.(
         let { key; value; annot; static; variance } = prop in
         let key' = this#object_key key in
@@ -365,8 +363,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           Variable (this#on_loc_annot annot, this#declare_variable decl_var)
         | Function (annot, decl_func) ->
           Function (this#on_loc_annot annot, this#declare_function decl_func)
-        | Class (annot, decl_class) ->
-          Class (this#on_loc_annot annot, this#declare_class decl_class)
+        | Class (annot, decl_class) -> Class (this#on_loc_annot annot, this#declare_class decl_class)
         | DefaultType t -> DefaultType (this#type_ t)
         | NamedType (annot, alias) -> NamedType (this#on_loc_annot annot, this#type_alias alias)
         | NamedOpaqueType (annot, ot) ->
@@ -562,8 +559,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Expression expr -> Expression (this#expression expr)
         | Spread spread -> Spread (this#spread_element spread))
 
-    method for_in_statement (stmt : ('M, 'T) Ast.Statement.ForIn.t)
-        : ('N, 'U) Ast.Statement.ForIn.t =
+    method for_in_statement (stmt : ('M, 'T) Ast.Statement.ForIn.t) : ('N, 'U) Ast.Statement.ForIn.t
+        =
       Ast.Statement.ForIn.(
         let { left; right; body; each } = stmt in
         let left' = this#for_in_statement_lhs left in
@@ -629,9 +626,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
       Ast.Type.Function.(
-        let { params = (params_annot, { Params.params = ps; rest = rpo }); return; tparams } =
-          ft
-        in
+        let { params = (params_annot, { Params.params = ps; rest = rpo }); return; tparams } = ft in
         this#type_params_opt tparams (fun tparams' ->
             let ps' = Base.List.map ~f:this#function_param_type ps in
             let rpo' = Option.map ~f:this#function_rest_param_type rpo in
@@ -772,8 +767,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         ( this#on_type_annot annot,
           match t with
           | ( Any | Mixed | Empty | Void | Null | Number | BigInt | String | Boolean
-            | StringLiteral _ | NumberLiteral _ | BigIntLiteral _ | BooleanLiteral _ | Exists ) as
-            t ->
+            | StringLiteral _ | NumberLiteral _ | BigIntLiteral _ | BooleanLiteral _ | Exists ) as t
+            ->
             t
           | Nullable t' -> Nullable (this#type_ t')
           | Array t' -> Array (this#type_ t')
@@ -955,8 +950,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method import_default_specifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
-    method import_namespace_specifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t
-        =
+    method import_namespace_specifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
     method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
@@ -965,11 +959,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let openingElement' = this#jsx_opening_element openingElement in
         let closingElement' = Option.map ~f:this#jsx_closing_element closingElement in
         let children' = this#jsx_children children in
-        {
-          openingElement = openingElement';
-          closingElement = closingElement';
-          children = children';
-        })
+        { openingElement = openingElement'; closingElement = closingElement'; children = children' })
 
     method jsx_fragment (expr : ('M, 'T) Ast.JSX.fragment) : ('N, 'U) Ast.JSX.fragment =
       Ast.JSX.(
@@ -1144,8 +1134,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method member_private_name (name : 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
       this#private_name name
 
-    method member_property_expression (expr : ('M, 'T) Ast.Expression.t)
-        : ('N, 'U) Ast.Expression.t =
+    method member_property_expression (expr : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t
+        =
       this#expression expr
 
     method meta_property (expr : 'M Ast.Expression.MetaProperty.t)
@@ -1369,8 +1359,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Pattern.t =
       this#pattern ?kind expr
 
-    method pattern_assignment_pattern ?kind (expr : ('M, 'T) Ast.Pattern.t)
-        : ('N, 'U) Ast.Pattern.t =
+    method pattern_assignment_pattern ?kind (expr : ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t
+        =
       this#pattern ?kind expr
 
     method pattern_expression (expr : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
@@ -1386,8 +1376,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let comments' = Option.map ~f:this#syntax comments in
         { argument = argument'; comments = comments' })
 
-    method sequence (expr : ('M, 'T) Ast.Expression.Sequence.t)
-        : ('N, 'U) Ast.Expression.Sequence.t =
+    method sequence (expr : ('M, 'T) Ast.Expression.Sequence.t) : ('N, 'U) Ast.Expression.Sequence.t
+        =
       Ast.Expression.Sequence.(
         let { expressions } = expr in
         let expressions' = Base.List.map ~f:this#expression expressions in

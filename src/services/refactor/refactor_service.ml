@@ -117,8 +117,7 @@ class rename_mapper refs new_name =
         | _ -> super#object_property prop)
   end
 
-let mapper_to_edits (ast_mapper : Loc.t Flow_ast_mapper.mapper) (ast : (Loc.t, Loc.t) Ast.program)
-    =
+let mapper_to_edits (ast_mapper : Loc.t Flow_ast_mapper.mapper) (ast : (Loc.t, Loc.t) Ast.program) =
   let new_ast = ast_mapper#program ast in
   let changes = Flow_ast_differ.program Flow_ast_differ.Standard ast new_ast in
   Ast_diff_printer.edits_of_changes None changes
@@ -130,10 +129,8 @@ let split_by_source refs =
     begin
       fun acc ref ->
       let (_, loc) = ref in
-      acc
-      >>= fun map ->
-      Base.Result.of_option ~error:"No source found" Loc.(loc.source)
-      >>= fun source ->
+      acc >>= fun map ->
+      Base.Result.of_option ~error:"No source found" Loc.(loc.source) >>= fun source ->
       let lst = ref :: get_with_default [] source map in
       Ok (FilenameMap.add source lst map)
     end
@@ -148,10 +145,8 @@ let apply_rename_to_files ~reader refs_by_file new_name =
   FilenameMap.fold
     begin
       fun file refs acc ->
-      acc
-      >>= fun edits ->
-      FindRefsUtils.get_ast_result ~reader file
-      >>| fun (ast, _, _) ->
+      acc >>= fun edits ->
+      FindRefsUtils.get_ast_result ~reader file >>| fun (ast, _, _) ->
       let file_edits = apply_rename_to_file file ast refs new_name in
       List.rev_append file_edits edits
     end
@@ -176,13 +171,11 @@ let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
       ~col
       ~multi_hop:false
   in
-  find_refs_response
-  %>>= function
+  find_refs_response %>>= function
   | None -> Lwt.return (Ok None)
   | Some (_old_name, refs) ->
     (* TODO prevent naming conflicts *)
     (* TODO only rename renameable locations (e.g. not `default` in `export default`) *)
-    split_by_source refs
-    %>>= fun refs_by_file ->
-    apply_rename_to_files ~reader refs_by_file new_name
-    %>>= (fun (edits : (Loc.t * string) list) -> Lwt.return @@ Ok (Some edits))
+    split_by_source refs %>>= fun refs_by_file ->
+    apply_rename_to_files ~reader refs_by_file new_name %>>= fun (edits : (Loc.t * string) list) ->
+    Lwt.return @@ Ok (Some edits)

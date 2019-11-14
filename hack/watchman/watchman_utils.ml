@@ -2,9 +2,7 @@
  * the revision we are moving to. This gets it. *)
 let rev_in_state_change json =
   Hh_json.Access.(
-    return json
-    >>= get_string "rev"
-    |> function
+    return json >>= get_string "rev" |> function
     | Error _ ->
       let () =
         Hh_logger.log
@@ -16,9 +14,7 @@ let rev_in_state_change json =
 
 let merge_in_state_change json =
   Hh_json.Access.(
-    return json
-    >>= get_bool "merge"
-    |> function
+    return json >>= get_bool "merge" |> function
     | Error _ ->
       let () =
         Hh_logger.log

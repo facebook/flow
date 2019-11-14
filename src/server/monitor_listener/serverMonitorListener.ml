@@ -32,8 +32,7 @@ module ListenLoop = LwtLoop.Make (struct
       ServerMonitorListenerState.push_new_env_update (fun env ->
           {
             env with
-            connections =
-              Persistent_connection.remove_client_from_clients env.connections client_id;
+            connections = Persistent_connection.remove_client_from_clients env.connections client_id;
           });
       Lwt.return_unit
     | MonitorProt.FileWatcherNotification (changed_files, metadata) ->

@@ -13,8 +13,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method arrow_function : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
-    method assignment :
-      ('M, 'T) Ast.Expression.Assignment.t -> ('N, 'U) Ast.Expression.Assignment.t
+    method assignment : ('M, 'T) Ast.Expression.Assignment.t -> ('N, 'U) Ast.Expression.Assignment.t
 
     method assignment_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
@@ -74,8 +73,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Expression.Comprehension.t -> ('N, 'U) Ast.Expression.Comprehension.t
 
     method comprehension_block :
-      ('M, 'T) Ast.Expression.Comprehension.Block.t ->
-      ('N, 'U) Ast.Expression.Comprehension.Block.t
+      ('M, 'T) Ast.Expression.Comprehension.Block.t -> ('N, 'U) Ast.Expression.Comprehension.Block.t
 
     method conditional :
       ('M, 'T) Ast.Expression.Conditional.t -> ('N, 'U) Ast.Expression.Conditional.t
@@ -129,16 +127,13 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'N Ast.Statement.EnumDeclaration.BooleanBody.t
 
     method enum_number_body :
-      'M Ast.Statement.EnumDeclaration.NumberBody.t ->
-      'N Ast.Statement.EnumDeclaration.NumberBody.t
+      'M Ast.Statement.EnumDeclaration.NumberBody.t -> 'N Ast.Statement.EnumDeclaration.NumberBody.t
 
     method enum_string_body :
-      'M Ast.Statement.EnumDeclaration.StringBody.t ->
-      'N Ast.Statement.EnumDeclaration.StringBody.t
+      'M Ast.Statement.EnumDeclaration.StringBody.t -> 'N Ast.Statement.EnumDeclaration.StringBody.t
 
     method enum_symbol_body :
-      'M Ast.Statement.EnumDeclaration.SymbolBody.t ->
-      'N Ast.Statement.EnumDeclaration.SymbolBody.t
+      'M Ast.Statement.EnumDeclaration.SymbolBody.t -> 'N Ast.Statement.EnumDeclaration.SymbolBody.t
 
     method enum_defaulted_member :
       'M Ast.Statement.EnumDeclaration.DefaultedMember.t ->
@@ -248,9 +243,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method import : 'T -> ('M, 'T) Ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
     method import_declaration :
-      'M ->
-      ('M, 'T) Ast.Statement.ImportDeclaration.t ->
-      ('N, 'U) Ast.Statement.ImportDeclaration.t
+      'M -> ('M, 'T) Ast.Statement.ImportDeclaration.t -> ('N, 'U) Ast.Statement.ImportDeclaration.t
 
     method import_default_specifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 

@@ -213,9 +213,8 @@ module Make (F : Func_params.S) = struct
               bogus_trust (),
               MixedT Mixed_everything ),
           DefT
-            ( replace_desc_reason (RCustom "no next") reason,
-              bogus_trust (),
-              MixedT Mixed_everything ) )
+            (replace_desc_reason (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
+        )
     in
     let (yield, next, return) =
       Scope.(
@@ -240,8 +239,8 @@ module Make (F : Func_params.S) = struct
         | Some (Ast.Function.BodyExpression expr) ->
           ( [
               ( fst expr,
-                Return
-                  { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () } );
+                Return { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () }
+              );
             ],
             (function
             | [(_, Return { Return.argument = Some expr; comments = _ })]
@@ -312,9 +311,7 @@ module Make (F : Func_params.S) = struct
           | AsyncGenerator ->
             let reason = mk_annot_reason (RType "AsyncGenerator") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t =
-              Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t]
-            in
+            let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)

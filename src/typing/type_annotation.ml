@@ -399,8 +399,7 @@ let rec convert cx tparams_map =
                 | DefT (r, trust, ObjT o) ->
                   let r = replace_desc_reason RObjectLit r in
                   DefT (r, trust, ObjT { o with flags = { o.flags with exact = true } })
-                | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
-                  ->
+                | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id) ->
                   let r = replace_desc_reason RObjectLit r in
                   EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
                 | _ -> t
@@ -734,12 +733,10 @@ let rec convert cx tparams_map =
           mk_react_prop_type cx loc t_ast targs ident React.PropType.InstanceOf
         | "React$PropType$ObjectOf" ->
           mk_react_prop_type cx loc t_ast targs ident React.PropType.ObjectOf
-        | "React$PropType$OneOf" ->
-          mk_react_prop_type cx loc t_ast targs ident React.PropType.OneOf
+        | "React$PropType$OneOf" -> mk_react_prop_type cx loc t_ast targs ident React.PropType.OneOf
         | "React$PropType$OneOfType" ->
           mk_react_prop_type cx loc t_ast targs ident React.PropType.OneOfType
-        | "React$PropType$Shape" ->
-          mk_react_prop_type cx loc t_ast targs ident React.PropType.Shape
+        | "React$PropType$Shape" -> mk_react_prop_type cx loc t_ast targs ident React.PropType.Shape
         | "React$CreateClass" -> mk_custom_fun cx loc t_ast targs ident ReactCreateClass
         | "React$CreateElement" -> mk_custom_fun cx loc t_ast targs ident ReactCreateElement
         | "React$CloneElement" -> mk_custom_fun cx loc t_ast targs ident ReactCloneElement
@@ -900,8 +897,7 @@ let rec convert cx tparams_map =
       end
     | ( loc,
         Function
-          { Function.params = (params_loc, { Function.Params.params; rest }); return; tparams } )
-      ->
+          { Function.params = (params_loc, { Function.Params.params; rest }); return; tparams } ) ->
       let (tparams, tparams_map, tparams_ast) =
         mk_type_param_declarations cx ~tparams_map tparams
       in
@@ -1192,8 +1188,7 @@ and convert_object =
             if name = "__proto__" && (not (_method || optional)) && variance = None then
               let reason = mk_reason RPrototype (fst value) in
               let proto =
-                Tvar.mk_where cx reason (fun tout ->
-                    Flow.flow cx (t, ObjTestProtoT (reason, tout)))
+                Tvar.mk_where cx reason (fun tout -> Flow.flow cx (t, ObjTestProtoT (reason, tout)))
               in
               let acc =
                 match Acc.add_proto (Flow.mk_typeof_annotation cx reason proto) acc with
@@ -1441,9 +1436,7 @@ and mk_func_sig =
       in
       let (((_, t), _) as annot) = convert cx tparams_map annot in
       let name = Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
-      let rest =
-        (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }) }))
-      in
+      let rest = (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }) })) in
       Func_type_params.add_rest rest x
     in
     let convert_params cx tparams_map (loc, { Params.params; rest }) =
@@ -1776,8 +1769,7 @@ and add_interface_properties cx tparams_map properties s =
               else (
                 Flow.add_output
                   cx
-                  Error_message.(
-                    EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static }));
+                  Error_message.(EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static }));
                 (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
               )
             | SpreadProperty (loc, _) as prop ->

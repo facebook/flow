@@ -70,21 +70,19 @@ end = struct
   let pid handle = handle.daemon_handle.Daemon.pid
 
   let wait_until_ready handle =
-    Marshal_tools.from_fd_with_preamble handle.infd
-    >>= fun msg ->
+    Marshal_tools.from_fd_with_preamble handle.infd >>= fun msg ->
     assert (msg = DfindServer.Ready);
     Marshal_tools.return ()
 
   let request_changes ?timeout handle =
-    Marshal_tools.to_fd_with_preamble handle.outfd ()
-    >>= (fun _ -> Marshal_tools.from_fd_with_preamble ?timeout handle.infd)
+    Marshal_tools.to_fd_with_preamble handle.outfd () >>= fun _ ->
+    Marshal_tools.from_fd_with_preamble ?timeout handle.infd
 
   let get_changes ?timeout daemon =
     let rec loop acc =
-      request_changes ?timeout daemon
-      >>= (function
-            | DfindServer.Updates s -> Marshal_tools.return s
-            | DfindServer.Ready -> assert false)
+      (request_changes ?timeout daemon >>= function
+       | DfindServer.Updates s -> Marshal_tools.return s
+       | DfindServer.Ready -> assert false)
       >>= fun diff ->
       if SSet.is_empty diff then
         Marshal_tools.return acc

@@ -315,8 +315,7 @@ let update_errors_due_to_change_and_send send_json params state =
         | Some (ParseErrors []) ->
           live_parse_errors
         | Some (ParseErrors live_parse_errors) ->
-          Some
-            (ParseErrors (Lsp_helpers.update_diagnostics_due_to_change live_parse_errors params))
+          Some (ParseErrors (Lsp_helpers.update_diagnostics_due_to_change live_parse_errors params))
       in
       let live_non_parse_errors =
         match live_non_parse_errors with

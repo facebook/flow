@@ -109,8 +109,8 @@ let calc_direct_dependents_utils ~reader workers fileset root_fileset =
               (* If f's phantom dependents are in root_fileset, then add f to
        `resolution_path_files`. These are considered direct dependencies (in
        addition to others computed by direct_dependents downstream). *)
-              resolved_requires.phantom_dependents
-              |> SSet.exists (fun f -> SSet.mem f root_fileset) )
+              resolved_requires.phantom_dependents |> SSet.exists (fun f -> SSet.mem f root_fileset)
+            )
           in
           (f, entry) :: utils)
     in

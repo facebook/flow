@@ -79,9 +79,7 @@ let slave_main ic oc =
     Measure.track_distribution
       "promoted_words"
       ~bucket_size:(float (25 * 1024 * 1024));
-    Measure.sample
-      "promoted_words"
-      (end_promoted_words -. !start_promoted_words);
+    Measure.sample "promoted_words" (end_promoted_words -. !start_promoted_words);
 
     Measure.track_distribution
       "major_words"
@@ -96,9 +94,7 @@ let slave_main ic oc =
       (float (end_major_collections - !start_major_collections));
 
     begin
-      match
-        (!start_proc_fs_status, ProcFS.status_for_pid (Unix.getpid ()))
-      with
+      match (!start_proc_fs_status, ProcFS.status_for_pid (Unix.getpid ())) with
       | ( Some { ProcFS.rss_total = start; _ },
           Ok { ProcFS.rss_total = total; rss_hwm = hwm; _ } ) ->
         Measure.sample "worker_rss_start" (float start);
@@ -111,10 +107,7 @@ let slave_main ic oc =
     WorkerCancel.set_on_worker_cancelled (fun () -> ());
     let len =
       Measure.time "worker_send_response" (fun () ->
-          Marshal_tools.to_fd_with_preamble
-            ~flags:[Marshal.Closures]
-            outfd
-            data)
+          Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data)
     in
     if len > 30 * 1024 * 1024 (* 30 MB *) then (
       Hh_logger.log
@@ -177,10 +170,7 @@ let slave_main ic oc =
     Printf.printf "Worker slave %d exception: %s\n%!" pid e_str;
     EventLogger.log_if_initialized (fun () ->
         EventLogger.worker_exception e_str);
-    Printf.printf
-      "Worker slave %d Potential backtrace:\n%s\n%!"
-      pid
-      e_backtrace;
+    Printf.printf "Worker slave %d Potential backtrace:\n%s\n%!" pid e_backtrace;
     exit 2
 
 let win32_worker_main restore (state, _controller_fd) (ic, oc) =

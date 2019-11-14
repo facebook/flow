@@ -551,8 +551,7 @@ let name_of_signal = function
   | s when s = Sys.sigstop -> "SIGSTOP (Stop)"
   | s when s = Sys.sigtstp -> "SIGTSTP (Interactive stop)"
   | s when s = Sys.sigttin -> "SIGTTIN (Terminal read from background process)"
-  | s when s = Sys.sigttou ->
-    "SIGTTOU (Terminal write from background process)"
+  | s when s = Sys.sigttou -> "SIGTTOU (Terminal write from background process)"
   | s when s = Sys.sigvtalrm -> "SIGVTALRM (Timeout in virtual time)"
   | s when s = Sys.sigprof -> "SIGPROF (Profiling interrupt)"
   | s when s = Sys.sigbus -> "SIGBUS (Bus error)"
@@ -654,7 +653,6 @@ type rusage = {
 
 external getrusage : unit -> rusage = "hh_getrusage"
 
-external start_gc_profiling : unit -> unit = "hh_start_gc_profiling"
-  [@@noalloc]
+external start_gc_profiling : unit -> unit = "hh_start_gc_profiling" [@@noalloc]
 
 external get_gc_time : unit -> float * float = "hh_get_gc_time"

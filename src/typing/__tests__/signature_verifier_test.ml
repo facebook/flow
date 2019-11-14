@@ -330,10 +330,7 @@ let tests_data =
       ["module.exports = [1, ...[2, 3], 4]"],
       ["Unexpected array spread @ (1, 21) to (1, 30)"],
       [] );
-    ( name "array_hole",
-      ["module.exports = [,]"],
-      ["Unexpected array hole @ (1, 17) to (1, 20)"],
-      [] );
+    (name "array_hole", ["module.exports = [,]"], ["Unexpected array hole @ (1, 17) to (1, 20)"], []);
     (name "object_spread", ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"], [], []);
     (name "reference_expression1", ["module.exports = Number.NaN"], [], ["global value: Number"]);
     ( name "reference_expression2",

@@ -125,8 +125,7 @@ end = struct
 
   let set_min_level level = min_level_ref := level
 
-  let passes_min_level level =
-    int_of_level level >= int_of_level !min_level_ref
+  let passes_min_level level = int_of_level level >= int_of_level !min_level_ref
 
   let log level ?exn fmt =
     if passes_min_level level then

@@ -15,7 +15,6 @@ let hh_logger_level_of_env env =
   | Some "debug" -> Some Hh_logger.Level.Debug
   | Some _
   (* ignore invalid values *)
-  
   | None ->
     None
 

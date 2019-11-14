@@ -573,8 +573,7 @@ module Unix : sig
 
   val shutdown_connection : in_channel -> unit
 
-  val establish_server :
-    (in_channel -> out_channel -> unit) -> sockaddr -> unit
+  val establish_server : (in_channel -> out_channel -> unit) -> sockaddr -> unit
 
   type host_entry = Unix.host_entry = {
     h_name: string;

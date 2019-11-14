@@ -44,15 +44,15 @@ module Lwt_watchman_process :
   let get_sockname timeout =
     let process =
       Lwt_process.open_process_in
-        ("", [|"watchman"; "--no-pretty"; "get-sockname"|])
+        ("", [| "watchman"; "--no-pretty"; "get-sockname" |])
     in
     let%lwt output =
       match timeout_to_secs timeout with
       | None -> Lwt_io.read_line process#stdout
       | Some timeout ->
         (try%lwt
-           Lwt_unix.with_timeout timeout
-           @@ (fun () -> Lwt_io.read_line process#stdout)
+           Lwt_unix.with_timeout timeout @@ fun () ->
+           Lwt_io.read_line process#stdout
          with Lwt_unix.Timeout -> raise Timeout)
     in
     let%lwt status = process#close in
@@ -124,8 +124,8 @@ module Lwt_watchman_process :
         | None -> Buffered_line_reader_lwt.get_next_line reader
         | Some timeout ->
           (try%lwt
-             Lwt_unix.with_timeout timeout
-             @@ (fun () -> Buffered_line_reader_lwt.get_next_line reader)
+             Lwt_unix.with_timeout timeout @@ fun () ->
+             Buffered_line_reader_lwt.get_next_line reader
            with Lwt_unix.Timeout -> raise Timeout)
       in
       Lwt.return @@ sanitize_watchman_response ~debug_logging line
@@ -140,8 +140,7 @@ module Lwt_watchman_process :
     | None -> Lwt.return @@ Lwt_unix.readable fd
     | Some timeout ->
       (try%lwt
-         Lwt_unix.with_timeout timeout
-         @@ fun () ->
+         Lwt_unix.with_timeout timeout @@ fun () ->
          let%lwt () = Lwt_unix.wait_read fd in
          Lwt.return true
        with Lwt_unix.Timeout -> Lwt.return false)
@@ -155,8 +154,8 @@ module Lwt_watchman_process :
     else
       let%lwt output =
         try%lwt
-          Lwt_unix.with_timeout 40.0
-          @@ (fun () -> Buffered_line_reader_lwt.get_next_line reader)
+          Lwt_unix.with_timeout 40.0 @@ fun () ->
+          Buffered_line_reader_lwt.get_next_line reader
         with Lwt_unix.Timeout ->
           let () =
             Hh_logger.log "Lwt_watchman_process.blocking_read timed out"

@@ -300,9 +300,7 @@ let utf8_escape =
       (next, buf)
     in
     fun ?pos ?len f acc str ->
-      str
-      |> Wtf8.fold_wtf_8 ?pos ?len (lookahead ~f) (None, acc)
-      |> fun (last, acc) ->
+      str |> Wtf8.fold_wtf_8 ?pos ?len (lookahead ~f) (None, acc) |> fun (last, acc) ->
       match last with
       | Some (i, cp) -> f ~next:None acc i cp
       | None -> acc
@@ -532,8 +530,7 @@ and statement ?(pretty_semicolon = false) (root_stmt : (Loc.t, Loc.t) Ast.Statem
             | Some alt ->
               fuse
                 [
-                  group
-                    [statement_with_test "if" (expression test); statement_after_test consequent];
+                  group [statement_with_test "if" (expression test); statement_after_test consequent];
                   pretty_space;
                   fuse_with_space [Atom "else"; statement ~pretty_semicolon alt];
                 ]
@@ -915,8 +912,7 @@ and expression ?(ctxt = normal_context) (root_expr : (Loc.t, Loc.t) Ast.Expressi
         member ~optional ~precedence ~ctxt m
       | E.New { E.New.callee; targs; arguments; comments } ->
         let callee_layout =
-          if definitely_needs_parens ~precedence ctxt callee || contains_call_expression callee
-          then
+          if definitely_needs_parens ~precedence ctxt callee || contains_call_expression callee then
             wrap_in_parens (expression ~ctxt callee)
           else
             expression ~ctxt callee
@@ -1141,9 +1137,7 @@ and literal { Ast.Literal.raw; value; comments = _ (* handled by caller *) } =
       let quote = better_quote str in
       fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
     | RegExp { RegExp.pattern; flags } ->
-      let flags =
-        flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list
-      in
+      let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
       fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
     | _ -> Atom raw)
 
@@ -1170,8 +1164,7 @@ and member ?(optional = false) ~precedence ~ctxt member_node =
       begin
         match _object with
         | (_, Ast.Expression.Call _) -> expression ~ctxt _object
-        | ( loc,
-            Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw; comments } )
+        | (loc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw; comments })
           when not computed ->
           (* 1.foo would be confused with a decimal point, so it needs parens *)
           source_location_with_comments
@@ -1195,8 +1188,7 @@ and member ?(optional = false) ~precedence ~ctxt member_node =
 
 and string_literal (loc, { Ast.StringLiteral.value; _ }) =
   let quote = better_quote value in
-  source_location_with_comments
-    (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
+  source_location_with_comments (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
 
 and pattern_object_property_key =
   Ast.Pattern.Object.(
@@ -1427,11 +1419,11 @@ and arrow_function
       (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
        unexpected multiply-and-assign operator. Thus, we format this with a
        space e.g. `():* =>{}`. *)
-        begin
-          match return with
-          | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
-          | _ -> pretty_space
-        end;
+      begin
+        match return with
+        | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
+        | _ -> pretty_space
+      end;
       Atom "=>";
       pretty_space;
       begin
@@ -1453,8 +1445,7 @@ and arrow_function_params params =
     ]
 
 and function_ func =
-  let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ }
-      =
+  let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ } =
     func
   in
   let prefix =
@@ -1903,17 +1894,8 @@ and object_property property =
             ] )
   | O.Property (loc, O.Property.Method { key; value = (fn_loc, func) }) ->
     let s_key = object_property_key key in
-    let {
-      Ast.Function.id;
-      params;
-      body;
-      async;
-      generator;
-      predicate;
-      return;
-      tparams;
-      sig_loc = _;
-    } =
+    let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ }
+        =
       func
     in
     assert (id = None);
@@ -1938,17 +1920,8 @@ and object_property property =
         source_location_with_comments
           (fn_loc, function_base ~prefix ~params ~body ~predicate ~return ~tparams) )
   | O.Property (loc, O.Property.Get { key; value = (fn_loc, func) }) ->
-    let {
-      Ast.Function.id;
-      params;
-      body;
-      async;
-      generator;
-      predicate;
-      return;
-      tparams;
-      sig_loc = _;
-    } =
+    let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ }
+        =
       func
     in
     assert (id = None);
@@ -1966,17 +1939,8 @@ and object_property property =
         source_location_with_comments
           (fn_loc, function_base ~prefix ~params ~body ~predicate ~return ~tparams) )
   | O.Property (loc, O.Property.Set { key; value = (fn_loc, func) }) ->
-    let {
-      Ast.Function.id;
-      params;
-      body;
-      async;
-      generator;
-      predicate;
-      return;
-      tparams;
-      sig_loc = _;
-    } =
+    let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _ }
+        =
       func
     in
     assert (id = None);
@@ -2024,8 +1988,7 @@ and jsx_identifier (loc, { Ast.JSX.Identifier.name }) =
   identifier_with_comments @@ Flow_ast_utils.ident_of_source (loc, name)
 
 and jsx_namespaced_name (loc, { Ast.JSX.NamespacedName.namespace; name }) =
-  source_location_with_comments
-    (loc, fuse [jsx_identifier namespace; Atom ":"; jsx_identifier name])
+  source_location_with_comments (loc, fuse [jsx_identifier namespace; Atom ":"; jsx_identifier name])
 
 and jsx_member_expression (loc, { Ast.JSX.MemberExpression._object; property }) =
   source_location_with_comments
@@ -2196,8 +2159,7 @@ and partition_specifiers default specifiers =
     | None -> (special, named))
 
 and import_namespace_specifier (loc, id) =
-  source_location_with_comments
-    (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier id])
+  source_location_with_comments (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier id])
 
 and import_named_specifier { Ast.Statement.ImportDeclaration.kind; local; remote } =
   fuse
@@ -2224,8 +2186,7 @@ and import_named_specifiers named_specifiers =
         (Base.List.map ~f:import_named_specifier named_specifiers);
     ]
 
-and import_declaration { Ast.Statement.ImportDeclaration.importKind; source; specifiers; default }
-    =
+and import_declaration { Ast.Statement.ImportDeclaration.importKind; source; specifiers; default } =
   let s_from = fuse [Atom "from"; pretty_space] in
   let module I = Ast.Statement.ImportDeclaration in
   with_semicolon
@@ -2324,8 +2285,7 @@ and export_declaration
       end;
     ]
 
-and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.default = _; declaration }
-    =
+and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.default = _; declaration } =
   fuse
     [
       Atom "export";
@@ -2540,8 +2500,8 @@ and type_function
 and type_object_property =
   Ast.Type.Object.(
     function
-    | Property
-        (loc, { Property.key; value; optional; static; proto; variance = variance_; _method }) ->
+    | Property (loc, { Property.key; value; optional; static; proto; variance = variance_; _method })
+      ->
       let s_static =
         if static then
           fuse [Atom "static"; space]
@@ -2847,15 +2807,7 @@ and declare_function
 and declare_variable ?(s_type = Empty) { Ast.Statement.DeclareVariable.id; annot } =
   with_semicolon
     (fuse
-       [
-         Atom "declare";
-         space;
-         s_type;
-         Atom "var";
-         space;
-         identifier id;
-         hint type_annotation annot;
-       ])
+       [Atom "declare"; space; s_type; Atom "var"; space; identifier id; hint type_annotation annot])
 
 and declare_module_exports annot =
   with_semicolon (fuse [Atom "declare"; space; Atom "module.exports"; type_annotation annot])

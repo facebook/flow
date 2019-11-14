@@ -276,8 +276,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       | FunRestParam c -> FunRestParam { lower = c.upper; upper = c.lower }
       | FunReturn c -> FunReturn { lower = c.upper; upper = c.lower }
       | IndexerKeyCompatibility c -> IndexerKeyCompatibility { lower = c.upper; upper = c.lower }
-      | PropertyCompatibility c ->
-        PropertyCompatibility { c with lower = c.upper; upper = c.lower }
+      | PropertyCompatibility c -> PropertyCompatibility { c with lower = c.upper; upper = c.lower }
       | ReactConfigCheck -> ReactConfigCheck
       | TupleElementCompatibility c ->
         TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
@@ -426,8 +425,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
               `Root (op, Some prop, [text "Cannot call "; desc fn])
             | Frame
                 ( FunParam _,
-                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _)))
-                  as use_op ) ) ->
+                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
+                  use_op ) ) ->
               `Next use_op
             | Frame
                 ( FunParam { n; name; lower = lower'; _ },
@@ -447,12 +446,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
                 ( lower,
                   None,
                   [
-                    text "Cannot call ";
-                    desc fn;
-                    text " with ";
-                    desc lower;
-                    text " bound to ";
-                    param;
+                    text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param;
                   ] )
             | Op (FunReturnStatement { value }) ->
               `Root (value, None, [text "Cannot return "; desc value])

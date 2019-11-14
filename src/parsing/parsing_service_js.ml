@@ -419,6 +419,7 @@ let do_parse ~parse_options ~info content file =
         Parse_skip Skip_non_flow_file
       else
         let (ast, parse_errors) = parse_source_file ~fail ~types ~use_strict content file in
+
         (* NOTE: if ~fail:true, we'll never get parse errors here *)
 
         (* Only calculate file sigs for files which will actually be inferred.
@@ -533,8 +534,7 @@ let reducer
      * means we don't currently have the file's AST but we might have the file's hash in the
      * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
     if
-      skip_hash_mismatch
-      && Some new_hash <> Parsing_heaps.Mutator_reader.get_file_hash ~reader file
+      skip_hash_mismatch && Some new_hash <> Parsing_heaps.Mutator_reader.get_file_hash ~reader file
     then
       let parse_hash_mismatch_skips =
         FilenameSet.add file parse_results.parse_hash_mismatch_skips

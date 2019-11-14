@@ -114,8 +114,7 @@ let nameify_default_export_decl decl =
                   id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
                 } ),
             (function
-            | (x, ClassDeclaration class_decl) ->
-              (x, ClassDeclaration { class_decl with id = None })
+            | (x, ClassDeclaration class_decl) -> (x, ClassDeclaration { class_decl with id = None })
             | _ -> failwith "expected ClassDeclaration") ))
     | _ -> (decl, identity))
 

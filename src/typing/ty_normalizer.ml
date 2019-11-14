@@ -959,12 +959,7 @@ end = struct
        *)
       let props_obj =
         Ty.Obj
-          {
-            Ty.obj_exact = false;
-            obj_frozen = false;
-            obj_literal = false;
-            obj_props = static_flds;
-          }
+          { Ty.obj_exact = false; obj_frozen = false; obj_literal = false; obj_props = static_flds }
       in
       Ty.mk_inter (parent_class, [props_obj])
 
@@ -1172,8 +1167,7 @@ end = struct
           let symbol = symbol_from_reason env r name in
           return (Ty.named_alias symbol)
         | RThisType -> type__ ~env t
-        | desc ->
-          terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
+        | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
       in
       fun ~env r kind t ps ->
         match kind with

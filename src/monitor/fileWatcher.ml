@@ -93,8 +93,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             Lwt.return_unit
           with
           | Sys_error msg as exn when msg = "Broken pipe" -> raise (FileWatcherDied exn)
-          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as exn ->
-            raise (FileWatcherDied exn))
+          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as exn -> raise (FileWatcherDied exn))
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in

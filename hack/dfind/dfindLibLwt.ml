@@ -32,13 +32,11 @@ module MarshalToolsLwt :
       (Daemon.descr_of_out_channel oc)
 
   let to_fd_with_preamble ?timeout ?flags fd v =
-    if timeout <> None then
-      raise (Invalid_argument "Use lwt timeouts directly");
+    if timeout <> None then raise (Invalid_argument "Use lwt timeouts directly");
     Marshal_tools_lwt.to_fd_with_preamble ?flags fd v
 
   let from_fd_with_preamble ?timeout fd =
-    if timeout <> None then
-      raise (Invalid_argument "Use lwt timeouts directly");
+    if timeout <> None then raise (Invalid_argument "Use lwt timeouts directly");
     Marshal_tools_lwt.from_fd_with_preamble fd
 end
 

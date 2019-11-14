@@ -177,8 +177,7 @@ let start ~start_state ~trigger =
   let id = internal_state.next_id in
   internal_state.next_id <- internal_state.next_id + 1;
   let interaction = { start_state; trigger } in
-  internal_state.pending_interactions <-
-    IMap.add id interaction internal_state.pending_interactions;
+  internal_state.pending_interactions <- IMap.add id interaction internal_state.pending_interactions;
   id
 
 (* Call this to note that a recheck has started *)
@@ -287,7 +286,6 @@ let trigger_of_lsp_msg =
     | RequestMessage (_, CodeLensResolveRequest _)
     | RequestMessage (_, DocumentCodeLensRequest _)
     (* TODO not sure if this is right, just need to unbreak the build. *)
-    
     | RequestMessage (_, TypeDefinitionRequest _)
     | RequestMessage (_, UnknownRequest _)
     | RequestMessage (_, WorkspaceSymbolRequest _)
@@ -309,7 +307,6 @@ let trigger_of_lsp_msg =
     | ResponseMessage (_, DocumentCodeLensResult _)
     | ResponseMessage (_, TypeCoverageResult _)
     (* TODO not sure if this is right, just need to unbreak the build. *)
-    
     | ResponseMessage (_, TypeDefinitionResult _)
     | ResponseMessage (_, DocumentFormattingResult _)
     | ResponseMessage (_, DocumentRangeFormattingResult _)

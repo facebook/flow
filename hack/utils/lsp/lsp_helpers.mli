@@ -62,8 +62,7 @@ val get_range_overlap : Lsp.range -> Lsp.range -> range_overlap
 val update_pos_due_to_prior_replace :
   Lsp.position -> range_replace -> Lsp.position
 
-val update_range_due_to_replace :
-  Lsp.range -> range_replace -> Lsp.range option
+val update_range_due_to_replace : Lsp.range -> range_replace -> Lsp.range option
 
 val update_diagnostics_due_to_change :
   Lsp.PublishDiagnostics.diagnostic list ->

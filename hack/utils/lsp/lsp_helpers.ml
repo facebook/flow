@@ -109,9 +109,7 @@ let get_range_overlap (selection : range) (squiggle : range) : range_overlap =
   let selStart_leq_squiggleEnd =
     pos_compare selection.start squiggle.end_ <= 0
   in
-  let selEnd_lt_squiggleStart =
-    pos_compare selection.end_ squiggle.start < 0
-  in
+  let selEnd_lt_squiggleStart = pos_compare selection.end_ squiggle.start < 0 in
   let selEnd_lt_squiggleEnd = pos_compare selection.end_ squiggle.end_ < 0 in
   (* Q. Why does it test "<=" for the first two and "<" for the last two? *)
   (* Intuitively you can trust that it has something to do with how ranges are *)
@@ -138,8 +136,7 @@ let get_range_overlap (selection : range) (squiggle : range) : range_overlap =
     failwith "sel.start proves squiggle.start > squiggle.end_"
   | (_, _, true, false) ->
     failwith "sel.end proves squiggle.start > squiggle.end_"
-  | (false, _, true, _) ->
-    failwith "squiggle.start proves sel.start > sel.end_"
+  | (false, _, true, _) -> failwith "squiggle.start proves sel.start > sel.end_"
   | (_, false, _, true) -> failwith "squiggle.end_ proves sel.start > sel.end_"
 
 (* this structure models a change where a certain range is replaced with
@@ -182,8 +179,7 @@ let update_pos_due_to_prior_replace (p : position) (replace : range_replace) :
   else
     (* The position is on the line where a few characters were inserted *)
     let line =
-      p.line
-      - (replace.remove_range.end_.line - replace.remove_range.start.line)
+      p.line - (replace.remove_range.end_.line - replace.remove_range.start.line)
     in
     let character =
       replace.remove_range.start.character

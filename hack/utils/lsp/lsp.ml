@@ -291,8 +291,7 @@ module CodeActionKind = struct
     | k :: ks -> (k, ks)
 
   (* Create the equivalent string that the spec would have required *)
-  let string_of_kind : t -> string =
-   (fun (k, ks) -> String.concat "." (k :: ks))
+  let string_of_kind : t -> string = (fun (k, ks) -> String.concat "." (k :: ks))
 
   (* Create a new sub-kind of an existing kind *)
   let sub_kind : t -> string -> t =

@@ -124,7 +124,7 @@ end = struct
              and we can bail out *)
           TypeSet.subset prev_ts ts
           && (* otherwise, we recurse on the remaining targs, updating the bit *)
-             loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts)) (prev_tss, tss)
+          loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts)) (prev_tss, tss)
         | ([], []) ->
           (* we have found no counterexamples, so it comes down to whether we've
              seen any non-empty prev_ts *)
@@ -148,8 +148,7 @@ end = struct
         false
       else (
         stack := (c, tss) :: !stack;
-        if Context.is_verbose cx then
-          prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
+        if Context.is_verbose cx then prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
         true
       )
 

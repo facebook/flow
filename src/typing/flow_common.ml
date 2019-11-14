@@ -26,8 +26,7 @@ module type TRUST_CHECKING = sig
 
   val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
 
-  val strengthen_trust :
-    Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
+  val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
 end
 
 module type S = sig
@@ -62,11 +61,9 @@ module type S = sig
 
   val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 
-  val get_builtin_type :
-    Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
+  val get_builtin_type : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
 
-  val get_builtin_typeapp :
-    Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
+  val get_builtin_typeapp : Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
   val is_munged_prop_name : Context.t -> name -> bool
 

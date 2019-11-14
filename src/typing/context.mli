@@ -379,8 +379,7 @@ val iter_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) 
 
 val iter_real_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
 
-val fold_real_props :
-  t -> Type.Properties.id -> (string -> Type.Property.t -> 'a -> 'a) -> 'a -> 'a
+val fold_real_props : t -> Type.Properties.id -> (string -> Type.Property.t -> 'a -> 'a) -> 'a -> 'a
 
 val has_prop : t -> Type.Properties.id -> string -> bool
 

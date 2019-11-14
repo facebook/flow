@@ -93,11 +93,11 @@ let asset_procfs_supported =
       supported
 
 let status_for_pid pid =
-  asset_procfs_supported ()
-  >>= (fun () -> read_proc_file "status" pid >>| parse_status)
+  asset_procfs_supported () >>= fun () ->
+  read_proc_file "status" pid >>| parse_status
 
 (* In cgroup v1 a pid can be in multiple cgroups. In cgroup v2 it will only be in a single cgroup.
  *)
 let first_cgroup_for_pid pid =
-  asset_procfs_supported ()
-  >>= (fun () -> read_proc_file "cgroup" pid >>= parse_cgroup)
+  asset_procfs_supported () >>= fun () ->
+  read_proc_file "cgroup" pid >>= parse_cgroup

@@ -51,8 +51,8 @@ let set_saved_state_filename _ = ()
 
 let set_monitor_options ~file_watcher:_ = ()
 
-let set_server_options
-    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ =
+let set_server_options ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_
+    =
   ()
 
 let status_response ~num_errors:_ = ()

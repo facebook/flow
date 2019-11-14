@@ -110,7 +110,6 @@ module Signature = struct
       | (_, Empty)
       | (_, EnumDeclaration _)
       (* TODO(T44736715) Support enums in signature builder/verifier/etc. *)
-      
       | (_, Expression _)
       | (_, Break _)
       | (_, Continue _)
@@ -246,8 +245,7 @@ module Signature = struct
         let env =
           match (module_kind, module_kind_info) with
           | (CommonJS _, CommonJSInfo _) -> env
-          | (ES { named; _ }, ESInfo named_infos) ->
-            add_export_value_bindings named named_infos env
+          | (ES { named; _ }, ESInfo named_infos) -> add_export_value_bindings named named_infos env
           | _ -> assert false
         in
         add_export_type_bindings type_exports_named type_exports_named_info env

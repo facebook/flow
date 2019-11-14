@@ -175,8 +175,7 @@ end = struct
     let relative_file_data =
       {
         unparsed_info =
-          normalize_info ~root
-          @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+          normalize_info ~root @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
       }
     in
@@ -395,9 +394,7 @@ end = struct
     (* file_sig *)
     let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
     (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents; hash } =
-      file_data.resolved_requires
-    in
+    let { Module_heaps.resolved_modules; phantom_dependents; hash } = file_data.resolved_requires in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules

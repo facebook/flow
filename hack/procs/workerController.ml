@@ -62,8 +62,7 @@ let failure_to_string f =
   | Worker_quit s -> Printf.sprintf "(Worker_quit %s)" (status_string s)
 
 let () =
-  Caml.Printexc.register_printer
-  @@ function
+  Caml.Printexc.register_printer @@ function
   | Worker_failed_to_send_job (Other_send_job_failure exn) ->
     Some (Printf.sprintf "Other_send_job_failure: %s" (Exn.to_string exn))
   | Worker_failed_to_send_job (Worker_already_exited status) ->
@@ -250,8 +249,7 @@ let make_one ?call_wrapper controller_fd spawn id =
 
 (* Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
-let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle
-    =
+let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let setup_controller_fd () =
     if use_prespawned then
       let (parent_fd, child_fd) = Unix.pipe () in
@@ -396,8 +394,7 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
      * fail accordingly, since its slave has failed.
      *)
     try get_result_with_status_check ()
-    with End_of_file ->
-      get_result_with_status_check ~block_on_waitpid:true ()
+    with End_of_file -> get_result_with_status_check ~block_on_waitpid:true ()
   in
   let wait_for_cancel () : unit =
     with_exit_status_check slave_pid (fun () ->
@@ -419,8 +416,7 @@ let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
     with e ->
       begin
         match Unix.waitpid [Unix.WNOHANG] slave_pid with
-        | (0, _) ->
-          raise (Worker_failed_to_send_job (Other_send_job_failure e))
+        | (0, _) -> raise (Worker_failed_to_send_job (Other_send_job_failure e))
         | (_, status) ->
           raise (Worker_failed_to_send_job (Worker_already_exited status))
       end

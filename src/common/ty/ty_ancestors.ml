@@ -212,8 +212,8 @@ class virtual ['self] reduce_ty_base =
     method private on_option : 'env 'a. ('env -> 'a -> 'acc) -> 'env -> 'a option -> 'acc =
       (fun f env -> Option.value_map ~default:self#zero ~f:(f env))
 
-    method private list_fold_left
-        : 'env 'a. ('env -> 'a -> 'acc) -> 'env -> 'acc -> 'a list -> 'acc =
+    method private list_fold_left : 'env 'a. ('env -> 'a -> 'acc) -> 'env -> 'acc -> 'a list -> 'acc
+        =
       fun f env acc xs ->
         match xs with
         | [] -> acc
@@ -236,8 +236,7 @@ class virtual ['self] mapreduce_ty_base =
 
     method private on_aloc : 'env -> ALoc.t -> ALoc.t * 'acc = (fun _ x -> (x, self#zero))
 
-    method private on_list : 'a 'b. ('env -> 'a -> 'b * 'acc) -> 'env -> 'a list -> 'b list * 'acc
-        =
+    method private on_list : 'a 'b. ('env -> 'a -> 'b * 'acc) -> 'env -> 'a list -> 'b list * 'acc =
       (fun f env -> self#list_fold_left f env ([], self#zero))
 
     method private on_option

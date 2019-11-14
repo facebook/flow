@@ -21,8 +21,7 @@ let coalesced_failures_to_string failures =
     (String.concat ~sep:", " failure_strings)
 
 let () =
-  Caml.Printexc.register_printer
-  @@ function
+  Caml.Printexc.register_printer @@ function
   | Coalesced_failures failures -> Some (coalesced_failures_to_string failures)
   | _ -> None
 
@@ -231,8 +230,7 @@ let call workers job merge neutral next =
   assert (unfinished = []);
   res
 
-let call_with_interrupt workers job merge neutral next ?on_cancelled interrupt
-    =
+let call_with_interrupt workers job merge neutral next ?on_cancelled interrupt =
   SharedMem.allow_removes false;
 
   (* Interrupting of nested jobs is not implemented *)

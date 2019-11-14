@@ -106,8 +106,7 @@ and daemon_operation =
 
 (* Try to read a message from the daemon's stdin, which is where all of the
    editor messages can be read from. May throw if the message is malformed. *)
-let internal_read_message (reader : Buffered_line_reader.t) : timestamped_json
-    =
+let internal_read_message (reader : Buffered_line_reader.t) : timestamped_json =
   let message = reader |> Http_lite.read_message_utf8 in
   let tj_json = Hh_json.json_of_string message in
   let tj_timestamp = Unix.gettimeofday () in

@@ -193,9 +193,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               | DefT (r, _, ArrT (ArrayAT (t, ts))) when is_literal_array_reason r ->
                 self#arrlit cx pole seen t ts
               | DefT (r, _, ObjT o) when is_literal_object_reason r ->
-                let refcnt =
-                  (try Properties.Map.find o.props_tmap objlits with Not_found -> 0)
-                in
+                let refcnt = (try Properties.Map.find o.props_tmap objlits with Not_found -> 0) in
                 objlits <- Properties.Map.add o.props_tmap (refcnt + 1) objlits;
                 let seen = super#type_ cx pole seen t in
                 objlits <-
@@ -220,8 +218,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                   Option.value_map static_props_id ~default:0 ~f:(fun id ->
                       (try fst (Properties.Map.find id insts) with Not_found -> 0))
                 in
-                insts <-
-                  Properties.Map.add i.own_props (own_refcnt + 1, i.initialized_fields) insts;
+                insts <- Properties.Map.add i.own_props (own_refcnt + 1, i.initialized_fields) insts;
                 insts <- Properties.Map.add i.proto_props (proto_refcnt + 1, SSet.empty) insts;
                 Option.iter static_props_id (fun id ->
                     insts <-

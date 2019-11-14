@@ -154,9 +154,7 @@ struct
     let items_to_collection_string indent open_ close items =
       let indent_str = String.make (indent * 2) ' ' in
       let items_str =
-        items
-        |> Base.List.map ~f:(Printf.sprintf "%s%s;\n" (indent_str ^ "  "))
-        |> String.concat ""
+        items |> Base.List.map ~f:(Printf.sprintf "%s%s;\n" (indent_str ^ "  ")) |> String.concat ""
       in
       Printf.sprintf "%s\n%s%s%s" open_ items_str indent_str close
 
@@ -461,8 +459,7 @@ struct
 
       method private add_tolerable_error (err : tolerable_error) =
         this#update_acc
-          (Result.map ~f:(fun fsig ->
-               { fsig with tolerable_errors = err :: fsig.tolerable_errors }))
+          (Result.map ~f:(fun fsig -> { fsig with tolerable_errors = err :: fsig.tolerable_errors }))
 
       method! expression (expr : (L.t, L.t) Ast.Expression.t) =
         Ast.Expression.(
@@ -483,8 +480,7 @@ struct
         Ast.Expression.(
           Ast.Expression.Binary.(
             let is_module_or_exports = function
-              | (_, Identifier (_, { Ast.Identifier.name = "module" | "exports"; comments = _ }))
-                ->
+              | (_, Identifier (_, { Ast.Identifier.name = "module" | "exports"; comments = _ })) ->
                 true
               | _ -> false
             in
@@ -530,15 +526,13 @@ struct
                * looked for assignments to it before recursing down here. *)
               | ( Member
                     {
-                      _object =
-                        (_, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
+                      _object = (_, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
                       property =
                         PropertyIdentifier (_, { Ast.Identifier.name = "exports"; comments = _ });
                       _;
                     },
                   PropertyIdentifier _ )
               (* Allow `exports.whatever`, for the same reason as above *)
-              
               | ( Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }),
                   PropertyIdentifier _ ) ->
                 (* In these cases we don't know much about the property so we should recurse *)
@@ -865,7 +859,6 @@ struct
                           _;
                         } ) ) )
             (* module.exports.foo = ... *)
-            
             | ( None,
                 ( _,
                   Ast.Pattern.Expression

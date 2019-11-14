@@ -207,8 +207,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
   let (lb, errors) =
     try (Sedlexing.Utf8.from_string content, [])
     with Sedlexing.MalFormed ->
-      ( Sedlexing.Utf8.from_string "",
-        [({ Loc.none with Loc.source }, Parse_error.MalformedUnicode)] )
+      (Sedlexing.Utf8.from_string "", [({ Loc.none with Loc.source }, Parse_error.MalformedUnicode)])
   in
   let parse_options =
     match parse_options with
@@ -699,7 +698,6 @@ module Peek = struct
         | T_NUMBER_SINGLETON_TYPE _
         | T_BIGINT_SINGLETON_TYPE _
         (* identifier-ish *)
-        
         | T_ASYNC
         | T_AWAIT
         | T_BREAK
@@ -824,7 +822,6 @@ module Peek = struct
         | T_TEMPLATE_PART _
         | T_REGEXP _
         (* misc that shouldn't appear in NORMAL mode *)
-        
         | T_JSX_IDENTIFIER _
         | T_JSX_TEXT _
         | T_ERROR _ ->

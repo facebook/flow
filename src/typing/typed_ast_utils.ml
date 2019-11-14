@@ -27,8 +27,7 @@ class type_parameter_mapper =
      through the calls, we're maintaining this accumulator imperatively. *)
     val mutable bound_tparams : (ALoc.t * string) list = []
 
-    method annot_with_tparams : 'a. ((ALoc.t * string) list -> 'a) -> 'a =
-      (fun f -> f bound_tparams)
+    method annot_with_tparams : 'a. ((ALoc.t * string) list -> 'a) -> 'a = (fun f -> f bound_tparams)
 
     (* Imperatively adds type parameter to bound_tparams environment. *)
     method! type_param tparam =

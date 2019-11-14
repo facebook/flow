@@ -124,7 +124,7 @@ let file_key_to_uri (file_key_opt : File_key.t option) : (string, string) result
 
 let loc_to_lsp (loc : Loc.t) : (Lsp.Location.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
-  file_key_to_uri loc.Loc.source >>| (fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc })
+  file_key_to_uri loc.Loc.source >>| fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc }
 
 let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : string) : Lsp.Location.t =
   let uri =
@@ -205,12 +205,8 @@ module DocumentSymbols = struct
         ast_name ~uri ~containerName ~acc ~loc ~name ~kind)
 
   let ast_key
-      ~uri
-      ~containerName
-      ~acc
-      ~loc
-      ~(key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key)
-      ~kind =
+      ~uri ~containerName ~acc ~loc ~(key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key) ~kind
+      =
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_key key) ~kind
 
   let ast_id ~uri ~containerName ~acc ~loc ~(id : (Loc.t, Loc.t) Ast.Identifier.t) ~kind =
@@ -249,13 +245,7 @@ module DocumentSymbols = struct
       ~(class_ : (Loc.t, Loc.t) Ast.Class.t) : Lsp.SymbolInformation.t list =
     Ast.Class.(
       let acc =
-        ast_id_opt
-          ~uri
-          ~containerName
-          ~acc
-          ~loc
-          ~id_opt:class_.id
-          ~kind:Lsp.SymbolInformation.Class
+        ast_id_opt ~uri ~containerName ~acc ~loc ~id_opt:class_.id ~kind:Lsp.SymbolInformation.Class
       in
       let containerName = name_of_id_opt class_.id in
       let (_, body) = class_.body in

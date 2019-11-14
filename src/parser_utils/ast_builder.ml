@@ -496,7 +496,5 @@ let statement_of_string str =
   | _ -> failwith "Multiple statements found"
 
 let program_of_string str =
-  let stmts =
-    ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str
-  in
+  let stmts = ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str in
   (Loc.none, stmts, [])

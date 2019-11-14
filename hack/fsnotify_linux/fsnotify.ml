@@ -63,9 +63,7 @@ let select_events =
 
 (* Returns None if we're already watching that path and Some watch otherwise *)
 let add_watch env path =
-  let watch =
-    wrap (fun () -> Inotify.add_watch env.fd path select_events) ()
-  in
+  let watch = wrap (fun () -> Inotify.add_watch env.fd path select_events) () in
   if WMap.mem watch env.wpaths && WMap.find watch env.wpaths = path then
     None
   else (

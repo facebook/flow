@@ -17,19 +17,18 @@ let extensions =
   [
     ".php";
     (* normal php file *)
-      ".phpt";
+    ".phpt";
     (* our php template or test files *)
-      ".hack";
+    ".hack";
     (* open source hack: bikeshed entry *)
-      ".hck";
+    ".hck";
     (* open source hack: bikeshed entry *)
-      ".hh";
+    ".hh";
     (* open source hack: biekshed entry *)
-      ".hhi";
+    ".hhi";
     (* interface files only visible to the type checker *)
-      ".xhp";
-      (* XHP extensions *)
-    
+    ".xhp";
+    (* XHP extensions *)
   ]
 
 let is_dot_file path =

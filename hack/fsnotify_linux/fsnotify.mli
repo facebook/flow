@@ -32,9 +32,8 @@ type fd_select = Unix.file_descr * (unit -> unit)
 val select :
   (* The fsevents context *)
   env ->
-  ?read_fdl:
-    (* Additional file descriptor to select for reading *)
-    fd_select list ->
+  ?read_fdl:(* Additional file descriptor to select for reading *)
+            fd_select list ->
   ?write_fdl:
     (* Additional file descriptor to select for writing *)
     fd_select list ->

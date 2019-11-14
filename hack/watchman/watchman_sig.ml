@@ -157,9 +157,7 @@ module type S = sig
   val get_mergebase : ?timeout:timeout -> env -> string result
 
   val get_changes :
-    ?deadline:float ->
-    watchman_instance ->
-    (watchman_instance * changes) result
+    ?deadline:float -> watchman_instance -> (watchman_instance * changes) result
 
   val get_changes_synchronously :
     timeout:int ->

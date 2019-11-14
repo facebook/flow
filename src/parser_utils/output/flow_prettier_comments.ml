@@ -39,8 +39,8 @@ let find_expression_index_for_node quasis ({ Loc.start = orig_start; _ }, _) =
 
 (* / comments.js#findExpressionIndexForComment *)
 (* comments.js#attach *)
-let rec attach_comments ((_, ss, cs) : (Loc.t, Loc.t) Ast.program) :
-    Js_layout_generator.comment_map =
+let rec attach_comments ((_, ss, cs) : (Loc.t, Loc.t) Ast.program) : Js_layout_generator.comment_map
+    =
   let (comment_list, comment_ties) = List.fold_left (attach_comment ss) ([], []) cs in
   (* The original algorithm in prettier may return some unresolved ties *)
   let comment_list = break_tie comment_list comment_ties in
@@ -80,11 +80,7 @@ and find_comment_attach statements (comment_pos, _) =
           r
           { candidate with CommentAttachCandidate.preceding = Some pivot }
       | n when n > 0 ->
-        find_comment
-          statements
-          l
-          m
-          { candidate with CommentAttachCandidate.following = Some pivot }
+        find_comment statements l m { candidate with CommentAttachCandidate.following = Some pivot }
       | _ ->
         let children_nodes = Array.of_list (get_children_nodes pivot) in
         find_comment

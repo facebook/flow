@@ -642,8 +642,7 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
       match (kind, entry) with
       | (Var _, Value ({ Entry.kind = Var _; _ } as v))
       | ( Let _,
-          Value ({ Entry.kind = Let _; value_state = State.Undeclared | State.Declared; _ } as v)
-        )
+          Value ({ Entry.kind = Let _; value_state = State.Undeclared | State.Declared; _ } as v) )
       | ( Const _,
           Value ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v)
         ) ->
@@ -700,8 +699,7 @@ let pseudo_init_declared_type cx name loc =
       let (scope, entry) = find_entry cx name loc in
       match entry with
       | Value ({ Entry.kind = Var _; _ } as v)
-      | Value
-          ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
+      | Value ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
         ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
         let kind = v.Entry.kind in
@@ -1357,8 +1355,7 @@ let refine_with_preds cx loc preds orig_types =
         let reason = loc |> mk_reason (RBooleanLit b) in
         Flow.flow
           cx
-          ( DefT (reason, bogus_trust (), BoolT (Some b)),
-            UseT (Op (Internal Refinement), orig_type) )
+          (DefT (reason, bogus_trust (), BoolT (Some b)), UseT (Op (Internal Refinement), orig_type))
       | SingletonStrP (loc, b, str) ->
         let reason = loc |> mk_reason (RStringLit str) in
         Flow.flow

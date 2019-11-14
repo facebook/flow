@@ -1800,7 +1800,7 @@ end = struct
     in
     fun t0 t1 ts ->
       let enum =
-        Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| (fun tset -> UnionEnum tset))
+        Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| fun tset -> UnionEnum tset)
       in
       (t0, t1, ts, ref enum)
 
@@ -1845,13 +1845,11 @@ end = struct
         (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
         | OpenT _
         (* some types may not be evaluated yet; TODO *)
-        
         | EvalT _
         | TypeAppT _
         | KeysT _
         | IntersectionT _
         (* other types might wrap parts that are accessible directly *)
-        
         | OpaqueT _
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->
@@ -1898,8 +1896,7 @@ end = struct
   let disjoint_union_optimize =
     let base_props_of find_resolved find_props t =
       Option.(
-        props_of find_props t
-        >>| fun prop_map ->
+        props_of find_props t >>| fun prop_map ->
         SMap.fold
           (fun key p acc ->
             match base_prop find_resolved p with
@@ -1954,7 +1951,7 @@ end = struct
               SMap.merge
                 (fun _key enum_t_opt values_opt ->
                   Option.(
-                    both enum_t_opt values_opt >>| (fun (enum_t, values) -> List.cons enum_t values)))
+                    both enum_t_opt values_opt >>| fun (enum_t, values) -> List.cons enum_t values))
                 base_props
                 acc)
             init
@@ -2442,8 +2439,7 @@ and TypeUtil : sig
 
   val mod_reason_of_t : (reason -> reason) -> TypeTerm.t -> TypeTerm.t
 
-  val mod_reason_of_defer_use_t :
-    (reason -> reason) -> TypeTerm.defer_use_t -> TypeTerm.defer_use_t
+  val mod_reason_of_defer_use_t : (reason -> reason) -> TypeTerm.defer_use_t -> TypeTerm.defer_use_t
 
   val mod_reason_of_use_t : (reason -> reason) -> TypeTerm.use_t -> TypeTerm.use_t
 
@@ -2451,8 +2447,7 @@ and TypeUtil : sig
 
   val use_op_of_use_t : TypeTerm.use_t -> TypeTerm.use_op option
 
-  val mod_use_op_of_use_t :
-    (TypeTerm.use_op -> TypeTerm.use_op) -> TypeTerm.use_t -> TypeTerm.use_t
+  val mod_use_op_of_use_t : (TypeTerm.use_op -> TypeTerm.use_op) -> TypeTerm.use_t -> TypeTerm.use_t
 
   val mod_root_of_use_op :
     (TypeTerm.root_use_op -> TypeTerm.root_use_op) -> TypeTerm.use_op -> TypeTerm.use_op
@@ -2830,8 +2825,7 @@ end = struct
       util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, t, tp))
     | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
     | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
-    | GetPrivatePropT (op, r, s, c, b, t) ->
-      util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
+    | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
     | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))
     | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
     | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
@@ -2961,19 +2955,13 @@ end = struct
       | ClassOwnProtoCheck { own_loc; proto_loc; prop } ->
         ClassOwnProtoCheck
           { prop; own_loc = Option.map ~f own_loc; proto_loc = Option.map ~f proto_loc }
-      | Coercion { from; target } ->
-        Coercion { from = mod_reason from; target = mod_reason target }
+      | Coercion { from; target } -> Coercion { from = mod_reason from; target = mod_reason target }
       | DeleteProperty { lhs; prop } ->
         DeleteProperty { lhs = mod_reason lhs; prop = mod_reason prop }
       | DeleteVar { var } -> DeleteVar { var = mod_reason var }
       | FunCall { op; fn; args; local } ->
         FunCall
-          {
-            local;
-            op = mod_reason op;
-            fn = mod_reason fn;
-            args = Base.List.map ~f:mod_reason args;
-          }
+          { local; op = mod_reason op; fn = mod_reason fn; args = Base.List.map ~f:mod_reason args }
       | FunCallMethod { op; fn; args; prop; local } ->
         FunCallMethod
           {

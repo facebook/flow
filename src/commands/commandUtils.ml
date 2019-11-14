@@ -173,8 +173,7 @@ let error_flags prev =
     |> flag
          "--unicode"
          (required ~default:`Auto (enum [("never", `Never); ("always", `Always); ("auto", `Auto)]))
-         ~doc:
-           "Display terminal output with unicode decoration. never, always, auto (default: auto)"
+         ~doc:"Display terminal output with unicode decoration. never, always, auto (default: auto)"
     |> flag
          "--message-width"
          int
@@ -251,8 +250,8 @@ type shared_mem_params = {
   shm_log_level: int option;
 }
 
-let collect_shm_flags
-    main shm_dirs shm_min_avail shm_dep_table_pow shm_hash_table_pow shm_log_level =
+let collect_shm_flags main shm_dirs shm_min_avail shm_dep_table_pow shm_hash_table_pow shm_log_level
+    =
   main { shm_dirs; shm_min_avail; shm_dep_table_pow; shm_hash_table_pow; shm_log_level }
 
 let shm_flags prev =
@@ -324,11 +323,10 @@ let from_flag =
       | None ->
         Base.Result.(
           let parent_cmdline =
-            Proc.get_proc_stat (Unix.getpid ())
-            >>= fun proc_stat ->
+            Proc.get_proc_stat (Unix.getpid ()) >>= fun proc_stat ->
             let ppid = proc_stat.Proc.ppid in
-            Proc.get_proc_stat ppid
-            >>| (fun parent_proc_stat -> String.trim parent_proc_stat.Proc.cmdline)
+            Proc.get_proc_stat ppid >>| fun parent_proc_stat ->
+            String.trim parent_proc_stat.Proc.cmdline
           in
           (match parent_cmdline with
           | Ok cmdline -> Some ("parent cmdline: " ^ cmdline)
@@ -475,8 +473,7 @@ let offset_style_flag prev =
     |> flag
          "--offset-style"
          (enum [("utf8-bytes", Utf8_offsets); ("js-indices", JavaScript_offsets)])
-         ~doc:
-           "How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)")
+         ~doc:"How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)")
 
 let offset_kind_of_offset_style = function
   | None
@@ -644,8 +641,7 @@ let file_options =
         ~init:[]
     in
     let config_libs =
-      if !has_explicit_flowtyped_lib = false && Sys.file_exists (Path.to_string flowtyped_path)
-      then
+      if !has_explicit_flowtyped_lib = false && Sys.file_exists (Path.to_string flowtyped_path) then
         flowtyped_path :: config_libs
       else
         config_libs
@@ -683,10 +679,7 @@ let file_options =
 let ignore_flag prev =
   CommandSpec.ArgSpec.(
     prev
-    |> flag
-         "--ignore"
-         (optional string)
-         ~doc:"Specify one or more ignore patterns, comma separated")
+    |> flag "--ignore" (optional string) ~doc:"Specify one or more ignore patterns, comma separated")
 
 let untyped_flag prev =
   CommandSpec.ArgSpec.(
@@ -804,10 +797,7 @@ let connect_flags_with_lazy_collector collector =
          "--retry-if-init"
          (optional bool)
          ~doc:"retry if the server is initializing (default: true)"
-    |> flag
-         "--no-auto-start"
-         no_arg
-         ~doc:"If the server is not running, do not start it; just exit"
+    |> flag "--no-auto-start" no_arg ~doc:"If the server is not running, do not start it; just exit"
     |> temp_dir_flag
     |> shm_flags
     |> from_flag
@@ -1200,9 +1190,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
         ~default:(FlowConfig.saved_state_fetcher flowconfig)
     in
     let opt_lazy_mode =
-      let default =
-        Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE
-      in
+      let default = Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE in
       Option.value lazy_mode ~default
     in
     let opt_arch =
@@ -1537,9 +1525,7 @@ let rec connect_and_make_request flowconfig_name =
   let rec wait_for_response ?timeout ~quiet ~root (ic : Timeout.in_channel) =
     let use_emoji =
       Tty.supports_emoji ()
-      && Server_files_js.config_file flowconfig_name root
-         |> read_config_or_exit
-         |> FlowConfig.emoji
+      && Server_files_js.config_file flowconfig_name root |> read_config_or_exit |> FlowConfig.emoji
     in
     let response : MonitorProt.monitor_to_client_message =
       try Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel ic) with

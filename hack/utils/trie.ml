@@ -66,8 +66,8 @@ let get_leaf (trie : 'a t) : 'a =
     k : string -- the full key matched
     n : 'a t   -- the node associated with key k
 *)
-let trie_assoc_partial (trie : 'a t) (w : string) :
-    (int * string * 'a t) option =
+let trie_assoc_partial (trie : 'a t) (w : string) : (int * string * 'a t) option
+    =
   with_return (fun e ->
       !(get_node trie)
       |> SMap.iter (fun key elt ->
@@ -197,13 +197,12 @@ let find (trie : 'a t) (s : string) : 'a =
   | (_s, v) :: _tl -> v
   | _ -> raise Not_found
 
-let find_prefix (trie : 'a t) (s : string) (vmap : string -> 'a -> 'b) :
-    'b list =
+let find_prefix (trie : 'a t) (s : string) (vmap : string -> 'a -> 'b) : 'b list
+    =
   find_impl false trie s vmap
 
 let find_prefix_limit
-    (i : int) (trie : 'a t) (s : string) (vmap : string -> 'a -> 'b) : 'b list
-    =
+    (i : int) (trie : 'a t) (s : string) (vmap : string -> 'a -> 'b) : 'b list =
   find_impl false trie s vmap ~limit:(Some i)
 
 let remove_one (trie : 'a t) (key : string) : unit =

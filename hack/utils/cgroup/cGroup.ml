@@ -105,10 +105,9 @@ type stats = {
 let read_single_number_file path =
   let%lwt contents_result = cat path in
   Lwt.return
-    ( contents_result
-    >>= fun contents ->
-    try Ok (contents |> String.strip |> int_of_string)
-    with Failure _ -> Error "Failed to parse memory.current" )
+    ( contents_result >>= fun contents ->
+      try Ok (contents |> String.strip |> int_of_string)
+      with Failure _ -> Error "Failed to parse memory.current" )
 
 let parse_stat stat_contents =
   let stats =
@@ -126,17 +125,13 @@ let parse_stat stat_contents =
     | Some stat -> Ok stat
     | None -> Error (spf "Failed to find %S in memory.stat" key)
   in
-  get "anon"
-  >>= fun anon ->
-  get "file"
-  >>= fun file ->
-  get "shmem"
-  >>| fun shmem ->
+  get "anon" >>= fun anon ->
+  get "file" >>= fun file ->
+  get "shmem" >>| fun shmem ->
   (* In `memory.stat` the `file` stat includes `shmem` *)
   (anon, file - shmem, shmem)
 
-let get_stats_for_cgroup (cgroup_name : string) : (stats, string) result Lwt.t
-    =
+let get_stats_for_cgroup (cgroup_name : string) : (stats, string) result Lwt.t =
   (* cgroup_name starts with a /, like /my_cgroup *)
   let dir = spf "%s%s" cgroup_dir cgroup_name in
   let%lwt total_result =
@@ -145,20 +140,16 @@ let get_stats_for_cgroup (cgroup_name : string) : (stats, string) result Lwt.t
     read_single_number_file (Filename.concat dir "memory.swap.current")
   and stat_contents_result = cat (Filename.concat dir "memory.stat") in
   Lwt.return
-    ( total_result
-    >>= fun total ->
-    total_swap_result
-    >>= fun total_swap ->
-    stat_contents_result
-    >>= fun stat_contents ->
-    parse_stat stat_contents
-    >>= (fun (anon, file, shmem) -> Ok { total; total_swap; anon; file; shmem })
-    )
+    ( total_result >>= fun total ->
+      total_swap_result >>= fun total_swap ->
+      stat_contents_result >>= fun stat_contents ->
+      parse_stat stat_contents >>= fun (anon, file, shmem) ->
+      Ok { total; total_swap; anon; file; shmem } )
 
 (* Like Result's >>= but for when you're dealing with result threads *)
 let ( >>% )
-    (type a b c) (thread : (a, b) result Lwt.t) (f : a -> (c, b) result Lwt.t)
-    : (c, b) result Lwt.t =
+    (type a b c) (thread : (a, b) result Lwt.t) (f : a -> (c, b) result Lwt.t) :
+    (c, b) result Lwt.t =
   match%lwt thread with
   | Ok value -> f value
   | Error e -> Lwt.return_error e

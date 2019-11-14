@@ -111,13 +111,13 @@ let client_to_monitor_1__to_json (c : client_to_monitor_1) : Hh_json.json =
         ( "version_mismatch_strategy",
           JSON_String (version_mismatch_strategy_to_string c.version_mismatch_strategy) );
         (* Deprecated - sent to talk to old servers *)
-          ( "server_should_exit_if_version_mismatch",
-            JSON_Bool
-              (match c.version_mismatch_strategy with
-              | Always_stop_server -> true
-              | Stop_server_if_older -> true
-              (* Any server reading this field is older than this client *)
-              | Error_client -> false) );
+        ( "server_should_exit_if_version_mismatch",
+          JSON_Bool
+            (match c.version_mismatch_strategy with
+            | Always_stop_server -> true
+            | Stop_server_if_older -> true
+            (* Any server reading this field is older than this client *)
+            | Error_client -> false) );
       ])
 
 let default_client_to_monitor_1 =

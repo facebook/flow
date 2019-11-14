@@ -46,8 +46,7 @@ val mk_super :
   ALoc.t ->
   Type.t ->
   (ALoc.t, ALoc.t) Flow_ast.Type.TypeArgs.t option ->
-  (ALoc.t * Type.t * Type.t list option)
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeArgs.t option
+  (ALoc.t * Type.t * Type.t list option) * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeArgs.t option
 
 val mk_type_annotation :
   Context.t ->

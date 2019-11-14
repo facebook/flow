@@ -267,8 +267,7 @@ module Friendly = struct
    * text in references. *)
   let capitalize = function
     | [] -> []
-    | Inline (Text s :: xs) :: message ->
-      Inline (Text (String.capitalize_ascii s) :: xs) :: message
+    | Inline (Text s :: xs) :: message -> Inline (Text (String.capitalize_ascii s) :: xs) :: message
     | message -> message
 
   (* Uncapitalizes the first letter in the message. Does not uncapitalize code
@@ -564,9 +563,7 @@ module Friendly = struct
 
   (* Converts our friendly error to a classic error message. *)
   let to_classic error =
-    let (_, loc, message) =
-      message_group_of_error ~show_all_branches:false ~show_root:true error
-    in
+    let (_, loc, message) = message_group_of_error ~show_all_branches:false ~show_root:true error in
     (* Extract the references from the message. *)
     let (references, message) = extract_references message in
     (* We use a basic strategy that concatenates all group messages together.
@@ -590,8 +587,8 @@ module Friendly = struct
           InfoLeaf [(Loc.none, ["References:"])]
           :: ( references
              |> IMap.bindings
-             |> Base.List.map ~f:(fun (id, loc) ->
-                    InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])]) )
+             |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])])
+             )
         else
           [] );
     }
@@ -758,10 +755,7 @@ let read_lines_in_file loc filename stdin_file =
       (try
          Loc.(
            let lines =
-             get_lines
-               ~start:(loc.start.line - 1)
-               ~len:(loc._end.line - loc.start.line + 1)
-               content
+             get_lines ~start:(loc.start.line - 1) ~len:(loc._end.line - loc.start.line + 1) content
            in
            match lines with
            | [] -> None
@@ -1172,9 +1166,7 @@ module Cli_output = struct
               |> List.fold_left
                    (fun (line_num, acc) line ->
                      if (not abridged) || line_num - l0 < max_lines - 2 || line_num = l1 then
-                       let line_number_text =
-                         line_number_style (Utils_js.spf "\n%3d: " line_num)
-                       in
+                       let line_number_text = line_number_style (Utils_js.spf "\n%3d: " line_num) in
                        let highlighted_line =
                          (* First line *)
                          if line_num = l0 then
@@ -1898,8 +1890,7 @@ module Cli_output = struct
    *
    * We render the root location for our friendly error message. Decorated with
    * the reference locations from the message. *)
-  let print_code_frames_friendly ~stdin_file ~strip_root ~flags ~references ~colors ~tags root_loc
-      =
+  let print_code_frames_friendly ~stdin_file ~strip_root ~flags ~references ~colors ~tags root_loc =
     Loc.(
       (* Get a list of all the locations we will want to display. We want to
        * display references and the root location with some extra lines
@@ -2025,9 +2016,7 @@ module Cli_output = struct
               | None -> failwith "expected loc to have a source"
               | Some source ->
                 let line_references =
-                  Option.value
-                    (FileKeyMap.find_opt source file_line_references)
-                    ~default:IMap.empty
+                  Option.value (FileKeyMap.find_opt source file_line_references) ~default:IMap.empty
                 in
                 let references =
                   Option.value (IMap.find_opt loc.start.line line_references) ~default:[]
@@ -2578,18 +2567,18 @@ module Cli_output = struct
       Base.List.concat
         [
           (* Header: *)
-            header;
+          header;
           [default_style "\n"];
           (* Error Message: *)
-            message;
+          message;
           (* Code frame: *)
-            (match code_frame with
-            | [] -> []
-            | code_frame -> default_style "\n" :: code_frame);
+          (match code_frame with
+          | [] -> []
+          | code_frame -> default_style "\n" :: code_frame);
           (* Trace: *)
-            (match trace with
-            | [] -> []
-            | _ -> [default_style "\n"]);
+          (match trace with
+          | [] -> []
+          | _ -> [default_style "\n"]);
           Base.List.concat
             (Base.List.map
                ~f:
@@ -2602,7 +2591,7 @@ module Cli_output = struct
                     | None -> "[No file]"))
                (append_trace_reasons [] trace));
           (* Next error: *)
-            [default_style "\n"];
+          [default_style "\n"];
         ])
 
   let get_pretty_printed_error
@@ -2953,8 +2942,7 @@ module Json_output = struct
                           ("kind", JSON_String "Reference");
                           ("referenceId", JSON_String (string_of_int id));
                           ( "message",
-                            JSON_Array (Base.List.map ~f:json_of_message_inline_friendly inlines)
-                          );
+                            JSON_Array (Base.List.map ~f:json_of_message_inline_friendly inlines) );
                         ];
                     ])
                 message))))
@@ -2981,8 +2969,7 @@ module Json_output = struct
         (List.rev
            (IMap.fold
               (fun id loc acc ->
-                ( string_of_int id,
-                  json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind loc )
+                (string_of_int id, json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind loc)
                 :: acc)
               references
               [])))
@@ -3003,20 +2990,19 @@ module Json_output = struct
         [
           (* Unfortunately, Nuclide currently depends on this flag. Remove it in
            * the future? *)
-            ("classic", JSON_Bool false);
+          ("classic", JSON_Bool false);
           (* NOTE: `primaryLoc` is the location we want to show in an IDE! `rootLoc`
            * is another loc which Flow associates with some errors. We include it
            * for tools which are interested in using the location to enhance
            * their rendering. `primaryLoc` will always be inside `rootLoc`. *)
-            ( "primaryLoc",
-              json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind primary_loc );
+          ("primaryLoc", json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind primary_loc);
           ("rootLoc", root_loc);
           (* NOTE: This `messageMarkup` can be concatenated into a string when
            * implementing the LSP error output. *)
-            ("messageMarkup", json_of_message_group_friendly message_group);
+          ("messageMarkup", json_of_message_group_friendly message_group);
           (* NOTE: These `referenceLocs` can become `relatedLocations` when
            * implementing the LSP error output. *)
-            ("referenceLocs", json_of_references ~strip_root ~stdin_file ~offset_kind references);
+          ("referenceLocs", json_of_references ~strip_root ~stdin_file ~offset_kind references);
         ]))
 
   let json_of_error_props
@@ -3259,7 +3245,8 @@ module Vim_emacs_output = struct
         Buffer.add_string buf (to_pp_string ~strip_root prefix message1);
         List.iter
           begin
-            fun message -> Buffer.add_string buf (to_pp_string ~strip_root "" message)
+            fun message ->
+            Buffer.add_string buf (to_pp_string ~strip_root "" message)
           end
           rest_of_error);
       Buffer.contents buf

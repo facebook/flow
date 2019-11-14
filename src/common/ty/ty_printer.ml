@@ -178,8 +178,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     let params =
       match fun_rest_param with
       | Some (name, t) ->
-        params
-        @ [fuse [Atom "..."; type_function_param ~depth (name, t, { prm_optional = false })]]
+        params @ [fuse [Atom "..."; type_function_param ~depth (name, t, { prm_optional = false })]]
       | None -> params
     in
     fuse

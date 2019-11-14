@@ -68,8 +68,7 @@ end = struct
   let call workers ~job ~merge ~neutral ~next =
     match workers with
     | None ->
-      Caller.return
-        (single_threaded_call_with_worker_id job merge neutral next)
+      Caller.return (single_threaded_call_with_worker_id job merge neutral next)
     | Some workers -> Caller.multi_threaded_call workers job merge neutral next
 end
 

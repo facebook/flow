@@ -135,9 +135,7 @@ let get_with_separate_warnings ~reader ~options env =
         collated_errors
       | Some collated_errors -> collated_errors
     in
-    let { collated_errorset; collated_warning_map; collated_suppressed_errors } =
-      collated_errors
-    in
+    let { collated_errorset; collated_warning_map; collated_suppressed_errors } = collated_errors in
     (collated_errorset, collated_warning_map, collated_suppressed_errors))
 
 (* combine error maps into a single error set and a single warning set *)

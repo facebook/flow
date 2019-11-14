@@ -50,10 +50,9 @@ let get_ast_result ~reader file :
     let ast_result = get_result (Reader.get_ast ~reader) "AST" in
     let file_sig_result = get_result (Reader.get_file_sig ~reader) "file sig" in
     let docblock_result = get_result (Reader.get_docblock ~reader) "docblock" in
-    ast_result
-    >>= fun ast ->
-    file_sig_result
-    >>= (fun file_sig -> docblock_result >>= (fun docblock -> Ok (ast, file_sig, docblock))))
+    ast_result >>= fun ast ->
+    file_sig_result >>= fun file_sig ->
+    docblock_result >>= fun docblock -> Ok (ast, file_sig, docblock))
 
 let get_all_dependents ~reader options workers env file_key content =
   let docblock = compute_docblock file_key content in

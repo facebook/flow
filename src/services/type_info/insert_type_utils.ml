@@ -57,10 +57,9 @@ class type_validator_visitor =
         Ty.explicit_any
       | Ty.Any
           (Ty.Unsound
-            ( ( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports
-              | Ty.FunctionPrototype | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged
-              | Ty.ResolveSpread | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType
-              | Ty.WeakContext ) as kind )) ->
+            ( ( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports | Ty.FunctionPrototype
+              | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged | Ty.ResolveSpread
+              | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType | Ty.WeakContext ) as kind )) ->
         env := Any_Unsound kind :: !env;
         Ty.explicit_any
       | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
@@ -265,12 +264,7 @@ class stylize_ty_mapper ?(imports_react = false) () =
 let is_point loc = Loc.(loc.start = loc._end)
 
 let temporary_objectlit_symbol =
-  {
-    Ty.provenance = Ty.Builtin;
-    def_loc = ALoc.none;
-    name = "$TEMPORARY$object";
-    anonymous = false;
-  }
+  { Ty.provenance = Ty.Builtin; def_loc = ALoc.none; name = "$TEMPORARY$object"; anonymous = false }
 
 let temporary_arraylit_symbol =
   { Ty.provenance = Ty.Builtin; def_loc = ALoc.none; name = "$TEMPORARY$array"; anonymous = false }

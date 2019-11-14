@@ -363,6 +363,7 @@ let find_props cx =
 
 let resolve_tvar cx (_, id) =
   let ts = possible_types cx id in
+
   (* The list of types returned by possible_types is often empty, and the
      most common reason is that we don't have enough type coverage to
      resolve id. Thus, we take the unit of merging to be `any`. (Something
@@ -500,7 +501,6 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
             | Get (loc, t)
             | Set (loc, t)
             (* arbitrarily use the location for the getter. maybe we can send both in the future *)
-            
             | GetSet (loc, t, _, _)
             | Method (loc, t) ->
               (loc, t)
@@ -590,8 +590,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
   | SuccessModule t ->
     FailureUnhandledMembers t
 
-and extract ?exclude_proto_members cx =
-  extract_type cx %> extract_members ?exclude_proto_members cx
+and extract ?exclude_proto_members cx = extract_type cx %> extract_members ?exclude_proto_members cx
 
 and extract_members_as_map ~exclude_proto_members cx this_t =
   match extract ~exclude_proto_members cx this_t |> to_command_result with

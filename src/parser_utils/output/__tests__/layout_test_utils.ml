@@ -136,8 +136,7 @@ module Layout_builder = struct
       | IfBreak (Newline, Atom " ") -> word "line"
       | IfBreak (Newline, IfPretty (Atom " ", Empty)) -> word "pretty_line"
       | IfBreak (Newline, Empty) -> word "softline"
-      | IfBreak (left, right) ->
-        phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
+      | IfBreak (left, right) -> phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
       | Indent node -> phrase "indent (%s)" (helper ~i node)
       | Newline -> word "hardline"
       | Empty -> word "empty"

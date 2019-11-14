@@ -47,9 +47,7 @@ let less_than_or_equal_to_version =
       "\\(" ^ String.concat "\\|" parts ^ "\\)"
   in
   let n_digits n = List.init n (fun _ -> "[0-9]") |> String.concat "" in
-  let n_or_fewer_digits n =
-    "[0-9]" ^ (List.init (n - 1) (fun _ -> "[0-9]?") |> String.concat "")
-  in
+  let n_or_fewer_digits n = "[0-9]" ^ (List.init (n - 1) (fun _ -> "[0-9]?") |> String.concat "") in
   let rec range ~pad part =
     let len = String.length part in
     if len = 1 then

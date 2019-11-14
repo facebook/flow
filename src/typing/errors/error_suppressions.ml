@@ -172,8 +172,7 @@ let in_declarations ~file_options loc =
   | None -> false
   | Some (file, options) -> Files.is_declaration options (File_key.to_string file)
 
-let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions : t) (unused : t)
-    =
+let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions : t) (unused : t) =
   let locs =
     Errors.locs_of_printable_error err
     (* It is possible for errors to contain locations without a source, but suppressions always
@@ -203,10 +202,7 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
 (* Gets the locations of the suppression comments that are yet unused *)
 
 let all_locs map =
-  FilenameMap.fold
-    (fun _k v acc -> LocSet.union acc (FileSuppressions.all_locs v))
-    map
-    LocSet.empty
+  FilenameMap.fold (fun _k v acc -> LocSet.union acc (FileSuppressions.all_locs v)) map LocSet.empty
 
 let filter_suppressed_errors ~root ~file_options suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
@@ -235,8 +231,7 @@ let update_suppressions current_suppressions new_suppressions =
 
 let get_lint_settings severity_cover loc =
   Option.Monad_infix.(
-    Loc.source loc
-    >>= fun source ->
+    Loc.source loc >>= fun source ->
     Utils_js.FilenameMap.find_opt source severity_cover >>= ExactCover.find_opt loc)
 
 (* Filter out lint errors which are definitely suppressed or were never

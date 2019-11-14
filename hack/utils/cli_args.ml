@@ -9,8 +9,7 @@
 open Core_kernel
 include Cli_args_sig.Types
 
-let files_to_check_range_to_json (range : files_to_check_range) : Hh_json.json
-    =
+let files_to_check_range_to_json (range : files_to_check_range) : Hh_json.json =
   let range_properties =
     match range.to_prefix_excl with
     | Some to_prefix_excl ->
@@ -152,11 +151,8 @@ let parse_save_state_json ((json : Hh_json.json), _keytrace) =
     in
     let files_to_check = List.map files_to_check ~f:get_spec in
     let json = return json in
-    json
-    >>= get_string "filename"
-    >>= fun (filename, _filename_keytrace) ->
-    json
-    >>= get_bool "gen_with_errors"
+    json >>= get_string "filename" >>= fun (filename, _filename_keytrace) ->
+    json >>= get_bool "gen_with_errors"
     >>= fun (gen_with_errors, _gen_with_errors_keytrace) ->
     return { files_to_check; filename; gen_with_errors })
 
@@ -193,18 +189,11 @@ let parse_saved_state_json (json, _keytrace) =
   let prechecked_changes = Option.value ~default:[] prechecked_changes in
   let json = Hh_json.Access.return json in
   Hh_json.Access.(
-    json
-    >>= get_string "state"
-    >>= fun (state, _state_keytrace) ->
-    json
-    >>= get_string "corresponding_base_revision"
+    json >>= get_string "state" >>= fun (state, _state_keytrace) ->
+    json >>= get_string "corresponding_base_revision"
     >>= fun (for_base_rev, _for_base_rev_keytrace) ->
-    json
-    >>= get_string "deptable"
-    >>= fun (deptable, _deptable_keytrace) ->
-    json
-    >>= get_array "changes"
-    >>= fun (changes, _) ->
+    json >>= get_string "deptable" >>= fun (deptable, _deptable_keytrace) ->
+    json >>= get_array "changes" >>= fun (changes, _) ->
     let naming_changes =
       match json >>= get_val "naming_changes" with
       | Ok (Hh_json.JSON_Array files, _) -> array_to_path_list files
@@ -234,8 +223,7 @@ let get_saved_state_spec (v : string option) :
         json >>= get_obj "data_dump" >>= parse_saved_state_json
       in
       let from_file_parse_result =
-        json
-        >>= get_string "from_file"
+        json >>= get_string "from_file"
         >>= fun (filename, _filename_keytrace) ->
         let contents = Sys_utils.cat filename in
         let json = Hh_json.json_of_string contents in

@@ -40,17 +40,11 @@ let id_to_string (id : lsp_id) : string =
   | StringId s -> Printf.sprintf "\"%s\"" s
 
 let parse_position (json : json option) : position =
-  {
-    line = Jget.int_exn json "line";
-    character = Jget.int_exn json "character";
-  }
+  { line = Jget.int_exn json "line"; character = Jget.int_exn json "character" }
 
 let print_position (position : position) : json =
   JSON_Object
-    [
-      ("line", position.line |> int_);
-      ("character", position.character |> int_);
-    ]
+    [("line", position.line |> int_); ("character", position.character |> int_)]
 
 let print_range (range : range) : json =
   JSON_Object
@@ -59,10 +53,7 @@ let print_range (range : range) : json =
 let print_location (location : Location.t) : json =
   Location.(
     JSON_Object
-      [
-        ("uri", JSON_String location.uri);
-        ("range", print_range location.range);
-      ])
+      [("uri", JSON_String location.uri); ("range", print_range location.range)])
 
 let print_definition_location (definition_location : DefinitionLocation.t) :
     json =
@@ -94,8 +85,8 @@ let parse_range_opt (json : json option) : range option =
   else
     Some (parse_range_exn json)
 
-let parse_textDocumentIdentifier (json : json option) :
-    TextDocumentIdentifier.t =
+let parse_textDocumentIdentifier (json : json option) : TextDocumentIdentifier.t
+    =
   TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" }
 
 let parse_versionedTextDocumentIdentifier (json : json option) :
@@ -152,10 +143,7 @@ let parse_textEdit (params : json option) : TextEdit.t option =
 let print_textEdit (edit : TextEdit.t) : json =
   TextEdit.(
     JSON_Object
-      [
-        ("range", print_range edit.range);
-        ("newText", JSON_String edit.newText);
-      ])
+      [("range", print_range edit.range); ("newText", JSON_String edit.newText)])
 
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
@@ -345,8 +333,8 @@ let print_signatureHelp (r : SignatureHelp.result) : json =
             Option.map ~f:Hh_json.string_ sigInfo.siginfo_documentation );
           ( "parameters",
             Some
-              (Hh_json.JSON_Array
-                 (List.map ~f:print_parInfo sigInfo.parameters)) );
+              (Hh_json.JSON_Array (List.map ~f:print_parInfo sigInfo.parameters))
+          );
         ]
     in
     match r with
@@ -367,8 +355,7 @@ let print_signatureHelp (r : SignatureHelp.result) : json =
 let parse_codeLensResolve (params : json option) : CodeLensResolve.params =
   parse_codeLens params
 
-let print_codeLensResolve (r : CodeLensResolve.result) : json =
-  print_codeLens r
+let print_codeLensResolve (r : CodeLensResolve.result) : json = print_codeLens r
 
 (************************************************************************)
 (* textDocument/rename Request                                          *)
@@ -405,9 +392,7 @@ let print_documentCodeLens (r : DocumentCodeLens.result) : json =
 
 let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
   PublishDiagnostics.(
-    let print_diagnosticSeverity =
-      Fn.compose int_ diagnosticSeverity_to_enum
-    in
+    let print_diagnosticSeverity = Fn.compose int_ diagnosticSeverity_to_enum in
     let print_diagnosticCode = function
       | IntCode i -> Some (int_ i)
       | StringCode s -> Some (string_ s)
@@ -571,8 +556,8 @@ let print_showMessage (type_ : MessageType.t) (message : string) : json =
 (* window/showMessage request                                           *)
 (************************************************************************)
 
-let print_showMessageRequest (r : ShowMessageRequest.showMessageRequestParams)
-    : json =
+let print_showMessageRequest (r : ShowMessageRequest.showMessageRequestParams) :
+    json =
   let print_action (action : ShowMessageRequest.messageActionItem) : json =
     JSON_Object [("title", JSON_String action.ShowMessageRequest.title)]
   in
@@ -671,8 +656,7 @@ let print_hover (r : Hover.result) : json =
       Jprint.object_opt
         [
           ( "contents",
-            Some (JSON_Array (List.map r.Hover.contents ~f:print_markedItem))
-          );
+            Some (JSON_Array (List.map r.Hover.contents ~f:print_markedItem)) );
           ("range", Option.map r.range ~f:print_range);
         ])
 
@@ -690,8 +674,7 @@ let print_definition (r : Definition.result) : json =
 (* completionItem/resolve request                                       *)
 (************************************************************************)
 
-let parse_completionItem (params : json option) : CompletionItemResolve.params
-    =
+let parse_completionItem (params : json option) : CompletionItemResolve.params =
   Completion.(
     let textEdits =
       Jget.obj_opt params "textEdit"
@@ -705,8 +688,7 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params
     in
     {
       label = Jget.string_exn params "label";
-      kind =
-        Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
+      kind = Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
       detail = Jget.string_opt params "detail";
       inlineDetail = Jget.string_opt params "inlineDetail";
       itemType = Jget.string_opt params "itemType";
@@ -725,8 +707,7 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params
 
 let string_of_markedString (acc : string) (marked : markedString) : string =
   match marked with
-  | MarkedCode (lang, code) ->
-    acc ^ "```" ^ lang ^ "\n" ^ code ^ "\n" ^ "```\n"
+  | MarkedCode (lang, code) -> acc ^ "```" ^ lang ^ "\n" ^ code ^ "\n" ^ "```\n"
   | MarkedString str -> acc ^ str ^ "\n"
 
 let print_completionItem (item : Completion.completionItem) : json =
@@ -1000,11 +981,9 @@ let parse_initialize (params : json option) : Initialize.params =
     and parse_workspace json =
       {
         applyEdit = Jget.bool_d json "applyEdit" ~default:false;
-        workspaceEdit =
-          Jget.obj_opt json "workspaceEdit" |> parse_workspaceEdit;
+        workspaceEdit = Jget.obj_opt json "workspaceEdit" |> parse_workspaceEdit;
         didChangeWatchedFiles =
-          Jget.obj_opt json "didChangeWatchedFiles"
-          |> parse_dynamicRegistration;
+          Jget.obj_opt json "didChangeWatchedFiles" |> parse_dynamicRegistration;
       }
     and parse_dynamicRegistration json =
       {
@@ -1044,8 +1023,8 @@ let parse_initialize (params : json option) : Initialize.params =
       }
     and parse_codeActionLiteralSupport json =
       Option.(
-        Jget.array_opt json "valueSet"
-        >>= (fun ls -> Some { codeAction_valueSet = parse_kinds ls }))
+        Jget.array_opt json "valueSet" >>= fun ls ->
+        Some { codeAction_valueSet = parse_kinds ls })
     and parse_window json =
       {
         status = Jget.obj_opt json "status" |> Option.is_some;
@@ -1088,8 +1067,7 @@ let print_initialize (r : Initialize.result) : json =
                        ( "save",
                          Option.map sync.want_didSave ~f:(fun save ->
                              JSON_Object
-                               [("includeText", JSON_Bool save.includeText)])
-                       );
+                               [("includeText", JSON_Bool save.includeText)]) );
                      ]) );
               ("hoverProvider", Some (JSON_Bool cap.hoverProvider));
               ( "completionProvider",
@@ -1153,8 +1131,7 @@ let print_initialize (r : Initialize.result) : json =
               );
               ( "implementationProvider",
                 Some (JSON_Bool cap.implementationProvider) );
-              ( "typeCoverageProvider",
-                Some (JSON_Bool cap.typeCoverageProvider) );
+              ("typeCoverageProvider", Some (JSON_Bool cap.typeCoverageProvider));
               ("rageProvider", Some (JSON_Bool cap.rageProvider));
             ] );
       ])
@@ -1163,8 +1140,8 @@ let print_initialize (r : Initialize.result) : json =
 (* capabilities                                                         *)
 (************************************************************************)
 
-let print_registrationOptions (registerOptions : Lsp.lsp_registration_options)
-    : Hh_json.json =
+let print_registrationOptions (registerOptions : Lsp.lsp_registration_options) :
+    Hh_json.json =
   match registerOptions with
   | Lsp.DidChangeWatchedFilesRegistrationOptions registerOptions ->
     Lsp.DidChangeWatchedFiles.(
@@ -1177,8 +1154,7 @@ let print_registrationOptions (registerOptions : Lsp.lsp_registration_options)
                      [
                        ("globPattern", JSON_String watcher.globPattern);
                        ("kind", int_ 7);
-                         (* all events: create, change, and delete *)
-                       
+                       (* all events: create, change, and delete *)
                      ])) );
         ])
 
@@ -1195,8 +1171,7 @@ let print_registerCapability (params : Lsp.RegisterCapability.params) :
                      ("id", string_ registration.id);
                      ("method", string_ registration.method_);
                      ( "registerOptions",
-                       print_registrationOptions registration.registerOptions
-                     );
+                       print_registrationOptions registration.registerOptions );
                    ])) );
       ])
 

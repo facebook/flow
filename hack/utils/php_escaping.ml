@@ -147,9 +147,8 @@ let unescape_literal literal_kind s =
         else
           Buffer.add_string buf "\\\""
       | 'u'
-        when literal_kind <> Literal_long_string
-             && !idx < len
-             && s.[!idx] = '{' ->
+        when literal_kind <> Literal_long_string && !idx < len && s.[!idx] = '{'
+        ->
         let _ = next () in
         let unicode_count = count_f (fun c -> c <> '}') ~max:6 0 in
         let n = parse_int ("0x" ^ Caml.String.sub s !idx unicode_count) in
@@ -231,8 +230,7 @@ let extract_unquoted_string ~start ~len content =
   (* Using String.sub; Invalid_argument when str too short *)
   try
     if
-      len >= 3 && Caml.String.sub content start 3 = "<<<"
-      (* The heredoc case *)
+      len >= 3 && Caml.String.sub content start 3 = "<<<" (* The heredoc case *)
     then
       (* These types of strings begin with an opening line containing <<<
        * followed by a string to use as a terminator (which is optionally

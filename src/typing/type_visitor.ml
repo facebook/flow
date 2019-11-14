@@ -960,9 +960,7 @@ class ['a] t =
         (fun acc (head, ts, specs) ->
           let acc = self#react_create_class_stack_head cx acc head in
           let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
-          let acc =
-            List.fold_left (self#maybe_known (self#react_create_class_spec cx)) acc specs
-          in
+          let acc = List.fold_left (self#maybe_known (self#react_create_class_spec cx)) acc specs in
           acc)
         acc
 

@@ -97,10 +97,8 @@ let rec not_exists t =
   | MaybeT (r, _) ->
     UnionT
       ( r,
-        UnionRep.make
-          (Trust.bogus_trust () |> NullT.why r)
-          (Trust.bogus_trust () |> VoidT.why r)
-          [] )
+        UnionRep.make (Trust.bogus_trust () |> NullT.why r) (Trust.bogus_trust () |> VoidT.why r) []
+      )
   | DefT (r, trust, BoolT None) -> DefT (r, trust, BoolT (Some false))
   | DefT (r, trust, StrT AnyLiteral) -> DefT (r, trust, StrT (Literal (None, "")))
   | DefT (r, trust, NumT AnyLiteral) -> DefT (r, trust, NumT (Literal (None, (0., "0"))))
@@ -114,10 +112,8 @@ let rec maybe = function
   | MaybeT (r, _) ->
     UnionT
       ( r,
-        UnionRep.make
-          (Trust.bogus_trust () |> NullT.why r)
-          (Trust.bogus_trust () |> VoidT.why r)
-          [] )
+        UnionRep.make (Trust.bogus_trust () |> NullT.why r) (Trust.bogus_trust () |> VoidT.why r) []
+      )
   | DefT (r, trust, MixedT Mixed_everything) ->
     UnionT (r, UnionRep.make (NullT.why r trust) (VoidT.why r trust) [])
   | DefT (r, trust, MixedT Mixed_truthy) -> EmptyT.why r trust
@@ -307,8 +303,7 @@ let not_string t =
 
 let symbol t =
   match t with
-  | DefT (r, trust, MixedT _) ->
-    DefT (replace_desc_new_reason RSymbol r, trust, MixedT Mixed_symbol)
+  | DefT (r, trust, MixedT _) -> DefT (replace_desc_new_reason RSymbol r, trust, MixedT Mixed_symbol)
   | _ ->
     (* TODO: since symbols aren't supported, `t` is never a symbol so always empty *)
     let reason = reason_of_t t in

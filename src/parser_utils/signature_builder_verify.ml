@@ -838,8 +838,7 @@ module Verifier (Env : EvalEnv) = struct
       List.fold_left (Deps.reduce_join (Eval.type_ref tps)) deps extends
     | Kind.ImportNamedDef { kind; source; name } ->
       Deps.import_named (Kind.Sort.of_import_kind kind) source name
-    | Kind.ImportStarDef { kind; source } ->
-      Deps.import_star (Kind.Sort.of_import_kind kind) source
+    | Kind.ImportStarDef { kind; source } -> Deps.import_star (Kind.Sort.of_import_kind kind) source
     | Kind.RequireDef { source; name } -> Deps.require ?name source
     | Kind.SketchyToplevelDef -> Deps.top (Error.SketchyToplevelDef loc)
 
@@ -950,8 +949,7 @@ module Verifier (Env : EvalEnv) = struct
                     | Some id -> Deps.value (snd id)
                     | None -> eval_export_default_declaration decl
                   end
-                | (ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt) ->
-                  Deps.value n
+                | (ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt) -> Deps.value n
                 | _ -> assert false ))
           Deps.bot
           named

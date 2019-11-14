@@ -90,8 +90,7 @@ let get_intrinsic
         ( use_op,
           reason,
           (match literal with
-          | Literal (_, name) ->
-            Named (replace_desc_reason (RReactElement (Some name)) reason, name)
+          | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
           | _ -> Computed component),
           intrinsic ) );
 
@@ -349,7 +348,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Stateless functional components. *)
       | DefT (_, _, FunT _)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      
       | DefT (_, _, ObjT { call_t = Some _; _ }) ->
         rec_flow cx trace (component, ReactInToProps (reason_op, tin))
       (* Abstract components. *)
@@ -401,9 +399,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        * of children. We need to model all of these possibilities. *)
       | ([], Some spread) ->
         let r =
-          update_desc_reason
-            (fun desc -> RReactChildrenOrUndefinedOrType desc)
-            (reason_of_t spread)
+          update_desc_reason (fun desc -> RReactChildrenOrUndefinedOrType desc) (reason_of_t spread)
         in
         Some
           (OptionalT
@@ -633,8 +629,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Abstract components. *)
       | DefT (_, _, ReactAbstractComponentT { instance; _ }) -> rec_flow_t cx trace (instance, tout)
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) ->
-        get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
+      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
       | AnyT (reason, source) -> rec_flow_t cx trace (AnyT.why source reason, tout)
       (* ...otherwise, error. *)
       | _ -> err_incompatible (reason_of_t component)
@@ -1079,8 +1074,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               (props, SMap.empty)
           in
           let static_props =
-            static_props
-            |> SMap.add "defaultProps" (Field (None, knot.default_t, Polarity.Neutral))
+            static_props |> SMap.add "defaultProps" (Field (None, knot.default_t, Polarity.Neutral))
           in
           let reason_component = replace_desc_reason RReactComponent reason_op in
           let super =
@@ -1218,8 +1212,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | None ->
               let prop_types = Some (Known prop_types) in
               map_spec
-                (fun spec ->
-                  { spec with prop_types = merge_prop_types prop_types spec.prop_types })
+                (fun spec -> { spec with prop_types = merge_prop_types prop_types spec.prop_types })
                 stack
               |> on_resolve_prop_types
             | Some (k, p) ->
@@ -1248,8 +1241,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Error reason ->
               let prop_types = Some (Unknown reason) in
               map_spec
-                (fun spec ->
-                  { spec with prop_types = merge_prop_types prop_types spec.prop_types })
+                (fun spec -> { spec with prop_types = merge_prop_types prop_types spec.prop_types })
                 stack
               |> on_resolve_prop_types)
           | ResolveDict (dicttype, todo, prop_types) ->

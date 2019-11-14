@@ -590,8 +590,7 @@ with type t = Impl.t = struct
       let body =
         match body with
         | Function.BodyBlock b -> b
-        | Function.BodyExpression _ ->
-          failwith "Unexpected FunctionDeclaration with BodyExpression"
+        | Function.BodyExpression _ -> failwith "Unexpected FunctionDeclaration with BodyExpression"
       in
       let return =
         match return with
@@ -605,7 +604,7 @@ with type t = Impl.t = struct
           (* estree hasn't come around to the idea that function decls can have
            optional ids, but acorn, babel, espree and esprima all have, so let's
            do it too. see https://github.com/estree/estree/issues/98 *)
-            ("id", option identifier id);
+          ("id", option identifier id);
           ("params", function_params params);
           ("body", block body);
           ("async", bool async);
@@ -690,8 +689,7 @@ with type t = Impl.t = struct
         "DeclareVariable"
         loc
         [
-          ( "id",
-            pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false } );
+          ("id", pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false });
         ]
     and declare_function (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_ }) =
       let id_loc = Loc.btwn (fst id) (fst annot) in
@@ -801,7 +799,7 @@ with type t = Impl.t = struct
           (* estree hasn't come around to the idea that class decls can have
            optional ids, but acorn, babel, espree and esprima all have, so let's
            do it too. see https://github.com/estree/estree/issues/98 *)
-            ("id", option identifier id);
+          ("id", option identifier id);
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
           ("superClass", option expression super);
@@ -812,10 +810,7 @@ with type t = Impl.t = struct
     and class_decorator (loc, { Class.Decorator.expression = expr }) =
       node "Decorator" loc [("expression", expression expr)]
     and class_implements (loc, { Class.Implements.id; targs }) =
-      node
-        "ClassImplements"
-        loc
-        [("id", identifier id); ("typeParameters", option type_args targs)]
+      node "ClassImplements" loc [("id", identifier id); ("typeParameters", option type_args targs)]
     and class_body (loc, { Class.Body.body }) =
       node "ClassBody" loc [("body", array_of_list class_element body)]
     and class_element =
@@ -1191,8 +1186,7 @@ with type t = Impl.t = struct
     and boolean_type loc = node "BooleanTypeAnnotation" loc []
     and nullable_type loc t = node "NullableTypeAnnotation" loc [("typeAnnotation", _type t)]
     and function_type
-        ( loc,
-          { Type.Function.params = (_, { Type.Function.Params.params; rest }); return; tparams } )
+        (loc, { Type.Function.params = (_, { Type.Function.Params.params; rest }); return; tparams })
         =
       node
         "FunctionTypeAnnotation"
@@ -1393,7 +1387,7 @@ with type t = Impl.t = struct
         [
           (* we track the location of the name, but don't expose it here for
            backwards-compatibility. TODO: change this? *)
-            ("name", string name);
+          ("name", string name);
           ("bound", hint type_annotation bound);
           ("variance", option variance tp_var);
           ("default", option _type default);
@@ -1424,8 +1418,8 @@ with type t = Impl.t = struct
         ]
     and jsx_fragment
         ( loc,
-          { JSX.frag_openingElement; frag_closingElement; frag_children = (_loc, frag_children) }
-        ) =
+          { JSX.frag_openingElement; frag_closingElement; frag_children = (_loc, frag_children) } )
+        =
       node
         "JSXFragment"
         loc

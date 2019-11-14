@@ -965,8 +965,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                               rec_flow
                                 cx
                                 trace
-                                ( filter_optional cx ~trace reason t1,
-                                  CondT (reason, None, t2, tvar) ))
+                                (filter_optional cx ~trace reason t1, CondT (reason, None, t2, tvar)))
                         in
                         Some (Field (None, t, prop_polarity)))
                     config_props

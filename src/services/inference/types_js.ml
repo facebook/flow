@@ -209,9 +209,7 @@ let collate_parse_results ~options parse_results =
 
 let parse ~options ~profiling ~workers ~reader parse_next =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
-      let%lwt results =
-        Parsing_service_js.parse_with_defaults ~reader options workers parse_next
-      in
+      let%lwt results = Parsing_service_js.parse_with_defaults ~reader options workers parse_next in
       Lwt.return (collate_parse_results ~options results))
 
 let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted =
@@ -295,9 +293,7 @@ let (commit_modules, commit_modules_from_saved_state) =
     (* conservatively approximate set of modules whose providers will change *)
     (* register providers for modules, warn on dupes etc. *)
     with_timer_lwt ~options "CommitModules" profiling (fun () ->
-        let all_files_set =
-          FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted
-        in
+        let all_files_set = FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted in
         let mutator = Module_heaps.Introduce_files_mutator.create transaction all_files_set in
         let%lwt new_modules =
           introduce_files ~mutator ~all_providers_mutator ~workers ~options ~parsed ~unparsed
@@ -313,6 +309,7 @@ let (commit_modules, commit_modules_from_saved_state) =
             new_or_changed
             dirty_modules
         in
+
         (* Providers might be new but not changed. This typically happens when old
       providers are deleted, and previously duplicate providers become new
       providers. In such cases, we must clear the old duplicate provider errors
@@ -354,10 +351,7 @@ let (commit_modules, commit_modules_from_saved_state) =
               errors ))
   in
   let commit_modules ~transaction ~reader =
-    commit_modules_generic
-      ~introduce_files:(Module_js.introduce_files ~reader)
-      ~transaction
-      ~reader
+    commit_modules_generic ~introduce_files:(Module_js.introduce_files ~reader) ~transaction ~reader
   in
   let commit_modules_from_saved_state ~transaction ~reader =
     commit_modules_generic
@@ -655,8 +649,7 @@ let remove_old_results (errors, warnings, suppressions, coverage, first_internal
     first_internal_error )
 
 let add_new_results
-    ~record_slow_file (errors, warnings, suppressions, coverage, first_internal_error) file result
-    =
+    ~record_slow_file (errors, warnings, suppressions, coverage, first_internal_error) file result =
   match result with
   | Ok (new_errors, new_warnings, new_suppressions, new_coverage, check_time) ->
     if check_time > 1. then record_slow_file file check_time;
@@ -889,6 +882,7 @@ let merge
       ~recheck_reasons
       suppressions
   in
+
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
 
@@ -2114,10 +2108,8 @@ end = struct
           match Options.lazy_mode options with
           | Options.NON_LAZY_MODE
           (* Non lazy mode treats every file as focused. *)
-          
           | Options.LAZY_MODE_WATCHMAN
           (* Watchman mode treats every modified file as focused *)
-          
           | Options.LAZY_MODE_FILESYSTEM ->
             (* FS mode treats every modified file as focused *)
             let old_focus_targets = CheckedSet.focused checked_files in
@@ -2415,8 +2407,7 @@ end = struct
 end
 
 let with_transaction f =
-  Transaction.with_transaction
-  @@ fun transaction ->
+  Transaction.with_transaction @@ fun transaction ->
   let reader = Mutator_state_reader.create transaction in
   f transaction reader
 
@@ -2547,8 +2538,7 @@ let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~c
   }
 
 let init_from_saved_state ~profiling ~workers ~saved_state options =
-  with_transaction
-  @@ fun transaction reader ->
+  with_transaction @@ fun transaction reader ->
   let file_options = Options.file_options options in
   (* We don't want to walk the file system for the checked in files. But we still need to find the
    * flowlibs *)
@@ -2706,8 +2696,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
 
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
-  with_transaction
-  @@ fun transaction reader ->
+  with_transaction @@ fun transaction reader ->
   (* TODO - explicitly order the libs.
    *
    * Should we let the filesystem dictate the order that we merge libs? Are we sheep? No! We are
@@ -2864,8 +2853,7 @@ let query_watchman_for_changed_files ~options =
     let%lwt watchman_env = Watchman_lwt.init init_settings () in
     let%lwt changed_files =
       match watchman_env with
-      | None ->
-        failwith "Failed to set up Watchman in order to get the changes since the mergebase"
+      | None -> failwith "Failed to set up Watchman in order to get the changes since the mergebase"
       | Some watchman_env ->
         (* No timeout. We'll time this out ourselves after init if we need *)
         let%lwt changed_files =
@@ -2922,8 +2910,7 @@ let init ~profiling ~workers options =
         (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
          * is to update the dependency graph and stuff like that. We don't actually want to merge
          * anything yet. *)
-        with_transaction
-        @@ fun transaction reader ->
+        with_transaction @@ fun transaction reader ->
         let recheck_reasons = [LspProt.Lazy_init_update_deps] in
         let%lwt env =
           Recheck.parse_and_update_dependency_info
@@ -2947,8 +2934,7 @@ let init ~profiling ~workers options =
     MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
     let%lwt (watchman_updates, files_to_focus) =
       try%lwt
-        Lwt_unix.with_timeout timeout
-        @@ fun () ->
+        Lwt_unix.with_timeout timeout @@ fun () ->
         let%lwt get_watchman_updates = get_watchman_updates_thread in
         get_watchman_updates ~libs:env.ServerEnv.libs
       with Lwt_unix.Timeout ->

@@ -530,7 +530,7 @@ module Completion : sig
     | PlainText (* 1 *)
     (* the insertText/textEdits are just plain strings *)
     | SnippetFormat (* 2 *)
-  (* wire: just "Snippet" *)
+                    (* wire: just "Snippet" *)
   [@@deriving enum]
 
   type completionTriggerKind =

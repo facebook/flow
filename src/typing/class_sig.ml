@@ -516,9 +516,7 @@ module Make (F : Func_sig.S) = struct
       | _ ->
         let open Type in
         let targs =
-          Base.List.map
-            ~f:(fun tp -> BoundT (tp.Type.reason, tp.name))
-            (TypeParams.to_list tparams)
+          Base.List.map ~f:(fun tp -> BoundT (tp.Type.reason, tp.name)) (TypeParams.to_list tparams)
         in
         Type.typeapp self targs
     in
@@ -662,9 +660,7 @@ module Make (F : Func_sig.S) = struct
           ~f:(fun (annot_loc, c, targs_opt) ->
             match targs_opt with
             | None ->
-              let reason =
-                annot_reason ~annot_loc @@ repos_reason annot_loc (Type.reason_of_t c)
-              in
+              let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (Type.reason_of_t c) in
               Flow.mk_instance cx reason c
             | Some targs -> Type.typeapp ~annot_loc c targs)
           implements

@@ -188,10 +188,10 @@ let tests =
                ["type U = number"; "export type T = U"]
                ["type U = number;"; "type T = U;"; "export type {T};"];
          (* TODO: change of spaces *)
-           "export_type_specifier"
-           >:: mk_signature_generator_test
-                 ["type U = number"; "export type { U }"]
-                 ["type U = number;"; "export type {U};"];
+         "export_type_specifier"
+         >:: mk_signature_generator_test
+               ["type U = number"; "export type { U }"]
+               ["type U = number;"; "export type {U};"];
          "export_type_specifier_local"
          >:: mk_signature_generator_test
                ["type U = number"; "export type { U as U2 }"]
@@ -201,10 +201,10 @@ let tests =
                ["export type { K } from './foo'"]
                ["export type {K} from \"./foo\";"];
          (* TODO: change of quotes *)
-           "export_type_specifier_remote_local1"
-           >:: mk_signature_generator_test
-                 ["export type { K as K2 } from './foo'"]
-                 ["export type {K as K2} from \"./foo\";"];
+         "export_type_specifier_remote_local1"
+         >:: mk_signature_generator_test
+               ["export type { K as K2 } from './foo'"]
+               ["export type {K as K2} from \"./foo\";"];
          "export_type_specifier_remote_local2"
          >:: mk_signature_generator_test
                ["type K = number"; "export type { K as K2 } from './foo'"]
@@ -258,39 +258,39 @@ let tests =
                ["module.exports = class { m(x: number): number { return x; } }"]
                ["declare class $1 {m(x: number): number}"; "declare module.exports: typeof $1;"];
          (* outlining *)
-           "module_exports_named_class_expression"
-           >:: mk_signature_generator_test
-                 ["module.exports = class C { m(x: C): C { return x; } }"]
-                 ["declare class C {m(x: C): C}"; "declare module.exports: typeof C;"];
+         "module_exports_named_class_expression"
+         >:: mk_signature_generator_test
+               ["module.exports = class C { m(x: C): C { return x; } }"]
+               ["declare class C {m(x: C): C}"; "declare module.exports: typeof C;"];
          (* outlining *)
-           "module_exports_require"
-           >:: mk_signature_generator_test
-                 ["module.exports = require('./foo')"]
-                 ["const $1 = require(\"./foo\");"; "declare module.exports: typeof $1;"];
+         "module_exports_require"
+         >:: mk_signature_generator_test
+               ["module.exports = require('./foo')"]
+               ["const $1 = require(\"./foo\");"; "declare module.exports: typeof $1;"];
          (* outlining *)
-           "module_exports_import"
-           >:: mk_signature_generator_test
-                 ["module.exports = import('./foo')"]
-                 ["import * as $1 from \"./foo\";"; "declare module.exports: typeof $1;"];
+         "module_exports_import"
+         >:: mk_signature_generator_test
+               ["module.exports = import('./foo')"]
+               ["import * as $1 from \"./foo\";"; "declare module.exports: typeof $1;"];
          (* outlining *)
-           "module_exports_bindings"
-           >:: mk_signature_generator_test
-                 [
-                   "function foo() { }";
-                   "class C { }";
-                   "const x: number = 0";
-                   "const o = { p: x };";
-                   "module.exports = { foo, C, x, p: o.p }";
-                 ]
-                 [
-                   "declare function foo(): void;";
-                   "declare class C {}";
-                   "declare var x: number;";
-                   "declare var o: $TEMPORARY$object<{|p: typeof x|}>;";
-                   "declare module.exports: $TEMPORARY$object<";
-                   "  {|foo: typeof foo, C: typeof C, x: typeof x, p: typeof o.p|},";
-                   ">;";
-                 ];
+         "module_exports_bindings"
+         >:: mk_signature_generator_test
+               [
+                 "function foo() { }";
+                 "class C { }";
+                 "const x: number = 0";
+                 "const o = { p: x };";
+                 "module.exports = { foo, C, x, p: o.p }";
+               ]
+               [
+                 "declare function foo(): void;";
+                 "declare class C {}";
+                 "declare var x: number;";
+                 "declare var o: $TEMPORARY$object<{|p: typeof x|}>;";
+                 "declare module.exports: $TEMPORARY$object<";
+                 "  {|foo: typeof foo, C: typeof C, x: typeof x, p: typeof o.p|},";
+                 ">;";
+               ];
          "declare_module_exports"
          >:: mk_signature_generator_test
                ["declare module.exports: () => void"]
@@ -403,7 +403,7 @@ let tests =
                [
                  "import type {T} from \"./foo\";";
                  (* TODO: change of specifier kind *)
-                   "declare module.exports: T;";
+                 "declare module.exports: T;";
                ];
          "import_type_specifier_local"
          >:: mk_signature_generator_test
@@ -455,15 +455,15 @@ let tests =
                  "export type T = number";
                  "type U = T";
                  (* reachable *)
-                   "import { type V } from './foo'";
+                 "import { type V } from './foo'";
                  (* dead *)
-                   "type W = [U, V]";
+                 "type W = [U, V]";
                  (* dead *)
-                   "function foo() { return [0, 0]; }";
+                 "function foo() { return [0, 0]; }";
                  (* dead *)
-                   "class B { +x: T = 0; m() { (foo(): W); } }";
+                 "class B { +x: T = 0; m() { (foo(): W); } }";
                  (* reachable, but as declaration *)
-                   "export interface A { +x: U; }";
+                 "export interface A { +x: U; }";
                  "module.exports = function(x: B): A { return x; }";
                ]
                [
@@ -471,7 +471,7 @@ let tests =
                  "type U = T;";
                  "";
                  (* TODO: pretty printing adds newlines for dead stuff *)
-                   "declare class B {+x: T, m(): void}";
+                 "declare class B {+x: T, m(): void}";
                  "interface A {+x: U}";
                  "export type {T};";
                  "";
@@ -535,7 +535,7 @@ let tests =
                  "declare export opaque type T2: number";
                  "opaque type T3 = number";
                  (* dead *)
-                   "export opaque type T4: number = T3";
+                 "export opaque type T4: number = T3";
                  "opaque type T5 = number";
                  "export opaque type T6: T5 = number";
                  "export opaque type T7 = number;";
@@ -682,12 +682,7 @@ let tests =
                ];
          "function_statics"
          >:: mk_signature_generator_test
-               [
-                 "function bar(): void { };";
-                 "const x = 42;";
-                 "bar.x = x;";
-                 "module.exports = bar;";
-               ]
+               ["function bar(): void { };"; "const x = 42;"; "bar.x = x;"; "module.exports = bar;"]
                [
                  "declare var bar: $TEMPORARY$function<() => void, {x: typeof x, ...}>;";
                  "declare var x: $TEMPORARY$number<42>;";

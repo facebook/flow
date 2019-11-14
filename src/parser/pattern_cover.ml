@@ -49,10 +49,7 @@ module Cover (Parse : PARSER) : COVER = struct
   let empty_errors = { if_patt = []; if_expr = [] }
 
   let rev_append_errors a b =
-    {
-      if_patt = List.rev_append a.if_patt b.if_patt;
-      if_expr = List.rev_append a.if_expr b.if_expr;
-    }
+    { if_patt = List.rev_append a.if_patt b.if_patt; if_expr = List.rev_append a.if_expr b.if_expr }
 
   let rev_errors a = { if_patt = List.rev a.if_patt; if_expr = List.rev a.if_expr }
 end

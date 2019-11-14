@@ -141,8 +141,8 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT
       ( _,
         _,
-        InstanceT
-          (static, super, _, { class_id; type_args; own_props; proto_props; inst_call_t; _ }) ) ->
+        InstanceT (static, super, _, { class_id; type_args; own_props; proto_props; inst_call_t; _ })
+      ) ->
     let ts =
       if class_id = ALoc.id_none then
         []

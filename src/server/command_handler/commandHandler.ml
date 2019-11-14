@@ -149,8 +149,7 @@ let check_file ~options ~env ~profiling ~force file_input =
         true
       else
         let (_, docblock) =
-          Parsing_service_js.(
-            parse_docblock docblock_max_tokens (File_key.SourceFile file) content)
+          Parsing_service_js.(parse_docblock docblock_max_tokens (File_key.SourceFile file) content)
         in
         Docblock.is_flow docblock
     in
@@ -206,8 +205,7 @@ let insert_type
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let options = { options with Options.opt_verbose = verbose } in
-  File_input.content_of_file_input file_input
-  %>>= fun file_content ->
+  File_input.content_of_file_input file_input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
         Type_info_service.insert_type
@@ -227,8 +225,7 @@ let insert_type
 let autofix_exports ~options ~env ~profiling ~input =
   let filename = File_input.filename_of_file_input input in
   let file_key = File_key.SourceFile filename in
-  File_input.content_of_file_input input
-  %>>= fun file_content ->
+  File_input.content_of_file_input input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
         Type_info_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
@@ -323,8 +320,7 @@ let collect_rage ~options ~reader ~env ~files =
 let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
-  File_input.content_of_file_input file_input
-  %>>= fun content ->
+  File_input.content_of_file_input file_input %>>= fun content ->
   try_with (fun () ->
       Type_info_service.dump_types
         ~options
@@ -343,8 +339,7 @@ let coverage ~options ~env ~profiling ~force ~trust file_input =
   else
     let file = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile file in
-    File_input.content_of_file_input file_input
-    %>>= fun content ->
+    File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
         Type_info_service.coverage ~options ~env ~profiling ~force ~trust file content)
 
@@ -433,8 +428,7 @@ let get_cycle ~env fn types_only =
 
 let suggest ~options ~env ~profiling file =
   let file_name = File_input.filename_of_file_input file in
-  File_input.content_of_file_input file
-  %>>= fun file_content ->
+  File_input.content_of_file_input file %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result = Type_info_service.suggest ~options ~env ~profiling file_name file_content in
       match result with
@@ -488,8 +482,8 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
   let file = File_key.SourceFile filename in
   let loc = Loc.make file line col in
   let%lwt check_result =
-    File_input.content_of_file_input file_input
-    %>>= (fun content -> Types_js.type_contents ~options ~env ~profiling content file)
+    File_input.content_of_file_input file_input %>>= fun content ->
+    Types_js.type_contents ~options ~env ~profiling content file
   in
   match check_result with
   | Error msg ->
@@ -500,40 +494,40 @@ let get_def ~options ~reader ~env ~profiling (file_input, line, col) =
             Lwt.return
               ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
               |> fun (result, request_history) ->
-              let open GetDef_js.Get_def_result in
-              let json_props =
-                [
-                  ( "request_history",
-                    Hh_json.JSON_Array
-                      (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) );
-                ]
-                |> fold_json_of_parse_errors parse_errors
-              in
-              match result with
-              | Def loc ->
-                ( Ok loc,
-                  Some
-                    (Hh_json.JSON_Object (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
-                )
-              | Partial (loc, msg) ->
-                ( Ok loc,
-                  Some
-                    (Hh_json.JSON_Object
-                       ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-                       :: ("error", Hh_json.JSON_String msg)
-                       :: json_props )) )
-              | Bad_loc ->
-                ( Ok Loc.none,
-                  Some
-                    (Hh_json.JSON_Object (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
-                )
-              | Def_error msg ->
-                ( Error msg,
-                  Some
-                    (Hh_json.JSON_Object
-                       ( ("result", Hh_json.JSON_String "FAILURE")
-                       :: ("error", Hh_json.JSON_String msg)
-                       :: json_props )) ) )))
+                let open GetDef_js.Get_def_result in
+                let json_props =
+                  [
+                    ( "request_history",
+                      Hh_json.JSON_Array
+                        (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) );
+                  ]
+                  |> fold_json_of_parse_errors parse_errors
+                in
+                match result with
+                | Def loc ->
+                  ( Ok loc,
+                    Some
+                      (Hh_json.JSON_Object (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
+                  )
+                | Partial (loc, msg) ->
+                  ( Ok loc,
+                    Some
+                      (Hh_json.JSON_Object
+                         ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
+                         :: ("error", Hh_json.JSON_String msg)
+                         :: json_props )) )
+                | Bad_loc ->
+                  ( Ok Loc.none,
+                    Some
+                      (Hh_json.JSON_Object (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
+                  )
+                | Def_error msg ->
+                  ( Error msg,
+                    Some
+                      (Hh_json.JSON_Object
+                         ( ("result", Hh_json.JSON_String "FAILURE")
+                         :: ("error", Hh_json.JSON_String msg)
+                         :: json_props )) ) )))
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
@@ -801,8 +795,7 @@ type command_handler =
    * These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
    * be handled immediately *)
   | Handle_immediately of
-      (profiling:Profiling_js.running ->
-      (ServerProt.Response.response * Hh_json.json option) Lwt.t)
+      (profiling:Profiling_js.running -> (ServerProt.Response.response * Hh_json.json option) Lwt.t)
   (* A command is parallelizable if it passes four conditions
    *
    * 1. It is fast. Running it in parallel will block the current recheck, so it needs to be really
@@ -895,10 +888,7 @@ let get_ephemeral_handler genv command =
       ~options
       (handle_get_def ~reader ~options ~filename ~line ~char)
   | ServerProt.Request.GET_IMPORTS { module_names; wait_for_recheck } ->
-    mk_parallelizable
-      ~wait_for_recheck
-      ~options
-      (handle_get_imports ~options ~reader ~module_names)
+    mk_parallelizable ~wait_for_recheck ~options (handle_get_imports ~options ~reader ~module_names)
   | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; types_only } ->
     (* The user preference is to make this wait for up-to-date data *)
     Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~types_only ~outfile)
@@ -960,10 +950,7 @@ let get_ephemeral_handler genv command =
         genv with
         options =
           Options.
-            {
-              options with
-              opt_include_warnings = options.opt_include_warnings || include_warnings;
-            };
+            { options with opt_include_warnings = options.opt_include_warnings || include_warnings };
       }
     in
     (* `flow status` is often used by users to get all the current errors. After talking to some
@@ -1216,8 +1203,7 @@ let keyvals_of_json (json : Hh_json.json option) : (string * Hh_json.json) list 
   | Some (Hh_json.JSON_Object keyvals) -> keyvals
   | Some json -> [("json_data", json)]
 
-let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) : LspProt.metadata
-    =
+let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) : LspProt.metadata =
   LspProt.(
     let extra_data = metadata.extra_data @ keyvals_of_json extra_data in
     { metadata with extra_data })
@@ -1653,12 +1639,10 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
       List.fold_left
         begin
           fun map edit ->
-          map
-          >>= fun map ->
+          map >>= fun map ->
           let (loc, _) = edit in
           let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
-          uri
-          >>| fun uri ->
+          uri >>| fun uri ->
           let lst = Option.value ~default:[] (SMap.find_opt uri map) in
           (* This reverses the list *)
           SMap.add uri (edit :: lst) map
@@ -1673,7 +1657,7 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
       file_to_edits >>| SMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
     in
     let workspace_edit : (WorkspaceEdit.t, string) result =
-      file_to_textedits >>| (fun file_to_textedits -> { WorkspaceEdit.changes = file_to_textedits })
+      file_to_textedits >>| fun file_to_textedits -> { WorkspaceEdit.changes = file_to_textedits }
     in
     match workspace_edit with
     | Ok x ->
@@ -1951,8 +1935,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
               (handle_persistent_did_close_notification ~reader ~genv ~metadata)
           else
             (* It's a no-op, so we can respond immediately *)
-            Handle_persistent_immediately
-              (handle_persistent_did_close_notification_no_op ~metadata)))
+            Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)))
     | (LspToServer (NotificationMessage (CancelRequestNotification params)), metadata) ->
       (* The general idea here is this:
        *

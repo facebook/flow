@@ -394,8 +394,7 @@ module T = struct
              (loc, { Ast.Type.Generic.id = generic_id_of_reference reference; targs = None })) )
     | (loc, NumberLiteral nt) -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
     | (loc, StringLiteral st) -> temporary_type "$TEMPORARY$string" loc (Ast.Type.StringLiteral st)
-    | (loc, BooleanLiteral b) ->
-      temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
+    | (loc, BooleanLiteral b) -> temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
     | (loc, Number) -> (loc, Ast.Type.Number)
     | (loc, String) -> (loc, Ast.Type.String)
     | (loc, Boolean) -> (loc, Ast.Type.Boolean)
@@ -669,8 +668,7 @@ module T = struct
         Ast.Statement.OpaqueType { Ast.Statement.OpaqueType.id; tparams; impltype; supertype } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,
-        Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body }
-      )
+        Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body } )
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
       (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
       let filtered_body_FIXME =
@@ -1678,9 +1676,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       if ListUtils.is_empty add_module_exports_list then
         (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot))
       else
-        let properties =
-          additional_properties_of_module_exports outlined add_module_exports_list
-        in
+        let properties = additional_properties_of_module_exports outlined add_module_exports_list in
         let ot = { Ast.Type.Object.exact = false; inexact = true; properties } in
         let assign = (mod_exp_loc, Ast.Type.Object ot) in
         let t =
@@ -1690,8 +1686,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               (Flow_ast_utils.ident_of_source (mod_exp_loc, name))
           in
           ( mod_exp_loc,
-            Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (mod_exp_loc, [annot; assign]) }
-          )
+            Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (mod_exp_loc, [annot; assign]) } )
         in
         (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, t))
     in

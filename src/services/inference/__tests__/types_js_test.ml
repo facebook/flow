@@ -10,15 +10,10 @@ open Utils_js
 open Dep_graph_test_utils
 
 (* Like `>::` except it expects the function to return `unit Lwt.t` rather than `unit` *)
-let ( %>:: ) name f = name >:: (fun ctxt -> LwtInit.run_lwt (fun () -> f ctxt))
+let ( %>:: ) name f = name >:: fun ctxt -> LwtInit.run_lwt (fun () -> f ctxt)
 
 let assert_checked_sets_equal ~ctxt expected actual =
-  assert_equal
-    ~ctxt
-    ~cmp:CheckedSet.debug_equal
-    ~printer:CheckedSet.debug_to_string
-    expected
-    actual
+  assert_equal ~ctxt ~cmp:CheckedSet.debug_equal ~printer:CheckedSet.debug_to_string expected actual
 
 module FilenameSetSet = Set.Make (FilenameSet)
 
@@ -485,8 +480,7 @@ let tests =
                              ("e", ["d"]);
                            ]
                          in
-                         let%lwt (to_merge, to_check, to_merge_or_check, components, _recheck_set)
-                             =
+                         let%lwt (to_merge, to_check, to_merge_or_check, components, _recheck_set) =
                            include_dependencies_and_dependents
                              ~profiling
                              ~sig_dependency_graph

@@ -267,7 +267,7 @@ let spawn
   Entry.set_context entry param (child_in, child_out);
   let exe = Sys_utils.executable_path () in
   let name = Option.value ~default:(Entry.name_of_entry entry) name in
-  let pid = Unix.create_process exe [|exe; name|] stdin stdout stderr in
+  let pid = Unix.create_process exe [| exe; name |] stdin stdout stderr in
   Entry.clear_context ();
   Unix.close child_in;
   Unix.close child_out;

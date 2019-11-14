@@ -55,8 +55,7 @@ val of_line_column_offset : line:int -> column:int -> offset:int -> int option
 
 val of_lexing_pos : Lexing.position -> int option
 
-val of_lnum_bol_cnum :
-  pos_lnum:int -> pos_bol:int -> pos_cnum:int -> int option
+val of_lnum_bol_cnum : pos_lnum:int -> pos_bol:int -> pos_cnum:int -> int option
 
 val offset : t -> int
 

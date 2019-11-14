@@ -58,7 +58,8 @@ let find_related_symbol_from_require loc = function
           fun _ local_name_to_locs acc ->
           SMap.fold
             begin
-              fun _ locs acc -> List.rev_append (Nel.to_list locs) acc
+              fun _ locs acc ->
+              List.rev_append (Nel.to_list locs) acc
             end
             local_name_to_locs
             acc

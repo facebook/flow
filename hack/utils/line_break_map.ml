@@ -90,8 +90,7 @@ let position_to_offset ?(existing = false) bolmap (line, column) =
   let line_start = (try bolmap.(file_line - 1) with _ -> raise Not_found) in
   let offset = line_start + column - 1 in
   if
-    (not existing)
-    || (offset >= 0 && offset <= bolmap.(min (len - 1) file_line))
+    (not existing) || (offset >= 0 && offset <= bolmap.(min (len - 1) file_line))
   then
     offset
   else

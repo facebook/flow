@@ -420,10 +420,7 @@ class virtual ['a] t =
       in
       let return_t' = self#type_ cx map_cx return_t in
       if
-        this_t' == this_t
-        && return_t' == return_t
-        && params' == params
-        && rest_param' == rest_param
+        this_t' == this_t && return_t' == return_t && params' == params && rest_param' == rest_param
       then
         t
       else
@@ -1622,14 +1619,8 @@ class virtual ['a] t_with_uses =
           ChainM (r, lhs_r, this', funtype', void_out')
 
     method fun_call_type cx map_cx t =
-      let {
-        call_this_t;
-        call_targs;
-        call_args_tlist;
-        call_tout;
-        call_closure_t;
-        call_strict_arity;
-      } =
+      let { call_this_t; call_targs; call_args_tlist; call_tout; call_closure_t; call_strict_arity }
+          =
         t
       in
       let call_this_t' = self#type_ cx map_cx call_this_t in
@@ -1858,11 +1849,8 @@ class virtual ['a] t_with_uses =
         | ObjectRep -> tool
         | ObjectWiden _ -> tool
         | Spread
-            (options, { Object.Spread.todo_rev; acc; spread_id; union_reason; curr_resolve_idx })
-          ->
-          let todo_rev' =
-            ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) todo_rev
-          in
+            (options, { Object.Spread.todo_rev; acc; spread_id; union_reason; curr_resolve_idx }) ->
+          let todo_rev' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) todo_rev in
           let acc' = ListUtils.ident_map (self#object_kit_acc_element cx map_cx) acc in
           if todo_rev' == todo_rev && acc' == acc then
             tool
@@ -2017,18 +2005,14 @@ class virtual ['a] t_with_uses =
             PropTypes ((head', tail'), resolve_object')
         | DefaultProps (tlist, default_props) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-          let default_props' =
-            OptionUtils.ident_map (self#default_props cx map_cx) default_props
-          in
+          let default_props' = OptionUtils.ident_map (self#default_props cx map_cx) default_props in
           if tlist' == tlist && default_props' == default_props then
             tool
           else
             DefaultProps (tlist', default_props')
         | InitialState (tlist, initial_state) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-          let initial_state' =
-            OptionUtils.ident_map (self#initial_state cx map_cx) initial_state
-          in
+          let initial_state' = OptionUtils.ident_map (self#initial_state cx map_cx) initial_state in
           if tlist' == tlist && initial_state' == initial_state then
             tool
           else

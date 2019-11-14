@@ -63,8 +63,7 @@ module type PARSER = sig
 
   val object_key : ?class_body:bool -> env -> Loc.t * (Loc.t, Loc.t) Expression.Object.Property.key
 
-  val class_declaration :
-    env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
+  val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
 
   val class_expression : env -> (Loc.t, Loc.t) Expression.t
 

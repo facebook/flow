@@ -85,8 +85,7 @@ class property_assignment (property_names : SSet.t) =
       ignore @@ this#pattern_identifier property_id
 
     (* READS *)
-    val mutable read_loc_metadata : string Loc_collections.ALocMap.t =
-      Loc_collections.ALocMap.empty
+    val mutable read_loc_metadata : string Loc_collections.ALocMap.t = Loc_collections.ALocMap.empty
 
     method metadata_of_read_loc (read_loc : ALoc.t) : string option =
       Loc_collections.ALocMap.find_opt read_loc read_loc_metadata

@@ -30,8 +30,7 @@ type t
    `Pervasives.in_channel`.
 
 *)
-val with_timeout :
-  timeout:int -> on_timeout:(unit -> 'a) -> do_:(t -> 'a) -> 'a
+val with_timeout : timeout:int -> on_timeout:(unit -> 'a) -> do_:(t -> 'a) -> 'a
 
 val check_timeout : t -> unit
 

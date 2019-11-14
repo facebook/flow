@@ -100,8 +100,7 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
   potential_refs
   |> ALocMap.bindings
   |> Base.List.map ~f:(fun (ref_loc, ty) ->
-         type_matches_locs ~reader cx ty prop_def_info name
-         >>| function
+         type_matches_locs ~reader cx ty prop_def_info name >>| function
          | true -> Some (loc_of_aloc ~reader ref_loc)
          | false -> None)
   |> Result.all
@@ -110,7 +109,7 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
            "Encountered while finding refs in `%s`: %s"
            (File_key.to_string file_key)
            err)
-  >>| (fun refs -> refs |> ListUtils.cat_maybes |> add_ref_kind FindRefsTypes.PropertyAccess)
+  >>| fun refs -> refs |> ListUtils.cat_maybes |> add_ref_kind FindRefsTypes.PropertyAccess
 
 let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
@@ -127,28 +126,21 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
     Ok local_defs
   else (
     set_get_refs_hook ~reader potential_refs potential_matching_literals name;
-    let (cx, _) =
-      Merge_service.merge_contents_context ~reader options file_key ast info file_sig
-    in
+    let (cx, _) = Merge_service.merge_contents_context ~reader options file_key ast info file_sig in
     unset_hooks ();
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
        * examine *)
       let prop_loc_map = lazy (LiteralToPropLoc.make ast name) in
       let get_prop_loc_if_relevant (obj_loc, into_type) =
-        type_matches_locs ~reader cx into_type def_info name
-        >>| function
+        type_matches_locs ~reader cx into_type def_info name >>| function
         | false -> None
         | true -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map)
       in
-      !potential_matching_literals
-      |> Base.List.map ~f:get_prop_loc_if_relevant
-      |> Result.all
-      >>| fun refs ->
-      refs |> ListUtils.cat_maybes |> add_ref_kind FindRefsTypes.PropertyDefinition
+      !potential_matching_literals |> Base.List.map ~f:get_prop_loc_if_relevant |> Result.all
+      >>| fun refs -> refs |> ListUtils.cat_maybes |> add_ref_kind FindRefsTypes.PropertyDefinition
     in
-    literal_prop_refs_result
-    >>= fun literal_prop_refs_result ->
+    literal_prop_refs_result >>= fun literal_prop_refs_result ->
     process_prop_refs ~reader cx !potential_refs file_key def_info name
     >>| ( @ ) local_defs
     >>| ( @ ) literal_prop_refs_result
@@ -205,8 +197,8 @@ let find_refs_in_file ~reader options ast_info file_key def_info =
     | Property (def_info, name) ->
       property_find_refs_in_file ~reader options ast_info file_key def_info name
     | CJSExport loc ->
-      export_find_refs_in_file ~reader ast_info file_key loc
-      >>| (fun refs -> add_ref_kind FindRefsTypes.Other refs)
+      export_find_refs_in_file ~reader ast_info file_key loc >>| fun refs ->
+      add_ref_kind FindRefsTypes.Other refs
   in
   refs >>| add_related_bindings ast_info
 
@@ -224,8 +216,8 @@ let find_refs_in_multiple_files ~reader genv all_deps def_info =
           Files.node_modules_containers := node_modules_containers;
           deps
           |> Base.List.map ~f:(fun dep ->
-                 get_ast_result ~reader dep
-                 >>= (fun ast_info -> find_refs_in_file ~reader options ast_info dep def_info))
+                 get_ast_result ~reader dep >>= fun ast_info ->
+                 find_refs_in_file ~reader options ast_info dep def_info)
         end
       ~merge:(fun refs acc -> List.rev_append refs acc)
       ~neutral:[]
@@ -245,7 +237,7 @@ let files_of_locs (locs : Loc.t Nel.t) : (FilenameSet.t, string) result =
     |> Nel.map (Result.of_option ~error:"Expected a location with a source file")
     |> Nel.result_all
   in
-  files_result >>| (fun files -> Nel.to_list files |> FilenameSet.of_list)
+  files_result >>| fun files -> Nel.to_list files |> FilenameSet.of_list
 
 (* Error if the set is empty *)
 let nel_of_filename_set (set : FilenameSet.t) : (File_key.t Nel.t, string) result =
@@ -259,14 +251,12 @@ let roots_of_def_info def_info : (File_key.t Nel.t, string) result =
   let root_locs = all_locs_of_def_info def_info in
   files_of_locs root_locs >>= nel_of_filename_set
 
-let deps_of_file_key ~reader genv env (file_key : File_key.t) :
-    (FilenameSet.t, string) result Lwt.t =
+let deps_of_file_key ~reader genv env (file_key : File_key.t) : (FilenameSet.t, string) result Lwt.t
+    =
   let { options; workers } = genv in
-  File_key.to_path file_key
-  %>>= fun path ->
+  File_key.to_path file_key %>>= fun path ->
   let fileinput = File_input.FileName path in
-  File_input.content_of_file_input fileinput
-  %>>| fun content ->
+  File_input.content_of_file_input fileinput %>>| fun content ->
   let%lwt all_deps = get_all_dependents ~reader options workers env file_key content in
   Lwt.return all_deps
 
@@ -275,8 +265,7 @@ let deps_of_file_keys ~reader genv env (file_keys : File_key.t list) :
   (* We need to use map_s (rather than map_p) because we cannot interleave calls into
    * MultiWorkers. *)
   let%lwt deps_result = Lwt_list.map_s (deps_of_file_key ~reader genv env) file_keys in
-  Result.all deps_result
-  %>>| fun (deps : FilenameSet.t list) ->
+  Result.all deps_result %>>| fun (deps : FilenameSet.t list) ->
   Lwt.return @@ List.fold_left FilenameSet.union FilenameSet.empty deps
 
 let focus_and_check genv env paths =
@@ -286,8 +275,7 @@ let focus_and_check genv env paths =
 
 let focus_and_check_filename_set genv env files =
   let paths = files |> FilenameSet.elements |> Base.List.map ~f:File_key.to_path |> Result.all in
-  paths
-  %>>| fun paths ->
+  paths %>>| fun paths ->
   Nel.of_list paths |> Option.value_map ~default:Lwt.return_unit ~f:(focus_and_check genv env)
 
 (* Returns location pairs such that:
@@ -318,13 +306,11 @@ let find_related_defs_in_file ~reader options name file =
   Type_inference_hooks_js.set_obj_to_obj_hook hook;
   Type_inference_hooks_js.set_instance_to_obj_hook hook;
   let cx_result =
-    get_ast_result ~reader file
-    >>| fun (ast, file_sig, docblock) ->
+    get_ast_result ~reader file >>| fun (ast, file_sig, docblock) ->
     Merge_service.merge_contents_context ~reader options file ast docblock file_sig
   in
   unset_hooks ();
-  cx_result
-  >>= fun (cx, _) ->
+  cx_result >>= fun (cx, _) ->
   let results : ((single_def_info * single_def_info) list list, string) result =
     !related_types |> Base.List.map ~f:(get_single_def_info_pairs_if_relevant cx) |> Result.all
   in
@@ -370,44 +356,36 @@ let find_related_defs ~reader genv env (def_info : property_def_info) (name : st
         ~neutral:[]
         ~next:(MultiWorkerLwt.next workers (FilenameSet.elements file_set))
     in
-    Result.all result
-    %>>| fun (pairs : (single_def_info * single_def_info) list list) ->
+    Result.all result %>>| fun (pairs : (single_def_info * single_def_info) list list) ->
     List.iter (List.iter (fun (x, y) -> UnionFind.union related_defs x y)) pairs;
     Lwt.return_unit
   in
   let get_unchecked_roots current_def_info checked_files =
-    current_def_info
-    |> all_locs_of_property_def_info
-    |> files_of_locs
-    >>| (fun roots -> FilenameSet.diff roots checked_files)
+    current_def_info |> all_locs_of_property_def_info |> files_of_locs >>| fun roots ->
+    FilenameSet.diff roots checked_files
   in
   let get_files_to_check unchecked_roots checked_files =
     let%lwt deps = deps_of_file_keys ~reader genv env (FilenameSet.elements unchecked_roots) in
-    deps
-    %>>| fun deps ->
+    deps %>>| fun deps ->
     Lwt.return (FilenameSet.union (FilenameSet.diff deps checked_files) unchecked_roots)
   in
   let rec loop current_def_info checked_files =
-    get_unchecked_roots current_def_info checked_files
-    %>>= fun unchecked_roots ->
+    get_unchecked_roots current_def_info checked_files %>>= fun unchecked_roots ->
     if FilenameSet.is_empty unchecked_roots then
       Lwt.return (Ok current_def_info)
     else
       let%lwt result = focus_and_check_filename_set genv env unchecked_roots in
-      result
-      %>>= fun () ->
+      result %>>= fun () ->
       let%lwt files_to_check = get_files_to_check unchecked_roots checked_files in
-      files_to_check
-      %>>= fun files_to_check ->
+      files_to_check %>>= fun files_to_check ->
       let%lwt check_result = process_files files_to_check in
-      check_result
-      %>>= fun () ->
+      check_result %>>= fun () ->
       let checked_files = FilenameSet.union checked_files files_to_check in
       let current_def_info =
         let updated_def_info = UnionFind.members related_defs (Nel.hd current_def_info) in
         Nel.of_list updated_def_info |> Result.of_option ~error:"Unexpected empty list"
       in
-      current_def_info %>>= (fun current_def_info -> loop current_def_info checked_files)
+      current_def_info %>>= fun current_def_info -> loop current_def_info checked_files
   in
   loop def_info FilenameSet.empty
 
@@ -417,32 +395,27 @@ let find_global_refs ~reader genv env ~multi_hop def_info =
       match def_info with
       | Property (property_def_info, name) ->
         let%lwt result = find_related_defs ~reader genv env property_def_info name in
-        result %>>| (fun x -> Lwt.return @@ Property (x, name))
+        result %>>| fun x -> Lwt.return @@ Property (x, name)
       | CJSExport _ -> Lwt.return (Ok def_info)
     else
       Lwt.return (Ok def_info)
   in
-  def_info
-  %>>= fun def_info ->
-  roots_of_def_info def_info
-  %>>= fun root_file_keys ->
+  def_info %>>= fun def_info ->
+  roots_of_def_info def_info %>>= fun root_file_keys ->
   let root_file_paths_result = Nel.map File_key.to_path root_file_keys |> Nel.result_all in
-  root_file_paths_result
-  %>>= fun root_file_paths ->
+  root_file_paths_result %>>= fun root_file_paths ->
   let%lwt () = focus_and_check genv env root_file_paths in
   let%lwt deps_result = deps_of_file_keys ~reader genv env (Nel.to_list root_file_keys) in
-  deps_result
-  %>>= fun deps ->
+  deps_result %>>= fun deps ->
   let dependent_file_count = FilenameSet.cardinal deps in
   let relevant_files =
     Nel.to_list root_file_keys |> FilenameSet.of_list |> FilenameSet.union deps
   in
   Hh_logger.info "find-refs: searching %d dependent modules for references" dependent_file_count;
   let%lwt refs = find_refs_in_multiple_files ~reader genv relevant_files def_info in
-  refs
-  %>>| fun refs ->
+  refs %>>| fun refs ->
   Lwt.return ((display_name_of_def_info def_info, refs), Some dependent_file_count)
 
 let find_local_refs ~reader ~options file_key ast_info def_info =
-  find_refs_in_file ~reader options ast_info file_key def_info
-  >>= (fun refs -> Ok (display_name_of_def_info def_info, refs))
+  find_refs_in_file ~reader options ast_info file_key def_info >>= fun refs ->
+  Ok (display_name_of_def_info def_info, refs)

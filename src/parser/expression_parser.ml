@@ -511,8 +511,7 @@ module Expression
       | Some operator ->
         Eat.token env;
         let (end_loc, argument) = with_loc unary env in
-        if not (is_lhs argument) then
-          error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
+        if not (is_lhs argument) then error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
         (match argument with
         | (_, Expression.Identifier (_, { Identifier.name; comments = _ })) when is_restricted name
           ->
@@ -561,8 +560,7 @@ module Expression
       | None -> argument
       | Some operator ->
         let argument = as_expression env argument in
-        if not (is_lhs argument) then
-          error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
+        if not (is_lhs argument) then error_at env (fst argument, Parse_error.InvalidLHSInAssignment);
         (match argument with
         | (_, Expression.Identifier (_, { Identifier.name; comments = _ })) when is_restricted name
           ->
@@ -851,12 +849,7 @@ module Expression
           else
             Expression.Member member
         in
-        call_cover
-          ~allow_optional_chain
-          ~in_optional_chain
-          env
-          start_loc
-          (Cover_expr (loc, member)))
+        call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, member)))
     in
     fun ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left ->
       let options = parse_options env in

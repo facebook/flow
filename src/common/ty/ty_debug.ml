@@ -206,9 +206,7 @@ and dump_t ?(depth = 10) t =
     | Arr a -> dump_arr ~depth a
     | Tup ts -> spf "Tup (%s)" (dump_list (dump_t ~depth) ~sep:"," ts)
     | Union (t1, t2, ts) ->
-      spf
-        "Union (%s)"
-        (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1 :: t2 :: ts)))
+      spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1 :: t2 :: ts)))
     | Inter (t1, t2, ts) -> spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1 :: t2 :: ts))
     | TypeAlias { ta_name; ta_tparams; ta_type } ->
       spf
@@ -340,8 +338,7 @@ let json_of_t ~strip_root =
             let extends = Base.List.map ~f:(fun g -> JSON_Object (json_of_generic g)) if_extends in
             [("extends", JSON_Array extends); ("body", JSON_Object (json_of_obj_t if_body))])
         | TypeOf b -> [("name", JSON_String (builtin_value b))]
-        | Module (name, _) ->
-          [("name", Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
+        | Module (name, _) -> [("name", Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
         | ClassDecl (name, tparams) ->
           [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
         | InterfaceDecl (name, tparams) ->
@@ -352,8 +349,7 @@ let json_of_t ~strip_root =
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt
     @ [
-        ("type", json_of_symbol s);
-        ("kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
+        ("type", json_of_symbol s); ("kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
       ]
   and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
     Hh_json.(

@@ -75,17 +75,8 @@ module Token_translator = Token_translator.Translate (Json_of_estree)
 let pp_underscore_loc fmt _ = Format.pp_print_string fmt "_"
 
 let main
-    include_tokens
-    pretty
-    check
-    debug
-    pattern
-    file_type_opt
-    use_strict
-    offset_style
-    path
-    filename
-    () =
+    include_tokens pretty check debug pattern file_type_opt use_strict offset_style path filename ()
+    =
   let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in

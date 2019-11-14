@@ -246,6 +246,7 @@ let merge_contents_context ~reader options file ast info file_sig =
 let merge_component ~worker_mutator ~options ~reader component =
   let start_merge_time = Unix.gettimeofday () in
   let file = Nel.hd component in
+
   (* We choose file as the leader, and other_files are followers. It is always
      OK to choose file as leader, as explained below.
 

@@ -521,11 +521,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPropNotFound (prop, (r1, r2), op) ->
     EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op)
   | EPropNotReadable { reason_prop; prop_name; use_op } ->
-    EPropNotReadable
-      { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
+    EPropNotReadable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
-    EPropNotWritable
-      { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
+    EPropNotWritable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
     EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
   | EBuiltinLookupFailed { reason; name } ->
@@ -1202,8 +1200,7 @@ let string_of_internal_error = function
   | PropRefComputedLiteral -> "unexpected literal computed property element type"
   | ShadowReadComputed -> "unexpected shadow read on computed property"
   | ShadowWriteComputed -> "unexpected shadow write on computed property"
-  | RestParameterNotIdentifierPattern ->
-    "unexpected rest parameter, expected an identifier pattern"
+  | RestParameterNotIdentifierPattern -> "unexpected rest parameter, expected an identifier pattern"
   | InterfaceTypeSpread -> "unexpected spread property in interface"
   | DebugThrow -> "debug throw"
   | MergeTimeout s -> spf "merge job timed out after %0.2f seconds" s
@@ -1618,12 +1615,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
-      {
-        loc = loc_of_reason (fst reasons);
-        prop = Some ("#" ^ x);
-        reason_obj = snd reasons;
-        use_op;
-      }
+      { loc = loc_of_reason (fst reasons); prop = Some ("#" ^ x); reason_obj = snd reasons; use_op }
   | EAdditionMixed (reason, use_op) ->
     UseOp
       {
@@ -1862,8 +1854,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     UseOp
       {
         loc = loc_of_reason lower;
-        features =
-          [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
+        features = [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
         use_op;
       }
   | EInternal (_, internal_error) ->
@@ -1878,8 +1869,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Not supported."]
       | ObjectPropertyLiteralNonString -> [text "Non-string literal property keys not supported."]
       | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
-      | ObjectPropertyComputedGetSet ->
-        [text "Computed getters and setters are not yet supported."]
+      | ObjectPropertyComputedGetSet -> [text "Computed getters and setters are not yet supported."]
       | InvariantSpreadArgument ->
         [text "Unsupported arguments in call to "; code "invariant"; text "."]
       | ClassPropertyLiteral -> [text "Literal properties not yet supported."]
@@ -1934,8 +1924,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EUseArrayLiteral _ ->
-    Normal
-      { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
+    Normal { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
   | EMissingAnnotation (reason, _) ->
     let default = [text "Missing type annotation for "; desc reason; text "."] in
     let features =
@@ -2197,14 +2186,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | EmptyArray _ ->
           [
             text "Cannot determine the element type of an empty array. ";
-            text
-              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
         | EmptyObject _ ->
           [
             text "Cannot determine types of initialized properties of an empty object. ";
-            text
-              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
         | UnexpectedExpression (_, esort) ->
           [
@@ -2212,8 +2199,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               (spf
                  "Cannot determine the type of this %s. "
                  (Flow_ast_utils.ExpressionSort.to_string esort));
-            text
-              "Please provide an annotation, e.g., by adding a type cast around this expression.";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
         | SketchyToplevelDef _ -> [text "Unexpected toplevel definition that needs hoisting:"]
         | UnsupportedPredicateExpression _ ->
@@ -2289,11 +2275,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EObjectComputedPropertyAccess (_, reason_prop) ->
-    Normal
-      { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
+    Normal { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
   | EObjectComputedPropertyAssign (_, reason_prop) ->
-    Normal
-      { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
+    Normal { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
   | EInvalidLHSInAssignment _ ->
     Normal { features = [text "Invalid left-hand side in assignment expression."] }
   | EIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
@@ -2378,13 +2362,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | n -> spf "no more than %d arguments are expected by" n
     in
     UseOp
-      {
-        loc = loc_of_reason unused_reason;
-        features = [text msg; text " "; ref def_reason];
-        use_op;
-      }
-  | EUnsupportedSetProto _ ->
-    Normal { features = [text "Mutating this prototype is unsupported."] }
+      { loc = loc_of_reason unused_reason; features = [text msg; text " "; ref def_reason]; use_op }
+  | EUnsupportedSetProto _ -> Normal { features = [text "Mutating this prototype is unsupported."] }
   | EDuplicateModuleProvider { module_name; provider; _ } ->
     let features =
       [
@@ -2525,8 +2504,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EDeprecatedUtility (_, name) ->
     Normal
       {
-        features =
-          [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
+        features = [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
       }
   | EDynamicExport (reason, reason_exp) ->
     let features =
@@ -2633,9 +2611,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EOptionalChainingMethods _ ->
     Normal
-      {
-        features = [text "Flow does not yet support method or property calls in optional chains."];
-      }
+      { features = [text "Flow does not yet support method or property calls in optional chains."] }
   | EUnnecessaryOptionalChain (_, lhs_reason) ->
     let features =
       [
@@ -2652,9 +2628,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EUnnecessaryInvariant (_, reason) ->
     let features =
       [
-        text "This use of `invariant` is unnecessary because ";
-        ref reason;
-        text " is always truthy.";
+        text "This use of `invariant` is unnecessary because "; ref reason; text " is always truthy.";
       ]
     in
     Normal { features }

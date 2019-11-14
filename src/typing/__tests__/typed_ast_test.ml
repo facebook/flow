@@ -192,9 +192,7 @@ let system_diff ~f prefix =
         Disk.mkdir_p diff_dir;
         let stmts1_file = dump_stmts (prefix ^ "_A.js") stmts1 in
         let stmts2_file = dump_stmts (prefix ^ "_B.js") stmts2 in
-        let out_file =
-          prefix ^ "_diff.txt" |> Path.concat (Path.make diff_dir) |> Path.to_string
-        in
+        let out_file = prefix ^ "_diff.txt" |> Path.concat (Path.make diff_dir) |> Path.to_string in
         let cmd = Utils_js.spf "diff -U7 %s %s > %s" stmts1_file stmts2_file out_file in
         match Sys.command cmd with
         | 0

@@ -18,8 +18,8 @@ let rec pattern loc ?annot_path ?init_path (p : (Loc.t, Loc.t) Ast.Pattern.t) =
         ( name,
           ( loc,
             Kind.VariableDef
-              { id = name; annot = Kind.Annot_path.mk_annot ?annot_path annot; init = init_path }
-          ) );
+              { id = name; annot = Kind.Annot_path.mk_annot ?annot_path annot; init = init_path } )
+        );
       ]
     | (_, Object { Object.properties; annot }) ->
       Object.(

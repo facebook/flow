@@ -437,9 +437,7 @@ module Statement
           | last_stmt :: _ -> fst last_stmt
           | _ -> end_loc
         in
-        let acc =
-          (Loc.btwn start_loc end_loc, Statement.Switch.Case.{ test; consequent }) :: acc
-        in
+        let acc = (Loc.btwn start_loc end_loc, Statement.Switch.Case.{ test; consequent }) :: acc in
         case_list env (seen_default, acc)
     in
     with_loc (fun env ->
@@ -1115,12 +1113,10 @@ module Statement
         | T_VAR
         (* not using Peek.is_class here because it would guard all of the
       * cases *)
-        
         | T_AT
         | T_CLASS
         (* not using Peek.is_function here because it would guard all of the
       * cases *)
-        
         | T_ASYNC
         | T_FUNCTION
         | T_ENUM ->
@@ -1418,6 +1414,7 @@ module Statement
         or "typeof", and the third IdentifierName's StringValue is not "as"
     *)
       in
+
       let specifier env =
         let kind =
           match Peek.token env with
@@ -1591,7 +1588,6 @@ module Statement
               | T_COMMA
               (* Importing the exported value named "type." This is not a type-import.
                * `import type from "ModuleName";` *)
-              
               | T_IDENTIFIER { raw = "from"; _ } ->
                 with_default ImportValue env
               | T_MULT ->

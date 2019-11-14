@@ -74,8 +74,7 @@ class ['loc] mapper =
         | (loc, DeclareModule m) ->
           id_loc this#declare_module loc m stmt (fun m -> (loc, DeclareModule m))
         | (loc, DeclareTypeAlias stuff) ->
-          id_loc this#declare_type_alias loc stuff stmt (fun stuff ->
-              (loc, DeclareTypeAlias stuff))
+          id_loc this#declare_type_alias loc stuff stmt (fun stuff -> (loc, DeclareTypeAlias stuff))
         | (loc, DeclareVariable stuff) ->
           id_loc this#declare_variable loc stuff stmt (fun stuff -> (loc, DeclareVariable stuff))
         | (loc, DeclareModuleExports annot) ->
@@ -164,8 +163,7 @@ class ['loc] mapper =
         | (loc, Class x) -> id_loc this#class_ loc x expr (fun x -> (loc, Class x))
         | (loc, Comprehension x) ->
           id_loc this#comprehension loc x expr (fun x -> (loc, Comprehension x))
-        | (loc, Conditional x) ->
-          id_loc this#conditional loc x expr (fun x -> (loc, Conditional x))
+        | (loc, Conditional x) -> id_loc this#conditional loc x expr (fun x -> (loc, Conditional x))
         | (loc, Function x) ->
           id_loc this#function_expression loc x expr (fun x -> (loc, Function x))
         | (loc, Generator x) -> id_loc this#generator loc x expr (fun x -> (loc, Generator x))
@@ -585,8 +583,7 @@ class ['loc] mapper =
         let members' =
           match members with
           | Defaulted members -> Defaulted (ListUtils.ident_map this#enum_defaulted_member members)
-          | Initialized members ->
-            Initialized (ListUtils.ident_map this#enum_string_member members)
+          | Initialized members -> Initialized (ListUtils.ident_map this#enum_string_member members)
         in
         if members == members' then
           body
@@ -1527,8 +1524,7 @@ class ['loc] mapper =
         | Property (loc, prop) ->
           id (this#pattern_object_property ?kind) prop p (fun prop -> Property (loc, prop))
         | RestProperty (loc, prop) ->
-          id (this#pattern_object_rest_property ?kind) prop p (fun prop ->
-              RestProperty (loc, prop)))
+          id (this#pattern_object_rest_property ?kind) prop p (fun prop -> RestProperty (loc, prop)))
 
     method pattern_object_property ?kind (prop : ('loc, 'loc) Ast.Pattern.Object.Property.t') =
       Ast.Pattern.Object.Property.(
@@ -1601,8 +1597,7 @@ class ['loc] mapper =
     method pattern_array_element_pattern ?kind (patt : ('loc, 'loc) Ast.Pattern.t) =
       this#pattern ?kind patt
 
-    method pattern_array_rest_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.RestElement.t')
-        =
+    method pattern_array_rest_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.RestElement.t') =
       Ast.Pattern.Array.RestElement.(
         let { argument } = elem in
         let argument' = this#pattern_array_rest_element_pattern ?kind argument in
@@ -1730,10 +1725,7 @@ class ['loc] mapper =
         in
         let comments' = this#syntax_opt comments in
         if
-          block == block'
-          && handler == handler'
-          && finalizer == finalizer'
-          && comments == comments'
+          block == block' && handler == handler' && finalizer == finalizer' && comments == comments'
         then
           stmt
         else

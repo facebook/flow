@@ -561,8 +561,7 @@ functor
       | ProfiledValue.Raw y -> y
       | ProfiledValue.Profiled { entry; write_time } ->
         EventLogger.(
-          log_if_initialized
-          @@ fun () ->
+          log_if_initialized @@ fun () ->
           sharedmem_access_sample
             ~heap_name:Value.description
             ~key:(Key.string_of_md5 x)
@@ -1164,8 +1163,7 @@ end)
   CacheType with type key := Key.t and type value := Config.value = struct
   type value = Config.value
 
-  let string_of_key _key =
-    failwith "FreqCache does not support 'string_of_key'"
+  let string_of_key _key = failwith "FreqCache does not support 'string_of_key'"
 
   (* The cache itself *)
   let (cache : (Key.t, int ref * value) Hashtbl.t) =
@@ -1192,7 +1190,8 @@ end)
       let l = ref [] in
       Hashtbl.iter
         begin
-          fun key (freq, v) -> l := (key, !freq, v) :: !l
+          fun key (freq, v) ->
+          l := (key, !freq, v) :: !l
         end
         cache;
       Hashtbl.clear cache;
@@ -1248,8 +1247,7 @@ end)
   let string_of_key _key =
     failwith "OrderedCache does not support 'string_of_key'"
 
-  let (cache : (Key.t, Config.value) Hashtbl.t) =
-    Hashtbl.create Config.capacity
+  let (cache : (Key.t, Config.value) Hashtbl.t) = Hashtbl.create Config.capacity
 
   let queue = Queue.create ()
 
@@ -1434,7 +1432,8 @@ struct
   let get_batch keys =
     KeySet.fold
       begin
-        fun key acc -> KeyMap.add key (get key) acc
+        fun key acc ->
+        KeyMap.add key (get key) acc
       end
       keys
       KeyMap.empty
@@ -1454,8 +1453,10 @@ struct
   let () =
     invalidate_callback_list :=
       begin
-        fun () -> Cache.clear ()
-      end :: !invalidate_callback_list
+        fun () ->
+        Cache.clear ()
+      end
+      :: !invalidate_callback_list
 
   let remove_old_batch = Direct.remove_old_batch
 

@@ -227,8 +227,7 @@ module ArgSpec = struct
     }
 
   let help_flag =
-    SMap.empty
-    |> SMap.add "--help" { doc = "This list of options"; env = None; arg_count = No_Arg }
+    SMap.empty |> SMap.add "--help" { doc = "This list of options"; env = None; arg_count = No_Arg }
 
   let apply_help (values, main) =
     let main help =

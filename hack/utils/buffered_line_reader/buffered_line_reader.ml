@@ -83,8 +83,7 @@ module Functor (Reader : Buffered_line_reader_sig.READER) :
    * call to get_next_line or get_next_bytes. *)
   let rec read_line chunks r =
     let b = Bytes.create chunk_size in
-    Reader.read r.fd ~buffer:b ~offset:0 ~size:chunk_size
-    >>= fun bytes_read ->
+    Reader.read r.fd ~buffer:b ~offset:0 ~size:chunk_size >>= fun bytes_read ->
     if bytes_read == 0 then raise End_of_file;
     let b = Bytes.sub_string b 0 bytes_read in
     match index b '\n' with
@@ -173,8 +172,7 @@ module Functor (Reader : Buffered_line_reader_sig.READER) :
     match !null_reader_ref with
     | Some x -> Reader.return x
     | None ->
-      Reader.open_devnull ()
-      >>= fun fd ->
+      Reader.open_devnull () >>= fun fd ->
       let null_reader = { fd; unconsumed_buffer = ref None } in
       null_reader_ref := Some null_reader;
       Reader.return null_reader

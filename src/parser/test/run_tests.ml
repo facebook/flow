@@ -107,8 +107,7 @@ end = struct
         try return (Hh_json.get_bool_exn v)
         with Assert_failure _ -> failf "invalid value for %S, expected bool" k
       in
-      return (Hh_json.json_of_string content)
-      >>= fun json ->
+      return (Hh_json.json_of_string content) >>= fun json ->
       begin
         match json with
         | Hh_json.JSON_Object props -> return props
@@ -117,39 +116,33 @@ end = struct
       >>= fun props ->
       List.fold_left
         (fun opts (k, v) ->
-          opts
-          >>= fun (test_opts, opts) ->
+          opts >>= fun (test_opts, opts) ->
           match k with
           | "enums" ->
-            get_bool k v >>= (fun v -> return (test_opts, { opts with Parser_env.enums = v }))
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.enums = v })
           | "esproposal_class_instance_fields" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_class_instance_fields = v })
           | "esproposal_class_static_fields" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_class_static_fields = v })
           | "esproposal_decorators" ->
-            get_bool k v
-            >>= (fun v -> return (test_opts, { opts with Parser_env.esproposal_decorators = v }))
+            get_bool k v >>= fun v ->
+            return (test_opts, { opts with Parser_env.esproposal_decorators = v })
           | "esproposal_export_star_as" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_export_star_as = v })
           | "esproposal_optional_chaining" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_optional_chaining = v })
           | "esproposal_nullish_coalescing" ->
-            get_bool k v
-            >>= fun v ->
+            get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_nullish_coalescing = v })
           | "types" ->
-            get_bool k v >>= (fun v -> return (test_opts, { opts with Parser_env.types = v }))
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.types = v })
           | "use_strict" ->
-            get_bool k v >>= (fun v -> return (test_opts, { opts with Parser_env.use_strict = v }))
-          | "intern_comments" -> get_bool k v >>= (fun v -> return ({ intern_comments = v }, opts))
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.use_strict = v })
+          | "intern_comments" -> get_bool k v >>= fun v -> return ({ intern_comments = v }, opts)
           | _ -> failf "unknown option %S" k)
         (return ({ intern_comments = false }, Parser_env.default_parse_options))
         props)
@@ -231,7 +224,6 @@ end = struct
     | (_, None, Some "range")
     | (_, None, Some "source")
     (* Esprima doesn't support type annotations *)
-    
     | (_, None, Some "typeAnnotation")
     | (_, None, Some "typeParameters")
     | (_, None, Some "superTypeParameters")
@@ -243,19 +235,14 @@ end = struct
     | (_, None, Some "exportKind")
     (* Esprima doesn't support decorators *)
     (* https://github.com/estree/estree/blob/master/experimental/decorators.md *)
-    
     | (_, None, Some "decorators")
     (* Esprima doesn't support async functions *)
-    
     | (_, None, Some "async")
     (* TODO: Flow should include this *)
-    
     | ([], Some "sourceType", None)
     (* TODO: enable this in tests *)
-    
     | ([], Some "tokens", None)
     (* Flow doesn't support this *)
-    
     | (_, Some "leadingComments", None)
     | (_, Some "trailingComments", None)
     | (_, Some "innerComments", None) ->
@@ -346,8 +333,8 @@ end = struct
         else
           errors
       | ( JSON_Number actual,
-          (_, Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ })
-        ) ->
+          (_, Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ }) )
+        ->
         if actual <> expected then
           let path = string_of_path path in
           spf "%s: Expected %s, got %s." path expected actual :: errors
@@ -371,15 +358,14 @@ end = struct
         else
           errors
       | ( JSON_String actual,
-          (_, Literal { Ast.Literal.value = Ast.Literal.String expected; raw = _; comments = _ })
-        ) ->
+          (_, Literal { Ast.Literal.value = Ast.Literal.String expected; raw = _; comments = _ }) )
+        ->
         if not (string_value_matches expected actual) then
           let path = string_of_path path in
           spf "%s: Expected %S, got %S." path expected actual :: errors
         else
           errors
-      | (JSON_Null, (_, Literal { Ast.Literal.value = Ast.Literal.Null; raw = _; comments = _ }))
-        ->
+      | (JSON_Null, (_, Literal { Ast.Literal.value = Ast.Literal.Null; raw = _; comments = _ })) ->
         errors
       | (_, _) ->
         let path = string_of_path path in
@@ -705,8 +691,7 @@ end = struct
                     print [(C.Bold C.White, spf "=== %s ===\n" test_name)];
                   print
                     [
-                      (C.Normal C.Red, "[\xE2\x9C\x97] FAIL");
-                      (C.Normal C.Default, spf ": %s\n" key);
+                      (C.Normal C.Red, "[\xE2\x9C\x97] FAIL"); (C.Normal C.Default, spf ": %s\n" key);
                     ];
                   List.iter (fun err -> print [(C.Normal C.Default, spf "    %s\n" err)]) errs;
                   flush stdout;

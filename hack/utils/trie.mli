@@ -61,19 +61,13 @@ val to_list :
   int option -> 'b t -> (string -> 'a) -> ('a -> 'b -> 'c) -> 'c list
 
 val find_impl :
-  ?limit:int option ->
-  bool ->
-  'a t ->
-  string ->
-  (string -> 'a -> 'c) ->
-  'c list
+  ?limit:int option -> bool -> 'a t -> string -> (string -> 'a -> 'c) -> 'c list
 
 val find : 'a t -> string -> 'a
 
 val find_prefix : 'a t -> string -> (string -> 'a -> 'b) -> 'b list
 
-val find_prefix_limit :
-  int -> 'a t -> string -> (string -> 'a -> 'b) -> 'b list
+val find_prefix_limit : int -> 'a t -> string -> (string -> 'a -> 'b) -> 'b list
 
 val remove_one : 'a t -> string -> unit
 

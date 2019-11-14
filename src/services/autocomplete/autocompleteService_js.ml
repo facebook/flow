@@ -39,10 +39,7 @@ let remove_autocomplete_token_from_loc loc =
 let autocomplete_result_to_json ~strip_root result =
   let func_param_to_json param =
     Hh_json.JSON_Object
-      [
-        ("name", Hh_json.JSON_String param.param_name);
-        ("type", Hh_json.JSON_String param.param_ty);
-      ]
+      [("name", Hh_json.JSON_String param.param_name); ("type", Hh_json.JSON_String param.param_ty)]
   in
   let func_details_to_json details =
     match details with
@@ -82,8 +79,7 @@ let autocomplete_response_to_json ~strip_root response =
         [
           ("error", JSON_String error);
           ("result", JSON_Array []);
-            (* TODO: remove this? kept for BC *)
-          
+          (* TODO: remove this? kept for BC *)
         ]
     | Ok completions ->
       let results = List.map (autocomplete_result_to_json ~strip_root) completions in
@@ -182,7 +178,7 @@ let autocomplete_is_valid_member key =
   && (not (key = "constructor"))
   && (* strip out members from prototypes which are implicitly created for
      internal reasons *)
-     not (Reason.is_internal_name key)
+  not (Reason.is_internal_name key)
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -318,6 +314,7 @@ let local_value_identifiers ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
       scope_info
       (fun _ scope acc ->
         let scope_vars = scope.Scope.defs |> SMap.map (fun Def.{ locs; _ } -> Nel.hd locs) in
+
         (* don't suggest lexically-scoped variables declared after the current location.
           this filtering isn't perfect:
 
@@ -542,9 +539,7 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
          (fun (results, errors_to_log) ((name, loc), ty_result) ->
            match ty_result with
            | Ok ty ->
-             let result =
-               autocomplete_create_result (name, ac_loc) (ty, loc_of_aloc ~reader loc)
-             in
+             let result = autocomplete_create_result (name, ac_loc) (ty, loc_of_aloc ~reader loc) in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -617,8 +612,7 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character =
         ~tparams )
   | Some (tparams, ac_loc, Acjsx (ac_name, used_attr_names, cls)) ->
     ( "Acjsx",
-      autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams
-    )
+      autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams )
   | Some (tparams, ac_loc, Actype) ->
     ("Actype", autocomplete_unqualified_type ~reader ~cx ~tparams ~ac_loc ~typed_ast ~file_sig)
   | Some (tparams, ac_loc, Acqualifiedtype qtype) ->

@@ -216,8 +216,7 @@ module Opts = struct
 
   let parse_lines : line list -> (raw_options, error) result =
     let rec loop acc lines =
-      acc
-      >>= fun map ->
+      acc >>= fun map ->
       match lines with
       | [] -> Ok map
       | (line_num, line) :: rest ->
@@ -266,10 +265,8 @@ module Opts = struct
           |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_parse_value msg))
         in
         let config =
-          value
-          >>= fun value ->
-          setter config value
-          |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_set msg))
+          value >>= fun value ->
+          setter config value |> Base.Result.map_error ~f:(fun msg -> (line_num, Failed_to_set msg))
         in
         config >>= loop optparser setter rest
     in
@@ -295,8 +292,7 @@ module Opts = struct
     with Scanf.Scan_failure reason -> Error (spf "Invalid ocaml string: %s" reason)
 
   let optparse_regexp str =
-    optparse_string str
-    >>= fun unescaped ->
+    optparse_string str >>= fun unescaped ->
     try Ok (Str.regexp unescaped)
     with Failure reason -> Error (spf "Invalid regex \"%s\" (%s)" unescaped reason)
 
@@ -372,9 +368,7 @@ module Opts = struct
       ( "file_watcher",
         enum
           [
-            ("none", Options.NoFileWatcher);
-            ("dfind", Options.DFind);
-            ("watchman", Options.Watchman);
+            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
           ]
           (fun opts v -> Ok { opts with file_watcher = Some v }) );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
@@ -501,7 +495,7 @@ module Opts = struct
             |> String.escaped
             |> Base.Result.return
             >>= optparse_regexp
-            >>= (fun v -> Ok { opts with suppress_comments = v :: opts.suppress_comments })) );
+            >>= fun v -> Ok { opts with suppress_comments = v :: opts.suppress_comments }) );
       ( "suppress_type",
         string
           ~init:(fun opts -> { opts with suppress_types = SSet.empty })
@@ -528,8 +522,7 @@ module Opts = struct
       ("sharedmemory.log_level", uint (fun opts shm_log_level -> Ok { opts with shm_log_level }));
       ("traces", uint (fun opts v -> Ok { opts with traces = v }));
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
-      ( "experimental.const_params",
-        boolean (fun opts v -> Ok { opts with enable_const_params = v }) );
+      ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ( "experimental.lsp.code_actions",
         boolean (fun opts v -> Ok { opts with lsp_code_actions = v }) );
@@ -566,9 +559,7 @@ module Opts = struct
       ( "trust_mode",
         enum
           [
-            ("check", Options.CheckTrust);
-            ("silent", Options.SilentTrust);
-            ("none", Options.NoTrust);
+            ("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust);
           ]
           (fun opts trust_mode -> Ok { opts with trust_mode }) );
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
@@ -591,8 +582,7 @@ module Opts = struct
     let rec loop
         (acc : (raw_options * t, error) result)
         (parsers : (string * (raw_values -> t -> (t, opt_error) result)) list) =
-      acc
-      >>= fun (raw_opts, config) ->
+      acc >>= fun (raw_opts, config) ->
       match parsers with
       | [] -> Ok (raw_opts, config)
       | (key, f) :: rest ->
@@ -600,17 +590,15 @@ module Opts = struct
           match SMap.find_opt key raw_opts with
           | None -> Ok (raw_opts, config)
           | Some values ->
-            f values config
-            |> Base.Result.map_error ~f:(error_of_opt_error key)
-            >>= fun config ->
+            f values config |> Base.Result.map_error ~f:(error_of_opt_error key) >>= fun config ->
             let new_raw_opts = SMap.remove key raw_opts in
             Ok (new_raw_opts, config)
         in
         loop acc rest
     in
     fun (init : t) (lines : line list) ->
-      ( parse_lines lines
-        >>= (fun raw_options -> loop (Ok (raw_options, init)) parsers >>= warn_on_unknown_opts)
+      ( parse_lines lines >>= fun raw_options ->
+        loop (Ok (raw_options, init)) parsers >>= warn_on_unknown_opts
         : (t * warning list, error) result )
 end
 
@@ -739,8 +727,7 @@ let empty_config =
 let group_into_sections : line list -> (section list, error) result =
   let is_section_header = Str.regexp "^\\[\\(.*\\)\\]$" in
   let rec loop acc lines =
-    acc
-    >>= fun (seen, sections, (section_name, section_lines)) ->
+    acc >>= fun (seen, sections, (section_name, section_lines)) ->
     match lines with
     | [] ->
       let section = (section_name, Base.List.rev section_lines) in
@@ -794,8 +781,8 @@ let parse_declarations lines config =
   Ok ({ config with declarations }, [])
 
 let parse_options lines config : (config * warning list, error) result =
-  Opts.parse config.options lines
-  >>= (fun (options, warnings) -> Ok ({ config with options }, warnings))
+  Opts.parse config.options lines >>= fun (options, warnings) ->
+  Ok ({ config with options }, warnings)
 
 let parse_version lines config =
   let potential_versions =
@@ -817,12 +804,12 @@ let parse_version lines config =
 
 let parse_lints lines config : (config * warning list, error) result =
   let lines = trim_labeled_lines lines in
-  LintSettings.of_lines config.lint_severities lines
-  >>= (fun lint_severities -> Ok ({ config with lint_severities }, []))
+  LintSettings.of_lines config.lint_severities lines >>= fun lint_severities ->
+  Ok ({ config with lint_severities }, [])
 
 let parse_strict lines config =
   let lines = trim_labeled_lines lines in
-  StrictModeSettings.of_lines lines >>= (fun strict_mode -> Ok ({ config with strict_mode }, []))
+  StrictModeSettings.of_lines lines >>= fun strict_mode -> Ok ({ config with strict_mode }, [])
 
 (* Basically fold_left but with early exit when f returns an Error *)
 let rec fold_left_stop_on_error
@@ -830,7 +817,7 @@ let rec fold_left_stop_on_error
     ('acc, 'error) result =
   match l with
   | [] -> Ok acc
-  | elem :: rest -> f acc elem >>= (fun acc -> fold_left_stop_on_error rest ~acc ~f)
+  | elem :: rest -> f acc elem >>= fun acc -> fold_left_stop_on_error rest ~acc ~f
 
 (* Rollouts are based on randomness, but we want it to be stable from run to run. So we seed our
  * pseudo random number generator with
@@ -924,13 +911,12 @@ let parse_rollouts config lines =
               ( line_num,
                 "Malformed rollout. A rollout should be an identifier followed by a list of groups, "
                 ^ "like `myRollout=10% on, 50% off`" ))
-      >>= (fun rollouts -> Ok { config with rollouts }))
+      >>= fun rollouts -> Ok { config with rollouts })
 
 let parse_section config ((section_ln, section), lines) : (config * warning list, error) result =
   match (section, lines) with
   | ("", []) when section_ln = 0 -> Ok (config, [])
-  | ("", (ln, _) :: _) when section_ln = 0 ->
-    Error (ln, "Unexpected config line not in any section")
+  | ("", (ln, _) :: _) when section_ln = 0 -> Error (ln, "Unexpected config line not in any section")
   | ("include", _) -> parse_includes lines config
   | ("ignore", _) -> parse_ignores lines config
   | ("libs", _) -> parse_libs lines config
@@ -969,8 +955,8 @@ let parse =
                   Error (line_num, spf "Unknown group %S in rollout %S" group_name rollout_name)
             else
               Ok ((line_num, line) :: acc))
-        >>= (fun lines -> Ok ((section_name, Base.List.rev lines) :: acc)))
-    >>= (fun sections -> Ok (config, Base.List.rev sections))
+        >>= fun lines -> Ok ((section_name, Base.List.rev lines) :: acc))
+    >>= fun sections -> Ok (config, Base.List.rev sections)
   in
   let process_rollouts config sections =
     let rollout_section_lines = ref None in
@@ -984,31 +970,27 @@ let parse =
     parse_rollouts config !rollout_section_lines >>= filter_sections_by_rollout sections
   in
   let rec loop acc sections =
-    acc
-    >>= fun (config, warn_acc) ->
+    acc >>= fun (config, warn_acc) ->
     match sections with
     | [] -> Ok (config, Base.List.rev warn_acc)
     | section :: rest ->
-      parse_section config section
-      >>= fun (config, warnings) ->
+      parse_section config section >>= fun (config, warnings) ->
       let acc = Ok (config, Base.List.rev_append warnings warn_acc) in
       loop acc rest
   in
   fun config lines ->
-    group_into_sections lines
-    >>= process_rollouts config
-    >>= (fun (config, sections) -> loop (Ok (config, [])) sections)
+    group_into_sections lines >>= process_rollouts config >>= fun (config, sections) ->
+    loop (Ok (config, [])) sections
 
 let is_not_comment =
   let comment_regexps =
     [
       Str.regexp_string "#";
       (* Line starts with # *)
-        Str.regexp_string ";";
+      Str.regexp_string ";";
       (* Line starts with ; *)
-        Str.regexp_string "\240\159\146\169";
-        (* Line starts with poop emoji *)
-
+      Str.regexp_string "\240\159\146\169";
+      (* Line starts with poop emoji *)
     ]
   in
   fun (_, line) ->
@@ -1043,9 +1025,8 @@ let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
       (acc : (config * warning list, error) result)
       (fn : config -> (config * warning list, error) result) =
     let ( >>= ) = Base.Result.( >>= ) in
-    acc
-    >>= fun (config, warn_acc) ->
-    fn config >>= (fun (config, warnings) -> Ok (config, Base.List.rev_append warnings warn_acc))
+    acc >>= fun (config, warn_acc) ->
+    fn config >>= fun (config, warnings) -> Ok (config, Base.List.rev_append warnings warn_acc)
   in
   let ignores_lines = Base.List.map ~f:(fun s -> (1, s)) ignores in
   let untyped_lines = Base.List.map ~f:(fun s -> (1, s)) untyped in

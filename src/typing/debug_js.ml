@@ -222,14 +222,12 @@ and _json_of_t_impl json_cx t =
         [
           ("enum_id", JSON_String (ALoc.debug_to_string (enum_id :> ALoc.t)));
           ("enum_name", JSON_String enum_name);
-          ( "members",
-            JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)) );
+          ("members", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)));
         ]
       | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]
       | EvalT (t, defer_use_t, id) ->
         [
-          ("type", _json_of_t json_cx t);
-          ("defer_use_type", json_of_defer_use_t json_cx defer_use_t);
+          ("type", _json_of_t json_cx t); ("defer_use_type", json_of_defer_use_t json_cx defer_use_t);
         ]
         @
         let evaluated = Context.evaluated json_cx.cx in
@@ -270,8 +268,7 @@ and _json_of_t_impl json_cx t =
           (let ts = UnionRep.members rep in
            ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) ts)));
         ]
-      | MergedT (_, uses) ->
-        [("uses", JSON_Array (Base.List.map ~f:(_json_of_use_t json_cx) uses))]
+      | MergedT (_, uses) -> [("uses", JSON_Array (Base.List.map ~f:(_json_of_use_t json_cx) uses))]
       | DefT (_, _, IdxWrapper t) -> [("wrappedObj", _json_of_t json_cx t)]
       | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
         [("config", _json_of_t json_cx config); ("instance", _json_of_t json_cx instance)]
@@ -282,8 +279,7 @@ and _json_of_t_impl json_cx t =
       | DefT (_, _, SingletonNumT (_, raw)) -> [("literal", JSON_String raw)]
       | DefT (_, _, SingletonBoolT b) -> [("literal", JSON_Bool b)]
       | DefT (_, _, TypeT (_, t)) -> [("result", _json_of_t json_cx t)]
-      | AnnotT (_, t, use_desc) ->
-        [("type", _json_of_t json_cx t); ("useDesc", JSON_Bool use_desc)]
+      | AnnotT (_, t, use_desc) -> [("type", _json_of_t json_cx t); ("useDesc", JSON_Bool use_desc)]
       | OpaqueT (_, opaquetype) ->
         let t =
           match opaquetype.underlying_t with
@@ -407,8 +403,7 @@ and _json_of_use_t_impl json_cx t =
         ]
       @
       match t with
-      | UseT (op, t) ->
-        [("use", JSON_String (string_of_use_op op)); ("type", _json_of_t json_cx t)]
+      | UseT (op, t) -> [("use", JSON_String (string_of_use_op op)); ("type", _json_of_t json_cx t)]
       | AssertArithmeticOperandT _ -> []
       | AssertBinaryInLHST _ -> []
       | AssertBinaryInRHST _ -> []
@@ -442,10 +437,7 @@ and _json_of_use_t_impl json_cx t =
       | GetElemT (_, _, indext, elemt) ->
         [("indexType", _json_of_t json_cx indext); ("elemType", _json_of_t json_cx elemt)]
       | CallElemT (_, _, indext, action) ->
-        [
-          ("indexType", _json_of_t json_cx indext);
-          ("funType", json_of_methodaction json_cx action);
-        ]
+        [("indexType", _json_of_t json_cx indext); ("funType", json_of_methodaction json_cx action)]
       | GetStaticsT (_, t) -> [("type", _json_of_t json_cx t)]
       | GetProtoT (_, t)
       | SetProtoT (_, t) ->
@@ -492,8 +484,7 @@ and _json_of_use_t_impl json_cx t =
           | Some targs -> [("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs))]
           | None -> [])
         @ [("tvar", _json_of_t json_cx tvar)]
-      | ThisSpecializeT (_, this, k) ->
-        ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
+      | ThisSpecializeT (_, this, k) -> ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
       | VarianceCheckT (_, _, targs, polarity) ->
         [
           ("types", JSON_Array (Base.List.map ~f:(_json_of_t json_cx) targs));
@@ -879,8 +870,7 @@ and json_of_objtype_impl json_cx objtype =
         | None -> []
         | Some d -> [("dictType", json_of_dicttype json_cx d)])
       @ [
-          ("propTypes", json_of_pmap json_cx pmap);
-          ("prototype", _json_of_t json_cx objtype.proto_t);
+          ("propTypes", json_of_pmap json_cx pmap); ("prototype", _json_of_t json_cx objtype.proto_t);
         ] ))
 
 and json_of_dicttype json_cx = check_depth json_of_dicttype_impl json_cx
@@ -952,15 +942,14 @@ and json_of_changeset_impl _json_cx =
     fun (changed_vars, changed_refis) ->
       JSON_Object
         [
-          ("vars", json_of_changed_vars changed_vars);
-          ("refis", json_of_changed_refis changed_refis);
+          ("vars", json_of_changed_vars changed_vars); ("refis", json_of_changed_refis changed_refis);
         ])
 
 and json_of_funtype json_cx = check_depth json_of_funtype_impl json_cx
 
 and json_of_funtype_impl
-    json_cx
-    { this_t; params; rest_param; return_t; is_predicate; closure_t; changeset; def_reason } =
+    json_cx { this_t; params; rest_param; return_t; is_predicate; closure_t; changeset; def_reason }
+    =
   Hh_json.(
     let rec params_names (any, names_rev) = function
       | [] ->
@@ -1139,8 +1128,7 @@ and json_of_spread_operand_slice json_cx { Object.Spread.reason; prop_map; dict 
       [
         ("reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None reason);
         ( "props",
-          JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p) :: acc) prop_map [])
-        );
+          JSON_Object (SMap.fold (fun k p acc -> (k, json_of_prop json_cx p) :: acc) prop_map []) );
         ( "dict",
           match dict with
           | Some dict -> json_of_dicttype json_cx dict
@@ -1978,9 +1966,7 @@ and dump_use_t_ (depth, tvars) cx t =
         | And -> "And"
         | Or -> "Or"
       in
-      let resolved xs =
-        spf "[%s]" (String.concat "; " (Base.List.map ~f:slice (Nel.to_list xs)))
-      in
+      let resolved xs = spf "[%s]" (String.concat "; " (Base.List.map ~f:slice (Nel.to_list xs))) in
       let resolve = function
         | Next -> "Next"
         | List0 (todo, j) ->
@@ -2000,8 +1986,7 @@ and dump_use_t_ (depth, tvars) cx t =
         | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
       in
       let acc_element = function
-        | Spread.InlineSlice { Spread.reason; prop_map; dict } ->
-          operand_slice reason prop_map dict
+        | Spread.InlineSlice { Spread.reason; prop_map; dict } -> operand_slice reason prop_map dict
         | Spread.ResolvedSlice xs -> resolved xs
       in
       let spread target state =
@@ -2129,10 +2114,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | GetProtoT (_, arg) -> p ~extra:(kid arg) t
     | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
     | GuardT (pred, result, sink) ->
-      p
-        ~reason:false
-        ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (kid sink))
-        t
+      p ~reason:false ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (kid sink)) t
     | HasOwnPropT _ -> p t
     | IdxUnMaybeifyT _ -> p t
     | IdxUnwrap _ -> p t
@@ -2732,8 +2714,7 @@ let dump_error_message =
         (dump_reason cx reason)
         (dump_reason cx valid)
         (string_of_use_op use_op)
-    | EUnsupportedKeyInObjectType loc ->
-      spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
+    | EUnsupportedKeyInObjectType loc -> spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
     | EPredAnnot loc -> spf "EPredAnnot (%s)" (string_of_aloc loc)
     | ERefineAnnot loc -> spf "ERefineAnnot (%s)" (string_of_aloc loc)
     | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)
@@ -2793,15 +2774,9 @@ let dump_error_message =
     | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2) ->
-      spf
-        "EObjectComputedPropertyAccess (%s, %s)"
-        (dump_reason cx reason1)
-        (dump_reason cx reason2)
+      spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EObjectComputedPropertyAssign (reason1, reason2) ->
-      spf
-        "EObjectComputedPropertyAssign (%s, %s)"
-        (dump_reason cx reason1)
-        (dump_reason cx reason2)
+      spf "EObjectComputedPropertyAssign (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
     | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
       spf
@@ -2923,8 +2898,7 @@ let dump_error_message =
       spf "EInexactSpread (%s, %s)" (dump_reason cx reason) (dump_reason cx reason_op)
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
-    | ECannotDelete (l1, r1) ->
-      spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
+    | ECannotDelete (l1, r1) -> spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
     | ESignatureVerification sve ->
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg
@@ -2941,8 +2915,7 @@ let dump_error_message =
         (dump_reason cx spread_reason)
         (dump_reason cx object_reason)
         (dump_reason cx key_reason)
-    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _ }
-      ->
+    | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind = _ } ->
       spf
         "EUnableToSpread (%s) (%s) (%s) (%s)"
         (dump_reason cx spread_reason)

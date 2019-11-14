@@ -157,9 +157,7 @@ let rec split_overlapping_ranges accum = function
         let head_loc = (loc1_start, loc2_start - 1) in
         let overlap_loc = (loc2_start, loc1_end) in
         let tail_loc = (loc1_end + 1, loc2_end) in
-        ( (head_loc, is_covered1)
-          :: (overlap_loc, Coverage.m_or (is_covered1, is_covered2))
-          :: accum,
+        ( (head_loc, is_covered1) :: (overlap_loc, Coverage.m_or (is_covered1, is_covered2)) :: accum,
           (tail_loc, is_covered2) :: rest )
       else
         (* range 2 is in the middle of range 1, so split range 1 and consume

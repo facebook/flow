@@ -237,8 +237,7 @@ end = struct
               ~is_explicit:true
               members.string_members
               members.defaulted_members
-          | Some Enum_common.Symbol ->
-            SymbolBody { SymbolBody.members = members.defaulted_members }
+          | Some Enum_common.Symbol -> SymbolBody { SymbolBody.members = members.defaulted_members }
           | None ->
             let bools_len = List.length members.boolean_members in
             let nums_len = List.length members.number_members in

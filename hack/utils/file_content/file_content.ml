@@ -82,8 +82,7 @@ let invalid_position p =
           p.column))
 
 (* this returns 0-based offsets *)
-let get_offsets (content : string) (queries : position * position) : int * int
-    =
+let get_offsets (content : string) (queries : position * position) : int * int =
   match get_offsets content queries 1 1 0 (None, None) with
   | (Some r1, Some r2) -> (r1, r2)
   | (None, _) -> invalid_position (fst queries)

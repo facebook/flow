@@ -66,8 +66,7 @@ class allow_temporary_types_mapper =
     method! on_Arr () t =
       function
       | Ty.{ arr_literal = true; arr_elt_t; _ } ->
-        Ty.Generic
-          (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
+        Ty.Generic (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
       | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
@@ -158,8 +157,7 @@ class allow_temporary_arr_and_obj_types_mapper =
     method! on_Arr () t =
       function
       | Ty.{ arr_literal = true; arr_elt_t; _ } ->
-        Ty.Generic
-          (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
+        Ty.Generic (Utils.temporary_arraylit_symbol, Ty.TypeAliasKind, Some [this#on_t () arr_elt_t])
       | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
@@ -233,9 +231,7 @@ let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
 let serialize ?(imports_react = false) loc ty =
-  (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty
-  |> simplify
-  |> Ty_serializer.type_
+  (new Utils.stylize_ty_mapper ~imports_react ())#on_t loc ty |> simplify |> Ty_serializer.type_
   |> function
   | Ok ast -> Utils.patch_up_type_ast ast
   | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))

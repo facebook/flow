@@ -48,8 +48,7 @@ let add ?singleton ~commit ~rollback transaction =
 
 let commit transaction = Lwt_list.iter_s (fun mutator -> mutator.commit ()) transaction.mutators
 
-let rollback transaction =
-  Lwt_list.iter_s (fun mutator -> mutator.rollback ()) transaction.mutators
+let rollback transaction = Lwt_list.iter_s (fun mutator -> mutator.rollback ()) transaction.mutators
 
 external reraise : exn -> 'a = "%reraise"
 

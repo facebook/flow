@@ -43,8 +43,7 @@ let sharedmem_failed_anonymous_memfd_init _ = ()
 
 let sharedmem_failed_to_use_shm_dir ~shm_dir:_ ~reason:_ = ()
 
-let sharedmem_less_than_minimum_available ~shm_dir:_ ~shm_min_avail:_ ~avail:_
-    =
+let sharedmem_less_than_minimum_available ~shm_dir:_ ~shm_min_avail:_ ~avail:_ =
   ()
 
 let sharedmem_access_sample ~heap_name:_ ~key:_ ~write_time:_ = ()

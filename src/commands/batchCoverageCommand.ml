@@ -155,9 +155,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
       print_endlinef "\nCoverage results from %d file(s):\n" num_files_in_dir;
       Base.List.iter
         ~f:(fun fstats ->
-          let (file, trusted, covered, total, trusted_percentage, percentage) =
-            file_stats fstats
-          in
+          let (file, trusted, covered, total, trusted_percentage, percentage) = file_stats fstats in
           match (trusted_percentage, trusted) with
           | (Some p, Some t) ->
             print_endlinef

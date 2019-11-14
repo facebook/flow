@@ -49,9 +49,7 @@ module Reqs = struct
     }
 
   let add_impl require requirer require_locs reqs =
-    let impls =
-      RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.impls
-    in
+    let impls = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.impls in
     { reqs with impls }
 
   let add_dep_impl =

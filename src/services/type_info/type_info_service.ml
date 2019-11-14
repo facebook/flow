@@ -20,8 +20,7 @@ let type_at_pos
     content
     line
     col =
-  Types_js.type_contents ~options ~env ~profiling content file
-  >|= function
+  Types_js.type_contents ~options ~env ~profiling content file >|= function
   | Error str -> Error (str, None)
   | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
     let loc = Loc.make file line col in
@@ -73,8 +72,7 @@ let insert_type
     ~location_is_strict:strict
     ~ambiguity_strategy =
   Insert_type.(
-    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key
-    >|= function
+    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
     | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
       begin
         try
@@ -97,8 +95,7 @@ let insert_type
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   Autofix_exports.(
-    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key
-    >|= function
+    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
     | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
       let sv_errors = set_of_fixable_signature_verification_locations file_sig in
       let fix_sv_errors = fix_signature_verification_errors ~full_cx ~file_sig ~typed_ast in
@@ -134,8 +131,7 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
 
 let suggest ~options ~env ~profiling file_name file_content =
   let file_key = File_key.SourceFile file_name in
-  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key
-  >|= function
+  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
   | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let ty_query = Query_types.suggest_types cx file_sig tast in
@@ -156,14 +152,12 @@ let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_content
         CodeActionKind.(
           let { textDocument; range = _; context } = params in
           let uri = TextDocumentIdentifier.(textDocument.uri) in
-          Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key
-          >|= function
+          Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key >|= function
           | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
             Autofix_exports.(
               let fixable_locs = set_of_fixable_signature_verification_locations file_sig in
               if
-                contains_kind_opt ~default:true quickfix context.only
-                && LocSet.mem loc fixable_locs
+                contains_kind_opt ~default:true quickfix context.only && LocSet.mem loc fixable_locs
               then
                 match
                   fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc

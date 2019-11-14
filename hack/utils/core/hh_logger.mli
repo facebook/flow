@@ -42,8 +42,7 @@ module Level : sig
   val log_duration : t -> string -> float -> float
 end
 
-val log :
-  ?lvl:Level.t -> ('a, unit, string, string, string, unit) format6 -> 'a
+val log : ?lvl:Level.t -> ('a, unit, string, string, string, unit) format6 -> 'a
 
 val log_duration : string -> float -> float
 

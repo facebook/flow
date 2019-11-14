@@ -175,9 +175,7 @@ let object_property
     match key with
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
       let acc = object_named_property ~has_default cx acc loc x comments in
-      ( acc,
-        x :: xs,
-        Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }) )
+      (acc, x :: xs, Property.Identifier ((loc, acc.current), { Ast.Identifier.name = x; comments }))
     | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
       let acc = object_named_property ~has_default cx acc loc x None in
       (acc, x :: xs, Property.Literal (loc, lit))

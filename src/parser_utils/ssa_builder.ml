@@ -276,10 +276,7 @@ struct
       method assert_ssa_env (env0 : Env.t) : unit =
         let env0 = SMap.values env0 in
         let ssa_env = SMap.values ssa_env in
-        List.iter2
-          (fun { val_ref; _ } value -> Val.resolve ~unresolved:value !val_ref)
-          ssa_env
-          env0
+        List.iter2 (fun { val_ref; _ } value -> Val.resolve ~unresolved:value !val_ref) ssa_env env0
 
       method empty_ssa_env : Env.t = SMap.map (fun _ -> Val.empty) ssa_env
 
@@ -322,8 +319,7 @@ struct
         this#resolve_havocs bindings;
         ssa_env <- old_ssa_env
 
-      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
-          =
+      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
         fun ?lexical loc bindings visit node ->
           let saved_state = this#push_ssa_env bindings in
           this#run

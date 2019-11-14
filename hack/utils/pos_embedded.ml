@@ -235,8 +235,7 @@ let make_from_lexing_pos pos_file pos_start pos_end =
     ( File_pos_small.of_lexing_pos pos_start,
       File_pos_small.of_lexing_pos pos_end )
   with
-  | (Some pos_start, Some pos_end) ->
-    Pos_small { pos_file; pos_start; pos_end }
+  | (Some pos_start, Some pos_end) -> Pos_small { pos_file; pos_start; pos_end }
   | (_, _) ->
     Pos_large
       {
@@ -279,8 +278,7 @@ let btw_nocheck x1 x2 =
     Pos_large
       { pos_file; pos_start = small_to_large_file_pos pos_start; pos_end }
   | (Pos_large { pos_file; pos_start; _ }, Pos_small { pos_end; _ }) ->
-    Pos_large
-      { pos_file; pos_start; pos_end = small_to_large_file_pos pos_end }
+    Pos_large { pos_file; pos_start; pos_end = small_to_large_file_pos pos_end }
 
 let set_file pos_file pos =
   match pos with
@@ -291,8 +289,7 @@ let set_file pos_file pos =
 
 let to_absolute p = set_file (Relative_path.to_absolute (filename p)) p
 
-let to_relative p =
-  set_file (Relative_path.create_detect_prefix (filename p)) p
+let to_relative p = set_file (Relative_path.create_detect_prefix (filename p)) p
 
 let btw x1 x2 =
   if filename x1 <> filename x2 then failwith "Position in separate files";
@@ -509,8 +506,7 @@ let make_from_lnum_bol_cnum ~pos_file ~pos_start ~pos_end =
         ~pos_bol:bol_end
         ~pos_cnum:cnum_end )
   with
-  | (Some pos_start, Some pos_end) ->
-    Pos_small { pos_file; pos_start; pos_end }
+  | (Some pos_start, Some pos_end) -> Pos_small { pos_file; pos_start; pos_end }
   | (_, _) ->
     Pos_large
       {

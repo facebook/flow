@@ -239,14 +239,14 @@ and reason_desc_function =
 type reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
-  | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty
-    | RVoid | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _
-    | RStringLit _ | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit
-    | RObjectType | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit
-    | RArrayType | RROArrayType | RTupleType | RTupleElement | RTupleLength _
-    | RTupleOutOfBoundsAccess | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType
-    | RFunctionUnusedArgument | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _
-    | RJSXElement _ | RJSXText | RFbt ) as r ->
+  | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
+    | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
+    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
+    | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
+    | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
+    | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
+      ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
@@ -260,11 +260,11 @@ let rec map_desc_locs f = function
     | RSuper | RNoSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _
     | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RIdentifier _
     | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _
-    | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
-    | RUnknownProperty _ | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _
-    | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
-    | RImportStar _ | RDefaultImportedType _ | RCode _ | RCustom _ | RIncompatibleInstantiation _
-    | ROpaqueType _ | RObjectMapi ) as r ->
+    | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
+    | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _ | RUntypedModule _
+    | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
+    | RDefaultImportedType _ | RCode _ | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _
+    | RObjectMapi ) as r ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RImplicitReturn desc -> RImplicitReturn (map_desc_locs f desc)
@@ -299,8 +299,8 @@ let rec map_desc_locs f = function
   | RTrusted desc -> RTrusted (map_desc_locs f desc)
   | RPrivate desc -> RPrivate (map_desc_locs f desc)
   | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _
-    | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent
-    | RReactStatics | RReactDefaultProps | RReactState | RReactPropTypes | RReactChildren ) as r ->
+    | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent | RReactStatics
+    | RReactDefaultProps | RReactState | RReactPropTypes | RReactChildren ) as r ->
     r
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
@@ -409,7 +409,7 @@ let json_of_loc_props ?(strip_root = None) ?(catch_offset_errors = false) ~offse
           ("line", int_ loc.start.line);
           (* It's not ideal that we use a different column numbering system here
            * versus other places (like the estree translator) *)
-            ("column", int_ (loc.start.column + 1));
+          ("column", int_ (loc.start.column + 1));
         ]
         @
         match offset_table with
@@ -1111,8 +1111,7 @@ and code_desc_of_operation =
           | `Binary Xor -> 3
           | `Binary BitAnd -> 4
           | `Binary (Equal | NotEqual | StrictEqual | StrictNotEqual) -> 5
-          | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof)
-            ->
+          | `Binary (LessThan | LessThanEqual | GreaterThan | GreaterThanEqual | In | Instanceof) ->
             6
           | `Binary (LShift | RShift | RShift3) -> 7
           | `Binary (Plus | Minus) -> 8
@@ -1200,8 +1199,7 @@ and code_desc_of_property ~optional property =
     else
       "." )
     ^ x
-  | Ast.Expression.Member.PropertyPrivateName (_, (_, { Ast.Identifier.name = x; comments = _ }))
-    ->
+  | Ast.Expression.Member.PropertyPrivateName (_, (_, { Ast.Identifier.name = x; comments = _ })) ->
     ( if optional then
       "?.#"
     else
