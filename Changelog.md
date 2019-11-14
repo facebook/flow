@@ -1,3 +1,7 @@
+### 0.112.1
+
+* Facebook-only logging fixes for autocomplete
+
 ### 0.112.0
 
 Likely to cause new Flow errors:
