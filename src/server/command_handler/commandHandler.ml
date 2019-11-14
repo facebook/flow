@@ -111,36 +111,47 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
   | Ok (cx, info, file_sig, tast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
+            let open AutocompleteService_js in
             let (ac_type_string, results_res) =
-              AutocompleteService_js.autocomplete_get_results
-                ~reader
-                cx
-                file_sig
-                tast
-                trigger_character
-            in
-            let (results, errors_to_log, response) =
-              let open AutocompleteService_js in
-              match results_res with
-              | AcResult { results; errors_to_log } -> (results, errors_to_log, Ok results)
-              | AcFatalError error -> ([], [error], Error error)
-            in
-            let result_string =
-              match (results, errors_to_log) with
-              | (_, []) -> "SUCCESS"
-              | ([], _ :: _) -> "FAILURE"
-              | (_ :: _, _ :: _) -> "PARTIAL"
+              let cursor_loc =
+                let (line, column) = cursor in
+                Loc.make path line column
+              in
+              autocomplete_get_results ~reader cx file_sig tast trigger_character cursor_loc
             in
             let json_props_to_log =
-              let open Hh_json in
-              ("ac_type", JSON_String ac_type_string)
-              :: ("result", JSON_String result_string)
-              :: ("count", JSON_Number (results |> List.length |> string_of_int))
-              :: ("errors", JSON_Array (List.map (fun s -> JSON_String s) errors_to_log))
+              ("ac_type", Hh_json.JSON_String ac_type_string)
               :: ("docblock", Docblock.json_of_docblock info)
               :: initial_json_props
-              |> fold_json_of_parse_errors parse_errors
             in
+            let (response, json_props_to_log) =
+              let open Hh_json in
+              match results_res with
+              | AcResult { results; errors_to_log } ->
+                let result_string =
+                  match (results, errors_to_log) with
+                  | (_, []) -> "SUCCESS"
+                  | ([], _ :: _) -> "FAILURE"
+                  | (_ :: _, _ :: _) -> "PARTIAL"
+                in
+                ( Ok results,
+                  ("result", JSON_String result_string)
+                  :: ("count", JSON_Number (results |> List.length |> string_of_int))
+                  :: ("errors", JSON_Array (List.map (fun s -> JSON_String s) errors_to_log))
+                  :: json_props_to_log )
+              | AcEmpty reason ->
+                ( Ok [],
+                  ("result", JSON_String "SUCCESS")
+                  :: ("count", JSON_Number "0")
+                  :: ("empty_reason", JSON_String reason)
+                  :: json_props_to_log )
+              | AcFatalError error ->
+                ( Error error,
+                  ("result", JSON_String "FAILURE")
+                  :: ("errors", JSON_Array [JSON_String error])
+                  :: json_props_to_log )
+            in
+            let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
             Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))))
 
 let check_file ~options ~env ~profiling ~force file_input =

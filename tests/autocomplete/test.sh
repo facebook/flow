@@ -226,3 +226,19 @@ assert_ok \
 printf "qualified-type-annotation-require.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty qualified-type-annotation-require.js 5 23 < qualified-type-annotation-require.js
+
+printf "comments.js (line) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 3 8 < comments.js
+
+printf "comments.js (block) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty comments.js 5 8 < comments.js
+
+printf "literal.js (inside string) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 3 16 < literal.js
+
+printf "literal.js (inside regex) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 5 16 < literal.js

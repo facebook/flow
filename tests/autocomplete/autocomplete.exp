@@ -4016,3 +4016,7 @@ qualified-type-annotation-require.js = {
     }
   ]
 }
+comments.js (line) = {"result":[]}
+comments.js (block) = {"result":[]}
+literal.js (inside string) = {"result":[]}
+literal.js (inside regex) = {"result":[]}

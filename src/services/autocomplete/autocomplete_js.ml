@@ -10,16 +10,29 @@ type ident_type =
   | JSXIdent
 
 type autocomplete_type =
-  | Acempty (* no results, like binding indentifiers, strings or comments *)
+  (* ignore extraneous requests the IDE sends *)
+  | Acignored
+  (* binding identifiers introduce new names *)
+  | Acbinding
+  (* inside a comment *)
+  | Accomment
+  (* identifier references *)
   | Acid of {
       id_type: ident_type;
       include_super: bool;
       include_this: bool;
     }
-  | Ackey (* object key, not supported yet *)
+  (* object key, not supported yet *)
+  | Ackey
+  (* inside a literal like a string or regex *)
+  | Acliteral
+  (* type identifiers *)
   | Actype
+  (* qualified type identifiers *)
   | Acqualifiedtype of Type.t
+  (* member expressions *)
   | Acmem of Type.t
+  (* JSX attributes *)
   | Acjsx of string * SSet.t * Type.t
 
 let autocomplete_suffix = "AUTO332"
@@ -55,9 +68,11 @@ let type_of_qualification =
 
 exception Found of Type.typeparam list * ALoc.t * autocomplete_type
 
-class process_request_searcher (from_trigger_character : bool) =
+class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper as super
+
+    method covers_target loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
 
     method find : 'a. ALoc.t -> autocomplete_type -> 'a =
       fun loc x ->
@@ -66,10 +81,17 @@ class process_request_searcher (from_trigger_character : bool) =
           | Acid _ when from_trigger_character ->
             (* space is a trigger character, so this avoids completing immediately following
                a space ('.' is also a trigger, but it'd be an Acmem for member expressions) *)
-            Acempty
+            Acignored
           | _ -> x
         in
         this#annot_with_tparams (fun tparams -> raise (Found (tparams, loc, x)))
+
+    method! comment ((loc, _) as c) =
+      if this#covers_target loc then
+        (* don't autocomplete in comments *)
+        this#find loc Accomment
+      else
+        super#comment c
 
     method! t_identifier ident =
       match identifier_is_autocomplete ident with
@@ -126,7 +148,7 @@ class process_request_searcher (from_trigger_character : bool) =
         | Some loc ->
           (* don't offer suggestions for bindings, because this is where names are created,
              so existing names aren't useful. *)
-          this#find loc Acempty
+          this#find loc Acbinding
         | None -> ident)
 
     method! jsx_opening_element elt =
@@ -159,6 +181,24 @@ class process_request_searcher (from_trigger_character : bool) =
           this#find loc (Acjsx (attribute_name, used_attr_names, component_t)))
         found;
       super#jsx_opening_element elt
+
+    method! jsx_attribute_value value =
+      let open Flow_ast.JSX.Attribute in
+      match value with
+      | Literal ((loc, _), _) when this#covers_target loc -> this#find loc Acliteral
+      | _ -> super#jsx_attribute_value value
+
+    method! pattern_object_property_key ?kind key =
+      let open Flow_ast.Pattern.Object.Property in
+      match key with
+      | Literal (loc, _) when this#covers_target loc -> this#find loc Acliteral
+      | _ -> super#pattern_object_property_key ?kind key
+
+    method! object_key key =
+      let open Flow_ast.Expression.Object.Property in
+      match key with
+      | Literal ((loc, _), _) when this#covers_target loc -> this#find loc Acliteral
+      | _ -> super#object_key key
 
     (* we don't currently autocomplete object keys *)
     method! object_key_identifier x =
@@ -201,6 +241,12 @@ class process_request_searcher (from_trigger_character : bool) =
         | _ -> ()
       end;
       id
+
+    method! expression expr =
+      let open Flow_ast.Expression in
+      match expr with
+      | ((loc, _), Literal _) when this#covers_target loc -> this#find loc Acliteral
+      | _ -> super#expression expr
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =
@@ -213,9 +259,9 @@ let autocomplete_member _cx ac_name _ac_loc _this_t = is_autocomplete ac_name
 
 let autocomplete_jsx _cx ac_name _ac_loc _class_t = is_autocomplete ac_name
 
-let process_location ~trigger_character ~typed_ast =
+let process_location ~trigger_character ~cursor ~typed_ast =
   try
-    ignore ((new process_request_searcher (trigger_character <> None))#program typed_ast);
+    ignore ((new process_request_searcher (trigger_character <> None) cursor)#program typed_ast);
     None
   with Found (tparams, loc, res) -> Some (tparams, loc, res)
 
