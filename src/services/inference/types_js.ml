@@ -2258,15 +2258,6 @@ end = struct
               merge_internal_error ) =
       let n = FilenameSet.cardinal all_dependent_files in
       if n > 0 then Hh_logger.info "recheck %d dependent files:" n;
-
-      let _ =
-        FilenameSet.fold
-          (fun f i ->
-            Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
-            i + 1)
-          all_dependent_files
-          1
-      in
       merge
         ~transaction
         ~reader
