@@ -42,7 +42,3 @@ declare var cc: P;
 if (cc.c) {
   cc?.c();
 }
-
-if (cc.b?.c) { // Refinements currently don't work in this case
-  var xxx: number = cc.b.c.d;
-}

@@ -1153,48 +1153,6 @@ References:
          ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- method_calls.js:43:3
-
-Cannot call `cc?.c` because undefined [1] is not a function.
-
-   method_calls.js:43:3
-   43|   cc?.c();
-         ^^^^^^^
-
-References:
-   method_calls.js:40:15
-   40| type P = {c?: () => void, b?: {c?: {d: number}}};
-                     ^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- method_calls.js:47:21
-
-Cannot get `cc.b.c` because property `c` is missing in undefined [1].
-
-   method_calls.js:47:21
-   47|   var xxx: number = cc.b.c.d;
-                           ^^^^^^
-
-References:
-   method_calls.js:40:31
-   40| type P = {c?: () => void, b?: {c?: {d: number}}};
-                                     ^^^^^^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- method_calls.js:47:21
-
-Cannot get `cc.b.c.d` because property `d` is missing in undefined [1].
-
-   method_calls.js:47:21
-   47|   var xxx: number = cc.b.c.d;
-                           ^^^^^^^^
-
-References:
-   method_calls.js:40:36
-   40| type P = {c?: () => void, b?: {c?: {d: number}}};
-                                          ^^^^^^^^^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------- private_properties.js:6:6
 
 Cannot cast `this?.#foo` to empty because number [1] is incompatible with empty [2].
@@ -1294,6 +1252,245 @@ References:
    private_properties.js:15:6
    15|     (this?.#baz: empty);
             ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:6:21
+
+Cannot get `cc.b.c` because property `c` is missing in undefined [1].
+
+   refinements.js:6:21
+   6|   var xxx: number = cc.b.c.d;
+                          ^^^^^^
+
+References:
+   refinements.js:3:31
+   3| type P = {c?: () => void, b?: {c?: {d: number}}};
+                                    ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:6:21
+
+Cannot get `cc.b.c.d` because property `d` is missing in undefined [1].
+
+   refinements.js:6:21
+   6|   var xxx: number = cc.b.c.d;
+                          ^^^^^^^^
+
+References:
+   refinements.js:3:36
+   3| type P = {c?: () => void, b?: {c?: {d: number}}};
+                                         ^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:15:3
+
+Cannot get `a.b.c.d` because property `d` is missing in undefined [1].
+
+   refinements.js:15:3
+   15|   a.b.c.d; // bad
+         ^^^^^^^
+
+References:
+   refinements.js:9:27
+    9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                                 ^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:16:4
+
+This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:16:4
+   16|   (a?.b.c?.d: ?number); // ok, one unneeded optional chain
+          ^^^^
+
+References:
+   refinements.js:16:4
+   16|   (a?.b.c?.d: ?number); // ok, one unneeded optional chain
+          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:17:4
+
+This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:17:4
+   17|   (a?.b.e: number); // ok, one unneeded optional chain
+          ^^^^
+
+References:
+   refinements.js:17:4
+   17|   (a?.b.e: number); // ok, one unneeded optional chain
+          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:18:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:18:4
+   18|   (a.b?.e: number); // ok, one unneeded optional chain
+          ^^^^^^
+
+References:
+   refinements.js:18:4
+   18|   (a.b?.e: number); // ok, one unneeded optional chain
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:22:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:22:4
+   22|   (a.b?.f(): ?number); // unneeded chain and bad
+          ^^^^^^
+
+References:
+   refinements.js:22:4
+   22|   (a.b?.f(): ?number); // unneeded chain and bad
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:22:4
+
+Cannot call `a.b?.f` because null or undefined [1] is not a function.
+
+   refinements.js:22:4
+   22|   (a.b?.f(): ?number); // unneeded chain and bad
+          ^^^^^^^^
+
+References:
+   refinements.js:9:54
+    9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                                                            ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:30:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:30:4
+   30|   (a.b?.f?.(): ?number); // ok, one unneeded optional chain
+          ^^^^^^
+
+References:
+   refinements.js:30:4
+   30|   (a.b?.f?.(): ?number); // ok, one unneeded optional chain
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:38:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:38:4
+   38|   (a.b.g?.(): number); // ok, unneeded chain
+          ^^^^^^^^^
+
+References:
+   refinements.js:38:4
+   38|   (a.b.g?.(): number); // ok, unneeded chain
+          ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:42:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:42:4
+   42|   (a.b?.g(): number); // ok, unneeded chain
+          ^^^^^^
+
+References:
+   refinements.js:42:4
+   42|   (a.b?.g(): number); // ok, unneeded chain
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:46:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:46:4
+   46|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^^^^
+
+References:
+   refinements.js:46:4
+   46|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:46:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:46:4
+   46|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^^^^^^^^
+
+References:
+   refinements.js:46:4
+   46|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:48:4
+
+Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2].
+
+   refinements.js:48:4
+   48|   (a: {}); // should fail, sanity check
+          ^
+
+References:
+   refinements.js:9:16
+    9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:48:7
+   48|   (a: {}); // should fail, sanity check
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:49:4
+
+Cannot cast `a` to union type because object type [1] is incompatible with enum [2].
+
+   refinements.js:49:4
+   49|   (a: (null | void)); // should fail, sanity check
+          ^
+
+References:
+   refinements.js:9:17
+    9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:49:8
+   49|   (a: (null | void)); // should fail, sanity check
+              ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:59:4
+
+Cannot get `x.a` because property `a` is missing in null or undefined [1].
+
+   refinements.js:59:4
+   59|   (x.a: empty) // should fail
+          ^^^
+
+References:
+   refinements.js:52:23
+   52| function f<T: any>(x: ?T) {
+                             ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
@@ -1967,7 +2164,7 @@ References:
 
 
 
-Found 152 errors
+Found 165 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

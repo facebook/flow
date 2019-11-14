@@ -2943,7 +2943,7 @@ and expression ?(is_cond = false) cx (loc, e) = expression_ ~is_cond cx loc e
 
 and this_ cx loc =
   Ast.Expression.(
-    match Refinement.get cx (loc, This) loc with
+    match Refinement.get ~allow_optional:true cx (loc, This) loc with
     | Some t -> t
     | None -> Env.var_ref cx (internal_name "this") loc)
 
@@ -3935,7 +3935,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       let super = super_ cx super_loc in
       let expr_reason = mk_reason (RProperty (Some name)) loc in
       let lhs_t =
-        match Refinement.get cx (loc, e) loc with
+        match Refinement.get ~allow_optional:true cx (loc, e) loc with
         | Some t -> t
         | None ->
           let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -3987,6 +3987,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           Flow.flow_t cx (filtered, t);
           Flow.flow_t cx (void, t))
   in
+  let noop _ = None in
   let handle_new_chain
       lhs_reason
       loc
@@ -4053,7 +4054,13 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
     (mem_t, Some voided_out, lhs_t, object_ast, subexpression_asts)
   in
   let handle_continue_chain
-      (chain_t, voided_t, object_ast) ~subexpressions ~get_result ~test_hooks ~get_reason =
+      (chain_t, voided_t, object_ast)
+      ~refine
+      ~refinement_action
+      ~subexpressions
+      ~get_result
+      ~test_hooks
+      ~get_reason =
     (* We're looking at a non-optional call or member access, but one where
          deeper in the chain there was an optional chaining operator. We don't
          need to do anything special locally, but we do need to remember that
@@ -4064,16 +4071,30 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
     let (subexpression_types, subexpression_asts) = subexpressions () in
     let reason = get_reason chain_t in
     let res_t =
-      match test_hooks chain_t with
-      | Some hit -> hit
-      | None -> get_result subexpression_types reason chain_t
+      match (test_hooks chain_t, refine ()) with
+      | (Some hit, _) -> hit
+      | (None, Some refi) ->
+        Option.value_map
+          ~f:(fun refinement_action -> refinement_action subexpression_types chain_t refi)
+          ~default:refi
+          refinement_action
+      | (None, None) -> get_result subexpression_types reason chain_t
     in
     let lhs_t = join_optional_branches voided_t res_t in
     (res_t, voided_t, lhs_t, object_ast, subexpression_asts)
   in
   let handle_chaining
-      opt object_ loc ~this_reason ~subexpressions ~get_result ~test_hooks ~get_opt_use ~get_reason
-      =
+      ?refinement_action
+      opt
+      object_
+      loc
+      ~refine
+      ~this_reason
+      ~subexpressions
+      ~get_result
+      ~test_hooks
+      ~get_opt_use
+      ~get_reason =
     match opt with
     | NonOptional ->
       (* Proceeding as normal: no need to worry about optionality, so T2 from
@@ -4083,34 +4104,53 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       let (subexpression_types, subexpression_asts) = subexpressions () in
       let reason = get_reason obj_t in
       let lhs_t =
-        match test_hooks obj_t with
-        | Some hit -> hit
-        | None -> get_result subexpression_types reason obj_t
+        match (test_hooks obj_t, refine ()) with
+        | (Some hit, _) -> hit
+        | (None, Some refi) ->
+          Option.value_map
+            ~f:(fun refinement_action -> refinement_action subexpression_types obj_t refi)
+            ~default:refi
+            refinement_action
+        | (None, None) -> get_result subexpression_types reason obj_t
       in
       (lhs_t, None, lhs_t, object_ast, subexpression_asts)
     | NewChain ->
       let lhs_reason = mk_expression_reason object_ in
-      handle_new_chain
-        lhs_reason
-        loc
-        (optional_chain ~is_cond:false cx object_)
-        ~subexpressions
-        ~this_reason
-        ~get_reason
-        ~test_hooks
-        ~get_opt_use
+      let ((filtered_t, voided_t, object_ast) as object_data) =
+        optional_chain ~is_cond:false cx object_
+      in
+      begin
+        match refine () with
+        | Some t ->
+          Context.mark_optional_chain cx loc lhs_reason ~useful:false;
+          let (subexpression_types, subexpression_asts) = subexpressions () in
+          let tout =
+            Option.value_map
+              ~f:(fun refinement_action -> refinement_action subexpression_types filtered_t t)
+              ~default:t
+              refinement_action
+          in
+          (tout, voided_t, join_optional_branches voided_t tout, object_ast, subexpression_asts)
+        | _ ->
+          handle_new_chain
+            lhs_reason
+            loc
+            object_data
+            ~subexpressions
+            ~this_reason
+            ~get_reason
+            ~test_hooks
+            ~get_opt_use
+      end
     | ContinueChain ->
       handle_continue_chain
         (optional_chain ~is_cond cx object_)
+        ~refine
+        ~refinement_action
         ~subexpressions
         ~get_result
         ~test_hooks
         ~get_reason
-  in
-  let maybe_refine (loc, e) opt =
-    match opt with
-    | NonOptional -> Refinement.get cx (loc, e) loc
-    | _ -> None
   in
   match try_non_chain cx loc e' ~call_ast ~member_ast with
   | Some (((_, lhs_t), _) as res) ->
@@ -4185,12 +4225,9 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       let use_op = Op (GetProperty (mk_expression_reason ex)) in
       let get_opt_use tind _ _ = OptGetElemT (use_op, reason, tind) in
       let get_mem_t tind reason obj_t =
-        match maybe_refine (loc, e) opt_state with
-        | Some t -> t
-        | None ->
-          Tvar.mk_where cx reason (fun t ->
-              let use = apply_opt_use (get_opt_use tind reason obj_t) t in
-              Flow.flow cx (obj_t, use))
+        Tvar.mk_where cx reason (fun t ->
+            let use = apply_opt_use (get_opt_use tind reason obj_t) t in
+            Flow.flow cx (obj_t, use))
       in
       let eval_index () =
         let (((_, tind), _) as index) = expression cx index in
@@ -4204,8 +4241,9 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~this_reason:(mk_expression_reason _object)
           ~subexpressions:eval_index
           ~get_result:get_mem_t
-          ~test_hooks:(Fn.const None)
+          ~test_hooks:noop
           ~get_opt_use
+          ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
           ~get_reason:(Fn.const reason)
       in
       ( filtered_out,
@@ -4232,12 +4270,9 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           None
       in
       let get_mem_t () _ obj_t =
-        match maybe_refine (loc, e) opt_state with
-        | Some t -> t
-        | None ->
-          Tvar.mk_where cx expr_reason (fun t ->
-              let use = apply_opt_use opt_use t in
-              Flow.flow cx (obj_t, use))
+        Tvar.mk_where cx expr_reason (fun t ->
+            let use = apply_opt_use opt_use t in
+            Flow.flow cx (obj_t, use))
       in
       let (filtered_out, voided_out, lhs_t, object_ast, _) =
         handle_chaining
@@ -4247,6 +4282,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~subexpressions:(Fn.const ((), ()))
           ~this_reason:(mk_expression_reason _object)
           ~get_result:get_mem_t
+          ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
           ~test_hooks
           ~get_opt_use:(fun _ _ _ -> opt_use)
           ~get_reason:(Fn.const expr_reason)
@@ -4274,12 +4310,9 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           None
       in
       let get_mem_t () _ obj_t =
-        match maybe_refine (loc, e) opt_state with
-        | Some t -> t
-        | None ->
-          Tvar.mk_where cx expr_reason (fun t ->
-              let use = apply_opt_use opt_use t in
-              Flow.flow cx (obj_t, use))
+        Tvar.mk_where cx expr_reason (fun t ->
+            let use = apply_opt_use opt_use t in
+            Flow.flow cx (obj_t, use))
       in
       let (filtered_out, voided_out, lhs_t, object_ast, _) =
         handle_chaining
@@ -4289,6 +4322,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~this_reason:(mk_expression_reason _object)
           ~subexpressions:(Fn.const ((), ()))
           ~get_result:get_mem_t
+          ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
           ~test_hooks
           ~get_opt_use:(fun _ _ _ -> opt_use)
           ~get_reason:(Fn.const expr_reason)
@@ -4314,6 +4348,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
           let reason_call = mk_reason (RMethodCall (Some name)) loc in
           let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
+          let this_reason = mk_expression_reason callee in
           let use_op =
             Op
               (FunCallMethod
@@ -4347,34 +4382,33 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             else
               None
           in
+          let handle_refined_callee argts obj_t f =
+            Env.havoc_heap_refinements ();
+            Tvar.mk_where cx reason_call (fun t ->
+                let frame = Env.peek_frame () in
+                let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity:true in
+                Flow.unify cx f prop_t;
+                let call_t =
+                  match opt_state with
+                  | NewChain ->
+                    let chain_reason = mk_reason ROptionalChain loc in
+                    let lhs_reason = mk_expression_reason callee in
+                    let this_t = Tvar.mk cx this_reason in
+                    OptionalChainT
+                      (chain_reason, lhs_reason, this_t, CallT (use_op, reason_call, app), t)
+                  | _ -> CallT (use_op, reason_call, app)
+                in
+                Flow.flow cx (f, call_t))
+          in
           let get_mem_t argts reason obj_t =
             Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
-            match maybe_refine (loc, callee_expr) member_opt with
-            | Some f ->
-              Env.havoc_heap_refinements ();
-              Tvar.mk_where cx reason_call (fun t ->
-                  let frame = Env.peek_frame () in
-                  let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity:true in
-                  Flow.unify cx f prop_t;
-                  let call_t =
-                    match opt_state with
-                    | NewChain ->
-                      let chain_reason = mk_reason ROptionalChain loc in
-                      let lhs_reason = mk_expression_reason callee in
-                      OptionalChainT
-                        (chain_reason, lhs_reason, obj_t, CallT (use_op, reason_call, app), t)
-                    | _ -> CallT (use_op, reason_call, app)
-                  in
-                  Flow.flow cx (f, call_t))
-            | None ->
-              Tvar.mk_where cx reason_call (fun t ->
-                  let use = apply_opt_use (get_opt_use argts reason obj_t) t in
-                  Flow.flow cx (obj_t, use))
+            Tvar.mk_where cx reason_call (fun t ->
+                let use = apply_opt_use (get_opt_use argts reason obj_t) t in
+                Flow.flow cx (obj_t, use))
           in
           let eval_args () =
             arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
           in
-          let this_reason = mk_expression_reason callee in
           let (filtered_out, lookup_voided_out, member_lhs_t, object_ast, argument_asts) =
             handle_chaining
               member_opt
@@ -4385,6 +4419,8 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
               ~get_result:get_mem_t
               ~test_hooks
               ~get_opt_use
+              ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, callee_expr) loc)
+              ~refinement_action:handle_refined_callee
               ~get_reason:(Fn.const expr_reason)
           in
           let prop_ast =
@@ -4444,8 +4480,9 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
               ~this_reason
               ~subexpressions:eval_args_and_expr
               ~get_result:get_mem_t
-              ~test_hooks:(Fn.const None)
+              ~test_hooks:noop
               ~get_opt_use
+              ~refine:noop
               ~get_reason:(Fn.const expr_reason)
           in
           ( filtered_out,
@@ -4494,7 +4531,6 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             Flow.flow cx (f, use))
       in
       let eval_args () = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
-      let test_hooks = Fn.const None in
       let (filtered_out, voided_out, lhs_t, object_ast, argument_asts) =
         handle_chaining
           opt_state
@@ -4502,8 +4538,9 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           loc
           ~subexpressions:eval_args
           ~this_reason:(mk_expression_reason ex)
+          ~refine:noop
           ~get_result
-          ~test_hooks
+          ~test_hooks:noop
           ~get_opt_use
           ~get_reason
       in
@@ -4544,7 +4581,7 @@ and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; argu
   let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
   let arg_asts = Base.List.map ~f:(expression cx) args in
   let argts = Base.List.map ~f:snd_fst arg_asts in
-  let argks = Base.List.map ~f:Refinement.key args in
+  let argks = Base.List.map ~f:(Refinement.key ~allow_optional:false) args in
   let use_op =
     Op
       (FunCall
@@ -4620,7 +4657,7 @@ and method_call
     cx reason ~use_op ?(call_strict_arity = true) prop_loc (expr, obj_t, name) targts argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   let (expr_loc, _) = expr in
-  match Refinement.get cx expr (aloc_of_reason reason) with
+  match Refinement.get ~allow_optional:true cx expr (aloc_of_reason reason) with
   | Some f ->
     (* note: the current state of affairs is that we understand
          member expressions as having refined types, rather than
@@ -5868,7 +5905,7 @@ and predicates_of_condition cx e =
   Ast.(
     Expression.(
       (* refinement key if expr is eligible, along with unrefined type *)
-      let refinable_lvalue e = (Refinement.key e, condition cx e) in
+      let refinable_lvalue e = (Refinement.key ~allow_optional:false e, condition cx e) in
       (* package empty result (no refinements derived) from test type *)
       let empty_result test_tast = (test_tast, Key_map.empty, Key_map.empty, Key_map.empty) in
       let add_predicate key unrefined_t pred sense (test_tast, ps, notps, tmap) =
@@ -5926,7 +5963,7 @@ and predicates_of_condition cx e =
           let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
           let expr_reason = mk_expression_reason expr in
           let prop_t =
-            match Refinement.get cx expr expr_loc with
+            match Refinement.get ~allow_optional:true cx expr expr_loc with
             | Some t -> t
             | None ->
               if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t then
@@ -5937,7 +5974,7 @@ and predicates_of_condition cx e =
           in
           (* refine the object (`foo.bar` in the example) based on the prop. *)
           let refinement =
-            match Refinement.key _object with
+            match Refinement.key ~allow_optional:false _object with
             | None -> None
             | Some name ->
               let pred = LeftP (SentinelProp prop_name, val_t) in
@@ -5958,7 +5995,7 @@ and predicates_of_condition cx e =
         let ast = reconstruct_ast e_ast in
         flow_eqt ~strict loc (t, null_t);
         let out =
-          match Refinement.key e with
+          match Refinement.key ~allow_optional:false e with
           | None ->
             let t_out = BoolT.at loc |> with_trust bogus_trust in
             empty_result ((loc, t_out), ast)
@@ -5991,7 +6028,7 @@ and predicates_of_condition cx e =
         let ast = reconstruct_ast e_ast in
         flow_eqt ~strict loc (t, void_t);
         let out =
-          match Refinement.key e with
+          match Refinement.key ~allow_optional:false e with
           | None ->
             let t_out = BoolT.at loc |> with_trust bogus_trust in
             empty_result ((loc, t_out), ast)
@@ -6026,7 +6063,7 @@ and predicates_of_condition cx e =
         flow_eqt ~strict loc (t, val_t);
         let refinement =
           if strict then
-            Refinement.key expr
+            Refinement.key ~allow_optional:false expr
           else
             None
         in
@@ -6373,7 +6410,7 @@ and predicates_of_condition cx e =
         let expr_reason = mk_expression_reason e in
         let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
         let t =
-          match Refinement.get cx e loc with
+          match Refinement.get ~allow_optional:true cx e loc with
           | Some t -> t
           | None ->
             if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t then
@@ -6385,13 +6422,13 @@ and predicates_of_condition cx e =
         let property = Member.PropertyIdentifier ((prop_loc, t), id) in
         let ast = ((loc, t), Member { Member._object = _object_ast; property }) in
         let out =
-          match Refinement.key e with
+          match Refinement.key ~allow_optional:false e with
           | Some name -> result ast name t (ExistsP (Some loc)) true
           | None -> empty_result ast
         in
         (* refine the object (`foo.bar` in the example) based on the prop. *)
         begin
-          match Refinement.key _object with
+          match Refinement.key ~allow_optional:false _object with
           | Some name ->
             let predicate = PropExistsP (prop_name, Some prop_loc) in
             out |> add_predicate name obj_t predicate true
@@ -7612,7 +7649,7 @@ and post_assignment_havoc ~private_ name exp orig_t t =
   Env.havoc_heap_refinements_with_propname ~private_ name;
 
   (* add type refinement if LHS is a pattern we handle *)
-  match Refinement.key exp with
+  match Refinement.key ~allow_optional:false exp with
   | Some key ->
     (* NOTE: currently, we allow property refinements to propagate
        even if they may turn out to be invalid w.r.t. the
