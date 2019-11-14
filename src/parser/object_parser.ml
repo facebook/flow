@@ -754,24 +754,14 @@ module Object
     let body = class_body env in
     let trailing = Peek.comments env in
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-    (id, body, extends, implements, tparams, decorators, comments)
+    { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments }
 
   let class_declaration env decorators =
     with_loc
       (fun env ->
         let optional_id = in_export env in
-        let (id, body, extends, implements, tparams, decorators, comments) =
-          _class env ~decorators ~optional_id
-        in
-        Ast.Statement.ClassDeclaration
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments })
+        Ast.Statement.ClassDeclaration (_class env ~decorators ~optional_id))
       env
 
-  let class_expression =
-    with_loc (fun env ->
-        let (id, body, extends, implements, tparams, decorators, comments) =
-          _class env ~optional_id:true
-        in
-        Ast.Expression.Class
-          { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments })
+  let class_expression = with_loc (fun env -> Ast.Expression.Class (_class env ~optional_id:true))
 end
