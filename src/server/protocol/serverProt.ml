@@ -12,10 +12,11 @@ module Request = struct
 
   type command =
     | AUTOCOMPLETE of {
-        input: File_input.t;
+        filename: string option;
+        contents: string;
+        cursor: int * int;
         trigger_character: string option;
         wait_for_recheck: bool option;
-        broader_context: string;
       }
     | AUTOFIX_EXPORTS of {
         input: File_input.t;
@@ -124,8 +125,14 @@ module Request = struct
     | RENAME new_name -> Printf.sprintf "rename(%s)" new_name
 
   let to_string = function
-    | AUTOCOMPLETE { input; wait_for_recheck = _; trigger_character = _; broader_context = _ } ->
-      Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
+    | AUTOCOMPLETE
+        { filename; contents = _; cursor = _; wait_for_recheck = _; trigger_character = _ } ->
+      let filename =
+        match filename with
+        | None -> "-"
+        | Some filename -> filename
+      in
+      Printf.sprintf "autocomplete %s" filename
     | AUTOFIX_EXPORTS { input; _ } ->
       Printf.sprintf "autofix exports %s" (File_input.filename_of_file_input input)
     | CHECK_FILE { input; verbose = _; force = _; include_warnings = _; wait_for_recheck = _ } ->

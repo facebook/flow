@@ -12,3 +12,6 @@ val split_nth : string -> int -> (string * string * string) option
 
 (* transform nth line, if it exists. returns reconstructed string *)
 val transform_nth : string -> int -> (string -> string) -> string
+
+(* find (line, col) of a byte offset. raises Not_found if offset > string length *)
+val position_of_offset : string -> int -> int * int
