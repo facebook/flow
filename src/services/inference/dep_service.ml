@@ -228,8 +228,6 @@ let file_dependencies ~audit ~reader file =
     require_set
     (FilenameSet.empty, FilenameSet.empty)
 
-type dependency_graph = FilenameSet.t FilenameMap.t
-
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
 let calc_partial_dependency_info ~options ~reader workers files ~parsed =
