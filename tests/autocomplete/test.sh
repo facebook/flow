@@ -258,3 +258,7 @@ assert_ok \
 printf "literal.js (inside template literal) = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty literal.js 7 16 < literal.js
+
+printf "import_source.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty import_source.js 3 17 < import_source.js

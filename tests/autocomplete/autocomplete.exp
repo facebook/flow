@@ -4140,3 +4140,4 @@ comments.js (block) = {"result":[]}
 literal.js (inside string) = {"result":[]}
 literal.js (inside regex) = {"result":[]}
 literal.js (inside template literal) = {"result":[]}
+import_source.js = {"result":[]}

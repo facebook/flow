@@ -26,6 +26,8 @@ type autocomplete_type =
   | Ackey
   (* inside a literal like a string or regex *)
   | Acliteral
+  (* a module name *)
+  | Acmodule
   (* type identifiers *)
   | Actype
   (* qualified type identifiers *)
@@ -252,6 +254,13 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match elem with
       | (loc, _) when this#covers_target loc -> this#find loc Acliteral
       | _ -> super#template_literal_element elem
+
+    method! import_declaration decl_loc decl =
+      let open Flow_ast.Statement.ImportDeclaration in
+      let { importKind = _; source; specifiers = _; default = _ } = decl in
+      match source with
+      | (loc, _) when this#covers_target loc -> this#find loc Acmodule
+      | _ -> super#import_declaration decl_loc decl
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =
