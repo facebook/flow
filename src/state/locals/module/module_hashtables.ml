@@ -7,32 +7,35 @@
 
 (* hash table from module names to all known provider files.
    maintained and used by commit_modules and remove_files *)
+
 (** TODO [perf]: investigate whether this takes too much memory **)
 let all_providers = ref (Hashtbl.create 0)
-let currently_oldified_all_providers
-  : (Modulename.t, Utils_js.FilenameSet.t) Hashtbl.t option ref
-  = ref None
 
-let find_in_all_providers_unsafe modulename =
-  Hashtbl.find (!all_providers) modulename
+let currently_oldified_all_providers : (Modulename.t, Utils_js.FilenameSet.t) Hashtbl.t option ref =
+  ref None
+
+let find_in_all_providers_unsafe modulename = Hashtbl.find !all_providers modulename
 
 module type READER = sig
   type reader
 
-  val find_in_all_providers_unsafe: reader:reader -> Modulename.t -> Utils_js.FilenameSet.t
+  val find_in_all_providers_unsafe : reader:reader -> Modulename.t -> Utils_js.FilenameSet.t
 end
 
-module Mutator_reader: READER with type reader = Mutator_state_reader.t = struct
+module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
   type reader = Mutator_state_reader.t
 
   let find_in_all_providers_unsafe ~reader:_ = find_in_all_providers_unsafe
 end
 
-module All_providers_mutator: sig
+module All_providers_mutator : sig
   type t
-  val create: Transaction.t -> t
-  val add_provider: t -> File_key.t -> Modulename.t -> unit
-  val remove_provider: t -> File_key.t -> Modulename.t -> unit
+
+  val create : Transaction.t -> t
+
+  val add_provider : t -> File_key.t -> Modulename.t -> unit
+
+  val remove_provider : t -> File_key.t -> Modulename.t -> unit
 end = struct
   type t = unit
 
@@ -51,7 +54,6 @@ end = struct
       currently_oldified_all_providers := None;
       Lwt.return_unit
     in
-
     Transaction.add ~singleton:"All providers" ~commit ~rollback transaction
 
   (* Note that the module provided by a file is always accessible via its full
@@ -78,15 +80,21 @@ end = struct
      that name when the /foo directory is moved to, say, /qux/foo. *)
 
   let add_provider () f m =
-    let provs = try Utils_js.FilenameSet.add f (find_in_all_providers_unsafe m)
-      with Not_found -> Utils_js.FilenameSet.singleton f in
+    let provs =
+      try Utils_js.FilenameSet.add f (find_in_all_providers_unsafe m)
+      with Not_found -> Utils_js.FilenameSet.singleton f
+    in
     Hashtbl.replace !all_providers m provs
 
   let remove_provider () f m =
-    let provs = try Utils_js.FilenameSet.remove f (find_in_all_providers_unsafe m)
-      with Not_found -> failwith (Printf.sprintf
-        "can't remove provider %s of %S, not found in all_providers"
-        (File_key.to_string f) (Modulename.to_string m))
+    let provs =
+      try Utils_js.FilenameSet.remove f (find_in_all_providers_unsafe m)
+      with Not_found ->
+        failwith
+          (Printf.sprintf
+             "can't remove provider %s of %S, not found in all_providers"
+             (File_key.to_string f)
+             (Modulename.to_string m))
     in
     Hashtbl.replace !all_providers m provs
 end
@@ -98,6 +106,7 @@ end
  * 2. The code which populates it never changes during the lifetime of a server. So we never
  *    really need to roll anything back ever *)
 let module_name_candidates_cache = Hashtbl.create 50
+
 let memoize_with_module_name_candidates_cache ~f name =
   try Hashtbl.find module_name_candidates_cache name
   with Not_found ->

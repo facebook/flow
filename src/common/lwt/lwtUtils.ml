@@ -18,30 +18,30 @@
  * promises either :P
  *)
 let rec iter_all threads =
-  if threads = []
-  then Lwt.return_unit
+  if threads = [] then
+    Lwt.return_unit
   else
     (* If any thread in threads fails during this nchoose, the whole all function will fail *)
-    let%lwt _, sleeping_threads = Lwt.nchoose_split threads in
-    iter_all sleeping_threads
+      let%lwt (_, sleeping_threads) = Lwt.nchoose_split threads in
+      iter_all sleeping_threads
 
-let get_value_unsafe thread = match Lwt.state thread with
+let get_value_unsafe thread =
+  match Lwt.state thread with
   | Lwt.Return x -> x
   | _ -> failwith "Not yet completed"
 
 let all threads =
   let%lwt () = iter_all threads in
-  threads
-  |> Core_list.map ~f:get_value_unsafe
-  |> Lwt.return
+  threads |> Base.List.map ~f:get_value_unsafe |> Lwt.return
 
 let output_graph out strip_root graph =
   let%lwt () = Lwt_io.fprint out "digraph {\n" in
-  let%lwt () = Lwt_list.iter_s (fun (f, dep_fs) ->
-    Lwt_list.iter_s (fun dep_f ->
-      Lwt_io.fprintf out "  \"%s\" -> \"%s\"\n"
-        (strip_root f)
-        (strip_root dep_f)
-    ) dep_fs
-  ) graph in
+  let%lwt () =
+    Lwt_list.iter_s
+      (fun (f, dep_fs) ->
+        Lwt_list.iter_s
+          (fun dep_f -> Lwt_io.fprintf out "  \"%s\" -> \"%s\"\n" (strip_root f) (strip_root dep_f))
+          dep_fs)
+      graph
+  in
   Lwt_io.fprint out "}"

@@ -1,33 +1,39 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
   ({
-    ideStartAndConnect,
-    ideStart,
-    ideRequest,
+    lspStartAndConnect,
+    lspStart,
+    lspRequest,
     lspInitializeParams,
-    ideRequestAndWaitUntilResponse,
+    lspRequestAndWaitUntilResponse,
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/completion', [
       addFile('completion.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion.js'},
         position: {line: 10, character: 15}, // statement position
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           (() => {
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,
@@ -44,13 +50,6 @@ export default suite(
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'exports',
-                  kind: 6,
-                  detail: '{||}',
-                  inlineDetail: '{||}',
-                  insertTextFormat: 1,
-                },
-                {
                   label: 'b',
                   kind: 6,
                   detail: 'string',
@@ -64,41 +63,34 @@ export default suite(
                   inlineDetail: 'number',
                   insertTextFormat: 1,
                 },
-                {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'super',
-                  kind: 6,
-                  detail: 'typeof Object.prototype',
-                  inlineDetail: 'typeof Object.prototype',
-                  insertTextFormat: 1,
-                },
               ],
             };
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion', [
       addFile('kind.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>kind.js'},
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/kind.js'},
         position: {line: 13, character: 15},
         context: {triggerKind: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           (() => {
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,
@@ -112,27 +104,6 @@ export default suite(
                   detail: '() => void',
                   inlineDetail: '()',
                   itemType: 'void',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'exports',
-                  kind: 6,
-                  detail: '{||}',
-                  inlineDetail: '{||}',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'anInterface',
-                  kind: 8,
-                  detail: 'interface anInterface',
-                  inlineDetail: 'interface anInterface',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'aUnion',
-                  kind: 13,
-                  detail: 'type aUnion = "a" | "b"',
-                  inlineDetail: 'type aUnion = "a" | "b"',
                   insertTextFormat: 1,
                 },
                 {
@@ -157,32 +128,17 @@ export default suite(
                   inlineDetail: 'class aClass',
                   insertTextFormat: 1,
                 },
-                {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
-                  insertTextFormat: 1,
-                },
-                {
-                  label: 'super',
-                  kind: 6,
-                  detail: 'typeof Object.prototype',
-                  inlineDetail: 'typeof Object.prototype',
-                  insertTextFormat: 1,
-                },
               ],
             };
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion', [
       addFile('params.js'),
-      ideStart({mode: 'lsp', needsFlowServer: true}),
-      ideRequest('initialize', {
+      lspStartAndConnect(6000, {
         ...lspInitializeParams,
         capabilities: {
           ...lspInitializeParams.capabilities,
@@ -196,17 +152,24 @@ export default suite(
             },
           },
         },
-      }).waitUntilIDEMessage(30000, 'initialize'),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>params.js'},
+      }),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/params.js'},
         position: {line: 9, character: 15},
         context: {triggerKind: 1},
-      }).verifyAllIDEMessagesInStep(
+      }).verifyAllLSPMessagesInStep(
         [
           (() => {
             const expectedResponse = {
               isIncomplete: false,
               items: [
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  inlineDetail: 'this',
+                  insertTextFormat: 1,
+                },
                 {
                   label: 'x',
                   kind: 6,
@@ -223,18 +186,11 @@ export default suite(
                   insertTextFormat: 2,
                   textEdit: {
                     range: {
-                      start: { line: 9, character: 15 },
-                      end: { line: 9, character: 15 }
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
                     },
                     newText: 'foo()',
                   },
-                },
-                {
-                  label: 'exports',
-                  kind: 6,
-                  detail: '{||}',
-                  inlineDetail: '{||}',
-                  insertTextFormat: 1,
                 },
                 {
                   label: 'aFunction',
@@ -245,24 +201,110 @@ export default suite(
                   insertTextFormat: 2,
                   textEdit: {
                     range: {
-                      start: { line: 9, character: 15 },
-                      end: { line: 9, character: 15 }
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
                     },
                     newText: 'aFunction(${1:arg1}, ${2:arg2})',
                   },
                 },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by space in jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+        position: {line: 12, character: 4},
+        context: {triggerKind: 2, triggerCharacter: ' '},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
                 {
-                  label: 'this',
+                  label: 'a',
                   kind: 6,
-                  detail: 'empty',
-                  inlineDetail: 'empty',
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 12, character: 4},
+                      end: {line: 12, character: 4},
+                    },
+                    newText: 'a=',
+                  },
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by space outside of jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+        position: {line: 11, character: 1},
+        context: {triggerKind: 2, triggerCharacter: ' '},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion invoked outside of jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+        position: {line: 11, character: 1},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'React',
+                  kind: 6,
+                  detail:
+                    '{|+AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React...',
+                  inlineDetail:
+                    '{|+AbstractComponent: type AbstractComponent<-Config, +Instance = mixed> = React...',
                   insertTextFormat: 1,
                 },
                 {
-                  label: 'super',
-                  kind: 6,
-                  detail: 'typeof Object.prototype',
-                  inlineDetail: 'typeof Object.prototype',
+                  label: 'D',
+                  kind: 3,
+                  detail: '(props: Props) => void',
+                  inlineDetail: '(props: Props)',
+                  itemType: 'void',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'C',
+                  kind: 7,
+                  detail: 'class C',
+                  inlineDetail: 'class C',
                   insertTextFormat: 1,
                 },
               ],
@@ -270,7 +312,296 @@ export default suite(
             return `textDocument/completion${JSON.stringify(expectedResponse)}`;
           })(),
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion invoked in jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+        position: {line: 12, character: 4},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'a',
+                  kind: 6,
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 12, character: 4},
+                      end: {line: 12, character: 4},
+                    },
+                    newText: 'a=',
+                  },
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test(
+      'textDocument/completion triggered by space in jsx, function component',
+      [
+        addFile('jsx.js'),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/completion', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+          position: {line: 13, character: 4},
+          context: {triggerKind: 2, triggerCharacter: ' '},
+        }).verifyAllLSPMessagesInStep(
+          [
+            (() => {
+              const expectedResponse = {
+                isIncomplete: false,
+                items: [
+                  {
+                    label: 'a',
+                    kind: 6,
+                    detail: 'number',
+                    inlineDetail: 'number',
+                    insertTextFormat: 1,
+                    textEdit: {
+                      range: {
+                        start: {line: 13, character: 4},
+                        end: {line: 13, character: 4},
+                      },
+                      newText: 'a=',
+                    },
+                  },
+                ],
+              };
+              return `textDocument/completion${JSON.stringify(
+                expectedResponse,
+              )}`;
+            })(),
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+      ],
+    ),
+    test('textDocument/completion invoked in jsx, function component', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+        position: {line: 13, character: 4},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'a',
+                  kind: 6,
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 4},
+                      end: {line: 13, character: 4},
+                    },
+                    newText: 'a=',
+                  },
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by dot in jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+        position: {line: 14, character: 3},
+        context: {triggerKind: 2, triggerCharacter: '.'},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  inlineDetail: '(o: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'name',
+                  kind: 6,
+                  detail: 'string',
+                  inlineDetail: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  inlineDetail: '()',
+                  itemType: 'mixed',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by dot outside jsx', [
+      addFile('jsx.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
+        position: {line: 15, character: 2},
+        context: {triggerKind: 2, triggerCharacter: '.'},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'hasOwnProperty',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'isPrototypeOf',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  inlineDetail: '(o: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'name',
+                  kind: 6,
+                  detail: 'string',
+                  inlineDetail: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'propertyIsEnumerable',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  inlineDetail: '(prop: mixed)',
+                  itemType: 'boolean',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toLocaleString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'toString',
+                  kind: 3,
+                  detail: '() => string',
+                  inlineDetail: '()',
+                  itemType: 'string',
+                  insertTextFormat: 1,
+                },
+                {
+                  label: 'valueOf',
+                  kind: 3,
+                  detail: '() => mixed',
+                  inlineDetail: '()',
+                  itemType: 'mixed',
+                  insertTextFormat: 1,
+                },
+              ],
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion in an unqualified type annotation', [
+      addFile('type-exports.js'),
+      addFile('unqualified-type-annotation.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/unqualified-type-annotation.js',
+        },
+        position: {line: 27, character: 18},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          (() => {
+            const expectedSubstrings = [
+              '"newText":"Typologies."',
+              '"newText":"Types."',
+            ];
+
+            return `textDocument/completion{${expectedSubstrings.join(',')}}`;
+          })(),
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],

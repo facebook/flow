@@ -19,26 +19,29 @@ let mk_id = Reason.mk_id
 
 (* entry state *)
 module State = struct
-  type t = Undeclared | Declared | MaybeInitialized | Initialized
+  type t =
+    | Undeclared
+    | Declared
+    | MaybeInitialized
+    | Initialized
 
   let to_int = function
-  | Undeclared -> 0
-  | Declared -> 1
-  | MaybeInitialized -> 2
-  | Initialized -> 3
+    | Undeclared -> 0
+    | Declared -> 1
+    | MaybeInitialized -> 2
+    | Initialized -> 3
 
   let to_string = function
-  | Undeclared -> "Undeclared"
-  | Declared -> "Declared"
-  | MaybeInitialized -> "MaybeInitialized"
-  | Initialized -> "Initialized"
+    | Undeclared -> "Undeclared"
+    | Declared -> "Declared"
+    | MaybeInitialized -> "MaybeInitialized"
+    | Initialized -> "Initialized"
 
   let compare x y = Pervasives.compare (to_int x) (to_int y)
 end
 
 (* entries for vars/lets, consts and types *)
 module Entry = struct
-
   type value_kind =
     (* consts are either explicit bindings or e.g. const params *)
     | Const of const_binding_kind
@@ -52,6 +55,7 @@ module Entry = struct
     | ConstImportBinding
     | ConstParamBinding
     | ConstVarBinding
+    | EnumNameBinding
 
   and let_binding_kind =
     | LetVarBinding
@@ -67,29 +71,27 @@ module Entry = struct
     | ConstlikeVarBinding
 
   let string_of_value_kind = function
-  | Const ConstImportBinding -> "import"
-  | Const ConstParamBinding -> "const param"
-  | Const ConstVarBinding -> "const"
-  | Let LetVarBinding -> "let"
-  | Let ConstlikeLetVarBinding -> "let"
-  | Let ClassNameBinding -> "class"
-  | Let CatchParamBinding -> "catch"
-  | Let FunctionBinding -> "function"
-  | Let ParamBinding -> "param"
-  | Let ConstlikeParamBinding -> "param"
-  | Var VarBinding -> "var"
-  | Var ConstlikeVarBinding -> "var"
+    | Const ConstImportBinding -> "import"
+    | Const ConstParamBinding -> "const param"
+    | Const ConstVarBinding -> "const"
+    | Const EnumNameBinding -> "enum"
+    | Let LetVarBinding -> "let"
+    | Let ConstlikeLetVarBinding -> "let"
+    | Let ClassNameBinding -> "class"
+    | Let CatchParamBinding -> "catch"
+    | Let FunctionBinding -> "function"
+    | Let ParamBinding -> "param"
+    | Let ConstlikeParamBinding -> "param"
+    | Var VarBinding -> "var"
+    | Var ConstlikeVarBinding -> "var"
 
   type value_binding = {
     kind: value_kind;
     value_state: State.t;
-
     (* The location where the binding was declared/created *)
     value_declare_loc: ALoc.t;
-
     (* The last location (in this scope) where the entry value was assigned *)
     value_assign_loc: ALoc.t;
-
     specific: Type.t;
     general: Type.t;
   }
@@ -106,80 +108,79 @@ module Entry = struct
   }
 
   type t =
-  | Value of value_binding
-  | Type of type_binding
-  | Class of Type.class_binding
+    | Value of value_binding
+    | Type of type_binding
+    | Class of Type.class_binding
 
   (* constructors *)
   let new_class class_binding_id class_private_fields class_private_static_fields =
     Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
 
   let new_value kind state specific general value_declare_loc =
-    Value {
-      kind;
-      value_state = state;
-      value_declare_loc;
-      value_assign_loc = value_declare_loc;
-      specific;
-      general;
-    }
+    Value
+      {
+        kind;
+        value_state = state;
+        value_declare_loc;
+        value_assign_loc = value_declare_loc;
+        specific;
+        general;
+      }
 
-  let new_const ~loc ?(state=State.Undeclared) ?(kind=ConstVarBinding) t =
+  let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) t =
     new_value (Const kind) state t t loc
 
-  let new_import ~loc t =
-    new_value (Const ConstImportBinding) State.Initialized t t loc
+  let new_import ~loc t = new_value (Const ConstImportBinding) State.Initialized t t loc
 
-  let new_let ~loc ?(state=State.Undeclared) ?(kind=LetVarBinding) t =
+  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) t =
     new_value (Let kind) state t t loc
 
-  let new_var ~loc ?(state=State.Undeclared) ?(kind=VarBinding) ?specific general =
-    let specific = match specific with Some t -> t | None -> general in
+  let new_var ~loc ?(state = State.Undeclared) ?(kind = VarBinding) ?specific general =
+    let specific =
+      match specific with
+      | Some t -> t
+      | None -> general
+    in
     new_value (Var kind) state specific general loc
 
   let new_type_ type_binding_kind state loc type_ =
-    Type {
-      type_binding_kind;
-      type_state = state;
-      type_loc = loc;
-      type_
-    }
+    Type { type_binding_kind; type_state = state; type_loc = loc; type_ }
 
-  let new_type ~loc ?(state=State.Undeclared) type_ =
-    new_type_ TypeBinding state loc type_
+  let new_type ~loc ?(state = State.Undeclared) type_ = new_type_ TypeBinding state loc type_
 
-  let new_import_type ~loc type_ =
-    new_type_ ImportTypeBinding State.Initialized loc type_
+  let new_import_type ~loc type_ = new_type_ ImportTypeBinding State.Initialized loc type_
 
   (* accessors *)
   let entry_loc = function
-  | Value v -> v.value_declare_loc
-  | Type t -> t.type_loc
-  | Class _ -> ALoc.none
+    | Value v -> v.value_declare_loc
+    | Type t -> t.type_loc
+    | Class _ -> ALoc.none
 
   let assign_loc = function
-  | Value v -> v.value_assign_loc
-  | Type t -> t.type_loc
-  | Class _ -> ALoc.none
+    | Value v -> v.value_assign_loc
+    | Type t -> t.type_loc
+    | Class _ -> ALoc.none
 
   let declared_type = function
-  | Value v -> v.general
-  | Type t -> t.type_
-  | Class _ -> assert_false "Internal Error: Class bindings have no type"
+    | Value v -> v.general
+    | Type t -> t.type_
+    | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let actual_type = function
-  | Value v -> v.specific
-  | Type t -> t.type_
-  | Class _ -> assert_false "Internal Error: Class bindings have no type"
+    | Value v -> v.specific
+    | Type t -> t.type_
+    | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let string_of_kind = function
-  | Value v -> string_of_value_kind v.kind
-  | Type _ -> "type"
-  | Class c -> spf "Class %s" (ALoc.debug_to_string c.Type.class_binding_id)
+    | Value v -> string_of_value_kind v.kind
+    | Type _ -> "type"
+    | Class c -> spf "Class %s" (ALoc.debug_to_string (c.Type.class_binding_id :> ALoc.t))
 
-  let kind_of_value (value: value_binding) = value.kind
-  let general_of_value (value: value_binding) = value.general
-  let state_of_value (value: value_binding) = value.value_state
+  let kind_of_value (value : value_binding) = value.kind
+
+  let general_of_value (value : value_binding) = value.general
+
+  let state_of_value (value : value_binding) = value.value_state
 
   (** Given a named entry, return a new Value entry with specific type replaced
       with general type for non-internal, non-Const value entries. Types, consts
@@ -188,25 +189,22 @@ module Entry = struct
     *)
   let havoc name entry =
     match entry with
-    | Type _ ->
-      entry
+    | Type _ -> entry
     | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT _); _ } as v) ->
       (* cleared consts: see note on Env.reset_current_activation *)
-      if Reason.is_internal_name name
-      then entry
-      else Value { v with specific = v.general }
-    | Value { kind = Const _; _ } ->
-      entry
-    | Value { kind = Var ConstlikeVarBinding; _ } ->
-      entry
-    | Value { kind = Let ConstlikeLetVarBinding; _ } ->
-      entry
-    | Value { kind = Let ConstlikeParamBinding; _ } ->
-      entry
+      if Reason.is_internal_name name then
+        entry
+      else
+        Value { v with specific = v.general }
+    | Value { kind = Const _; _ } -> entry
+    | Value { kind = Var ConstlikeVarBinding; _ } -> entry
+    | Value { kind = Let ConstlikeLetVarBinding; _ } -> entry
+    | Value { kind = Let ConstlikeParamBinding; _ } -> entry
     | Value v ->
-      if Reason.is_internal_name name
-      then entry
-      else Value { v with specific = v.general }
+      if Reason.is_internal_name name then
+        entry
+      else
+        Value { v with specific = v.general }
     | Class _ -> entry
 
   let reset loc name entry =
@@ -215,50 +213,53 @@ module Entry = struct
     | Type _ ->
       entry
     | Value v ->
-      if Reason.is_internal_name name
-      then entry
-      else Value { v with specific = Type.EmptyT.at loc |> Type.with_trust Trust.bogus_trust}
+      if Reason.is_internal_name name then
+        entry
+      else
+        Value { v with specific = Type.EmptyT.at loc |> Type.with_trust Trust.bogus_trust }
 
   let is_lex = function
     | Type _ -> false
     | Class _ -> true
     | Value v ->
-      match v.kind with
+      (match v.kind with
       | Const _ -> true
       | Let _ -> true
-      | _ -> false
+      | _ -> false)
 end
 
 type var_scope_kind =
-  | Ordinary        (* function or module *)
-  | Async           (* async function *)
-  | Generator       (* generator function *)
-  | AsyncGenerator  (* async generator function *)
-  | Module          (* module scope *)
-  | Global          (* global scope *)
-  | Predicate       (* predicate function *)
-  | Ctor            (* constructor *)
+  | Ordinary (* function or module *)
+  | Async (* async function *)
+  | Generator (* generator function *)
+  | AsyncGenerator (* async generator function *)
+  | Module (* module scope *)
+  | Global (* global scope *)
+  | Predicate (* predicate function *)
+  | Ctor
+
+(* constructor *)
 
 let string_of_var_scope_kind = function
-| Ordinary -> "Ordinary"
-| Async -> "Async"
-| Generator -> "Generator"
-| AsyncGenerator -> "AsyncGenerator"
-| Module -> "Module"
-| Global -> "Global"
-| Predicate -> "Predicate"
-| Ctor -> "Constructor"
+  | Ordinary -> "Ordinary"
+  | Async -> "Async"
+  | Generator -> "Generator"
+  | AsyncGenerator -> "AsyncGenerator"
+  | Module -> "Module"
+  | Global -> "Global"
+  | Predicate -> "Predicate"
+  | Ctor -> "Constructor"
 
 (* var and lexical scopes differ in hoisting behavior
    and auxiliary properties *)
 (* TODO lexical scope support *)
 type kind =
-| VarScope of var_scope_kind
-| LexScope
+  | VarScope of var_scope_kind
+  | LexScope
 
 let string_of_kind = function
-| VarScope kind -> spf "VarScope %s" (string_of_var_scope_kind kind)
-| LexScope -> "LexScope"
+  | VarScope kind -> spf "VarScope %s" (string_of_var_scope_kind kind)
+  | LexScope -> "LexScope"
 
 type refi_binding = {
   refi_loc: ALoc.t;
@@ -287,17 +288,17 @@ type t = {
 }
 
 (* ctor helper *)
-let fresh_impl kind = {
-  id = mk_id ();
-  kind;
-  entries = SMap.empty;
-  refis = Key_map.empty;
-  declare_func_annots = SMap.empty;
-}
+let fresh_impl kind =
+  {
+    id = mk_id ();
+    kind;
+    entries = SMap.empty;
+    refis = Key_map.empty;
+    declare_func_annots = SMap.empty;
+  }
 
 (* return a fresh scope of the most common kind (var) *)
-let fresh ?(var_scope_kind=Ordinary) () =
-  fresh_impl (VarScope var_scope_kind)
+let fresh ?(var_scope_kind = Ordinary) () = fresh_impl (VarScope var_scope_kind)
 
 (* return a fresh lexical scope *)
 let fresh_lex () = fresh_impl LexScope
@@ -309,24 +310,19 @@ let clone { id; kind; entries; refis; declare_func_annots } =
   { id; kind; entries; refis; declare_func_annots }
 
 (* use passed f to iterate over all scope entries *)
-let iter_entries f scope =
-  SMap.iter f scope.entries
+let iter_entries f scope = SMap.iter f scope.entries
 
 (* use passed f to update all scope entries *)
-let update_entries f scope =
-  scope.entries <- SMap.mapi f scope.entries
+let update_entries f scope = scope.entries <- SMap.mapi f scope.entries
 
 (* add entry to scope *)
-let add_entry name entry scope =
-  scope.entries <- SMap.add name entry scope.entries
+let add_entry name entry scope = scope.entries <- SMap.add name entry scope.entries
 
 (* remove entry from scope *)
-let remove_entry name scope =
-  scope.entries <- SMap.remove name scope.entries
+let remove_entry name scope = scope.entries <- SMap.remove name scope.entries
 
 (* get entry from scope, or None *)
-let get_entry name scope =
-  SMap.get name scope.entries
+let get_entry name scope = SMap.find_opt name scope.entries
 
 (* havoc entry *)
 let havoc_entry name scope =
@@ -335,47 +331,42 @@ let havoc_entry name scope =
     let entry = Entry.havoc name entry in
     scope.entries <- SMap.add name entry scope.entries
   | None ->
-    assert_false (spf "entry %S not found in scope %d: { %s }"
-      name scope.id (String.concat ", "
-        (SMap.fold (fun n _ acc -> n :: acc) scope.entries [])))
+    assert_false
+      (spf
+         "entry %S not found in scope %d: { %s }"
+         name
+         scope.id
+         (String.concat ", " (SMap.fold (fun n _ acc -> n :: acc) scope.entries [])))
 
 (* use passed f to update all scope refis *)
-let update_refis f scope =
-  scope.refis <- Key_map.mapi f scope.refis
+let update_refis f scope = scope.refis <- Key_map.mapi f scope.refis
 
 (* add refi to scope *)
-let add_refi key refi scope =
-  scope.refis <- Key_map.add key refi scope.refis
+let add_refi key refi scope = scope.refis <- Key_map.add key refi scope.refis
 
 (* remove entry from scope *)
-let remove_refi key scope =
-  scope.refis <- Key_map.remove key scope.refis
+let remove_refi key scope = scope.refis <- Key_map.remove key scope.refis
 
 (* get entry from scope, or None *)
-let get_refi name scope =
-  Key_map.get name scope.refis
+let get_refi name scope = Key_map.find_opt name scope.refis
 
 (* havoc a refi *)
 let havoc_refi key scope =
-  scope.refis <- scope.refis |>
-    Key_map.filter (fun k _ -> Key.compare key k != 0)
+  scope.refis <- scope.refis |> Key_map.filter (fun k _ -> Key.compare key k != 0)
 
 (* helper: filter all refis whose expressions involve the given name *)
 let filter_refis_using_propname ~private_ propname refis =
-  refis |> Key_map.filter (fun key _ ->
-    not (Key.uses_propname ~private_ propname key)
-  )
+  refis |> Key_map.filter (fun key _ -> not (Key.uses_propname ~private_ propname key))
 
 (* havoc a scope's refinements:
    if name is passed, clear refis whose expressions involve it.
    otherwise, clear them all
  *)
 let havoc_refis ?name ~private_ scope =
-  scope.refis <- match name with
-  | Some name ->
-    scope.refis |> (filter_refis_using_propname ~private_ name)
-  | None ->
-    Key_map.empty
+  scope.refis <-
+    (match name with
+    | Some name -> scope.refis |> filter_refis_using_propname ~private_ name
+    | None -> Key_map.empty)
 
 let havoc_all_refis ?name scope =
   havoc_refis ?name ~private_:false scope;
@@ -396,8 +387,7 @@ let reset loc scope =
 let add_declare_func_annot name annot scope =
   scope.declare_func_annots <- SMap.add name annot scope.declare_func_annots
 
-let get_declare_func_annot name scope =
-  SMap.get name scope.declare_func_annots
+let get_declare_func_annot name scope = SMap.find_opt name scope.declare_func_annots
 
 let is_lex scope =
   match scope.kind with
@@ -407,4 +397,11 @@ let is_lex scope =
 let is_global scope =
   match scope.kind with
   | VarScope Global -> true
+  | _ -> false
+
+let is_toplevel scope =
+  match scope.kind with
+  | VarScope Global
+  | VarScope Module ->
+    true
   | _ -> false

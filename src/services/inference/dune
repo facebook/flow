@@ -1,0 +1,28 @@
+(library
+  (name flow_service_inference)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_exit_status
+    flow_monitor_rpc
+    flow_parser
+    flow_parsing
+    flow_procs
+    flow_server_env
+    flow_server_files
+    flow_server_monitor_listener_state
+    flow_server_rechecker_updates
+    flow_server_status
+    flow_server_watchman_expression_terms
+    flow_service_inference_module
+    flow_service_saved_state
+    flow_state_heaps_context
+    flow_state_heaps_module
+    flow_typing
+    build_mode ; hack
+    cgroup ; hack
+    procs_bucket ; hack
+    watchman_lwt ; hack
+  )
+  (preprocess (pps lwt_ppx))
+)

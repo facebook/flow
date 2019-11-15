@@ -1,0 +1,7 @@
+// @flow
+export function fred(a, b: string) {
+  const x = 15;
+  return x;
+}
+
+export var barney = {a: 1, b: fred}

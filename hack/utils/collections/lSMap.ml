@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -7,7 +7,7 @@
  *
  *)
 
-include MyMap.Make (LowerStringKey)
+include WrappedMap.Make (LowerStringKey)
 
 let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
-  fun pp_data -> make_pp Format.pp_print_string pp_data
+ (fun pp_data -> make_pp Format.pp_print_string pp_data)

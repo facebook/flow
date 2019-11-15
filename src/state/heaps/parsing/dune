@@ -1,0 +1,14 @@
+(library
+  (name flow_state_heaps_parsing)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_parser
+    flow_parser_utils
+    flow_shared_mem
+    flow_state_heaps_parsing_exceptions
+    flow_state_readers
+    xx
+    heap_shared_mem ; hack
+  )
+)

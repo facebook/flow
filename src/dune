@@ -1,0 +1,14 @@
+(executable
+  (name flow)
+  (modules
+    flow)
+  (libraries
+    flow_commands
+    flow_exit_status
+    flow_extra_commands
+    flow_logging_utils
+    flow_parser
+    default_injector_config
+    lz4 ; see dune-workspace
+  )
+)

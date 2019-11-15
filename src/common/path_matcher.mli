@@ -8,9 +8,9 @@
 type t
 
 val empty : t
-val paths : t -> Path.t list
+
 val stems : t -> Path.t list
-val stem_map : t -> ((string * Str.regexp) list) Utils_js.PathMap.t
 
 val add : t -> Path.t -> t
+
 val matches : t -> string -> bool

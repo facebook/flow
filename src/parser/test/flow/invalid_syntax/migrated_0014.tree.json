@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
-      "message":"Unexpected token enum"
+      "message":"Unexpected reserved word"
     }
   ],
   "type":"Program",

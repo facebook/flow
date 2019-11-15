@@ -5,25 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val compute_docblock: File_key.t -> string (* content *) -> Docblock.t
+type ast_info = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t
 
-val compute_ast_result:
-  Options.t ->
-  File_key.t ->
-  string (* content *) ->
-  ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
+val compute_docblock : File_key.t -> string (* content *) -> Docblock.t
 
-val get_ast_result:
-  reader:State_reader.t ->
-  File_key.t ->
-  ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
+val compute_ast_result :
+  Options.t -> File_key.t -> string (* content *) -> (ast_info, string) result
 
-val get_dependents:
+val get_ast_result : reader:State_reader.t -> File_key.t -> (ast_info, string) result
+
+val get_all_dependents :
   reader:State_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
   ServerEnv.env ref ->
   File_key.t ->
   string (* content *) ->
-  (* transitive dependents, direct dependents *)
-  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Lwt.t
+  (* transitive dependents *)
+  Utils_js.FilenameSet.t Lwt.t

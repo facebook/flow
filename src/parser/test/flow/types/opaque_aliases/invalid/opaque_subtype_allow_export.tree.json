@@ -2,15 +2,19 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
-      "message":"Unexpected token ="
+      "message":"Unexpected token `=`, expected the token `;`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
+      "message":"Unexpected token `=`, expected the token `declare`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":46},"end":{"line":2,"column":52}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `var`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":52},"end":{"line":2,"column":53}},
-      "message":"Unexpected token ;"
+      "message":"Unexpected token `;`, expected an identifier"
     }
   ],
   "type":"Program",

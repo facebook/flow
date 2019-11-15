@@ -71,7 +71,7 @@ Found 2 errors
 
 ========Skipping stats========
 Merge skipped 2 of 3 modules
-Check will skip 1 files
+Check will skip 2 of 3 files
 
 Adding a comment should cause minimal rechecking (but preserve errors)
 Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
@@ -110,4 +110,4 @@ Found 2 errors
 
 ========Skipping stats========
 Merge skipped 2 of 3 modules
-Check will skip 1 files
+Check will skip 2 of 3 files

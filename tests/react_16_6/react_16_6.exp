@@ -76,8 +76,8 @@ References:
    <BUILTINS>/react.js:313:30
    313|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -97,8 +97,8 @@ References:
    <BUILTINS>/react.js:313:30
    313|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -271,16 +271,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:19:12
 
-Cannot create `MemoComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
+Cannot create `MemoComponentWithEqual` element because property `foo` is missing in props [1] but exists in `Props` [2].
 
    memo.js:19:12
-   19| const _f = <MemoComponent />; // Error missing foo
-                  ^^^^^^^^^^^^^^^^^
+   19| const _f = <MemoComponentWithEqual />; // Error missing foo
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   memo.js:9:23
-    9| const MemoComponent = React.memo(Component);
-                             ^^^^^^^^^^^^^^^^^^^^^ [1]
+   memo.js:16:32
+   16| const MemoComponentWithEqual = React.memo(Component, (props1, props2) => props1 === props2);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    memo.js:7:23
     7| function Component(x: Props): React.Node { return null }
                              ^^^^^ [2]
@@ -288,33 +288,33 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:20:12
 
-Cannot create `MemoComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
+Cannot create `MemoComponentWithEqual` element because property `bar` is missing in `Props` [1] but exists in props [2].
 
    memo.js:20:12
-   20| const _g = <MemoComponent foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   20| const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    memo.js:7:23
     7| function Component(x: Props): React.Node { return null }
                              ^^^^^ [1]
-   memo.js:9:23
-    9| const MemoComponent = React.memo(Component);
-                             ^^^^^^^^^^^^^^^^^^^^^ [2]
+   memo.js:16:32
+   16| const MemoComponentWithEqual = React.memo(Component, (props1, props2) => props1 === props2);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:21:12
 
-Cannot create `MemoComponent` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `MemoComponentWithEqual` element because string [1] is incompatible with number [2] in property `foo`.
 
    memo.js:21:12
-   21| const _h = <MemoComponent foo="string" />; // Error wrong type for foo
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   21| const _h = <MemoComponentWithEqual foo="string" />; // Error wrong type for foo
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   memo.js:21:31
-   21| const _h = <MemoComponent foo="string" />; // Error wrong type for foo
-                                     ^^^^^^^^ [1]
+   memo.js:21:40
+   21| const _h = <MemoComponentWithEqual foo="string" />; // Error wrong type for foo
+                                              ^^^^^^^^ [1]
    memo.js:5:22
     5| type Props = {| foo: number |};
                             ^^^^^^ [2]

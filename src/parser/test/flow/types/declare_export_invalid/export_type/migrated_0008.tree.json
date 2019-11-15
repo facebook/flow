@@ -6,7 +6,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":19}},
-      "message":"Unexpected token type"
+      "message":"Unexpected token `type`, expected the token `{`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":33}},
@@ -22,15 +22,15 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Unexpected token {"
+      "message":"Unexpected token `{`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":27}},
-      "message":"Unexpected token default"
+      "message":"Unexpected token `default`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":33}},
-      "message":"Unexpected token class"
+      "message":"Unexpected token `class`"
     }
   ],
   "type":"Program",

@@ -21,6 +21,7 @@ Table of contents:
 - [`$Call<F, T...>`](#toc-call)
 - [`Class<T>`](#toc-class)
 - [`$Shape<T>`](#toc-shape)
+- [`$Exports<T>`](#toc-exports)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -248,11 +249,14 @@ This can be especially useful for referring to the type of React props, or, even
 ```js
 // @flow
 import React from 'react';
-class Tooltip extends React.Component {
-  props: {
-    text: string,
-    onMouseOver: ({x: number, y: number}) => void
-  };
+
+type Props = {
+  text: string,
+  onMouseOver: ({x: number, y: number}) => void
+}
+
+class Tooltip extends React.Component<Props> {
+  props: Props;
 }
 
 const someProps: $PropertyType<Tooltip, 'props'> = {
@@ -611,8 +615,11 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 
 ## `$Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
 
-Copies the shape of the type supplied, but marks every field optional.
+A variable of type `$Shape<T>`, where `T` is some object type, can be assigned objects `o`
+that contain a subset of the properties included in `T`. For each property `p: S` of `T`,
+the type of a potential binding of `p` in `o` must be compatible with `S`.
 
+For example
 ```js
 // @flow
 type Person = {
@@ -626,6 +633,40 @@ const person2: Person = {name: 'a'};  // Error: missing `age`
 const person3: PersonDetails = {age: 28};  // OK
 const person4: PersonDetails = {name: 'a'};  // OK
 const person5: PersonDetails = {age: 28, name: 'a'};  // OK
+const person6: PersonDetails = {age: '28'};  // Error: string is incompatible with number
+```
+
+> Note: `$Shape<T>` is **not** equivalent to `T` with all its fields marked as optional.
+> In particular, Flow unsoundly allows `$Shape<T>` to be used as a `T` in several
+> contexts. For example in
+```
+const personShape: PersonDetails = {age: 28};
+(personShape: Person);
+```
+Flow will unsoundly allow this last cast to succeed. If this behavior is not wanted,
+then this utility type should be avoided.
+
+## `$Exports<T>` <a class="toc" id="toc-exports" href="#toc-exports"></a>
+
+The following are functionally equivalent
+
+```js
+import typeof * as T from 'my-module';
+```
+
+```js
+type T = $Exports<'my-module'>;
+```
+
+The advantage of the `$Exports` syntax is that you can `export` the type on the same line
+```js
+export type T = $Exports<'my-module'>;
+```
+
+where as you would otherwise need to export an alias in the `import typeof` case
+```js
+import typeof * as T from 'my-module';
+export type MyModuleType = T;
 ```
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
@@ -639,4 +680,3 @@ This utility has been deprecated and should be avoided. See [here](../../linting
 ## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
 
 This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-type) for details.
-

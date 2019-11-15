@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -23,7 +22,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: // @jsx (x)=>x
-                       ^^^^^^ Invalid \`@jsx\` declaration. Should have the form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token =>.
+                       ^^^^^^ Invalid \`@jsx\` declaration. Should have the form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token \`=>\`, expected the end of input.
         `,
       ),
   ]),
@@ -37,7 +36,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:            (x)=>x
-                          ^^^^^^ Invalid \`@jsx\` declaration. Should have the form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token =>.
+                          ^^^^^^ Invalid \`@jsx\` declaration. Should have the form \`@jsx LeftHandSideExpression\` with no spaces. Parse error: Unexpected token \`=>\`, expected the end of input.
         `,
       ),
   ]),

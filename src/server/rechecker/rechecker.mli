@@ -6,21 +6,15 @@
  *)
 
 (* filter and relativize updated file paths *)
-val process_updates :
-  ServerEnv.genv ->
-  ServerEnv.env ->
-  SSet.t ->
-  Utils_js.FilenameSet.t
+val process_updates : options:Options.t -> ServerEnv.env -> SSet.t -> Utils_js.FilenameSet.t
 
-val recheck_single:
+val recheck_single :
   ?files_to_force:CheckedSet.t ->
   ServerEnv.genv ->
   ServerEnv.env ->
   (Profiling_js.finished * ServerEnv.env, ServerEnv.env) result Lwt.t
 
-val recheck_loop:
-  ServerEnv.genv ->
-  ServerEnv.env ->
-  (Profiling_js.finished list * ServerEnv.env) Lwt.t
+val recheck_loop :
+  ServerEnv.genv -> ServerEnv.env -> (Profiling_js.finished list * ServerEnv.env) Lwt.t
 
-val get_lazy_stats: ServerEnv.genv -> ServerEnv.env -> ServerProt.Response.lazy_stats
+val get_lazy_stats : options:Options.t -> ServerEnv.env -> ServerProt.Response.lazy_stats

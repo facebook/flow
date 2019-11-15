@@ -193,3 +193,16 @@ function testit(arg       )                  {
 
 // Test function with default type parameter
 function f          () {}
+
+// Opaque types
+                       
+                               
+                      
+                              
+                              
+
+// Declare export
+                             
+                     
+                                  
+                         

@@ -6,11 +6,13 @@
  *)
 
 type file_kind =
-| Dir of string
-| File of string
+  | Dir of string
+  | File of string
 
-val fold_files:
-  ?max_depth:int -> ?filter:(string -> bool) -> ?file_only:bool ->
+val fold_files :
+  ?max_depth:int ->
+  ?filter:(string -> bool) ->
+  ?file_only:bool ->
   string list ->
   (file_kind -> 'a -> 'a) ->
   'a ->

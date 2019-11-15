@@ -18,13 +18,13 @@
  * body will be walked over. Typically the body is only useful when TypeAlias
  * appears as the top-level constructor, and is ignored otherwise.
  *)
-val tvar_appears_in_type: is_toplevel:bool -> Ty.tvar -> Ty.t -> bool
+val tvar_appears_in_type : is_toplevel:bool -> Ty.tvar -> Ty.t -> bool
 
 (* Returns the number of nodes in a type. Will return None if the number of nodes
  * exceeds the max parameter.
  *)
-val size_of_type: ?max:int -> Ty.t -> int option
+val size_of_type : ?max:int -> Ty.t -> int option
 
-val simplify_type: simplify_empty:bool -> Ty.t -> Ty.t
+val simplify_type : merge_kinds:bool -> ?sort:bool -> Ty.t -> Ty.t
 
-val symbols_of_type: Ty.t -> Ty_symbol.symbol list
+val symbols_of_type : Ty.t -> Ty_symbol.symbol list

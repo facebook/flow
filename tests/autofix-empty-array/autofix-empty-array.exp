@@ -1,0 +1,12 @@
+// @flow
+
+const a0: Array<empty> = [];
+
+const a1: Array<any | number> = [];
+a1.push(1);
+
+const a2: Array<number> = [];
+(a2[0]: number);
+
+module.exports = { a0, a1, a2};
+No errors!

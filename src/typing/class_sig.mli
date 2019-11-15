@@ -9,6 +9,5 @@
 
 include module type of Class_sig_intf
 
-module Make (F: Func_sig.S): S
-  with type func_sig = F.t
-   and type func_params_tast = F.func_params_tast
+module Make (F : Func_sig.S) :
+  S with type func_sig = F.t and type func_params_tast = F.func_params_tast

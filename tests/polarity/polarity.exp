@@ -1,3 +1,17 @@
+Error ----------------------------------------------------------------------------------------------------- call.js:1:20
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   call.js:1:20
+   1| type O<+T> = { (x: T): void }; // Error: +T in a negative position
+                         ^
+
+References:
+   call.js:1:9
+   1| type O<+T> = { (x: T): void }; // Error: +T in a negative position
+              ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ fun.js:3:19
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -52,6 +66,34 @@ References:
    fun.js:10:18
    10| type FlipRetPos<+T> = (() => T) => void; // Error: +T in negative position
                         ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- implements.js:2:26
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   implements.js:2:26
+   2| class C<+T> implements I<T> {} // Error: +T in a negative position
+                               ^
+
+References:
+   implements.js:2:10
+   2| class C<+T> implements I<T> {} // Error: +T in a negative position
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:3:16
+
+Cannot use `X` [1] in an input/output position because `X` [1] is expected to occur only in output positions.
+
+   method.js:3:16
+   3|   x: <+X>(x: F<X>) => void; 
+                     ^
+
+References:
+   method.js:3:8
+   3|   x: <+X>(x: F<X>) => void; 
+             ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:2:25
@@ -167,4 +209,4 @@ References:
 
 
 
-Found 12 errors
+Found 15 errors

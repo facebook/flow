@@ -1,0 +1,18 @@
+(library
+  (name flow_server)
+  (wrapped false)
+  (libraries
+    flow_exit_status
+    flow_logging_lwt
+    flow_logging_utils
+    flow_monitor_rpc
+    flow_procs
+    flow_server_env
+    flow_server_files
+    flow_server_monitor_listener
+    flow_server_rechecker
+    flow_service_inference
+    flow_shared_mem
+  )
+  (preprocess (pps lwt_ppx))
+)

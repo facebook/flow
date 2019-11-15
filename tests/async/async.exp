@@ -10,8 +10,8 @@ References:
    async.js:11:30
     11| async function f1(): Promise<bool> {
                                      ^^^^ [2]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -30,8 +30,8 @@ References:
    async.js:30:48
     30| async function f4(p: Promise<number>): Promise<bool> {
                                                        ^^^^ [2]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -100,8 +100,8 @@ References:
    async2.js:57:13
     57|   : Promise<number> { // error, number != void
                     ^^^^^^ [1]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [2]
 
 
@@ -134,8 +134,8 @@ References:
    async_return_void.js:3:32
      3| async function foo1(): Promise<string> {
                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -151,8 +151,8 @@ References:
    async_return_void.js:7:32
      7| async function foo2(): Promise<string> {
                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -171,14 +171,14 @@ References:
    async_return_void.js:11:32
     11| async function foo3(): Promise<string> {
                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:649:24
-   649| declare class Promise<+R> {
+   <BUILTINS>/core.js:664:24
+   664| declare class Promise<+R> {
                                ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- await_not_in_async.js:5:9
 
-Unexpected number
+Unexpected number, expected the end of an expression statement (`;`)
 
    5|   await 1;
               ^
@@ -186,7 +186,7 @@ Unexpected number
 
 Error --------------------------------------------------------------------------------------- await_not_in_async2.js:6:9
 
-Unexpected number
+Unexpected number, expected the token `,`
 
    6| f(await 1);
               ^
@@ -194,7 +194,7 @@ Unexpected number
 
 Error --------------------------------------------------------------------------------------- await_not_in_async3.js:6:9
 
-Unexpected number
+Unexpected number, expected the token `,`
 
    6| f(await 1);
               ^

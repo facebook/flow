@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-
-
 (* trust_qualifier information describes a type's relationship with the any type.
    These may be applied to any DefT (except AnyT), and determine whether
    the type is a subtype, supertype, both, or neither of "any".
@@ -122,168 +120,240 @@
 let mask b = (1 lsl b) - 1
 
 type ident = int
+
 module TrustRepresentation : sig
   type trust_qualifier
+
   type trust_rep
+
   type trust_level
 
-  val fail_trust: (int -> string, unit, string) format -> trust_qualifier -> 'a
-  val fail_trust_rep: (int -> string, unit, string) format -> trust_rep -> 'a
+  val fail_trust : (int -> string, unit, string) format -> trust_qualifier -> 'a
 
-  val untag_ident: trust_rep -> ident
-  val untag_qualifier: trust_rep -> trust_qualifier
-  val tag_ident: ident -> trust_rep
-  val tag_qualifier: trust_qualifier -> trust_rep
-  val is_ident: trust_rep -> bool
-  val is_qualifier: trust_rep -> bool
+  val fail_trust_rep : (int -> string, unit, string) format -> trust_rep -> 'a
 
-  val bot: trust_level
-  val top: trust_level
-  val unk: trust_level
-  val enf: trust_level
+  val untag_ident : trust_rep -> ident
 
-  val get_taint: trust_qualifier -> trust_level
-  val get_pub: trust_qualifier -> trust_level
-  val make_trust: trust_level -> trust_level -> trust_qualifier
+  val untag_qualifier : trust_rep -> trust_qualifier
+
+  val tag_ident : ident -> trust_rep
+
+  val tag_qualifier : trust_qualifier -> trust_rep
+
+  val is_ident : trust_rep -> bool
+
+  val is_qualifier : trust_rep -> bool
+
+  val bot : trust_level
+
+  val top : trust_level
+
+  val unk : trust_level
+
+  val enf : trust_level
+
+  val get_taint : trust_qualifier -> trust_level
+
+  val get_pub : trust_qualifier -> trust_level
+
+  val make_trust : trust_level -> trust_level -> trust_qualifier
 end = struct
   type bitrep = int
 
   type trust_qualifier = bitrep
+
   type trust_rep = bitrep
 
-  let fail s (n: int) =
-    Utils_js.assert_false (Utils_js.spf s n)
-  let fail_trust s (n: trust_qualifier) = fail s n
-  let fail_trust_rep s (n: trust_rep) = fail s n
+  let fail s (n : int) = Utils_js.assert_false (Utils_js.spf s n)
+
+  let fail_trust s (n : trust_qualifier) = fail s n
+
+  let fail_trust_rep s (n : trust_rep) = fail s n
 
   module Tag : sig
     type tag
-    val qualifier: tag
-    val ident: tag
-    val get_tag: trust_rep -> tag
-    val untag: trust_rep -> bitrep
-    val tag: tag -> bitrep -> trust_rep
+
+    val qualifier : tag
+
+    val ident : tag
+
+    val get_tag : trust_rep -> tag
+
+    val untag : trust_rep -> bitrep
+
+    val tag : tag -> bitrep -> trust_rep
   end = struct
     type tag = int
+
     let tag_size = 1
+
     let tag_mask = mask tag_size
 
     let qualifier = 0
+
     let ident = 1
 
     let get_tag n = n land tag_mask
+
     let untag n = n lsr tag_size
+
     let tag t n = (n lsl tag_size) lor t
   end
-  let is_ident (n: trust_rep) : bool = Tag.get_tag n = Tag.ident
-  let is_qualifier (n: trust_rep) : bool = Tag.get_tag n = Tag.qualifier
+
+  let is_ident (n : trust_rep) : bool = Tag.get_tag n = Tag.ident
+
+  let is_qualifier (n : trust_rep) : bool = Tag.get_tag n = Tag.qualifier
 
   let untag_ident : trust_rep -> ident = Tag.untag
+
   let untag_qualifier : trust_rep -> trust_qualifier = Tag.untag
+
   let tag_qualifier : trust_qualifier -> trust_rep = Tag.tag Tag.qualifier
+
   let tag_ident : ident -> trust_rep = Tag.tag Tag.ident
 
   module Elt : sig
     type trust_level
-    val bot: trust_level
-    val top: trust_level
-    val unk: trust_level
-    val enf: trust_level
 
-    val get_taint: trust_qualifier -> trust_level
-    val get_pub: trust_qualifier -> trust_level
-    val make_trust: trust_level -> trust_level -> trust_qualifier
+    val bot : trust_level
+
+    val top : trust_level
+
+    val unk : trust_level
+
+    val enf : trust_level
+
+    val get_taint : trust_qualifier -> trust_level
+
+    val get_pub : trust_qualifier -> trust_level
+
+    val make_trust : trust_level -> trust_level -> trust_qualifier
   end = struct
     type trust_level = int
+
     let elt_size = 2
+
     let elt_mask = mask elt_size
 
-    let bot: trust_level = 0
-    let top: trust_level = 1
-    let unk: trust_level = 2
-    let enf: trust_level = 3
+    let bot : trust_level = 0
 
-    let get_taint (n: trust_qualifier) : trust_level = (n lsr elt_size) land elt_mask
-    let get_pub (n: trust_qualifier) : trust_level = n land elt_mask
-    let make_trust (taint: trust_level) (pub: trust_level) : trust_qualifier = (taint lsl elt_size) lor pub
+    let top : trust_level = 1
+
+    let unk : trust_level = 2
+
+    let enf : trust_level = 3
+
+    let get_taint (n : trust_qualifier) : trust_level = (n lsr elt_size) land elt_mask
+
+    let get_pub (n : trust_qualifier) : trust_level = n land elt_mask
+
+    let make_trust (taint : trust_level) (pub : trust_level) : trust_qualifier =
+      (taint lsl elt_size) lor pub
   end
 
   include Elt
 end
 
 include TrustRepresentation
+
 type expanded_trust =
-| Qualifier of trust_qualifier
-| Inferred of ident
+  | Qualifier of trust_qualifier
+  | Inferred of ident
 
 let dynamic = make_trust bot bot
+
 let initial = make_trust top bot
+
 let terminal = make_trust bot top
+
 let static = make_trust top top
+
 let infertrust = make_trust unk unk
 
 let dynamic_info = tag_qualifier dynamic
-let _initial_info = tag_qualifier initial
-let _terminal_info = tag_qualifier terminal
-let _static_info = tag_qualifier static
-let infer_info = tag_qualifier infertrust
 
+let _initial_info = tag_qualifier initial
+
+let _terminal_info = tag_qualifier terminal
+
+let _static_info = tag_qualifier static
+
+let infer_info = tag_qualifier infertrust
 
 let bad_trust_rep n = fail_trust "invalid trust_qualifier representation: %d" n
 
 let expand n =
-  if is_ident n then Inferred (untag_ident n) else Qualifier (untag_qualifier n)
+  if is_ident n then
+    Inferred (untag_ident n)
+  else
+    Qualifier (untag_qualifier n)
+
 let compress x =
   match x with
   | Inferred n -> tag_ident n
   | Qualifier trust_qualifier -> tag_qualifier trust_qualifier
 
 let as_qualifier n =
-  if is_qualifier n then untag_qualifier n else
+  if is_qualifier n then
+    untag_qualifier n
+  else
     fail_trust_rep "trust_rep value does not represent trust: %d" n
+
 let as_ident n =
-  if is_ident n then untag_ident n else
+  if is_ident n then
+    untag_ident n
+  else
     fail_trust_rep "trust_rep value does not represent inference ident: %d" n
 
-let from_ident ident =
-  tag_ident ident
+let from_ident ident = tag_ident ident
 
-let from_qualifier n =
-  tag_qualifier n
+let from_qualifier n = tag_qualifier n
 
 let trust_value ~default n =
   if is_qualifier n then
     untag_qualifier n
-  else default
+  else
+    default
 
 let trust_value_map ~default ~f n =
   if is_qualifier n then
     untag_qualifier n |> f
-  else default
-
+  else
+    default
 
 let string_of_taint t =
   let n = get_taint t in
-  if n = bot then "Tainted" else
-  if n = top then "Trusted" else
-  if n = unk then "?" else
-  if n = enf then "Enforced" else
-  bad_trust_rep t
+  if n = bot then
+    "Tainted"
+  else if n = top then
+    "Trusted"
+  else if n = unk then
+    "?"
+  else if n = enf then
+    "Enforced"
+  else
+    bad_trust_rep t
 
 let string_of_pub t =
   let n = get_pub t in
-  if n = bot then "Public" else
-  if n = top then "Private" else
-  if n = unk then "?" else
-  if n = enf then "Enforced" else
-  bad_trust_rep t
+  if n = bot then
+    "Public"
+  else if n = top then
+    "Private"
+  else if n = unk then
+    "?"
+  else if n = enf then
+    "Enforced"
+  else
+    bad_trust_rep t
 
-let string_of_trust n =
-  Printf.sprintf "<%s/%s>" (string_of_taint n) (string_of_pub n)
+let string_of_trust n = Printf.sprintf "<%s/%s>" (string_of_taint n) (string_of_pub n)
 
 let string_of_trust_rep get_trust n =
-  if is_qualifier n then untag_qualifier n |> string_of_trust
-  else Printf.sprintf "%d -> [%s]" (untag_ident n) (untag_ident n |> get_trust |> string_of_trust)
+  if is_qualifier n then
+    untag_qualifier n |> string_of_trust
+  else
+    Printf.sprintf "%d -> [%s]" (untag_ident n) (untag_ident n |> get_trust |> string_of_trust)
 
 (* trust_qualifier creation functions and modules:
    These functions will be used to generate trust_qualifier information when DefTs are
@@ -305,48 +375,55 @@ let literal_trust () = infer_info
 let annot_trust () = dynamic_info
 
 let unknown_qualifier () = infertrust
+
 let dynamic_qualifier () = dynamic
 
 (* Given a trust_qualifier datum, add (if not already present) the requirement that it
    be trusted or private. *)
-let make_trusted n =
-  make_trust top (get_pub n)
-let make_private n =
-  make_trust (get_taint n) top
+let make_trusted n = make_trust top (get_pub n)
 
-let make_enforced n =
-  make_trust enf (get_pub n)
+let make_private n = make_trust (get_taint n) top
+
+let make_enforced n = make_trust enf (get_pub n)
 
 let is_tainted n = get_taint n = bot
+
 let is_public n = get_pub n = bot
 
-let subtype_bit l u =
-  l = u || (l = bot && u = top) ||
-    l = unk || u = unk || l = enf || u = enf
+let subtype_bit l u = l = u || (l = bot && u = top) || l = unk || u = unk || l = enf || u = enf
+
 let subtype_trust l u =
-  subtype_bit (get_taint u) (get_taint l) &&
-  subtype_bit (get_pub l) (get_pub u)
+  subtype_bit (get_taint u) (get_taint l) && subtype_bit (get_pub l) (get_pub u)
 
 let taint_with tainted other =
   if get_taint other <> enf && is_tainted tainted then
     make_trust bot (get_pub other)
-  else other
+  else
+    other
 
 let publicize_with public other =
   if is_public public then
     make_trust (get_taint other) bot
-  else other
+  else
+    other
 
 let join_bit l r =
-  if l = enf || r = enf then enf else
-  if l = top || r = top then top else
-  if l = bot || r = bot then bot else
-  unk
+  if l = enf || r = enf then
+    enf
+  else if l = top || r = top then
+    top
+  else if l = bot || r = bot then
+    bot
+  else
+    unk
+
 let join_trust l r =
-  make_trust (join_bit (get_taint l) (get_taint r))
-    (join_bit (get_pub l) (get_pub r))
+  make_trust (join_bit (get_taint l) (get_taint r)) (join_bit (get_pub l) (get_pub r))
 
 let fix_bit n =
-  if n = unk then bot else n
-let fix t =
-  make_trust (fix_bit (get_taint t)) (fix_bit (get_pub t))
+  if n = unk then
+    bot
+  else
+    n
+
+let fix t = make_trust (fix_bit (get_taint t)) (fix_bit (get_pub t))

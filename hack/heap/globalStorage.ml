@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -17,34 +17,44 @@
  *)
 (*****************************************************************************)
 
-module Make:
-    functor(Value:sig type t end) -> sig
+module Make : functor
+  (Value : sig
+     type t
+   end)
+  -> sig
+  (* "store v" stores the value v in the global storage.
+   * Can only be called by the master.
+   * 'hh_shared_init' must have been called prior to the first call.
+   * The store must be empty.
+   *)
+  val store : Value.t -> unit
 
-    (* "store v" stores the value v in the global storage.
-     * Can only be called by the master.
-     * 'hh_shared_init' must have been called prior to the first call.
-     * The store must be empty.
-     *)
-    val store: Value.t -> unit
+  (* "load()" returns the value stored in the global storage.
+   * Can be called by any process (master or workers), "store" must have
+   * been called by the master before the call.
+   *)
+  val load : unit -> Value.t
 
-    (* "load()" returns the value stored in the global storage.
-     * Can be called by any process (master or workers), "store" must have
-     * been called by the master before the call.
-     *)
-    val load: unit -> Value.t
+  (* "clear()" empties the global storage.
+   * Can only be called by the master.
+   *)
+  val clear : unit -> unit
+end =
+functor
+  (Value : sig
+     type t
+   end)
+  ->
+  struct
+    external hh_shared_store : string -> unit = "hh_shared_store"
 
-    (* "clear()" empties the global storage.
-     * Can only be called by the master.
-     *)
-    val clear: unit -> unit
+    external hh_shared_load : unit -> string = "hh_shared_load"
 
-  end = functor(Value: sig type t end) -> struct
+    external hh_shared_clear : unit -> unit = "hh_shared_clear"
 
-    external hh_shared_store : string -> unit   = "hh_shared_store"
-    external hh_shared_load  : unit   -> string = "hh_shared_load"
-    external hh_shared_clear : unit   -> unit   = "hh_shared_clear"
+    let store (x : Value.t) = hh_shared_store (Marshal.to_string x [])
 
-    let store (x: Value.t)  = hh_shared_store (Marshal.to_string x [])
-    let load () = (Marshal.from_string (hh_shared_load()) 0 : Value.t)
-    let clear () = hh_shared_clear()
-end
+    let load () = (Marshal.from_string (hh_shared_load ()) 0 : Value.t)
+
+    let clear () = hh_shared_clear ()
+  end

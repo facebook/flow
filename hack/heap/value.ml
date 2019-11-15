@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -7,18 +7,19 @@
  *
  *)
 
-
 (*****************************************************************************)
 (* Very simple module used to make sure we don't mix keys of different
  * type in the heap (cf shared.ml).
  * Because we have to "create" a new module every time, we have to make a new
  * prefix (cf prefix.ml). Since the prefixes are always different (for each
  * call to make), we are sure that they are not colliding.
-*)
+ *)
 (*****************************************************************************)
 
 module type Type = sig
   type t
-  val prefix: Prefix.t
-  val description: string
+
+  val prefix : Prefix.t
+
+  val description : string
 end

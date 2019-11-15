@@ -22,3 +22,12 @@ foo;
 
 import type {Foo} from './types';
 function takesFoo(foo: Foo) { }
+
+{
+  let require = (x : string) => x === './Parent';
+  let adopted = require('./Parent');
+  adopted;
+}
+
+var Child = require('./Child');
+Child.ChildFoo.foo;

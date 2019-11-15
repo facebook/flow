@@ -8,5 +8,5 @@
 (* This module is documented in state_reader.ml *)
 
 type t =
-| State_reader of State_reader.t
-| Mutator_state_reader of Mutator_state_reader.t
+  | State_reader of State_reader.t
+  | Mutator_state_reader of Mutator_state_reader.t

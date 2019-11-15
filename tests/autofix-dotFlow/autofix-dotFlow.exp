@@ -1,0 +1,10 @@
+> cat a.js
+// @flow
+
+module.exports = (): number => 1;
+> cat a.js.flow
+// @flow
+
+module.exports = (): number => 1;
+> flow status
+No errors!

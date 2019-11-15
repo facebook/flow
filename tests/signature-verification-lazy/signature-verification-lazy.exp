@@ -1,7 +1,7 @@
 ===== signature-verification error should not be reported, just the parsing error: =====
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -17,7 +17,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== suppressed signature-verification error should not be reported after focus-checking suppressed_signature_verification_error.js: =====
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -33,7 +33,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== suppressed signature-verification error should not be reported after focus-checking suppressed_bad_module_export.js: =====
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -57,7 +57,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -81,7 +81,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -89,7 +89,7 @@ Unexpected token ;
 
 Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
 
-Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at function return: (`signature-verification-failure`)
 
    3| export function foo(x: number) { return x; }
@@ -114,7 +114,7 @@ Error --------------------------------------------------------------------------
 
 Error --------------------------------------------------------------------------------------------------- cycleC.js:5:31
 
-Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at function return: (`signature-verification-failure`)
 
    5| export function foo(x: number) { return x; } // error when force-checking cycleA.js
@@ -123,7 +123,7 @@ annotation at function return: (`signature-verification-failure`)
 
 Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
 
-Unexpected token ;
+Unexpected token `;`
 
    6| const x =;
                ^
@@ -131,7 +131,7 @@ Unexpected token ;
 
 Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
 
-Failed to build a typed interface for this module. The exports of this module must be annotated with types. Missing type
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at function return: (`signature-verification-failure`)
 
    3| export function foo(x: number) { return x; }

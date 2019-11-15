@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-include FlowServerMonitorConnection.CONNECTION
-  with type in_message := Persistent_connection_prot.request
-  and type out_message := Persistent_connection_prot.response
+include
+  FlowServerMonitorConnection.CONNECTION
+    with type in_message := LspProt.request_with_metadata
+     and type out_message := LspProt.message_from_server

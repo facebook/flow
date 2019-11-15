@@ -1,3 +1,44 @@
+Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:16
+
+string [1] is incompatible with `$ArrayLike` [2].
+
+   apply-array-like.js:5:16
+     5| test.apply("", "foo"); // error: string ~> object
+                       ^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:306:22
+                             v
+   306| type $ArrayLike<T> = {
+   307|   [indexer: number]: T,
+   308|   length: number,
+   309|   ...
+   310| }
+        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- apply-array-like.js:20:16
+
+Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2].
+
+   apply-array-like.js:20:16
+    20| test.apply([], gen()); // error: iterable ~> array-like
+                       ^^^^^
+
+References:
+   apply-array-like.js:15:17
+    15| function * gen() {
+                        ^ [1]
+   <BUILTINS>/core.js:306:22
+                             v
+   306| type $ArrayLike<T> = {
+   307|   [indexer: number]: T,
+   308|   length: number,
+   309|   ...
+   310| }
+        ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
 
 Cannot get `this.length` because:
@@ -30,8 +71,8 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:120:18
-   120|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+   <BUILTINS>/core.js:126:18
+   126|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -105,21 +146,23 @@ References:
                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:28:1
+Error --------------------------------------------------------------------------------------------------- apply.js:28:16
 
-Cannot call `test.apply` because string [1] is incompatible with number [2].
+string [1] is incompatible with `$ArrayLike` [2].
 
-   apply.js:28:1
-    28| test.apply("", "not array"); // error: expect array of args
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   apply.js:28:16
+    28| test.apply("", "not array"); // error: string ~> object
+                       ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:311:28
-   311|     @@iterator(): Iterator<string>;
-                                   ^^^^^^ [1]
-   apply.js:1:29
-     1| function test(a: string, b: number): number {
-                                    ^^^^^^ [2]
+   <BUILTINS>/core.js:306:22
+                             v
+   306| type $ArrayLike<T> = {
+   307|   [indexer: number]: T,
+   308|   length: number,
+   309|   ...
+   310| }
+        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:35:2
@@ -442,6 +485,48 @@ References:
                               ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- call_error_generic.js:23:5
+
+Cannot call `bar` with `foo` bound to `x` because null or undefined [1] is incompatible with string [2] in type argument
+`T` [3].
+
+   call_error_generic.js:23:5
+   23| bar(foo);
+           ^^^
+
+References:
+   call_error_generic.js:3:19
+                         v-
+    3| declare var some: ?{
+    4|   x: string;
+    5| }
+       ^ [1]
+   call_error_generic.js:21:25
+   21| function bar(x: ROArray<string>) { }
+                               ^^^^^^ [2]
+   call_error_generic.js:10:24
+   10| declare class ROArray<+T> { }
+                              ^ [3]
+
+
+Error -------------------------------------------------------------------------------------- call_error_generic2.js:11:8
+
+Cannot call `bar2` with `userRef` bound to `fragmentRef` because property `$data` is missing in object type [1] but
+exists in object type [2].
+
+   call_error_generic2.js:11:8
+   11|   bar2(userRef);
+              ^^^^^^^
+
+References:
+   call_error_generic2.js:9:33
+    9| function foo(props: { userRef?: {} }) {
+                                       ^^ [1]
+   call_error_generic2.js:3:30
+    3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
+                                    ^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- function.js:21:3
 
 Cannot resolve name `React`.
@@ -459,8 +544,8 @@ Cannot cast `x.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:126:13
-   126|     length: number;
+   <BUILTINS>/core.js:132:13
+   132|     length: number;
                     ^^^^^^ [1]
    function.js:37:16
     37|     (x.length: void); // error, it's a number
@@ -476,8 +561,8 @@ Cannot cast `y.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:126:13
-   126|     length: number;
+   <BUILTINS>/core.js:132:13
+   132|     length: number;
                     ^^^^^^ [1]
    function.js:38:16
     38|     (y.length: void); // error, it's a number
@@ -493,8 +578,8 @@ Cannot cast `x.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:127:11
-   127|     name: string;
+   <BUILTINS>/core.js:133:11
+   133|     name: string;
                   ^^^^^^ [1]
    function.js:41:14
     41|     (x.name: void); // error, it's a string
@@ -510,8 +595,8 @@ Cannot cast `y.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:127:11
-   127|     name: string;
+   <BUILTINS>/core.js:133:11
+   133|     name: string;
                   ^^^^^^ [1]
    function.js:42:14
     42|     (y.name: void); // error, it's a string
@@ -527,8 +612,8 @@ Cannot assign `'foo'` to `x.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:126:13
-   126|     length: number;
+   <BUILTINS>/core.js:132:13
+   132|     length: number;
                     ^^^^^^ [2]
 
 
@@ -541,8 +626,8 @@ Cannot assign `'foo'` to `y.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:126:13
-   126|     length: number;
+   <BUILTINS>/core.js:132:13
+   132|     length: number;
                     ^^^^^^ [2]
 
 
@@ -555,8 +640,8 @@ Cannot assign `123` to `x.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:127:11
-   127|     name: string;
+   <BUILTINS>/core.js:133:11
+   133|     name: string;
                   ^^^^^^ [2]
 
 
@@ -569,8 +654,8 @@ Cannot assign `123` to `y.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:127:11
-   127|     name: string;
+   <BUILTINS>/core.js:133:11
+   133|     name: string;
                   ^^^^^^ [2]
 
 
@@ -717,4 +802,4 @@ References:
 
 
 
-Found 52 errors
+Found 56 errors

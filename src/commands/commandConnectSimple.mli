@@ -12,7 +12,10 @@ type busy_reason =
 
 type mismatch_behavior =
   | Server_exited
-  | Client_should_error of { server_bin: string; server_version: string; }
+  | Client_should_error of {
+      server_bin: string;
+      server_version: string;
+    }
 
 type error =
   | Build_id_mismatch of mismatch_behavior
@@ -24,7 +27,7 @@ val server_exists : flowconfig_name:string -> tmp_dir:string -> Path.t -> bool
 
 val connect_once :
   flowconfig_name:string ->
-  client_handshake: (SocketHandshake.client_handshake) ->
+  client_handshake:SocketHandshake.client_handshake ->
   tmp_dir:string ->
   Path.t ->
   (Timeout.in_channel * out_channel, error) result

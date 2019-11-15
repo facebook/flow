@@ -7,48 +7,32 @@
 
 open Utils_js
 
-val dependent_files:
-  reader: Abstract_state_reader.t ->
-  MultiWorkerLwt.worker list option -> (* workers *)
-  candidates:FilenameSet.t ->
+val calc_direct_dependents :
+  reader:Abstract_state_reader.t ->
+  MultiWorkerLwt.worker list option ->
+  candidates:(* workers *)
+             FilenameSet.t ->
   root_files:FilenameSet.t ->
   root_modules:Modulename.Set.t ->
-  (* (transitive_dependents, direct_dependents) of changed_modules *)
-  (FilenameSet.t * FilenameSet.t) Lwt.t
+  (* direct_dependents of changed_modules *)
+  FilenameSet.t Lwt.t
 
 type dependency_graph = FilenameSet.t FilenameMap.t
 
-val calc_dependency_info:
+val calc_dependency_info :
   options:Options.t ->
-  reader: Mutator_state_reader.t ->
-  MultiWorkerLwt.worker list option -> (* workers *)
-  parsed:FilenameSet.t ->
+  reader:Mutator_state_reader.t ->
+  MultiWorkerLwt.worker list option ->
+  parsed:(* workers *)
+         FilenameSet.t ->
   Dependency_info.t Lwt.t
 
-val calc_partial_dependency_info:
+val calc_partial_dependency_info :
   options:Options.t ->
-  reader: Mutator_state_reader.t ->
-  MultiWorkerLwt.worker list option -> (* workers *)
-  FilenameSet.t -> (* files *)
-  parsed:FilenameSet.t ->
+  reader:Mutator_state_reader.t ->
+  MultiWorkerLwt.worker list option ->
+  (* workers *)
+  FilenameSet.t ->
+  parsed:(* files *)
+         FilenameSet.t ->
   Dependency_info.t Lwt.t
-
-val calc_direct_dependencies:
-  Dependency_info.t ->
-  FilenameSet.t ->
-  FilenameSet.t
-
-val calc_all_dependencies:
-  Dependency_info.t ->
-  FilenameSet.t ->
-  FilenameSet.t
-
-val calc_all_reverse_dependencies:
-  Dependency_info.t ->
-  FilenameSet.t ->
-  FilenameSet.t
-
-val filter_dependency_graph:
-  dependency_graph ->
-  FilenameSet.t -> (* files *)
-  dependency_graph

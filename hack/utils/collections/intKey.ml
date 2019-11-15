@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -8,4 +8,5 @@
  *)
 
 type t = int
-let compare = (-)
+
+let compare = ( - )

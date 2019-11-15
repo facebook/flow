@@ -7,8 +7,6 @@
 
 open OUnit2
 
-let tests = "ty" >::: [
-  Ty_printer_test.tests;
-]
+let tests = "ty" >::: [Ty_printer_test.tests; Ty_simplifier_test.tests]
 
 let () = run_test_tt_main tests

@@ -24,6 +24,7 @@ can be overridden with command line flags.
 * [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
 * [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
 * [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
+* [`exact_by_default`](#toc-exact-by-default-boolean)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
 * [`lazy_mode`](#toc-lazy-mode-fs-ide-watchman-none)
@@ -129,6 +130,27 @@ the syntax.
 
 The default value of this option is `warn`, which gives a warning on
 use since this proposal is still very early-stage.
+
+#### `exact_by_default` _`(boolean)`_ <a class="toc" id="toc-exact-by-default-boolean" href="#toc-exact-by-default-boolean"></a>
+
+Set this to `true` to indicate that Flow should interpret object types as exact
+by default. When this flag is `false`, Flow has the following behavior:
+
+```js
+{foo: number} // inexact
+{| foo: number |} // exact
+{foo: number, ...} // inexact
+```
+
+When this flag is `true`, Flow has the following behavior:
+
+```js
+{foo: number} // exact
+{| foo: number |} // exact
+{foo: number, ...} // inexact
+```
+
+The default value is `false`.
 
 #### `experimental.const_params` _`(boolean)`_ <a class="toc" id="toc-experimental-const-params-boolean" href="#toc-experimental-const-params-boolean"></a>
 

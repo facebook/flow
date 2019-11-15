@@ -2,11 +2,11 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":30}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
-      "message":"Unexpected token :"
+      "message":"Unexpected token `:`, expected the token `=>`"
     }
   ],
   "type":"Program",

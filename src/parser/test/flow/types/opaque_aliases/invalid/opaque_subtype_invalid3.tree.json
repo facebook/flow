@@ -2,11 +2,11 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":12}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the end of an expression statement (`;`)"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
-      "message":"Unexpected token ="
+      "message":"Unexpected token `=`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":20}},

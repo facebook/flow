@@ -1,1 +1,278 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
+
+Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2].
+
+   enum-object.js:16:2
+   16| (F: EO); // Error: types are incompatible
+        ^
+
+References:
+   enum-object.js:8:1
+       v-------
+    8| enum F {
+    9|   A,
+   10|   B,
+   11| }
+       ^ [1]
+   enum-object.js:16:5
+   16| (F: EO); // Error: types are incompatible
+           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:19:1
+
+Cannot reference type `EO` [1] from a value position.
+
+   enum-object.js:19:1
+   19| EO.A;
+       ^^
+
+References:
+   enum-object.js:14:6
+   14| type EO = typeof E;
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:28:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:28:4
+   28|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:28:7
+   28|   (x: EO); // Error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:32:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:32:4
+   32|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:32:7
+   32|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:37:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:37:4
+   37|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:37:7
+   37|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:43:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:43:4
+   43|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:43:7
+   43|   (x: EO); // Error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:47:4
+
+Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2].
+
+   enum-object.js:47:4
+   47|   (x: void); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:47:7
+   47|   (x: void); // Error
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:53:4
+
+Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2].
+
+   enum-object.js:53:4
+   53|   (x: EO); // Error
+          ^
+
+References:
+   enum-object.js:24:10
+   24| const x: VoidableEO = E;
+                ^^^^^^^^^^ [1]
+   enum-object.js:53:7
+   53|   (x: EO); // Error
+             ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:9:11
+
+Cannot access `E.C` [1] because `C` is not a member of enum `E` [2]
+
+   error-access.js:9:11
+   9| const x = E.C;
+                ^^^ [1]
+
+References:
+   error-access.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- error-access.js:14:1
+
+Cannot access computed property [1] on enum `E` [2] because computed access is not allowed on enums.
+
+   error-access.js:14:1
+   14| E["A"];
+       ^^^^^^ [1]
+
+References:
+   error-access.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- error-coercion.js:9:19
+
+Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2].
+
+   error-coercion.js:9:19
+   9| const a: string = E.A;
+                        ^^^
+
+References:
+   error-coercion.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+   error-coercion.js:9:10
+   9| const a: string = E.A;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error-coercion.js:12:14
+
+Cannot assign `'B'` to `b` because string [1] is incompatible with `E` [2].
+
+   error-coercion.js:12:14
+   12| const b: E = 'B';
+                    ^^^ [1]
+
+References:
+   error-coercion.js:12:10
+   12| const b: E = 'B';
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
+
+Cannot change member [1] of enum `E` [2] because enums are frozen.
+
+   error-modification.js:9:1
+   9| E.A = 1;
+      ^^^ [1]
+
+References:
+   error-modification.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- error-modification.js:12:1
+
+Cannot change member [1] of enum `E` [2] because enums are frozen.
+
+   error-modification.js:12:1
+   12| E["A"] = 1;
+       ^^^^^^ [1]
+
+References:
+   error-modification.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- error-modification.js:15:8
+
+Cannot change member [1] of enum `E` [2] because enums are frozen.
+
+   error-modification.js:15:8
+   15| delete E.A;
+              ^^^ [1]
+
+References:
+   error-modification.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- error-reassign.js:4:1
+
+Cannot reassign enum `E` [1].
+
+   error-reassign.js:4:1
+   4| E = 0;
+      ^
+
+References:
+   error-reassign.js:3:6
+   3| enum E {}
+           ^ [1]
+
+
+
+Found 16 errors

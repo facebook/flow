@@ -1,0 +1,53 @@
+
+Should detect that rollout groups sum to less than 100%:
+.flowconfig:2 Rollout groups must sum to 100%. "foo" sums to 90%
+
+Should detect that rollout groups sum to more than 100%:
+.flowconfig:2 Rollout groups must sum to 100%. "foo" sums to 180%
+
+Duplicate rollout names are banned:
+.flowconfig:3 Rollouts must have unique names. There already is a "foo" rollout
+
+Duplicate group names are banned:
+.flowconfig:2 Groups must have unique names. There is more than one "on" group
+
+Rollout names may only contain [a-zA-Z0-9._]:
+.flowconfig:2 Malformed rollout. A rollout should be an identifier followed by a list of groups, like `myRollout=10% on, 50% off`
+
+Group names may only contain [a-zA-Z0-9._]:
+.flowconfig:2 Malformed rollout group. A group should be a percentage and an identifier, like `50% on`
+
+100% on should always be on:
+Error ---------------------------------------------------------------------------------- error_malformed_exports.js:3:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: (`signature-verification-failure`)
+
+   3| export function foo(x: number) { return x; }
+                                    
+
+
+
+Found 1 error
+
+0% on should always be off:
+Found 0 errors
+
+Unknown rollout:
+.flowconfig:2 Unknown rollout "verify_sig"
+
+Unknown group:
+.flowconfig:5 Unknown group "potato" in rollout "verify_sig"
+
+Disable a .*.js ignore via rollout:
+Error ---------------------------------------------------------------------------------- error_malformed_exports.js:3:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: (`signature-verification-failure`)
+
+   3| export function foo(x: number) { return x; }
+                                    
+
+
+
+Found 1 error

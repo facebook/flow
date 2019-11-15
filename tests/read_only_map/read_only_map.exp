@@ -12,20 +12,6 @@ References:
                    ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:16:39
-
-Cannot use `V` [1] in an input/output position because `V` [1] is expected to occur only in output positions.
-
-   test.js:16:39
-   16|     bad (x: number) : $ReadOnlyMap<K, V> { // Error: V in invariant position
-                                             ^
-
-References:
-   test.js:15:16
-   15| class FooV<K, +V> {
-                      ^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:22:36
 
 Cannot use `K` [1] in an input/output position because `K` [1] is expected to occur only in input positions.
@@ -42,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:39
 
-Cannot use `V` [1] in an input/output position because `V` [1] is expected to occur only in input positions.
+Cannot use `V` [1] in an output position because `V` [1] is expected to occur only in input positions.
 
    test.js:28:39
    28|     bad (x: number) : $ReadOnlyMap<K, V> {// Error: V in invariant position
@@ -55,4 +41,4 @@ References:
 
 
 
-Found 4 errors
+Found 3 errors

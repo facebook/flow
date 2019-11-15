@@ -1,0 +1,10 @@
+(library
+  (name flow_service_autocomplete)
+  (wrapped false)
+  (libraries
+    flow_server_protocol
+    flow_state_heaps_parsing
+    flow_typing
+    collections ; hack
+  )
+)

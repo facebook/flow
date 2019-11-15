@@ -23,7 +23,7 @@ Found 1 error
 Introducing a parse error should invalidate errors in dependents
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:13
 
-Unexpected token ;
+Unexpected token `;`
 
    3| const x = 0?;
                   ^
@@ -97,7 +97,7 @@ Found 2 errors
 Introducing a parse error should invalidate errors in dependents
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:13
 
-Unexpected token ;
+Unexpected token `;`
 
    3| const x = 0?;
                   ^

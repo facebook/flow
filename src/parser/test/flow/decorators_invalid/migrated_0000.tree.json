@@ -2,21 +2,21 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
-      "message":"Unexpected token @"
+      "message":"Unexpected token `@`, expected the token `class`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `{`"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-  "range":[0,27],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":26}},
+  "range":[0,26],
   "body":[
     {
       "type":"ClassDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,27],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":26}},
+      "range":[0,26],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":26}},
@@ -27,12 +27,12 @@
       },
       "body":{
         "type":"ClassBody",
-        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-        "range":[27,27],
+        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":1,"column":26}},
+        "range":[27,26],
         "body":[]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

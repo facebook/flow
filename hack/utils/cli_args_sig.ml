@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,6 +9,7 @@
 module Types = struct
   type saved_state_target_info = {
     changes: Relative_path.t list;
+    naming_changes: Relative_path.t list;
     corresponding_base_revision: string;
     deptable_fn: string;
     prechecked_changes: Relative_path.t list;
@@ -25,8 +26,8 @@ module Types = struct
   }
 
   type files_to_check_spec =
-  | Range of files_to_check_range
-  | Prefix of Relative_path.t
+    | Range of files_to_check_range
+    | Prefix of Relative_path.t
 
   type save_state_spec_info = {
     files_to_check: files_to_check_spec list;
@@ -40,10 +41,15 @@ end
 module type S = sig
   include module type of Types
 
-  val save_state_spec_json_descr: string
-  val get_save_state_spec: string option -> (save_state_spec_info option, string) result
-  val get_save_state_spec_json: save_state_spec_info -> string
+  val save_state_spec_json_descr : string
 
-  val saved_state_json_descr: string
-  val get_saved_state_spec: string option -> (saved_state_target_info option, string) result
+  val get_save_state_spec :
+    string option -> (save_state_spec_info option, string) result
+
+  val get_save_state_spec_json : save_state_spec_info -> string
+
+  val saved_state_json_descr : string
+
+  val get_saved_state_spec :
+    string option -> (saved_state_target_info option, string) result
 end

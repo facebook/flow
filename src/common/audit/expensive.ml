@@ -22,7 +22,6 @@
    tokens describing the results of manual audits of calls to the API.
 *)
 
-
 type audit = unit
 
 (* Use this token to describe expensive calls that are deemed OK.
@@ -32,7 +31,7 @@ type audit = unit
    time cost is OK) and their memory is reclaimed after they die (so memory cost
    is OK).
 *)
-let ok: audit = ()
+let ok : audit = ()
 
 (* Use this token to describe expensive calls that either need immediate fixing
    or careful monitoring of costs.
@@ -43,9 +42,10 @@ let ok: audit = ()
    pressure that might eventually cultimate in memory leaks or long / frequent
    GC pauses.
 *)
-let warn: audit = ()
+let warn : audit = ()
 
 (* Given a function `f`, `wrap f` demands an extra argument, ~audit preceding
    other arguments, but otherwise behaves the same way. *)
 type 'a t = audit:audit -> 'a
+
 let wrap f ~audit:_ = f

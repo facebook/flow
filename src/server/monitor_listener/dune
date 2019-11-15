@@ -1,0 +1,21 @@
+(library
+  (name flow_server_monitor_listener)
+  (wrapped false)
+  (modules :standard \ serverMonitorListenerState workloadStream)
+  (libraries
+    flow_exit_status
+    flow_server_command_handler
+    flow_server_env
+  )
+  (preprocess (pps lwt_ppx))
+)
+
+(library
+  (name flow_server_monitor_listener_state)
+  (wrapped false)
+  (modules serverMonitorListenerState workloadStream)
+  (libraries
+    flow_server_env
+  )
+  (preprocess (pps lwt_ppx))
+)

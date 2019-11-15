@@ -24,8 +24,8 @@ Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with 
                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:140:23
-   140|     static MAX_VALUE: number;
+   <BUILTINS>/core.js:146:23
+   146|     static MAX_VALUE: number;
                               ^^^^^^ [1]
    libtest.js:2:7
      2| var y:string = Number.MAX_VALUE;
@@ -41,8 +41,8 @@ Cannot assign `new TypeError().name` to `z` because string [1] is incompatible w
                        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:451:11
-   451|     name: string;
+   <BUILTINS>/core.js:464:11
+   464|     name: string;
                   ^^^^^^ [1]
    libtest.js:3:7
      3| var z:number = new TypeError().name;

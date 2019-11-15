@@ -10,5 +10,6 @@
 
 experimental.well_formed_exports=true
 experimental.types_first=true
+experimental.abstract_locations=true
 
 [strict]

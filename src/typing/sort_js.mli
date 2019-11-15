@@ -11,5 +11,6 @@ open Utils_js
    cyclic, as well as a topologically sorted list of key lists where any keys in
    a list only depend on keys in a subsequent list
 *)
-val topsort: roots:FilenameSet.t -> FilenameSet.t FilenameMap.t -> File_key.t Nel.t list
-val log: File_key.t Nel.t list -> unit
+val topsort : roots:FilenameSet.t -> FilenameSet.t FilenameMap.t -> File_key.t Nel.t list
+
+val log : File_key.t Nel.t list -> unit

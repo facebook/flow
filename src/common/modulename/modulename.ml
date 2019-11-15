@@ -20,8 +20,8 @@
    is simply known by its path in the file system.
 *)
 type t =
-| String of string
-| Filename of File_key.t
+  | String of string
+  | Filename of File_key.t
 
 let to_string = function
   | String m -> m
@@ -31,8 +31,11 @@ let compare = Pervasives.compare
 
 module Key = struct
   type nonrec t = t
+
   let to_string = to_string
+
   let compare = compare
 end
-module Set = Set.Make(Key)
-module Map = MyMap.Make(Key)
+
+module Set = Set.Make (Key)
+module Map = WrappedMap.Make (Key)

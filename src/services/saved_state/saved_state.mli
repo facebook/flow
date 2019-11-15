@@ -6,7 +6,8 @@
  *)
 
 type denormalized_file_data = {
-  package: Package_json.t option; (* Only package.json files have this *)
+  package: Package_json.t option;
+  (* Only package.json files have this *)
   file_sig: File_sig.With_Loc.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
@@ -31,34 +32,34 @@ type saved_state_data = {
   ordered_non_flowlib_libs: string list;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage : Coverage.file_coverage Utils_js.FilenameMap.t;
-  node_modules_containers: SSet.t;
+  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
+  node_modules_containers: SSet.t SMap.t;
 }
 
 type invalid_reason =
-| Bad_header
-| Build_mismatch
-| Changed_files
-| Failed_to_marshal
-| Failed_to_decompress
-| File_does_not_exist
-| Flowconfig_mismatch
+  | Bad_header
+  | Build_mismatch
+  | Changed_files
+  | Failed_to_marshal
+  | Failed_to_decompress
+  | File_does_not_exist
+  | Flowconfig_mismatch
 
-val invalid_reason_to_string: invalid_reason -> string
+val invalid_reason_to_string : invalid_reason -> string
 
 exception Invalid_saved_state of invalid_reason
 
-val save:
+val save :
   saved_state_filename:Path.t ->
   genv:ServerEnv.genv ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   unit Lwt.t
 
-val load:
+val load :
   workers:MultiWorkerLwt.worker list option ->
   saved_state_filename:Path.t ->
   options:Options.t ->
   (Profiling_js.finished * saved_state_data) Lwt.t
 
-val denormalize_parsed_data: root:string -> normalized_file_data -> denormalized_file_data
+val denormalize_parsed_data : root:string -> normalized_file_data -> denormalized_file_data

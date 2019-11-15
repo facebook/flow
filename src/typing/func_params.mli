@@ -7,9 +7,10 @@
 
 include module type of Func_params_intf
 
-module Make (C: Config): S
-  with type 'T ast = 'T C.ast
-   and type 'T param_ast = 'T C.param_ast
-   and type 'T rest_ast = 'T C.rest_ast
-   and type param = C.param
-   and type rest = C.rest
+module Make (C : Config) :
+  S
+    with type 'T ast = 'T C.ast
+     and type 'T param_ast = 'T C.param_ast
+     and type 'T rest_ast = 'T C.rest_ast
+     and type param = C.param
+     and type rest = C.rest

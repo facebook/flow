@@ -10,6 +10,8 @@ let ident_map f x =
   match x with
   | None -> x
   | Some x' ->
-      let x'' = f x' in
-      if x'' == x' then x
-      else Some x''
+    let x'' = f x' in
+    if x'' == x' then
+      x
+    else
+      Some x''

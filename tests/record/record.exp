@@ -55,19 +55,5 @@ Deprecated utility. Using `$Subtype` types is not recommended! (`deprecated-util
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:20:6
 
-Property `qux` is missing in object type [1].
-
-   test.js:20:6
-   20|   x: { foo: number, qux: boolean }; // error: qux not found
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:19:19
-   19| class D extends C<{foo: number, bar: string}> {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-
-Found 5 errors
+Found 4 errors

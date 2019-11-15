@@ -7,4 +7,4 @@
 
 type t
 
-val create: Transaction.t -> t
+val create : Transaction.t -> t

@@ -176,6 +176,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/config/version/":
   title: ".flowconfig [version]"
   description: "How to pin your project to a specific version of Flow"
+"/docs/config/declarations/":
+  title: ".flowconfig [declarations]"
+  description: "How to include a third-party module’s types without typechecking its code"
 "/docs/errors/":
   title: "Debugging Errors"
   description: ""
@@ -218,6 +221,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/libdefs/usage/":
   title: "Using Library Definitions"
   description: ""
+"/docs/declarations/":
+  title: "Declaration Files"
+  description: "Using .flow files"
 "/docs/modules/":
   title: "Modules"
   description: ""
@@ -426,6 +432,10 @@ guides:
     description: >
       Learn how to create and use library definitions for the third-party code
       your code depends on.
+  declarations:
+    title: "Declaration Files"
+    description: >
+      Learn how to write types in .flow files.
   # errors:
   #   title: "Debugging Errors"
   #   description: >

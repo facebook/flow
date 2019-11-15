@@ -11,8 +11,14 @@ type sketchy_null_kind =
   | SketchyNullNumber
   | SketchyNullMixed
 
-type sketchy_number_kind =
-  | SketchyNumberAnd
+type sketchy_number_kind = SketchyNumberAnd
+
+type property_assignment_kind =
+  | PropertyNotDefinitelyInitialized
+  | ReadFromUninitializedProperty
+  | MethodCallBeforeEverythingInitialized
+  | ThisBeforeEverythingInitialized
+  | PropertyFunctionCallBeforeEverythingInitialized
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
@@ -23,7 +29,6 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DeprecatedEnumUtility
   | DynamicExport
   | UnsafeGettersSetters
   | InexactSpread
@@ -32,6 +37,8 @@ type lint_kind =
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
+  | NonArraySpread
+  | AmbiguousObjectType
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
@@ -51,7 +58,6 @@ let string_of_kind = function
   | UnclearType -> "unclear-type"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
-  | DeprecatedEnumUtility -> "deprecated-enum-utility"
   | DynamicExport -> "dynamic-export"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | InexactSpread -> "inexact-spread"
@@ -60,21 +66,23 @@ let string_of_kind = function
   | SignatureVerificationFailure -> "signature-verification-failure"
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
+  | NonArraySpread -> "non-array-spread"
+  | AmbiguousObjectType -> "ambiguous-object-type"
 
 let kinds_of_string = function
-  | "sketchy-null" -> Some [
-      SketchyNull SketchyNullBool;
-      SketchyNull SketchyNullString;
-      SketchyNull SketchyNullNumber;
-      SketchyNull SketchyNullMixed;
-    ]
+  | "sketchy-null" ->
+    Some
+      [
+        SketchyNull SketchyNullBool;
+        SketchyNull SketchyNullString;
+        SketchyNull SketchyNullNumber;
+        SketchyNull SketchyNullMixed;
+      ]
   | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
   | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
   | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
-  | "sketchy-number" -> Some [
-      SketchyNumber SketchyNumberAnd;
-    ]
+  | "sketchy-number" -> Some [SketchyNumber SketchyNumberAnd]
   | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]
   | "untyped-type-import" -> Some [UntypedTypeImport]
   | "nonstrict-import" -> Some [NonstrictImport]
@@ -82,7 +90,6 @@ let kinds_of_string = function
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" -> Some [DeprecatedType]
   | "deprecated-utility" -> Some [DeprecatedUtility]
-  | "deprecated-enum-utility" -> Some [DeprecatedEnumUtility]
   | "dynamic-export" -> Some [DynamicExport]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "inexact-spread" -> Some [InexactSpread]
@@ -90,13 +97,16 @@ let kinds_of_string = function
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
+  | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
+  | "non-array-spread" -> Some [NonArraySpread]
   | _ -> None
 
 module LintKind = struct
   type t = lint_kind
+
   let compare = compare
 end
 
-module LintMap = MyMap.Make(LintKind)
-module LintSet = Set.Make(LintKind)
+module LintMap = WrappedMap.Make (LintKind)
+module LintSet = Set.Make (LintKind)

@@ -33,51 +33,79 @@
  * node we know how old the youngest element in a node is.
  * If the youngest element is too old, we can cut the branch.
  * (cf function walk in monoidAvl.ml)
-*)
+ *)
 
-module type MonoidOrderedType =
-  sig
-    type elt
-    val compare : elt -> elt -> int
+module type MonoidOrderedType = sig
+  type elt
 
-    type monoelt
-    val neutral: monoelt
-    val compose: monoelt -> monoelt -> monoelt
-    val make: elt -> monoelt
-  end
+  val compare : elt -> elt -> int
 
-module type S =
-  sig
-    type elt
-    type monoelt
-    type t
-    val empty: t
-    val is_empty: t -> bool
-    val mem: elt -> t -> bool
-    val add: elt -> t -> t
-    val singleton: elt -> t
-    val remove: elt -> t -> t
-    val union: t -> t -> t
-    val inter: t -> t -> t
-    val diff: t -> t -> t
-    val compare: t -> t -> int
-    val equal: t -> t -> bool
-    val subset: t -> t -> bool
-    val iter: (elt -> unit) -> t -> unit
-    val fold: (elt -> 'a -> 'a) -> t -> 'a -> 'a
-    val for_all: (elt -> bool) -> t -> bool
-    val exists: (elt -> bool) -> t -> bool
-    val filter: (elt -> bool) -> t -> t
-    val partition: (elt -> bool) -> t -> t * t
-    val cardinal: t -> int
-    val elements: t -> elt list
-    val min_elt: t -> elt
-    val max_elt: t -> elt
-    val choose: t -> elt
-    val split: elt -> t -> t * bool * t
-    val walk: (monoelt -> bool) -> (elt -> unit) -> t -> unit
- end
+  type monoelt
 
-module Make (Ord : MonoidOrderedType) : S 
-with type elt = Ord.elt 
-with type monoelt = Ord.monoelt
+  val neutral : monoelt
+
+  val compose : monoelt -> monoelt -> monoelt
+
+  val make : elt -> monoelt
+end
+
+module type S = sig
+  type elt
+
+  type monoelt
+
+  type t
+
+  val empty : t
+
+  val is_empty : t -> bool
+
+  val mem : elt -> t -> bool
+
+  val add : elt -> t -> t
+
+  val singleton : elt -> t
+
+  val remove : elt -> t -> t
+
+  val union : t -> t -> t
+
+  val inter : t -> t -> t
+
+  val diff : t -> t -> t
+
+  val compare : t -> t -> int
+
+  val equal : t -> t -> bool
+
+  val subset : t -> t -> bool
+
+  val iter : (elt -> unit) -> t -> unit
+
+  val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+
+  val for_all : (elt -> bool) -> t -> bool
+
+  val exists : (elt -> bool) -> t -> bool
+
+  val filter : (elt -> bool) -> t -> t
+
+  val partition : (elt -> bool) -> t -> t * t
+
+  val cardinal : t -> int
+
+  val elements : t -> elt list
+
+  val min_elt : t -> elt
+
+  val max_elt : t -> elt
+
+  val choose : t -> elt
+
+  val split : elt -> t -> t * bool * t
+
+  val walk : (monoelt -> bool) -> (elt -> unit) -> t -> unit
+end
+
+module Make (Ord : MonoidOrderedType) :
+  S with type elt = Ord.elt with type monoelt = Ord.monoelt

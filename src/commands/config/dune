@@ -1,0 +1,9 @@
+(library
+  (name flow_config)
+  (wrapped false)
+  (libraries
+    flow_common
+    semver
+    xx
+  )
+)

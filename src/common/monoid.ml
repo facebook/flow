@@ -7,24 +7,32 @@
 
 module type S = sig
   type t
-  val empty: t
-  val append: t -> t -> t
+
+  val empty : t
+
+  val append : t -> t -> t
 end
 
-module Unit: S with type t = unit = struct
+module Unit : S with type t = unit = struct
   type t = unit
+
   let empty = ()
+
   let append _ _ = ()
 end
 
-module Any: S with type t = bool = struct
+module Any : S with type t = bool = struct
   type t = bool
+
   let empty = false
-  let append = (||)
+
+  let append = ( || )
 end
 
-module Counter: S with type t = int = struct
+module Counter : S with type t = int = struct
   type t = int
+
   let empty = 0
-  let append = (+)
+
+  let append = ( + )
 end

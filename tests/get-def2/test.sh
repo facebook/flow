@@ -25,12 +25,11 @@ printf "\nTrace \`ParentFoo\` back to its def\n"
 assert_ok "$FLOW" get-def --strip-root require.js 4 2
 
 printf "\nReact class and attribute expressions\n"
-assert_ok "$FLOW" get-def --strip-root react.js 9 3
-assert_ok "$FLOW" get-def --strip-root react.js 9 9
-assert_ok "$FLOW" get-def --strip-root react.js 11 4
-assert_ok "$FLOW" get-def --strip-root react.js 11 12
+assert_ok "$FLOW" get-def --strip-root react.js 11 3
+assert_ok "$FLOW" get-def --strip-root react.js 11 9
 # TODO give some result for the JSX intrinsic here
-assert_ok "$FLOW" get-def --strip-root react.js 11 4
+assert_ok "$FLOW" get-def --strip-root react.js 13 4
+assert_ok "$FLOW" get-def --strip-root react.js 13 12
 
 printf "\nInheritance\n"
 assert_ok "$FLOW" get-def --strip-root override.js 8 19
@@ -52,3 +51,12 @@ assert_ok "$FLOW" get-def --strip-root declare.js 4 1
 assert_ok "$FLOW" get-def --strip-root declare.js 7 1
 assert_ok "$FLOW" get-def --strip-root declare.js 10 1
 assert_ok "$FLOW" get-def --strip-root declare.js 13 5
+
+printf "\nShadowing \`require\`\n"
+assert_ok "$FLOW" get-def --strip-root main.js 28 20
+assert_ok "$FLOW" get-def --strip-root main.js 29 6
+assert_ok "$FLOW" get-def --strip-root main.js 33 3
+
+printf "\nChaining \`require\`s through multiple files\n"
+assert_ok "$FLOW" get-def --strip-root main.js 33 10
+assert_ok "$FLOW" get-def --strip-root main.js 33 17

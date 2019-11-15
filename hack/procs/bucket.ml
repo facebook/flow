@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -8,6 +8,7 @@
  *)
 
 open Core_kernel
+
 (****************************************************************************)
 (* Moduling Making buckets.
  * When we parallelize, we need to create "buckets" of tasks for the
@@ -23,8 +24,7 @@ type 'a bucket =
   | Wait
   | Done
 
-type 'a next =
-  unit -> 'a bucket
+type 'a next = unit -> 'a bucket
 
 let max_size_ref = ref 500
 
@@ -33,9 +33,10 @@ let max_size () = !max_size_ref
 let set_max_bucket_size x = max_size_ref := x
 
 let calculate_bucket_size ~num_jobs ~num_workers ~max_size =
-  if num_jobs < num_workers * max_size
-  then max 1 (1 + (num_jobs / num_workers))
-  else max_size
+  if num_jobs < num_workers * max_size then
+    max 1 (1 + (num_jobs / num_workers))
+  else
+    max_size
 
 let make_ progress_fn bucket_size jobs =
   let i = ref 0 in
@@ -47,10 +48,14 @@ let make_ progress_fn bucket_size jobs =
     Array.to_list result
 
 let make_list ~num_workers ?progress_fn ?max_size jobs =
-  let progress_fn = Option.value ~default:(fun ~total:_ ~start:_ ~length:_ -> ()) progress_fn in
+  let progress_fn =
+    Option.value ~default:(fun ~total:_ ~start:_ ~length:_ -> ()) progress_fn
+  in
   let max_size = Option.value max_size ~default:!max_size_ref in
   let jobs = Array.of_list jobs in
-  let bucket_size = calculate_bucket_size ~num_jobs:(Array.length jobs) ~num_workers ~max_size in
+  let bucket_size =
+    calculate_bucket_size ~num_jobs:(Array.length jobs) ~num_workers ~max_size
+  in
   make_ (progress_fn ~total:(Array.length jobs)) bucket_size jobs
 
 let of_list = function
@@ -60,16 +65,20 @@ let of_list = function
 let make ~num_workers ?progress_fn ?max_size jobs =
   let max_size = Option.value max_size ~default:!max_size_ref in
   let maker = make_list ~num_workers ?progress_fn ~max_size jobs in
-  fun () -> of_list (maker ())
+  (fun () -> of_list (maker ()))
 
-type 'a of_n = { work: 'a; bucket: int; total: int }
+type 'a of_n = {
+  work: 'a;
+  bucket: int;
+  total: int;
+}
 
 let make_n_buckets ~buckets ~split =
   let next_bucket = ref 0 in
   fun () ->
     let current = !next_bucket in
     incr next_bucket;
-    if (current < buckets) then
+    if current < buckets then
       Job { work = split ~bucket:current; bucket = current; total = buckets }
     else
       Done

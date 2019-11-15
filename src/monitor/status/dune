@@ -1,0 +1,11 @@
+(library
+  (name flow_server_status)
+  (wrapped false)
+  (libraries
+    flow_parser
+    flow_logging
+    flow_common
+    build_mode
+    sys_utils
+  )
+)

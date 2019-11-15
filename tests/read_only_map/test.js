@@ -13,7 +13,7 @@ class FooK<+K, V> {
 }
 
 class FooV<K, +V> {
-    bad (x: number) : $ReadOnlyMap<K, V> { // Error: V in invariant position
+    bad (x: number) : $ReadOnlyMap<K, V> { // Fine, V in covariant position
         return new Map();
     }
 }

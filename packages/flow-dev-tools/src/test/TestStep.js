@@ -1,7 +1,6 @@
 /**
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import Builder from './builder';
@@ -14,9 +13,9 @@ import sortedStdout from './assertions/sortedStdout';
 import exitCodes from './assertions/exitCodes';
 import serverRunning from './assertions/serverRunning';
 import noop from './assertions/noop';
-import ideNoNewMessagesAfterSleep from './assertions/ideNoNewMessagesAfterSleep';
-import ideNewMessagesWithTimeout from './assertions/ideNewMessagesWithTimeout';
-import ideStderr from './assertions/ideStderr';
+import lspNoNewMessagesAfterSleep from './assertions/lspNoNewMessagesAfterSleep';
+import lspNewMessagesWithTimeout from './assertions/lspNewMessagesWithTimeout';
+import lspStderr from './assertions/lspStderr';
 import simpleDiffAssertion from './assertions/simpleDiffAssertion';
 
 import {sleep} from '../utils/async';
@@ -30,7 +29,7 @@ import type {
 import type {TestBuilder} from './builder';
 import type {FlowResult} from '../flowResult';
 import type {StepEnvReadable, StepEnvWriteable} from './stepEnv';
-import type {IDEMessage} from './ide';
+import type {LSPMessage} from './lsp';
 
 type Action = (
   builder: TestBuilder,
@@ -175,16 +174,16 @@ class TestStepFirstOrSecondStage extends TestStep {
   }
 
   /* This is mainly useful for debugging. Actual tests probably shouldn't
-   * test the stderr output. But when you're working on `flow ide`, you can
+   * test the stderr output. But when you're working on `flow lsp`, you can
    * log things to stderr and use this assertion to see what's being logged
    *
    *   addCode('foo')
-   *     .ideNoNewMessagesAfterSleep(500)
-   *     .ideStderr('Foo')
+   *     .lspNoNewMessagesAfterSleep(500)
+   *     .lspStderr('Foo')
    */
-  ideStderr(expected: string): TestStepSecondStage {
+  lspStderr(expected: string): TestStepSecondStage {
     const assertLoc = searchStackForTestAssertion();
-    const ret = this._cloneWithAssertion(ideStderr(expected, assertLoc));
+    const ret = this._cloneWithAssertion(lspStderr(expected, assertLoc));
     ret._needsFlowCheck = true;
     return ret;
   }
@@ -265,29 +264,29 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  waitUntilIDEStatus: (number, 'stopped' | 'running') => TestStepFirstStage = (
+  waitUntilLSPStatus: (number, 'stopped' | 'running') => TestStepFirstStage = (
     timeoutMs,
     expected,
   ) => {
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.waitUntilIDEStatus(timeoutMs, expected);
+      await builder.waitUntilLSPStatus(timeoutMs, expected);
     });
     return ret;
   };
 
-  verifyIDEStatus: (
+  verifyLSPStatus: (
     'stopped' | 'running',
   ) => TestStepSecondStage = expected => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
-      const actual = env.getIDERunning();
-      const suggestion = {method: 'verifyIDEStatus', args: [actual]};
+      const actual = env.getLSPRunning();
+      const suggestion = {method: 'verifyLSPStatus', args: [actual]};
       return simpleDiffAssertion(
         expected,
         actual,
         assertLoc,
         reason,
-        "'is IDE running?'",
+        "'is LSP running?'",
         suggestion,
       );
     });
@@ -332,41 +331,38 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  ideStart: (
-    {|mode: 'legacy'|} | {|mode: 'lsp', needsFlowServer: boolean|},
-  ) => TestStepFirstStage = arg => {
-    const mode = arg.mode;
-    const needsFlowServer = arg.mode === 'legacy' ? true : arg.needsFlowServer;
-    const doFlowCheck = arg.mode === 'legacy' ? true : false;
+  lspStart: ({|needsFlowServer: boolean|}) => TestStepFirstStage = arg => {
+    const needsFlowServer = arg.needsFlowServer;
 
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.createIDEConnection(mode);
-      if (doFlowCheck) {
-        env.triggerFlowCheck();
-      }
+      await builder.createLSPConnection();
     });
     ret._startsIde = true;
     ret._needsFlowServer = needsFlowServer; // to start flow server before action is executed
     return ret;
   };
 
-  ideStartAndConnect: (?number) => TestStepSecondStage = timeoutMsOpt => {
+  lspStartAndConnect: (?number, ?{}) => TestStepSecondStage = (
+    timeoutMsOpt,
+    initParamsOpt,
+  ) => {
     const assertLoc = searchStackForTestAssertion();
     const timeoutMs = timeoutMsOpt || 60000;
+    const initParams = initParamsOpt || this.lspInitializeParams;
 
     const expected = 'telemetry/connectionStatus{true}';
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.createIDEConnection('lsp');
-      const promise = builder.sendIDERequestAndWaitForResponse('initialize', [
-        this.lspInitializeParams,
+      await builder.createLSPConnection();
+      const promise = builder.sendLSPRequestAndWaitForResponse('initialize', [
+        initParams,
       ]); // discarding the promise; instead we wait in the next statement...
-      await builder.waitUntilIDEMessage(timeoutMs, expected);
+      await builder.waitUntilLSPMessage(timeoutMs, expected);
     })._cloneWithAssertion((reason, env) => {
       const isConnected = env
-        .getIDEMessagesSinceStartOfStep()
+        .getLSPMessagesSinceStartOfStep()
         .some(msg => Builder.doesMessageMatch(msg, expected));
       const suggestion = {
-        method: 'ideStartAndConnect',
+        method: 'lspStartAndConnect',
         args: [timeoutMs * 2],
       };
       return simpleDiffAssertion(
@@ -374,7 +370,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         isConnected
           ? 'connected'
           : 'disconnected' +
-              JSON.stringify(env.getIDEMessagesSinceStartOfStep()),
+              JSON.stringify(env.getLSPMessagesSinceStartOfStep()),
         assertLoc,
         reason,
         "'is connected to flow server?'",
@@ -386,70 +382,70 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  ideStop: () => TestStepFirstStage = () => {
+  lspStop: () => TestStepFirstStage = () => {
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.cleanupIDEConnection();
+      await builder.cleanupLSPConnection();
     });
     ret._needsFlowServer = true;
     return ret;
   };
 
-  ideNotification: (string, ...params: Array<mixed>) => TestStepFirstStage = (
+  lspNotification: (string, ...params: Array<mixed>) => TestStepFirstStage = (
     method,
     ...params
   ) => {
     const ret = this._cloneWithAction(async (builder, env) =>
-      builder.sendIDENotification(method, params),
+      builder.sendLSPNotification(method, params),
     );
     return ret;
   };
 
-  ideResponse: (
+  lspResponse: (
     number | 'mostRecent',
     ...params: Array<mixed>
   ) => TestStepFirstStage = (id, ...params) => {
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.sendIDEResponse(id, params);
+      await builder.sendLSPResponse(id, params);
     });
     return ret;
   };
 
-  ideRequest: (string, ...params: Array<mixed>) => TestStepFirstStage = (
+  lspRequest: (string, ...params: Array<mixed>) => TestStepFirstStage = (
     method,
     ...params
   ) => {
     const ret = this._cloneWithAction(async (builder, env) => {
-      const promise = builder.sendIDERequestAndWaitForResponse(method, params);
+      const promise = builder.sendLSPRequestAndWaitForResponse(method, params);
       // We don't do anything with that promise; user will wait for messages later.
       // TODO(ljw): at end of step, verify that no promises are left outstanding
     });
     return ret;
   };
 
-  ideRequestAndWaitUntilResponse: (
+  lspRequestAndWaitUntilResponse: (
     string,
     ...params: Array<mixed>
   ) => TestStepFirstStage = (method, ...params) => {
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.sendIDERequestAndWaitForResponse(method, params);
+      await builder.sendLSPRequestAndWaitForResponse(method, params);
     });
     ret._readsIdeMessages = true;
     return ret;
   };
 
-  waitUntilIDEMessage: (number, string) => TestStepFirstStage = (
+  waitUntilLSPMessage: (number, string) => TestStepFirstStage = (
     timeoutMs,
     method,
   ) => {
     const ret = this._cloneWithAction(
       async (builder, env) =>
-        await builder.waitUntilIDEMessage(timeoutMs, method),
+        await builder.waitUntilLSPMessage(timeoutMs, method),
     );
     ret._readsIdeMessages = true;
     return ret;
   };
 
-  // verifyAllIDEMessagesInStep(expects=['A','B{C,D}'], ignores=['B','E'])
+  // verifyAllLSPMessagesInStep(expects=['A','B{C,D}'], ignores=['B','E'])
   // will look at all the actual messages that arrived in this step.
   // In this case there must be an "A", followed by a "B" which has
   // the strings C and D in its JSON representation (up to whitespace).
@@ -457,13 +453,13 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
   // ignores list - in this case we'd ignore any "B" (either because it came
   // in the wrong order or because it didn't have C and D), and ignore any "E".
   // But if there are unexpected messages not in the ignore list, then we fail.
-  verifyAllIDEMessagesInStep: (
+  verifyAllLSPMessagesInStep: (
     Array<string>,
     Array<string>,
   ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
-      const actualMessages = env.getIDEMessagesSinceStartOfStep();
+      const actualMessages = env.getLSPMessagesSinceStartOfStep();
       let actuals: Array<string> = [];
       let iExpect = 0;
       for (let iActual = 0; iActual < actualMessages.length; iActual++) {
@@ -485,7 +481,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       }
 
       const suggestion = {
-        method: 'verifyAllIDEMessagesInStep',
+        method: 'verifyAllLSPMessagesInStep',
         args: [actuals, ignores],
       };
       return simpleDiffAssertion(
@@ -501,14 +497,14 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  // waitAndVerifyNoIDEMessagesSinceStartOfStep: if any messages arrive since the start
+  // waitAndVerifyNoLSPMessagesSinceStartOfStep: if any messages arrive since the start
   // of this step until the timeout then it fails; otherwise it succeeds
-  waitAndVerifyNoIDEMessagesSinceStartOfStep: number => TestStepSecondStage = timeoutMs => {
+  waitAndVerifyNoLSPMessagesSinceStartOfStep: number => TestStepSecondStage = timeoutMs => {
     const assertLoc = searchStackForTestAssertion();
 
     const ret = this._cloneWithAction(async (builder, env) => {
       await sleep(timeoutMs);
-    })._cloneWithAssertion(ideNoNewMessagesAfterSleep(timeoutMs, assertLoc));
+    })._cloneWithAssertion(lspNoNewMessagesAfterSleep(timeoutMs, assertLoc));
     ret._readsIdeMessages = true;
     return ret;
   };
@@ -518,22 +514,22 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       await sleep(timeoutMs);
     });
 
-  // waitAndVerifyAllIDEMessagesContentSinceStartOfStep: will consider all messages that
+  // waitAndVerifyAllLSPMessagesContentSinceStartOfStep: will consider all messages that
   // have arrived since the start of the step, and will consider further
   // messages that arrive up to the expected message count until the timeout.
   // (This set of messages to consider may therefore be larger than, same
   // size, or smaller than the expected count). If the messages to consider
   // are identical to the expected messages, then it succeeds.
-  waitAndVerifyAllIDEMessagesContentSinceStartOfStep: (
+  waitAndVerifyAllLSPMessagesContentSinceStartOfStep: (
     number,
-    $ReadOnlyArray<IDEMessage>,
+    $ReadOnlyArray<LSPMessage>,
   ) => TestStepSecondStage = (timeoutMs, expected) => {
     const assertLoc = searchStackForTestAssertion();
 
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.waitUntilIDEMessageCount(timeoutMs, expected.length);
+      await builder.waitUntilLSPMessageCount(timeoutMs, expected.length);
     })._cloneWithAssertion(
-      ideNewMessagesWithTimeout(timeoutMs, expected, assertLoc),
+      lspNewMessagesWithTimeout(timeoutMs, expected, assertLoc),
     );
     ret._readsIdeMessages = true;
     return ret;

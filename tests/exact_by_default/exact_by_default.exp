@@ -1,0 +1,35 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:4:26
+
+Cannot assign object literal to `x` because property `bar` is missing in object type [1] but exists in object
+literal [2].
+
+   test.js:4:26
+   4| const x: {foo: number} = {foo: 3, bar: 3}; // Error, {foo: number} is exact so can't include bar
+                               ^^^^^^^^^^^^^^^^ [2]
+
+References:
+   test.js:4:10
+   4| const x: {foo: number} = {foo: 3, bar: 3}; // Error, {foo: number} is exact so can't include bar
+               ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:6
+
+Cannot call `test` with `inexact` bound to `x` because inexact object type [1] is incompatible with exact object
+type [2].
+
+   test.js:9:6
+   9| test(inexact); // Error inexact ~> exact
+           ^^^^^^^
+
+References:
+   test.js:8:16
+   8| const inexact: {foo: number, ...} = {foo: 3, bar: 3};
+                     ^^^^^^^^^^^^^^^^^^ [1]
+   test.js:6:18
+   6| function test(x: {foo: number}) {}
+                       ^^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors

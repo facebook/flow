@@ -44,7 +44,7 @@ facebookism.js:3:8 = {
   "end":9
 }
 jsx.js:7:12 = {
-  "type":"any (implicit)",
+  "type":"\"div\"",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -179,7 +179,7 @@ jsx.js:8:23 = {
   "end":26
 }
 jsx.js:8:30 = {
-  "type":"any (implicit)",
+  "type":"\"div\"",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -569,7 +569,7 @@ object-resolution.js:10:2 = {
   "end":5
 }
 object-resolution.js:13:5 = {
-  "type":"{p?: number, q?: string}",
+  "type":"{p: number, q: string}",
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",

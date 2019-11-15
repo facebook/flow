@@ -1,3 +1,29 @@
+Error ----------------------------------------------------------------------------------------------- concretize.js:10:1
+
+Cannot create `C1` element because:
+ - `EventTarget` [1] is incompatible with `C1` [2] in type argument `T` [3] of the first argument of property
+   `onKeyDown`.
+ - `EventTarget` [4] is incompatible with `C1` [2] in type argument `T` of the first argument of property `onKeyDown`.
+
+   concretize.js:10:1
+    10| <C1 onKeyDown={_onKeyDown} />;
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:181:21
+   181|   +T: EventTarget = EventTarget,
+                            ^^^^^^^^^^^ [1]
+   concretize.js:9:47
+     9| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
+                                                      ^^ [2]
+   <BUILTINS>/react-dom.js:181:4
+   181|   +T: EventTarget = EventTarget,
+           ^ [3]
+   <BUILTINS>/react-dom.js:181:7
+   181|   +T: EventTarget = EventTarget,
+              ^^^^^^^^^^^ [4]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:23:1
 
 Cannot create `Foo` element because undefined property `context` [1] is incompatible with object type [2] in type
@@ -39,4 +65,4 @@ References:
 
 
 
-Found 3 errors
+Found 5 errors

@@ -55,6 +55,12 @@ echo "json"
 echo "-----------------------------"
 echo
 assert_ok "$FLOW" batch-coverage --strip-root --json --pretty --input-file files.txt
+echo "-----------------------------"
+echo "root info survives recheck"
+echo "-----------------------------"
+assert_ok mv a.js.ignored a.js
+assert_ok "$FLOW" force-recheck a.js
+assert_ok "$FLOW" batch-coverage --strip-root --wait-for-recheck true .
 
 "$FLOW" stop
 "$FLOW" start --trust-mode=check

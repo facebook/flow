@@ -409,9 +409,9 @@ Cannot create `Fun` element because undefined [1] is incompatible with `Fn` [2] 
        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   fun.js:48:7
+   48| <Fun>{undefined}</Fun>; // Error: `undefined` is not allowed.
+             ^^^^^^^^^ [1]
    fun.js:16:46
    16| class Fun extends React.Component<{children: Fn}, void> {}
                                                     ^^ [2]
@@ -766,9 +766,9 @@ Cannot create `FunArray` element because in property `children`:
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-    13| declare var undefined: void;
-                               ^^^^ [1]
+   fun.js:136:12
+   136| <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
+                   ^^^^^^^^^ [1]
    fun.js:21:51
     21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                           ^^ [2]
@@ -1142,9 +1142,9 @@ Cannot create `Text` element because undefined [1] is incompatible with string [
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-   13| declare var undefined: void;
-                              ^^^^ [1]
+   text.js:20:8
+   20| <Text>{undefined}</Text>; // Error: `undefined` is not allowed.
+              ^^^^^^^^^ [1]
    text.js:5:47
     5| class Text extends React.Component<{children: string}, void> {}
                                                      ^^^^^^ [2]

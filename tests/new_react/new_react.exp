@@ -150,19 +150,25 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
-Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in property `type`.
+Cannot assign `<Foo />` to `foo` because:
+ - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
+ - class `Foo` [3] is incompatible with number [1] in property `type`.
 
    classes.js:39:25
-   39| var foo: $jsx<number> = <Foo/>;
-                               ^^^^^^
+    39| var foo: $jsx<number> = <Foo/>;
+                                ^^^^^^
 
 References:
-   classes.js:7:7
-    7| class Foo extends React.Component<Props, State> {
-             ^^^ [1]
    classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [2]
+    39| var foo: $jsx<number> = <Foo/>;
+                      ^^^^^^ [1]
+   <BUILTINS>/react.js:170:5
+   170|   | string
+            ^^^^^^ [2]
+   classes.js:7:7
+     7| class Foo extends React.Component<Props, State> {
+              ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
@@ -179,25 +185,6 @@ References:
                                          ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:39:25
-
-Cannot instantiate `React.Element` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
-
-   classes.js:39:25
-    39| var foo: $jsx<number> = <Foo/>;
-                                ^^^^^^
-
-References:
-   classes.js:39:15
-    39| var foo: $jsx<number> = <Foo/>;
-                      ^^^^^^ [1]
-   <BUILTINS>/react.js:170:5
-   170|   | string
-            ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- classes.js:57:21
 
 Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2].
@@ -207,8 +194,8 @@ Cannot assign `this.props.x` to `_` because number [1] is incompatible with stri
                             ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    classes.js:57:12
     57|     var _: string = this.props.x;
@@ -263,67 +250,62 @@ References:
                          ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:79:17
-
-Cannot instantiate `$jsx` because number [1] is not an object in type argument `ElementType`.
-
-   classes.js:79:17
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                       ^^^^^^^^^^^^
-
-References:
-   classes.js:78:26
-   78| FooLegacy.defaultProps = 0;
-                                ^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
-Cannot assign `<FooLegacy />` to `foo_legacy` because class React component [1] is incompatible with number [2] in
-property `type`.
+Cannot assign `<FooLegacy />` to `foo_legacy` because:
+ - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
+ - class React component [3] is incompatible with number [1] in property `type`.
+ - number [4] is not an object in type argument `ElementType`.
 
    classes.js:79:32
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                      ^^^^^^^^^^^^
+    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                       ^^^^^^^^^^^^
 
 References:
-   classes.js:43:17
-                       v------------------
-   43| var FooLegacy = React.createClass({
-   44|   is_mounted: (undefined: ?boolean),
-   45|
-   46|   propTypes: {
-   47|     x: React.PropTypes.number.isRequired
-   48|   },
-   49|
-   50|   getDefaultProps(): DefaultProps { return {} },
-   51|
-   52|   statics: {
-   53|     bar(): void {}
-   54|   },
-   55|
-   56|   qux(): void {
-   57|     var _: string = this.props.x;
-     :
-   62|   },
-   63|
-   64|   setState(o: { y_: string }): void { },
-   65|
-   66|   componentDidMount(): void {
-   67|     this.is_mounted = true;
-   68|   },
-   69|
-   70|   componentWillReceiveProps(
-   71|     nextProps: Object,
-   72|     nextContext: any
-   73|   ): void {
-   74|     this.qux();
-   75|   },
-   76| });
-       -^ [1]
    classes.js:79:22
-   79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                            ^^^^^^ [2]
+    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
+                             ^^^^^^ [1]
+   <BUILTINS>/react.js:170:5
+   170|   | string
+            ^^^^^^ [2]
+   classes.js:43:17
+                        v------------------
+    43| var FooLegacy = React.createClass({
+    44|   is_mounted: (undefined: ?boolean),
+    45|
+    46|   propTypes: {
+    47|     x: React.PropTypes.number.isRequired
+    48|   },
+    49|
+    50|   getDefaultProps(): DefaultProps { return {} },
+    51|
+    52|   statics: {
+    53|     bar(): void {}
+    54|   },
+    55|
+    56|   qux(): void {
+    57|     var _: string = this.props.x;
+      :
+    62|   },
+    63|
+    64|   setState(o: { y_: string }): void { },
+    65|
+    66|   componentDidMount(): void {
+    67|     this.is_mounted = true;
+    68|   },
+    69|
+    70|   componentWillReceiveProps(
+    71|     nextProps: Object,
+    72|     nextContext: any
+    73|   ): void {
+    74|     this.qux();
+    75|   },
+    76| });
+        -^ [3]
+   classes.js:78:26
+    78| FooLegacy.defaultProps = 0;
+                                 ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
@@ -346,25 +328,6 @@ References:
    47|     x: React.PropTypes.number.isRequired
    48|   },
          ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:79:32
-
-Cannot instantiate `React.Element` because:
- - number [1] is not a React component.
- - number [1] is incompatible with string [2] in type argument `ElementType`.
-
-   classes.js:79:32
-    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                       ^^^^^^^^^^^^
-
-References:
-   classes.js:79:22
-    79| var foo_legacy: $jsx<number> = <FooLegacy/>;
-                             ^^^^^^ [1]
-   <BUILTINS>/react.js:170:5
-   170|   | string
-            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- import-react.js:16:1
@@ -434,8 +397,8 @@ Cannot assign `this.props.z` to `qux` because:
                                   ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    new_react.js:19:18
     19|         var qux: string = this.props.z;
@@ -451,8 +414,8 @@ Cannot assign `this.props.x` to `w` because string [1] is incompatible with numb
                                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:449:36
-   449|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    new_react.js:20:15
     20|         var w:number = this.props.x;
@@ -486,8 +449,8 @@ References:
    new_react.js:29:23
     29| var element = <C x = {0}/>;
                               ^ [1]
-   <BUILTINS>/react.js:449:36
-   449|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 
@@ -616,8 +579,8 @@ Cannot assign `this.props.x` to `a` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:449:36
-   449|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    props.js:14:16
     14|         var a: number = this.props.x; // error
@@ -653,8 +616,8 @@ Cannot assign `this.props.z` to `c` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    props.js:16:16
     16|         var c: string = this.props.z; // error
@@ -675,14 +638,14 @@ References:
    props.js:20:29
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                     ^^^^^ [1]
-   <BUILTINS>/react.js:449:36
-   449|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props.js:20:49
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                         ^^^^^ [3]
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [4]
 
 
@@ -739,8 +702,8 @@ References:
    props2.js:9:41
      9|     getInitialState: function(): { bar: number } {
                                                 ^^^^^^ [1]
-   <BUILTINS>/react.js:449:36
-   449|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props2.js:15:42
     15|         return <C {...this.state} foo = {0} />;
@@ -771,13 +734,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` is 
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:422:39
+   <BUILTINS>/react.js:461:39
                                               v
-   422| type ReactPropsChainableTypeChecker = {
-   423|   (props: any, propName: string, componentName: string, href?: string): ?Error,
-   424|   isRequired: ReactPropsCheckType,
-   425|   ...
-   426| };
+   461| type ReactPropsChainableTypeChecker = {
+   462|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   463|   isRequired: ReactPropsCheckType,
+   464|   ...
+   465| };
         ^ [1]
 
 
@@ -822,8 +785,8 @@ Cannot call `ReactDOM.render` with `document.body` bound to `container` because 
           ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:718:27
-   718|   body: HTMLBodyElement | null;
+   <BUILTINS>/dom.js:737:27
+   737|   body: HTMLBodyElement | null;
                                   ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,

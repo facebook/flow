@@ -458,7 +458,13 @@ static uint64_t* deptbl_bindings = NULL;
 
 /* The hashtable containing the shared values. */
 static helt_t* hashtbl = NULL;
-static uint64_t* hcounter = NULL;   // the number of slots taken in the table
+/* The number of nonempty slots in the hashtable. A nonempty slot has a
+ * non-zero hash. We never clear hashes so this monotonically increases */
+static uint64_t* hcounter = NULL;
+/* The number of nonempty filled slots in the hashtable. A nonempty filled slot
+ * has a non-zero hash AND a non-null addr. It increments when we write data
+ * into a slot with addr==NULL and decrements when we clear data from a slot */
+static uint64_t* hcounter_filled = NULL;
 
 /* A counter increasing globally across all forks. */
 static uintptr_t* counter = NULL;
@@ -542,22 +548,11 @@ CAMLprim value hh_sample_rate(void) {
 
 CAMLprim value hh_hash_used_slots(void) {
   CAMLparam0();
-  uint64_t filled_slots = 0;
-  uint64_t nonempty_slots = 0;
-  uintptr_t i = 0;
-  for (i = 0; i < hashtbl_size; ++i) {
-    if (hashtbl[i].hash != 0) {
-      nonempty_slots++;
-    }
-    if (hashtbl[i].addr == NULL) {
-      continue;
-    }
-    filled_slots++;
-  }
-  assert(nonempty_slots == *hcounter);
-  value connector = caml_alloc_tuple(2);
-  Field(connector, 0) = Val_long(filled_slots);
-  Field(connector, 1) = Val_long(nonempty_slots);
+  CAMLlocal1(connector);
+
+  connector = caml_alloc_tuple(2);
+  Store_field(connector, 0, Val_long(*hcounter_filled));
+  Store_field(connector, 1, Val_long(*hcounter));
 
   CAMLreturn(connector);
 }
@@ -823,7 +818,11 @@ static void memfd_reserve(char * mem, size_t sz) {
 
 static void memfd_reserve(char *mem, size_t sz) {
   off_t offset = (off_t)(mem - shared_mem);
-  if(posix_fallocate(memfd, offset, sz)) {
+  int err;
+  do {
+    err = posix_fallocate(memfd, offset, sz);
+  } while (err == EINTR);
+  if (err) {
     raise_out_of_shared_memory();
   }
 }
@@ -891,9 +890,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   allow_dependency_table_reads = (size_t*)(mem + 10*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  hcounter_filled = (size_t*)(mem + 11*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 11*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 12*CACHE_LINE_SIZE + (int)sizeof(int));
 
   assert (CACHE_LINE_SIZE >= sizeof(local_t));
   locals = mem;
@@ -953,6 +955,7 @@ static void init_shared_globals(
   global_storage[0] = 0;
   // Initialize the number of element in the table
   *hcounter = 0;
+  *hcounter_filled = 0;
   *dcounter = 0;
   // Ensure the global counter starts on a COUNTER_RANGE boundary
   *counter = ALIGN(early_counter + 1, COUNTER_RANGE);
@@ -984,7 +987,7 @@ static void set_sizes(
 
   size_t page_size = getpagesize();
 
-  global_size_b = config_global_size;
+  global_size_b = sizeof(global_storage[0]) + config_global_size;
   heap_size = config_heap_size;
 
   dep_size        = 1ul << config_dep_table_pow;
@@ -1075,12 +1078,12 @@ CAMLprim value hh_shared_init(
 #endif
 
   connector = caml_alloc_tuple(6);
-  Field(connector, 0) = Val_handle(memfd);
-  Field(connector, 1) = config_global_size_val;
-  Field(connector, 2) = config_heap_size_val;
-  Field(connector, 3) = config_dep_table_pow_val;
-  Field(connector, 4) = config_hash_table_pow_val;
-  Field(connector, 5) = num_workers_val;
+  Store_field(connector, 0, Val_handle(memfd));
+  Store_field(connector, 1, config_global_size_val);
+  Store_field(connector, 2, config_heap_size_val);
+  Store_field(connector, 3, config_dep_table_pow_val);
+  Store_field(connector, 4, config_hash_table_pow_val);
+  Store_field(connector, 5, num_workers_val);
 
   CAMLreturn(connector);
 }
@@ -1238,7 +1241,7 @@ void hh_shared_store(value data) {
 
   assert_master();                               // only the master can store
   assert(global_storage[0] == 0);                // Is it clear?
-  assert(size < global_size_b - sizeof(value));  // Do we have enough space?
+  assert(size < global_size_b - sizeof(global_storage[0])); // Do we have enough space?
 
   global_storage[0] = size;
   memfd_reserve((char *)&global_storage[1], size);
@@ -1528,15 +1531,15 @@ CAMLprim value hh_get_dep(value ocaml_key) {
         slotval = table[slotval.s.next.num];
 
         cell = caml_alloc_tuple(2);
-        Field(cell, 0) = Val_long(slotval.s.key.num);
-        Field(cell, 1) = result;
+        Store_field(cell, 0, Val_long(slotval.s.key.num));
+        Store_field(cell, 1, result);
         result = cell;
       }
 
       // The tail of the list is special, "next" is really a value.
       cell = caml_alloc_tuple(2);
-      Field(cell, 0) = Val_long(slotval.s.next.num);
-      Field(cell, 1) = result;
+      Store_field(cell, 0, Val_long(slotval.s.next.num));
+      Store_field(cell, 1, result);
       result = cell;
 
       // We are done!
@@ -1798,11 +1801,12 @@ static value write_at(unsigned int slot, value data) {
     size_t alloc_size = 0;
     size_t orig_size = 0;
     hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
-    Field(result, 0) = Val_long(alloc_size);
-    Field(result, 1) = Val_long(orig_size);
+    Store_field(result, 0, Val_long(alloc_size));
+    Store_field(result, 1, Val_long(orig_size));
+    __sync_fetch_and_add(hcounter_filled, 1);
   } else {
-    Field(result, 0) = Min_long;
-    Field(result, 1) = Min_long;
+    Store_field(result, 0, Min_long);
+    Store_field(result, 1, Min_long);
   }
   CAMLreturn(result);
 }
@@ -2027,7 +2031,7 @@ CAMLprim value hh_get_size(value key) {
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Long_val(Entry_size(hashtbl[slot].addr->header)));
+  CAMLreturn(Val_long(Entry_size(hashtbl[slot].addr->header)));
 }
 
 /*****************************************************************************/
@@ -2046,6 +2050,8 @@ void hh_move(value key1, value key2) {
   assert(hashtbl[slot1].hash == get_hash(key1));
   assert(hashtbl[slot2].addr == NULL);
   // We are taking up a previously empty slot. Let's increment the counter.
+  // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
+  // filled.
   if (hashtbl[slot2].hash == 0) {
     __sync_fetch_and_add(hcounter, 1);
   }
@@ -2071,6 +2077,7 @@ void hh_remove(value key) {
   __sync_fetch_and_add(wasted_heap_size, slot_size);
   hashtbl[slot].addr = NULL;
   removed_count += 1;
+  __sync_fetch_and_sub(hcounter_filled, 1);
 }
 
 size_t deptbl_entry_count_for_slot(size_t slot) {
@@ -2317,7 +2324,7 @@ value Val_some(value v)
     CAMLparam1(v);
     CAMLlocal1(some);
     some = caml_alloc_small(1, 0);
-    Field(some, 0) = v;
+    Store_field(some, 0, v);
     CAMLreturn(some);
 }
 
@@ -2327,7 +2334,9 @@ value Val_some(value v)
 
 // ------------------------ START OF SQLITE3 SECTION --------------------------
 
-void assert_sql_with_line(
+#define assert_sql(db, x, y) (assert_sql_with_line((db), (x), (y), __LINE__))
+
+static void assert_sql_with_line(
   sqlite3 *db,
   int result,
   int correct_result,
@@ -2888,8 +2897,8 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
 
   for (size_t i = 0; i < count; i++) {
     cell = caml_alloc_tuple(2);
-    Field(cell, 0) = Val_long(values[i]);
-    Field(cell, 1) = result;
+    Store_field(cell, 0, Val_long(values[i]));
+    Store_field(cell, 1, result);
     result = cell;
   }
   CAMLreturn(result);

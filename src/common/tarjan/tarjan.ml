@@ -12,124 +12,103 @@
 
 module type NODE = sig
   type t
-  val compare: t -> t -> int
-  val to_string: t -> string
+
+  val compare : t -> t -> int
+
+  val to_string : t -> string
 end
 
-module Make
-  (N: NODE)
-  (NMap: MyMap.S with type key = N.t)
-  (NSet: Set.S with type elt = N.t) = struct
+module Make (N : NODE) (NMap : WrappedMap.S with type key = N.t) (NSet : Set.S with type elt = N.t) =
+struct
+  type node = {
+    value: N.t;
+    edges: NSet.t;
+    (* visit order, -1 if unvisited *)
+    mutable index: int;
+    (* back edge to earliest visited node, -1 when unvisited *)
+    mutable lowlink: int;
+    mutable on_stack: bool;
+  }
 
-  (** Nodes are N.t. Edges are dependencies. **)
   type topsort_state = {
-    graph: NSet.t NMap.t;
-    (* nodes not yet visited *)
-    mutable not_yet_visited: NSet.t;
+    graph: node NMap.t;
     (* number of nodes visited *)
     mutable visit_count: int;
-    (* visit ordering *)
-    indices: (N.t, int) Hashtbl.t;
     (* nodes in a strongly connected component *)
-    mutable stack: N.t list;
-    mem_stack: (N.t, bool) Hashtbl.t;
-    (* back edges to earliest visited nodes *)
-    lowlinks: (N.t, int) Hashtbl.t;
-    (* components *)
+    mutable stack: node list;
+    (* accumulated components *)
     mutable components: N.t Nel.t list;
   }
+  (** Nodes are N.t. Edges are dependencies. **)
 
-  let initial_state ~roots graph = {
-    graph;
-    not_yet_visited = roots;
-    visit_count = 0;
-    indices = Hashtbl.create 0;
-    stack = [];
-    mem_stack = Hashtbl.create 0;
-    lowlinks = Hashtbl.create 0;
-    components = [];
-  }
+  let initial_state graph =
+    let graph =
+      NMap.mapi
+        (fun value edges -> { value; edges; index = -1; lowlink = -1; on_stack = false })
+        graph
+    in
+    { graph; visit_count = 0; stack = []; components = [] }
 
   (* Compute strongly connected component for node m with requires rs. *)
-  let rec strongconnect state m rs =
+  let rec strongconnect state v =
     let i = state.visit_count in
     state.visit_count <- i + 1;
 
-    (* visit m *)
-    Hashtbl.replace state.indices m i;
-    state.not_yet_visited <- NSet.remove m state.not_yet_visited;
+    (* visit node *)
+    assert (v.index = -1);
+    v.index <- i;
+    v.lowlink <- i;
 
     (* push on stack *)
-    state.stack <- m :: state.stack;
-    Hashtbl.replace state.mem_stack m true;
+    state.stack <- v :: state.stack;
+    v.on_stack <- true;
 
-    (* initialize lowlink *)
-    let lowlink = ref i in
+    (* for each edge e:
+       If the edge has not yet been visited, recurse in a depth-first manner.
+       If the edge has been visited, it is a back-edge iff it is on the stack,
+       otherwise it's a cross-edge and can be ignored. *)
+    v.edges
+    |> NSet.iter (fun e ->
+           let w = NMap.find e state.graph in
+           if w.index = -1 then (
+             strongconnect state w;
+             v.lowlink <- min v.lowlink w.lowlink
+           ) else if w.on_stack then
+             v.lowlink <- min v.lowlink w.index);
 
-    (* for each require r in rs: *)
-    rs |> NSet.iter (fun r ->
-      if Hashtbl.mem state.indices r
-      then begin
-        if (Hashtbl.find state.mem_stack r) then
-          (** either back edge, or cross edge where strongly connected component
-              is not yet complete **)
-          (* update lowlink with index of r *)
-          let index_r = Hashtbl.find state.indices r in
-          lowlink := min !lowlink index_r
-      end else match NMap.get r state.graph with
-        | Some rs_ ->
-          (* recursively compute strongly connected component of r *)
-          strongconnect state r rs_;
-
-          (* update lowlink with that of r *)
-          let lowlink_r = Hashtbl.find state.lowlinks r in
-          lowlink := min !lowlink lowlink_r
-
-        | None -> ()
-    );
-
-    Hashtbl.replace state.lowlinks m !lowlink;
-    if (!lowlink = i) then
+    if v.lowlink = v.index then
       (* strongly connected component *)
-      let c = component state m in
-      state.components <- (m, c) :: state.components
+      let c = component state v in
+      state.components <- (v.value, c) :: state.components
 
-  (* Return component strongly connected to m. *)
-  and component state m =
+  (* Return component strongly connected to v. *)
+  and component state v =
     (* pop stack until m is found *)
-    let m_ = List.hd state.stack in
+    let w = List.hd state.stack in
     state.stack <- List.tl state.stack;
-    Hashtbl.replace state.mem_stack m_ false;
-    if (m = m_) then []
-    else m_ :: (component state m)
+    w.on_stack <- false;
+    if v.value = w.value then
+      []
+    else
+      w.value :: component state v
 
   (** main loop **)
-  let tarjan state =
-    while not (NSet.is_empty state.not_yet_visited) do
-      (* choose a node, compute its strongly connected component *)
-      (** NOTE: this choice is non-deterministic, so any computations that depend
-          on the visit order, such as heights, are in general non-repeatable. **)
-      let m = NSet.choose state.not_yet_visited in
-      let rs = NMap.find_unsafe m state.graph in
-      strongconnect state m rs
-    done
+  let tarjan ~roots state =
+    NSet.iter
+      (fun x ->
+        let v = NMap.find x state.graph in
+        if v.index = -1 then strongconnect state v)
+      roots
 
   let topsort ~roots graph =
-    let state = initial_state ~roots graph in
-    tarjan state;
+    let state = initial_state graph in
+    tarjan ~roots state;
     state.components
 
   let log =
     List.iter (fun mc ->
-      (* Show cycles, which are components with more than one node. *)
-      if Nel.length mc > 1
-      then
-        let nodes = mc
-        |> Nel.to_list
-        |> Core_list.map ~f:N.to_string
-        |> String.concat "\n\t"
-        in
-        Printf.ksprintf prerr_endline
-          "cycle detected among the following nodes:\n\t%s" nodes
-    )
+        (* Show cycles, which are components with more than one node. *)
+        if Nel.length mc > 1 then
+          let nodes = mc |> Nel.to_list |> Base.List.map ~f:N.to_string |> String.concat "\n\t" in
+          Printf.ksprintf prerr_endline "cycle detected among the following nodes:\n\t%s" nodes)
 end

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
@@ -15,12 +15,10 @@ type 'a bucket =
   | Wait
   | Done
 
-
-
-type 'a next =
-  unit -> 'a bucket
+type 'a next = unit -> 'a bucket
 
 val set_max_bucket_size : int -> unit
+
 val max_size : unit -> int
 
 (** Given a number of jobs, number of workers, and a maximum bucket size, will
@@ -30,7 +28,8 @@ val max_size : unit -> int
     Specifically, if the number of jobs is less than the number of workers times
     the maximum bucket size, smaller bucket sizes will be returned in order to
     utilize as many workers as possible. *)
-val calculate_bucket_size : num_jobs:int -> num_workers:int -> max_size:int -> int
+val calculate_bucket_size :
+  num_jobs:int -> num_workers:int -> max_size:int -> int
 
 (* Makes a bucket out of a list, without regard for number of workers or the
    size of the list.  *)
@@ -43,15 +42,18 @@ val make :
   'a list ->
   'a list next
 
-type 'a of_n = { work: 'a; bucket: int; total: int }
+type 'a of_n = {
+  work: 'a;
+  bucket: int;
+  total: int;
+}
 
 (**
  * Make n buckets (where n = "buckets").
  *
  * The "split" function provides the workload for the k'th bucket.
  *)
-val make_n_buckets : buckets:int -> split:(bucket:int -> 'a) ->
-  'a of_n next
+val make_n_buckets : buckets:int -> split:(bucket:int -> 'a) -> 'a of_n next
 
 (* Specialized version to split into lists only. *)
 val make_list :
@@ -59,4 +61,5 @@ val make_list :
   ?progress_fn:(total:int -> start:int -> length:int -> unit) ->
   ?max_size:int ->
   'a list ->
-  (unit -> 'a list)
+  unit ->
+  'a list

@@ -2,11 +2,11 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":5}},
-      "message":"Unexpected token #"
+      "message":"Unexpected token `#`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":5},"end":{"line":4,"column":6}},
-      "message":"Unexpected identifier"
+      "message":"Unexpected identifier, expected the end of an expression statement (`;`)"
     }
   ],
   "type":"Program",
@@ -197,8 +197,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

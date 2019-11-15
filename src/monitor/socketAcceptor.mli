@@ -5,5 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val run: Lwt_unix.file_descr -> autostop:bool -> unit Lwt.t
-val run_legacy: Lwt_unix.file_descr -> unit Lwt.t
+val run : Lwt_unix.file_descr -> autostop:bool -> unit Lwt.t
+
+val run_legacy : Lwt_unix.file_descr -> unit Lwt.t

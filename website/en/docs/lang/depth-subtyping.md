@@ -20,8 +20,8 @@ var employee: Employee = new Employee;
 var person: Person = employee; // OK
 ```
 
-However, it is not valid to use an object containing an `Employee` instance
-where an object containing a `Person` instance is expected.
+However, it is not valid to use an object containing an `Person` instance
+where an object containing a `Employee` instance is expected.
 
 ```js
 // @flow

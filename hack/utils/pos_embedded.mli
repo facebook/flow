@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -10,18 +10,18 @@
 (* Note: While Pos.string prints out positions as closed intervals, pos_start
  * and pos_end actually form a half-open interval (i.e. pos_end points to the
  * character *after* the last character of the relevant lexeme.) *)
-type 'a pos
+type 'a pos [@@deriving eq]
 
 (** The underlying type used to construct Pos instances.
  *
  * See "val make: 'a -> b -> 'a pos" *)
 type b = Pos_source.t
 
-type t = Relative_path.t pos
+type t = Relative_path.t pos [@@deriving eq]
 
 val pp : Format.formatter -> t -> unit
 
-type absolute = string pos
+type absolute = string pos [@@deriving eq]
 
 val none : t
 
@@ -72,7 +72,12 @@ val line_beg_offset : t -> int * int * int
 val inside : 'a pos -> int -> int -> bool
 
 val exactly_matches_range :
-  'a pos -> start_line:int -> start_col:int -> end_line:int -> end_col:int -> bool
+  'a pos ->
+  start_line:int ->
+  start_col:int ->
+  end_line:int ->
+  end_col:int ->
+  bool
 
 val contains : 'a pos -> 'a pos -> bool
 
@@ -100,14 +105,14 @@ val first_char_of_line : t -> t
 
 val to_absolute : t -> absolute
 
-val to_relative: absolute -> t
+val to_relative : absolute -> t
 
 val to_relative_string : t -> string pos
 
-val get_text_from_pos: content:string -> 'a pos -> string
+val get_text_from_pos : content:string -> 'a pos -> string
 
 (* This returns a half-open interval. *)
-val destruct_range : 'a pos -> (int * int * int * int)
+val destruct_range : 'a pos -> int * int * int * int
 
 (* Advance the ending position by one character *)
 val advance_one : 'a pos -> 'a pos
@@ -122,16 +127,20 @@ val shrink_by_one_char_both_sides : 'a pos -> 'a pos
  * end position *)
 val compare : 'a pos -> 'a pos -> int
 
-val set_file : 'a -> 'a pos -> 'a pos
+val set_file : 'a -> 'b pos -> 'a pos
 
 val make_from_lnum_bol_cnum :
   pos_file:Relative_path.t ->
-  pos_start:int*int*int ->
-  pos_end:int*int*int ->
+  pos_start:int * int * int ->
+  pos_end:int * int * int ->
   t
-module Map : MyMap.S with type key = t
-module AbsolutePosMap : MyMap.S with type key = absolute
 
+module Map : WrappedMap.S with type key = t
+
+module AbsolutePosMap : WrappedMap.S with type key = absolute
 
 val print_verbose_absolute : absolute -> string
+
 val print_verbose_relative : t -> string
+
+val pessimize_enabled : t -> float -> bool

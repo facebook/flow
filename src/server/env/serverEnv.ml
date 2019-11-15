@@ -10,14 +10,17 @@
 (*****************************************************************************)
 
 type genv = {
-    options          : Options.t;
-    workers          : MultiWorkerLwt.worker list option;
-  }
+  options: Options.t;
+  workers: MultiWorkerLwt.worker list option;
+}
 
 (*****************************************************************************)
 (* The environment constantly maintained by the server *)
 (*****************************************************************************)
 
+(* Do not change these to contain `Loc.t`s. Because these errors are stored between rechecks, it
+ * is critical that they contain `ALoc.t`s, so that we can update the concrete locations when we
+ * render the errors, without having to retypecheck the files that generated those errors. *)
 type errors = {
   (* errors are stored in a map from file path to error set, so that the errors
      from checking particular files can be cleared during recheck. *)
@@ -39,18 +42,20 @@ type collated_errors = {
 }
 
 type env = {
-    (* All the files that we at least parse. *)
-    files: Utils_js.FilenameSet.t;
-    (* All the files that we at least parse. *)
-    dependency_info: Dependency_info.t;
-    (* All the current files we typecheck. *)
-    checked_files: CheckedSet.t;
-    ordered_libs: string list; (* The lib files, in their merge order *)
-    libs: SSet.t; (* a subset of `files` *)
-    (* The files which didn't parse (skipped or errored) *)
-    unparsed: Utils_js.FilenameSet.t;
-    errors: errors;
-    coverage: Coverage.file_coverage Utils_js.FilenameMap.t;
-    collated_errors: collated_errors option ref;
-    connections: Persistent_connection.t;
+  (* All the files that we at least parse. *)
+  files: Utils_js.FilenameSet.t;
+  (* All the files that we at least parse. *)
+  dependency_info: Dependency_info.t;
+  (* All the current files we typecheck. *)
+  checked_files: CheckedSet.t;
+  ordered_libs: string list;
+  (* The lib files, in their merge order *)
+  libs: SSet.t;
+  (* a subset of `files` *)
+  (* The files which didn't parse (skipped or errored) *)
+  unparsed: Utils_js.FilenameSet.t;
+  errors: errors;
+  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
+  collated_errors: collated_errors option ref;
+  connections: Persistent_connection.t;
 }

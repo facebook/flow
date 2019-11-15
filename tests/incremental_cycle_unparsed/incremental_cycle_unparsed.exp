@@ -1,0 +1,181 @@
+
+Initial status...with type errors:
+Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
+
+Cannot return `foo.y` because string [1] is incompatible with number [2].
+
+   bar.js:6:10
+    6|   return foo.y;
+                ^^^^^
+
+References:
+   foo.js:10:6
+   10|   y: string;
+            ^^^^^^ [1]
+   bar.js:5:25
+    5| function err(foo: foo): number {
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
+
+Cannot return `bar.x` because string [1] is incompatible with number [2].
+
+   foo.js:6:10
+    6|   return bar.x;
+                ^^^^^
+
+References:
+   bar.js:10:6
+   10|   x: string;
+            ^^^^^^ [1]
+   foo.js:5:25
+    5| function err(bar: bar): number {
+                               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+Delete foo.js (cannot resolve module!):
+Error ------------------------------------------------------------------------------------------------------ bar.js:3:24
+
+Cannot resolve module `./foo`.
+
+   3| import type {foo} from './foo';
+                             ^^^^^^^
+
+
+
+Found 1 error
+
+Restore foo.js (same as initial status):
+Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
+
+Cannot return `foo.y` because string [1] is incompatible with number [2].
+
+   bar.js:6:10
+    6|   return foo.y;
+                ^^^^^
+
+References:
+   foo.js:10:6
+   10|   y: string;
+            ^^^^^^ [1]
+   bar.js:5:25
+    5| function err(foo: foo): number {
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
+
+Cannot return `bar.x` because string [1] is incompatible with number [2].
+
+   foo.js:6:10
+    6|   return bar.x;
+                ^^^^^
+
+References:
+   bar.js:10:6
+   10|   x: string;
+            ^^^^^^ [1]
+   foo.js:5:25
+    5| function err(bar: bar): number {
+                               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+Remove @flow in foo.js (no errors!):
+No errors!
+
+Restore foo.js (same as initial status):
+Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
+
+Cannot return `foo.y` because string [1] is incompatible with number [2].
+
+   bar.js:6:10
+    6|   return foo.y;
+                ^^^^^
+
+References:
+   foo.js:10:6
+   10|   y: string;
+            ^^^^^^ [1]
+   bar.js:5:25
+    5| function err(foo: foo): number {
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
+
+Cannot return `bar.x` because string [1] is incompatible with number [2].
+
+   foo.js:6:10
+    6|   return bar.x;
+                ^^^^^
+
+References:
+   bar.js:10:6
+   10|   x: string;
+            ^^^^^^ [1]
+   foo.js:5:25
+    5| function err(bar: bar): number {
+                               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+Introduce parse error in foo.js (unexpected identifier!):
+Error ----------------------------------------------------------------------------------------------------- foo.js:14:11
+
+Unexpected identifier, expected the token `;`
+
+   14| let parse error
+                 ^^^^^
+
+
+
+Found 1 error
+
+Restore foo.js (same as initial status):
+Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
+
+Cannot return `foo.y` because string [1] is incompatible with number [2].
+
+   bar.js:6:10
+    6|   return foo.y;
+                ^^^^^
+
+References:
+   foo.js:10:6
+   10|   y: string;
+            ^^^^^^ [1]
+   bar.js:5:25
+    5| function err(foo: foo): number {
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
+
+Cannot return `bar.x` because string [1] is incompatible with number [2].
+
+   foo.js:6:10
+    6|   return bar.x;
+                ^^^^^
+
+References:
+   bar.js:10:6
+   10|   x: string;
+            ^^^^^^ [1]
+   foo.js:5:25
+    5| function err(bar: bar): number {
+                               ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+Done!

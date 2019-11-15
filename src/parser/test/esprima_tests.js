@@ -10,9 +10,28 @@ module.exports = {
     ],
 
     'Invalid syntax': [
-
-        '{',
-        '}',
+        {
+          content: '{',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `}`'
+            }
+          }
+        },
+        {
+          content: '}',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token }',
+              actual: 'Unexpected token `}`, expected the start of a statement'
+            }
+          }
+        },
         '3ea',
         '3in []',
         '3e',
@@ -159,14 +178,74 @@ module.exports = {
             },
           }
         },
-        '[',
-        '[,',
-        '1 + {',
-        '1 + { t:t ',
-        '1 + { t:t,',
+        {
+          content: '[',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `]`'
+            }
+          }
+        },
+        {
+          content: '[,',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `]`'
+            }
+          }
+        },
+        {
+          content: '1 + {',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `}`'
+            }
+          }
+        },
+        {
+          content: '1 + { t:t ',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `,`'
+            }
+          }
+        },
+        {
+          content: '1 + { t:t,',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `}`'
+            }
+          }
+        },
         'var x = /\n/',
         'var x = "\n',
-        'var if = 42',
+        {
+          content: 'var if = 42',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token if',
+              actual: 'Unexpected token `if`'
+            }
+          }
+        },
         {
           content: 'i #= 42',
           explanation: "# is no longer illegal in Flow, since we support private class fields. " +
@@ -176,19 +255,79 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token ILLEGAL',
-              actual: 'Unexpected token #'
+              actual: 'Unexpected token `#`, expected the end of an expression statement (`;`)'
             },
           }
         },
         'i + 2 = 42',
         '+i = 42',
         '1 + (',
-        '\n\n\n{',
-        '\n/* Some multiline\ncomment */\n)',
-        '{ set 1 }',
-        '{ get 2 }',
-        '({ set: s(if) { } })',
-        '({ set s(.) { } })',
+        {
+          content: '\n\n\n{',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `}`'
+            }
+          }
+        },
+        {
+          content: '\n/* Some multiline\ncomment */\n)',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token )',
+              actual: 'Unexpected token `)`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '{ set 1 }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected number',
+              actual: 'Unexpected number, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
+        {
+          content: '{ get 2 }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected number',
+              actual: 'Unexpected number, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
+        {
+          content: '({ set: s(if) { } })',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token if',
+              actual: 'Unexpected token `if`'
+            }
+          }
+        },
+        {
+          content: '({ set s(.) { } })',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token .',
+              actual: 'Unexpected token `.`, expected an identifier'
+            }
+          }
+        },
         {
           content: '({ set s() { } })',
           explanation: "Esprima error isn't great",
@@ -205,9 +344,39 @@ module.exports = {
             }
           }
         },
-        '({ set: s() { } })',
-        '({ set: s(a, b) { } })',
-        '({ get: g(d) { } })',
+        {
+          content: '({ set: s() { } })',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token {',
+              actual: 'Unexpected token `{`, expected the token `,`'
+            }
+          }
+        },
+        {
+          content: '({ set: s(a, b) { } })',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token {',
+              actual: 'Unexpected token `{`, expected the token `,`'
+            }
+          }
+        },
+        {
+          content: '({ get: g(d) { } })',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token {',
+              actual: 'Unexpected token `{`, expected the token `,`'
+            }
+          }
+        },
         {
           content: '({ get i() { }, i: 42 })',
           explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
@@ -274,8 +443,28 @@ module.exports = {
             }
           }
         },
-        '((a)) => 42',
-        '(a, (b)) => 42',
+        {
+          content: '((a)) => 42',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token =>',
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
+        {
+          content: '(a, (b)) => 42',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token =>',
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
         {
           content: '"use strict"; (eval = 10) => 42',
           explanation: "This is an arrow function error, not an assignment "+
@@ -348,14 +537,94 @@ module.exports = {
           }
         },
         '"use strict"; (a) => 00',
-        '() <= 42',
-        '() ? 42',
-        '() + 42',
-        '(...x) + 42',
-        '()++',
-        '()()',
-        '(10) => 00',
-        '(10, 20) => 00',
+        {
+          content: '() <= 42',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token <=',
+              actual: 'Unexpected token `<=`, expected the token `=>`'
+            }
+          }
+        },
+        {
+          content: '() ? 42',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ?',
+              actual: 'Unexpected token `?`, expected the token `=>`'
+            }
+          }
+        },
+        {
+          content: '() + 42',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token +',
+              actual: 'Unexpected token `+`, expected the token `=>`'
+            }
+          }
+        },
+        {
+          content: '(...x) + 42',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token +',
+              actual: 'Unexpected token `+`, expected the token `=>`'
+            }
+          }
+        },
+        {
+          content: '()++',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ++',
+              actual: 'Unexpected token `++`, expected the token `=>`'
+            }
+          }
+        },
+        {
+          content: '()()',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token (',
+              actual: 'Unexpected token `(`, expected the token `=>`'
+            }
+          }
+        },
+        {
+          content: '(10) => 00',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token =>',
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
+        {
+          content: '(10, 20) => 00',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token =>',
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
         {
           content: '"use strict"; (eval) => 42',
           explanation: "Esprima error loc is crazy here",
@@ -378,17 +647,127 @@ module.exports = {
             },
           }
         },
-        'function t(if) { }',
-        'function t(true) { }',
-        'function t(false) { }',
-        'function t(null) { }',
-        'function null() { }',
-        'function true() { }',
-        'function false() { }',
-        'function if() { }',
-        'a b;',
-        'if.a;',
-        'a if;',
+        {
+          content: 'function t(if) { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token if',
+              actual: 'Unexpected token `if`'
+            }
+          }
+        },
+        {
+          content: 'function t(true) { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token true',
+              actual: 'Unexpected token `true`'
+            }
+          }
+        },
+        {
+          content: 'function t(false) { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token false',
+              actual: 'Unexpected token `false`'
+            }
+          }
+        },
+        {
+          content: 'function t(null) { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token null',
+              actual: 'Unexpected token `null`'
+            }
+          }
+        },
+        {
+          content: 'function null() { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token null',
+              actual: 'Unexpected token `null`'
+            }
+          }
+        },
+        {
+          content: 'function true() { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token true',
+              actual: 'Unexpected token `true`'
+            }
+          }
+        },
+        {
+          content: 'function false() { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token false',
+              actual: 'Unexpected token `false`'
+            }
+          }
+        },
+        {
+          content: 'function if() { }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token if',
+              actual: 'Unexpected token `if`'
+            }
+          }
+        },
+        {
+          content: 'a b;',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected identifier',
+              actual: 'Unexpected identifier, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
+        {
+          content: 'if.a;',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token .',
+              actual: 'Unexpected token `.`, expected the token `(`'
+            }
+          }
+        },
+        {
+          content: 'a if;',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token if',
+              actual: 'Unexpected token `if`, expected the end of an expression statement (`;`)'
+            }
+          }
+        },
         {
           content: 'a class;',
           explanation: 'class is no longer a future reserved word',
@@ -396,16 +775,46 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected reserved word',
-              actual: 'Unexpected token class',
+              actual: 'Unexpected token `class`, expected the end of an expression statement (`;`)',
             },
           },
         },
         'break\n',
-        'break 1;',
+        {
+          content: 'break 1;',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected number',
+              actual: 'Unexpected number, expected an identifier'
+            }
+          }
+        },
         'continue\n',
-        'continue 2;',
+        {
+          content: 'continue 2;',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected number',
+              actual: 'Unexpected number, expected an identifier'
+            }
+          }
+        },
         'throw',
-        'throw;',
+        {
+          content: 'throw;',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ;',
+              actual: 'Unexpected token `;`'
+            }
+          }
+        },
         'throw\n',
         {
           content: 'for (var i, i2 in {});',
@@ -423,15 +832,85 @@ module.exports = {
             },
           }
         },
-        'for ((i in {}));',
+        {
+          content: 'for ((i in {}));',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token )',
+              actual: 'Unexpected token `)`, expected the token `;`'
+            }
+          }
+        },
         'for (i + 1 in {});',
         'for (+i in {});',
-        'if(false)',
-        'if(false) doThis(); else',
-        'do',
-        'while(false)',
-        'for(;;)',
-        'with(x)',
+        {
+          content: 'if(false)',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: 'if(false) doThis(); else',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: 'do',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: 'while(false)',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: 'for(;;)',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: 'with(x)',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the start of a statement'
+            }
+          }
+        },
         'try { }',
 
         'const x = 12, y;',
@@ -450,11 +929,21 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token let',
-              actual: 'Unexpected identifier',
+              actual: 'Unexpected identifier, expected the end of an expression statement (`;`)',
             },
           }
         },
-        'if(true) const a = 1;',
+        {
+          content: 'if(true) const a = 1;',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token const',
+              actual: 'Unexpected token `const`'
+            }
+          }
+        },
         {
           content: 'switch (c) { default: default: }',
           explanation: "Esprima points after the duplicate default",
@@ -466,24 +955,134 @@ module.exports = {
             },
           }
         },
-        'new X()."s"',
+        {
+          content: 'new X()."s"',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected string',
+              actual: 'Unexpected string, expected an identifier'
+            }
+          }
+        },
         '/*',
         '/*\n\n\n',
         '/**',
         '/*\n\n*',
         '/*hello',
         '/*hello  *',
-        '\n]',
-        '\r]',
-        '\r\n]',
-        '\n\r]',
-        '//\r\n]',
-        '//\n\r]',
+        {
+          content: '\n]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '\r]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '\r\n]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '\n\r]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '//\r\n]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '//\n\r]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
         '/a\\\n/',
-        '//\r \n]',
-        '/*\r\n*/]',
-        '/*\n\r*/]',
-        '/*\r \n*/]',
+        {
+          content: '//\r \n]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '/*\r\n*/]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '/*\n\r*/]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
+        {
+          content: '/*\r \n*/]',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ]',
+              actual: 'Unexpected token `]`, expected the start of a statement'
+            }
+          }
+        },
         '\\\\',
         '\\x',
         {
@@ -498,12 +1097,32 @@ module.exports = {
           }
         },
         '"\\u',
-        'try { } catch() {}',
+        {
+          content: 'try { } catch() {}',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token )',
+              actual: 'Unexpected token `)`, expected an identifier'
+            }
+          }
+        },
         'return',
         'break',
         'continue',
         'switch (x) { default: continue; }',
-        'do { x } *',
+        {
+          content: 'do { x } *',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token *',
+              actual: 'Unexpected token `*`, expected the token `while`'
+            }
+          }
+        },
         'while (true) { break x; }',
         'while (true) { continue x; }',
         'x: while (true) { (function () { break x; }); }',
@@ -702,16 +1321,116 @@ module.exports = {
             }
           }
         },
-        'var',
-        'let',
-        'const',
-        '{ ;  ;  ',
-        'function t() { ;  ;  ',
-        'let let',
-        'const let=4',
-        'for (let let=4;;) {}',
-        'for (let in arr) {}',
-        'for (let let in arr) {}',
+        {
+          content: 'var',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected an identifier'
+            }
+          }
+        },
+        {
+          content: 'let',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected an identifier'
+            }
+          }
+        },
+        {
+          content: 'const',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected an identifier'
+            }
+          }
+        },
+        {
+          content: '{ ;  ;  ',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `}`'
+            }
+          }
+        },
+        {
+          content: 'function t() { ;  ;  ',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected end of input',
+              actual: 'Unexpected end of input, expected the token `}`'
+            }
+          }
+        },
+        {
+          content: 'let let',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token let',
+              actual: 'Unexpected token `let`'
+            }
+          }
+        },
+        {
+          content: 'const let=4',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token let',
+              actual: 'Unexpected token `let`'
+            }
+          }
+        },
+        {
+          content: 'for (let let=4;;) {}',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token let',
+              actual: 'Unexpected token `let`'
+            }
+          }
+        },
+        {
+          content: 'for (let in arr) {}',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token in',
+              actual: 'Unexpected token `in`'
+            }
+          }
+        },
+        {
+          content: 'for (let let in arr) {}',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token let',
+              actual: 'Unexpected token `let`'
+            }
+          }
+        },
         {
           content: 'class let { }',
           explanation: "Esprima counts comments in its loc, Flow doesn't",
@@ -736,7 +1455,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Invalid left-hand side in formals list',
-              actual: 'Unexpected token .',
+              actual: 'Unexpected token `.`, expected the token `,`',
             }
           },
         },
@@ -752,7 +1471,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Invalid left-hand side in formals list',
-              actual: 'Unexpected token .',
+              actual: 'Unexpected token `.`, expected the token `,`',
             }
           },
         },
@@ -761,57 +1480,7 @@ module.exports = {
         '<n:a n:v />',
         '<a n:foo="bar"> {value} <b><c /></b></a>',
         '<a b={" "} c=" " d="&amp;" />',
-        {
-          content: '<日本語></日本語>',
-          explanation: 'Flow reports offsets based on bytes',
-          expected_differences: {
-            'root.body.0.expression.openingElement.name.range.1': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 10,
-            },
-            'root.body.0.expression.openingElement.range.1': {
-              type: 'Wrong number',
-              expected: 5,
-              actual: 11,
-            },
-            'root.body.0.expression.closingElement.name.range.0': {
-              type: 'Wrong number',
-              expected: 7,
-              actual: 13,
-            },
-            'root.body.0.expression.closingElement.name.range.1': {
-              type: 'Wrong number',
-              expected: 10,
-              actual: 22,
-            },
-            'root.body.0.expression.closingElement.range.0': {
-              type: 'Wrong number',
-              expected: 5,
-              actual: 11,
-            },
-            'root.body.0.expression.closingElement.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.body.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-          },
-        },
+        '<日本語></日本語>',
         '<AbC-def\n  test="&#x0026;&#38;">\nbar\nbaz\n</AbC-def>',
         '<a b={x ? <c /> : <d />} />',
         '<div>@test content</div>',
@@ -825,19 +1494,129 @@ module.exports = {
         '<a b=d />',
         '<a></b>',
         '<a foo="bar',
-        '<a:b.c></a:b.c>',
-        '<a.b:c></a.b:c>',
+        {
+          content: '<a:b.c></a:b.c>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token .',
+              actual: 'Unexpected token `.`, expected an identifier'
+            }
+          }
+        },
+        {
+          content: '<a.b:c></a.b:c>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token :',
+              actual: 'Unexpected token `:`, expected an identifier'
+            }
+          }
+        },
         '<a.b.c></a>',
-        '<.a></.a>',
-        '<a[foo]></a[foo]>',
-        '<a[\'foo\']></a[\'foo\']>',
+        {
+          content: '<.a></.a>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token .',
+              actual: 'Unexpected token `.`, expected an identifier'
+            }
+          }
+        },
+        {
+          content: '<a[foo]></a[foo]>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token [',
+              actual: 'Unexpected token `[`, expected an identifier'
+            }
+          }
+        },
+        {
+          content: '<a[\'foo\']></a[\'foo\']>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token [',
+              actual: 'Unexpected token `[`, expected an identifier'
+            }
+          }
+        },
         '<a><a />',
-        '<a>{"str";}</a>',
-        '<span className="a", id="b" />',
-        '<div className"app">',
-        '<div {props} />',
-        '<div>stuff</div {...props}>',
-        '<div {...props}>stuff</div {...props}>',
+        {
+          content: '<a>{"str";}</a>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ;',
+              actual: 'Unexpected token `;`, expected the token `}`'
+            }
+          }
+        },
+        {
+          content: '<span className="a", id="b" />',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ,',
+              actual: 'Unexpected token `,`, expected an identifier'
+            }
+          }
+        },
+        {
+          content: '<div className"app">',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected string',
+              actual: 'Unexpected string, expected an identifier'
+            }
+          }
+        },
+        {
+          content: '<div {props} />',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected identifier',
+              actual: 'Unexpected identifier, expected the token `...`'
+            }
+          }
+        },
+        {
+          content: '<div>stuff</div {...props}>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token {',
+              actual: 'Unexpected token `{`, expected the token `>`'
+            }
+          }
+        },
+        {
+          content: '<div {...props}>stuff</div {...props}>',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token {',
+              actual: 'Unexpected token `{`, expected the token `>`'
+            }
+          }
+        },
         '<div><a/><b/><c/>',
     ],
 
@@ -876,7 +1655,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Invalid left-hand side in formals list',
-              actual: 'Unexpected token =>',
+              actual: 'Unexpected token `=>`, expected the end of an expression statement (`;`)',
             }
           },
         },
@@ -2057,7 +2836,17 @@ module.exports = {
         /* Esprima doesn't parse nameless exported classes yet
         'export class {}',
         */
-        'export function {}',
+        {
+          content: 'export function {}',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token {',
+              actual: 'Unexpected token `{`, expected an identifier'
+            }
+          }
+        },
         /* Esprima parses default exports wrong
         'export default class A {}',
         */
@@ -2148,7 +2937,17 @@ module.exports = {
       'declare function foo(x: number, y: string): void;',
     ],
     'Invalid Declare Statements': [
-      'declare function foo();',
+      {
+        content: 'declare function foo();',
+        explanation: "Improved error message",
+        expected_differences: {
+          'root.errors.0.message': {
+            type: 'Wrong error message',
+            expected: 'Unexpected token ;',
+            actual: 'Unexpected token `;`, expected the token `:`'
+          }
+        }
+      },
     ],
     'Declare Module': [
       'declare module A {}',
@@ -2157,8 +2956,28 @@ module.exports = {
       'declare module A { declare function foo(): number; }',
     ],
     'Invalid Declare Module': [
-      'declare Module A {}',
-      'declare module {}',
+      {
+        content: 'declare Module A {}',
+        explanation: "Improved error message",
+        expected_differences: {
+          'root.errors.0.message': {
+            type: 'Wrong error message',
+            expected: 'Unexpected identifier',
+            actual: 'Unexpected identifier, expected the end of an expression statement (`;`)'
+          }
+        }
+      },
+      {
+        content: 'declare module {}',
+        explanation: "Improved error message",
+        expected_differences: {
+          'root.errors.0.message': {
+            type: 'Wrong error message',
+            expected: 'Unexpected token {',
+            actual: 'Unexpected token `{`, expected an identifier'
+          }
+        }
+      },
       '"use strict"; declare module "\\01" {}',
       {
         content: 'declare module A { declare module B {} }',
@@ -2168,6 +2987,11 @@ module.exports = {
             type: 'Wrong error column',
             expected: 19,
             actual: '34-35'
+          },
+          'root.errors.0.message': {
+            type: 'Wrong error message',
+            expected: 'Unexpected identifier',
+            actual: 'Unexpected identifier, expected the token `.`'
           }
         }
       },
@@ -2178,7 +3002,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected reserved word',
-              actual: 'Unexpected token export',
+              actual: 'Unexpected token `export`, expected the token `declare`',
             },
         },
       },
@@ -2245,13 +3069,43 @@ module.exports = {
     ],
     'Invalid Typecasts': [
       // Must be parenthesized
-      'var x: number = 0: number;',
+      {
+        content: 'var x: number = 0: number;',
+        explanation: "Improved error message",
+        expected_differences: {
+          'root.errors.0.message': {
+            type: 'Wrong error message',
+            expected: 'Unexpected token :',
+            actual: 'Unexpected token `:`, expected the token `;`'
+          }
+        }
+      },
       // ...even within groups
-      '(xxx: number, yyy: string)'
+      {
+        content: '(xxx: number, yyy: string)',
+        explanation: "Improved error message",
+        expected_differences: {
+          'root.errors.0.message': {
+            type: 'Wrong error message',
+            expected: 'Unexpected token ,',
+            actual: 'Unexpected token `,`, expected the token `)`'
+          }
+        }
+      },
     ],
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',
-      'class Foo<T: Bar>() {}',
+      {
+        content: 'class Foo<T: Bar>() {}',
+        explanation: "Improved error message",
+        expected_differences: {
+          'root.errors.0.message': {
+            type: 'Wrong error message',
+            expected: 'Unexpected token (',
+            actual: 'Unexpected token `(`, expected the token `{`'
+          }
+        }
+      },
     ],
     'Async/Await': [
         'try { foo(); } catch (async) { bar(); }',
@@ -2477,7 +3331,17 @@ module.exports = {
           },
         },
         'var x = async function bar() { await foo; }',
-        'async function foo() { return await; }',
+        {
+          content: 'async function foo() { return await; }',
+          explanation: "Improved error message",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ;',
+              actual: 'Unexpected token `;`'
+            }
+          }
+        },
         'var x = async (a, b) => await a;',
         'var x = async a => await a;',
         'foo(async () => await bar);',

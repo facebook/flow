@@ -42,7 +42,9 @@ open Type
    structure for readability.)
  *)
 type step = Type.t * Type.use_t * parent * int
+
 and t = step list
+
 and parent = Parent of t
 
 let compare = Pervasives.compare
@@ -52,14 +54,12 @@ let compare = Pervasives.compare
    may be thrown away due to externally imposed limits on trace depth;
    b) the recursion limiter in the flow function checks this on every
    call. *)
-let trace_depth trace =
-  List.fold_left (fun acc (_, _, _, d) -> max acc d) 0 trace
+let trace_depth trace = List.fold_left (fun acc (_, _, _, d) -> max acc d) 0 trace
 
 (* Single-step trace with no parent. This corresponds to a
    top-level invocation of the flow function, e.g. due to
    a constraint generated in Type_inference_js *)
-let unit_trace lower upper =
-  [lower, upper, Parent [], 1]
+let unit_trace lower upper = [(lower, upper, Parent [], 1)]
 
 let dummy_trace = []
 
@@ -70,16 +70,23 @@ let dummy_trace = []
 *)
 let rec_trace ~max lower upper parent =
   let parent_depth = trace_depth parent in
-  let parent = if max > 0 then parent else [] in
-  [lower, upper, Parent parent, parent_depth + 1]
+  let parent =
+    if max > 0 then
+      parent
+    else
+      []
+  in
+  [(lower, upper, Parent parent, parent_depth + 1)]
 
 (* join a list of traces *)
 let concat_trace = List.concat
 
 (* used to index trace nodes *)
-module TraceMap : MyMap.S with type key = t = MyMap.Make (struct
+module TraceMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
   type key = t
+
   type t = key
+
   let compare = compare
 end)
 
@@ -88,52 +95,55 @@ end)
  *)
 let index_trace =
   let rec f (level, tmap, imap) trace =
-    if level <= 0 || TraceMap.mem trace tmap
-    then level, tmap, imap
-    else (
-      let tmap, imap =
+    if level <= 0 || TraceMap.mem trace tmap then
+      (level, tmap, imap)
+    else
+      let (tmap, imap) =
         let i = TraceMap.cardinal tmap in
-        TraceMap.(add trace i tmap), IMap.(add i trace imap)
+        (TraceMap.(add trace i tmap), IMap.(add i trace imap))
       in
-      List.fold_left (fun acc (_, _, Parent parent, _) ->
-        match parent with [] -> acc | _ -> f acc parent
-      ) (level - 1, tmap, imap) trace
-    )
+      List.fold_left
+        (fun acc (_, _, Parent parent, _) ->
+          match parent with
+          | [] -> acc
+          | _ -> f acc parent)
+        (level - 1, tmap, imap)
+        trace
   in
   fun level trace ->
-    let _, tmap, imap = f (level, TraceMap.empty, IMap.empty) trace in
-    tmap, imap
-
+    let (_, tmap, imap) = f (level, TraceMap.empty, IMap.empty) trace in
+    (tmap, imap)
 
 (* scan a trace tree, return maximum position length
    of reasons at or above the given depth limit, and
    min of that limit and actual max depth *)
 let max_depth_of_trace limit trace =
   let rec f depth (_, _, parent, _) =
-    if depth > limit then depth
-    else (
+    if depth > limit then
+      depth
+    else
       match parent with
       | Parent [] -> depth
       | Parent trace -> List.fold_left f (depth + 1) trace
-    )
-  in List.fold_left f 0 trace
-
+  in
+  List.fold_left f 1 trace
 
 (* reformat a reason's description with
    - the given prefix and suffix: if either is nonempty,
      "desc" becomes "prefix[desc]suffix"
   *)
 let pretty_r r prefix suffix =
-  replace_reason (fun desc ->
-    let desc_str = string_of_desc desc in
-    let custom =
-      if prefix = "" && suffix = ""
-      then desc_str
-      else spf "%s[%s]%s" prefix desc_str suffix
-    in
-    RCustom custom
-  ) r
-
+  update_desc_new_reason
+    (fun desc ->
+      let desc_str = string_of_desc desc in
+      let custom =
+        if prefix = "" && suffix = "" then
+          desc_str
+        else
+          spf "%s[%s]%s" prefix desc_str suffix
+      in
+      RCustom custom)
+    r
 
 (* prettyprint a trace. what we print:
 
@@ -146,45 +156,41 @@ let pretty_r r prefix suffix =
      if the step was derived from another path, we append a note
      to that effect.
  *)
-let reasons_of_trace ?(level=0) trace =
+let reasons_of_trace ?(level = 0) trace =
   let max_depth = max_depth_of_trace level trace in
   let level = min level max_depth in
-
-  let tmap, imap = index_trace level trace in
-
+  let (tmap, imap) = index_trace level trace in
   let is_pipelined_tvar ~steps ~i lower =
-    i > 0 && (
-      let upper = match List.nth steps (i - 1) with (_, upper, _, _) -> upper in
-      match upper with
-      | UseT (_, upper) -> lower = upper
-      | _ -> false
-    )
+    i > 0
+    &&
+    let upper =
+      match List.nth steps (i - 1) with
+      | (_, upper, _, _) -> upper
+    in
+    match upper with
+    | UseT (_, upper) -> lower = upper
+    | _ -> false
   in
-  let print_step (steps: step list) i (lower, upper, Parent parent, _) =
+  let print_step (steps : step list) i (lower, upper, Parent parent, _) =
     (* omit lower if it's a pipelined tvar *)
-    (if is_pipelined_tvar ~steps ~i lower
-    then []
-    else [pretty_r (reason_of_t_add_id lower)
-      (spf "%s " (string_of_ctor lower)) ""]
-    )
-    @
-    [pretty_r (reason_of_use_t_add_id upper)
-      (spf "~> %s " (string_of_use_ctor upper))
-      (if parent = []
-        then ""
-        else match TraceMap.get parent tmap with
-        | Some i -> spf " (from path %d)" (i + 1)
-        | None -> " (from [not shown])"
-      )
-    ]
+    ( if is_pipelined_tvar ~steps ~i lower then
+      []
+    else
+      [pretty_r (reason_of_t_add_id lower) (spf "%s " (string_of_ctor lower)) ""] )
+    @ [
+        pretty_r
+          (reason_of_use_t_add_id upper)
+          (spf "~> %s " (string_of_use_ctor upper))
+          ( if parent = [] then
+            ""
+          else
+            match TraceMap.find_opt parent tmap with
+            | Some i -> spf " (from path %d)" (i + 1)
+            | None -> " (from [not shown])" );
+      ]
   in
-
-  let print_path i (steps: step list) =
+  let print_path i (steps : step list) =
     let desc = RCustom (spf "* path %d:" (i + 1)) in
-    (locationless_reason desc) ::
-    List.concat (List.mapi (print_step steps) steps)
+    locationless_reason desc :: List.concat (List.mapi (print_step steps) steps)
   in
-
-  List.concat (List.rev (IMap.fold (
-    fun i flow acc -> (print_path i flow) :: acc
-  ) imap []))
+  List.concat (List.rev (IMap.fold (fun i flow acc -> print_path i flow :: acc) imap []))

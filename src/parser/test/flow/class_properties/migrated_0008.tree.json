@@ -2,19 +2,19 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":29}},
-      "message":"Unexpected token ="
+      "message":"Unexpected token `=`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":38}},
-      "message":"Unexpected string"
+      "message":"Unexpected string, expected the token `(`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":39}},
-      "message":"Unexpected token ;"
+      "message":"Unexpected token `;`, expected an identifier"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
-      "message":"Unexpected token }"
+      "message":"Unexpected token `}`, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
@@ -22,7 +22,15 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "message":"Unexpected end of input, expected the token `)`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "message":"Unexpected end of input, expected the token `{`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "message":"Unexpected end of input, expected the token `}`"
     }
   ],
   "type":"Program",
@@ -111,8 +119,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

@@ -5,4 +5,5 @@
  * process is interrupted or if you get scheduled onto a different
  * processor.
  * *)
-external cpu_cycles : unit -> int = "ocaml_cpu_cycles" "ocaml_cpu_cycles" "noalloc";;
+external cpu_cycles : unit -> int
+  = "ocaml_cpu_cycles" "ocaml_cpu_cycles" "noalloc"

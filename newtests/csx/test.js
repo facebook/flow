@@ -1,6 +1,5 @@
 /*
  * @flow
- * @lint-ignore-every LINEWRAP1
  */
 
 
@@ -117,8 +116,8 @@ export default suite(({addFile, addFiles, addCode}) => [
           References:
             7:       const x = 42;
                                ^^ [1]
-           31: interface $Iterable<+Yield,+Return,-Next> {
-                         ^^^^^^^^^ [2]. See lib: [LIB] prelude.js:31
+           41: interface $Iterable<+Yield,+Return,-Next> {
+                         ^^^^^^^^^ [2]. See lib: [LIB] prelude.js:41
       `,
     )
   ]),

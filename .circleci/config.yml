@@ -1,50 +1,73 @@
+version: 2.1
+
 aliases:
   - &opam_env
     TERM: dumb
     OPAMYES: true
-
-  - &docker_opam
-    docker:
-      - image: ocaml/opam2:debian-8
-        environment:
-          <<: *opam_env
-    working_directory: ~/flow
-
-  - &docker_node
-    docker:
-      - image: circleci/node:8
-    working_directory: ~/flow
-
-  # Saves the currently-installed opam version to a file, which we include
-  # in cache keys.
-  - &opam_version
-    name: Calculate opam version
-    command: opam --version > .circleci/opamversion
-
-  - &opam_deps
-    name: Install deps from opam
-    command: |
-      eval $(opam env)
-      opam switch create . 4.05.0 --deps-only | cat
-
-  - &restore_opam_cache
-    keys:
-      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
-
-  - &save_opam_cache
-    key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
-    paths:
-      - ~/.opam
 
   - &run_on_tags
     filters:
       tags:
         only: /.*/
 
-version: 2
+executors:
+  linux-opam:
+    docker:
+      - image: ocaml/opam2:debian-8
+        environment:
+          <<: *opam_env
+    working_directory: ~/flow
+  linux-node:
+    docker:
+      - image: circleci/node:8
+    working_directory: ~/flow
+  mac:
+    macos:
+      xcode: "9.0"
+    environment:
+      <<: *opam_env
+    working_directory: ~/flow
+  curl:
+    docker:
+      - image: appropriate/curl:latest
+    working_directory: /flow
+  flow-website:
+    docker:
+      - image: flowtype/flow-website:latest
+    working_directory: ~/flow
+  awscli:
+    docker:
+      - image: xueshanf/awscli:latest
+    working_directory: ~/flow
+
+commands:
+  restore-opam-cache:
+    steps:
+      - run:
+          name: Calculate opam version
+          command: opam --version > .circleci/opamversion
+      - restore_cache:
+          keys:
+          - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+
+  save-opam-cache:
+    steps:
+      - save_cache:
+          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1-{{ checksum "opam" }}
+          paths:
+            - ~/.opam
+
+  create-opam-switch:
+    steps:
+      - run:
+          name: Install deps from opam
+          command: |
+            eval $(opam env)
+            opam switch create . 4.07.1 --deps-only | cat
+
 jobs:
   checkout:
-    <<: *docker_node
+    executor: linux-node
     steps:
       - checkout
       - run:
@@ -58,7 +81,7 @@ jobs:
           paths: .
 
   build_linux:
-    <<: *docker_opam
+    executor: linux-opam
     steps:
       - attach_workspace:
           at: ~/flow
@@ -76,19 +99,18 @@ jobs:
             echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
             echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
             sudo apt-get update && sudo apt-get --yes install zip m4
-      - run: *opam_version
-      - restore_cache: *restore_opam_cache
+      - restore-opam-cache
       - run:
           name: Update opam repo
           command: |
             opam remote list -s | grep upstream >/dev/null || \
               opam remote add upstream https://opam.ocaml.org | cat
             opam update | cat
-      - run: *opam_deps
+      - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install js_of_ocaml.3.1.0 | cat
-      - save_cache: *save_opam_cache
+          command: opam install js_of_ocaml.3.4.0 | cat
+      - save-opam-cache
       - run:
           name: Build flow
           command: |
@@ -131,11 +153,7 @@ jobs:
           destination: flow_parser.js
 
   build_macos:
-    macos:
-      xcode: "9.0"
-    environment:
-      <<: *opam_env
-    working_directory: ~/flow
+    executor: mac
     steps:
       - attach_workspace:
           at: ~/flow
@@ -150,20 +168,19 @@ jobs:
       - run:
           name: Install opam
           command: command -v opam || brew install opam aspcud
-      - run: *opam_version
-      - restore_cache: *restore_opam_cache
+      - restore-opam-cache
       - run:
           name: Install ocaml
-          command: opam init --comp 4.05.0 -yn | cat
+          command: opam init --comp 4.07.1 -yn | cat
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0
+          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_07_1
           paths:
             - ~/.opam
       - run:
           name: Update opam repo
           command: opam update | cat
-      - run: *opam_deps
-      - save_cache: *save_opam_cache
+      - create-opam-switch
+      - save-opam-cache
       - run:
           name: Build flow
           command: |
@@ -191,7 +208,9 @@ jobs:
           destination: libflowparser-osx.zip
 
   runtests_linux:
-    <<: *docker_node
+    executor: linux-node
+    environment:
+      FLOW_RUNTESTS_PARALLELISM: 8
     steps:
       - attach_workspace:
           at: ~/flow
@@ -200,9 +219,7 @@ jobs:
           command: ./runtests.sh bin/linux/flow | cat
 
   runtests_macos:
-    macos:
-      xcode: "9.0"
-    working_directory: ~/flow
+    executor: mac
     steps:
       - attach_workspace:
           at: ~/flow
@@ -211,7 +228,7 @@ jobs:
           command: ./runtests.sh bin/macos/flow | cat
 
   tool_test_linux:
-    <<: *docker_node
+    executor: linux-node
     steps:
       - attach_workspace:
           at: ~/flow
@@ -223,9 +240,7 @@ jobs:
           command: ./tool test -p 4 --bin bin/linux/flow | cat # Limit parallelism
 
   tool_test_macos:
-    macos:
-      xcode: "9.0"
-    working_directory: ~/flow
+    executor: mac
     steps:
       - attach_workspace:
           at: ~/flow
@@ -237,7 +252,7 @@ jobs:
           command: ./tool test --bin bin/macos/flow | cat
 
   npm_pack:
-    <<: *docker_node
+    executor: linux-node
     steps:
       - attach_workspace:
           at: ~/flow
@@ -283,7 +298,7 @@ jobs:
           destination: npm-flow-remove-types.tgz
 
   npm_deploy:
-    <<: *docker_node
+    executor: linux-node
     steps:
     - attach_workspace:
         at: ~/flow
@@ -292,9 +307,7 @@ jobs:
         command: .circleci/deploy_npm.sh
 
   github_linux:
-    docker:
-      - image: appropriate/curl:latest
-    working_directory: /flow
+    executor: curl
     steps:
     - attach_workspace:
         at: /flow
@@ -306,9 +319,7 @@ jobs:
         command: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-$CIRCLE_TAG.zip"
 
   github_macos:
-    docker:
-      - image: appropriate/curl:latest
-    working_directory: /flow
+    executor: curl
     steps:
     - attach_workspace:
         at: /flow
@@ -320,9 +331,7 @@ jobs:
         command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
 
   website_deploy:
-    docker:
-      - image: flowtype/flow-website:latest
-    working_directory: ~/flow
+    executor: flow-website
     steps:
     - attach_workspace:
         at: ~/flow
@@ -359,9 +368,7 @@ jobs:
         command: bundle exec s3_website push --config-dir=website/ --site=dist/flow.org
 
   try_flow_deploy:
-    docker:
-      - image: xueshanf/awscli:latest
-    working_directory: ~/flow
+    executor: awscli
     steps:
     - attach_workspace:
         at: ~/flow
@@ -377,7 +384,6 @@ jobs:
         command: aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
 
 workflows:
-  version: 2
   build_and_test:
     jobs:
       - checkout:

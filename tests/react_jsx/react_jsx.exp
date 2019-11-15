@@ -93,8 +93,8 @@ References:
    test.js:105:12
    105|   string1={null}
                    ^^^^ [1]
-   <BUILTINS>/react.js:449:36
-   449|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:488:36
+   488|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    test.js:106:12
    106|   string2={null}
@@ -102,8 +102,8 @@ References:
    test.js:107:13
    107|   boolean1={null}
                     ^^^^ [4]
-   <BUILTINS>/react.js:445:34
-   445|   bool: React$PropType$Primitive<boolean>,
+   <BUILTINS>/react.js:484:34
+   484|   bool: React$PropType$Primitive<boolean>,
                                          ^^^^^^^ [5]
    test.js:108:13
    108|   boolean2={null}
@@ -111,8 +111,8 @@ References:
    test.js:109:11
    109|   number={null}
                   ^^^^ [7]
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [8]
 
 
@@ -142,45 +142,28 @@ References:
           ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:134:1
+Error ---------------------------------------------------------------------------------------------------- test.js:140:1
 
 Cannot create `Legacy_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:134:1
-        v--------------------------------------------------------------------------
-   134| <Legacy_ManyProps // OK: `number` is overwritten at the end of the element.
-   135|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   136|   boolean1
-   137|   boolean2={false}
-   138|   number={42}
-   139| />;
-        -^
-
-References:
-   test.js:135:54
-   135|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
-                                           ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:144:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:144:7
+   test.js:140:1
+        v---------------------------------------------------
+   140| <Legacy_ManyProps // Error: `number` cannot be null.
+   141|   boolean1
+   142|   boolean2={false}
+   143|   number={42}
    144|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   145| />;
+        -^
 
 References:
    test.js:144:54
    144|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:143:11
-   143|   number={42}
-                  ^^ [2]
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
+                                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:148:1
@@ -274,45 +257,28 @@ References:
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:196:1
+Error ---------------------------------------------------------------------------------------------------- test.js:202:1
 
 Cannot create `Class_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:196:1
-        v-------------------------------------------------------------------------
-   196| <Class_ManyProps // OK: `number` is overwritten at the end of the element.
-   197|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   198|   boolean1
-   199|   boolean2={false}
-   200|   number={42}
-   201| />;
-        -^
-
-References:
-   test.js:197:54
-   197|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:206:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:206:7
+   test.js:202:1
+        v--------------------------------------------------
+   202| <Class_ManyProps // Error: `number` cannot be null.
+   203|   boolean1
+   204|   boolean2={false}
+   205|   number={42}
    206|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   207| />;
+        -^
 
 References:
    test.js:206:54
    206|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:205:11
-   205|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:210:1
@@ -457,45 +423,28 @@ References:
                                                                   ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:258:1
+Error ---------------------------------------------------------------------------------------------------- test.js:264:1
 
 Cannot create `ClassExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:258:1
-        v------------------------------------------------------------------------------------------------
-   258| <ClassExact_ManyProps // Error (TODO), but OK: `number` is overwritten at the end of the element.
-   259|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   260|   boolean1
-   261|   boolean2={false}
-   262|   number={42}
-   263| />;
-        -^
-
-References:
-   test.js:259:54
-   259|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:268:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:268:7
+   test.js:264:1
+        v--------------------------------------------------------------------------------
+   264| <ClassExact_ManyProps // Error, `number` is overwritten at the end of the element
+   265|   boolean1
+   266|   boolean2={false}
+   267|   number={42}
    268|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   269| />;
+        -^
 
 References:
    test.js:268:54
    268|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:267:11
-   267|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:272:1
@@ -589,45 +538,28 @@ References:
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:320:1
+Error ---------------------------------------------------------------------------------------------------- test.js:326:1
 
 Cannot create `ClassPure_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:320:1
-        v-----------------------------------------------------------------------------
-   320| <ClassPure_ManyProps // OK: `number` is overwritten at the end of the element.
-   321|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   322|   boolean1
-   323|   boolean2={false}
-   324|   number={42}
-   325| />;
-        -^
-
-References:
-   test.js:321:54
-   321|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:330:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:330:7
+   test.js:326:1
+        v------------------------------------------------------
+   326| <ClassPure_ManyProps // Error: `number` cannot be null.
+   327|   boolean1
+   328|   boolean2={false}
+   329|   number={42}
    330|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   331| />;
+        -^
 
 References:
    test.js:330:54
    330|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:329:11
-   329|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:334:1
@@ -721,45 +653,28 @@ References:
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:382:1
+Error ---------------------------------------------------------------------------------------------------- test.js:388:1
 
 Cannot create `Function_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:382:1
-        v----------------------------------------------------------------------------
-   382| <Function_ManyProps // OK: `number` is overwritten at the end of the element.
-   383|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   384|   boolean1
-   385|   boolean2={false}
-   386|   number={42}
-   387| />;
-        -^
-
-References:
-   test.js:383:54
-   383|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:392:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:392:7
+   test.js:388:1
+        v-----------------------------------------------------
+   388| <Function_ManyProps // Error: `number` cannot be null.
+   389|   boolean1
+   390|   boolean2={false}
+   391|   number={42}
    392|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   393| />;
+        -^
 
 References:
    test.js:392:54
    392|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:391:11
-   391|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:396:1
@@ -904,45 +819,28 @@ References:
                                                        ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:444:1
+Error ---------------------------------------------------------------------------------------------------- test.js:450:1
 
 Cannot create `FunctionExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:444:1
-        v-------------------------------------------------------------------------
-   444| <FunctionExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
-   445|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   446|   boolean1
-   447|   boolean2={false}
-   448|   number={42}
-   449| />;
-        -^
-
-References:
-   test.js:445:54
-   445|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:454:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:454:7
+   test.js:450:1
+        v-----------------------------------------------------------------------------------
+   450| <FunctionExact_ManyProps // Error: `number` is overwritten at the end of the element
+   451|   boolean1
+   452|   boolean2={false}
+   453|   number={42}
    454|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   455| />;
+        -^
 
 References:
    test.js:454:54
    454|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:453:11
-   453|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:458:1
@@ -1036,45 +934,28 @@ References:
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:506:1
+Error ---------------------------------------------------------------------------------------------------- test.js:512:1
 
 Cannot create `Abstract_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:506:1
-        v----------------------------------------------------------------------------
-   506| <Abstract_ManyProps // OK: `number` is overwritten at the end of the element.
-   507|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   508|   boolean1
-   509|   boolean2={false}
-   510|   number={42}
-   511| />;
-        -^
-
-References:
-   test.js:507:54
-   507|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:516:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:516:7
+   test.js:512:1
+        v-----------------------------------------------------
+   512| <Abstract_ManyProps // Error: `number` cannot be null.
+   513|   boolean1
+   514|   boolean2={false}
+   515|   number={42}
    516|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   517| />;
+        -^
 
 References:
    test.js:516:54
    516|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:515:11
-   515|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:521:1
@@ -1219,45 +1100,28 @@ References:
                                                                   ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:569:1
+Error ---------------------------------------------------------------------------------------------------- test.js:575:1
 
 Cannot create `AbstractExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:569:1
-        v-------------------------------------------------------------------------
-   569| <AbstractExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
-   570|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   571|   boolean1
-   572|   boolean2={false}
-   573|   number={42}
-   574| />;
-        -^
-
-References:
-   test.js:570:54
-   570|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:579:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:579:7
+   test.js:575:1
+        v-------------------------------------------------------
+   575| <AbstractExact_ManyProps // OK: `number` is overwritten.
+   576|   boolean1
+   577|   boolean2={false}
+   578|   number={42}
    579|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   580| />;
+        -^
 
 References:
    test.js:579:54
    579|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:578:11
-   578|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:583:1
@@ -1351,45 +1215,28 @@ References:
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:631:1
+Error ---------------------------------------------------------------------------------------------------- test.js:637:1
 
 Cannot create `Member_ManyProps.prop` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:631:1
-        v-------------------------------------------------------------------------------
-   631| <Member_ManyProps.prop // OK: `number` is overwritten at the end of the element.
-   632|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   633|   boolean1
-   634|   boolean2={false}
-   635|   number={42}
-   636| />;
-        -^
-
-References:
-   test.js:632:54
-   632|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:641:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:641:7
+   test.js:637:1
+        v--------------------------------------------------------
+   637| <Member_ManyProps.prop // Error: `number` cannot be null.
+   638|   boolean1
+   639|   boolean2={false}
+   640|   number={42}
    641|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   642| />;
+        -^
 
 References:
    test.js:641:54
    641|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:640:11
-   640|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:645:1
@@ -1483,45 +1330,28 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:693:1
+Error ---------------------------------------------------------------------------------------------------- test.js:699:1
 
 Cannot create `EnhancedClass_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:693:1
-        v---------------------------------------------------------------------------------
-   693| <EnhancedClass_ManyProps // OK: `number` is overwritten at the end of the element.
-   694|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   695|   boolean1
-   696|   boolean2={false}
-   697|   number={42}
-   698| />;
-        -^
-
-References:
-   test.js:694:54
-   694|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:703:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:703:7
+   test.js:699:1
+        v----------------------------------------------------------
+   699| <EnhancedClass_ManyProps // Error: `number` cannot be null.
+   700|   boolean1
+   701|   boolean2={false}
+   702|   number={42}
    703|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   704| />;
+        -^
 
 References:
    test.js:703:54
    703|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:702:11
-   702|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:707:1
@@ -1615,45 +1445,28 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:755:1
+Error ---------------------------------------------------------------------------------------------------- test.js:761:1
 
 Cannot create `EnhancedFunction_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:755:1
-        v------------------------------------------------------------------------------------
-   755| <EnhancedFunction_ManyProps // OK: `number` is overwritten at the end of the element.
-   756|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   757|   boolean1
-   758|   boolean2={false}
-   759|   number={42}
-   760| />;
-        -^
-
-References:
-   test.js:756:54
-   756|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
-   test.js:74:11
-    74|   number: number,
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:765:7
-
-Cannot spread object literal because null or undefined [1] is incompatible with number [2].
-
-   test.js:765:7
+   test.js:761:1
+        v-------------------------------------------------------------
+   761| <EnhancedFunction_ManyProps // Error: `number` cannot be null.
+   762|   boolean1
+   763|   boolean2={false}
+   764|   number={42}
    765|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   766| />;
+        -^
 
 References:
    test.js:765:54
    765|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
-   test.js:764:11
-   764|   number={42}
-                  ^^ [2]
+   test.js:74:11
+    74|   number: number,
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:780:1
@@ -1684,11 +1497,11 @@ Cannot create `Legacy_OptionalProps` element because undefined [1] is incompatib
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:13:24
-    13| declare var undefined: void;
-                               ^^^^ [1]
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   test.js:782:28
+   782| <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
+                                   ^^^^^^^^^ [1]
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -1708,8 +1521,8 @@ References:
    test.js:788:7
    788|   foo="nope"
               ^^^^^^ [1]
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -1729,8 +1542,8 @@ References:
    test.js:793:7
    793|   bar="nope"
               ^^^^^^ [1]
-   <BUILTINS>/react.js:447:36
-   447|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:486:36
+   486|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [2]
 
 
@@ -2479,4 +2292,4 @@ References:
 
 
 
-Found 207 errors
+Found 196 errors

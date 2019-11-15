@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- fail-flow-2.js:4:1
 
-Unexpected token .
+Unexpected token `.`, expected the start of a statement
 
    4| .
       ^
@@ -8,7 +8,7 @@ Unexpected token .
 
 Error ------------------------------------------------------------------------------------------------- fail-flow.js:3:1
 
-Unexpected token .
+Unexpected token `.`, expected the start of a statement
 
    3| .
       ^
@@ -16,7 +16,7 @@ Unexpected token .
 
 Error ------------------------------------------------------------------------------------------------------ fail.js:1:1
 
-Unexpected token .
+Unexpected token `.`, expected the start of a statement
 
    1| .
       ^

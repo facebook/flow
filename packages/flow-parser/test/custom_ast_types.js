@@ -96,6 +96,7 @@ def("ExportDefaultDeclaration")
       def("FunctionDeclaration"), // TODO: should be NullableFunctionDeclaration
       def("VariableDeclaration"),
       def("InterfaceDeclaration"),
+      def("EnumDeclaration"),
       def("TypeAlias"),
       def("OpaqueType"),
       def("Expression")))
@@ -280,3 +281,52 @@ def("BigIntLiteralTypeAnnotation")
   .build("value", "raw")
   .field("value", or(def("BigInt"), null))
   .field("raw", String);
+
+// Enums
+def("EnumDeclaration")
+  .bases("Declaration")
+  .build("id", "body")
+  .field("id", def("Identifier"))
+  .field("body", or(
+    def("EnumBooleanBody"),
+    def("EnumNumberBody"),
+    def("EnumStringBody"),
+    def("EnumSymbolBody")))
+
+def("EnumBooleanBody")
+  .build("members", "explicitType")
+  .field("members", [def("EnumBooleanMember")])
+  .field("explicitType", Boolean)
+
+def("EnumNumberBody")
+  .build("members", "explicitType")
+  .field("members", [def("EnumNumberMember")])
+  .field("explicitType", Boolean)
+
+def("EnumStringBody")
+  .build("members", "explicitType")
+  .field("members", [or(def("EnumStringMember"), def("EnumDefaultedMember"))])
+  .field("explicitType", Boolean)
+
+def("EnumSymbolBody")
+  .build("members")
+  .field("members", [def("EnumDefaultedMember")])
+
+def("EnumBooleanMember")
+  .build("id", "init")
+  .field("id", def("Identifier"))
+  .field("init", Boolean)
+
+def("EnumNumberMember")
+  .build("id", "init")
+  .field("id", def("Identifier"))
+  .field("init", def("Literal"))
+
+def("EnumStringMember")
+  .build("id", "init")
+  .field("id", def("Identifier"))
+  .field("init", def("Literal"))
+
+def("EnumDefaultedMember")
+  .build("id")
+  .field("id", def("Identifier"))

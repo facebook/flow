@@ -12,8 +12,13 @@ module Table = struct
 end
 
 let new_sample _ _ = ()
+
 let add_int _ _ _ = ()
+
 let add_normal _ _ _ = ()
+
 let add_denorm _ _ _ = ()
+
 let add_normvector _ _ _ = ()
+
 let add_tags _ _ _ = ()

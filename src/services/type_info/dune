@@ -1,0 +1,12 @@
+(library
+  (name flow_service_type_info)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_common_lsp_conversions
+    flow_parser
+    flow_parser_utils
+    flow_server_env
+    flow_service_inference
+  )
+)

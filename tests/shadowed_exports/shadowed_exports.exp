@@ -1,0 +1,47 @@
+Error ------------------------------------------------------------------------------------- import_shadow_exports.js:4:2
+
+Cannot cast `x` to number because exports [1] is incompatible with number [2].
+
+   import_shadow_exports.js:4:2
+   4| (x: number);
+       ^
+
+References:
+   import_shadow_exports.js:4:5
+   4| (x: number);
+          ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- shadow_exports.js:4:1
+
+Cannot assign `42` to `module.exports` because property `exports` is missing in statics of function type [1].
+
+   shadow_exports.js:4:1
+   4| module.exports = 42;
+      ^^^^^^^^^^^^^^
+
+References:
+   shadow_exports.js:3:21
+   3| declare var module: number => string;
+                          ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ shadow_exports_lookup.js:4:17
+
+Cannot assign `module.exports` to `y` because string [1] is incompatible with number [2].
+
+   shadow_exports_lookup.js:4:17
+   4| var y: number = module.exports;
+                      ^^^^^^^^^^^^^^
+
+References:
+   shadow_exports_lookup.js:3:31
+   3| declare var module: {exports: string};
+                                    ^^^^^^ [1]
+   shadow_exports_lookup.js:4:8
+   4| var y: number = module.exports;
+             ^^^^^^ [2]
+
+
+
+Found 3 errors

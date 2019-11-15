@@ -1,0 +1,9 @@
+(library
+  (name flow_parser_utils_signature_builder)
+  (wrapped false)
+  (flags -w +a-4-6-29-35-44-48-50)
+  (libraries
+    flow_common
+    flow_parser
+    ))
+

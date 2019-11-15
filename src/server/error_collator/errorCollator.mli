@@ -5,14 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val get_with_separate_warnings:
+val get_with_separate_warnings :
   reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
-  Errors.ConcreteLocPrintableErrorSet.t * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
+  Errors.ConcreteLocPrintableErrorSet.t
+  * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
+  * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
 
-val get:
+val get :
   reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
-  Errors.ConcreteLocPrintableErrorSet.t * Errors.ConcreteLocPrintableErrorSet.t * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
+  Errors.ConcreteLocPrintableErrorSet.t
+  * Errors.ConcreteLocPrintableErrorSet.t
+  * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list

@@ -6,26 +6,16 @@
  *)
 
 val send_request :
-  client:EphemeralConnection.t ->
-  request:ServerProt.Request.command_with_context ->
-  unit
+  client:EphemeralConnection.t -> request:ServerProt.Request.command_with_context -> unit
 
 val send_persistent_request :
-  client_id:Persistent_connection_prot.client_id ->
-  request:Persistent_connection_prot.request ->
-  unit
-
+  client_id:LspProt.client_id -> request:LspProt.request_with_metadata -> unit
 
 val notify_new_persistent_connection :
-  client_id:Persistent_connection_prot.client_id ->
-  logging_context:FlowEventLogger.logging_context ->
-  lsp:Lsp.Initialize.params option ->
-  unit
+  client_id:LspProt.client_id -> lsp_init_params:Lsp.Initialize.params -> unit
 
-val notify_dead_persistent_connection :
-  client_id:Persistent_connection_prot.client_id ->
-  unit
+val notify_dead_persistent_connection : client_id:LspProt.client_id -> unit
 
-val start: FlowServerMonitorOptions.t -> unit Lwt.t
+val start : FlowServerMonitorOptions.t -> unit Lwt.t
 
-val exit: msg:string -> FlowExitStatus.t -> 'a Lwt.t
+val exit : msg:string -> FlowExitStatus.t -> 'a Lwt.t

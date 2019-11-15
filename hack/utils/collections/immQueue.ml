@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2017, Facebook, Inc.
  * All rights reserved.
  *
@@ -15,62 +15,49 @@ type 'a t = {
 
 exception Empty
 
-let empty = {
-  incoming = [];
-  outgoing = [];
-  length = 0;
-}
+let empty = { incoming = []; outgoing = []; length = 0 }
 
 let length t = t.length
 
 let is_empty t = length t = 0
 
-let push t x =
-  { t with
-    incoming = x :: t.incoming;
-    length = t.length + 1;
-  }
+let push t x = { t with incoming = x :: t.incoming; length = t.length + 1 }
 
 let prepare_for_read t =
   match t.outgoing with
-    | [] -> { t with incoming = []; outgoing = List.rev t.incoming }
-    | _ -> t
+  | [] -> { t with incoming = []; outgoing = List.rev t.incoming }
+  | _ -> t
 
 let pop t =
   let t = prepare_for_read t in
   match t.outgoing with
-    | [] -> (None, t)
-    | hd::tl -> (Some hd, { t with outgoing = tl; length = t.length - 1 })
+  | [] -> (None, t)
+  | hd :: tl -> (Some hd, { t with outgoing = tl; length = t.length - 1 })
 
 let peek t =
   let t = prepare_for_read t in
   match t.outgoing with
-    | [] -> (None, t)
-    | hd::_ -> (Some hd, t)
+  | [] -> (None, t)
+  | hd :: _ -> (Some hd, t)
 
 let pop_unsafe t =
   match pop t with
-    | (Some x, t) -> (x, t)
-    | (None, _) -> raise Empty
+  | (Some x, t) -> (x, t)
+  | (None, _) -> raise Empty
 
-let exists t ~f =
-  (List.exists f t.outgoing) || (List.exists f t.incoming)
+let exists t ~f = List.exists f t.outgoing || List.exists f t.incoming
 
 let iter t ~f =
   List.iter f t.outgoing;
   List.iter f (List.rev t.incoming)
 
-let from_list x =
-  { incoming = [];
-    outgoing = x;
-    length = List.length x;
-  }
+let from_list x = { incoming = []; outgoing = x; length = List.length x }
 
-let to_list x =
-  x.outgoing @ (List.rev x.incoming)
+let to_list x = x.outgoing @ List.rev x.incoming
 
 let concat t =
-  { incoming = [];
+  {
+    incoming = [];
     outgoing = List.map to_list t |> List.concat;
-    length = List.map (fun u -> u.length) t |> List.fold_left (+) 0;
+    length = List.map (fun u -> u.length) t |> List.fold_left ( + ) 0;
   }

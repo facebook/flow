@@ -5,11 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type error = { msg: string; exit_status: FlowExitStatus.t; }
+type error = {
+  msg: string;
+  exit_status: FlowExitStatus.t;
+}
 
-val process_updates:
+val process_updates :
   ?skip_incompatible:bool ->
   options:Options.t ->
   libs:SSet.t ->
   SSet.t ->
-  (Utils_js.FilenameSet.t, error) Core_result.t
+  (Utils_js.FilenameSet.t, error) result

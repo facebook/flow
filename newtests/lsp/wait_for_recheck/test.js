@@ -1,7 +1,6 @@
 /*
  * @flow
  * @format
- * @lint-ignore-every LINEWRAP1
  */
 
 import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
@@ -15,44 +14,44 @@ import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
  */
 export default suite(
   ({
-    ideStartAndConnect,
-    ideNotification,
-    ideRequestAndWaitUntilResponse,
+    lspStartAndConnect,
+    lspNotification,
+    lspRequestAndWaitUntilResponse,
     addFile,
     addFiles,
     lspIgnoreStatusAndCancellation,
   }) => [
     test('invalid_method handled immediately when wait_for_recheck=true', [
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
+      lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
         ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideNotification('barfoo', {})
-        .waitUntilIDEMessage(2000, 'barfoo')
-        .verifyAllIDEMessagesInStep(
+      lspNotification('barfoo', {})
+        .waitUntilLSPMessage(2000, 'barfoo')
+        .verifyAllLSPMessagesInStep(
           ['telemetry/event{not implemented}'],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(true),
 
     test('invalid_method handled immediately when wait_for_recheck=false', [
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
+      lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
         ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideNotification('barfoo', {})
-        .waitUntilIDEMessage(2000, 'barfoo')
-        .verifyAllIDEMessagesInStep(
+      lspNotification('barfoo', {})
+        .waitUntilLSPMessage(2000, 'barfoo')
+        .verifyAllLSPMessagesInStep(
           ['telemetry/event{not implemented}'],
           [...lspIgnoreStatusAndCancellation],
         ),
@@ -60,31 +59,31 @@ export default suite(
 
     test('textDocument/definition will time out with wait_for_recheck=true', [
       addFile('definition.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/definition.js'},
         position: {line: 6, character: 1},
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(true),
 
     test('textDocument/definition will return with wait_for_recheck=false', [
       addFile('definition.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
+      lspRequestAndWaitUntilResponse('textDocument/definition', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/definition.js'},
         position: {line: 6, character: 1},
       })
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           [
             'textDocument/definition{definition.js,"start":{"line":2,"character":0}}',
           ],
@@ -95,31 +94,31 @@ export default suite(
 
     test('textDocument/hover will time out with wait_for_recheck=true', [
       addFile('hover.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover.js'},
         position: {line: 6, character: 1}, // over a function use
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(true),
 
     test('textDocument/hover will return with wait_for_recheck=false', [
       addFile('hover.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover.js'},
         position: {line: 6, character: 1}, // over a function use
       })
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           ['textDocument/hover{() => number}'],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -128,31 +127,31 @@ export default suite(
 
     test('textDocument/completion will time out with wait_for_recheck=true', [
       addFile('completion.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion.js'},
         position: {line: 10, character: 15}, // statement position
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(true),
 
     test('textDocument/completion will return with wait_for_recheck=false', [
       addFile('completion.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion.js'},
         position: {line: 10, character: 15}, // statement position
       })
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           [
             'textDocument/completion{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
           ],
@@ -162,19 +161,22 @@ export default suite(
     ]).waitForRecheck(false),
 
     test(
-      'textDocument/documentHighlight will time out with wait_for_recheck=false',
+      'textDocument/documentHighlight will return with wait_for_recheck=false',
       [
         addFiles('references.js', 'references2.js'),
-        ideStartAndConnect(),
-        addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+        lspStartAndConnect(),
+        addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
           [''],
           [...lspIgnoreStatusAndCancellation],
         ),
-        ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
           position: {line: 9, character: 17}, // on an identifier
         })
-          .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+          .verifyAllLSPMessagesInStep(
+            ['textDocument/documentHighlight'],
+            [...lspIgnoreStatusAndCancellation],
+          )
           .timeout(2000),
       ],
     ).waitForRecheck(false),
@@ -183,93 +185,93 @@ export default suite(
       'textDocument/documentHighlight will time out with wait_for_recheck=true',
       [
         addFiles('references.js', 'references2.js'),
-        ideStartAndConnect(),
-        addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+        lspStartAndConnect(),
+        addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
           [''],
           [...lspIgnoreStatusAndCancellation],
         ),
-        ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
           position: {line: 9, character: 17}, // on an identifier
         })
-          .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+          .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
           .timeout(2000),
       ],
     ).waitForRecheck(true),
 
     test('textDocument/references will time out with wait_for_recheck=true', [
       addFiles('references.js', 'references2.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+      lspRequestAndWaitUntilResponse('textDocument/references', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(true),
 
     test('textDocument/references will time out with wait_for_recheck=false', [
       addFiles('references.js', 'references2.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+      lspRequestAndWaitUntilResponse('textDocument/references', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(false),
 
     test('textDocument/rename will time out with wait_for_recheck=true', [
       addFiles('references.js', 'references2.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/rename', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+      lspRequestAndWaitUntilResponse('textDocument/rename', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
         newName: 'foobar',
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(true),
 
     test('textDocument/rename will time out with wait_for_recheck=false', [
       addFiles('references.js', 'references2.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/rename', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+      lspRequestAndWaitUntilResponse('textDocument/rename', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
         newName: 'foobar',
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(false),
 
     test('textDocument/documentSymbol will return with wait_for_recheck=true', [
       addFiles('outline.js', 'references.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/documentSymbol', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>outline.js'},
+      lspRequestAndWaitUntilResponse('textDocument/documentSymbol', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/outline.js'},
       })
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           [
             'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
           ],
@@ -282,15 +284,15 @@ export default suite(
       'textDocument/documentSymbol will return with wait_for_recheck=false',
       [
         addFiles('outline.js', 'references.js'),
-        ideStartAndConnect(),
-        addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+        lspStartAndConnect(),
+        addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
           [''],
           [...lspIgnoreStatusAndCancellation],
         ),
-        ideRequestAndWaitUntilResponse('textDocument/documentSymbol', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>outline.js'},
+        lspRequestAndWaitUntilResponse('textDocument/documentSymbol', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/outline.js'},
         })
-          .verifyAllIDEMessagesInStep(
+          .verifyAllLSPMessagesInStep(
             [
               'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
             ],
@@ -302,29 +304,29 @@ export default suite(
 
     test('textDocument/typeCoverage will time out with wait_for_recheck=true', [
       addFiles('coverage.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
+      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/coverage.js'},
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(true),
 
     test('textDocument/typeCoverage will return with wait_for_recheck=false', [
       addFiles('coverage.js'),
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
+      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/coverage.js'},
       })
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -332,28 +334,28 @@ export default suite(
     ]).waitForRecheck(false),
 
     test('telemetry/rage will time out with wait_for_recheck=true', [
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
       })
-        .verifyAllIDEMessagesInStep([], [...lspIgnoreStatusAndCancellation])
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
     ]).waitForRecheck(true),
 
     test('telemetry/rage will return with wait_for_recheck=false', [
-      ideStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllIDEMessagesInStep(
+      lspStartAndConnect(),
+      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
       })
-        .verifyAllIDEMessagesInStep(
+        .verifyAllLSPMessagesInStep(
           ['textDocument/typeCoverage{Use @flow}'],
           [...lspIgnoreStatusAndCancellation],
         )

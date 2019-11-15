@@ -8,10 +8,7 @@
 module LocMap = Loc_collections.LocMap
 
 type names = string LocMap.t
-type t = {
-  names: names
-}
 
-let default = {
-  names = LocMap.empty
-}
+type t = { names: names }
+
+let default = { names = LocMap.empty }

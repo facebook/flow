@@ -1,0 +1,70 @@
+> flow autofix insert-type a.js 6 3 6 14
+> flow autofix insert-type a.js 7 3 7 11
+> cat a.js
+// @flow
+
+class C {}
+// XYZXYZ
+export default class {
+  array: Array<empty> = [];
+  num: number = 1;
+}
+> flow autofix exports tmp/a.js
+> cat tmp/a.js
+// @flow
+
+class C {}
+// XYZXYZ
+export default class {
+  array: Array<empty> = [];
+  num: number = 1;
+}
+> flow autofix insert-type b.js 4 6 4 6
+> cat b.js
+// @flow
+
+class C {
+  m(): number {
+    return 1;
+  }
+}
+module.exports = C;
+> flow autofix exports tmp/b.js
+> cat tmp/b.js
+// @flow
+
+class C {
+  m(): number {
+    return 1;
+  }
+}
+module.exports = C;
+> flow autofix insert-type c.js 4 3 4 24
+> flow autofix insert-type c.js 9 17 9 17
+> cat c.js
+// @flow
+
+class A {
+  f: ((x: string) => string) = (x: string) => x;
+}
+
+module.exports = {
+  a: A,
+  b: (x: string): string => x,
+};
+> flow autofix exports tmp/c.js
+> cat tmp/c.js
+// @flow
+
+class A {
+  f: ((x: string) => string) = (x: string) => x;
+}
+
+module.exports = {
+  a: A,
+  b: (x: string): string => x,
+};
+> flow status
+No errors!
+> flow status tmp
+No errors!

@@ -10,8 +10,8 @@ open Type
 type ident = Type.ident
 
 type node =
-| TrustGoto of ident
-| TrustRoot of root
+  | TrustGoto of ident
+  | TrustRoot of root
 
 and root = {
   rank: int;
@@ -19,8 +19,8 @@ and root = {
 }
 
 and constraints =
-| TrustResolved of trust_qualifier
-| TrustUnresolved of bounds
+  | TrustResolved of trust_qualifier
+  | TrustUnresolved of bounds
 
 and bounds = {
   mutable trust: trust_qualifier;
@@ -30,25 +30,25 @@ and bounds = {
 
 let get_constraints { constraints; _ } = constraints
 
-let get_bounds { lowervars; uppervars; _ } = lowervars, uppervars
+let get_bounds { lowervars; uppervars; _ } = (lowervars, uppervars)
+
 let get_trust { trust; _ } = trust
 
 let resolved_trust_constraint _ trust = TrustResolved trust
 
 let new_unresolved_root initial =
-  TrustRoot { rank = 0; constraints = TrustUnresolved {
-    trust = initial;
-    lowervars = ISet.empty;
-    uppervars = ISet.empty;
-  } }
+  TrustRoot
+    {
+      rank = 0;
+      constraints =
+        TrustUnresolved { trust = initial; lowervars = ISet.empty; uppervars = ISet.empty };
+    }
 
-let new_resolved_root trust =
-  TrustRoot { rank = 0; constraints = TrustResolved trust }
+let new_resolved_root trust = TrustRoot { rank = 0; constraints = TrustResolved trust }
 
 let new_goto id = TrustGoto id
 
-let set_trust bounds trust =
-  bounds.trust <- trust
+let set_trust bounds trust = bounds.trust <- trust
 
 let extend_uppervars bounds new_uppervars =
   bounds.uppervars <- ISet.union bounds.uppervars new_uppervars

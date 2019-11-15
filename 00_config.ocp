@@ -1,7 +1,0 @@
-
-have_lz4 = false
-debug = false
-(*
-ccopt += [ "-IC:\path\to\lz4\lib" ]
-cclib += [ "-LC:\path\to\lz4\lib" ]
-*)

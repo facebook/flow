@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -30,23 +30,23 @@ type t
    `Pervasives.in_channel`.
 
 *)
-val with_timeout:
-  timeout:int ->
-  on_timeout:(unit -> 'a) ->
-  do_:(t -> 'a) -> 'a
+val with_timeout : timeout:int -> on_timeout:(unit -> 'a) -> do_:(t -> 'a) -> 'a
 
-val check_timeout: t -> unit
+val check_timeout : t -> unit
 
 type in_channel
 
-val open_in: string -> in_channel
-val close_in: in_channel -> unit
-val close_in_noerr: in_channel -> unit
+val open_in : string -> in_channel
 
-val in_channel_of_descr:  Unix.file_descr -> in_channel
-val descr_of_in_channel: in_channel -> Unix.file_descr
+val close_in : in_channel -> unit
 
-val select:
+val close_in_noerr : in_channel -> unit
+
+val in_channel_of_descr : Unix.file_descr -> in_channel
+
+val descr_of_in_channel : in_channel -> Unix.file_descr
+
+val select :
   ?timeout:t ->
   Unix.file_descr list ->
   Unix.file_descr list ->
@@ -54,30 +54,41 @@ val select:
   float ->
   Unix.file_descr list * Unix.file_descr list * Unix.file_descr list
 
-val input: ?timeout:t -> in_channel -> bytes -> int -> int -> int
-val really_input: ?timeout:t -> in_channel -> bytes -> int -> int -> unit
-val input_char: ?timeout:t -> in_channel -> char
-val input_line: ?timeout:t -> in_channel -> string
-val input_value: ?timeout:t -> in_channel -> 'a
+val input : ?timeout:t -> in_channel -> bytes -> int -> int -> int
 
-val open_process: string -> string array -> in_channel * out_channel
-val open_process_in: string -> string array -> in_channel
-val close_process_in: in_channel -> Unix.process_status
-val read_process:
+val really_input : ?timeout:t -> in_channel -> bytes -> int -> int -> unit
+
+val input_char : ?timeout:t -> in_channel -> char
+
+val input_line : ?timeout:t -> in_channel -> string
+
+val input_value : ?timeout:t -> in_channel -> 'a
+
+val open_process : string -> string array -> in_channel * out_channel
+
+val open_process_in : string -> string array -> in_channel
+
+val close_process_in : in_channel -> Unix.process_status
+
+val read_process :
   timeout:int ->
   on_timeout:(unit -> 'a) ->
   reader:(t -> in_channel -> out_channel -> 'a) ->
-  string -> string array -> 'a
+  string ->
+  string array ->
+  'a
 
-val open_connection:
-  ?timeout:t -> Unix.sockaddr -> in_channel * out_channel
-val read_connection:
+val open_connection : ?timeout:t -> Unix.sockaddr -> in_channel * out_channel
+
+val read_connection :
   timeout:int ->
   on_timeout:(unit -> 'a) ->
   reader:(t -> in_channel -> out_channel -> 'a) ->
-  Unix.sockaddr -> 'a
-val shutdown_connection: in_channel -> unit
+  Unix.sockaddr ->
+  'a
+
+val shutdown_connection : in_channel -> unit
 
 (* Some silly people like to catch all exceptions. This means they need to explicitly detect and
  * reraise the timeout exn. *)
-val is_timeout_exn: t -> exn -> bool
+val is_timeout_exn : t -> exn -> bool

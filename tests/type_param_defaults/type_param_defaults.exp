@@ -58,9 +58,9 @@ Cannot cast `b_star.p` to boolean because number [1] is incompatible with boolea
         ^^^^^^^^
 
 References:
-   classes.js:17:26
+   classes.js:17:15
    17| var b_star: B<*> = new B(123);
-                                ^^^ [1]
+                     ^ [1]
    classes.js:23:12
    23| (b_star.p: boolean); // Error number ~> boolean
                   ^^^^^^^ [2]
@@ -160,9 +160,9 @@ Cannot cast `c_star.p` to boolean because string [1] is incompatible with boolea
         ^^^^^^^^
 
 References:
-   classes.js:30:26
+   classes.js:30:15
    30| var c_star: C<*> = new C('hello');
-                                ^^^^^^^ [1]
+                     ^ [1]
    classes.js:34:12
    34| (c_star.p: boolean); // Error string ~> boolean
                   ^^^^^^^ [2]

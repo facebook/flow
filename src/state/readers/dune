@@ -1,0 +1,7 @@
+(library
+  (name flow_state_readers)
+  (wrapped false)
+  (libraries
+    flow_common_transaction
+  )
+)

@@ -1,0 +1,13 @@
+(library
+  (name flow_state_heaps_module)
+  (wrapped false)
+  (libraries
+    flow_common_audit
+    flow_common_modulename
+    flow_parser_utils
+    flow_procs
+    flow_shared_mem
+    flow_state_readers
+    collections ; hack
+  )
+)

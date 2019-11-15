@@ -6,13 +6,19 @@
  *)
 
 type sketchy_null_kind =
- | SketchyNullBool
- | SketchyNullString
- | SketchyNullNumber
- | SketchyNullMixed
+  | SketchyNullBool
+  | SketchyNullString
+  | SketchyNullNumber
+  | SketchyNullMixed
 
-type sketchy_number_kind =
-  | SketchyNumberAnd
+type sketchy_number_kind = SketchyNumberAnd
+
+type property_assignment_kind =
+  | PropertyNotDefinitelyInitialized
+  | ReadFromUninitializedProperty
+  | MethodCallBeforeEverythingInitialized
+  | ThisBeforeEverythingInitialized
+  | PropertyFunctionCallBeforeEverythingInitialized
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
@@ -23,7 +29,6 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DeprecatedEnumUtility
   | DynamicExport
   | UnsafeGettersSetters
   | InexactSpread
@@ -32,10 +37,13 @@ type lint_kind =
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
+  | NonArraySpread
+  | AmbiguousObjectType
 
-val string_of_kind: lint_kind -> string
+val string_of_kind : lint_kind -> string
 
-val kinds_of_string: string -> lint_kind list option
+val kinds_of_string : string -> lint_kind list option
 
-module LintMap: MyMap.S with type key = lint_kind
-module LintSet: Set.S with type elt = lint_kind
+module LintMap : WrappedMap.S with type key = lint_kind
+
+module LintSet : Set.S with type elt = lint_kind

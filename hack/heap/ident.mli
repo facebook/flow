@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -7,7 +7,7 @@
  *
  *)
 
-type t = int
+type t = int [@@deriving eq]
 
 val compare : t -> t -> int
 

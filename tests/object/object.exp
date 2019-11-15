@@ -1,0 +1,212 @@
+Error ------------------------------------------------------------------------------------------------------- obj.js:8:1
+
+Cannot call method `defineProperty` because:
+ - boolean [1] is incompatible with string [2] in the first argument of property `set`.
+ - boolean [1] is incompatible with number [3] in the first argument of property `set`.
+
+   obj.js:8:1
+   8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:8:68
+   8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
+                                                                         ^^^^^^^ [1]
+   obj.js:8:43
+   8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
+                                                ^^^ [2]
+   obj.js:8:55
+   8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
+                                                            ^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:11:2
+
+Cannot cast `x.c` to number because string [1] is incompatible with number [2].
+
+   obj.js:11:2
+   11| (x.c: number);
+        ^^^
+
+References:
+   obj.js:8:43
+    8| Object.defineProperty(x, 'c', {get: () => 'a', value: 42, set: (x: boolean) => {}});
+                                                 ^^^ [1]
+   obj.js:11:7
+   11| (x.c: number);
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:16:1
+
+Cannot call method `defineProperty` because string [1] is incompatible with number [2].
+
+   obj.js:16:1
+   16| Object.defineProperty(y, 'a', {value: "a"});
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:16:39
+   16| Object.defineProperty(y, 'a', {value: "a"});
+                                             ^^^ [1]
+   obj.js:13:21
+   13| declare var y: {|a: number, b: number|};
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:19:1
+
+Cannot call method `defineProperty` because string [1] is incompatible with number [2] in property `value`.
+
+   obj.js:19:1
+   19| Object.defineProperty<number>(y, 'b', {value: "a"})
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:19:47
+   19| Object.defineProperty<number>(y, 'b', {value: "a"})
+                                                     ^^^ [1]
+   obj.js:19:23
+   19| Object.defineProperty<number>(y, 'b', {value: "a"})
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:20:1
+
+Cannot call method `defineProperty` because string [1] is incompatible with number [2].
+
+   obj.js:20:1
+   20| Object.defineProperty<string>(y, 'b', {value: "a"})
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:20:23
+   20| Object.defineProperty<string>(y, 'b', {value: "a"})
+                             ^^^^^^ [1]
+   obj.js:13:32
+   13| declare var y: {|a: number, b: number|};
+                                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:21:1
+
+Cannot call function without exactly 1 type argument.
+
+   21| Object.defineProperty<string, string>(y, 'b', {value: "a"}) //targ arity mismatch
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:22:1
+
+Cannot call method `defineProperty` because property `c` is missing in object type [1].
+
+   obj.js:22:1
+   22| Object.defineProperty(y, 'c', {value: 42});
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:13:16
+   13| declare var y: {|a: number, b: number|};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:23:1
+
+Cannot call method `defineProperty` because property `c` is missing in object type [1].
+
+   obj.js:23:1
+   23| Object.defineProperty(y, 'c', {writable:false});
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:13:16
+   13| declare var y: {|a: number, b: number|};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:26:1
+
+Cannot call method `defineProperties` because:
+ - property `d` is missing in object type [1].
+ - string [2] is incompatible with number [3].
+
+   obj.js:26:1
+   26| Object.defineProperties(y, {d: {value: 42}, a: {writable:false}, b:{get: () => "a"}});
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:13:16
+   13| declare var y: {|a: number, b: number|};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   obj.js:26:80
+   26| Object.defineProperties(y, {d: {value: 42}, a: {writable:false}, b:{get: () => "a"}});
+                                                                                      ^^^ [2]
+   obj.js:13:32
+   13| declare var y: {|a: number, b: number|};
+                                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:27:1
+
+Cannot call non-polymorphic function with type arguments.
+
+   27| Object.defineProperties<number>({}, {}); // targ arity mismatch
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:33:2
+
+Cannot cast `z.b` to string because number [1] is incompatible with string [2].
+
+   obj.js:33:2
+   33| (z.b: string);
+        ^^^
+
+References:
+   obj.js:32:7
+   32| z.b = 10;
+             ^^ [1]
+   obj.js:33:7
+   33| (z.b: string);
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:37:1
+
+Cannot get `Object.freeze<...>(...).b` because property `b` is missing in object type [1].
+
+   obj.js:37:1
+   37| Object.freeze<{a: number}>({a: 42, b: 42}).b; // b is hidden
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   obj.js:37:15
+   37| Object.freeze<{a: number}>({a: 42, b: 42}).b; // b is hidden
+                     ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- obj.js:38:28
+
+Cannot call method `freeze` with object literal bound to `o` because property `c` is missing in frozen object
+literal [1] but exists in object type [2].
+
+   obj.js:38:28
+   38| Object.freeze<{c: number}>({a: 42, b: 42}); // c does not exist
+                                  ^^^^^^^^^^^^^^ [1]
+
+References:
+   obj.js:38:15
+   38| Object.freeze<{c: number}>({a: 42, b: 42}); // c does not exist
+                     ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ obj.js:39:1
+
+Cannot call function without exactly 1 type argument.
+
+   39| Object.freeze<number, number>({}); // targ arity misnatch
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 16 errors

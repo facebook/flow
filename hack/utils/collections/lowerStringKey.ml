@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2018, Facebook, Inc.
  * All rights reserved.
  *
@@ -9,7 +9,5 @@
 
 type t = string
 
-let compare (x: t) (y: t) =
-  (String.compare
-    (String.lowercase_ascii x)
-    (String.lowercase_ascii y))
+let compare (x : t) (y : t) =
+  String.compare (String.lowercase_ascii x) (String.lowercase_ascii y)

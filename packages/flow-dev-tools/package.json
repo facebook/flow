@@ -4,50 +4,55 @@
   "license": "MIT",
   "version": "0.1.0",
   "dependencies": {
-    "babel-jest": "^21.0.2",
-    "babel-plugin-syntax-async-functions": "^6.8.0",
+    "babel-core": "^6.8.0",
+    "babel-jest": "^23.0.0",
     "babel-plugin-syntax-flow": "^6.8.0",
-    "babel-plugin-syntax-trailing-function-commas": "^6.8.0",
     "babel-plugin-transform-class-properties": "^6.8.0",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",
     "babel-plugin-transform-object-rest-spread": "^6.20.2",
-    "babel-plugin-transform-regenerator": "^6.8.0",
     "babel-polyfill": "^6.8.0",
-    "babel-preset-es2015": "^6.8.0",
+    "babel-preset-env": "^1.7.0",
     "babel-register": "^6.8.0",
     "blessed": "^0.1.81",
-    "colors": "~1.1.2",
+    "colors": "^1.1.2",
     "diff": "^3.5.0",
     "flow-parser": "~0.21.0",
     "glob": "^7.0.3",
-    "jest": "^21.1.0",
+    "jest": "^23.0.0",
     "minimist": "~1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
-    "newtests": "*",
     "resolve": "^1.1.7",
     "rimraf": "^2.5.2",
-    "sane": "^1.4.0",
+    "sane": "^1.4.0 || ^2.0.0 || ^3.0.0",
     "semver": "^5.6.0",
     "source-map-support": "~0.4.0",
     "twit": "^2.1.5",
-    "vscode-jsonrpc": "^3.3.0"
+    "vscode-jsonrpc": "^4.0.0",
+    "vscode-uri": "^2.0.3"
   },
   "babel": {
     "presets": [
-      "es2015"
+      [
+        "env",
+        {
+          "targets": {
+            "node": "6"
+          }
+        }
+      ]
     ],
     "plugins": [
-      "syntax-async-functions",
       "syntax-flow",
-      "syntax-trailing-function-commas",
       "transform-class-properties",
       "transform-flow-strip-types",
-      "transform-object-rest-spread",
-      "transform-regenerator"
+      "transform-object-rest-spread"
     ]
   },
   "scripts": {
-    "test": "make -C ../.. test"
+    "test": "jest"
+  },
+  "engines": {
+    "node": ">=6"
   }
 }

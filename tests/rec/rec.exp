@@ -1,3 +1,25 @@
+Error ----------------------------------------------------------------------------------------------- eval_union.js:9:18
+
+Cannot instantiate array type because:
+ - Either null or undefined [1] is incompatible with empty [2].
+ - Or null or undefined [1] is incompatible with number [3].
+
+   eval_union.js:9:18
+   9| arr.forEach(x => acc.push(x.f));
+                       ^^^
+
+References:
+   eval_union.js:7:30
+   7| declare var arr: Array<{ +f: ?number }>;
+                                   ^^^^^^^ [1]
+   eval_union.js:9:27
+   9| arr.forEach(x => acc.push(x.f));
+                                ^^^ [2]
+   eval_union.js:7:31
+   7| declare var arr: Array<{ +f: ?number }>;
+                                    ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:6:17
 
 Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
@@ -7,11 +29,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:586:22
-   586|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:530:11
-   530| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -24,11 +46,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:586:22
-   586|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:530:11
-   530| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -41,11 +63,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:586:22
-   586|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:530:11
-   530| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -58,11 +80,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:586:22
-   586|     get(key: K): V | void;
+   <BUILTINS>/core.js:599:22
+   599|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:530:11
-   530| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:543:11
+   543| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -122,6 +144,14 @@ References:
    issue6155.js:5:17
     5| type C = {kind: 'c'};
                        ^^^ [6]
+
+
+Error ------------------------------------------------------------------------------- recursive_react_component.js:21:11
+
+Cannot resolve name `DoesntMatter`.
+
+   21|   return <DoesntMatter
+                 ^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
@@ -265,4 +295,4 @@ References:
 
 
 
-Found 22 errors
+Found 24 errors

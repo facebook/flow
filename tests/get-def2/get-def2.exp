@@ -25,11 +25,10 @@ Trace `ParentFoo` back to its def
 Parent.js:4:19,4:27
 
 React class and attribute expressions
-react.js:3:7,3:7
-react.js:7:5,7:7
-:0:1,0:0
-react.js:7:5,7:7
-:0:1,0:0
+react.js:6:7,6:7
+react.js:9:5,9:7
+react.js:13:3,13:5
+react.js:9:5,9:7
 
 Inheritance
 override.js:10:3,10:10
@@ -51,3 +50,12 @@ declare.js:3:13,3:15
 declare.js:6:20,6:22
 declare.js:9:18,9:20
 declare.js:12:15,12:17
+
+Shadowing `require`
+main.js:27:7,27:13
+main.js:28:7,28:13
+Child.js:4:18,4:41
+
+Chaining `require`s through multiple files
+Child.js:4:20,4:27
+Parent.js:3:18,3:20

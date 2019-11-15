@@ -13,7 +13,7 @@ class FooK<+K: {}, V> {
 }
 
 class FooV<K: {}, +V> {
-    bad (x: number) : $ReadOnlyWeakMap<K, V> { // Error: V in invariant position
+    bad (x: number) : $ReadOnlyWeakMap<K, V> { // Fine, V in covarint position
         return new WeakMap();
     }
 }
