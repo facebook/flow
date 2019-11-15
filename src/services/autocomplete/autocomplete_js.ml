@@ -206,13 +206,6 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | Some loc -> this#find loc Ackey
       | None -> x
 
-    (* prevent shorthand properties from triggering autocomplete on object keys *)
-    method! object_property prop =
-      let open Flow_ast.Expression.Object.Property in
-      match prop with
-      | (_, Init { shorthand = true; _ }) -> prop
-      | _ -> super#object_property prop
-
     method! class_body x =
       try super#class_body x
       with Found (tparams, loc, Acid id) ->
