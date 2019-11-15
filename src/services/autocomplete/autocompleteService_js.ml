@@ -599,7 +599,12 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cur
   | Some (_, _, Accomment) -> ("Empty", AcEmpty "Comment")
   | Some (_, _, Acliteral) -> ("Empty", AcEmpty "Literal")
   | Some (_, _, Acjsxtext) -> ("Empty", AcEmpty "JSXText")
-  | Some (_, _, Ackey) -> ("Ackey", AcResult { results = []; errors_to_log = [] })
+  | Some (_, _, Acmodule) ->
+    (* TODO: complete module names *)
+    ("Acmodule", AcEmpty "Module")
+  | Some (_, _, Ackey) ->
+    (* TODO: complete object keys based on their upper bounds *)
+    ("Ackey", AcResult { results = []; errors_to_log = [] })
   | Some (tparams, ac_loc, Acid { id_type; include_super; include_this }) ->
     ( "Acid",
       autocomplete_id
