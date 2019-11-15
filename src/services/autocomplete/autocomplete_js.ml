@@ -247,6 +247,11 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match expr with
       | ((loc, _), Literal _) when this#covers_target loc -> this#find loc Acliteral
       | _ -> super#expression expr
+
+    method! template_literal_element elem =
+      match elem with
+      | (loc, _) when this#covers_target loc -> this#find loc Acliteral
+      | _ -> super#template_literal_element elem
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =

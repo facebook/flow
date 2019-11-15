@@ -254,3 +254,7 @@ assert_ok \
 printf "literal.js (inside regex) = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty literal.js 5 16 < literal.js
+
+printf "literal.js (inside template literal) = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty literal.js 7 16 < literal.js
