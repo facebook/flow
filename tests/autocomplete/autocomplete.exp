@@ -1272,6 +1272,7 @@ jsx-with-children.js = {
     }
   ]
 }
+jsx-text.js = {"result":[]}
 customfun.js = {
   "result":[
     {
