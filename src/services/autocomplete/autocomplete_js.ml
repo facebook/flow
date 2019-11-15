@@ -34,6 +34,8 @@ type autocomplete_type =
   | Acmem of Type.t
   (* JSX attributes *)
   | Acjsx of string * SSet.t * Type.t
+  (* JSX text child *)
+  | Acjsxtext
 
 let autocomplete_suffix = "AUTO332"
 
@@ -187,6 +189,11 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match value with
       | Literal ((loc, _), _) when this#covers_target loc -> this#find loc Acliteral
       | _ -> super#jsx_attribute_value value
+
+    method! jsx_child child =
+      match child with
+      | (loc, Flow_ast.JSX.Text _) when this#covers_target loc -> this#find loc Acjsxtext
+      | _ -> super#jsx_child child
 
     method! pattern_object_property_key ?kind key =
       let open Flow_ast.Pattern.Object.Property in

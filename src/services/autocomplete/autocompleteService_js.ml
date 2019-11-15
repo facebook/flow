@@ -598,6 +598,7 @@ let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cur
   | Some (_, _, Acignored) -> ("Empty", AcEmpty "Ignored")
   | Some (_, _, Accomment) -> ("Empty", AcEmpty "Comment")
   | Some (_, _, Acliteral) -> ("Empty", AcEmpty "Literal")
+  | Some (_, _, Acjsxtext) -> ("Empty", AcEmpty "JSXText")
   | Some (_, _, Ackey) -> ("Ackey", AcResult { results = []; errors_to_log = [] })
   | Some (tparams, ac_loc, Acid { id_type; include_super; include_this }) ->
     ( "Acid",

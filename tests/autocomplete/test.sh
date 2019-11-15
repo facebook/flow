@@ -101,6 +101,10 @@ printf "jsx-with-children.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty jsx-with-children.js 10 4 < jsx-with-children.js
 
+printf "jsx-text.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty jsx-text.js 1 11 < jsx-text.js
+
 printf "customfun.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty customfun.js 6 1 < customfun.js
