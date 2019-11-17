@@ -74,6 +74,6 @@
     worker_cancel ; hack
     xx
   )
-  (modules_without_implementation graph partition resolvable_type_job)
+  (modules_without_implementation partition resolvable_type_job)
   (preprocess (pps ppx_let))
 )
