@@ -1099,7 +1099,12 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           reason
           { Object.reason = r1; props = props1; dict = dict1; flags = flags1 }
           { Object.reason = r2; props = props2; dict = dict2; flags = flags2 } =
-        let intersection t1 t2 = IntersectionT (reason, InterRep.make t1 t2 []) in
+        let intersection t1 t2 =
+          if reasonless_compare t1 t2 = 0 then
+            t1
+          else
+            IntersectionT (reason, InterRep.make t1 t2 [])
+        in
         let merge_props (t1, own1) (t2, own2) =
           let (t1, t2, opt) =
             match (t1, t2) with
