@@ -7,6 +7,12 @@
 
 open Reason
 
+(* exceptions *)
+
+exception Not_expect_bound of string
+
+exception Attempted_operation_on_bound of string
+
 (* propagates sources to sinks following a subtype relation *)
 val flow : Context.t -> Type.t * Type.use_t -> unit
 
@@ -77,9 +83,18 @@ val eval_selector :
 val visit_eval_id : Context.t -> Type.Eval.id -> (Type.t -> unit) -> unit
 
 (* destructors *)
-exception Not_expect_bound of string
 
 val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
+
+val mk_type_destructor :
+  Context.t ->
+  trace:Trace.t ->
+  Type.use_op ->
+  Reason.reason ->
+  Type.t ->
+  Type.destructor ->
+  Type.Eval.id ->
+  bool * Type.t
 
 (* ... *)
 

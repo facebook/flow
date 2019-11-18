@@ -64,6 +64,7 @@ type metadata = {
 type phase =
   | Checking
   | Merging
+  | Normalizing
 
 type type_assert_kind =
   | Is
@@ -420,3 +421,7 @@ val find_trust_constraints :
 val find_trust_graph : t -> Trust_constraint.ident -> Trust_constraint.constraints
 
 val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
+
+val with_normalizer_mode : t -> (t -> 'a) -> 'a
+
+val in_normalizer_mode : t -> bool

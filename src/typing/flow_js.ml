@@ -327,14 +327,17 @@ end
 
 exception Not_expect_bound of string
 
+exception Attempted_operation_on_bound of string
+
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
    been substituted away. *)
-let not_expect_bound t =
+let not_expect_bound cx t =
   match t with
-  | BoundT _ -> raise (Not_expect_bound (spf "Did not expect %s" (string_of_ctor t)))
+  | BoundT _ when not (Context.in_normalizer_mode cx) ->
+    raise (Not_expect_bound (spf "Did not expect %s" (string_of_ctor t)))
   | _ -> ()
 
-let not_expect_bound_use t = lift_to_use not_expect_bound t
+let not_expect_bound_use cx t = lift_to_use (not_expect_bound cx) t
 
 (* Sometimes we expect to see only proper def types. Proper def types make sense
    as use types. *)
@@ -771,10 +774,15 @@ struct
        def type: the latter typically when we have annotations. *)
 
       (* Type parameters should always be substituted out, and as such they should
-       never appear "exposed" in flows. (They can still appear bound inside
-       polymorphic definitions.) *)
-      not_expect_bound l;
-      not_expect_bound_use u;
+         never appear "exposed" in flows. (They can still appear bound inside
+         polymorphic definitions.)
+
+         An exception to this is when calling Flow_js from the normalizer. There,
+         BoundTs have not been substituted with their bounds. Doing so typically
+         leads to poor quality of normalized types when the BoundTs appear under
+         EvalT. The following checks take this into account in banning BoundTs. *)
+      not_expect_bound cx l;
+      not_expect_bound_use cx u;
 
       (* Types that are classified as def types but don't make sense as use types
        should not appear as use types. *)
@@ -872,6 +880,18 @@ struct
           | FullyResolved (use_op', t2) ->
             let t2_use = flow_use_op use_op' (UseT (use_op, t2)) in
             rec_flow cx trace (t1, t2_use))
+        (*****************************************)
+        (* BoundTs - only used for normalization *)
+        (*****************************************)
+        | (BoundT (_, lname), UseT (_, BoundT (_, uname))) when lname = uname ->
+          assert (Context.in_normalizer_mode cx);
+          ()
+        | (BoundT (_, _), ReposLowerT (reason, use_desc, u)) ->
+          assert (Context.in_normalizer_mode cx);
+          rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+        | (BoundT (_, name), _) ->
+          assert (Context.in_normalizer_mode cx);
+          raise (Attempted_operation_on_bound name)
         (*****************)
         (* any with uses *)
         (*****************)
@@ -9952,8 +9972,8 @@ struct
      flows should also be enforced here. In particular, we don't expect t1 or t2
      to be type parameters, and we don't expect t1 or t2 to be def types that
      don't make sense as use types. See __flow for more details. *)
-      not_expect_bound t1;
-      not_expect_bound t2;
+      not_expect_bound cx t1;
+      not_expect_bound cx t1;
       expect_proper_def t1;
       expect_proper_def t2;
 

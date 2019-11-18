@@ -2265,7 +2265,7 @@ indirect_array.js:5:3 = {
     },
     {
       "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<$NonMaybeType<number>>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
+      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
       "func_details":null,
       "path":"[LIB] core.js",
       "line":262,
@@ -2681,7 +2681,7 @@ indirect_array.js:10:3 = {
     },
     {
       "name":"filter",
-      "type":"((callbackfn: class Boolean) => Array<$NonMaybeType<number>>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
+      "type":"((callbackfn: class Boolean) => Array<number>) & ((callbackfn: (value: number, index: number, array: Array<number>) => mixed, thisArg?: any) => Array<number>)",
       "func_details":null,
       "path":"[LIB] core.js",
       "line":262,
