@@ -206,6 +206,198 @@ References:
                 ^ [2]
 
 
+Error ------------------------------------------------------------------------------------ error-duplicate-values.js:6:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `E` [3]
+
+   error-duplicate-values.js:6:7
+   6|   C = true, // Error: duplicate member initializer
+            ^^^^ [1]
+
+References:
+   error-duplicate-values.js:4:7
+   4|   A = true,
+            ^^^^ [2]
+   error-duplicate-values.js:3:1
+      v-------
+   3| enum E {
+   4|   A = true,
+   5|   B = false,
+   6|   C = true, // Error: duplicate member initializer
+   7|   D = true, // Error: duplicate member initializer
+   8| }
+      ^ [3]
+
+
+Error ------------------------------------------------------------------------------------ error-duplicate-values.js:7:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `E` [3]
+
+   error-duplicate-values.js:7:7
+   7|   D = true, // Error: duplicate member initializer
+            ^^^^ [1]
+
+References:
+   error-duplicate-values.js:4:7
+   4|   A = true,
+            ^^^^ [2]
+   error-duplicate-values.js:3:1
+      v-------
+   3| enum E {
+   4|   A = true,
+   5|   B = false,
+   6|   C = true, // Error: duplicate member initializer
+   7|   D = true, // Error: duplicate member initializer
+   8| }
+      ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:12:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `F` [3]
+
+   error-duplicate-values.js:12:7
+   12|   B = 1, // Error: duplicate member initializer
+             ^ [1]
+
+References:
+   error-duplicate-values.js:11:7
+   11|   A = 1,
+             ^ [2]
+   error-duplicate-values.js:10:1
+       v-------
+   10| enum F {
+   11|   A = 1,
+   12|   B = 1, // Error: duplicate member initializer
+   13|   C = 1.0, // Error: duplicate member initializer
+   14|   D = 2,
+   15| }
+       ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:13:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `F` [3]
+
+   error-duplicate-values.js:13:7
+   13|   C = 1.0, // Error: duplicate member initializer
+             ^^^ [1]
+
+References:
+   error-duplicate-values.js:11:7
+   11|   A = 1,
+             ^ [2]
+   error-duplicate-values.js:10:1
+       v-------
+   10| enum F {
+   11|   A = 1,
+   12|   B = 1, // Error: duplicate member initializer
+   13|   C = 1.0, // Error: duplicate member initializer
+   14|   D = 2,
+   15| }
+       ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:20:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `G` [3]
+
+   error-duplicate-values.js:20:7
+   20|   C = "a", // Error: duplicate member initializer
+             ^^^ [1]
+
+References:
+   error-duplicate-values.js:19:7
+   19|   B = "a",
+             ^^^ [2]
+   error-duplicate-values.js:17:1
+       v-------
+   17| enum G {
+   18|   A = "b",
+   19|   B = "a",
+   20|   C = "a", // Error: duplicate member initializer
+   21|   D = "a", // Error: duplicate member initializer
+   22| }
+       ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:21:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `G` [3]
+
+   error-duplicate-values.js:21:7
+   21|   D = "a", // Error: duplicate member initializer
+             ^^^ [1]
+
+References:
+   error-duplicate-values.js:19:7
+   19|   B = "a",
+             ^^^ [2]
+   error-duplicate-values.js:17:1
+       v-------
+   17| enum G {
+   18|   A = "b",
+   19|   B = "a",
+   20|   C = "a", // Error: duplicate member initializer
+   21|   D = "a", // Error: duplicate member initializer
+   22| }
+       ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:28:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `H` [3]
+
+   error-duplicate-values.js:28:7
+   28|   C = 2.2204460492503130808472633361815E-16, // Error: duplicate member initializer
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error-duplicate-values.js:27:7
+   27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   error-duplicate-values.js:24:1
+       v-------
+   24| enum H {
+   25|   A = 0,
+   26|   // Due to IEEE 754, both below values are the same in JS
+   27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
+   28|   C = 2.2204460492503130808472633361815E-16, // Error: duplicate member initializer
+   29| }
+       ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:35:7
+
+Enum member initializers need to be unique, but this value [1] has already been used for a previous initializer [2] in
+enum `I` [3]
+
+   error-duplicate-values.js:35:7
+   35|   C = 9007199254740993, // Error: duplicate member initializer
+             ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error-duplicate-values.js:34:7
+   34|   B = 9007199254740992,
+             ^^^^^^^^^^^^^^^^ [2]
+   error-duplicate-values.js:31:1
+       v-------
+   31| enum I {
+   32|   A = 9007199254740991, // Number.MAX_SAFE_INTEGER
+   33|   // Due to IEEE 754, both below values are the same in JS
+   34|   B = 9007199254740992,
+   35|   C = 9007199254740993, // Error: duplicate member initializer
+   36| }
+       ^ [3]
+
+
 Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
 
 Cannot change member [1] of enum `E` [2] because enums are frozen.
@@ -275,4 +467,4 @@ References:
 
 
 
-Found 16 errors
+Found 24 errors

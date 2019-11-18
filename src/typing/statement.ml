@@ -1954,7 +1954,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let { id = (name_loc, ident); body } = enum in
       let { Ast.Identifier.name; _ } = ident in
       let reason = mk_reason (REnum name) loc in
-      let enum_t = mk_enum cx ~loc enum in
+      let enum_t = mk_enum cx ~enum_reason:reason enum in
       let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
       let id' = ((name_loc, t), ident) in
       Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
@@ -7682,27 +7682,78 @@ and warn_or_ignore_optional_chaining optional cx loc =
   else
     ()
 
-and mk_enum cx ~loc enum =
+and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
-  let { id = (_, { Ast.Identifier.name; _ }); body } = enum in
-  let name_of_initialized_member (type t) (member : (t, ALoc.t) InitializedMember.t) =
-    let (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); _ }) = member in
-    name
-  in
+  let { id = (name_loc, { Ast.Identifier.name; _ }); body } = enum in
   let name_of_defaulted_member (_, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) =
     name
   in
-  let enum_id = Context.make_aloc_id cx loc in
-  let member_names =
+  let enum_id = Context.make_aloc_id cx name_loc in
+  let members =
     match body with
     | (_, BooleanBody { BooleanBody.members; _ }) ->
-      Base.List.map ~f:name_of_initialized_member members
+      fst
+      @@ Base.List.fold_left
+           ~f:
+             (fun (names, seen_values)
+                  (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+             let (init_loc, init_value) = init in
+             let seen_values =
+               match BoolMap.find_opt init_value seen_values with
+               | Some prev_use_loc ->
+                 Flow.add_output
+                   cx
+                   (Error_message.EEnumMemberDuplicateValue
+                      { loc = init_loc; prev_use_loc; enum_reason });
+                 seen_values
+               | None -> BoolMap.add init_value init_loc seen_values
+             in
+             (SSet.add name names, seen_values))
+           ~init:(SSet.empty, BoolMap.empty)
+           members
     | (_, NumberBody { NumberBody.members; _ }) ->
-      Base.List.map ~f:name_of_initialized_member members
+      fst
+      @@ Base.List.fold_left
+           ~f:
+             (fun (names, seen_values)
+                  (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+             let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
+             let seen_values =
+               match NumberMap.find_opt init_value seen_values with
+               | Some prev_use_loc ->
+                 Flow.add_output
+                   cx
+                   (Error_message.EEnumMemberDuplicateValue
+                      { loc = init_loc; prev_use_loc; enum_reason });
+                 seen_values
+               | None -> NumberMap.add init_value init_loc seen_values
+             in
+             (SSet.add name names, seen_values))
+           ~init:(SSet.empty, NumberMap.empty)
+           members
     | (_, StringBody { StringBody.members = StringBody.Initialized members; _ }) ->
-      Base.List.map ~f:name_of_initialized_member members
+      fst
+      @@ Base.List.fold_left
+           ~f:
+             (fun (names, seen_values)
+                  (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+             let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
+             let seen_values =
+               match SMap.find_opt init_value seen_values with
+               | Some prev_use_loc ->
+                 Flow.add_output
+                   cx
+                   (Error_message.EEnumMemberDuplicateValue
+                      { loc = init_loc; prev_use_loc; enum_reason });
+                 seen_values
+               | None -> SMap.add init_value init_loc seen_values
+             in
+             (SSet.add name names, seen_values))
+           ~init:(SSet.empty, SMap.empty)
+           members
     | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
-      Base.List.map ~f:name_of_defaulted_member members
-    | (_, SymbolBody { SymbolBody.members }) -> Base.List.map ~f:name_of_defaulted_member members
+      SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members
+    | (_, SymbolBody { SymbolBody.members }) ->
+      SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members
   in
-  { enum_id; enum_name = name; members = SSet.of_list member_names }
+  { enum_id; enum_name = name; members }
