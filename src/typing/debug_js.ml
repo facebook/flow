@@ -218,11 +218,12 @@ and _json_of_t_impl json_cx t =
         ]
       | DefT (_, _, EnumT enum)
       | DefT (_, _, EnumObjectT enum) ->
-        let { enum_id; enum_name; members } = enum in
+        let { enum_id; enum_name; members; representation_t } = enum in
         [
           ("enum_id", JSON_String (ALoc.debug_to_string (enum_id :> ALoc.t)));
           ("enum_name", JSON_String enum_name);
           ("members", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)));
+          ("representation_t", _json_of_t json_cx representation_t);
         ]
       | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]
       | EvalT (t, defer_use_t, id) ->
@@ -1689,8 +1690,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) ->
       p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
     | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
-    | DefT (_, trust, EnumT { enum_id; enum_name; members = _ })
-    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _ }) ->
+    | DefT (_, trust, EnumT { enum_id; enum_name; members = _; representation_t = _ })
+    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _; representation_t = _ }) ->
       p
         ~trust:(Some trust)
         ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t)))

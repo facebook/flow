@@ -277,7 +277,13 @@ class virtual ['a] t =
         else
           ExplicitArg t''
 
-    method virtual enum : enum_t -> enum_t
+    method enum cx map_cx e =
+      let { enum_id; enum_name; members; representation_t } = e in
+      let representation_t' = self#type_ cx map_cx representation_t in
+      if representation_t' = representation_t then
+        e
+      else
+        { enum_id; enum_name; members; representation_t = representation_t' }
 
     method def_type cx map_cx t =
       match t with
@@ -317,13 +323,13 @@ class virtual ['a] t =
         else
           ClassT t''
       | EnumT enum ->
-        let enum' = self#enum enum in
+        let enum' = self#enum cx map_cx enum in
         if enum' == enum then
           t
         else
           EnumT enum'
       | EnumObjectT enum ->
-        let enum' = self#enum enum in
+        let enum' = self#enum cx map_cx enum in
         if enum' == enum then
           t
         else

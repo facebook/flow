@@ -7689,71 +7689,76 @@ and mk_enum cx ~enum_reason enum =
     name
   in
   let enum_id = Context.make_aloc_id cx name_loc in
-  let members =
+  let (representation_t, members) =
     match body with
     | (_, BooleanBody { BooleanBody.members; _ }) ->
-      fst
-      @@ Base.List.fold_left
-           ~f:
-             (fun (names, seen_values)
-                  (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
-             let (init_loc, init_value) = init in
-             let seen_values =
-               match BoolMap.find_opt init_value seen_values with
-               | Some prev_use_loc ->
-                 Flow.add_output
-                   cx
-                   (Error_message.EEnumMemberDuplicateValue
-                      { loc = init_loc; prev_use_loc; enum_reason });
-                 seen_values
-               | None -> BoolMap.add init_value init_loc seen_values
-             in
-             (SSet.add name names, seen_values))
-           ~init:(SSet.empty, BoolMap.empty)
-           members
+      ( BoolT.why enum_reason (literal_trust ()),
+        fst
+        @@ Base.List.fold_left
+             ~f:
+               (fun (names, seen_values)
+                    (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+               let (init_loc, init_value) = init in
+               let seen_values =
+                 match BoolMap.find_opt init_value seen_values with
+                 | Some prev_use_loc ->
+                   Flow.add_output
+                     cx
+                     (Error_message.EEnumMemberDuplicateValue
+                        { loc = init_loc; prev_use_loc; enum_reason });
+                   seen_values
+                 | None -> BoolMap.add init_value init_loc seen_values
+               in
+               (SSet.add name names, seen_values))
+             ~init:(SSet.empty, BoolMap.empty)
+             members )
     | (_, NumberBody { NumberBody.members; _ }) ->
-      fst
-      @@ Base.List.fold_left
-           ~f:
-             (fun (names, seen_values)
-                  (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
-             let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
-             let seen_values =
-               match NumberMap.find_opt init_value seen_values with
-               | Some prev_use_loc ->
-                 Flow.add_output
-                   cx
-                   (Error_message.EEnumMemberDuplicateValue
-                      { loc = init_loc; prev_use_loc; enum_reason });
-                 seen_values
-               | None -> NumberMap.add init_value init_loc seen_values
-             in
-             (SSet.add name names, seen_values))
-           ~init:(SSet.empty, NumberMap.empty)
-           members
+      ( NumT.why enum_reason (literal_trust ()),
+        fst
+        @@ Base.List.fold_left
+             ~f:
+               (fun (names, seen_values)
+                    (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+               let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
+               let seen_values =
+                 match NumberMap.find_opt init_value seen_values with
+                 | Some prev_use_loc ->
+                   Flow.add_output
+                     cx
+                     (Error_message.EEnumMemberDuplicateValue
+                        { loc = init_loc; prev_use_loc; enum_reason });
+                   seen_values
+                 | None -> NumberMap.add init_value init_loc seen_values
+               in
+               (SSet.add name names, seen_values))
+             ~init:(SSet.empty, NumberMap.empty)
+             members )
     | (_, StringBody { StringBody.members = StringBody.Initialized members; _ }) ->
-      fst
-      @@ Base.List.fold_left
-           ~f:
-             (fun (names, seen_values)
-                  (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
-             let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
-             let seen_values =
-               match SMap.find_opt init_value seen_values with
-               | Some prev_use_loc ->
-                 Flow.add_output
-                   cx
-                   (Error_message.EEnumMemberDuplicateValue
-                      { loc = init_loc; prev_use_loc; enum_reason });
-                 seen_values
-               | None -> SMap.add init_value init_loc seen_values
-             in
-             (SSet.add name names, seen_values))
-           ~init:(SSet.empty, SMap.empty)
-           members
+      ( StrT.why enum_reason (literal_trust ()),
+        fst
+        @@ Base.List.fold_left
+             ~f:
+               (fun (names, seen_values)
+                    (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+               let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
+               let seen_values =
+                 match SMap.find_opt init_value seen_values with
+                 | Some prev_use_loc ->
+                   Flow.add_output
+                     cx
+                     (Error_message.EEnumMemberDuplicateValue
+                        { loc = init_loc; prev_use_loc; enum_reason });
+                   seen_values
+                 | None -> SMap.add init_value init_loc seen_values
+               in
+               (SSet.add name names, seen_values))
+             ~init:(SSet.empty, SMap.empty)
+             members )
     | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
-      SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members
+      ( StrT.why enum_reason (literal_trust ()),
+        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
     | (_, SymbolBody { SymbolBody.members }) ->
-      SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members
+      ( Flow.get_builtin_type cx enum_reason "Symbol",
+        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
   in
-  { enum_id; enum_name = name; members }
+  { enum_id; enum_name = name; members; representation_t }

@@ -255,6 +255,7 @@ module rec TypeTerm : sig
     enum_id: ALoc.id;
     enum_name: string;
     members: SSet.t;
+    representation_t: t;
   }
 
   and internal_t =
