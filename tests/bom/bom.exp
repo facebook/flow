@@ -22,8 +22,8 @@ with `HTMLFormElement` [2].
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:772:36
-   772|   createElement(tagName: 'input'): HTMLInputElement;
+   <BUILTINS>/dom.js:771:36
+   771|   createElement(tagName: 'input'): HTMLInputElement;
                                            ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:527:24
    527|     constructor(form?: HTMLFormElement): void;
@@ -489,12 +489,26 @@ Cannot assign `headers.get(...)` to `b` because null [1] is incompatible with st
                            ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1365:24
-   1365|     get(name: string): null | string;
+   <BUILTINS>/bom.js:1368:24
+   1368|     get(name: string): null | string;
                                 ^^^^ [1]
    Headers.js:8:10
       8| const b: string = headers.get('foo'); // incorrect
                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- MediaDevices.js:11:1
+
+Cannot call `navigator.mediaDevices.getUserMedia` because property `getUserMedia` is missing in undefined [1].
+
+   MediaDevices.js:11:1
+    11| navigator.mediaDevices.getUserMedia({ audio: true }); // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:275:20
+   275|     mediaDevices?: MediaDevices;
+                           ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:10:1
@@ -714,8 +728,8 @@ Cannot assign `params.get(...)` to `b` because null [1] is incompatible with str
                            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1379:24
-   1379|     get(name: string): null | string;
+   <BUILTINS>/bom.js:1382:24
+   1382|     get(name: string): null | string;
                                 ^^^^ [1]
    URLSearchParams.js:8:10
       8| const b: string = params.get('foo'); // incorrect
@@ -723,7 +737,7 @@ References:
 
 
 
-Found 47 errors
+Found 48 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
