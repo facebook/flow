@@ -113,6 +113,7 @@ type 'loc virtual_reason_desc =
   | RUnknownString
   | RUnionEnum
   | REnum of string (* name *)
+  | REnumRepresentation of 'loc virtual_reason_desc
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -266,6 +267,7 @@ let rec map_desc_locs f = function
     | RDefaultImportedType _ | RCode _ | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _
     | RObjectMapi ) as r ->
     r
+  | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RImplicitReturn desc -> RImplicitReturn (map_desc_locs f desc)
   | RTypeAlias (s, b, d) -> RTypeAlias (s, b, map_desc_locs f d)
@@ -570,6 +572,7 @@ let rec string_of_desc = function
   | RUnknownString -> "some string with unknown value"
   | RUnionEnum -> "enum"
   | REnum name -> spf "enum `%s`" name
+  | REnumRepresentation representation -> spf "%s enum" (string_of_desc representation)
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -1426,7 +1429,8 @@ let classification_of_reason r =
   | RWidenedObjProp _
   | RTrusted _
   | RPrivate _
-  | REnum _ ->
+  | REnum _
+  | REnumRepresentation _ ->
     `Unclassified
 
 let is_nullish_reason r = classification_of_reason r = `Nullish

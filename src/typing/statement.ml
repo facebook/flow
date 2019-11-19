@@ -7692,7 +7692,8 @@ and mk_enum cx ~enum_reason enum =
   let (representation_t, members) =
     match body with
     | (_, BooleanBody { BooleanBody.members; _ }) ->
-      ( BoolT.why enum_reason (literal_trust ()),
+      let reason = mk_reason (REnumRepresentation RBoolean) (aloc_of_reason enum_reason) in
+      ( BoolT.make reason (literal_trust ()),
         fst
         @@ Base.List.fold_left
              ~f:
@@ -7713,7 +7714,8 @@ and mk_enum cx ~enum_reason enum =
              ~init:(SSet.empty, BoolMap.empty)
              members )
     | (_, NumberBody { NumberBody.members; _ }) ->
-      ( NumT.why enum_reason (literal_trust ()),
+      let reason = mk_reason (REnumRepresentation RNumber) (aloc_of_reason enum_reason) in
+      ( NumT.make reason (literal_trust ()),
         fst
         @@ Base.List.fold_left
              ~f:
@@ -7734,7 +7736,8 @@ and mk_enum cx ~enum_reason enum =
              ~init:(SSet.empty, NumberMap.empty)
              members )
     | (_, StringBody { StringBody.members = StringBody.Initialized members; _ }) ->
-      ( StrT.why enum_reason (literal_trust ()),
+      let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
+      ( StrT.make reason (literal_trust ()),
         fst
         @@ Base.List.fold_left
              ~f:
@@ -7755,10 +7758,12 @@ and mk_enum cx ~enum_reason enum =
              ~init:(SSet.empty, SMap.empty)
              members )
     | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
-      ( StrT.why enum_reason (literal_trust ()),
+      let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
+      ( StrT.make reason (literal_trust ()),
         SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
     | (_, SymbolBody { SymbolBody.members }) ->
-      ( Flow.get_builtin_type cx enum_reason "Symbol",
+      let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
+      ( Flow.get_builtin_type cx reason ~use_desc:true "Symbol",
         SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
   in
   { enum_id; enum_name = name; members; representation_t }
