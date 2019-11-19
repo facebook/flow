@@ -103,6 +103,7 @@ type t = {
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
   opt_no_saved_state: bool;
+  opt_node_main_fields: string list;
   opt_profile: bool;
   opt_quiet: bool;
   opt_recursion_limit: int;
@@ -201,6 +202,8 @@ let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let no_saved_state opts = opts.opt_no_saved_state
+
+let node_main_fields opts = opts.opt_node_main_fields
 
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
 

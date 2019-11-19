@@ -35,6 +35,7 @@ can be overridden with command line flags.
 * [`module.name_mapper`](#toc-module-name-mapper-regex-string)
 * [`module.name_mapper.extension`](#toc-module-name-mapper-extension-string-string)
 * [`module.system`](#toc-module-system-node-haste)
+* [`module.system.node.main_field`](#toc-module-system-node-main-field-string)
 * [`module.system.node.resolve_dirname`](#toc-module-system-node-resolve-dirname-string)
 * [`module.use_strict`](#toc-module-use-strict-boolean)
 * [`munge_underscores`](#toc-munge-underscores-boolean)
@@ -265,6 +266,38 @@ The module system to use to resolve `import` and `require`.
 [Haste](https://github.com/facebook/node-haste) is used in React Native.
 
 The default is `node`.
+
+#### `module.system.node.main_field` _`(string)`_ <a class="toc" id="toc-module-system-node-main-field-string" href="#toc-module-system-node-main-field-string"></a>
+
+Flow reads `package.json` files for the `"name"` and `"main"` fields to figure
+out the name of the module and which file should be used to provide that
+module.
+
+So if Flow sees this in the `.flowconfig`:
+
+```
+[options]
+module.system.node.main_field=foo
+module.system.node.main_field=bar
+module.system.node.main_field=baz
+```
+
+and then it comes across a `package.json` with
+
+```
+{
+  "name": "kittens",
+  "main": "main.js",
+  "bar": "bar.js",
+  "baz": "baz.js"
+}
+```
+
+Flow will use `bar.js` to provide the `"kittens"` module.
+
+If this option is unspecified, Flow will always use the `"main"` field.
+
+See [this GitHub issue for the original motivation](https://github.com/facebook/flow/issues/5725)
 
 #### `module.system.node.resolve_dirname` _`(string)`_ <a class="toc" id="toc-module-system-node-resolve-dirname-string" href="#toc-module-system-node-resolve-dirname-string"></a>
 

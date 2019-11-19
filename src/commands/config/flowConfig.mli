@@ -138,6 +138,8 @@ val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool
 
+val node_main_fields : config -> string list
+
 val node_resolver_allow_root_relative : config -> bool
 
 val node_resolver_dirnames : config -> string list
