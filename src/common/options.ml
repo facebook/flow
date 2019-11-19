@@ -59,7 +59,6 @@ type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
   opt_arch: arch;
-  opt_cache_direct_dependents: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
@@ -130,8 +129,6 @@ let abstract_locations opts = opts.opt_abstract_locations
 let all opts = opts.opt_all
 
 let arch opts = opts.opt_arch
-
-let cache_direct_dependents opts = opts.opt_cache_direct_dependents
 
 let max_literal_length opts = opts.opt_max_literal_length
 

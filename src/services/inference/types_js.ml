@@ -365,10 +365,7 @@ module DirectDependentFilesCache : sig
   val clear : unit -> unit
 
   val with_cache :
-    options:Options.t ->
-    root_files:FilenameSet.t ->
-    on_miss:(unit -> FilenameSet.t Lwt.t) ->
-    FilenameSet.t Lwt.t
+    root_files:FilenameSet.t -> on_miss:(unit -> FilenameSet.t Lwt.t) -> FilenameSet.t Lwt.t
 end = struct
   type entry = {
     direct_dependents: FilenameSet.t;
@@ -417,9 +414,9 @@ end = struct
       cache := { entries = FilenameMap.add root_file entry entries; size };
       Some entry
 
-  let with_cache ~options ~root_files ~on_miss =
+  let with_cache ~root_files ~on_miss =
     match FilenameSet.elements root_files with
-    | [root_file] when Options.cache_direct_dependents options ->
+    | [root_file] ->
       begin
         match get_from_cache ~root_file with
         | None ->
@@ -1966,7 +1963,7 @@ end = struct
     let%lwt direct_dependent_files =
       with_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
           let root_files = FilenameSet.union new_or_changed unchanged_files_with_dependents in
-          DirectDependentFilesCache.with_cache ~options ~root_files ~on_miss:(fun () ->
+          DirectDependentFilesCache.with_cache ~root_files ~on_miss:(fun () ->
               Dep_service.calc_direct_dependents
                 ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                 workers
