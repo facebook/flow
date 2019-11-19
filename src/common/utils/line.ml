@@ -55,7 +55,7 @@ let split_nth s n =
     let j =
       match nth_line_opt 1 s len i with
       | Some j -> j
-      | None -> len - 1
+      | None -> len
     in
     Some String.(sub s 0 i, sub s i (j - i), sub s j (len - j))
   | None -> None
