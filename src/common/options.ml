@@ -91,6 +91,7 @@ type t = {
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
   opt_max_literal_length: int;
+  opt_max_rss_bytes_for_check_per_worker: int;
   opt_max_seconds_for_check_per_worker: float;
   opt_max_workers: int;
   opt_merge_timeout: float option;
@@ -181,6 +182,8 @@ let is_quiet opts = opts.opt_quiet
 let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 
 let max_header_tokens opts = opts.opt_max_header_tokens
+
+let max_rss_bytes_for_check_per_worker opts = opts.opt_max_rss_bytes_for_check_per_worker
 
 let max_seconds_for_check_per_worker opts = opts.opt_max_seconds_for_check_per_worker
 

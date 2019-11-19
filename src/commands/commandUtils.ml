@@ -1281,6 +1281,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
         Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
       opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
       opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
+      opt_max_rss_bytes_for_check_per_worker =
+        FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
       opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
     })

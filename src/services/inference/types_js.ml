@@ -986,25 +986,47 @@ module Check_files : sig
     * string option )
     Lwt.t
 end = struct
+  let out_of_time ~options ~start_time =
+    Unix.gettimeofday () -. start_time > Options.max_seconds_for_check_per_worker options
+
+  let out_of_memory ~options ~start_rss =
+    match start_rss with
+    | None -> false
+    | Some start_rss ->
+      (match ProcFS.status_for_pid (Unix.getpid ()) with
+      | Ok { ProcFS.rss_total; _ } ->
+        rss_total - start_rss > Options.max_rss_bytes_for_check_per_worker options
+      | Error _ -> false)
+
   (* Check as many files as it can before it hits the timeout. The timeout is soft,
    * so the file which exceeds the timeout won't be canceled. We expect most buckets
    * to not hit the timeout *)
-  let rec job_helper ~reader ~options ~start_time acc = function
+  let rec job_helper ~reader ~options ~start_time ~start_rss acc = function
     | [] -> (acc, [])
-    | unfinished_files
-      when Unix.gettimeofday () -. start_time > Options.max_seconds_for_check_per_worker options ->
+    | unfinished_files when out_of_time ~options ~start_time ->
       Hh_logger.debug
         "Bucket timed out! %d files finished, %d files unfinished"
         (List.length acc)
         (List.length unfinished_files);
       (acc, unfinished_files)
+    | unfinished_files when out_of_memory ~options ~start_rss ->
+      Hh_logger.debug
+        "Bucket ran out of memory! %d files finished, %d files unfinished"
+        (List.length acc)
+        (List.length unfinished_files);
+      (acc, unfinished_files)
     | file :: rest ->
       let result = Merge_service.check options ~reader file in
-      job_helper ~reader ~options ~start_time (result :: acc) rest
+      job_helper ~reader ~options ~start_time ~start_rss (result :: acc) rest
 
   let job ~reader ~options acc files =
     let start_time = Unix.gettimeofday () in
-    job_helper ~reader ~options ~start_time acc files
+    let start_rss =
+      match ProcFS.status_for_pid (Unix.getpid ()) with
+      | Ok { ProcFS.rss_total; _ } -> Some rss_total
+      | Error _ -> None
+    in
+    job_helper ~reader ~options ~start_time ~start_rss acc files
 
   (* A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
    * when a bucket times out *)
