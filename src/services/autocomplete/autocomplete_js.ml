@@ -261,6 +261,13 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match source with
       | (loc, _) when this#covers_target loc -> this#find loc Acmodule
       | _ -> super#import_declaration decl_loc decl
+
+    method! type_ t =
+      let open Flow_ast.Type in
+      match t with
+      | ((loc, _), (StringLiteral _ | NumberLiteral _)) when this#covers_target loc ->
+        this#find loc Acliteral
+      | _ -> super#type_ t
   end
 
 let autocomplete_id from_trigger_character _cx ac_name _ac_loc =
