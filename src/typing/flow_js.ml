@@ -2560,7 +2560,7 @@ struct
             | None -> ts
           in
           (* Create a union type from all our selected types. *)
-          let values_l = union_of_ts reason ts in
+          let values_l = Type_mapper.union_flatten cx ts |> union_of_ts reason in
           rec_flow_t cx trace (values_l, values)
         | (DefT (_, _, InstanceT (_, _, _, { own_props; _ })), GetValuesT (reason, values)) ->
           (* Find all of the props. *)
@@ -2579,7 +2579,7 @@ struct
               []
           in
           (* Create a union type from all our selected types. *)
-          let values_l = union_of_ts reason ts in
+          let values_l = Type_mapper.union_flatten cx ts |> union_of_ts reason in
           rec_flow_t cx trace (values_l, values)
         (* Any will always be ok *)
         | (AnyT (_, src), GetValuesT (reason, values)) ->
