@@ -9,6 +9,7 @@ type t =
   | Negative
   | Neutral
   | Positive
+[@@deriving show]
 
 val compat : t * t -> bool
 
