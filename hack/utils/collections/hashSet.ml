@@ -26,3 +26,5 @@ let iter f set = Hashtbl.iter (fun k _ -> f k) set
 let fold f set acc = Hashtbl.fold (fun k _ acc -> f k acc) set acc
 
 let length set = Hashtbl.length set
+
+let is_empty set = length set = 0
