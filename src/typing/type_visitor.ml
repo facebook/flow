@@ -186,6 +186,7 @@ class ['a] t =
       | VoidP -> acc
       | ArrP -> acc
       | PropExistsP _ -> acc
+      | PropNonMaybeP _ -> acc
       | LatentP (t, _) -> self#type_ cx P.Positive acc t
 
     method destructor cx acc =
@@ -600,9 +601,11 @@ class ['a] t =
           let acc = self#type_ cx pole_TODO acc t2 in
           let acc = self#type_ cx pole_TODO acc t3 in
           acc
-        | PropExistsTest (_, _, t1, t2) ->
+        | PropExistsTest (_, _, t1, t2, (pred, not_pred)) ->
           let acc = self#type_ cx pole_TODO acc t1 in
           let acc = self#type_ cx pole_TODO acc t2 in
+          let acc = self#predicate cx acc pred in
+          let acc = self#predicate cx acc not_pred in
           acc)
       | DestructuringT (_, _, s, tout) ->
         let acc = self#selector cx acc s in

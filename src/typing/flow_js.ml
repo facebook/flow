@@ -2365,8 +2365,8 @@ struct
        concatenate those object types explicitly. *)
         | (_, IntersectionPreprocessKitT (_, SentinelPropTest (sense, key, t, inter, tvar))) ->
           sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
-        | (_, IntersectionPreprocessKitT (_, PropExistsTest (sense, key, inter, tvar))) ->
-          prop_exists_test_generic key cx trace tvar inter sense l
+        | (_, IntersectionPreprocessKitT (_, PropExistsTest (sense, key, inter, tvar, preds))) ->
+          prop_exists_test_generic key cx trace tvar inter sense preds l
         (***********************)
         (* Singletons and keys *)
         (***********************)
@@ -2871,6 +2871,12 @@ struct
             (List.hd ts, LookupT (reason, strict, List.tl ts @ try_ts_on_failure, s, t))
         | (IntersectionT _, TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
+        | ( IntersectionT _,
+            OptionalChainT (r1, r2, this, TestPropT (reason, _, prop, tout), void_out) ) ->
+          rec_flow
+            cx
+            trace
+            (l, OptionalChainT (r1, r2, this, GetPropT (unknown_use, reason, prop, tout), void_out))
         (* extends **)
         | (IntersectionT (_, rep), ExtendsUseT (use_op, reason, try_ts_on_failure, l, u)) ->
           let (t, ts) = InterRep.members_nel rep in
@@ -9102,6 +9108,18 @@ struct
         | DefT (_, _, EmptyT _) -> ()
         | _ -> rec_flow_t cx trace (result, sink)
       end
+    | MaybeP ->
+      begin
+        match Type_filter.maybe source with
+        | DefT (_, _, EmptyT _) -> ()
+        | _ -> rec_flow_t cx trace (result, sink)
+      end
+    | NotP MaybeP ->
+      begin
+        match Type_filter.not_maybe source with
+        | DefT (_, _, EmptyT _) -> ()
+        | _ -> rec_flow_t cx trace (result, sink)
+      end
     | _ ->
       let loc = aloc_of_reason (reason_of_t sink) in
       let pred_str = string_of_predicate pred in
@@ -9258,11 +9276,12 @@ struct
       rec_flow_t cx trace (filtered, t)
     | PropExistsP key -> prop_exists_test cx trace key true l t
     | NotP (PropExistsP key) -> prop_exists_test cx trace key false l t
-    (* unreachable *)
-    | NotP (NotP _)
-    | NotP (AndP _)
-    | NotP (OrP _) ->
-      assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
+    | PropNonMaybeP key -> prop_non_maybe_test cx trace key true l t
+    | NotP (PropNonMaybeP key) -> prop_non_maybe_test cx trace key false l t
+    (* classical logic i guess *)
+    | NotP (NotP p) -> predicate cx trace t l p
+    | NotP (AndP (p1, p2)) -> predicate cx trace t l (OrP (NotP p1, NotP p2))
+    | NotP (OrP (p1, p2)) -> predicate cx trace t l (AndP (NotP p1, NotP p2))
     (********************)
     (* Latent predicate *)
     (********************)
@@ -9276,9 +9295,12 @@ struct
       rec_flow cx trace (fun_t, CallLatentPredT (neg_reason, false, idx, l, t))
 
   and prop_exists_test cx trace key sense obj result =
-    prop_exists_test_generic key cx trace result obj sense obj
+    prop_exists_test_generic key cx trace result obj sense (ExistsP None, NotP (ExistsP None)) obj
 
-  and prop_exists_test_generic key cx trace result orig_obj sense = function
+  and prop_non_maybe_test cx trace key sense obj result =
+    prop_exists_test_generic key cx trace result obj sense (NotP MaybeP, MaybeP) obj
+
+  and prop_exists_test_generic key cx trace result orig_obj sense (pred, not_pred) = function
     | DefT (lreason, _, ObjT { flags; props_tmap; _ }) as obj ->
       (match Context.get_prop cx props_tmap key with
       | Some p ->
@@ -9287,9 +9309,9 @@ struct
           (* prop is present on object type *)
           let pred =
             if sense then
-              ExistsP None
+              pred
             else
-              NotP (ExistsP None)
+              not_pred
           in
           rec_flow cx trace (t, GuardT (pred, orig_obj, result))
         | None ->
@@ -9327,8 +9349,9 @@ struct
                cx
                trace
                ( obj,
-                 intersection_preprocess_kit reason (PropExistsTest (sense, key, orig_obj, result))
-               ))
+                 intersection_preprocess_kit
+                   reason
+                   (PropExistsTest (sense, key, orig_obj, result, (pred, not_pred))) ))
     | _ -> rec_flow_t cx trace (orig_obj, result)
 
   and binary_predicate cx trace sense test left right result =

@@ -30,6 +30,7 @@ let string_of_pred_ctor = function
   | SingletonStrP _ -> "SingletonStrP"
   | SingletonNumP _ -> "SingletonNumP"
   | PropExistsP _ -> "PropExistsP"
+  | PropNonMaybeP _ -> "PropNonMaybeP"
   | LatentP _ -> "LatentP"
 
 let string_of_binary_test_ctor = function
@@ -1248,6 +1249,7 @@ and json_of_pred_impl json_cx p =
       | SingletonStrP (_, _, str) -> [("value", JSON_String str)]
       | SingletonNumP (_, _, (_, raw)) -> [("value", JSON_String raw)]
       | PropExistsP key -> [("propName", JSON_String key)]
+      | PropNonMaybeP key -> [("propName", JSON_String key)]
       | ExistsP _
       | VoidP
       | NullP

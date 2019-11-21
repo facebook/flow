@@ -728,6 +728,7 @@ class virtual ['a] t =
       | SymbolP
       | VoidP
       | ArrP
+      | PropNonMaybeP _
       | PropExistsP _ ->
         p
       | LatentP (t, i) ->
@@ -1944,13 +1945,15 @@ class virtual ['a] t_with_uses =
           t
         else
           SentinelPropTest (b, s, t1', t2', t3')
-      | PropExistsTest (b, s, t1, t2) ->
+      | PropExistsTest (b, s, t1, t2, (pred, not_pred)) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
-        if t1' == t2 && t2' == t2 then
+        let pred' = self#predicate cx map_cx pred in
+        let not_pred' = self#predicate cx map_cx not_pred in
+        if t1' == t2 && t2' == t2 && pred' == pred && not_pred' == not_pred then
           t
         else
-          PropExistsTest (b, s, t1', t2')
+          PropExistsTest (b, s, t1', t2', (pred', not_pred'))
 
     method simplify_prop_type_tool cx map_cx tool =
       React.SimplifyPropType.(

@@ -804,6 +804,8 @@ module rec TypeTerm : sig
     | ArrP (* Array.isArray *)
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
     | PropExistsP of string
+    (* `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))` *)
+    | PropNonMaybeP of string
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
     | LatentP of t * index
@@ -1211,7 +1213,7 @@ module rec TypeTerm : sig
   and intersection_preprocess_tool =
     | ConcretizeTypes of t list * t list * t * use_t
     | SentinelPropTest of bool * string * t * t * t
-    | PropExistsTest of bool * string * t * t
+    | PropExistsTest of bool * string * t * t * (predicate * predicate)
 
   and spec =
     | UnionCases of use_op * t * UnionRep.t * t list
@@ -3761,6 +3763,7 @@ let rec string_of_predicate = function
   (* Array.isArray *)
   | ArrP -> "array"
   | PropExistsP key -> spf "prop `%s` is truthy" key
+  | PropNonMaybeP key -> spf "prop `%s` is not null or undefined" key
   | LatentP (OpenT (_, id), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t, i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 

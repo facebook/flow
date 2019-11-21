@@ -1254,34 +1254,6 @@ References:
             ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- refinements.js:6:21
-
-Cannot get `cc.b.c` because property `c` is missing in undefined [1].
-
-   refinements.js:6:21
-   6|   var xxx: number = cc.b.c.d;
-                          ^^^^^^
-
-References:
-   refinements.js:3:31
-   3| type P = {c?: () => void, b?: {c?: {d: number}}};
-                                    ^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- refinements.js:6:21
-
-Cannot get `cc.b.c.d` because property `d` is missing in undefined [1].
-
-   refinements.js:6:21
-   6|   var xxx: number = cc.b.c.d;
-                          ^^^^^^^^
-
-References:
-   refinements.js:3:36
-   3| type P = {c?: () => void, b?: {c?: {d: number}}};
-                                         ^^^^^^^^^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------- refinements.js:15:3
 
 Cannot get `a.b.c.d` because property `d` is missing in undefined [1].
@@ -1491,6 +1463,424 @@ References:
    refinements.js:52:23
    52| function f<T: any>(x: ?T) {
                              ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:66:3
+
+Cannot get `a.b.c.d` because property `d` is missing in undefined [1].
+
+   refinements.js:66:3
+   66|   a.b.c.d; // bad
+         ^^^^^^^
+
+References:
+   refinements.js:9:27
+    9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                                 ^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:67:4
+
+This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:67:4
+   67|   (a?.b.c?.d: ?number); // ok, one unneeded optional chain
+          ^^^^
+
+References:
+   refinements.js:67:4
+   67|   (a?.b.c?.d: ?number); // ok, one unneeded optional chain
+          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:68:4
+
+This use of optional chaining (`?.`) is unnecessary because `a` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:68:4
+   68|   (a?.b.e: number); // ok, one unneeded optional chain
+          ^^^^
+
+References:
+   refinements.js:68:4
+   68|   (a?.b.e: number); // ok, one unneeded optional chain
+          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:69:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:69:4
+   69|   (a.b?.e: number); // ok, one unneeded optional chain
+          ^^^^^^
+
+References:
+   refinements.js:69:4
+   69|   (a.b?.e: number); // ok, one unneeded optional chain
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:73:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:73:4
+   73|   (a.b?.f(): ?number); // unneeded chain and bad
+          ^^^^^^
+
+References:
+   refinements.js:73:4
+   73|   (a.b?.f(): ?number); // unneeded chain and bad
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:73:4
+
+Cannot call `a.b?.f` because null or undefined [1] is not a function.
+
+   refinements.js:73:4
+   73|   (a.b?.f(): ?number); // unneeded chain and bad
+          ^^^^^^^^
+
+References:
+   refinements.js:9:54
+    9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                                                            ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:81:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:81:4
+   81|   (a.b?.f?.(): ?number); // ok, one unneeded optional chain
+          ^^^^^^
+
+References:
+   refinements.js:81:4
+   81|   (a.b?.f?.(): ?number); // ok, one unneeded optional chain
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:89:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:89:4
+   89|   (a.b.g?.(): number); // ok, unneeded chain
+          ^^^^^^^^^
+
+References:
+   refinements.js:89:4
+   89|   (a.b.g?.(): number); // ok, unneeded chain
+          ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:93:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:93:4
+   93|   (a.b?.g(): number); // ok, unneeded chain
+          ^^^^^^
+
+References:
+   refinements.js:93:4
+   93|   (a.b?.g(): number); // ok, unneeded chain
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:97:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:97:4
+   97|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^^^^
+
+References:
+   refinements.js:97:4
+   97|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:97:4
+
+This use of optional chaining (`?.`) is unnecessary because `a.b.g` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   refinements.js:97:4
+   97|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^^^^^^^^
+
+References:
+   refinements.js:97:4
+   97|   (a.b?.g?.(): number); // ok, two unneeded chains
+          ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:99:4
+
+Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2].
+
+   refinements.js:99:4
+   99|   (a: {}); // should fail, sanity check
+          ^
+
+References:
+   refinements.js:9:16
+    9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:99:7
+   99|   (a: {}); // should fail, sanity check
+             ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:100:4
+
+Cannot cast `a` to union type because object type [1] is incompatible with enum [2].
+
+   refinements.js:100:4
+   100|   (a: (null | void)); // should fail, sanity check
+           ^
+
+References:
+   refinements.js:9:17
+     9| declare var a: ?{b?: {c?: {d: number}, e: number, f: ?(() => number), g: ?(() => number)}};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:100:8
+   100|   (a: (null | void)); // should fail, sanity check
+               ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:108:4
+
+Cannot cast `b.x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+
+   refinements.js:108:4
+   108|   (b.x: false); // nope
+           ^^^
+
+References:
+   refinements.js:103:21
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                            ^^^^^^^ [1]
+   refinements.js:108:9
+   108|   (b.x: false); // nope
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:108:4
+
+Cannot get `b.x` because property `x` is missing in null or undefined [1].
+
+   refinements.js:108:4
+   108|   (b.x: false); // nope
+           ^^^
+
+References:
+   refinements.js:103:16
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:111:10
+
+Property `u` is missing in undefined [1].
+
+   refinements.js:111:10
+   111| if (b?.w.u) { // error here
+                 ^
+
+References:
+   refinements.js:103:53
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                                                            ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:116:14
+
+Property `u` is missing in undefined [1].
+
+   refinements.js:116:14
+   116| if (b && b.w.u) { // error consistent with above
+                     ^
+
+References:
+   refinements.js:103:53
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                                                            ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:123:4
+
+Cannot get `b.z` because property `z` is missing in null or undefined [1].
+
+   refinements.js:123:4
+   123|   (b.z.value: string); // error
+           ^^^
+
+References:
+   refinements.js:103:16
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:123:4
+
+Cannot cast `b.z.value` to string because number [1] is incompatible with string [2].
+
+   refinements.js:123:4
+   123|   (b.z.value: string); // error
+           ^^^^^^^^^
+
+References:
+   refinements.js:102:33
+   102| type Z = {| a: "hello ", value: number |} | {| b: "goodbye", value: string |}
+                                        ^^^^^^ [1]
+   refinements.js:123:15
+   123|   (b.z.value: string); // error
+                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:126:5
+
+Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+(`sketchy-null-bool`)
+
+   refinements.js:126:5
+   126| if (b?.y) {// sketchy null
+            ^^^^
+
+References:
+   refinements.js:103:34
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                                         ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:129:4
+
+Cannot cast `b.y` to boolean literal `false` because:
+ - boolean [1] is incompatible with boolean literal `false` [2].
+ - undefined [1] is incompatible with boolean literal `false` [2].
+
+   refinements.js:129:4
+   129|   (b.y: false); // nope
+           ^^^
+
+References:
+   refinements.js:103:34
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                                         ^^^^^^^ [1]
+   refinements.js:129:9
+   129|   (b.y: false); // nope
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:129:4
+
+Cannot get `b.y` because property `y` is missing in null or undefined [1].
+
+   refinements.js:129:4
+   129|   (b.y: false); // nope
+           ^^^
+
+References:
+   refinements.js:103:16
+   103| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:136:4
+
+Cannot get `c[1][0]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
+
+   refinements.js:136:4
+   136|   (c[1][0]: {}); // no
+           ^^^^^^^
+
+References:
+   refinements.js:132:22
+   132| declare var c: Array<?Array<{a: number, b: {c: {d: string}}}>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:142:4
+
+Cannot call `d.a` because undefined [1] is not a function.
+
+   refinements.js:142:4
+   142|   (d.a().b.c: number); // nope, never was a refinement in the first place
+           ^^^^^
+
+References:
+   refinements.js:140:22
+   140| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
+                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:142:4
+
+Cannot get `d.a().b.c` because property `c` is missing in undefined [1].
+
+   refinements.js:142:4
+   142|   (d.a().b.c: number); // nope, never was a refinement in the first place
+           ^^^^^^^^^
+
+References:
+   refinements.js:140:33
+   140| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
+                                        ^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:148:18
+
+Cannot assign `a11?.a || b11?.a` to `x11` because:
+ - string [1] is incompatible with empty [2].
+ - property `a` of unknown type [3] is incompatible with empty [2].
+ - null or undefined [4] is incompatible with empty [2].
+
+   refinements.js:148:18
+   148| var x11: empty = a11?.a || b11?.a;
+                         ^^^^^^^^^^^^^^^^
+
+References:
+   refinements.js:145:24
+   145| declare var a11: ?({a: string} | {});
+                               ^^^^^^ [1]
+   refinements.js:148:10
+   148| var x11: empty = a11?.a || b11?.a;
+                 ^^^^^ [2]
+   refinements.js:148:18
+   148| var x11: empty = a11?.a || b11?.a;
+                         ^^^^^^ [3]
+   refinements.js:146:18
+   146| declare var b11: ?{};
+                         ^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- refinements.js:148:28
+
+Cannot get `b11?.a` because property `a` is missing in object type [1].
+
+   refinements.js:148:28
+   148| var x11: empty = a11?.a || b11?.a;
+                                   ^^^^^^
+
+References:
+   refinements.js:146:19
+   146| declare var b11: ?{};
+                          ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
@@ -2164,7 +2554,7 @@ References:
 
 
 
-Found 165 errors
+Found 193 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

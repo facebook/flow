@@ -3478,12 +3478,34 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         ) else
           Tast_utils.unchecked_mapper#expression ex))
 
-(* Handles subscript operations. Whereas `expression` recursively computes the
-   type of the LHS, `subscript` instead walks the AST to first build up a
-   representation of the property chain. We can then walk that representation
-   and emit constraints as we go along and omit the recursion.
+(* Handles operations that may traverse optional chains.
+    If is_cond is true, will allow non-existent properties to be looked up
+      at the top-level of the chain.
+    If is_existence_check is true and the top of the chain is a member lookup
+      "a.x", generate the predicate "a.x exists" and "a has property x".
+    In addition to checking chains, this function produces predicates of the above
+    form for all optional member accesses in the chain: everywhere we see an
+    expression like "a.x?.y", generate the predicate "a.x exists" and "a has
+    property x", because if that was not the case, the optional chain operator
+    would short-circuit the evaluation of the chain at runtime.
+
+    This function also generates the inverse of the predicates, for when the chain
+    does short-circuit. So for example, if called with
+    ~is_existence_check:true, a?.b.c?.d generates the following predicates
+    for the non-short-circuit case:
+      "a exists" /\ "a.b.c exists" /\ "a.b has property c" /\ "a.b.c.d exists" /\ "a.b.c has property d"
+    and the negation of the above for the short-circuiting/falsy case.
+
+    Returns a tuple:
+      * type of expression if no optional chains short-circuited,
+      * optional type of all possible short-circuitings,
+      * typed AST of expression, where the type is the combination of
+        short-circuiting and non short-circuiting (i.e. representing the actual
+        range of possible types of the expression),
+      * predicates that hold if the chain does not short-circuit and if it
+        does.
 *)
-and optional_chain ~is_cond cx ((loc, e) as ex) =
+and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
   let open Ast.Expression in
   let factor_out_optional (loc, e) =
     let (opt_state, e') =
@@ -3521,6 +3543,73 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       | NonOptional -> Member member
     in
     (e', opt_state, call_ast, member_ast)
+  in
+  let mk_preds =
+    List.fold_left
+      (fun preds (key, pred, ty) ->
+        match preds with
+        | Some (preds, not_preds, xtys) ->
+          Some
+            ( Key_map.add key pred preds,
+              Key_map.add key (NotP pred) not_preds,
+              Key_map.add key ty xtys )
+        | None ->
+          Some
+            (Key_map.singleton key pred, Key_map.singleton key (NotP pred), Key_map.singleton key ty))
+      None
+  in
+  (* Later bindings for the same key in pred_list will override earlier bindings.
+     They are treated as a unit in both positive and negative branches of the
+     refinements: if the positive branch is "a.b truthy /\ a has truthy prop b",
+     then the negative branch is "a.b not truthy /\ a does not have truthy prop b".
+     This unit is itself then AND'ed to the positive branch and OR'ed to the
+     negative branch of any existing predicates.
+  *)
+  let combine_preds existing_preds pred_list =
+    let new_preds = mk_preds pred_list in
+    match (existing_preds, new_preds) with
+    | (Some existing_preds, None) -> Some existing_preds
+    | ( Some (existing_preds, existing_not_preds, existing_xtys),
+        Some (new_preds, new_not_preds, new_xtys) ) ->
+      Some
+        ( mk_and existing_preds new_preds,
+          mk_or existing_not_preds new_not_preds,
+          Key_map.union existing_xtys new_xtys )
+    | (None, _) -> new_preds
+  in
+  let exists_pred ((loc, _) as expr) lhs_t =
+    if is_existence_check then
+      let pred =
+        (* is_cond is true when this expression is the top-level of a conditional,
+           "if ([expr]) {...}". In this case, we check both that the expression exists and
+           that it has a truthy type (that's what the "ExistsP" predicate does). If we're
+           deeper in the chain, then is_cond will be false, and we only care if the expression
+           is null or undefined, not if it's false/0/"". *)
+        if is_cond then
+          ExistsP (Some loc)
+        else
+          NotP MaybeP
+      in
+      match Refinement.key ~allow_optional:true expr with
+      | Some key_name -> [(key_name, pred, lhs_t)]
+      | None -> []
+    else
+      []
+  in
+  let prop_exists_pred object_ name obj_t =
+    if is_existence_check then
+      let prop_pred =
+        (* see comment on exists_pred *)
+        if is_cond then
+          PropExistsP name
+        else
+          PropNonMaybeP name
+      in
+      match Refinement.key ~allow_optional:true object_ with
+      | Some key_name -> [(key_name, prop_pred, obj_t)]
+      | None -> []
+    else
+      []
   in
   let try_non_chain cx loc e ~call_ast ~member_ast =
     (* Special cases where optional chaining doesn't occur *)
@@ -3592,13 +3681,14 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
-        ( (loc, lhs_t),
-          call_ast
-            {
-              Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-              targs;
-              arguments;
-            } )
+        ( ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
+                targs;
+                arguments;
+              } ),
+          None )
     | Call
         {
           Call.callee =
@@ -3680,13 +3770,14 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
-        ( (loc, lhs_t),
-          call_ast
-            {
-              Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-              targs;
-              arguments;
-            } )
+        ( ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
+                targs;
+                arguments;
+              } ),
+          None )
     | Call
         {
           Call.callee =
@@ -3707,20 +3798,21 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         static_method_call_Object cx loc callee_loc prop_loc expr obj_t name targs arguments
       in
       Some
-        ( (loc, lhs_t),
-          let t = bogus_trust () |> MixedT.at callee_loc in
-          call_ast
-            {
-              Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
-                ( (callee_loc, t),
-                  Member
-                    {
-                      Member._object = obj_ast;
-                      property = Member.PropertyIdentifier ((prop_loc, t), id);
-                    } );
-              targs;
-              arguments;
-            } )
+        ( ( (loc, lhs_t),
+            let t = bogus_trust () |> MixedT.at callee_loc in
+            call_ast
+              {
+                Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
+                  ( (callee_loc, t),
+                    Member
+                      {
+                        Member._object = obj_ast;
+                        property = Member.PropertyIdentifier ((prop_loc, t), id);
+                      } );
+                targs;
+                arguments;
+              } ),
+          None )
     | Call
         {
           Call.callee =
@@ -3770,19 +3862,20 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
                     Some prop_t ) ))
       in
       Some
-        ( (loc, lhs_t),
-          call_ast
-            {
-              Call.callee =
-                ( (callee_loc, prop_t),
-                  Member
-                    {
-                      Member._object = ((super_loc, super), Super);
-                      property = Member.PropertyIdentifier ((ploc, prop_t), id);
-                    } );
-              targs;
-              arguments = argument_asts;
-            } )
+        ( ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee =
+                  ( (callee_loc, prop_t),
+                    Member
+                      {
+                        Member._object = ((super_loc, super), Super);
+                        property = Member.PropertyIdentifier ((ploc, prop_t), id);
+                      } );
+                targs;
+                arguments = argument_asts;
+              } ),
+          None )
     | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, argument_asts) =
@@ -3815,9 +3908,10 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
               (super, MethodT (use_op, reason, super_reason, propref, CallM funtype, None)))
       in
       Some
-        ( (loc, lhs_t),
-          call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts }
-        )
+        ( ( (loc, lhs_t),
+            call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts }
+          ),
+          None )
     (******************************************)
     (* See ~/www/static_upstream/core/ *)
     | Call { Call.callee; targs; arguments } when is_call_to_invariant callee ->
@@ -3885,7 +3979,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           List.map Tast_utils.error_mapper#expression_or_spread arguments
       in
       let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-      Some ((loc, lhs_t), call_ast { Call.callee; targs; arguments })
+      Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments }), None)
     | Member
         {
           Member._object =
@@ -3903,10 +3997,11 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), id_name))
       in
       Some
-        ( (loc, lhs_t),
-          member_ast
-            { Member._object; property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name) }
-        )
+        ( ( (loc, lhs_t),
+            member_ast
+              { Member._object; property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name) }
+          ),
+          None )
     | Member
         {
           Member._object =
@@ -3921,12 +4016,13 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
       let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
       Some
-        ( (loc, lhs_t),
-          (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
-          let t = AnyT.at Untyped object_loc in
-          let property = Member.PropertyIdentifier ((ploc, t), name) in
-          member_ast
-            { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } )
+        ( ( (loc, lhs_t),
+            (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
+            let t = AnyT.at Untyped object_loc in
+            let property = Member.PropertyIdentifier ((ploc, t), name) in
+            member_ast
+              { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } ),
+          None )
     | Member
         {
           Member._object = (super_loc, Super);
@@ -3942,12 +4038,17 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           if Type_inference_hooks_js.dispatch_member_hook cx name ploc super then
             Unsoundness.at InferenceHooks ploc
           else
-            Tvar.mk_where cx expr_reason (fun tvar ->
-                let use_op = Op (GetProperty (mk_expression_reason ex)) in
-                Flow.flow cx (super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)))
+            let use_op = Op (GetProperty (mk_expression_reason ex)) in
+            get_prop ~use_op ~is_cond cx expr_reason super (prop_reason, name)
       in
       let property = Member.PropertyIdentifier ((ploc, super), id) in
-      Some ((loc, lhs_t), member_ast { Member._object = ((super_loc, super), Super); property })
+      let ast =
+        ((loc, lhs_t), member_ast { Member._object = ((super_loc, super), Super); property })
+      in
+      (* Even though there's no optional chaining for Super member accesses, we
+         can still get predicates *)
+      let preds = exists_pred (loc, e) lhs_t @ prop_exists_pred (super_loc, Super) name super in
+      Some (ast, mk_preds preds)
     | _ -> None
   in
   let (e', opt_state, call_ast, member_ast) = factor_out_optional ex in
@@ -3961,7 +4062,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       expression, which can be seen as a union of the successful type and all
       possible nullish failure types.
 
-      The optional_chain function therefore returns a 3-tuple:
+      The optional_chain function therefore returns a 4-tuple:
         * T1: the type of the expression modulo optional chaining--i.e., the
           type in the case where any optional chain tests succeed,
         * T2: optionally, a type representing the union of all optional chain
@@ -3969,12 +4070,23 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         * exp: the typed AST expression, where the type of the node is the
           "actual" type of the expression, including both chain failures and
           chain successes.
+        * preds: any predicates that can be used to refine elements of the
+          optional chain based on whether a ?. operator short-circuits. If any
+          predicates exist, this will be a Key_map.t of positive refinements
+          (the chain didn't short circuit), a Key_map.t of negative refinements
+          (the chain did short-circuit), and a Key_map.t of the original types
+          of refined expressions. See predicates_of_condition for how these
+          are used.
 
       So, if `a: ?{b?: {c: number}}`, and the checked expression is `a?.b?.c`,
         then the output would be (T1, T2, T3, exp), where:
         * T1 = number
         * T2 = void, both from `a: ?{...}` and from `a: {b? : {...}}`
         * exp = ast for `a?.b?.c` with type T1 U T2
+        * preds = assuming the overall function was called with ~is_cond,
+              "a exists and has non-nullish property b", "a.b exists and has
+              truthy property c", and "a.b.c is truthy", as well as the the
+              types of a, a.b, and a.b.c
 
      Below are several helper functions for setting up this tuple in the
      presence of chaining.
@@ -3991,7 +4103,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
   let handle_new_chain
       lhs_reason
       loc
-      (chain_t, voided_t, object_ast)
+      (chain_t, voided_t, object_ast, preds)
       ~this_reason
       ~subexpressions
       ~get_reason
@@ -4051,10 +4163,10 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           Flow.flow_t cx (mem_t, t);
           Flow.flow_t cx (voided_out, t))
     in
-    (mem_t, Some voided_out, lhs_t, object_ast, subexpression_asts)
+    (mem_t, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts, preds)
   in
   let handle_continue_chain
-      (chain_t, voided_t, object_ast)
+      (chain_t, voided_t, object_ast, preds)
       ~refine
       ~refinement_action
       ~subexpressions
@@ -4081,7 +4193,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       | (None, None) -> get_result subexpression_types reason chain_t
     in
     let lhs_t = join_optional_branches voided_t res_t in
-    (res_t, voided_t, lhs_t, object_ast, subexpression_asts)
+    (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts, preds)
   in
   let handle_chaining
       ?refinement_action
@@ -4113,11 +4225,11 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             refinement_action
         | (None, None) -> get_result subexpression_types reason obj_t
       in
-      (lhs_t, None, lhs_t, object_ast, subexpression_asts)
+      (lhs_t, None, lhs_t, obj_t, object_ast, subexpression_asts, None)
     | NewChain ->
       let lhs_reason = mk_expression_reason object_ in
-      let ((filtered_t, voided_t, object_ast) as object_data) =
-        optional_chain ~is_cond:false cx object_
+      let ((filtered_t, voided_t, object_ast, preds) as object_data) =
+        optional_chain ~is_cond:false ~is_existence_check:true cx object_
       in
       begin
         match refine () with
@@ -4130,7 +4242,13 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
               ~default:t
               refinement_action
           in
-          (tout, voided_t, join_optional_branches voided_t tout, object_ast, subexpression_asts)
+          ( tout,
+            voided_t,
+            join_optional_branches voided_t tout,
+            filtered_t,
+            object_ast,
+            subexpression_asts,
+            preds )
         | _ ->
           handle_new_chain
             lhs_reason
@@ -4144,7 +4262,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       end
     | ContinueChain ->
       handle_continue_chain
-        (optional_chain ~is_cond cx object_)
+        (optional_chain ~is_cond:false ~is_existence_check:false cx object_)
         ~refine
         ~refinement_action
         ~subexpressions
@@ -4153,10 +4271,10 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         ~get_reason
   in
   match try_non_chain cx loc e' ~call_ast ~member_ast with
-  | Some (((_, lhs_t), _) as res) ->
+  | Some ((((_, lhs_t), _) as res), preds) ->
     (* Nothing to do with respect to optional chaining, because we're in a
          case where chaining isn't allowed. *)
-    (lhs_t, None, res)
+    (lhs_t, None, res, preds)
   | None ->
     let (e', method_receiver_and_state) =
       (* If we're looking at a call, look "one level deeper" to see if the
@@ -4233,7 +4351,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         let (((_, tind), _) as index) = expression cx index in
         (tind, index)
       in
-      let (filtered_out, voided_out, lhs_t, object_ast, index) =
+      let (filtered_out, voided_out, lhs_t, _, object_ast, index, preds) =
         handle_chaining
           opt_state
           _object
@@ -4246,11 +4364,13 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
           ~get_reason:(Fn.const reason)
       in
+      let new_pred_list = exists_pred (loc, e') lhs_t in
+      let preds = combine_preds preds new_pred_list in
       ( filtered_out,
         voided_out,
         ( (loc, lhs_t),
-          member_ast { Member._object = object_ast; property = Member.PropertyExpression index } )
-      )
+          member_ast { Member._object = object_ast; property = Member.PropertyExpression index } ),
+        preds )
     (* e.l *)
     | ( Member
           {
@@ -4274,7 +4394,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             let use = apply_opt_use opt_use t in
             Flow.flow cx (obj_t, use))
       in
-      let (filtered_out, voided_out, lhs_t, object_ast, _) =
+      let (filtered_out, voided_out, lhs_t, obj_t, object_ast, _, preds) =
         handle_chaining
           opt_state
           _object
@@ -4287,10 +4407,15 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~get_opt_use:(fun _ _ _ -> opt_use)
           ~get_reason:(Fn.const expr_reason)
       in
+      let new_pred_list =
+        exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t
+      in
+      let preds = combine_preds preds new_pred_list in
       let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
       ( filtered_out,
         voided_out,
-        ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
+        ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
+        preds )
     (* e.#l *)
     | ( Member
           {
@@ -4314,7 +4439,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             let use = apply_opt_use opt_use t in
             Flow.flow cx (obj_t, use))
       in
-      let (filtered_out, voided_out, lhs_t, object_ast, _) =
+      let (filtered_out, voided_out, lhs_t, _, object_ast, _, preds) =
         handle_chaining
           opt_state
           _object
@@ -4327,9 +4452,12 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~get_opt_use:(fun _ _ _ -> opt_use)
           ~get_reason:(Fn.const expr_reason)
       in
+      let new_pred_list = exists_pred (loc, e') lhs_t in
+      let preds = combine_preds preds new_pred_list in
       ( filtered_out,
         voided_out,
-        ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
+        ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
+        preds )
     (* Method calls: e.l(), e.#l(), and e1[e2]() *)
     | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments },
         Some (member_opt, ({ Member._object; property } as receiver), receiver_ast) ) ->
@@ -4342,7 +4470,8 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             prop_t,
             object_ast,
             property,
-            argument_asts ) =
+            argument_asts,
+            preds ) =
         match property with
         | Member.PropertyPrivateName (prop_loc, (_, ({ Ast.Identifier.name; comments = _ } as id)))
         | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
@@ -4409,7 +4538,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           let eval_args () =
             arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
           in
-          let (filtered_out, lookup_voided_out, member_lhs_t, object_ast, argument_asts) =
+          let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, preds) =
             handle_chaining
               member_opt
               _object
@@ -4437,7 +4566,8 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             prop_t,
             object_ast,
             prop_ast,
-            argument_asts )
+            argument_asts,
+            preds )
         | Member.PropertyExpression expr ->
           let reason_call = mk_reason (RMethodCall None) loc in
           let reason_lookup = mk_reason (RProperty None) lookup_loc in
@@ -4471,8 +4601,13 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             ((argts, elem_t), (argument_asts, expr))
           in
           let this_reason = mk_expression_reason callee in
-          let (filtered_out, lookup_voided_out, member_lhs_t, object_ast, (argument_asts, expr_ast))
-              =
+          let ( filtered_out,
+                lookup_voided_out,
+                member_lhs_t,
+                _,
+                object_ast,
+                (argument_asts, expr_ast),
+                preds ) =
             handle_chaining
               member_opt
               _object
@@ -4492,7 +4627,8 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             prop_t,
             object_ast,
             Member.PropertyExpression expr_ast,
-            argument_asts )
+            argument_asts,
+            preds )
       in
       let voided_out = join_optional_branches lookup_voided_out call_voided_out in
       let lhs_t =
@@ -4509,7 +4645,8 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
                 ((lookup_loc, prop_t), receiver_ast { Member._object = object_ast; property });
               targs;
               arguments = argument_asts;
-            } ) )
+            } ),
+        preds )
     (* e1(e2...) *)
     | (Call { Call.callee; targs; arguments }, None) ->
       let (targts, targs) = convert_call_targs_opt cx targs in
@@ -4531,7 +4668,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             Flow.flow cx (f, use))
       in
       let eval_args () = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
-      let (filtered_out, voided_out, lhs_t, object_ast, argument_asts) =
+      let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, preds) =
         handle_chaining
           opt_state
           callee
@@ -4545,13 +4682,24 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~get_reason
       in
       let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
-      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
+      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), preds)
+    | (This, _)
+    | (Identifier _, _)
+      when is_existence_check ->
+      (* if optional_chain is called from a conditional position and we're generating
+         predicates, we might recursively reach an identifier, and if the level "above"
+         it in the chain was a "?." operator, we'll need to add the predicate that the
+         property exists, so that e.g. "a?.b" generates the predicates "a.b exists",
+         "a has prop b", and "a exists". *)
+      let (((_, t), _) as res) = expression ~is_cond cx ex in
+      let preds = mk_preds @@ exists_pred (loc, e') t in
+      (t, None, res, preds)
     | _ ->
-      let (((_, t), _) as res) = expression cx ex in
-      (t, None, res))
+      let (((_, t), _) as res) = expression ~is_cond cx ex in
+      (t, None, res, None))
 
 and subscript ~is_cond cx ex =
-  let (_, _, ast) = optional_chain ~is_cond cx ex in
+  let (_, _, ast, _) = optional_chain ~is_cond ~is_existence_check:false cx ex in
   ast
 
 (* Handles function calls that appear in conditional contexts. The main
@@ -5104,7 +5252,7 @@ and assign_member
        Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as property;
     } ->
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object) = optional_chain ~is_cond:false cx _object in
+      let (o, _, _object, _) = optional_chain ~is_cond:false ~is_existence_check:false cx _object in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5139,7 +5287,7 @@ and assign_member
         | _ -> Normal
       in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object) = optional_chain ~is_cond:false cx _object in
+      let (o, _, _object, _) = optional_chain ~is_cond:false ~is_existence_check:false cx _object in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5167,7 +5315,7 @@ and assign_member
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index) } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object) = optional_chain ~is_cond:false cx _object in
+      let (o, _, _object, _) = optional_chain ~is_cond:false ~is_existence_check:false cx _object in
       let (((_, i), _) as index) = expression cx index in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
       let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
@@ -5891,6 +6039,30 @@ and expression_to_jsx_title_member loc member =
     Option.map _object ~f:(fun _object -> (loc, Ast.JSX.MemberExpression.{ _object; property }))
   | _ -> None
 
+and mk_and map1 map2 =
+  Key_map.merge
+    (fun _ p1 p2 ->
+      match (p1, p2) with
+      | (None, None) -> None
+      | (Some p, None)
+      | (None, Some p) ->
+        Some p
+      | (Some p1, Some p2) -> Some (AndP (p1, p2)))
+    map1
+    map2
+
+and mk_or map1 map2 =
+  Key_map.merge
+    (fun _ p1 p2 ->
+      match (p1, p2) with
+      | (None, None) -> None
+      | (Some _, None)
+      | (None, Some _) ->
+        None
+      | (Some p1, Some p2) -> Some (OrP (p1, p2)))
+    map1
+    map2
+
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
    and returns a 5-tuple:
@@ -6360,79 +6532,16 @@ and predicates_of_condition cx e =
           let t_out = BoolT.at loc |> with_trust bogus_trust in
           empty_result ((loc, t_out), ast)
       in
-      let mk_and map1 map2 =
-        Key_map.merge
-          (fun _ p1 p2 ->
-            match (p1, p2) with
-            | (None, None) -> None
-            | (Some p, None)
-            | (None, Some p) ->
-              Some p
-            | (Some p1, Some p2) -> Some (AndP (p1, p2)))
-          map1
-          map2
-      in
-      let mk_or map1 map2 =
-        Key_map.merge
-          (fun _ p1 p2 ->
-            match (p1, p2) with
-            | (None, None) -> None
-            | (Some _, None)
-            | (None, Some _) ->
-              None
-            | (Some p1, Some p2) -> Some (OrP (p1, p2)))
-          map1
-          map2
-      in
       (* main *)
       match e with
       (* member expressions *)
-      | ( loc,
-          Member
-            {
-              Member._object;
-              property =
-                Member.PropertyIdentifier
-                  (prop_loc, ({ Ast.Identifier.name = prop_name; comments = _ } as id));
-            } ) ->
-        let (((_, obj_t), _) as _object_ast) =
-          match _object with
-          | (super_loc, Super) ->
-            let t = super_ cx super_loc in
-            ((super_loc, t), Super)
-          | _ ->
-            (* use `expression` instead of `condition` because `_object` is the
-             object in a member expression; if it itself is a member expression,
-             it must exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here
-             as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
-            expression cx _object
-        in
-        let expr_reason = mk_expression_reason e in
-        let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-        let t =
-          match Refinement.get ~allow_optional:true cx e loc with
-          | Some t -> t
-          | None ->
-            if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t then
-              Unsoundness.at InferenceHooks prop_loc
-            else
-              let use_op = Op (GetProperty (mk_expression_reason e)) in
-              get_prop ~is_cond:true cx expr_reason ~use_op obj_t (prop_reason, prop_name)
-        in
-        let property = Member.PropertyIdentifier ((prop_loc, t), id) in
-        let ast = ((loc, t), Member { Member._object = _object_ast; property }) in
-        let out =
-          match Refinement.key ~allow_optional:false e with
-          | Some name -> result ast name t (ExistsP (Some loc)) true
-          | None -> empty_result ast
-        in
-        (* refine the object (`foo.bar` in the example) based on the prop. *)
+      | (_, Member _)
+      | (_, OptionalMember _) ->
+        let (_, _, ast, preds) = optional_chain ~is_cond:true ~is_existence_check:true cx e in
         begin
-          match Refinement.key ~allow_optional:false _object with
-          | Some name ->
-            let predicate = PropExistsP prop_name in
-            out |> add_predicate name obj_t predicate true
-          | None -> out
+          match preds with
+          | None -> empty_result ast
+          | Some (preds, not_preds, xts) -> (ast, preds, not_preds, xts)
         end
       (* assignments *)
       | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
@@ -6561,8 +6670,7 @@ and predicates_of_condition cx e =
         (ast, not_map, map, xts)
       (* ids *)
       | (loc, This)
-      | (loc, Identifier _)
-      | (loc, Member _) ->
+      | (loc, Identifier _) ->
         (match refinable_lvalue e with
         | (Some name, (((_, t), _) as e)) -> result e name t (ExistsP (Some loc)) true
         | (None, e) -> empty_result e)
