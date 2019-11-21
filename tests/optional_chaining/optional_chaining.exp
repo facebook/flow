@@ -1883,6 +1883,424 @@ References:
                           ^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- refinements2.js:9:4
+
+Cannot cast `t` to union type because `T` [1] is incompatible with enum [2].
+
+   refinements2.js:9:4
+   9|   (t: (null | void)); // no
+         ^
+
+References:
+   refinements2.js:4:17
+   4| declare var t: ?T;
+                      ^ [1]
+   refinements2.js:9:8
+   9|   (t: (null | void)); // no
+             ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:10:4
+
+Cannot cast `t.a` to number because null [1] is incompatible with number [2].
+
+   refinements2.js:10:4
+   10|   (t.a: number); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:3:14
+    3| type T = {a: null | number}
+                    ^^^^ [1]
+   refinements2.js:10:9
+   10|   (t.a: number); // no for two reasons
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:10:4
+
+Cannot get `t.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:10:4
+   10|   (t.a: number); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:4:16
+    4| declare var t: ?T;
+                      ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:13:4
+
+Cannot cast `t` to union type because `T` [1] is incompatible with enum [2].
+
+   refinements2.js:13:4
+   13|   (t: (null | void)); // no
+          ^
+
+References:
+   refinements2.js:4:17
+    4| declare var t: ?T;
+                       ^ [1]
+   refinements2.js:13:8
+   13|   (t: (null | void)); // no
+              ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:14:4
+
+Cannot cast `t.a` to number because null [1] is incompatible with number [2].
+
+   refinements2.js:14:4
+   14|   (t.a: number); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:3:14
+    3| type T = {a: null | number}
+                    ^^^^ [1]
+   refinements2.js:14:9
+   14|   (t.a: number); // no for two reasons
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:14:4
+
+Cannot get `t.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:14:4
+   14|   (t.a: number); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:4:16
+    4| declare var t: ?T;
+                      ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:23:4
+
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+
+   refinements2.js:23:4
+   23|   (s: S); // no, may be nulled
+          ^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+   refinements2.js:23:7
+   23|   (s: S); // no, may be nulled
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:24:4
+
+Cannot cast `s.a` to union type because:
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   refinements2.js:24:4
+   24|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:20:15
+   20| type S = {a: ?number};
+                     ^^^^^^ [1]
+   refinements2.js:24:10
+   24|   (s.a: (null | void)); // no for two reasons
+                ^^^^ [2]
+   refinements2.js:24:17
+   24|   (s.a: (null | void)); // no for two reasons
+                       ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:24:4
+
+Cannot get `s.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:24:4
+   24|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:33:4
+
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+
+   refinements2.js:33:4
+   33|   (s: S); // no, may be nulled
+          ^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+   refinements2.js:33:7
+   33|   (s: S); // no, may be nulled
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:34:4
+
+Cannot cast `s.a` to union type because:
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   refinements2.js:34:4
+   34|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:20:15
+   20| type S = {a: ?number};
+                     ^^^^^^ [1]
+   refinements2.js:34:10
+   34|   (s.a: (null | void)); // no for two reasons
+                ^^^^ [2]
+   refinements2.js:34:17
+   34|   (s.a: (null | void)); // no for two reasons
+                       ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:34:4
+
+Cannot get `s.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:34:4
+   34|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:37:4
+
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+
+   refinements2.js:37:4
+   37|   (s: S); // no, may be nulled
+          ^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+   refinements2.js:37:7
+   37|   (s: S); // no, may be nulled
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:38:4
+
+Cannot cast `s.a` to union type because:
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   refinements2.js:38:4
+   38|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:20:15
+   20| type S = {a: ?number};
+                     ^^^^^^ [1]
+   refinements2.js:38:10
+   38|   (s.a: (null | void)); // no for two reasons
+                ^^^^ [2]
+   refinements2.js:38:17
+   38|   (s.a: (null | void)); // no for two reasons
+                       ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:38:4
+
+Cannot get `s.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:38:4
+   38|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:41:4
+
+Cannot cast `s.a` to number because null or undefined [1] is incompatible with number [2].
+
+   refinements2.js:41:4
+   41|   (s.a: number); // no: s.a can be null
+          ^^^
+
+References:
+   refinements2.js:20:14
+   20| type S = {a: ?number};
+                    ^^^^^^^ [1]
+   refinements2.js:41:9
+   41|   (s.a: number); // no: s.a can be null
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:45:4
+
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2].
+
+   refinements2.js:45:4
+   45|   (s: S); // no, may be nulled
+          ^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+   refinements2.js:45:7
+   45|   (s: S); // no, may be nulled
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:46:4
+
+Cannot cast `s.a` to union type because:
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   refinements2.js:46:4
+   46|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:20:15
+   20| type S = {a: ?number};
+                     ^^^^^^ [1]
+   refinements2.js:46:10
+   46|   (s.a: (null | void)); // no for two reasons
+                ^^^^ [2]
+   refinements2.js:46:17
+   46|   (s.a: (null | void)); // no for two reasons
+                       ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:46:4
+
+Cannot get `s.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:46:4
+   46|   (s.a: (null | void)); // no for two reasons
+          ^^^
+
+References:
+   refinements2.js:21:16
+   21| declare var s: ?S;
+                      ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:59:4
+
+Cannot cast `w` to `W` because null or undefined [1] is incompatible with `W` [2].
+
+   refinements2.js:59:4
+   59|   (w: W); // no
+          ^
+
+References:
+   refinements2.js:53:16
+   53| declare var w: ?W;
+                      ^^ [1]
+   refinements2.js:59:7
+   59|   (w: W); // no
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:60:3
+
+Cannot get `w.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:60:3
+   60|   w.a; // no
+         ^^^
+
+References:
+   refinements2.js:53:16
+   53| declare var w: ?W;
+                      ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:66:4
+
+Cannot cast `a.b` to number because string [1] is incompatible with number [2].
+
+   refinements2.js:66:4
+   66|   (a.b: number); // fails currently but doesn't need to
+          ^^^
+
+References:
+   refinements2.js:64:30
+   64| declare var a: ?{b: number | string};
+                                    ^^^^^^ [1]
+   refinements2.js:66:9
+   66|   (a.b: number); // fails currently but doesn't need to
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:66:4
+
+Cannot get `a.b` because property `b` is missing in null or undefined [1].
+
+   refinements2.js:66:4
+   66|   (a.b: number); // fails currently but doesn't need to
+          ^^^
+
+References:
+   refinements2.js:64:16
+   64| declare var a: ?{b: number | string};
+                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:73:4
+
+Cannot cast `a.b` to number because string [1] is incompatible with number [2].
+
+   refinements2.js:73:4
+   73|   (a.b: number) // a.b may not exist and may not be number
+          ^^^
+
+References:
+   refinements2.js:64:30
+   64| declare var a: ?{b: number | string};
+                                    ^^^^^^ [1]
+   refinements2.js:73:9
+   73|   (a.b: number) // a.b may not exist and may not be number
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:73:4
+
+Cannot get `a.b` because property `b` is missing in null or undefined [1].
+
+   refinements2.js:73:4
+   73|   (a.b: number) // a.b may not exist and may not be number
+          ^^^
+
+References:
+   refinements2.js:64:16
+   64| declare var a: ?{b: number | string};
+                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
 
 Cannot cast `x1?.foo` to empty because:
@@ -2554,7 +2972,7 @@ References:
 
 
 
-Found 193 errors
+Found 218 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

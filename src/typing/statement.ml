@@ -3496,6 +3496,10 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       "a exists" /\ "a.b.c exists" /\ "a.b has property c" /\ "a.b.c.d exists" /\ "a.b.c has property d"
     and the negation of the above for the short-circuiting/falsy case.
 
+    There is also an optional sentinel_refine argument which is applied to the
+    top of the chain, and which can produce an additional refinement, but which
+    callers will handle specially. See usage in condition_of_maybe_sentinel.
+
     Returns a tuple:
       * type of expression if no optional chains short-circuited,
       * optional type of all possible short-circuitings,
@@ -3504,8 +3508,9 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         range of possible types of the expression),
       * predicates that hold if the chain does not short-circuit and if it
         does.
+      * result of applying sentinel_refine to the top of the chain, if anything.
 *)
-and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
+and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
   let open Ast.Expression in
   let factor_out_optional (loc, e) =
     let (opt_state, e') =
@@ -3688,6 +3693,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
                 targs;
                 arguments;
               } ),
+          None,
           None )
     | Call
         {
@@ -3777,6 +3783,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
                 targs;
                 arguments;
               } ),
+          None,
           None )
     | Call
         {
@@ -3812,6 +3819,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
                 targs;
                 arguments;
               } ),
+          None,
           None )
     | Call
         {
@@ -3875,6 +3883,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
                 targs;
                 arguments = argument_asts;
               } ),
+          None,
           None )
     | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
@@ -3911,6 +3920,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
         ( ( (loc, lhs_t),
             call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts }
           ),
+          None,
           None )
     (******************************************)
     (* See ~/www/static_upstream/core/ *)
@@ -3979,7 +3989,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
           List.map Tast_utils.error_mapper#expression_or_spread arguments
       in
       let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-      Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments }), None)
+      Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments }), None, None)
     | Member
         {
           Member._object =
@@ -4001,6 +4011,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
             member_ast
               { Member._object; property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name) }
           ),
+          None,
           None )
     | Member
         {
@@ -4022,6 +4033,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
             let property = Member.PropertyIdentifier ((ploc, t), name) in
             member_ast
               { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } ),
+          None,
           None )
     | Member
         {
@@ -4047,8 +4059,11 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
       in
       (* Even though there's no optional chaining for Super member accesses, we
          can still get predicates *)
+      let sentinel_refinement =
+        Option.value_map ~f:(fun f -> f lhs_t) ~default:None sentinel_refine
+      in
       let preds = exists_pred (loc, e) lhs_t @ prop_exists_pred (super_loc, Super) name super in
-      Some (ast, mk_preds preds)
+      Some (ast, mk_preds preds, sentinel_refinement)
     | _ -> None
   in
   let (e', opt_state, call_ast, member_ast) = factor_out_optional ex in
@@ -4062,7 +4077,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
       expression, which can be seen as a union of the successful type and all
       possible nullish failure types.
 
-      The optional_chain function therefore returns a 4-tuple:
+      The optional_chain function therefore returns a 5-tuple:
         * T1: the type of the expression modulo optional chaining--i.e., the
           type in the case where any optional chain tests succeed,
         * T2: optionally, a type representing the union of all optional chain
@@ -4077,6 +4092,8 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
           (the chain did short-circuit), and a Key_map.t of the original types
           of refined expressions. See predicates_of_condition for how these
           are used.
+        * sentinel_refinement: optional additional predicate obtained by applying
+          sentinel_refine to the top of the chain
 
       So, if `a: ?{b?: {c: number}}`, and the checked expression is `a?.b?.c`,
         then the output would be (T1, T2, T3, exp), where:
@@ -4087,6 +4104,8 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
               "a exists and has non-nullish property b", "a.b exists and has
               truthy property c", and "a.b.c is truthy", as well as the the
               types of a, a.b, and a.b.c
+        * possibly an additional refinement based on the sentinel_refine function,
+          passed in by the caller.
 
      Below are several helper functions for setting up this tuple in the
      presence of chaining.
@@ -4103,7 +4122,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
   let handle_new_chain
       lhs_reason
       loc
-      (chain_t, voided_t, object_ast, preds)
+      (chain_t, voided_t, object_ast, preds, _)
       ~this_reason
       ~subexpressions
       ~get_reason
@@ -4166,7 +4185,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
     (mem_t, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts, preds)
   in
   let handle_continue_chain
-      (chain_t, voided_t, object_ast, preds)
+      (chain_t, voided_t, object_ast, preds, _)
       ~refine
       ~refinement_action
       ~subexpressions
@@ -4228,7 +4247,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
       (lhs_t, None, lhs_t, obj_t, object_ast, subexpression_asts, None)
     | NewChain ->
       let lhs_reason = mk_expression_reason object_ in
-      let ((filtered_t, voided_t, object_ast, preds) as object_data) =
+      let ((filtered_t, voided_t, object_ast, preds, _) as object_data) =
         optional_chain ~is_cond:false ~is_existence_check:true cx object_
       in
       begin
@@ -4271,10 +4290,10 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
         ~get_reason
   in
   match try_non_chain cx loc e' ~call_ast ~member_ast with
-  | Some ((((_, lhs_t), _) as res), preds) ->
+  | Some ((((_, lhs_t), _) as res), preds, sentinel_refinement) ->
     (* Nothing to do with respect to optional chaining, because we're in a
          case where chaining isn't allowed. *)
-    (lhs_t, None, res, preds)
+    (lhs_t, None, res, preds, sentinel_refinement)
   | None ->
     let (e', method_receiver_and_state) =
       (* If we're looking at a call, look "one level deeper" to see if the
@@ -4351,7 +4370,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
         let (((_, tind), _) as index) = expression cx index in
         (tind, index)
       in
-      let (filtered_out, voided_out, lhs_t, _, object_ast, index, preds) =
+      let (filtered_out, voided_out, lhs_t, obj_t, object_ast, index, preds) =
         handle_chaining
           opt_state
           _object
@@ -4364,13 +4383,17 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
           ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
           ~get_reason:(Fn.const reason)
       in
+      let sentinel_refinement =
+        Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+      in
       let new_pred_list = exists_pred (loc, e') lhs_t in
       let preds = combine_preds preds new_pred_list in
       ( filtered_out,
         voided_out,
         ( (loc, lhs_t),
           member_ast { Member._object = object_ast; property = Member.PropertyExpression index } ),
-        preds )
+        preds,
+        sentinel_refinement )
     (* e.l *)
     | ( Member
           {
@@ -4407,6 +4430,9 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
           ~get_opt_use:(fun _ _ _ -> opt_use)
           ~get_reason:(Fn.const expr_reason)
       in
+      let sentinel_refinement =
+        Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+      in
       let new_pred_list =
         exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t
       in
@@ -4415,7 +4441,8 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
       ( filtered_out,
         voided_out,
         ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
-        preds )
+        preds,
+        sentinel_refinement )
     (* e.#l *)
     | ( Member
           {
@@ -4457,7 +4484,8 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
       ( filtered_out,
         voided_out,
         ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
-        preds )
+        preds,
+        None )
     (* Method calls: e.l(), e.#l(), and e1[e2]() *)
     | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments },
         Some (member_opt, ({ Member._object; property } as receiver), receiver_ast) ) ->
@@ -4646,7 +4674,8 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
               targs;
               arguments = argument_asts;
             } ),
-        preds )
+        preds,
+        None )
     (* e1(e2...) *)
     | (Call { Call.callee; targs; arguments }, None) ->
       let (targts, targs) = convert_call_targs_opt cx targs in
@@ -4682,7 +4711,7 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
           ~get_reason
       in
       let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
-      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), preds)
+      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), preds, None)
     | (This, _)
     | (Identifier _, _)
       when is_existence_check ->
@@ -4693,13 +4722,15 @@ and optional_chain ~is_cond ~is_existence_check cx ((loc, e) as ex) =
          "a has prop b", and "a exists". *)
       let (((_, t), _) as res) = expression ~is_cond cx ex in
       let preds = mk_preds @@ exists_pred (loc, e') t in
-      (t, None, res, preds)
+      (t, None, res, preds, None)
     | _ ->
       let (((_, t), _) as res) = expression ~is_cond cx ex in
-      (t, None, res, None))
+      (t, None, res, None, None))
 
 and subscript ~is_cond cx ex =
-  let (_, _, ast, _) = optional_chain ~is_cond ~is_existence_check:false cx ex in
+  let (_, _, ast, _, _) =
+    optional_chain ~is_cond ~is_existence_check:false cx ex
+  in
   ast
 
 (* Handles function calls that appear in conditional contexts. The main
@@ -5252,7 +5283,9 @@ and assign_member
        Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as property;
     } ->
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object, _) = optional_chain ~is_cond:false ~is_existence_check:false cx _object in
+      let (o, _, _object, _, _) =
+        optional_chain ~is_cond:false ~is_existence_check:false cx _object
+      in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5287,7 +5320,9 @@ and assign_member
         | _ -> Normal
       in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object, _) = optional_chain ~is_cond:false ~is_existence_check:false cx _object in
+      let (o, _, _object, _, _) =
+        optional_chain ~is_cond:false ~is_existence_check:false cx _object
+      in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5315,7 +5350,9 @@ and assign_member
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index) } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object, _) = optional_chain ~is_cond:false ~is_existence_check:false cx _object in
+      let (o, _, _object, _, _) =
+        optional_chain ~is_cond:false ~is_existence_check:false cx _object
+      in
       let (((_, i), _) as index) = expression cx index in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
       let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
@@ -6077,19 +6114,23 @@ and predicates_of_condition cx e =
   Ast.(
     Expression.(
       (* refinement key if expr is eligible, along with unrefined type *)
-      let refinable_lvalue e = (Refinement.key ~allow_optional:false e, condition cx e) in
+      let refinable_lvalue ~allow_optional e = (Refinement.key ~allow_optional e, condition cx e) in
       (* package empty result (no refinements derived) from test type *)
       let empty_result test_tast = (test_tast, Key_map.empty, Key_map.empty, Key_map.empty) in
       let add_predicate key unrefined_t pred sense (test_tast, ps, notps, tmap) =
-        let (p, notp) =
+        (* if two predicates are applied to the same key, in the positive branch (which depends on
+           sense) the predicates are conjuncted, and in the negative branch they are disjuncted *)
+        let and_ p1 p2 = AndP (p1, p2) in
+        let or_ p1 p2 = OrP (p1, p2) in
+        let (p, notp, combine, not_combine) =
           if sense then
-            (pred, NotP pred)
+            (pred, NotP pred, and_, or_)
           else
-            (NotP pred, pred)
+            (NotP pred, pred, or_, and_)
         in
         ( test_tast,
-          Key_map.add key p ps,
-          Key_map.add key notp notps,
+          Key_map.add ~combine key p ps,
+          Key_map.add ~combine:not_combine key notp notps,
           Key_map.add key unrefined_t tmap )
       in
       let flow_eqt ~strict loc (t1, t2) =
@@ -6112,65 +6153,82 @@ and predicates_of_condition cx e =
      `foo.bar === false`, `foo.bar` is refined to be `false` (by `bool_test`)
      and `foo` is refined to eliminate branches that don't have a `false` bar
      property (by this function). *)
-      let condition_of_maybe_sentinel cx ~sense ~strict expr val_t =
-        match (strict, expr) with
-        | ( true,
-            ( expr_loc,
+      let condition_of_maybe_sentinel cx ~allow_optional ~sense ~strict expr val_t =
+        let expr' =
+          match expr with
+          | (loc, OptionalMember { OptionalMember.member; _ }) -> (loc, Member member)
+          | _ -> expr
+        in
+        match (Refinement.key ~allow_optional expr, expr') with
+        | ( Some _,
+            ( _,
               Member
                 {
                   Member._object;
                   property =
                     ( Member.PropertyIdentifier
-                        (prop_loc, { Ast.Identifier.name = prop_name; comments = _ })
+                        (_, { Ast.Identifier.name = prop_name; comments = _ })
                     | Member.PropertyExpression
-                        ( prop_loc,
+                        ( _,
                           Ast.Expression.Literal
-                            { Ast.Literal.value = Ast.Literal.String prop_name; _ } ) ) as property;
+                            { Ast.Literal.value = Ast.Literal.String prop_name; _ } ) );
                 } ) ) ->
-          (* use `expression` instead of `condition` because `_object` is the object
-         in a member expression; if it itself is a member expression, it must
-         exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
-         `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
-          let (((_, obj_t), _) as _object_ast) = expression cx _object in
-          let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-          let expr_reason = mk_expression_reason expr in
-          let prop_t =
-            match Refinement.get ~allow_optional:true cx expr expr_loc with
-            | Some t -> t
-            | None ->
-              if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t then
-                Unsoundness.at InferenceHooks prop_loc
-              else
-                let use_op = Op (GetProperty prop_reason) in
-                get_prop ~is_cond:true cx expr_reason ~use_op obj_t (prop_reason, prop_name)
-          in
-          (* refine the object (`foo.bar` in the example) based on the prop. *)
-          let refinement =
-            match Refinement.key ~allow_optional:false _object with
-            | None -> None
-            | Some name ->
+          let sentinel_refine obj_t =
+            (* Generate a refinement on the object that contains a sentinel property.
+               We need to pass this into optional_chain, rather than locally generating a
+               refinement on the type of _object, because the type getting refined is
+               the non-short-circuited, non-nullable branch of any optional chains. *)
+            match (strict, Refinement.key ~allow_optional:true _object) with
+            | (false, _)
+            | (_, None) ->
+              None
+            | (true, Some name) ->
               let pred = LeftP (SentinelProp prop_name, val_t) in
               Some (name, obj_t, pred, sense)
           in
-          (* since we never called `expression cx expr`, we have to add to the
-         type table ourselves *)
-          let m = new loc_mapper prop_t in
-          let property = m#member_property property in
-          (((expr_loc, prop_t), Member { Member._object = _object_ast; property }), refinement)
-        | _ -> (condition cx expr, None)
+          (* Note here we're calling optional_chain on the whole expression, not on _object.
+             We could "look down" one level and call it on _object and wouldn't need the
+             sentinel_refine function above, but then we'd need to duplicate a lot of the
+             functionality of optional_chain here. *)
+          let (_, _, ast, preds, sentinel_refinement) =
+            optional_chain
+              ~is_cond:true (* We do want to allow possibly absent properties... *)
+              ~is_existence_check:
+                false
+                (* ...but we don't generate predicates about
+                their existence at the top level: "a.b === undefined" must not generate the
+                predicate "a.b exists". *)
+              ~sentinel_refine
+              cx
+              expr
+          in
+          (ast, preds, sentinel_refinement)
+        | _ -> (condition cx expr, None, None)
+      in
+      let extend_with_chain_preds ((ast, preds, not_preds, xts1) as out) chain_preds sense =
+        let out =
+          match chain_preds with
+          | None -> out
+          | Some (chain_preds, chain_not_preds, xts2) ->
+            let xts = Key_map.union xts1 xts2 in
+            if sense then
+              (ast, mk_and preds chain_preds, mk_or not_preds chain_not_preds, xts)
+            else
+              (ast, mk_or preds chain_not_preds, mk_and not_preds chain_preds, xts)
+        in
+        out
       in
       (* inspect a null equality test *)
       let null_test loc ~sense ~strict e null_t reconstruct_ast =
-        let ((((_, t), _) as e_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict e null_t
+        let ((((_, t), _) as e_ast), chain_preds, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict e null_t
         in
         let ast = reconstruct_ast e_ast in
         flow_eqt ~strict loc (t, null_t);
+        let t_out = BoolT.at loc |> with_trust literal_trust in
         let out =
-          match Refinement.key ~allow_optional:false e with
-          | None ->
-            let t_out = BoolT.at loc |> with_trust bogus_trust in
-            empty_result ((loc, t_out), ast)
+          match Refinement.key ~allow_optional:true e with
+          | None -> empty_result ((loc, t_out), ast)
           | Some name ->
             let pred =
               if strict then
@@ -6178,12 +6236,40 @@ and predicates_of_condition cx e =
               else
                 MaybeP
             in
-            let t_out = BoolT.at loc |> with_trust bogus_trust in
             result ((loc, t_out), ast) name t pred sense
         in
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
+        let out =
+          match sentinel_refinement with
+          | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+          | None -> out
+        in
+
+        (*
+           This is a little tricky in the presence of optional chains, because
+           non-strict "== null" is true if the LHS is undefined, and a short-circuting
+           optional chain always returns "undefined". OTOH, strict "=== null" is false
+           if the LHS is a short-circuiting optional chain, so in the truthy
+           branch of an if we can refine the LHS with the knowledge that all
+           optional chain operators did not short circuit.
+
+           For example,
+           declare var a: ?{b: (null | number)}
+           if (a?.b === null) {
+             // here "a" must not be null or undefined, because the optional chain
+             // operator would have short circuited and produced undefined, which !== null
+           } else {
+             // "a" could be null or undefined, or "a.b" could be number.
+           }
+           but on the other hand,
+           if (a?.b == null) {
+             // here "a" might be null or undefined, because the optional chain short-
+             // circuiting would produce undefined, which == null
+           } else {
+             // and here, "a" must not be null or undefined, *and* "a.b" must be a number
+           }
+           *)
+        let chain_sense = (sense && strict) || ((not sense) && not strict) in
+        extend_with_chain_preds out chain_preds chain_sense
       in
       let void_test loc ~sense ~strict e void_t reconstruct_ast =
         (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
@@ -6194,13 +6280,13 @@ and predicates_of_condition cx e =
           | DefT (_, _, VoidT) -> void_t
           | _ -> VoidT.why (reason_of_t void_t) |> with_trust bogus_trust
         in
-        let ((((_, t), _) as e_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict e void_t
+        let ((((_, t), _) as e_ast), chain_preds, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict e void_t
         in
         let ast = reconstruct_ast e_ast in
         flow_eqt ~strict loc (t, void_t);
         let out =
-          match Refinement.key ~allow_optional:false e with
+          match Refinement.key ~allow_optional:true e with
           | None ->
             let t_out = BoolT.at loc |> with_trust bogus_trust in
             empty_result ((loc, t_out), ast)
@@ -6214,9 +6300,15 @@ and predicates_of_condition cx e =
             let t_out = BoolT.at loc |> with_trust bogus_trust in
             result ((loc, t_out), ast) name t pred sense
         in
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
+        let out =
+          match sentinel_refinement with
+          | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+          | None -> out
+        in
+        (* We flip the sense here for reasons similar to the discussion in null_test,
+           except that optional chain short-circuiting *always* reaches the true case,
+           since it produces undefined. *)
+        extend_with_chain_preds out chain_preds (not sense)
       in
       (* inspect an undefined equality test *)
       let undef_test loc ~sense ~strict e void_t reconstruct_ast =
@@ -6228,14 +6320,14 @@ and predicates_of_condition cx e =
           empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), reconstruct_ast e_ast)
       in
       let literal_test loc ~strict ~sense expr val_t pred reconstruct_ast =
-        let ((((_, t), _) as expr_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict expr val_t
+        let ((((_, t), _) as expr_ast), chain_preds, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict expr val_t
         in
         let ast = reconstruct_ast expr_ast in
         flow_eqt ~strict loc (t, val_t);
         let refinement =
           if strict then
-            Refinement.key ~allow_optional:false expr
+            Refinement.key ~allow_optional:true expr
           else
             None
         in
@@ -6248,14 +6340,17 @@ and predicates_of_condition cx e =
             let t = BoolT.at loc |> with_trust bogus_trust in
             empty_result ((loc, t), ast)
         in
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
+        let out =
+          match sentinel_refinement with
+          | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+          | None -> out
+        in
+        extend_with_chain_preds out chain_preds sense
       in
       (* inspect a typeof equality test *)
       let typeof_test loc sense arg typename str_loc reconstruct_ast =
         let bool = BoolT.at loc |> with_trust bogus_trust in
-        match refinable_lvalue arg with
+        match refinable_lvalue ~allow_optional:false arg with
         | (Some name, (((_, t), _) as arg)) ->
           let pred =
             match typename with
@@ -6278,8 +6373,8 @@ and predicates_of_condition cx e =
         | (None, arg) -> empty_result ((loc, bool), reconstruct_ast arg)
       in
       let sentinel_prop_test loc ~sense ~strict expr val_t reconstruct_ast =
-        let ((((_, t), _) as expr_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict expr val_t
+        let ((((_, t), _) as expr_ast), _, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:false ~sense ~strict expr val_t
         in
         let ast = reconstruct_ast expr_ast in
         flow_eqt ~strict loc (t, val_t);
@@ -6537,7 +6632,9 @@ and predicates_of_condition cx e =
       (* member expressions *)
       | (_, Member _)
       | (_, OptionalMember _) ->
-        let (_, _, ast, preds) = optional_chain ~is_cond:true ~is_existence_check:true cx e in
+        let (_, _, ast, preds, _) =
+          optional_chain ~is_cond:true ~is_existence_check:true cx e
+        in
         begin
           match preds with
           | None -> empty_result ast
@@ -6547,13 +6644,15 @@ and predicates_of_condition cx e =
       | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
         let (((_, expr), _) as tast) = expression cx e in
         let id = id.Ast.Pattern.Identifier.name in
-        (match refinable_lvalue (loc, Ast.Expression.Identifier id) with
+        (match refinable_lvalue ~allow_optional:false (loc, Ast.Expression.Identifier id) with
         | (Some name, _) -> result tast name expr (ExistsP (Some loc)) true
         | (None, _) -> empty_result tast)
       (* expr instanceof t *)
       | (loc, Binary { Binary.operator = Binary.Instanceof; left; right }) ->
         let bool = BoolT.at loc |> with_trust bogus_trust in
-        let (name_opt, (((_, left_t), _) as left_ast)) = refinable_lvalue left in
+        let (name_opt, (((_, left_t), _) as left_ast)) =
+          refinable_lvalue ~allow_optional:false left
+        in
         let (((_, right_t), _) as right_ast) = expression cx right in
         let ast =
           ( (loc, bool),
@@ -6620,7 +6719,7 @@ and predicates_of_condition cx e =
               Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t)))
         in
         let bool = BoolT.at loc |> with_trust bogus_trust in
-        let (name_opt, (((_, t), _) as arg)) = refinable_lvalue arg in
+        let (name_opt, (((_, t), _) as arg)) = refinable_lvalue ~allow_optional:false arg in
         let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
         let ast =
           ( (loc, bool),
@@ -6671,7 +6770,7 @@ and predicates_of_condition cx e =
       (* ids *)
       | (loc, This)
       | (loc, Identifier _) ->
-        (match refinable_lvalue e with
+        (match refinable_lvalue ~allow_optional:false e with
         | (Some name, (((_, t), _) as e)) -> result e name t (ExistsP (Some loc)) true
         | (None, e) -> empty_result e)
       (* e.m(...) *)

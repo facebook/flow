@@ -9120,6 +9120,7 @@ struct
         | DefT (_, _, EmptyT _) -> ()
         | _ -> rec_flow_t cx trace (result, sink)
       end
+    | NotP (NotP p) -> guard cx trace source p result sink
     | _ ->
       let loc = aloc_of_reason (reason_of_t sink) in
       let pred_str = string_of_predicate pred in
