@@ -2283,66 +2283,150 @@ References:
                       ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:66:4
-
-Cannot cast `a.b` to number because string [1] is incompatible with number [2].
-
-   refinements2.js:66:4
-   66|   (a.b: number); // fails currently but doesn't need to
-          ^^^
-
-References:
-   refinements2.js:64:30
-   64| declare var a: ?{b: number | string};
-                                    ^^^^^^ [1]
-   refinements2.js:66:9
-   66|   (a.b: number); // fails currently but doesn't need to
-               ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- refinements2.js:66:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:68:3
 
 Cannot get `a.b` because property `b` is missing in null or undefined [1].
 
-   refinements2.js:66:4
-   66|   (a.b: number); // fails currently but doesn't need to
-          ^^^
+   refinements2.js:68:3
+   68|   a.b; // nope
+         ^^^
 
 References:
-   refinements2.js:64:16
-   64| declare var a: ?{b: number | string};
+   refinements2.js:63:16
+   63| declare var a: ?{b: number | string};
                       ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements2.js:73:4
+Error --------------------------------------------------------------------------------------------- refinements2.js:69:4
 
-Cannot cast `a.b` to number because string [1] is incompatible with number [2].
+Cannot cast `a` to union type because object type [1] is incompatible with enum [2].
 
-   refinements2.js:73:4
-   73|   (a.b: number) // a.b may not exist and may not be number
-          ^^^
-
-References:
-   refinements2.js:64:30
-   64| declare var a: ?{b: number | string};
-                                    ^^^^^^ [1]
-   refinements2.js:73:9
-   73|   (a.b: number) // a.b may not exist and may not be number
-               ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- refinements2.js:73:4
-
-Cannot get `a.b` because property `b` is missing in null or undefined [1].
-
-   refinements2.js:73:4
-   73|   (a.b: number) // a.b may not exist and may not be number
-          ^^^
+   refinements2.js:69:4
+   69|   (a: (null | void));// nope
+          ^
 
 References:
-   refinements2.js:64:16
-   64| declare var a: ?{b: number | string};
-                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements2.js:63:17
+   63| declare var a: ?{b: number | string};
+                       ^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements2.js:69:8
+   69|   (a: (null | void));// nope
+              ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:74:3
+
+Cannot get `b.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:74:3
+   74|   b.a; //nope
+         ^^^
+
+References:
+   refinements2.js:72:16
+   72| declare var b: ?{a?: number};
+                      ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:75:4
+
+Cannot cast `b` to union type because object type [1] is incompatible with enum [2].
+
+   refinements2.js:75:4
+   75|   (b: (null | void)); // nope
+          ^
+
+References:
+   refinements2.js:72:17
+   72| declare var b: ?{a?: number};
+                       ^^^^^^^^^^^^ [1]
+   refinements2.js:75:8
+   75|   (b: (null | void)); // nope
+              ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:85:3
+
+Cannot get `b.a` because property `a` is missing in null or undefined [1].
+
+   refinements2.js:85:3
+   85|   b.a; // nope
+         ^^^
+
+References:
+   refinements2.js:72:16
+   72| declare var b: ?{a?: number};
+                      ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:86:4
+
+Cannot cast `b` to union type because object type [1] is incompatible with enum [2].
+
+   refinements2.js:86:4
+   86|   (b: (null | void)); // nope
+          ^
+
+References:
+   refinements2.js:72:17
+   72| declare var b: ?{a?: number};
+                       ^^^^^^^^^^^^ [1]
+   refinements2.js:86:8
+   86|   (b: (null | void)); // nope
+              ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:94:3
+
+Cannot get `c.d` because property `d` is missing in null or undefined [1].
+
+   refinements2.js:94:3
+   94|   c.d; //nope
+         ^^^
+
+References:
+   refinements2.js:89:16
+   89| declare var c: ?{d?: Array<number>};
+                      ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:95:4
+
+Cannot cast `c` to union type because object type [1] is incompatible with enum [2].
+
+   refinements2.js:95:4
+   95|   (c: (null | void)); //nope
+          ^
+
+References:
+   refinements2.js:89:17
+   89| declare var c: ?{d?: Array<number>};
+                       ^^^^^^^^^^^^^^^^^^^ [1]
+   refinements2.js:95:8
+   95|   (c: (null | void)); //nope
+              ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- refinements2.js:103:4
+
+Cannot cast `b1?.a` to number because:
+ - null or undefined [1] is incompatible with number [2].
+ - undefined [3] is incompatible with number [2].
+
+   refinements2.js:103:4
+   103|   (b1?.a: number) // b1.a may not exist and may not be number
+           ^^^^^
+
+References:
+   refinements2.js:100:17
+   100| declare var b1: ?{a?: number};
+                        ^^^^^^^^^^^^^ [1]
+   refinements2.js:103:11
+   103|   (b1?.a: number) // b1.a may not exist and may not be number
+                  ^^^^^^ [2]
+   refinements2.js:100:23
+   100| declare var b1: ?{a?: number};
+                              ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
@@ -3016,7 +3100,7 @@ References:
 
 
 
-Found 221 errors
+Found 227 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

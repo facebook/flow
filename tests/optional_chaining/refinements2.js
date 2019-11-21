@@ -60,15 +60,45 @@ if (w?.a === 42) {
   w.a; // no
 }
 
-// should not currently cause refinement
 declare var a: ?{b: number | string};
 if (typeof a?.b === 'number') {
-  (a.b: number); // fails currently but doesn't need to
+  (a.b: number);
+  (a: {});
+} else {
+  a.b; // nope
+  (a: (null | void));// nope
 }
 
-// should not cause refinement with current model
 declare var b: ?{a?: number};
-declare var c: number;
-if (a?.b === c) {
-  (a.b: number) // a.b may not exist and may not be number
+if (typeof b?.a === 'undefined') {
+  b.a; //nope
+  (b: (null | void)); // nope
+} else {
+  (b: {});
+  (b.a: number);
+}
+
+if (b?.a instanceof Object) {
+  (b.a: number);
+  (b: {});
+} else {
+  b.a; // nope
+  (b: (null | void)); // nope
+}
+
+declare var c: ?{d?: Array<number>};
+if (Array.isArray(c?.d)) {
+  (c.d[0]: number);
+  (c: {});
+} else {
+  c.d; //nope
+  (c: (null | void)); //nope
+}
+
+
+// should not cause refinement with current model
+declare var b1: ?{a?: number};
+declare var c1: number;
+if (b1?.a === c1) {
+  (b1?.a: number) // b1.a may not exist and may not be number
 }

@@ -6360,30 +6360,49 @@ and predicates_of_condition cx e =
         in
         extend_with_chain_preds out chain_preds sense
       in
+      (* generalizes typeof, instanceof, and Array.isArray() *)
+      let instance_test loc target make_ast_and_pred sense chain_sense =
+        let bool = BoolT.at loc |> with_trust bogus_trust in
+        match Refinement.key ~allow_optional:true target with
+        | Some name ->
+          let (filtered_out, _, targ_ast, chain_preds, _) =
+            optional_chain ~is_cond:true ~is_existence_check:false cx target
+          in
+          let (ast, pred) = make_ast_and_pred targ_ast bool in
+          let out = result ast name filtered_out pred sense in
+          extend_with_chain_preds out chain_preds chain_sense
+        | None ->
+          let targ_ast = condition cx target in
+          let (ast, _) = make_ast_and_pred targ_ast bool in
+          empty_result ast
+      in
       (* inspect a typeof equality test *)
       let typeof_test loc sense arg typename str_loc reconstruct_ast =
         let bool = BoolT.at loc |> with_trust bogus_trust in
-        match refinable_lvalue ~allow_optional:false arg with
-        | (Some name, (((_, t), _) as arg)) ->
-          let pred =
-            match typename with
-            | "boolean" -> Some BoolP
-            | "function" -> Some FunP
-            | "number" -> Some NumP
-            | "object" -> Some ObjP
-            | "string" -> Some StrP
-            | "symbol" -> Some SymbolP
-            | "undefined" -> Some VoidP
-            | _ -> None
-          in
-          begin
-            match pred with
-            | Some pred -> result ((loc, bool), reconstruct_ast arg) name t pred sense
-            | None ->
-              Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
-              empty_result ((loc, bool), reconstruct_ast arg)
-          end
-        | (None, arg) -> empty_result ((loc, bool), reconstruct_ast arg)
+        let pred_and_not_undef =
+          match typename with
+          | "boolean" -> Some (BoolP, true)
+          | "function" -> Some (FunP, true)
+          | "number" -> Some (NumP, true)
+          | "object" -> Some (ObjP, true)
+          | "string" -> Some (StrP, true)
+          | "symbol" -> Some (SymbolP, true)
+          | "undefined" -> Some (VoidP, false)
+          | _ -> None
+        in
+        match pred_and_not_undef with
+        | Some (pred, not_undef) ->
+          let make_ast_and_pred ast _ = (((loc, bool), reconstruct_ast ast), pred) in
+          instance_test
+            loc
+            arg
+            make_ast_and_pred
+            sense
+            ((sense && not_undef) || ((not sense) && not not_undef))
+        | None ->
+          let arg = condition cx arg in
+          Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
+          empty_result ((loc, bool), reconstruct_ast arg)
       in
       let sentinel_prop_test loc ~sense ~strict expr val_t reconstruct_ast =
         let ((((_, t), _) as expr_ast), _, sentinel_refinement) =
@@ -6655,25 +6674,18 @@ and predicates_of_condition cx e =
       | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
         let (((_, expr), _) as tast) = expression cx e in
         let id = id.Ast.Pattern.Identifier.name in
-        (match refinable_lvalue ~allow_optional:false (loc, Ast.Expression.Identifier id) with
+        (match refinable_lvalue ~allow_optional:true (loc, Ast.Expression.Identifier id) with
         | (Some name, _) -> result tast name expr (ExistsP (Some loc)) true
         | (None, _) -> empty_result tast)
       (* expr instanceof t *)
       | (loc, Binary { Binary.operator = Binary.Instanceof; left; right }) ->
-        let bool = BoolT.at loc |> with_trust bogus_trust in
-        let (name_opt, (((_, left_t), _) as left_ast)) =
-          refinable_lvalue ~allow_optional:false left
+        let make_ast_and_pred left_ast bool =
+          let (((_, right_t), _) as right_ast) = expression cx right in
+          ( ( (loc, bool),
+              Binary { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast } ),
+            LeftP (InstanceofTest, right_t) )
         in
-        let (((_, right_t), _) as right_ast) = expression cx right in
-        let ast =
-          ( (loc, bool),
-            Binary { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast } )
-        in
-        (match name_opt with
-        | Some name ->
-          let pred = LeftP (InstanceofTest, right_t) in
-          result ast name left_t pred true
-        | None -> empty_result ast)
+        instance_test loc left make_ast_and_pred true true
       (* expr op expr *)
       | (loc, Binary { Binary.operator = Binary.Equal; left; right }) ->
         eq_test loc ~sense:true ~strict:false left right (fun left right ->
@@ -6729,21 +6741,18 @@ and predicates_of_condition cx e =
               let use_op = Op (GetProperty (mk_expression_reason e)) in
               Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t)))
         in
-        let bool = BoolT.at loc |> with_trust bogus_trust in
-        let (name_opt, (((_, t), _) as arg)) = refinable_lvalue ~allow_optional:false arg in
-        let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
-        let ast =
-          ( (loc, bool),
-            Call
-              {
-                Call.callee = ((callee_loc, fn_t), Member { Member._object; property });
-                targs = None;
-                arguments = [Expression arg];
-              } )
+        let make_ast_and_pred arg bool =
+          let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
+          ( ( (loc, bool),
+              Call
+                {
+                  Call.callee = ((callee_loc, fn_t), Member { Member._object; property });
+                  targs = None;
+                  arguments = [Expression arg];
+                } ),
+            ArrP )
         in
-        (match name_opt with
-        | Some name -> result ast name t ArrP true
-        | None -> empty_result ast)
+        instance_test loc arg make_ast_and_pred true true
       (* test1 && test2 *)
       | (loc, Logical { Logical.operator = Logical.And; left; right }) ->
         let ((((_, t1), _) as left_ast), map1, not_map1, xts1) = predicates_of_condition cx left in
@@ -6781,12 +6790,13 @@ and predicates_of_condition cx e =
       (* ids *)
       | (loc, This)
       | (loc, Identifier _) ->
-        (match refinable_lvalue ~allow_optional:false e with
+        (match refinable_lvalue ~allow_optional:true e with
         | (Some name, (((_, t), _) as e)) -> result e name t (ExistsP (Some loc)) true
         | (None, e) -> empty_result e)
       (* e.m(...) *)
       (* TODO: Don't trap method calls for now *)
-      | (_, Call { Call.callee = (_, Member _); _ }) -> empty_result (expression cx e)
+      | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) ->
+        empty_result (expression cx e)
       (* f(...) *)
       (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
