@@ -4121,6 +4121,11 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
           Flow.flow_t cx (void, t))
   in
   let noop _ = None in
+  let in_env preds f =
+    match preds with
+    | Some (preds, _, xtypes) -> Env.in_refined_env cx loc preds xtypes f
+    | None -> f ()
+  in
   let handle_new_chain
       lhs_reason
       loc
@@ -4160,7 +4165,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
            essentially the successfully filtered receiver of the function call
            is flowed into it, and it is used as the `this`-parameter of the
            calltype that the method call will flow into. *)
-    let (subexpression_types, subexpression_asts) = subexpressions () in
+    let (subexpression_types, subexpression_asts) = subexpressions preds in
     let reason = get_reason chain_t in
     let chain_reason = mk_reason ROptionalChain loc in
     let mem_t =
@@ -4201,7 +4206,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
          voided_t parameter. We'll flow that type into the type of the overall
          expression to account for that possibility.
       *)
-    let (subexpression_types, subexpression_asts) = subexpressions () in
+    let (subexpression_types, subexpression_asts) = subexpressions preds in
     let reason = get_reason chain_t in
     let res_t =
       match (test_hooks chain_t, refine ()) with
@@ -4234,7 +4239,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
           above is None. We don't need to consider optional short-circuiting, so
           we can call expression_ rather than optional_chain. *)
       let (((_, obj_t), _) as object_ast) = expression cx object_ in
-      let (subexpression_types, subexpression_asts) = subexpressions () in
+      let (subexpression_types, subexpression_asts) = subexpressions None in
       let reason = get_reason obj_t in
       let lhs_t =
         match (test_hooks obj_t, refine ()) with
@@ -4256,7 +4261,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
         match refine () with
         | Some t ->
           Context.mark_optional_chain cx loc lhs_reason ~useful:false;
-          let (subexpression_types, subexpression_asts) = subexpressions () in
+          let (subexpression_types, subexpression_asts) = subexpressions preds in
           let tout =
             Option.value_map
               ~f:(fun refinement_action -> refinement_action subexpression_types filtered_t t)
@@ -4368,9 +4373,10 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
             let use = apply_opt_use (get_opt_use tind reason obj_t) t in
             Flow.flow cx (obj_t, use))
       in
-      let eval_index () =
-        let (((_, tind), _) as index) = expression cx index in
-        (tind, index)
+      let eval_index preds =
+        in_env preds (fun () ->
+            let (((_, tind), _) as index) = expression cx index in
+            (tind, index))
       in
       let (filtered_out, voided_out, lhs_t, obj_t, object_ast, index, preds) =
         handle_chaining
@@ -4500,8 +4506,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
             prop_t,
             object_ast,
             property,
-            argument_asts,
-            preds ) =
+            argument_asts ) =
         match property with
         | Member.PropertyPrivateName (prop_loc, (_, ({ Ast.Identifier.name; comments = _ } as id)))
         | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
@@ -4565,10 +4570,11 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
                 let use = apply_opt_use (get_opt_use argts reason obj_t) t in
                 Flow.flow cx (obj_t, use))
           in
-          let eval_args () =
-            arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+          let eval_args preds =
+            in_env preds (fun () ->
+                arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split)
           in
-          let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, preds) =
+          let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, _) =
             handle_chaining
               member_opt
               _object
@@ -4596,8 +4602,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
             prop_t,
             object_ast,
             prop_ast,
-            argument_asts,
-            preds )
+            argument_asts )
         | Member.PropertyExpression expr ->
           let reason_call = mk_reason (RMethodCall None) loc in
           let reason_lookup = mk_reason (RProperty None) lookup_loc in
@@ -4623,12 +4628,13 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
                 Flow.flow cx (obj_t, use);
                 Flow.flow_t cx (obj_t, prop_t))
           in
-          let eval_args_and_expr () =
-            let (((_, elem_t), _) as expr) = expression cx expr in
-            let (argts, argument_asts) =
-              arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-            in
-            ((argts, elem_t), (argument_asts, expr))
+          let eval_args_and_expr preds =
+            in_env preds (fun () ->
+                let (((_, elem_t), _) as expr) = expression cx expr in
+                let (argts, argument_asts) =
+                  arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+                in
+                ((argts, elem_t), (argument_asts, expr)))
           in
           let this_reason = mk_expression_reason callee in
           let ( filtered_out,
@@ -4637,7 +4643,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
                 _,
                 object_ast,
                 (argument_asts, expr_ast),
-                preds ) =
+                _ ) =
             handle_chaining
               member_opt
               _object
@@ -4657,8 +4663,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
             prop_t,
             object_ast,
             Member.PropertyExpression expr_ast,
-            argument_asts,
-            preds )
+            argument_asts )
       in
       let voided_out = join_optional_branches lookup_voided_out call_voided_out in
       let lhs_t =
@@ -4676,7 +4681,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
               targs;
               arguments = argument_asts;
             } ),
-        preds,
+        None,
         None )
     (* e1(e2...) *)
     | (Call { Call.callee; targs; arguments }, None) ->
@@ -4698,8 +4703,11 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
             let use = apply_opt_use (get_opt_use argts reason f) t in
             Flow.flow cx (f, use))
       in
-      let eval_args () = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
-      let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, preds) =
+      let eval_args preds =
+        in_env preds (fun () ->
+            arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split)
+      in
+      let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, _) =
         handle_chaining
           opt_state
           callee
@@ -4713,7 +4721,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
           ~get_reason
       in
       let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
-      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), preds, None)
+      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
     | (This, _)
     | (Identifier _, _)
       when is_existence_check ->
@@ -5350,10 +5358,15 @@ and assign_member
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index) } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object, _, _) =
+      let (o, _, _object, preds, _) =
         optional_chain ~is_cond:false ~is_existence_check:false cx _object
       in
-      let (((_, i), _) as index) = expression cx index in
+      let (((_, i), _) as index) =
+        match preds with
+        | None -> expression cx index
+        | Some (preds, _, xtypes) ->
+          Env.in_refined_env cx lhs_loc preds xtypes (fun () -> expression cx index)
+      in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
       let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
       Flow.flow cx (o, upper);

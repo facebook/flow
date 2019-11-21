@@ -837,6 +837,45 @@ References:
                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------- in_line_refinements.js:16:6
+
+This use of optional chaining (`?.`) is unnecessary because `x` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   in_line_refinements.js:16:6
+   16| x?.i[x?.a]; // unnecessary optional chain
+            ^^^^
+
+References:
+   in_line_refinements.js:16:6
+   16| x?.i[x?.a]; // unnecessary optional chain
+            ^ [1]
+
+
+Error ------------------------------------------------------------------------------------- in_line_refinements.js:24:12
+
+Cannot get `x.a` because property `a` is missing in null or undefined [1].
+
+   in_line_refinements.js:24:12
+   24| x?.f2(x.a)(x.a); // havoc refinements
+                  ^^^
+
+References:
+   in_line_refinements.js:3:16
+                      v-
+    3| declare var x: ?{
+    4|   a: number,
+    5|   f: number => string,
+    6|   i: Array<number>,
+    7|   of?: number => string,
+    8|   oi?: Array<number>,
+    9|   i2: Array<Array<number>>,
+   10|   i3: Array<{a: ?number}>,
+   11|   f2: number => number => string,
+   12| };
+       ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ lhs_types.js:12:2
 
 This use of optional chaining (`?.`) is unnecessary because `x` [1] cannot be nullish or because an earlier `?.` will
@@ -1817,7 +1856,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:142:4
 
-Cannot call `d.a` because undefined [1] is not a function.
+Cannot call `d.a` because:
+ - undefined [1] is not a function.
+ - property `a` is missing in null or undefined [2].
 
    refinements.js:142:4
    142|   (d.a().b.c: number); // nope, never was a refinement in the first place
@@ -1827,6 +1868,9 @@ References:
    refinements.js:140:22
    140| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:140:16
+   140| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:142:4
@@ -2972,7 +3016,7 @@ References:
 
 
 
-Found 218 errors
+Found 221 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
