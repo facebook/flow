@@ -59,6 +59,60 @@ if (typeof bBoolVoid !== "boolean") {
   (bBoolVoid: B | boolean); // Error
 }
 
+if (bVoidable) {
+  (bVoidable: void); // Error
+  (bVoidable: B); // Valid
+}
+
+if (!bVoidable) {
+  (bVoidable: void | B); // Valid
+  (bVoidable: B); // Error
+  (bVoidable: void); // Error
+}
+
+enum BEmpty {}
+declare var bEmpty: BEmpty | void;
+
+if (bEmpty) {
+  (bEmpty: void); // Error
+  (bEmpty: BEmpty); // Valid
+}
+
+if (!bEmpty) {
+  (bEmpty: void); // Valid
+  (bEmpty: BEmpty); // Error
+}
+
+enum BTrue {
+  A = true,
+}
+declare var bTrue: BTrue | void;
+
+if (bTrue) {
+  (bTrue: void); // Error
+  (bTrue: BTrue); // Valid
+}
+
+if (!bTrue) {
+  (bTrue: void); // Valid
+  (bTrue: BTrue); // Error
+}
+
+enum BFalse {
+  A = false,
+}
+declare var bFalse: BFalse | true;
+
+if (bFalse) {
+  (bFalse: true); // Valid
+  (bFalse: BFalse); // Error
+}
+
+if (!bFalse) {
+  (bFalse: true); // Error
+  (bFalse: BFalse); // Valid
+}
+
 ////////////
 // number //
 ////////////
@@ -118,6 +172,33 @@ if (typeof nNumVoid !== "number") {
   (nNumVoid: N | number); // Error
 }
 
+if (nVoidable) {
+  (nVoidable: void); // Error
+  (nVoidable: N); // Valid
+}
+
+if (!nVoidable) {
+  (nVoidable: void | N); // Valid
+  (nVoidable: N); // Error
+  (nVoidable: void); // Error
+}
+
+enum NTruthy {
+  A = 1,
+  B = 2,
+}
+declare var nTruthy: NTruthy | void;
+
+if (nTruthy) {
+  (nTruthy: void); // Error
+  (nTruthy: NTruthy); // Valid
+}
+
+if (!nTruthy) {
+  (nTruthy: void); // Valid
+  (nTruthy: NTruthy); // Error
+}
+
 ////////////
 // string //
 ////////////
@@ -175,6 +256,33 @@ if (typeof sStrVoid !== "string") {
   (sStrVoid: string); // Error
   (sStrVoid: S); // Error
   (sStrVoid: S | string); // Error
+}
+
+if (sVoidable) {
+  (sVoidable: void); // Error
+  (sVoidable: S); // Valid
+}
+
+if (!sVoidable) {
+  (sVoidable: void | S); // Valid
+  (sVoidable: S); // Error
+  (sVoidable: void); // Error
+}
+
+enum STruthy {
+  A,
+  B,
+}
+declare var sTruthy: STruthy | void;
+
+if (sTruthy) {
+  (sTruthy: void); // Error
+  (sTruthy: STruthy); // Valid
+}
+
+if (!sTruthy) {
+  (sTruthy: void); // Valid
+  (sTruthy: STruthy); // Error
 }
 
 //////////////

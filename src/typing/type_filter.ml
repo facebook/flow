@@ -48,6 +48,7 @@ let rec exists = function
         ( NullT | VoidT
         | SingletonBoolT false
         | BoolT (Some false)
+        | EnumT { representation_t = DefT (_, _, BoolT (Some false)); _ }
         | SingletonStrT ""
         | StrT (Literal (_, ""))
         | SingletonNumT (0., _)
@@ -74,6 +75,7 @@ let rec not_exists t =
         ( NullT | VoidT
         | SingletonBoolT false
         | BoolT (Some false)
+        | EnumT { representation_t = DefT (_, _, BoolT (Some false)); _ }
         | SingletonStrT ""
         | StrT (Literal (_, ""))
         | SingletonNumT (0., _)
@@ -86,10 +88,13 @@ let rec not_exists t =
         trust,
         ( SingletonBoolT _
         | BoolT (Some _)
+        | EnumT { representation_t = DefT (_, _, BoolT (Some _)); _ }
         | SingletonStrT _
         | StrT (Literal _ | Truthy)
+        | EnumT { representation_t = DefT (_, _, StrT Truthy); _ }
         | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | SingletonNumT _
         | NumT (Literal _ | Truthy)
+        | EnumT { representation_t = DefT (_, _, NumT Truthy); _ }
         | MixedT Mixed_truthy ) ) ->
     DefT (r, trust, EmptyT Bottom)
   | DefT (reason, trust, ClassT _) -> DefT (reason, trust, EmptyT Bottom)

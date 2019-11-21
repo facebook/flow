@@ -697,501 +697,824 @@ References:
                          ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:74:4
+Error ----------------------------------------------------------------------------------------------- refinement.js:63:4
 
-Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
+Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with undefined [2].
 
-   refinement.js:74:4
-   74|   (nVoidable: N); // Error
+   refinement.js:63:4
+   63|   (bVoidable: void); // Error
           ^^^^^^^^^
 
 References:
-   refinement.js:70:24
-   70| declare var nVoidable: void | N;
+   refinement.js:11:31
+   11| declare var bVoidable: void | B;
+                                     ^ [1]
+   refinement.js:63:15
+   63|   (bVoidable: void); // Error
+                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:69:4
+
+Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2].
+
+   refinement.js:69:4
+   69|   (bVoidable: B); // Error
+          ^^^^^^^^^
+
+References:
+   refinement.js:11:24
+   11| declare var bVoidable: void | B;
                               ^^^^ [1]
-   refinement.js:74:15
-   74|   (nVoidable: N); // Error
+   refinement.js:69:15
+   69|   (bVoidable: B); // Error
                      ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:78:4
+Error ----------------------------------------------------------------------------------------------- refinement.js:70:4
 
-Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with undefined [2].
 
-   refinement.js:78:4
-   78|   (nVoidable: void); // Error
+   refinement.js:70:4
+   70|   (bVoidable: void); // Error
           ^^^^^^^^^
 
 References:
-   refinement.js:70:31
-   70| declare var nVoidable: void | N;
+   refinement.js:11:31
+   11| declare var bVoidable: void | B;
                                      ^ [1]
-   refinement.js:78:15
-   78|   (nVoidable: void); // Error
+   refinement.js:70:15
+   70|   (bVoidable: void); // Error
                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:77:4
+
+Cannot cast `bEmpty` to undefined because `BEmpty` [1] is incompatible with undefined [2].
+
+   refinement.js:77:4
+   77|   (bEmpty: void); // Error
+          ^^^^^^
+
+References:
+   refinement.js:74:21
+   74| declare var bEmpty: BEmpty | void;
+                           ^^^^^^ [1]
+   refinement.js:77:12
+   77|   (bEmpty: void); // Error
+                  ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:83:4
 
-Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+Cannot cast `bEmpty` to `BEmpty` because undefined [1] is incompatible with `BEmpty` [2].
 
    refinement.js:83:4
-   83|   (nVoidable: void); // Error
-          ^^^^^^^^^
-
-References:
-   refinement.js:70:31
-   70| declare var nVoidable: void | N;
-                                     ^ [1]
-   refinement.js:83:15
-   83|   (nVoidable: void); // Error
-                     ^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- refinement.js:89:4
-
-Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
-
-   refinement.js:89:4
-   89|   (nVoidable: N); // Error
-          ^^^^^^^^^
-
-References:
-   refinement.js:70:24
-   70| declare var nVoidable: void | N;
-                              ^^^^ [1]
-   refinement.js:89:15
-   89|   (nVoidable: N); // Error
-                     ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- refinement.js:96:4
-
-Cannot cast `nMaybe` to `N` because null or undefined [1] is incompatible with `N` [2].
-
-   refinement.js:96:4
-   96|   (nMaybe: N); // Error
+   83|   (bEmpty: BEmpty); // Error
           ^^^^^^
 
 References:
-   refinement.js:92:21
-   92| declare var nMaybe: ?N;
-                           ^^ [1]
-   refinement.js:96:12
-   96|   (nMaybe: N); // Error
-                  ^ [2]
+   refinement.js:74:30
+   74| declare var bEmpty: BEmpty | void;
+                                    ^^^^ [1]
+   refinement.js:83:12
+   83|   (bEmpty: BEmpty); // Error
+                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:100:4
+Error ----------------------------------------------------------------------------------------------- refinement.js:92:4
 
-Cannot cast `nMaybe` to null because `N` [1] is incompatible with null [2].
+Cannot cast `bTrue` to undefined because `BTrue` [1] is incompatible with undefined [2].
 
-   refinement.js:100:4
-   100|   (nMaybe: null); // Error
-           ^^^^^^
-
-References:
-   refinement.js:92:22
-    92| declare var nMaybe: ?N;
-                             ^ [1]
-   refinement.js:100:12
-   100|   (nMaybe: null); // Error
-                   ^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- refinement.js:101:4
-
-Cannot cast `nMaybe` to undefined because `N` [1] is incompatible with undefined [2].
-
-   refinement.js:101:4
-   101|   (nMaybe: void); // Error
-           ^^^^^^
+   refinement.js:92:4
+   92|   (bTrue: void); // Error
+          ^^^^^
 
 References:
-   refinement.js:92:22
-    92| declare var nMaybe: ?N;
-                             ^ [1]
-   refinement.js:101:12
-   101|   (nMaybe: void); // Error
-                   ^^^^ [2]
+   refinement.js:89:20
+   89| declare var bTrue: BTrue | void;
+                          ^^^^^ [1]
+   refinement.js:92:11
+   92|   (bTrue: void); // Error
+                 ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:98:4
+
+Cannot cast `bTrue` to `BTrue` because undefined [1] is incompatible with `BTrue` [2].
+
+   refinement.js:98:4
+   98|   (bTrue: BTrue); // Error
+          ^^^^^
+
+References:
+   refinement.js:89:28
+   89| declare var bTrue: BTrue | void;
+                                  ^^^^ [1]
+   refinement.js:98:11
+   98|   (bTrue: BTrue); // Error
+                 ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:108:4
+
+Cannot cast `bFalse` to `BFalse` because boolean literal `true` [1] is incompatible with `BFalse` [2].
+
+   refinement.js:108:4
+   108|   (bFalse: BFalse); // Error
+           ^^^^^^
+
+References:
+   refinement.js:104:30
+   104| declare var bFalse: BFalse | true;
+                                     ^^^^ [1]
+   refinement.js:108:12
+   108|   (bFalse: BFalse); // Error
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:112:4
+
+Cannot cast `bFalse` to boolean literal `true` because `BFalse` [1] is incompatible with boolean literal `true` [2].
+
+   refinement.js:112:4
+   112|   (bFalse: true); // Error
+           ^^^^^^
+
+References:
+   refinement.js:104:21
+   104| declare var bFalse: BFalse | true;
+                            ^^^^^^ [1]
+   refinement.js:112:12
+   112|   (bFalse: true); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:128:4
+
+Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
+
+   refinement.js:128:4
+   128|   (nVoidable: N); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:124:24
+   124| declare var nVoidable: void | N;
+                               ^^^^ [1]
+   refinement.js:128:15
+   128|   (nVoidable: N); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:132:4
+
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:132:4
+   132|   (nVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:124:31
+   124| declare var nVoidable: void | N;
+                                      ^ [1]
+   refinement.js:132:15
+   132|   (nVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:137:4
+
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:137:4
+   137|   (nVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:124:31
+   124| declare var nVoidable: void | N;
+                                      ^ [1]
+   refinement.js:137:15
+   137|   (nVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:143:4
+
+Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
+
+   refinement.js:143:4
+   143|   (nVoidable: N); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:124:24
+   124| declare var nVoidable: void | N;
+                               ^^^^ [1]
+   refinement.js:143:15
+   143|   (nVoidable: N); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:150:4
+
+Cannot cast `nMaybe` to `N` because null or undefined [1] is incompatible with `N` [2].
+
+   refinement.js:150:4
+   150|   (nMaybe: N); // Error
+           ^^^^^^
+
+References:
+   refinement.js:146:21
+   146| declare var nMaybe: ?N;
+                            ^^ [1]
+   refinement.js:150:12
+   150|   (nMaybe: N); // Error
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:154:4
+
+Cannot cast `nMaybe` to null because `N` [1] is incompatible with null [2].
+
+   refinement.js:154:4
+   154|   (nMaybe: null); // Error
+           ^^^^^^
+
+References:
+   refinement.js:146:22
+   146| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:154:12
+   154|   (nMaybe: null); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:155:4
+
+Cannot cast `nMaybe` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:155:4
+   155|   (nMaybe: void); // Error
+           ^^^^^^
+
+References:
+   refinement.js:146:22
+   146| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:155:12
+   155|   (nMaybe: void); // Error
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:162:4
 
 Cannot cast `nNumVoid` to undefined because:
  - `N` [1] is incompatible with undefined [2].
  - number [3] is incompatible with undefined [2].
 
-   refinement.js:108:4
-   108|   (nNumVoid: void); // Error
+   refinement.js:162:4
+   162|   (nNumVoid: void); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:105:23
-   105| declare var nNumVoid: N | number | void;
+   refinement.js:159:23
+   159| declare var nNumVoid: N | number | void;
                               ^ [1]
-   refinement.js:108:14
-   108|   (nNumVoid: void); // Error
+   refinement.js:162:14
+   162|   (nNumVoid: void); // Error
                      ^^^^ [2]
-   refinement.js:105:27
-   105| declare var nNumVoid: N | number | void;
+   refinement.js:159:27
+   159| declare var nNumVoid: N | number | void;
                                   ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:109:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:163:4
 
 Cannot cast `nNumVoid` to number because `N` [1] is incompatible with number [2].
 
-   refinement.js:109:4
-   109|   (nNumVoid: number); // Error
+   refinement.js:163:4
+   163|   (nNumVoid: number); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:105:23
-   105| declare var nNumVoid: N | number | void;
+   refinement.js:159:23
+   159| declare var nNumVoid: N | number | void;
                               ^ [1]
-   refinement.js:109:14
-   109|   (nNumVoid: number); // Error
+   refinement.js:163:14
+   163|   (nNumVoid: number); // Error
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:110:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:164:4
 
 Cannot cast `nNumVoid` to `N` because number [1] is incompatible with `N` [2].
 
-   refinement.js:110:4
-   110|   (nNumVoid: N); // Error
+   refinement.js:164:4
+   164|   (nNumVoid: N); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:105:27
-   105| declare var nNumVoid: N | number | void;
+   refinement.js:159:27
+   159| declare var nNumVoid: N | number | void;
                                   ^^^^^^ [1]
-   refinement.js:110:14
-   110|   (nNumVoid: N); // Error
+   refinement.js:164:14
+   164|   (nNumVoid: N); // Error
                      ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:116:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:170:4
 
 Cannot cast `nNumVoid` to number because undefined [1] is incompatible with number [2].
 
-   refinement.js:116:4
-   116|   (nNumVoid: number); // Error
+   refinement.js:170:4
+   170|   (nNumVoid: number); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:105:36
-   105| declare var nNumVoid: N | number | void;
+   refinement.js:159:36
+   159| declare var nNumVoid: N | number | void;
                                            ^^^^ [1]
-   refinement.js:116:14
-   116|   (nNumVoid: number); // Error
+   refinement.js:170:14
+   170|   (nNumVoid: number); // Error
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:117:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:171:4
 
 Cannot cast `nNumVoid` to `N` because undefined [1] is incompatible with `N` [2].
 
-   refinement.js:117:4
-   117|   (nNumVoid: N); // Error
+   refinement.js:171:4
+   171|   (nNumVoid: N); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:105:36
-   105| declare var nNumVoid: N | number | void;
+   refinement.js:159:36
+   159| declare var nNumVoid: N | number | void;
                                            ^^^^ [1]
-   refinement.js:117:14
-   117|   (nNumVoid: N); // Error
+   refinement.js:171:14
+   171|   (nNumVoid: N); // Error
                      ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:118:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:172:4
 
 Cannot cast `nNumVoid` to union type because:
  - Either undefined [1] is incompatible with `N` [2].
  - Or undefined [1] is incompatible with number [3].
 
-   refinement.js:118:4
-   118|   (nNumVoid: N | number); // Error
+   refinement.js:172:4
+   172|   (nNumVoid: N | number); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:105:36
-   105| declare var nNumVoid: N | number | void;
+   refinement.js:159:36
+   159| declare var nNumVoid: N | number | void;
                                            ^^^^ [1]
-   refinement.js:118:14
-   118|   (nNumVoid: N | number); // Error
+   refinement.js:172:14
+   172|   (nNumVoid: N | number); // Error
                      ^ [2]
-   refinement.js:118:18
-   118|   (nNumVoid: N | number); // Error
+   refinement.js:172:18
+   172|   (nNumVoid: N | number); // Error
                          ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:133:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:176:4
 
-Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
 
-   refinement.js:133:4
-   133|   (sVoidable: S); // Error
+   refinement.js:176:4
+   176|   (nVoidable: void); // Error
            ^^^^^^^^^
 
 References:
-   refinement.js:129:24
-   129| declare var sVoidable: void | S;
-                               ^^^^ [1]
-   refinement.js:133:15
-   133|   (sVoidable: S); // Error
-                      ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- refinement.js:137:4
-
-Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
-
-   refinement.js:137:4
-   137|   (sVoidable: void); // Error
-           ^^^^^^^^^
-
-References:
-   refinement.js:129:31
-   129| declare var sVoidable: void | S;
+   refinement.js:124:31
+   124| declare var nVoidable: void | N;
                                       ^ [1]
-   refinement.js:137:15
-   137|   (sVoidable: void); // Error
+   refinement.js:176:15
+   176|   (nVoidable: void); // Error
                       ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:142:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:182:4
 
-Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+Cannot cast `nVoidable` to `N` because undefined [1] is incompatible with `N` [2].
 
-   refinement.js:142:4
-   142|   (sVoidable: void); // Error
+   refinement.js:182:4
+   182|   (nVoidable: N); // Error
            ^^^^^^^^^
 
 References:
-   refinement.js:129:31
-   129| declare var sVoidable: void | S;
-                                      ^ [1]
-   refinement.js:142:15
-   142|   (sVoidable: void); // Error
-                      ^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- refinement.js:148:4
-
-Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
-
-   refinement.js:148:4
-   148|   (sVoidable: S); // Error
-           ^^^^^^^^^
-
-References:
-   refinement.js:129:24
-   129| declare var sVoidable: void | S;
+   refinement.js:124:24
+   124| declare var nVoidable: void | N;
                                ^^^^ [1]
-   refinement.js:148:15
-   148|   (sVoidable: S); // Error
+   refinement.js:182:15
+   182|   (nVoidable: N); // Error
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:155:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:183:4
+
+Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with undefined [2].
+
+   refinement.js:183:4
+   183|   (nVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:124:31
+   124| declare var nVoidable: void | N;
+                                      ^ [1]
+   refinement.js:183:15
+   183|   (nVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:193:4
+
+Cannot cast `nTruthy` to undefined because `NTruthy` [1] is incompatible with undefined [2].
+
+   refinement.js:193:4
+   193|   (nTruthy: void); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:190:22
+   190| declare var nTruthy: NTruthy | void;
+                             ^^^^^^^ [1]
+   refinement.js:193:13
+   193|   (nTruthy: void); // Error
+                    ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:199:4
+
+Cannot cast `nTruthy` to `NTruthy` because undefined [1] is incompatible with `NTruthy` [2].
+
+   refinement.js:199:4
+   199|   (nTruthy: NTruthy); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:190:32
+   190| declare var nTruthy: NTruthy | void;
+                                       ^^^^ [1]
+   refinement.js:199:13
+   199|   (nTruthy: NTruthy); // Error
+                    ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:214:4
+
+Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
+
+   refinement.js:214:4
+   214|   (sVoidable: S); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:210:24
+   210| declare var sVoidable: void | S;
+                               ^^^^ [1]
+   refinement.js:214:15
+   214|   (sVoidable: S); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:218:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:218:4
+   218|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:210:31
+   210| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:218:15
+   218|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:223:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:223:4
+   223|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:210:31
+   210| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:223:15
+   223|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:229:4
+
+Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
+
+   refinement.js:229:4
+   229|   (sVoidable: S); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:210:24
+   210| declare var sVoidable: void | S;
+                               ^^^^ [1]
+   refinement.js:229:15
+   229|   (sVoidable: S); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:236:4
 
 Cannot cast `sMaybe` to `S` because null or undefined [1] is incompatible with `S` [2].
 
-   refinement.js:155:4
-   155|   (sMaybe: S); // Error
+   refinement.js:236:4
+   236|   (sMaybe: S); // Error
            ^^^^^^
 
 References:
-   refinement.js:151:21
-   151| declare var sMaybe: ?S;
+   refinement.js:232:21
+   232| declare var sMaybe: ?S;
                             ^^ [1]
-   refinement.js:155:12
-   155|   (sMaybe: S); // Error
+   refinement.js:236:12
+   236|   (sMaybe: S); // Error
                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:159:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:240:4
 
 Cannot cast `sMaybe` to null because `S` [1] is incompatible with null [2].
 
-   refinement.js:159:4
-   159|   (sMaybe: null); // Error
+   refinement.js:240:4
+   240|   (sMaybe: null); // Error
            ^^^^^^
 
 References:
-   refinement.js:151:22
-   151| declare var sMaybe: ?S;
+   refinement.js:232:22
+   232| declare var sMaybe: ?S;
                              ^ [1]
-   refinement.js:159:12
-   159|   (sMaybe: null); // Error
+   refinement.js:240:12
+   240|   (sMaybe: null); // Error
                    ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:160:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:241:4
 
 Cannot cast `sMaybe` to undefined because `S` [1] is incompatible with undefined [2].
 
-   refinement.js:160:4
-   160|   (sMaybe: void); // Error
+   refinement.js:241:4
+   241|   (sMaybe: void); // Error
            ^^^^^^
 
 References:
-   refinement.js:151:22
-   151| declare var sMaybe: ?S;
+   refinement.js:232:22
+   232| declare var sMaybe: ?S;
                              ^ [1]
-   refinement.js:160:12
-   160|   (sMaybe: void); // Error
+   refinement.js:241:12
+   241|   (sMaybe: void); // Error
                    ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:167:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:248:4
 
 Cannot cast `sStrVoid` to undefined because:
  - `S` [1] is incompatible with undefined [2].
  - string [3] is incompatible with undefined [2].
 
-   refinement.js:167:4
-   167|   (sStrVoid: void); // Error
+   refinement.js:248:4
+   248|   (sStrVoid: void); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:164:23
-   164| declare var sStrVoid: S | string | void;
+   refinement.js:245:23
+   245| declare var sStrVoid: S | string | void;
                               ^ [1]
-   refinement.js:167:14
-   167|   (sStrVoid: void); // Error
+   refinement.js:248:14
+   248|   (sStrVoid: void); // Error
                      ^^^^ [2]
-   refinement.js:164:27
-   164| declare var sStrVoid: S | string | void;
+   refinement.js:245:27
+   245| declare var sStrVoid: S | string | void;
                                   ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:168:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:249:4
 
 Cannot cast `sStrVoid` to string because `S` [1] is incompatible with string [2].
 
-   refinement.js:168:4
-   168|   (sStrVoid: string); // Error
+   refinement.js:249:4
+   249|   (sStrVoid: string); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:164:23
-   164| declare var sStrVoid: S | string | void;
+   refinement.js:245:23
+   245| declare var sStrVoid: S | string | void;
                               ^ [1]
-   refinement.js:168:14
-   168|   (sStrVoid: string); // Error
+   refinement.js:249:14
+   249|   (sStrVoid: string); // Error
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:169:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:250:4
 
 Cannot cast `sStrVoid` to `S` because string [1] is incompatible with `S` [2].
 
-   refinement.js:169:4
-   169|   (sStrVoid: S); // Error
+   refinement.js:250:4
+   250|   (sStrVoid: S); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:164:27
-   164| declare var sStrVoid: S | string | void;
+   refinement.js:245:27
+   245| declare var sStrVoid: S | string | void;
                                   ^^^^^^ [1]
-   refinement.js:169:14
-   169|   (sStrVoid: S); // Error
+   refinement.js:250:14
+   250|   (sStrVoid: S); // Error
                      ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:175:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:256:4
 
 Cannot cast `sStrVoid` to string because undefined [1] is incompatible with string [2].
 
-   refinement.js:175:4
-   175|   (sStrVoid: string); // Error
+   refinement.js:256:4
+   256|   (sStrVoid: string); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:164:36
-   164| declare var sStrVoid: S | string | void;
+   refinement.js:245:36
+   245| declare var sStrVoid: S | string | void;
                                            ^^^^ [1]
-   refinement.js:175:14
-   175|   (sStrVoid: string); // Error
+   refinement.js:256:14
+   256|   (sStrVoid: string); // Error
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:176:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:257:4
 
 Cannot cast `sStrVoid` to `S` because undefined [1] is incompatible with `S` [2].
 
-   refinement.js:176:4
-   176|   (sStrVoid: S); // Error
+   refinement.js:257:4
+   257|   (sStrVoid: S); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:164:36
-   164| declare var sStrVoid: S | string | void;
+   refinement.js:245:36
+   245| declare var sStrVoid: S | string | void;
                                            ^^^^ [1]
-   refinement.js:176:14
-   176|   (sStrVoid: S); // Error
+   refinement.js:257:14
+   257|   (sStrVoid: S); // Error
                      ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:177:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:258:4
 
 Cannot cast `sStrVoid` to union type because:
  - Either undefined [1] is incompatible with `S` [2].
  - Or undefined [1] is incompatible with string [3].
 
-   refinement.js:177:4
-   177|   (sStrVoid: S | string); // Error
+   refinement.js:258:4
+   258|   (sStrVoid: S | string); // Error
            ^^^^^^^^
 
 References:
-   refinement.js:164:36
-   164| declare var sStrVoid: S | string | void;
+   refinement.js:245:36
+   245| declare var sStrVoid: S | string | void;
                                            ^^^^ [1]
-   refinement.js:177:14
-   177|   (sStrVoid: S | string); // Error
+   refinement.js:258:14
+   258|   (sStrVoid: S | string); // Error
                      ^ [2]
-   refinement.js:177:18
-   177|   (sStrVoid: S | string); // Error
+   refinement.js:258:18
+   258|   (sStrVoid: S | string); // Error
                          ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:187:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:262:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:262:4
+   262|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:210:31
+   210| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:262:15
+   262|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:268:4
+
+Cannot cast `sVoidable` to `S` because undefined [1] is incompatible with `S` [2].
+
+   refinement.js:268:4
+   268|   (sVoidable: S); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:210:24
+   210| declare var sVoidable: void | S;
+                               ^^^^ [1]
+   refinement.js:268:15
+   268|   (sVoidable: S); // Error
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:269:4
+
+Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with undefined [2].
+
+   refinement.js:269:4
+   269|   (sVoidable: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:210:31
+   210| declare var sVoidable: void | S;
+                                      ^ [1]
+   refinement.js:269:15
+   269|   (sVoidable: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:279:4
+
+Cannot cast `sTruthy` to undefined because `STruthy` [1] is incompatible with undefined [2].
+
+   refinement.js:279:4
+   279|   (sTruthy: void); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:276:22
+   276| declare var sTruthy: STruthy | void;
+                             ^^^^^^^ [1]
+   refinement.js:279:13
+   279|   (sTruthy: void); // Error
+                    ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:285:4
+
+Cannot cast `sTruthy` to `STruthy` because undefined [1] is incompatible with `STruthy` [2].
+
+   refinement.js:285:4
+   285|   (sTruthy: STruthy); // Error
+           ^^^^^^^
+
+References:
+   refinement.js:276:32
+   276| declare var sTruthy: STruthy | void;
+                                       ^^^^ [1]
+   refinement.js:285:13
+   285|   (sTruthy: STruthy); // Error
+                    ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:295:4
 
 Cannot cast `bn` to `N` because `B` [1] is incompatible with `N` [2].
 
-   refinement.js:187:4
-   187|   (bn: N); // Error
+   refinement.js:295:4
+   295|   (bn: N); // Error
            ^^
 
 References:
-   refinement.js:183:17
-   183| declare var bn: B | N;
+   refinement.js:291:17
+   291| declare var bn: B | N;
                         ^ [1]
-   refinement.js:187:8
-   187|   (bn: N); // Error
+   refinement.js:295:8
+   295|   (bn: N); // Error
                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:191:4
+Error ---------------------------------------------------------------------------------------------- refinement.js:299:4
 
 Cannot cast `bn` to `B` because `N` [1] is incompatible with `B` [2].
 
-   refinement.js:191:4
-   191|   (bn: B); // Error
+   refinement.js:299:4
+   299|   (bn: B); // Error
            ^^
 
 References:
-   refinement.js:183:21
-   183| declare var bn: B | N;
+   refinement.js:291:21
+   291| declare var bn: B | N;
                             ^ [1]
-   refinement.js:191:8
-   191|   (bn: B); // Error
+   refinement.js:299:8
+   299|   (bn: B); // Error
                ^ [2]
 
 
 
-Found 68 errors
+Found 87 errors

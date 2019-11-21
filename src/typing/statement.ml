@@ -7693,73 +7693,95 @@ and mk_enum cx ~enum_reason enum =
     match body with
     | (_, BooleanBody { BooleanBody.members; _ }) ->
       let reason = mk_reason (REnumRepresentation RBoolean) (aloc_of_reason enum_reason) in
-      ( BoolT.make reason (literal_trust ()),
-        fst
-        @@ Base.List.fold_left
-             ~f:
-               (fun (names, seen_values)
-                    (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
-               let (init_loc, init_value) = init in
-               let seen_values =
-                 match BoolMap.find_opt init_value seen_values with
-                 | Some prev_use_loc ->
-                   Flow.add_output
-                     cx
-                     (Error_message.EEnumMemberDuplicateValue
-                        { loc = init_loc; prev_use_loc; enum_reason });
-                   seen_values
-                 | None -> BoolMap.add init_value init_loc seen_values
-               in
-               (SSet.add name names, seen_values))
-             ~init:(SSet.empty, BoolMap.empty)
-             members )
+      let (members, bool_type, _) =
+        Base.List.fold_left
+          ~f:
+            (fun (names, bool_type, seen_values)
+                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+            let (init_loc, init_value) = init in
+            let bool_type =
+              match bool_type with
+              (* we have seen one value *)
+              | None -> Some init_value
+              (* we have now seen both values *)
+              | Some _ -> None
+            in
+            let seen_values =
+              match BoolMap.find_opt init_value seen_values with
+              | Some prev_use_loc ->
+                Flow.add_output
+                  cx
+                  (Error_message.EEnumMemberDuplicateValue
+                     { loc = init_loc; prev_use_loc; enum_reason });
+                seen_values
+              | None -> BoolMap.add init_value init_loc seen_values
+            in
+            (SSet.add name names, bool_type, seen_values))
+          ~init:(SSet.empty, None, BoolMap.empty)
+          members
+      in
+      (DefT (reason, literal_trust (), BoolT bool_type), members)
     | (_, NumberBody { NumberBody.members; _ }) ->
       let reason = mk_reason (REnumRepresentation RNumber) (aloc_of_reason enum_reason) in
-      ( NumT.make reason (literal_trust ()),
-        fst
-        @@ Base.List.fold_left
-             ~f:
-               (fun (names, seen_values)
-                    (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
-               let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
-               let seen_values =
-                 match NumberMap.find_opt init_value seen_values with
-                 | Some prev_use_loc ->
-                   Flow.add_output
-                     cx
-                     (Error_message.EEnumMemberDuplicateValue
-                        { loc = init_loc; prev_use_loc; enum_reason });
-                   seen_values
-                 | None -> NumberMap.add init_value init_loc seen_values
-               in
-               (SSet.add name names, seen_values))
-             ~init:(SSet.empty, NumberMap.empty)
-             members )
+      let (members, num_type, _) =
+        Base.List.fold_left
+          ~f:
+            (fun (names, num_type, seen_values)
+                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+            let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
+            let num_type =
+              if init_value = 0.0 then
+                AnyLiteral
+              else
+                num_type
+            in
+            let seen_values =
+              match NumberMap.find_opt init_value seen_values with
+              | Some prev_use_loc ->
+                Flow.add_output
+                  cx
+                  (Error_message.EEnumMemberDuplicateValue
+                     { loc = init_loc; prev_use_loc; enum_reason });
+                seen_values
+              | None -> NumberMap.add init_value init_loc seen_values
+            in
+            (SSet.add name names, num_type, seen_values))
+          ~init:(SSet.empty, Truthy, NumberMap.empty)
+          members
+      in
+      (DefT (reason, literal_trust (), NumT num_type), members)
     | (_, StringBody { StringBody.members = StringBody.Initialized members; _ }) ->
       let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
-      ( StrT.make reason (literal_trust ()),
-        fst
-        @@ Base.List.fold_left
-             ~f:
-               (fun (names, seen_values)
-                    (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
-               let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
-               let seen_values =
-                 match SMap.find_opt init_value seen_values with
-                 | Some prev_use_loc ->
-                   Flow.add_output
-                     cx
-                     (Error_message.EEnumMemberDuplicateValue
-                        { loc = init_loc; prev_use_loc; enum_reason });
-                   seen_values
-                 | None -> SMap.add init_value init_loc seen_values
-               in
-               (SSet.add name names, seen_values))
-             ~init:(SSet.empty, SMap.empty)
-             members )
+      let (members, str_type, _) =
+        Base.List.fold_left
+          ~f:
+            (fun (names, str_type, seen_values)
+                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+            let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
+            let str_type =
+              if init_value = "" then
+                AnyLiteral
+              else
+                str_type
+            in
+            let seen_values =
+              match SMap.find_opt init_value seen_values with
+              | Some prev_use_loc ->
+                Flow.add_output
+                  cx
+                  (Error_message.EEnumMemberDuplicateValue
+                     { loc = init_loc; prev_use_loc; enum_reason });
+                seen_values
+              | None -> SMap.add init_value init_loc seen_values
+            in
+            (SSet.add name names, str_type, seen_values))
+          ~init:(SSet.empty, Truthy, SMap.empty)
+          members
+      in
+      (DefT (reason, literal_trust (), StrT str_type), members)
     | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
       let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
-      ( StrT.make reason (literal_trust ()),
+      ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
         SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
     | (_, SymbolBody { SymbolBody.members }) ->
       let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
