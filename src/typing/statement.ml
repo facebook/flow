@@ -3601,14 +3601,14 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
     else
       []
   in
-  let prop_exists_pred object_ name obj_t =
+  let prop_exists_pred object_ name obj_t prop_reason =
     if is_existence_check then
       let prop_pred =
         (* see comment on exists_pred *)
         if is_cond then
-          PropExistsP name
+          PropExistsP (name, prop_reason)
         else
-          PropNonMaybeP name
+          PropNonMaybeP (name, prop_reason)
       in
       match Refinement.key ~allow_optional:true object_ with
       | Some key_name -> [(key_name, prop_pred, obj_t)]
@@ -4042,11 +4042,11 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
         } ->
       let super = super_ cx super_loc in
       let expr_reason = mk_reason (RProperty (Some name)) loc in
+      let prop_reason = mk_reason (RProperty (Some name)) ploc in
       let lhs_t =
         match Refinement.get ~allow_optional:true cx (loc, e) loc with
         | Some t -> t
         | None ->
-          let prop_reason = mk_reason (RProperty (Some name)) ploc in
           if Type_inference_hooks_js.dispatch_member_hook cx name ploc super then
             Unsoundness.at InferenceHooks ploc
           else
@@ -4062,7 +4062,9 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
       let sentinel_refinement =
         Option.value_map ~f:(fun f -> f lhs_t) ~default:None sentinel_refine
       in
-      let preds = exists_pred (loc, e) lhs_t @ prop_exists_pred (super_loc, Super) name super in
+      let preds =
+        exists_pred (loc, e) lhs_t @ prop_exists_pred (super_loc, Super) name super prop_reason
+      in
       Some (ast, mk_preds preds, sentinel_refinement)
     | _ -> None
   in
@@ -4434,7 +4436,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
         Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
       in
       let new_pred_list =
-        exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t
+        exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t prop_reason
       in
       let preds = combine_preds preds new_pred_list in
       let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
@@ -4728,9 +4730,7 @@ and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as
       (t, None, res, None, None))
 
 and subscript ~is_cond cx ex =
-  let (_, _, ast, _, _) =
-    optional_chain ~is_cond ~is_existence_check:false cx ex
-  in
+  let (_, _, ast, _, _) = optional_chain ~is_cond ~is_existence_check:false cx ex in
   ast
 
 (* Handles function calls that appear in conditional contexts. The main
@@ -6632,9 +6632,7 @@ and predicates_of_condition cx e =
       (* member expressions *)
       | (_, Member _)
       | (_, OptionalMember _) ->
-        let (_, _, ast, preds, _) =
-          optional_chain ~is_cond:true ~is_existence_check:true cx e
-        in
+        let (_, _, ast, preds, _) = optional_chain ~is_cond:true ~is_existence_check:true cx e in
         begin
           match preds with
           | None -> empty_result ast

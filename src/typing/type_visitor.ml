@@ -601,7 +601,7 @@ class ['a] t =
           let acc = self#type_ cx pole_TODO acc t2 in
           let acc = self#type_ cx pole_TODO acc t3 in
           acc
-        | PropExistsTest (_, _, t1, t2, (pred, not_pred)) ->
+        | PropExistsTest (_, _, _, t1, t2, (pred, not_pred)) ->
           let acc = self#type_ cx pole_TODO acc t1 in
           let acc = self#type_ cx pole_TODO acc t2 in
           let acc = self#predicate cx acc pred in
