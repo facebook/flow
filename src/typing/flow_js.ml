@@ -2654,7 +2654,8 @@ struct
             (Error_message.EComputedPropertyWithUnion
                { computed_property_reason = reason; union_reason = r })
         (* cases where there is no loss of precision *)
-        | (UnionT _, UseT (_, (UnionT _ as u))) when union_optimization_guard cx l u -> ()
+        | (UnionT _, UseT (_, (UnionT _ as u))) when union_optimization_guard cx l u ->
+          if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path"
         (* Optimization to treat maybe and optional types as special unions for subset comparision *)
         | (UnionT (reason, rep), UseT (use_op, MaybeT (r, maybe))) ->
           let checked_trust = Context.trust_errors cx in
@@ -10970,9 +10971,9 @@ struct
   and union_optimization_guard =
     (* Check if l is a subset of u. Flatten both unions and then check that each element
      of l appears somewhere in u *)
-    let union_subtype cx rep1 rep2 =
-      let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
-      Type_mapper.union_flatten cx @@ UnionRep.members rep1
+    let union_subtype cx lts uts =
+      let ts2 = Type_mapper.union_flatten cx uts in
+      Type_mapper.union_flatten cx lts
       |> Base.List.for_all ~f:(fun t1 ->
              Base.List.exists ~f:(TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2)
     in
@@ -10981,20 +10982,32 @@ struct
       | (UnionT (_, rep1), UnionT (_, rep2)) ->
         rep1 = rep2
         ||
-        (* Try n log n check before n^2 check *)
+        (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
         begin
           match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
           | (Some enums1, Some enums2) -> UnionEnumSet.subset enums1 enums2
           | (_, _) ->
-            (* Check if u contains l after unwrapping annots, tvars and repos types.
-           This is faster than the n^2 case below because it avoids flattening both
-           unions *)
-            UnionRep.members rep2
-            |> Base.List.map ~f:(Type_mapper.unwrap_type cx)
-            |> Base.List.exists ~f:(fun u ->
-                   (not (TypeSet.mem u seen))
-                   && union_optimization_guard_impl (TypeSet.add u seen) cx l u)
-            || union_subtype cx rep1 rep2
+            let unwrap rep =
+              UnionRep.members rep |> Base.List.map ~f:(Type_mapper.unwrap_type cx)
+            in
+            let lts = unwrap rep1 in
+            let uts = unwrap rep2 in
+            (* Pointwise subtyping check: O(N) *)
+            if List.length lts = List.length uts && Base.List.for_all2_exn ~f:( = ) lts uts then
+              true
+            else if
+              (* Check if u contains l after unwrapping annots, tvars and repos types.
+                This is faster than the n^2 case below because it avoids flattening both
+                unions *)
+              Base.List.exists
+                ~f:(fun u ->
+                  (not (TypeSet.mem u seen))
+                  && union_optimization_guard_impl (TypeSet.add u seen) cx l u)
+                uts
+            then
+              true
+            else
+              union_subtype cx lts uts
         end
       | _ -> false
     in
