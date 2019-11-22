@@ -8,10 +8,6 @@ restore_file() {
   cp a.js.bak a.js
 }
 
-assert_one() {
-  assert_exit_on_line "${BASH_LINENO[0]}" "1" "$@"
-}
-
 coverage() {
   echo "-----------------------------"
   echo "restart server"
@@ -99,5 +95,5 @@ assert_ok mv .flowconfig.types-first .flowconfig
 coverage > types-first-coverage.log
 
 echo "==== DIFF BETWEEN CLASSIC AND TYPES-FIRST ====="
-assert_one diff --strip-trailing-cr classic-coverage.log types-first-coverage.log > diff.log
+assert_ok diff --strip-trailing-cr classic-coverage.log types-first-coverage.log > diff.log
 cat diff.log

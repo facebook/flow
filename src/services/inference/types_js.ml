@@ -640,11 +640,21 @@ let include_dependencies_and_dependents
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
-let remove_old_results (errors, warnings, suppressions, coverage, first_internal_error) file =
+let remove_old_results options phase current_results file =
+  let (errors, warnings, suppressions, coverage, first_internal_error) = current_results in
+  let new_coverage =
+    match (Options.arch options, phase) with
+    | (Options.TypesFirst, Context.Merging)
+    | (Options.TypesFirst, Context.Normalizing) ->
+      coverage
+    | (Options.TypesFirst, Context.Checking)
+    | (Options.Classic, _) ->
+      FilenameMap.remove file coverage
+  in
   ( FilenameMap.remove file errors,
     FilenameMap.remove file warnings,
     Error_suppressions.remove file suppressions,
-    FilenameMap.remove file coverage,
+    new_coverage,
     first_internal_error )
 
 let add_new_results
@@ -700,7 +710,7 @@ let run_merge_service
         List.fold_left
           (fun acc (file, result) ->
             let component = FilenameMap.find file component_map in
-            let acc = Nel.fold_left remove_old_results acc component in
+            let acc = Nel.fold_left (remove_old_results options Context.Merging) acc component in
             add_new_results ~record_slow_file:(fun _ _ -> ()) acc file result)
           acc
           merged
@@ -1156,7 +1166,7 @@ end = struct
           let (merge_errors, warnings, suppressions, coverage, first_internal_error) =
             List.fold_left
               (fun acc (file, result) ->
-                let acc = remove_old_results acc file in
+                let acc = remove_old_results options Context.Checking acc file in
                 add_new_results ~record_slow_file acc file result)
               (merge_errors, warnings, suppressions, coverage, None)
               ret
