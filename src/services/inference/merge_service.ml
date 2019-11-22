@@ -144,12 +144,11 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       dep_cxs
       master_cx
   in
-  let coverage_of_tast = Coverage.component_coverage ~full_cx in
   let (typed_asts, coverage_map) =
     Nel.fold_left
       (fun (typed_asts, cov_map) (ctx, typed_ast) ->
         let file = Context.file ctx in
-        let cov = coverage_of_tast typed_ast in
+        let cov = Coverage.file_coverage ~full_cx typed_ast in
         (FilenameMap.add file typed_ast typed_asts, FilenameMap.add file cov cov_map))
       (FilenameMap.empty, FilenameMap.empty)
       cx_nel
