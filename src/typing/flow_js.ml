@@ -1150,7 +1150,22 @@ struct
         (***************************)
         (* type cast e.g. `(x: T)` *)
         (***************************)
+        | (DefT (reason, trust, EnumT enum), TypeCastT (use_op, cast_to_t)) ->
+          rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) })
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
+        (**********************************************************************)
+        (* enum cast e.g. `(x: T)` where `x` is an `EnumT`                    *)
+        (* We allow enums to be explicitly cast to their representation type. *)
+        (* When we specialize `TypeCastT` when the LHS is an `EnumT`, the     *)
+        (* `cast_to_t` of `TypeCastT` must then be resolved. So we call flow  *)
+        (* with it on the LHS, and `EnumCastT` on the RHS. When we actually   *)
+        (* turn this into a `UseT`, it must placed back on the RHS.           *)
+        (**********************************************************************)
+        | (cast_to_t, EnumCastT { use_op; enum = (_, _, { representation_t; _ }) })
+          when TypeUtil.quick_subtype (Context.trust_errors cx) representation_t cast_to_t ->
+          rec_flow cx trace (representation_t, UseT (use_op, cast_to_t))
+        | (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) }) ->
+          rec_flow cx trace (DefT (reason, trust, EnumT enum), UseT (use_op, cast_to_t))
         (*********************************************************************)
         (* `import type` creates a properly-parameterized type alias for the *)
         (* remote type -- but only for particular, valid remote types.       *)
@@ -7104,6 +7119,7 @@ struct
     | (_, ToStringT _)
     | (_, TypeAppVarianceCheckT _)
     | (_, TypeCastT _)
+    | (_, EnumCastT _)
     | (_, UnaryMinusT _)
     | (_, VarianceCheckT _)
     | (_, ModuleExportsAssignT _) ->
@@ -7312,6 +7328,7 @@ struct
     | SuperT _
     | TypeAppVarianceCheckT _
     | TypeCastT _
+    | EnumCastT _
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ExtendsUseT _

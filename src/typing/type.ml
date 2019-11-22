@@ -739,6 +739,10 @@ module rec TypeTerm : sig
         id: ident;
       }
     | TypeCastT of use_op * t
+    | EnumCastT of {
+        use_op: use_op;
+        enum: reason * Trust.trust_rep * enum_t;
+      }
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
@@ -2546,6 +2550,7 @@ end = struct
     | DebugPrintT reason -> reason
     | DebugSleepT reason -> reason
     | ElemT (_, reason, _, _) -> reason
+    | EnumCastT { enum = (reason, _, _); _ } -> reason
     | EqT (reason, _, _) -> reason
     | ExportNamedT (reason, _, _, _) -> reason
     | ExportTypeT (reason, _, _, _) -> reason
@@ -2711,6 +2716,8 @@ end = struct
     | DebugPrintT reason -> DebugPrintT (f reason)
     | DebugSleepT reason -> DebugSleepT (f reason)
     | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
+    | EnumCastT { use_op; enum = (reason, trust, enum) } ->
+      EnumCastT { use_op; enum = (f reason, trust, enum) }
     | EqT (reason, flip, t) -> EqT (f reason, flip, t)
     | ExportNamedT (reason, tmap, export_kind, t_out) ->
       ExportNamedT (f reason, tmap, export_kind, t_out)
@@ -2846,6 +2853,7 @@ end = struct
     | TypeAppVarianceCheckT (op, r1, r2, ts) ->
       util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
     | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
+    | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
     | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
       util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
     | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
@@ -3638,6 +3646,7 @@ let string_of_use_ctor = function
   | DebugPrintT _ -> "DebugPrintT"
   | DebugSleepT _ -> "DebugSleepT"
   | ElemT _ -> "ElemT"
+  | EnumCastT _ -> "EnumCastT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"

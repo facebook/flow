@@ -47,7 +47,7 @@ declare var bBoolVoid: B | boolean | void;
 
 if (typeof bBoolVoid === "boolean") {
   (bBoolVoid: void); // Error
-  (bBoolVoid: boolean); // Error
+  (bBoolVoid: boolean); // Valid
   (bBoolVoid: B); // Error
   (bBoolVoid: B | boolean); // Valid
 }
@@ -160,7 +160,7 @@ declare var nNumVoid: N | number | void;
 
 if (typeof nNumVoid === "number") {
   (nNumVoid: void); // Error
-  (nNumVoid: number); // Error
+  (nNumVoid: number); // Valid
   (nNumVoid: N); // Error
   (nNumVoid: N | number); // Valid
 }
@@ -246,7 +246,7 @@ declare var sStrVoid: S | string | void;
 
 if (typeof sStrVoid === "string") {
   (sStrVoid: void); // Error
-  (sStrVoid: string); // Error
+  (sStrVoid: string); // Valid
   (sStrVoid: S); // Error
   (sStrVoid: S | string); // Valid
 }

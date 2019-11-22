@@ -1077,6 +1077,12 @@ class virtual ['a] t_with_uses =
           t
         else
           TypeCastT (use_op, t'')
+      | EnumCastT { use_op; enum = (reason, trust, enum) } ->
+        let enum' = self#enum cx map_cx enum in
+        if enum' == enum then
+          t
+        else
+          EnumCastT { use_op; enum = (reason, trust, enum') }
       | ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (t2, ts2, op2, r2), flip) ->
         let ts1' = ListUtils.ident_map (self#type_ cx map_cx) ts1 in
         let t2' = self#type_ cx map_cx t2 in

@@ -1,3 +1,196 @@
+Error ----------------------------------------------------------------------------------------------------- cast.js:31:2
+
+Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2].
+
+   cast.js:31:2
+   31| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
+        ^^^
+
+References:
+   cast.js:13:1
+       v-----------------
+   13| enum S of string {
+   14|   A,
+   15|   B,
+   16| }
+       ^ [1]
+   cast.js:31:8
+   31| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:44:2
+
+Cannot cast `B.A` to number because `B` [1] is incompatible with number [2].
+
+   cast.js:44:2
+   44| (B.A: number); // Error
+        ^^^
+
+References:
+   cast.js:3:1
+       v------------------
+    3| enum B of boolean {
+    4|   A = true,
+    5|   B = false,
+    6| }
+       ^ [1]
+   cast.js:44:7
+   44| (B.A: number); // Error
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:45:2
+
+Cannot cast `S.A` to boolean because `S` [1] is incompatible with boolean [2].
+
+   cast.js:45:2
+   45| (S.A: boolean); // Error
+        ^^^
+
+References:
+   cast.js:13:1
+       v-----------------
+   13| enum S of string {
+   14|   A,
+   15|   B,
+   16| }
+       ^ [1]
+   cast.js:45:7
+   45| (S.A: boolean); // Error
+             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:46:2
+
+Cannot cast `N.A` to boolean because `N` [1] is incompatible with boolean [2].
+
+   cast.js:46:2
+   46| (N.A: boolean); // Error
+        ^^^
+
+References:
+   cast.js:8:1
+       v-----------------
+    8| enum N of number {
+    9|   A = 1,
+   10|   B = 2,
+   11| }
+       ^ [1]
+   cast.js:46:7
+   46| (N.A: boolean); // Error
+             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:47:2
+
+Cannot cast `X.A` to string because `B` [1] is incompatible with string [2].
+
+   cast.js:47:2
+   47| (X.A: string); // Error
+        ^^^
+
+References:
+   cast.js:3:1
+       v------------------
+    3| enum B of boolean {
+    4|   A = true,
+    5|   B = false,
+    6| }
+       ^ [1]
+   cast.js:47:7
+   47| (X.A: string); // Error
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:55:2
+
+Cannot cast `BS.A` to union type because:
+ - all branches are incompatible:
+    - Either `B` [1] is incompatible with string [2].
+    - Or `B` [1] is incompatible with boolean [3].
+ - all branches are incompatible:
+    - Either `S` [4] is incompatible with string [2].
+    - Or `S` [4] is incompatible with boolean [3].
+
+   cast.js:55:2
+   55| (BS.A: string | boolean); // Error
+        ^^^^
+
+References:
+   cast.js:3:1
+       v------------------
+    3| enum B of boolean {
+    4|   A = true,
+    5|   B = false,
+    6| }
+       ^ [1]
+   cast.js:55:8
+   55| (BS.A: string | boolean); // Error
+              ^^^^^^ [2]
+   cast.js:55:17
+   55| (BS.A: string | boolean); // Error
+                       ^^^^^^^ [3]
+   cast.js:13:1
+       v-----------------
+   13| enum S of string {
+   14|   A,
+   15|   B,
+   16| }
+       ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:58:2
+
+Cannot cast `sb` to union type because:
+ - all branches are incompatible:
+    - Either `S` [1] is incompatible with string [2].
+    - Or `S` [1] is incompatible with boolean [3].
+ - all branches are incompatible:
+    - Either `B` [4] is incompatible with string [2].
+    - Or `B` [4] is incompatible with boolean [3].
+
+   cast.js:58:2
+   58| (sb: string | boolean); // Error
+        ^^
+
+References:
+   cast.js:57:17
+   57| declare var sb: S | B;
+                       ^ [1]
+   cast.js:58:6
+   58| (sb: string | boolean); // Error
+            ^^^^^^ [2]
+   cast.js:58:15
+   58| (sb: string | boolean); // Error
+                     ^^^^^^^ [3]
+   cast.js:57:21
+   57| declare var sb: S | B;
+                           ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:61:2
+
+Cannot cast `bs` to boolean because:
+ - `B` [1] is incompatible with boolean [2].
+ - `B2` [3] is incompatible with boolean [2].
+
+   cast.js:61:2
+   61| (bs: boolean); // Error
+        ^^
+
+References:
+   cast.js:60:17
+   60| declare var bs: B | B2;
+                       ^ [1]
+   cast.js:61:6
+   61| (bs: boolean); // Error
+            ^^^^^^^ [2]
+   cast.js:60:21
+   60| declare var bs: B | B2;
+                           ^^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
 
 Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2].
@@ -607,23 +800,6 @@ References:
                                   ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:50:4
-
-Cannot cast `bBoolVoid` to boolean because `B` [1] is incompatible with boolean [2].
-
-   refinement.js:50:4
-   50|   (bBoolVoid: boolean); // Error
-          ^^^^^^^^^
-
-References:
-   refinement.js:46:24
-   46| declare var bBoolVoid: B | boolean | void;
-                              ^ [1]
-   refinement.js:50:15
-   50|   (bBoolVoid: boolean); // Error
-                     ^^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- refinement.js:51:4
 
 Cannot cast `bBoolVoid` to `B` because boolean [1] is incompatible with `B` [2].
@@ -991,23 +1167,6 @@ References:
                                   ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:163:4
-
-Cannot cast `nNumVoid` to number because `N` [1] is incompatible with number [2].
-
-   refinement.js:163:4
-   163|   (nNumVoid: number); // Error
-           ^^^^^^^^
-
-References:
-   refinement.js:159:23
-   159| declare var nNumVoid: N | number | void;
-                              ^ [1]
-   refinement.js:163:14
-   163|   (nNumVoid: number); // Error
-                     ^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------- refinement.js:164:4
 
 Cannot cast `nNumVoid` to `N` because number [1] is incompatible with `N` [2].
@@ -1307,23 +1466,6 @@ References:
                                   ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:249:4
-
-Cannot cast `sStrVoid` to string because `S` [1] is incompatible with string [2].
-
-   refinement.js:249:4
-   249|   (sStrVoid: string); // Error
-           ^^^^^^^^
-
-References:
-   refinement.js:245:23
-   245| declare var sStrVoid: S | string | void;
-                              ^ [1]
-   refinement.js:249:14
-   249|   (sStrVoid: string); // Error
-                     ^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------- refinement.js:250:4
 
 Cannot cast `sStrVoid` to `S` because string [1] is incompatible with `S` [2].
@@ -1517,4 +1659,4 @@ References:
 
 
 
-Found 87 errors
+Found 95 errors

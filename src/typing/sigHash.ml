@@ -68,6 +68,7 @@ type hash =
   | EvalH
   | TypeAppH
   | TypeCastH
+  | EnumCastH
   | ThisClassH
   | ThisTypeAppH
   | BoundH
@@ -362,6 +363,7 @@ let hash_of_use_ctor =
     | VarianceCheckT _ -> VarianceCheckH
     | TypeAppVarianceCheckT _ -> TypeAppVarianceCheckH
     | TypeCastT _ -> TypeCastH
+    | EnumCastT _ -> EnumCastH
     | ConcretizeTypeAppsT _ -> ConcretizeTypeAppsH
     | LookupT _ -> LookupH
     | ObjAssignToT _ -> ObjAssignToH
