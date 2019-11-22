@@ -2035,13 +2035,15 @@ end = struct
           let files_to_update_dependency_info =
             FilenameSet.union freshparsed direct_dependent_files
           in
-          let%lwt updated_dependency_info =
-            Dep_service.calc_partial_dependency_info
-              ~options
+          let%lwt updated_dependency_graph =
+            Dep_service.calc_partial_dependency_graph
               ~reader
               workers
               files_to_update_dependency_info
               ~parsed
+          in
+          let updated_dependency_info =
+            Dep_service.dependency_info_of_dependency_graph ~options updated_dependency_graph
           in
           let old_dependency_info = env.ServerEnv.dependency_info in
           let to_remove = FilenameSet.union unparsed_set deleted in

@@ -237,7 +237,7 @@ let dependency_info_of_dependency_graph ~options dependency_graph =
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
-let calc_partial_dependency_info ~options ~reader workers files ~parsed =
+let calc_partial_dependency_graph ~reader workers files ~parsed =
   let%lwt dependency_graph =
     MultiWorkerLwt.call
       workers
@@ -257,8 +257,8 @@ let calc_partial_dependency_info ~options ~reader workers files ~parsed =
         (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
       dependency_graph
   in
-  let dependency_info = dependency_info_of_dependency_graph ~options dependency_graph in
-  Lwt.return dependency_info
+  Lwt.return dependency_graph
 
 let calc_dependency_info ~options ~reader workers ~parsed =
-  calc_partial_dependency_info ~options ~reader workers parsed ~parsed
+  let%lwt dependency_graph = calc_partial_dependency_graph ~reader workers parsed ~parsed in
+  Lwt.return (dependency_info_of_dependency_graph ~options dependency_graph)
