@@ -5582,9 +5582,8 @@ and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
       | Some _ -> (expr_loc, open_, children_loc)
       | _ -> (open_, open_, open_)
     in
-    let (unresolved_params, children) = collapse_children cx children in
-    let (t, openingElement, closingElement) =
-      jsx_title cx openingElement closingElement unresolved_params locs
+    let (t, openingElement, children, closingElement) =
+      jsx_title cx openingElement children closingElement locs
     in
     (t, { openingElement; children; closingElement }))
 
@@ -5593,13 +5592,13 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
     let { frag_openingElement; frag_children; frag_closingElement } = fragment in
     let (children_loc, _) = frag_children in
     let loc_opening = frag_openingElement in
-    let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let fragment_t =
       let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
       let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
       let use_op = Op (GetProperty reason) in
       get_prop ~is_cond:false cx reason ~use_op react (reason, "Fragment")
     in
+    let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_openingElement, children_loc) in
     let t =
       jsx_desugar
@@ -5613,7 +5612,7 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
     in
     (t, { frag_openingElement; frag_children; frag_closingElement }))
 
-and jsx_title cx openingElement closingElement children locs =
+and jsx_title cx openingElement children closingElement locs =
   Ast.JSX.(
     let make_trust = Context.trust_constructor cx in
     let (loc_element, _, _) = locs in
@@ -5621,7 +5620,7 @@ and jsx_title cx openingElement closingElement children locs =
     let facebook_fbs = Context.facebook_fbs cx in
     let facebook_fbt = Context.facebook_fbt cx in
     let jsx_mode = Context.jsx cx in
-    let (t, name, attributes) =
+    let (t, name, attributes, children) =
       match (name, jsx_mode, (facebook_fbs, facebook_fbt)) with
       | (Identifier (loc_id, ({ Identifier.name = "fbs" } as id)), _, (Some custom_jsx_type, _))
       | (Identifier (loc_id, ({ Identifier.name = "fbt" } as id)), _, (_, Some custom_jsx_type)) ->
@@ -5629,13 +5628,15 @@ and jsx_title cx openingElement closingElement children locs =
         let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
         let name = Identifier ((loc_id, t), id) in
         let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-        (t, name, attributes)
+        let (_, children) = collapse_children cx children in
+        (t, name, attributes, children)
       | (Identifier (loc, { Identifier.name }), Options.Jsx_react, _) ->
         if Type_inference_hooks_js.dispatch_id_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc_element in
           let name = Identifier ((loc, t), { Identifier.name }) in
           let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-          (t, name, attributes)
+          let (_, children) = collapse_children cx children in
+          (t, name, attributes, children)
         else
           let reason = mk_reason (RReactElement (Some name)) loc_element in
           let c =
@@ -5644,16 +5645,19 @@ and jsx_title cx openingElement closingElement children locs =
             else
               DefT (mk_reason (RIdentifier name) loc, make_trust (), SingletonStrT name)
           in
-          let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-          let t = jsx_desugar cx name c o attributes children locs in
+          let (o, attributes', unresolved_params, children) =
+            jsx_mk_props cx reason c name attributes children
+          in
+          let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name }) in
-          (t, name, attributes')
+          (t, name, attributes', children)
       | (Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _) ->
         if Type_inference_hooks_js.dispatch_id_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc_element in
           let name = Identifier ((loc, t), { Identifier.name }) in
           let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-          (t, name, attributes)
+          let (_, children) = collapse_children cx children in
+          (t, name, attributes, children)
         else
           let reason = mk_reason (RJSXElement (Some name)) loc_element in
           let c =
@@ -5662,10 +5666,12 @@ and jsx_title cx openingElement closingElement children locs =
             else
               DefT (mk_reason (RIdentifier name) loc, make_trust (), StrT (Literal (None, name)))
           in
-          let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-          let t = jsx_desugar cx name c o attributes children locs in
+          let (o, attributes', unresolved_params, children) =
+            jsx_mk_props cx reason c name attributes children
+          in
+          let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name }) in
-          (t, name, attributes')
+          (t, name, attributes', children)
       | (Identifier (loc, { Identifier.name }), Options.Jsx_csx, _) ->
         (*
          * It's a bummer to duplicate this case, but CSX does not want the
@@ -5675,14 +5681,17 @@ and jsx_title cx openingElement closingElement children locs =
           let t = Unsoundness.at InferenceHooks loc_element in
           let name = Identifier ((loc, t), { Identifier.name }) in
           let attributes' = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-          (t, name, attributes')
+          let (_, children) = collapse_children cx children in
+          (t, name, attributes', children)
         else
           let reason = mk_reason (RJSXElement (Some name)) loc_element in
           let c = identifier cx (mk_ident ~comments:None name) loc in
-          let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-          let t = jsx_desugar cx name c o attributes children locs in
+          let (o, attributes', unresolved_params, children) =
+            jsx_mk_props cx reason c name attributes children
+          in
+          let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name }) in
-          (t, name, attributes')
+          (t, name, attributes', children)
       | (MemberExpression member, Options.Jsx_react, _) ->
         let name = jsx_title_member_to_string member in
         let el = RReactElement (Some name) in
@@ -5690,22 +5699,24 @@ and jsx_title cx openingElement closingElement children locs =
         let m_expr = jsx_title_member_to_expression member in
         let ((m_loc, t), m_expr') = expression cx m_expr in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier name)) t in
-        let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-        let t = jsx_desugar cx name c o attributes children locs in
+        let (o, attributes', unresolved_params, children) =
+          jsx_mk_props cx reason c name attributes children
+        in
+        let t = jsx_desugar cx name c o attributes unresolved_params locs in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
           | None -> Tast_utils.error_mapper#jsx_member_expression member
         in
-        (t, MemberExpression member', attributes')
+        (t, MemberExpression member', attributes', children)
       | (MemberExpression member, Options.(Jsx_csx | Jsx_pragma _), _) ->
         let t = Unsoundness.at InferenceHooks loc_element in
         let name' = Tast_utils.error_mapper#jsx_name name in
         let el_name = jsx_title_member_to_string member in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier el_name)) t in
-        let (_o, attributes') = jsx_mk_props cx reason c el_name attributes children in
-        (t, name', attributes')
+        let (_o, attributes', _, children) = jsx_mk_props cx reason c el_name attributes children in
+        (t, name', attributes', children)
       | (NamespacedName namespace, _, _) ->
         (* TODO? covers namespaced names as element names *)
         let t = Unsoundness.at InferenceHooks loc_element in
@@ -5713,8 +5724,8 @@ and jsx_title cx openingElement closingElement children locs =
         let el_name = jsx_title_namespaced_name_to_string namespace in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier el_name)) t in
-        let (_o, attributes') = jsx_mk_props cx reason c el_name attributes children in
-        (t, name', attributes')
+        let (_o, attributes', _, children) = jsx_mk_props cx reason c el_name attributes children in
+        (t, name', attributes', children)
     in
     let closingElement =
       match closingElement with
@@ -5722,7 +5733,7 @@ and jsx_title cx openingElement closingElement children locs =
         Some (c_loc, { Closing.name = jsx_match_closing_element name cname })
       | None -> None
     in
-    (t, (loc, { Opening.name; selfClosing; attributes }), closingElement))
+    (t, (loc, { Opening.name; selfClosing; attributes }), children, closingElement))
 
 and jsx_match_closing_element =
   let match_identifiers o_id c_id =
@@ -5850,8 +5861,9 @@ and jsx_mk_props cx reason c name attributes children =
         attributes
     in
     let attributes = List.rev atts in
+    let (unresolved_params, children) = collapse_children cx children in
     let acc =
-      match children with
+      match unresolved_params with
       | [] -> acc
       (* We add children to the React.createElement() call for React. Not to the
        * props as other JSX users may support. *)
@@ -5868,7 +5880,7 @@ and jsx_mk_props cx reason c name attributes children =
                 cx
                 ~use_op:unknown_use
                 ~reason_op:reason
-                children
+                unresolved_params
                 (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)))
         in
         ObjectExpressionAcc.add_prop (Properties.add_field "children" Polarity.Neutral None arr) acc
@@ -5881,7 +5893,7 @@ and jsx_mk_props cx reason c name attributes children =
         ~default_proto:proto
         ~empty_unsealed:false
     in
-    (t, attributes))
+    (t, attributes, unresolved_params, children))
 
 and jsx_desugar cx name component_t props attributes children locs =
   let (loc_element, loc_opening, loc_children) = locs in
