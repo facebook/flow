@@ -245,18 +245,17 @@ let calc_partial_dependency_info ~options ~reader workers files ~parsed =
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
   in
   let dependency_info =
+    FilenameMap.map
+      (fun (sig_files, all_files) ->
+        (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
+      dependency_info
+  in
+  let dependency_info =
     match Options.arch options with
     | Options.Classic ->
       Dependency_info.Classic
-        (FilenameMap.map
-           (fun (_sig_files, all_files) -> FilenameSet.inter parsed all_files)
-           dependency_info)
-    | Options.TypesFirst ->
-      Dependency_info.TypesFirst
-        (FilenameMap.map
-           (fun (sig_files, all_files) ->
-             (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
-           dependency_info)
+        (FilenameMap.map (fun (_sig_files, all_files) -> all_files) dependency_info)
+    | Options.TypesFirst -> Dependency_info.TypesFirst dependency_info
   in
   Lwt.return dependency_info
 
