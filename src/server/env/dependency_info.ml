@@ -28,23 +28,20 @@ let of_types_first_map map =
 let update_map old_map updated_map files_to_remove =
   old_map |> FilenameSet.fold FilenameMap.remove files_to_remove |> FilenameMap.union updated_map
 
-let update old_dep_info partial_dep_info files_to_remove =
-  match (old_dep_info, partial_dep_info) with
-  | (Classic old_map, Classic updated_map) ->
-    Classic (update_map old_map updated_map files_to_remove)
-  | ( TypesFirst
-        { sig_dependency_graph = old_sig_map; implementation_dependency_graph = old_impl_map },
-      TypesFirst
-        {
-          sig_dependency_graph = updated_sig_map;
-          implementation_dependency_graph = updated_impl_map;
-        } ) ->
+let update old_dep_info updated_map files_to_remove =
+  match old_dep_info with
+  | Classic old_map ->
+    let updated_impl_map = extract_impl_map updated_map in
+    Classic (update_map old_map updated_impl_map files_to_remove)
+  | TypesFirst
+      { sig_dependency_graph = old_sig_map; implementation_dependency_graph = old_impl_map } ->
+    let updated_sig_map = extract_sig_map updated_map in
+    let updated_impl_map = extract_impl_map updated_map in
     TypesFirst
       {
         sig_dependency_graph = update_map old_sig_map updated_sig_map files_to_remove;
         implementation_dependency_graph = update_map old_impl_map updated_impl_map files_to_remove;
       }
-  | _ -> assert false
 
 let implementation_dependency_graph = function
   | Classic map -> map
