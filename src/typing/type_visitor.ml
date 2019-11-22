@@ -113,9 +113,12 @@ class ['a] t =
       | EmptyT _
       | MixedT _
       | NullT
-      | VoidT
-      | EnumT _
-      | EnumObjectT _ ->
+      | VoidT ->
+        acc
+      | EnumT enum
+      | EnumObjectT enum ->
+        let { enum_id = _; enum_name = _; members = _; representation_t } = enum in
+        let acc = self#type_ cx pole acc representation_t in
         acc
       | FunT (static, prototype, funtype) ->
         let acc = self#type_ cx pole acc static in
