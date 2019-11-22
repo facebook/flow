@@ -39,7 +39,9 @@ let merge_error_maps =
   FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
 
 (* We just want to replace the old coverage with the new one *)
-let update_coverage = FilenameMap.union ~combine:(fun _ _ -> Option.return)
+let update_coverage coverage = function
+  | None -> coverage
+  | Some new_coverage -> FilenameMap.union ~combine:(fun _ _ -> Option.return) coverage new_coverage
 
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
@@ -648,12 +650,12 @@ let remove_old_results (errors, warnings, suppressions, coverage, first_internal
 let add_new_results
     ~record_slow_file (errors, warnings, suppressions, coverage, first_internal_error) file result =
   match result with
-  | Ok (new_errors, new_warnings, new_suppressions, new_coverage, check_time) ->
+  | Ok (new_errors, new_warnings, new_suppressions, new_coverage_option, check_time) ->
     if check_time > 1. then record_slow_file file check_time;
     ( update_errset errors file new_errors,
       update_errset warnings file new_warnings,
       Error_suppressions.update_suppressions suppressions new_suppressions,
-      update_coverage coverage new_coverage,
+      update_coverage coverage new_coverage_option,
       first_internal_error )
   | Error (loc, internal_error) ->
     let new_errors = error_set_of_internal_error file (loc, internal_error) in

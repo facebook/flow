@@ -398,15 +398,19 @@ Expressions          :
 TYPES-FIRST
 =============================
 ==== DIFF BETWEEN CLASSIC AND TYPES-FIRST =====
-205c205
+203c203
+< Coverage results from 13 file(s):
+---
+> Coverage results from 11 file(s):
+205d204
 < other_folder/i.js: 33.33% (4 of 12 expressions)
----
-> other_folder/i.js: 0.00% (0 of 0 expressions)
-210c210
+210d208
 < folder/d.js: 50.00% (3 of 6 expressions)
+222c220
+< Files                : 13
 ---
-> folder/d.js: 0.00% (0 of 0 expressions)
-224,226c224,226
+> Files                : 11
+224,226c222,224
 <   Covered            : 80
 <   Total              : 163
 <   Covered Percentage : 49.08%
