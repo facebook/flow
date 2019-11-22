@@ -231,9 +231,9 @@ let file_dependencies ~audit ~reader file =
 let dependency_info_of_dependency_graph ~options dependency_graph =
   match Options.arch options with
   | Options.Classic ->
-    Dependency_info.Classic
+    Dependency_info.of_classic_map
       (FilenameMap.map (fun (_sig_files, all_files) -> all_files) dependency_graph)
-  | Options.TypesFirst -> Dependency_info.TypesFirst dependency_graph
+  | Options.TypesFirst -> Dependency_info.of_types_first_map dependency_graph
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)

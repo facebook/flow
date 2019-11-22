@@ -11,6 +11,24 @@ type t =
   | Classic of FilenameSet.t FilenameMap.t
   | TypesFirst of (FilenameSet.t * FilenameSet.t) FilenameMap.t
 
+let of_classic_map map = Classic map
+
+let of_types_first_map map = TypesFirst map
+
+let update old_dep_info partial_dep_info files_to_remove =
+  match (old_dep_info, partial_dep_info) with
+  | (Classic old_map, Classic updated_map) ->
+    Classic
+      ( old_map
+      |> FilenameSet.fold FilenameMap.remove files_to_remove
+      |> FilenameMap.union updated_map )
+  | (TypesFirst old_map, TypesFirst updated_map) ->
+    TypesFirst
+      ( old_map
+      |> FilenameSet.fold FilenameMap.remove files_to_remove
+      |> FilenameMap.union updated_map )
+  | _ -> assert false
+
 let implementation_dependency_graph = function
   | Classic map -> map
   | TypesFirst map -> FilenameMap.map (fun (_sig_files, all_files) -> all_files) map

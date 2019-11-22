@@ -2047,20 +2047,7 @@ end = struct
           in
           let old_dependency_info = env.ServerEnv.dependency_info in
           let to_remove = FilenameSet.union unparsed_set deleted in
-          match (old_dependency_info, updated_dependency_info) with
-          | (Dependency_info.Classic old_map, Dependency_info.Classic updated_map) ->
-            Lwt.return
-              (Dependency_info.Classic
-                 ( old_map
-                 |> FilenameSet.fold FilenameMap.remove to_remove
-                 |> FilenameMap.union updated_map ))
-          | (Dependency_info.TypesFirst old_map, Dependency_info.TypesFirst updated_map) ->
-            Lwt.return
-              (Dependency_info.TypesFirst
-                 ( old_map
-                 |> FilenameSet.fold FilenameMap.remove to_remove
-                 |> FilenameMap.union updated_map ))
-          | _ -> assert false)
+          Lwt.return (Dependency_info.update old_dependency_info updated_dependency_info to_remove))
     in
     (* Here's how to update unparsed:
      * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
