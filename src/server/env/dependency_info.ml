@@ -14,13 +14,15 @@ type t =
       implementation_dependency_graph: FilenameSet.t FilenameMap.t;
     }
 
-let of_classic_map map = Classic (FilenameMap.map (fun (_sig_deps, impl_deps) -> impl_deps) map)
+let extract_sig_map map = FilenameMap.map (fun (sig_deps, _impl_deps) -> sig_deps) map
+
+let extract_impl_map map = FilenameMap.map (fun (_sig_deps, impl_deps) -> impl_deps) map
+
+let of_classic_map map = Classic (extract_impl_map map)
 
 let of_types_first_map map =
-  let sig_dependency_graph = FilenameMap.map (fun (sig_deps, _impl_deps) -> sig_deps) map in
-  let implementation_dependency_graph =
-    FilenameMap.map (fun (_sig_deps, impl_deps) -> impl_deps) map
-  in
+  let sig_dependency_graph = extract_sig_map map in
+  let implementation_dependency_graph = extract_impl_map map in
   TypesFirst { sig_dependency_graph; implementation_dependency_graph }
 
 let update_map old_map updated_map files_to_remove =
