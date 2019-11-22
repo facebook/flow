@@ -2985,7 +2985,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let (t, annot') = Anno.mk_type_available_annotation cx SMap.empty annot in
       let (((_, infer_t), _) as e') = expression cx e in
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
-      Flow.flow cx (infer_t, UseT (use_op, t));
+      Flow.flow cx (infer_t, TypeCastT (use_op, t));
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot' })
     | Member _ -> subscript ~is_cond cx ex
     | OptionalMember _ -> subscript ~is_cond cx ex

@@ -1674,7 +1674,8 @@ end = struct
           | [] -> return Ty.NoUpper
           | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl)))
         end
-      | T.UseT (_, t) :: rest ->
+      | T.UseT (_, t) :: rest
+      | T.TypeCastT (_, t) :: rest ->
         let%bind t = type__ ~env t in
         uses_t_aux ~env (t :: acc) rest
       | T.ReposLowerT (_, _, u) :: rest -> uses_t_aux ~env acc (u :: rest)

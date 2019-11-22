@@ -24,7 +24,12 @@ Trace:
   2: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
   2: ({p: 42}: {p: empty});
-               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type]
+               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+  2: ({p: 42}: {p: empty});
+      ^^^^^^^ ObjT [object literal]
+  2: ({p: 42}: {p: empty});
+               ^^^^^^^^^^ ~> TypeCastT [object type]
 
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:4:2
@@ -53,7 +58,12 @@ Trace:
   4: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
   4: ({p: 42}: {p: empty});
-               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type]
+               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+  4: ({p: 42}: {p: empty});
+      ^^^^^^^ ObjT [object literal]
+  4: ({p: 42}: {p: empty});
+               ^^^^^^^^^^ ~> TypeCastT [object type]
 
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:6:2
@@ -91,7 +101,18 @@ Trace:
   8: }: {
   9:   p: empty,
  10: });
-     ^ ~> UseT(Cast, ObjT) [object type]
+     ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+      v
+  6: ({
+  7:   p: 42,
+  8: }: {
+     ^ ObjT [object literal]
+        v
+  8: }: {
+  9:   p: empty,
+ 10: });
+     ^ ~> TypeCastT [object type]
 
 
 Error ----------------------------------------------------------------------------------------------- code_frame.js:12:2
@@ -120,7 +141,12 @@ Trace:
  12: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
  12: ({p: 42}: {p: empty});
-               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type]
+               ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+ 12: ({p: 42}: {p: empty});
+      ^^^^^^^ ObjT [object literal]
+ 12: ({p: 42}: {p: empty});
+               ^^^^^^^^^^ ~> TypeCastT [object type]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
@@ -158,7 +184,18 @@ Trace:
   8: }: {
   9:   p: empty,
  10: });
-     ^ ~> UseT(Cast, ObjT) [object type]
+     ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+      v
+  6: ({
+  7:   p: 42, // Error: number ~> empty
+  8: }: {
+     ^ ObjT [object literal]
+        v
+  8: }: {
+  9:   p: empty,
+ 10: });
+     ^ ~> TypeCastT [object type]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
@@ -202,7 +239,22 @@ Trace:
  18:   b: empty,
  19:   c: empty,
  20: });
-     ^ ~> UseT(Cast, ObjT) [object type]
+     ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+      v
+ 12: ({
+ 13:   a: 1, // Error: number ~> empty
+ 14:   b: 2, // Error: number ~> empty
+ 15:   c: 3, // Error: number ~> empty
+ 16: }: {
+     ^ ObjT [object literal]
+        v
+ 16: }: {
+ 17:   a: empty,
+ 18:   b: empty,
+ 19:   c: empty,
+ 20: });
+     ^ ~> TypeCastT [object type]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
@@ -246,7 +298,22 @@ Trace:
  18:   b: empty,
  19:   c: empty,
  20: });
-     ^ ~> UseT(Cast, ObjT) [object type]
+     ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+      v
+ 12: ({
+ 13:   a: 1, // Error: number ~> empty
+ 14:   b: 2, // Error: number ~> empty
+ 15:   c: 3, // Error: number ~> empty
+ 16: }: {
+     ^ ObjT [object literal]
+        v
+ 16: }: {
+ 17:   a: empty,
+ 18:   b: empty,
+ 19:   c: empty,
+ 20: });
+     ^ ~> TypeCastT [object type]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
@@ -290,7 +357,22 @@ Trace:
  18:   b: empty,
  19:   c: empty,
  20: });
-     ^ ~> UseT(Cast, ObjT) [object type]
+     ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
+* path 3:
+      v
+ 12: ({
+ 13:   a: 1, // Error: number ~> empty
+ 14:   b: 2, // Error: number ~> empty
+ 15:   c: 3, // Error: number ~> empty
+ 16: }: {
+     ^ ObjT [object literal]
+        v
+ 16: }: {
+ 17:   a: empty,
+ 18:   b: empty,
+ 19:   c: empty,
+ 20: });
+     ^ ~> TypeCastT [object type]
 
 
 

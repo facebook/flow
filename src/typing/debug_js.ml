@@ -501,6 +501,8 @@ and _json_of_use_t_impl json_cx t =
                    JSON_Object [("t1", _json_of_t json_cx t1); ("t2", _json_of_t json_cx t2)])
                  targs) );
         ]
+      | TypeCastT (op, t) ->
+        [("use", JSON_String (string_of_use_op op)); ("arg", _json_of_t json_cx t)]
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) ->
         [
           ("willFlip", JSON_Bool will_flip);
@@ -2215,6 +2217,7 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | ConcretizeTypeAppsT _ -> p t
     | TypeAppVarianceCheckT _ -> p t
+    | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | CondT (_, then_t, else_t, tout) ->
       p
         t

@@ -905,7 +905,6 @@ struct
         (***************************)
         (* type destructor trigger *)
         (***************************)
-
         (* For evaluating type destructors we add a trigger, TypeDestructorTriggerT,
          * to both sides of a type. When TypeDestructorTriggerT sees a new upper or
          * lower bound we destruct that bound and flow the result in the same
@@ -1148,6 +1147,10 @@ struct
         are processed only when the corresponding triggers fire. *)
         | (_, UnifyT (t, t_other)) ->
           rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_other
+        (***************************)
+        (* type cast e.g. `(x: T)` *)
+        (***************************)
+        | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
         (*********************************************************************)
         (* `import type` creates a properly-parameterized type alias for the *)
         (* remote type -- but only for particular, valid remote types.       *)
@@ -7100,6 +7103,7 @@ struct
     | (_, ThisSpecializeT _)
     | (_, ToStringT _)
     | (_, TypeAppVarianceCheckT _)
+    | (_, TypeCastT _)
     | (_, UnaryMinusT _)
     | (_, VarianceCheckT _)
     | (_, ModuleExportsAssignT _) ->
@@ -7307,6 +7311,7 @@ struct
     | SetProtoT _
     | SuperT _
     | TypeAppVarianceCheckT _
+    | TypeCastT _
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ExtendsUseT _

@@ -738,6 +738,7 @@ module rec TypeTerm : sig
         upper: use_t;
         id: ident;
       }
+    | TypeCastT of use_op * t
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
@@ -2608,6 +2609,7 @@ end = struct
     | UnifyT (_, t) -> reason_of_t t
     | VarianceCheckT (reason, _, _, _) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
+    | TypeCastT (_, t) -> reason_of_t t
     | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
     | CondT (reason, _, _, _) -> reason
     | MatchPropT (_, reason, _, _) -> reason
@@ -2785,6 +2787,7 @@ end = struct
       VarianceCheckT (f reason, tparams, targs, polarity)
     | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
+    | TypeCastT (use_op, t) -> TypeCastT (use_op, mod_reason_of_t f t)
     | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
       ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
     | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
@@ -2842,6 +2845,7 @@ end = struct
     | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
     | TypeAppVarianceCheckT (op, r1, r2, ts) ->
       util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
+    | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
     | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
       util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
     | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
@@ -3718,6 +3722,7 @@ let string_of_use_ctor = function
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
+  | TypeCastT _ -> "TypeCastT"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
   | ReactPropsToOut _ -> "ReactPropsToOut"
