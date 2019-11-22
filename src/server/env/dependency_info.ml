@@ -14,7 +14,7 @@ type t =
       implementation_dependency_graph: FilenameSet.t FilenameMap.t;
     }
 
-let of_classic_map map = Classic map
+let of_classic_map map = Classic (FilenameMap.map (fun (_sig_deps, impl_deps) -> impl_deps) map)
 
 let of_types_first_map map =
   let sig_dependency_graph = FilenameMap.map (fun (sig_deps, _impl_deps) -> sig_deps) map in

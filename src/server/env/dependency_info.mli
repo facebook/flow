@@ -7,7 +7,7 @@
 
 type t
 
-val of_classic_map : Utils_js.FilenameSet.t Utils_js.FilenameMap.t -> t
+val of_classic_map : (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t -> t
 
 val of_types_first_map :
   (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t -> t
