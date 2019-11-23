@@ -17,6 +17,7 @@ let exe_name = Filename.basename Sys.executable_name
 
 module FilenameSet = Set.Make (File_key)
 module FilenameMap = WrappedMap.Make (File_key)
+module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap)
 
 let debug_string_of_filename_set set =
   set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
