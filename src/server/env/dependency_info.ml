@@ -18,7 +18,7 @@ let extract_sig_map map = FilenameMap.map (fun (sig_deps, _impl_deps) -> sig_dep
 
 let extract_impl_map map = FilenameMap.map (fun (_sig_deps, impl_deps) -> impl_deps) map
 
-let of_classic_map map = Classic (extract_impl_map map |> FilenameGraph.of_map)
+let of_classic_map map = Classic (FilenameGraph.of_map map)
 
 let of_types_first_map map =
   let sig_dependency_map = extract_sig_map map in
@@ -27,13 +27,14 @@ let of_types_first_map map =
   let implementation_dependency_graph = FilenameGraph.of_map implementation_dependency_map in
   TypesFirst { sig_dependency_graph; implementation_dependency_graph }
 
-let update old_dep_info updated_map to_remove =
-  match old_dep_info with
-  | Classic old_graph ->
-    let updated_impl_map = extract_impl_map updated_map in
-    Classic (FilenameGraph.update_from_map old_graph updated_impl_map ~to_remove)
-  | TypesFirst
-      { sig_dependency_graph = old_sig_graph; implementation_dependency_graph = old_impl_graph } ->
+let update old_dep_info partial_dep_graph to_remove =
+  let open Partial_dependency_graph in
+  match (old_dep_info, partial_dep_graph) with
+  | (Classic old_graph, PartialClassicDepGraph updated_map) ->
+    Classic (FilenameGraph.update_from_map old_graph updated_map ~to_remove)
+  | ( TypesFirst
+        { sig_dependency_graph = old_sig_graph; implementation_dependency_graph = old_impl_graph },
+      PartialTypesFirstDepGraph updated_map ) ->
     let updated_sig_map = extract_sig_map updated_map in
     let updated_impl_map = extract_impl_map updated_map in
     TypesFirst
@@ -43,6 +44,7 @@ let update old_dep_info updated_map to_remove =
         implementation_dependency_graph =
           FilenameGraph.update_from_map old_impl_graph updated_impl_map ~to_remove;
       }
+  | _ -> assert false
 
 let implementation_dependency_graph = function
   | Classic graph -> graph

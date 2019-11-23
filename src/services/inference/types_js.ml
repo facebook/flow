@@ -2049,8 +2049,9 @@ end = struct
           let files_to_update_dependency_info =
             FilenameSet.union freshparsed direct_dependent_files
           in
-          let%lwt updated_dependency_graph =
+          let%lwt partial_dependency_graph =
             Dep_service.calc_partial_dependency_graph
+              ~options
               ~reader
               workers
               files_to_update_dependency_info
@@ -2058,7 +2059,7 @@ end = struct
           in
           let old_dependency_info = env.ServerEnv.dependency_info in
           let to_remove = FilenameSet.union unparsed_set deleted in
-          Lwt.return (Dependency_info.update old_dependency_info updated_dependency_graph to_remove))
+          Lwt.return (Dependency_info.update old_dependency_info partial_dependency_graph to_remove))
     in
     (* Here's how to update unparsed:
      * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed

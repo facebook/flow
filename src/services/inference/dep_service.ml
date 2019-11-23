@@ -228,14 +228,13 @@ let file_dependencies ~audit ~reader file =
     require_set
     (FilenameSet.empty, FilenameSet.empty)
 
-let dependency_info_of_dependency_graph ~options dependency_graph =
-  match Options.arch options with
-  | Options.Classic -> Dependency_info.of_classic_map dependency_graph
-  | Options.TypesFirst -> Dependency_info.of_types_first_map dependency_graph
+let dependency_info_of_dependency_graph = function
+  | Partial_dependency_graph.PartialClassicDepGraph map -> Dependency_info.of_classic_map map
+  | Partial_dependency_graph.PartialTypesFirstDepGraph map -> Dependency_info.of_types_first_map map
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
-let calc_partial_dependency_graph ~reader workers files ~parsed =
+let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
   let%lwt dependency_graph =
     MultiWorkerLwt.call
       workers
@@ -250,13 +249,23 @@ let calc_partial_dependency_graph ~reader workers files ~parsed =
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
   in
   let dependency_graph =
-    FilenameMap.map
-      (fun (sig_files, all_files) ->
-        (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
-      dependency_graph
+    match Options.arch options with
+    | Options.Classic ->
+      Partial_dependency_graph.PartialClassicDepGraph
+        (FilenameMap.map
+           (fun (_sig_files, all_files) -> FilenameSet.inter parsed all_files)
+           dependency_graph)
+    | Options.TypesFirst ->
+      Partial_dependency_graph.PartialTypesFirstDepGraph
+        (FilenameMap.map
+           (fun (sig_files, all_files) ->
+             (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
+           dependency_graph)
   in
   Lwt.return dependency_graph
 
 let calc_dependency_info ~options ~reader workers ~parsed =
-  let%lwt dependency_graph = calc_partial_dependency_graph ~reader workers parsed ~parsed in
-  Lwt.return (dependency_info_of_dependency_graph ~options dependency_graph)
+  let%lwt dependency_graph =
+    calc_partial_dependency_graph ~options ~reader workers parsed ~parsed
+  in
+  Lwt.return (dependency_info_of_dependency_graph dependency_graph)

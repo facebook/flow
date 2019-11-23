@@ -7,16 +7,12 @@
 
 type t
 
-val of_classic_map : (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t -> t
+val of_classic_map : Utils_js.FilenameSet.t Utils_js.FilenameMap.t -> t
 
 val of_types_first_map :
   (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t -> t
 
-val update :
-  t ->
-  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t ->
-  Utils_js.FilenameSet.t ->
-  t
+val update : t -> Partial_dependency_graph.t -> Utils_js.FilenameSet.t -> t
 
 val implementation_dependency_graph : t -> Utils_js.FilenameGraph.t
 
