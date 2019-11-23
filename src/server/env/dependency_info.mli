@@ -18,8 +18,8 @@ val update :
   Utils_js.FilenameSet.t ->
   t
 
-val implementation_dependency_graph : t -> Utils_js.FilenameSet.t Utils_js.FilenameMap.t
+val implementation_dependency_graph : t -> Utils_js.FilenameGraph.t
 
-val sig_dependency_graph : t -> Utils_js.FilenameSet.t Utils_js.FilenameMap.t
+val sig_dependency_graph : t -> Utils_js.FilenameGraph.t
 
 val debug_to_string : t -> string

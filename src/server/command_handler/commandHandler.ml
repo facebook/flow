@@ -273,6 +273,7 @@ let collect_rage ~options ~reader ~env ~files =
   in
   let dependencies =
     Dependency_info.implementation_dependency_graph env.ServerEnv.dependency_info
+    |> Utils_js.FilenameGraph.to_map
     |> Utils_js.FilenameMap.bindings
     |> Base.List.map ~f:dependency_to_string
     |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
@@ -404,7 +405,7 @@ let output_dependencies ~env root strip_root types_only outfile =
     else
       Dependency_info.implementation_dependency_graph
   in
-  let graph = serialize_graph (dep_graph env.ServerEnv.dependency_info) in
+  let graph = serialize_graph (dep_graph env.ServerEnv.dependency_info |> FilenameGraph.to_map) in
   Hh_logger.info "printing dependency graph to %s\n" outfile;
   let%lwt out = Lwt_io.open_file ~mode:Lwt_io.Output outfile in
   let%lwt () = LwtUtils.output_graph out strip_root graph in
@@ -423,13 +424,13 @@ let get_cycle ~env fn types_only =
   in
   Lwt.return
     (Ok
-       (let components = Sort_js.topsort ~roots:parsed dependency_graph in
+       (let components = Sort_js.topsort ~roots:parsed (FilenameGraph.to_map dependency_graph) in
         (* Get component for target file *)
         let component = List.find (Nel.mem ~equal:File_key.equal fn) components in
         (* Restrict dep graph to only in-cycle files *)
         Nel.fold_left
           (fun acc f ->
-            Option.fold (FilenameMap.find_opt f dependency_graph) ~init:acc ~f:(fun acc deps ->
+            Option.fold (FilenameGraph.find_opt f dependency_graph) ~init:acc ~f:(fun acc deps ->
                 let subdeps =
                   FilenameSet.filter (fun f -> Nel.mem ~equal:File_key.equal f component) deps
                 in

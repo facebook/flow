@@ -574,7 +574,9 @@ let include_dependencies_and_dependents
        before we can prune. *)
       (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
        cycles *)
-      let components = Sort_js.topsort ~roots:preliminary_to_merge sig_dependency_graph in
+      let components =
+        Sort_js.topsort ~roots:preliminary_to_merge (FilenameGraph.to_map sig_dependency_graph)
+      in
       let dependencies =
         List.fold_left
           (fun dependencies component ->
@@ -1124,7 +1126,7 @@ end = struct
             FilenameSet.filter (fun f ->
                 (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
                 || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-                   @@ FilenameMap.find f implementation_dependency_graph
+                   @@ FilenameGraph.find f implementation_dependency_graph
                 ||
                 ( incr skipped_count;
                   false ))
@@ -1682,8 +1684,8 @@ module Recheck : sig
     options:Options.t ->
     is_file_checked:(File_key.t -> bool) ->
     ide_open_files:SSet.t Lazy.t ->
-    sig_dependency_graph:FilenameSet.t FilenameMap.t ->
-    implementation_dependency_graph:FilenameSet.t FilenameMap.t ->
+    sig_dependency_graph:FilenameGraph.t ->
+    implementation_dependency_graph:FilenameGraph.t ->
     checked_files:CheckedSet.t ->
     freshparsed:FilenameSet.t ->
     unparsed_set:FilenameSet.t ->

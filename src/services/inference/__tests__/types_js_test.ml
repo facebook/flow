@@ -115,7 +115,12 @@ let prepare_freshparsed freshparsed =
 let make_checked_files ~implementation_dependency_graph =
   (* Get all the files from the implementation_dependency_graph and consider them focused *)
   (* All files must be present as keys, even if they have no values. *)
-  let focused_set = implementation_dependency_graph |> FilenameMap.keys |> FilenameSet.of_list in
+  let focused_set =
+    FilenameGraph.fold
+      (fun file _ acc -> FilenameSet.add file acc)
+      implementation_dependency_graph
+      FilenameSet.empty
+  in
   CheckedSet.add ~focused:focused_set CheckedSet.empty
 
 let determine_what_to_recheck
@@ -132,7 +137,7 @@ let determine_what_to_recheck
    * Dep_service.calc_direct_dependents changes, this should change too so that these tests more
    * accurately reflect reality. *)
   let direct_dependent_files =
-    FilenameMap.fold
+    FilenameGraph.fold
       (fun file deps acc ->
         if FilenameSet.exists (fun x -> FilenameSet.mem x freshparsed) deps then
           FilenameSet.add file acc
