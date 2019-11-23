@@ -17,8 +17,6 @@ val calc_direct_dependents :
   (* direct_dependents of changed_modules *)
   FilenameSet.t Lwt.t
 
-val dependency_info_of_dependency_graph : Partial_dependency_graph.t -> Dependency_info.t
-
 val calc_dependency_info :
   options:Options.t ->
   reader:Mutator_state_reader.t ->
