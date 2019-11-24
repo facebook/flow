@@ -1225,6 +1225,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
       opt_module = FlowConfig.module_system flowconfig;
       opt_munge_underscores =
         options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
+      opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
       opt_temp_dir = temp_dir;
       opt_max_workers =
         Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
@@ -1274,13 +1275,14 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags : 
         FlowConfig.node_resolver_root_relative_dirnames flowconfig;
       opt_arch;
       opt_abstract_locations;
-      opt_cache_direct_dependents = FlowConfig.cache_direct_dependents flowconfig;
       opt_minimal_merge = FlowConfig.minimal_merge flowconfig;
       opt_include_suppressions = options_flags.include_suppressions;
       opt_trust_mode =
         Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
       opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
       opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
+      opt_max_rss_bytes_for_check_per_worker =
+        FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
       opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
       opt_type_asserts = FlowConfig.type_asserts flowconfig;
     })

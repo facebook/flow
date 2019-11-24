@@ -255,6 +255,7 @@ module rec TypeTerm : sig
     enum_id: ALoc.id;
     enum_name: string;
     members: SSet.t;
+    representation_t: t;
   }
 
   and internal_t =
@@ -737,6 +738,11 @@ module rec TypeTerm : sig
         upper: use_t;
         id: ident;
       }
+    | TypeCastT of use_op * t
+    | EnumCastT of {
+        use_op: use_op;
+        enum: reason * Trust.trust_rep * enum_t;
+      }
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
@@ -802,7 +808,9 @@ module rec TypeTerm : sig
     | VoidP (* undefined *)
     | ArrP (* Array.isArray *)
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
-    | PropExistsP of string
+    | PropExistsP of string * reason
+    (* `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))` *)
+    | PropNonMaybeP of string * reason
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
     | LatentP of t * index
@@ -1210,7 +1218,7 @@ module rec TypeTerm : sig
   and intersection_preprocess_tool =
     | ConcretizeTypes of t list * t list * t * use_t
     | SentinelPropTest of bool * string * t * t * t
-    | PropExistsTest of bool * string * t * t
+    | PropExistsTest of bool * string * reason * t * t * (predicate * predicate)
 
   and spec =
     | UnionCases of use_op * t * UnionRep.t * t list
@@ -2542,6 +2550,7 @@ end = struct
     | DebugPrintT reason -> reason
     | DebugSleepT reason -> reason
     | ElemT (_, reason, _, _) -> reason
+    | EnumCastT { enum = (reason, _, _); _ } -> reason
     | EqT (reason, _, _) -> reason
     | ExportNamedT (reason, _, _, _) -> reason
     | ExportTypeT (reason, _, _, _) -> reason
@@ -2605,6 +2614,7 @@ end = struct
     | UnifyT (_, t) -> reason_of_t t
     | VarianceCheckT (reason, _, _, _) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
+    | TypeCastT (_, t) -> reason_of_t t
     | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
     | CondT (reason, _, _, _) -> reason
     | MatchPropT (_, reason, _, _) -> reason
@@ -2706,6 +2716,8 @@ end = struct
     | DebugPrintT reason -> DebugPrintT (f reason)
     | DebugSleepT reason -> DebugSleepT (f reason)
     | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
+    | EnumCastT { use_op; enum = (reason, trust, enum) } ->
+      EnumCastT { use_op; enum = (f reason, trust, enum) }
     | EqT (reason, flip, t) -> EqT (f reason, flip, t)
     | ExportNamedT (reason, tmap, export_kind, t_out) ->
       ExportNamedT (f reason, tmap, export_kind, t_out)
@@ -2782,6 +2794,7 @@ end = struct
       VarianceCheckT (f reason, tparams, targs, polarity)
     | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
+    | TypeCastT (use_op, t) -> TypeCastT (use_op, mod_reason_of_t f t)
     | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
       ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
     | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
@@ -2839,6 +2852,8 @@ end = struct
     | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
     | TypeAppVarianceCheckT (op, r1, r2, ts) ->
       util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
+    | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
+    | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
     | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
       util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
     | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
@@ -3631,6 +3646,7 @@ let string_of_use_ctor = function
   | DebugPrintT _ -> "DebugPrintT"
   | DebugSleepT _ -> "DebugSleepT"
   | ElemT _ -> "ElemT"
+  | EnumCastT _ -> "EnumCastT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
@@ -3715,6 +3731,7 @@ let string_of_use_ctor = function
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
+  | TypeCastT _ -> "TypeCastT"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
   | ReactPropsToOut _ -> "ReactPropsToOut"
@@ -3759,7 +3776,8 @@ let rec string_of_predicate = function
   | SymbolP -> "symbol"
   (* Array.isArray *)
   | ArrP -> "array"
-  | PropExistsP key -> spf "prop `%s` is truthy" key
+  | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
+  | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
   | LatentP (OpenT (_, id), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t, i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 

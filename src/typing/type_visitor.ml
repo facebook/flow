@@ -113,9 +113,12 @@ class ['a] t =
       | EmptyT _
       | MixedT _
       | NullT
-      | VoidT
-      | EnumT _
-      | EnumObjectT _ ->
+      | VoidT ->
+        acc
+      | EnumT enum
+      | EnumObjectT enum ->
+        let { enum_id = _; enum_name = _; members = _; representation_t } = enum in
+        let acc = self#type_ cx pole acc representation_t in
         acc
       | FunT (static, prototype, funtype) ->
         let acc = self#type_ cx pole acc static in
@@ -186,6 +189,7 @@ class ['a] t =
       | VoidP -> acc
       | ArrP -> acc
       | PropExistsP _ -> acc
+      | PropNonMaybeP _ -> acc
       | LatentP (t, _) -> self#type_ cx P.Positive acc t
 
     method destructor cx acc =
@@ -342,6 +346,9 @@ class ['a] t =
             acc)
           acc
           ts
+      | TypeCastT (_, t) -> self#type_ cx pole_TODO acc t
+      | EnumCastT { enum = (_, _, { representation_t; _ }); _ } ->
+        self#type_ cx pole_TODO acc representation_t
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->
         let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in
         let acc = self#type_ cx pole_TODO acc t2 in
@@ -600,9 +607,11 @@ class ['a] t =
           let acc = self#type_ cx pole_TODO acc t2 in
           let acc = self#type_ cx pole_TODO acc t3 in
           acc
-        | PropExistsTest (_, _, t1, t2) ->
+        | PropExistsTest (_, _, _, t1, t2, (pred, not_pred)) ->
           let acc = self#type_ cx pole_TODO acc t1 in
           let acc = self#type_ cx pole_TODO acc t2 in
+          let acc = self#predicate cx acc pred in
+          let acc = self#predicate cx acc not_pred in
           acc)
       | DestructuringT (_, _, s, tout) ->
         let acc = self#selector cx acc s in

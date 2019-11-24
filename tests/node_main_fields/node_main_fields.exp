@@ -1,0 +1,44 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:3:15
+
+Cannot resolve module `C`.
+
+   3| import C from 'C'; // Error - this module has neither a foo nor bar property
+                    ^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:2
+
+Cannot cast `A` to empty because string [1] is incompatible with empty [2].
+
+   test.js:5:2
+   5| (A: empty); // Error: string ~> empty
+       ^
+
+References:
+   node_modules/A/foo.js:1:16
+   1| export default "hello";
+                     ^^^^^^^ [1]
+   test.js:5:5
+   5| (A: empty); // Error: string ~> empty
+          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:2
+
+Cannot cast `B` to empty because boolean [1] is incompatible with empty [2].
+
+   test.js:6:2
+   6| (B: empty); // Error: boolean ~> empty
+       ^
+
+References:
+   node_modules/B/bar.js:1:16
+   1| export default true;
+                     ^^^^ [1]
+   test.js:6:5
+   6| (B: empty); // Error: boolean ~> empty
+          ^^^^^ [2]
+
+
+
+Found 3 errors

@@ -319,6 +319,11 @@ and 'loc t' =
       loc: 'loc;
       enum_reason: 'loc virtual_reason;
     }
+  | EEnumMemberDuplicateValue of {
+      loc: 'loc;
+      prev_use_loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -762,6 +767,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EEnumModification { loc; enum_reason } ->
     EEnumModification { loc = f loc; enum_reason = map_reason enum_reason }
+  | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+    EEnumMemberDuplicateValue
+      { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -926,7 +934,8 @@ let util_use_op_of_msg nope util = function
   | EComputedPropertyWithMultipleLowerBounds _
   | EComputedPropertyWithUnion _
   | EEnumInvalidMemberAccess _
-  | EEnumModification _ ->
+  | EEnumModification _
+  | EEnumMemberDuplicateValue _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1093,6 +1102,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBindingError (_, loc, _, _) -> Some loc
   | EEnumInvalidMemberAccess { access_reason; _ } -> Some (poly_loc_of_reason access_reason)
   | EEnumModification { loc; _ } -> Some loc
+  | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EFunctionCallExtraArg _
@@ -2819,6 +2829,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " of ";
         ref enum_reason;
         text " because enums are frozen.";
+      ]
+    in
+    Normal { features }
+  | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+    let features =
+      [
+        text "Enum member initializers need to be unique, but ";
+        ref (mk_reason (RCustom "this value") loc);
+        text " has already been used for a ";
+        ref (mk_reason (RCustom "previous initializer") prev_use_loc);
+        text " in ";
+        ref enum_reason;
       ]
     in
     Normal { features }

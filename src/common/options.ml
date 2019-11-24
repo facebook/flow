@@ -59,7 +59,6 @@ type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
   opt_arch: arch;
-  opt_cache_direct_dependents: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
@@ -92,6 +91,7 @@ type t = {
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
   opt_max_literal_length: int;
+  opt_max_rss_bytes_for_check_per_worker: int;
   opt_max_seconds_for_check_per_worker: float;
   opt_max_workers: int;
   opt_merge_timeout: float option;
@@ -103,6 +103,7 @@ type t = {
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
   opt_no_saved_state: bool;
+  opt_node_main_fields: string list;
   opt_profile: bool;
   opt_quiet: bool;
   opt_recursion_limit: int;
@@ -129,8 +130,6 @@ let abstract_locations opts = opts.opt_abstract_locations
 let all opts = opts.opt_all
 
 let arch opts = opts.opt_arch
-
-let cache_direct_dependents opts = opts.opt_cache_direct_dependents
 
 let max_literal_length opts = opts.opt_max_literal_length
 
@@ -184,6 +183,8 @@ let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 
 let max_header_tokens opts = opts.opt_max_header_tokens
 
+let max_rss_bytes_for_check_per_worker opts = opts.opt_max_rss_bytes_for_check_per_worker
+
 let max_seconds_for_check_per_worker opts = opts.opt_max_seconds_for_check_per_worker
 
 let max_trace_depth opts = opts.opt_traces
@@ -201,6 +202,8 @@ let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let no_saved_state opts = opts.opt_no_saved_state
+
+let node_main_fields opts = opts.opt_node_main_fields
 
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
 

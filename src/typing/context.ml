@@ -150,6 +150,7 @@ type sig_t = {
 type phase =
   | Checking
   | Merging
+  | Normalizing
 
 type t = {
   sig_cx: sig_t;
@@ -807,3 +808,7 @@ let find_trust_constraints cx id =
 let find_trust_graph cx id =
   let (_, constraints) = find_trust_constraints cx id in
   constraints
+
+let with_normalizer_mode cx f = f { cx with phase = Normalizing }
+
+let in_normalizer_mode cx = cx.phase = Normalizing

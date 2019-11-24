@@ -7,6 +7,14 @@
 
 open OUnit2
 
-let tests = "utils" >::: [Nel_test.tests; ResizableArray_test.tests; UnionFind_test.tests]
+let tests =
+  "utils"
+  >::: [
+         Line_test.tests;
+         Nel_test.tests;
+         ResizableArray_test.tests;
+         UnionFind_test.tests;
+         Graph_test.tests;
+       ]
 
 let () = run_test_tt_main tests

@@ -17,7 +17,7 @@ type acc =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
-  * Coverage_response.file_coverage FilenameMap.t
+  * Coverage_response.file_coverage FilenameMap.t option
   * float
 
 type 'a merge_job_results = 'a file_keyed_result list
@@ -42,7 +42,7 @@ type merge_context_result = {
   master_cx: Context.sig_t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
   typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
-  coverage_map: Coverage_response.file_coverage FilenameMap.t;
+  coverage_map: Coverage_response.file_coverage FilenameMap.t option;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -144,14 +144,29 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       dep_cxs
       master_cx
   in
-  let coverage_of_tast = Coverage.component_coverage ~full_cx in
-  let (typed_asts, coverage_map) =
+  (* Only compute coverage on Types-First checking, or Classic merging phases *)
+  let coverage_map =
+    match (Options.arch options, phase) with
+    | (_, Context.Normalizing)
+    | (Options.TypesFirst, Context.Merging) ->
+      None
+    | (Options.TypesFirst, Context.Checking)
+    | (Options.Classic, _) ->
+      Some
+        (Nel.fold_left
+           (fun acc (ctx, typed_ast) ->
+             let file = Context.file ctx in
+             let cov = Coverage.file_coverage ~full_cx typed_ast in
+             FilenameMap.add file cov acc)
+           FilenameMap.empty
+           cx_nel)
+  in
+  let typed_asts =
     Nel.fold_left
-      (fun (typed_asts, cov_map) (ctx, typed_ast) ->
+      (fun typed_asts (ctx, typed_ast) ->
         let file = Context.file ctx in
-        let cov = coverage_of_tast typed_ast in
-        (FilenameMap.add file typed_ast typed_asts, FilenameMap.add file cov cov_map))
-      (FilenameMap.empty, FilenameMap.empty)
+        FilenameMap.add file typed_ast typed_asts)
+      FilenameMap.empty
       cx_nel
   in
   let other_cxs = Base.List.map ~f:(fun (cx, _) -> cx) other_cxs in
@@ -300,7 +315,7 @@ let merge_component ~worker_mutator ~options ~reader component =
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
-    let coverage = FilenameMap.empty in
+    let coverage = None in
     Ok (errors, warnings, suppressions, coverage, 0.0)
 
 let check_file options ~reader file =
@@ -343,7 +358,7 @@ let check_file options ~reader file =
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
-    let coverage = FilenameMap.empty in
+    let coverage = None in
     (errors, warnings, suppressions, coverage, 0.0)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,

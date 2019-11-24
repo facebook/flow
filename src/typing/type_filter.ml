@@ -48,6 +48,7 @@ let rec exists = function
         ( NullT | VoidT
         | SingletonBoolT false
         | BoolT (Some false)
+        | EnumT { representation_t = DefT (_, _, BoolT (Some false)); _ }
         | SingletonStrT ""
         | StrT (Literal (_, ""))
         | SingletonNumT (0., _)
@@ -74,6 +75,7 @@ let rec not_exists t =
         ( NullT | VoidT
         | SingletonBoolT false
         | BoolT (Some false)
+        | EnumT { representation_t = DefT (_, _, BoolT (Some false)); _ }
         | SingletonStrT ""
         | StrT (Literal (_, ""))
         | SingletonNumT (0., _)
@@ -86,10 +88,13 @@ let rec not_exists t =
         trust,
         ( SingletonBoolT _
         | BoolT (Some _)
+        | EnumT { representation_t = DefT (_, _, BoolT (Some _)); _ }
         | SingletonStrT _
         | StrT (Literal _ | Truthy)
+        | EnumT { representation_t = DefT (_, _, StrT Truthy); _ }
         | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | SingletonNumT _
         | NumT (Literal _ | Truthy)
+        | EnumT { representation_t = DefT (_, _, NumT Truthy); _ }
         | MixedT Mixed_truthy ) ) ->
     DefT (r, trust, EmptyT Bottom)
   | DefT (reason, trust, ClassT _) -> DefT (reason, trust, EmptyT Bottom)
@@ -271,6 +276,7 @@ let boolean t =
     DefT (replace_desc_new_reason BoolT.desc r, trust, BoolT (Some true))
   | DefT (r, trust, MixedT _) -> BoolT.why r trust
   | DefT (_, _, BoolT _)
+  | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ })
   | AnyT _ ->
     t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
@@ -279,8 +285,10 @@ let boolean t =
 let not_boolean t =
   match t with
   (* TODO: this is wrong, AnyT can be a bool *)
-  | DefT (_, trust, BoolT _) -> DefT (reason_of_t t, trust, EmptyT Bottom)
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
+  | DefT (_, trust, EnumT { representation_t = DefT (_, _, BoolT _); _ })
+  | DefT (_, trust, BoolT _) ->
+    DefT (reason_of_t t, trust, EmptyT Bottom)
   | _ -> t
 
 let string t =
@@ -289,6 +297,7 @@ let string t =
     DefT (replace_desc_new_reason StrT.desc r, trust, StrT Truthy)
   | DefT (r, trust, MixedT _) -> StrT.why r trust
   | DefT (_, _, StrT _)
+  | DefT (_, _, EnumT { representation_t = DefT (_, _, StrT _); _ })
   | AnyT _ ->
     t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
@@ -298,7 +307,9 @@ let not_string t =
   match t with
   (* TODO: this is wrong, AnyT can be a string *)
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
-  | DefT (_, trust, StrT _) -> DefT (reason_of_t t, trust, EmptyT Bottom)
+  | DefT (_, trust, EnumT { representation_t = DefT (_, _, StrT _); _ })
+  | DefT (_, trust, StrT _) ->
+    DefT (reason_of_t t, trust, EmptyT Bottom)
   | _ -> t
 
 let symbol t =
@@ -319,6 +330,7 @@ let number t =
     DefT (replace_desc_new_reason NumT.desc r, trust, NumT Truthy)
   | DefT (r, trust, MixedT _) -> NumT.why r trust
   | DefT (_, _, NumT _)
+  | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ })
   | AnyT _ ->
     t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
@@ -328,7 +340,9 @@ let not_number t =
   match t with
   (* TODO: this is wrong, AnyT can be a number *)
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
-  | DefT (_, trust, NumT _) -> DefT (reason_of_t t, trust, EmptyT Bottom)
+  | DefT (_, trust, EnumT { representation_t = DefT (_, _, NumT _); _ })
+  | DefT (_, trust, NumT _) ->
+    DefT (reason_of_t t, trust, EmptyT Bottom)
   | _ -> t
 
 let object_ cx t =

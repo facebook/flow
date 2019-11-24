@@ -30,6 +30,7 @@ let string_of_pred_ctor = function
   | SingletonStrP _ -> "SingletonStrP"
   | SingletonNumP _ -> "SingletonNumP"
   | PropExistsP _ -> "PropExistsP"
+  | PropNonMaybeP _ -> "PropNonMaybeP"
   | LatentP _ -> "LatentP"
 
 let string_of_binary_test_ctor = function
@@ -218,11 +219,12 @@ and _json_of_t_impl json_cx t =
         ]
       | DefT (_, _, EnumT enum)
       | DefT (_, _, EnumObjectT enum) ->
-        let { enum_id; enum_name; members } = enum in
+        let { enum_id; enum_name; members; representation_t } = enum in
         [
           ("enum_id", JSON_String (ALoc.debug_to_string (enum_id :> ALoc.t)));
           ("enum_name", JSON_String enum_name);
           ("members", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) (SSet.elements members)));
+          ("representation_t", _json_of_t json_cx representation_t);
         ]
       | OptionalT { reason = _; type_ = t; use_desc = _ } -> [("type", _json_of_t json_cx t)]
       | EvalT (t, defer_use_t, id) ->
@@ -498,6 +500,13 @@ and _json_of_use_t_impl json_cx t =
                  ~f:(fun (t1, t2) ->
                    JSON_Object [("t1", _json_of_t json_cx t1); ("t2", _json_of_t json_cx t2)])
                  targs) );
+        ]
+      | TypeCastT (op, t) ->
+        [("use", JSON_String (string_of_use_op op)); ("arg", _json_of_t json_cx t)]
+      | EnumCastT { use_op; enum = (reason, trust, enum) } ->
+        [
+          ("use", JSON_String (string_of_use_op use_op));
+          ("enum", _json_of_t json_cx (DefT (reason, trust, EnumT enum)));
         ]
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) ->
         [
@@ -1246,7 +1255,8 @@ and json_of_pred_impl json_cx p =
       | SingletonBoolP (_, value) -> [("value", JSON_Bool value)]
       | SingletonStrP (_, _, str) -> [("value", JSON_String str)]
       | SingletonNumP (_, _, (_, raw)) -> [("value", JSON_String raw)]
-      | PropExistsP key -> [("propName", JSON_String key)]
+      | PropExistsP (key, _) -> [("propName", JSON_String key)]
+      | PropNonMaybeP (key, _) -> [("propName", JSON_String key)]
       | ExistsP _
       | VoidP
       | NullP
@@ -1689,8 +1699,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) ->
       p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
     | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
-    | DefT (_, trust, EnumT { enum_id; enum_name; members = _ })
-    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _ }) ->
+    | DefT (_, trust, EnumT { enum_id; enum_name; members = _; representation_t = _ })
+    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _; representation_t = _ }) ->
       p
         ~trust:(Some trust)
         ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t)))
@@ -2212,6 +2222,9 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | ConcretizeTypeAppsT _ -> p t
     | TypeAppVarianceCheckT _ -> p t
+    | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
+    | EnumCastT { use_op = _; enum = (reason, trust, enum) } ->
+      p ~reason:false ~extra:(kid (DefT (reason, trust, EnumT enum))) t
     | CondT (_, then_t, else_t, tout) ->
       p
         t
@@ -2961,6 +2974,12 @@ let dump_error_message =
         (dump_reason cx enum_reason)
     | EEnumModification { loc; enum_reason } ->
       spf "EEnumModification (%s) (%s)" (string_of_aloc loc) (dump_reason cx enum_reason)
+    | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+      spf
+        "EEnumMemberDuplicateValue (%s) (%s) (%s)"
+        (string_of_aloc loc)
+        (string_of_aloc prev_use_loc)
+        (dump_reason cx enum_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

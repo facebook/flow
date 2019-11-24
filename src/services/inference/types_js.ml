@@ -39,7 +39,9 @@ let merge_error_maps =
   FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
 
 (* We just want to replace the old coverage with the new one *)
-let update_coverage = FilenameMap.union ~combine:(fun _ _ -> Option.return)
+let update_coverage coverage = function
+  | None -> coverage
+  | Some new_coverage -> FilenameMap.union ~combine:(fun _ _ -> Option.return) coverage new_coverage
 
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
@@ -365,10 +367,7 @@ module DirectDependentFilesCache : sig
   val clear : unit -> unit
 
   val with_cache :
-    options:Options.t ->
-    root_files:FilenameSet.t ->
-    on_miss:(unit -> FilenameSet.t Lwt.t) ->
-    FilenameSet.t Lwt.t
+    root_files:FilenameSet.t -> on_miss:(unit -> FilenameSet.t Lwt.t) -> FilenameSet.t Lwt.t
 end = struct
   type entry = {
     direct_dependents: FilenameSet.t;
@@ -417,9 +416,9 @@ end = struct
       cache := { entries = FilenameMap.add root_file entry entries; size };
       Some entry
 
-  let with_cache ~options ~root_files ~on_miss =
+  let with_cache ~root_files ~on_miss =
     match FilenameSet.elements root_files with
-    | [root_file] when Options.cache_direct_dependents options ->
+    | [root_file] ->
       begin
         match get_from_cache ~root_file with
         | None ->
@@ -575,7 +574,9 @@ let include_dependencies_and_dependents
        before we can prune. *)
       (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
        cycles *)
-      let components = Sort_js.topsort ~roots:preliminary_to_merge sig_dependency_graph in
+      let components =
+        Sort_js.topsort ~roots:preliminary_to_merge (FilenameGraph.to_map sig_dependency_graph)
+      in
       let dependencies =
         List.fold_left
           (fun dependencies component ->
@@ -641,22 +642,32 @@ let include_dependencies_and_dependents
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
-let remove_old_results (errors, warnings, suppressions, coverage, first_internal_error) file =
+let remove_old_results options phase current_results file =
+  let (errors, warnings, suppressions, coverage, first_internal_error) = current_results in
+  let new_coverage =
+    match (Options.arch options, phase) with
+    | (Options.TypesFirst, Context.Merging)
+    | (Options.TypesFirst, Context.Normalizing) ->
+      coverage
+    | (Options.TypesFirst, Context.Checking)
+    | (Options.Classic, _) ->
+      FilenameMap.remove file coverage
+  in
   ( FilenameMap.remove file errors,
     FilenameMap.remove file warnings,
     Error_suppressions.remove file suppressions,
-    FilenameMap.remove file coverage,
+    new_coverage,
     first_internal_error )
 
 let add_new_results
     ~record_slow_file (errors, warnings, suppressions, coverage, first_internal_error) file result =
   match result with
-  | Ok (new_errors, new_warnings, new_suppressions, new_coverage, check_time) ->
+  | Ok (new_errors, new_warnings, new_suppressions, new_coverage_option, check_time) ->
     if check_time > 1. then record_slow_file file check_time;
     ( update_errset errors file new_errors,
       update_errset warnings file new_warnings,
       Error_suppressions.update_suppressions suppressions new_suppressions,
-      update_coverage coverage new_coverage,
+      update_coverage coverage new_coverage_option,
       first_internal_error )
   | Error (loc, internal_error) ->
     let new_errors = error_set_of_internal_error file (loc, internal_error) in
@@ -701,7 +712,7 @@ let run_merge_service
         List.fold_left
           (fun acc (file, result) ->
             let component = FilenameMap.find file component_map in
-            let acc = Nel.fold_left remove_old_results acc component in
+            let acc = Nel.fold_left (remove_old_results options Context.Merging) acc component in
             add_new_results ~record_slow_file:(fun _ _ -> ()) acc file result)
           acc
           merged
@@ -989,25 +1000,47 @@ module Check_files : sig
     * string option )
     Lwt.t
 end = struct
+  let out_of_time ~options ~start_time =
+    Unix.gettimeofday () -. start_time > Options.max_seconds_for_check_per_worker options
+
+  let out_of_memory ~options ~start_rss =
+    match start_rss with
+    | None -> false
+    | Some start_rss ->
+      (match ProcFS.status_for_pid (Unix.getpid ()) with
+      | Ok { ProcFS.rss_total; _ } ->
+        rss_total - start_rss > Options.max_rss_bytes_for_check_per_worker options
+      | Error _ -> false)
+
   (* Check as many files as it can before it hits the timeout. The timeout is soft,
    * so the file which exceeds the timeout won't be canceled. We expect most buckets
    * to not hit the timeout *)
-  let rec job_helper ~reader ~options ~start_time acc = function
+  let rec job_helper ~reader ~options ~start_time ~start_rss acc = function
     | [] -> (acc, [])
-    | unfinished_files
-      when Unix.gettimeofday () -. start_time > Options.max_seconds_for_check_per_worker options ->
+    | unfinished_files when out_of_time ~options ~start_time ->
       Hh_logger.debug
         "Bucket timed out! %d files finished, %d files unfinished"
         (List.length acc)
         (List.length unfinished_files);
       (acc, unfinished_files)
+    | unfinished_files when out_of_memory ~options ~start_rss ->
+      Hh_logger.debug
+        "Bucket ran out of memory! %d files finished, %d files unfinished"
+        (List.length acc)
+        (List.length unfinished_files);
+      (acc, unfinished_files)
     | file :: rest ->
       let result = Merge_service.check options ~reader file in
-      job_helper ~reader ~options ~start_time (result :: acc) rest
+      job_helper ~reader ~options ~start_time ~start_rss (result :: acc) rest
 
   let job ~reader ~options acc files =
     let start_time = Unix.gettimeofday () in
-    job_helper ~reader ~options ~start_time acc files
+    let start_rss =
+      match ProcFS.status_for_pid (Unix.getpid ()) with
+      | Ok { ProcFS.rss_total; _ } -> Some rss_total
+      | Error _ -> None
+    in
+    job_helper ~reader ~options ~start_time ~start_rss acc files
 
   (* A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
    * when a bucket times out *)
@@ -1093,7 +1126,7 @@ end = struct
             FilenameSet.filter (fun f ->
                 (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
                 || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-                   @@ FilenameMap.find f implementation_dependency_graph
+                   @@ FilenameGraph.find f implementation_dependency_graph
                 ||
                 ( incr skipped_count;
                   false ))
@@ -1135,7 +1168,7 @@ end = struct
           let (merge_errors, warnings, suppressions, coverage, first_internal_error) =
             List.fold_left
               (fun acc (file, result) ->
-                let acc = remove_old_results acc file in
+                let acc = remove_old_results options Context.Checking acc file in
                 add_new_results ~record_slow_file acc file result)
               (merge_errors, warnings, suppressions, coverage, None)
               ret
@@ -1360,7 +1393,7 @@ let init_package_heap ~options ~profiling ~reader parsed =
             match filename with
             | File_key.JsonFile str when Filename.basename str = "package.json" ->
               let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader filename in
-              let package = Package_json.parse ast in
+              let package = Package_json.parse ~options ast in
               Module_js.add_package str package;
               begin
                 match package with
@@ -1651,8 +1684,8 @@ module Recheck : sig
     options:Options.t ->
     is_file_checked:(File_key.t -> bool) ->
     ide_open_files:SSet.t Lazy.t ->
-    sig_dependency_graph:FilenameSet.t FilenameMap.t ->
-    implementation_dependency_graph:FilenameSet.t FilenameMap.t ->
+    sig_dependency_graph:FilenameGraph.t ->
+    implementation_dependency_graph:FilenameGraph.t ->
     checked_files:CheckedSet.t ->
     freshparsed:FilenameSet.t ->
     unparsed_set:FilenameSet.t ->
@@ -1966,7 +1999,7 @@ end = struct
     let%lwt direct_dependent_files =
       with_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
           let root_files = FilenameSet.union new_or_changed unchanged_files_with_dependents in
-          DirectDependentFilesCache.with_cache ~options ~root_files ~on_miss:(fun () ->
+          DirectDependentFilesCache.with_cache ~root_files ~on_miss:(fun () ->
               Dep_service.calc_direct_dependents
                 ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                 workers
@@ -2016,8 +2049,8 @@ end = struct
           let files_to_update_dependency_info =
             FilenameSet.union freshparsed direct_dependent_files
           in
-          let%lwt updated_dependency_info =
-            Dep_service.calc_partial_dependency_info
+          let%lwt partial_dependency_graph =
+            Dep_service.calc_partial_dependency_graph
               ~options
               ~reader
               workers
@@ -2026,20 +2059,7 @@ end = struct
           in
           let old_dependency_info = env.ServerEnv.dependency_info in
           let to_remove = FilenameSet.union unparsed_set deleted in
-          match (old_dependency_info, updated_dependency_info) with
-          | (Dependency_info.Classic old_map, Dependency_info.Classic updated_map) ->
-            Lwt.return
-              (Dependency_info.Classic
-                 ( old_map
-                 |> FilenameSet.fold FilenameMap.remove to_remove
-                 |> FilenameMap.union updated_map ))
-          | (Dependency_info.TypesFirst old_map, Dependency_info.TypesFirst updated_map) ->
-            Lwt.return
-              (Dependency_info.TypesFirst
-                 ( old_map
-                 |> FilenameSet.fold FilenameMap.remove to_remove
-                 |> FilenameMap.union updated_map ))
-          | _ -> assert false)
+          Lwt.return (Dependency_info.update old_dependency_info partial_dependency_graph to_remove))
     in
     (* Here's how to update unparsed:
      * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed

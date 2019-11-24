@@ -28,3 +28,5 @@ val iter : ('a -> unit) -> 'a t -> unit
 val fold : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
 
 val length : 'a t -> int
+
+val is_empty : 'a t -> bool

@@ -99,6 +99,8 @@ end = struct
          The key to this map is the Type.tvar `ident`.
       *)
       tvar_cache: (Ty.t, error) result IMap.t;
+      (* Similar to a tvar map, we maintain an eval ID map. *)
+      eval_cache: (Ty.t, error) result Type.Eval.Map.t;
       (* This set is useful for synthesizing recursive types. It holds the set
          of type variables that are encountered "free". We say that a type
          variable is free when it appears in the body of its own definition.
@@ -110,7 +112,13 @@ end = struct
       free_tvars: VSet.t;
     }
 
-    let empty = { counter = 0; tvar_cache = IMap.empty; free_tvars = VSet.empty }
+    let empty =
+      {
+        counter = 0;
+        tvar_cache = IMap.empty;
+        eval_cache = Type.Eval.Map.empty;
+        free_tvars = VSet.empty;
+      }
   end
 
   include StateResult.Make (State)
@@ -144,18 +152,29 @@ end = struct
     let msg = ListUtils.cat_maybes [msg; t_str] |> String.concat "\n" in
     error (kind, msg)
 
-  (* Type caches *)
+  (* Update state *)
 
-  let update_tvar_cache i t =
-    State.(
-      let%bind st = get in
-      let tvar_cache = IMap.add i t st.tvar_cache in
-      put { st with tvar_cache })
+  type cache_key =
+    | TVarKey of int
+    | EvalKey of Type.Eval.id
 
-  let find_tvar root_id =
-    State.(
-      let%map st = get in
-      IMap.find_opt root_id st.tvar_cache)
+  let find_in_cache i =
+    let open State in
+    let%map state = get in
+    match i with
+    | TVarKey i -> IMap.find_opt i state.tvar_cache
+    | EvalKey i -> Type.Eval.Map.find_opt i state.eval_cache
+
+  let update_cache i t =
+    let open State in
+    let%bind st = get in
+    match i with
+    | TVarKey i -> put { st with tvar_cache = IMap.add i t st.tvar_cache }
+    | EvalKey i -> put { st with eval_cache = Type.Eval.Map.add i t st.eval_cache }
+
+  let add_to_free_tvars v =
+    let open State in
+    modify (fun st -> { st with free_tvars = VSet.add v st.free_tvars })
 
   (* Lookup a type parameter T in the current environment. There are three outcomes:
      1. T appears in env and for its first occurence locations match. This means it
@@ -368,6 +387,56 @@ end = struct
         let changed = not (t == t') in
         (* If not changed then all free_vars are still in, o.w. recompute free vars *)
         mk_mu ~definitely_appears:(not changed) i t'
+
+    (* Normalize potentially recursive types.
+     *
+     * Input here is a unique `id` (e.g. tvar) and a type-level operation `f`.
+     * To avoid non-termination we make use of the tvar_cache, that holds the result
+     * of ids that have been resolved, or are "in resolution". Depending on whether
+     * we have seen `id` before, there are a few cases here:
+     *
+     * a. The variable is "under resolution": We return the recursive variable as
+     *    result and update the set of free_tvars, which is later used to construct
+     *    the normalized recursive type.
+     *
+     * b. The variable is "resolved": Return the result.
+     *
+     * c. The variable resolution led to an error: Propagate error.
+     *
+     * d. The variable has never been seen before:
+     *    - We set the variable to "under resolution" and introduce a recursive
+     *      variable 'rid' to represent the normalized result.
+     *    - We evaluate the type (`f ()`). This typically includes a Flow_js constraint
+     *      level computation, like resolving lower-bounds, evaluating a type
+     *      destructor.
+     *    - We remove 'rid' from free_tvars, since it will no longer be in scope.
+     *    - We return the result.
+     *)
+    let with_cache id ~f =
+      let open State in
+      match%bind find_in_cache id with
+      | Some (Ok Ty.(TVar (RVar v, _) as t)) ->
+        let%map () = add_to_free_tvars v in
+        t
+      | Some (Ok t) -> return t
+      | Some (Error s) -> error s
+      | None ->
+        let%bind rid = fresh_num in
+        let rvar = Ty.RVar rid in
+        (* Set current variable "under resolution" *)
+        let%bind () = update_cache id (Ok (Ty.TVar (rvar, None))) in
+        let%bind in_st = get in
+        let (result, out_st) = run in_st (f ()) in
+        let result = Base.Result.map ~f:(make out_st.free_tvars rid) result in
+        (* Reset state by removing the current tvar from the free vars set *)
+        let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
+        let%bind () = put out_st in
+        (* Update cache with final result *)
+        let%bind () = update_cache id result in
+        (* Throw the error if one was encountered *)
+        (match result with
+        | Ok ty -> return ty
+        | Error e -> error e)
   end
 
   module Substitution = struct
@@ -689,68 +758,12 @@ end = struct
       | DefT (_, _, EnumT _) ->
         terr ~kind:UnsupportedTypeCtor (Some t))
 
-  (* Type variable normalization (input: a type variable `id`)
-
-     Step 1: Use `root_id` as a proxy for `id`.
-
-     Step 2: Check the cache in case root_id has been computed before. There are
-             several cases here:
-             a. The variable is "under resolution" state (recursive variable).
-                Exit with the cached result and add the variable to the free
-                variable set.
-             b. The variable is "resolved". Return the result.
-             c. The variable resolution led to an error. Propagate error.
-             d. The variable has never been seen before. Go to step 3.
-
-     Step 3: Start variable resolution.
-  *)
   and type_variable ~env id =
     let (root_id, constraints) =
-      (* step 1 *)
+      (* Use `root_id` as a proxy for `id` *)
       Context.find_constraints Env.(env.genv.cx) id
     in
-    match%bind find_tvar root_id with
-    (* step 2 *)
-    | Some (Ok Ty.(TVar (RVar v, _) as t)) ->
-      (* step 2a *)
-      let mod_state st = State.{ st with free_tvars = VSet.add v st.free_tvars } in
-      let%map () = modify mod_state in
-      t
-    | Some (Ok t) -> return t (* step 2b *)
-    | Some (Error s) -> error s (* step 2c *)
-    | None ->
-      (* step 2d *)
-      resolve_tvar ~env constraints root_id
-
-  (* step 3 *)
-
-  (* Resolve a type variable (encountered for the first time)
-
-     Resolving a type variable can either succeed and return a Ty.t, or fail and
-     return an error. Since we are caching the result of this resolution we need
-     to save a `(Ty.t, error) result`. For this reason we isolate the execution
-     of the monad under the current state and cache the "monadic" result.
-  *)
-  and resolve_tvar ~env cons root_id =
-    State.(
-      let%bind rid = fresh_num in
-      let rvar = Ty.RVar rid in
-      (* Set current variable "under resolution" *)
-      let%bind _ = update_tvar_cache root_id (Ok (Ty.TVar (rvar, None))) in
-      let%bind in_st = get in
-      (* Resolve the tvar *)
-      let (ty_res, out_st) = run in_st (resolve_bounds ~env cons) in
-      (* Create a recursive type (if needed) *)
-      let ty_res = Base.Result.map ~f:(Recursive.make out_st.free_tvars rid) ty_res in
-      (* Reset state by removing the current tvar from the free vars set *)
-      let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
-      let%bind _ = put out_st in
-      (* Update cache with final result *)
-      let%bind _ = update_tvar_cache root_id ty_res in
-      (* Throw the error if one was encountered *)
-      match ty_res with
-      | Ok ty -> return ty
-      | Error e -> error e)
+    Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds ~env constraints)
 
   (* Resolving a type variable amounts to normalizing its lower bounds and
      taking their union.
@@ -1562,14 +1575,18 @@ end = struct
       in
       mk_spread ty target prefix_tys head_slice
 
-  and type_destructor_t ~env id t d =
+  and type_destructor_t ~env use_op reason id t d =
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
-      let evaluated = Context.evaluated cx in
-      match T.Eval.Map.find_opt id evaluated with
-      | Some t -> type__ ~env t
-      | None -> type_destructor_unevaluated ~env t d
-    (* fallback *)
+      Context.with_normalizer_mode cx (fun cx ->
+          (* The evaluated type might be recursive. To avoid non-termination we
+           * wrap the evaluation with our caching mechanism. *)
+          Recursive.with_cache (EvalKey id) ~f:(fun () ->
+              let trace = Trace.dummy_trace in
+              match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
+              | exception Flow_js.Attempted_operation_on_bound _ ->
+                type_destructor_unevaluated ~env t d
+              | (_, tout) -> type__ ~env tout))
     else
       type_destructor_unevaluated ~env t d
 
@@ -1623,7 +1640,7 @@ end = struct
 
   and eval_t ~env t id = function
     | Type.LatentPredT _ -> latent_pred_t ~env id t
-    | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
+    | Type.TypeDestructorT (use_op, r, d) -> type_destructor_t ~env use_op r id t d
 
   and module_t =
     let mk_module env symbol_opt exports =
@@ -1657,7 +1674,8 @@ end = struct
           | [] -> return Ty.NoUpper
           | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl)))
         end
-      | T.UseT (_, t) :: rest ->
+      | T.UseT (_, t) :: rest
+      | T.TypeCastT (_, t) :: rest ->
         let%bind t = type__ ~env t in
         uses_t_aux ~env (t :: acc) rest
       | T.ReposLowerT (_, _, u) :: rest -> uses_t_aux ~env acc (u :: rest)

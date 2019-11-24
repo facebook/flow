@@ -1954,7 +1954,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let { id = (name_loc, ident); body } = enum in
       let { Ast.Identifier.name; _ } = ident in
       let reason = mk_reason (REnum name) loc in
-      let enum_t = mk_enum cx ~loc enum in
+      let enum_t = mk_enum cx ~enum_reason:reason enum in
       let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
       let id' = ((name_loc, t), ident) in
       Env.declare_implicit_const Scope.Entry.EnumNameBinding cx name name_loc;
@@ -2985,7 +2985,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let (t, annot') = Anno.mk_type_available_annotation cx SMap.empty annot in
       let (((_, infer_t), _) as e') = expression cx e in
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
-      Flow.flow cx (infer_t, UseT (use_op, t));
+      Flow.flow cx (infer_t, TypeCastT (use_op, t));
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot' })
     | Member _ -> subscript ~is_cond cx ex
     | OptionalMember _ -> subscript ~is_cond cx ex
@@ -3478,12 +3478,39 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         ) else
           Tast_utils.unchecked_mapper#expression ex))
 
-(* Handles subscript operations. Whereas `expression` recursively computes the
-   type of the LHS, `subscript` instead walks the AST to first build up a
-   representation of the property chain. We can then walk that representation
-   and emit constraints as we go along and omit the recursion.
+(* Handles operations that may traverse optional chains.
+    If is_cond is true, will allow non-existent properties to be looked up
+      at the top-level of the chain.
+    If is_existence_check is true and the top of the chain is a member lookup
+      "a.x", generate the predicate "a.x exists" and "a has property x".
+    In addition to checking chains, this function produces predicates of the above
+    form for all optional member accesses in the chain: everywhere we see an
+    expression like "a.x?.y", generate the predicate "a.x exists" and "a has
+    property x", because if that was not the case, the optional chain operator
+    would short-circuit the evaluation of the chain at runtime.
+
+    This function also generates the inverse of the predicates, for when the chain
+    does short-circuit. So for example, if called with
+    ~is_existence_check:true, a?.b.c?.d generates the following predicates
+    for the non-short-circuit case:
+      "a exists" /\ "a.b.c exists" /\ "a.b has property c" /\ "a.b.c.d exists" /\ "a.b.c has property d"
+    and the negation of the above for the short-circuiting/falsy case.
+
+    There is also an optional sentinel_refine argument which is applied to the
+    top of the chain, and which can produce an additional refinement, but which
+    callers will handle specially. See usage in condition_of_maybe_sentinel.
+
+    Returns a tuple:
+      * type of expression if no optional chains short-circuited,
+      * optional type of all possible short-circuitings,
+      * typed AST of expression, where the type is the combination of
+        short-circuiting and non short-circuiting (i.e. representing the actual
+        range of possible types of the expression),
+      * predicates that hold if the chain does not short-circuit and if it
+        does.
+      * result of applying sentinel_refine to the top of the chain, if anything.
 *)
-and optional_chain ~is_cond cx ((loc, e) as ex) =
+and optional_chain ~is_cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
   let open Ast.Expression in
   let factor_out_optional (loc, e) =
     let (opt_state, e') =
@@ -3521,6 +3548,73 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       | NonOptional -> Member member
     in
     (e', opt_state, call_ast, member_ast)
+  in
+  let mk_preds =
+    List.fold_left
+      (fun preds (key, pred, ty) ->
+        match preds with
+        | Some (preds, not_preds, xtys) ->
+          Some
+            ( Key_map.add key pred preds,
+              Key_map.add key (NotP pred) not_preds,
+              Key_map.add key ty xtys )
+        | None ->
+          Some
+            (Key_map.singleton key pred, Key_map.singleton key (NotP pred), Key_map.singleton key ty))
+      None
+  in
+  (* Later bindings for the same key in pred_list will override earlier bindings.
+     They are treated as a unit in both positive and negative branches of the
+     refinements: if the positive branch is "a.b truthy /\ a has truthy prop b",
+     then the negative branch is "a.b not truthy /\ a does not have truthy prop b".
+     This unit is itself then AND'ed to the positive branch and OR'ed to the
+     negative branch of any existing predicates.
+  *)
+  let combine_preds existing_preds pred_list =
+    let new_preds = mk_preds pred_list in
+    match (existing_preds, new_preds) with
+    | (Some existing_preds, None) -> Some existing_preds
+    | ( Some (existing_preds, existing_not_preds, existing_xtys),
+        Some (new_preds, new_not_preds, new_xtys) ) ->
+      Some
+        ( mk_and existing_preds new_preds,
+          mk_or existing_not_preds new_not_preds,
+          Key_map.union existing_xtys new_xtys )
+    | (None, _) -> new_preds
+  in
+  let exists_pred ((loc, _) as expr) lhs_t =
+    if is_existence_check then
+      let pred =
+        (* is_cond is true when this expression is the top-level of a conditional,
+           "if ([expr]) {...}". In this case, we check both that the expression exists and
+           that it has a truthy type (that's what the "ExistsP" predicate does). If we're
+           deeper in the chain, then is_cond will be false, and we only care if the expression
+           is null or undefined, not if it's false/0/"". *)
+        if is_cond then
+          ExistsP (Some loc)
+        else
+          NotP MaybeP
+      in
+      match Refinement.key ~allow_optional:true expr with
+      | Some key_name -> [(key_name, pred, lhs_t)]
+      | None -> []
+    else
+      []
+  in
+  let prop_exists_pred object_ name obj_t prop_reason =
+    if is_existence_check then
+      let prop_pred =
+        (* see comment on exists_pred *)
+        if is_cond then
+          PropExistsP (name, prop_reason)
+        else
+          PropNonMaybeP (name, prop_reason)
+      in
+      match Refinement.key ~allow_optional:true object_ with
+      | Some key_name -> [(key_name, prop_pred, obj_t)]
+      | None -> []
+    else
+      []
   in
   let try_non_chain cx loc e ~call_ast ~member_ast =
     (* Special cases where optional chaining doesn't occur *)
@@ -3592,13 +3686,15 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
-        ( (loc, lhs_t),
-          call_ast
-            {
-              Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-              targs;
-              arguments;
-            } )
+        ( ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
+                targs;
+                arguments;
+              } ),
+          None,
+          None )
     | Call
         {
           Call.callee =
@@ -3680,13 +3776,15 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
-        ( (loc, lhs_t),
-          call_ast
-            {
-              Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-              targs;
-              arguments;
-            } )
+        ( ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
+                targs;
+                arguments;
+              } ),
+          None,
+          None )
     | Call
         {
           Call.callee =
@@ -3707,20 +3805,22 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         static_method_call_Object cx loc callee_loc prop_loc expr obj_t name targs arguments
       in
       Some
-        ( (loc, lhs_t),
-          let t = bogus_trust () |> MixedT.at callee_loc in
-          call_ast
-            {
-              Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
-                ( (callee_loc, t),
-                  Member
-                    {
-                      Member._object = obj_ast;
-                      property = Member.PropertyIdentifier ((prop_loc, t), id);
-                    } );
-              targs;
-              arguments;
-            } )
+        ( ( (loc, lhs_t),
+            let t = bogus_trust () |> MixedT.at callee_loc in
+            call_ast
+              {
+                Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
+                  ( (callee_loc, t),
+                    Member
+                      {
+                        Member._object = obj_ast;
+                        property = Member.PropertyIdentifier ((prop_loc, t), id);
+                      } );
+                targs;
+                arguments;
+              } ),
+          None,
+          None )
     | Call
         {
           Call.callee =
@@ -3770,19 +3870,21 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
                     Some prop_t ) ))
       in
       Some
-        ( (loc, lhs_t),
-          call_ast
-            {
-              Call.callee =
-                ( (callee_loc, prop_t),
-                  Member
-                    {
-                      Member._object = ((super_loc, super), Super);
-                      property = Member.PropertyIdentifier ((ploc, prop_t), id);
-                    } );
-              targs;
-              arguments = argument_asts;
-            } )
+        ( ( (loc, lhs_t),
+            call_ast
+              {
+                Call.callee =
+                  ( (callee_loc, prop_t),
+                    Member
+                      {
+                        Member._object = ((super_loc, super), Super);
+                        property = Member.PropertyIdentifier ((ploc, prop_t), id);
+                      } );
+                targs;
+                arguments = argument_asts;
+              } ),
+          None,
+          None )
     | Call { Call.callee = (super_loc, Super) as callee; targs; arguments } ->
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, argument_asts) =
@@ -3815,9 +3917,11 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
               (super, MethodT (use_op, reason, super_reason, propref, CallM funtype, None)))
       in
       Some
-        ( (loc, lhs_t),
-          call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts }
-        )
+        ( ( (loc, lhs_t),
+            call_ast { Call.callee = ((super_loc, super), Super); targs; arguments = argument_asts }
+          ),
+          None,
+          None )
     (******************************************)
     (* See ~/www/static_upstream/core/ *)
     | Call { Call.callee; targs; arguments } when is_call_to_invariant callee ->
@@ -3885,7 +3989,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           List.map Tast_utils.error_mapper#expression_or_spread arguments
       in
       let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-      Some ((loc, lhs_t), call_ast { Call.callee; targs; arguments })
+      Some (((loc, lhs_t), call_ast { Call.callee; targs; arguments }), None, None)
     | Member
         {
           Member._object =
@@ -3903,10 +4007,12 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         ((object_loc, module_t), Ast.Expression.Identifier ((id_loc, module_t), id_name))
       in
       Some
-        ( (loc, lhs_t),
-          member_ast
-            { Member._object; property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name) }
-        )
+        ( ( (loc, lhs_t),
+            member_ast
+              { Member._object; property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name) }
+          ),
+          None,
+          None )
     | Member
         {
           Member._object =
@@ -3921,12 +4027,14 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
       let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
       Some
-        ( (loc, lhs_t),
-          (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
-          let t = AnyT.at Untyped object_loc in
-          let property = Member.PropertyIdentifier ((ploc, t), name) in
-          member_ast
-            { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } )
+        ( ( (loc, lhs_t),
+            (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
+            let t = AnyT.at Untyped object_loc in
+            let property = Member.PropertyIdentifier ((ploc, t), name) in
+            member_ast
+              { Member._object = ((object_loc, t), Identifier ((id_loc, t), name)); property } ),
+          None,
+          None )
     | Member
         {
           Member._object = (super_loc, Super);
@@ -3934,20 +4042,30 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         } ->
       let super = super_ cx super_loc in
       let expr_reason = mk_reason (RProperty (Some name)) loc in
+      let prop_reason = mk_reason (RProperty (Some name)) ploc in
       let lhs_t =
         match Refinement.get ~allow_optional:true cx (loc, e) loc with
         | Some t -> t
         | None ->
-          let prop_reason = mk_reason (RProperty (Some name)) ploc in
           if Type_inference_hooks_js.dispatch_member_hook cx name ploc super then
             Unsoundness.at InferenceHooks ploc
           else
-            Tvar.mk_where cx expr_reason (fun tvar ->
-                let use_op = Op (GetProperty (mk_expression_reason ex)) in
-                Flow.flow cx (super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)))
+            let use_op = Op (GetProperty (mk_expression_reason ex)) in
+            get_prop ~use_op ~is_cond cx expr_reason super (prop_reason, name)
       in
       let property = Member.PropertyIdentifier ((ploc, super), id) in
-      Some ((loc, lhs_t), member_ast { Member._object = ((super_loc, super), Super); property })
+      let ast =
+        ((loc, lhs_t), member_ast { Member._object = ((super_loc, super), Super); property })
+      in
+      (* Even though there's no optional chaining for Super member accesses, we
+         can still get predicates *)
+      let sentinel_refinement =
+        Option.value_map ~f:(fun f -> f lhs_t) ~default:None sentinel_refine
+      in
+      let preds =
+        exists_pred (loc, e) lhs_t @ prop_exists_pred (super_loc, Super) name super prop_reason
+      in
+      Some (ast, mk_preds preds, sentinel_refinement)
     | _ -> None
   in
   let (e', opt_state, call_ast, member_ast) = factor_out_optional ex in
@@ -3961,7 +4079,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       expression, which can be seen as a union of the successful type and all
       possible nullish failure types.
 
-      The optional_chain function therefore returns a 3-tuple:
+      The optional_chain function therefore returns a 5-tuple:
         * T1: the type of the expression modulo optional chaining--i.e., the
           type in the case where any optional chain tests succeed,
         * T2: optionally, a type representing the union of all optional chain
@@ -3969,12 +4087,27 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         * exp: the typed AST expression, where the type of the node is the
           "actual" type of the expression, including both chain failures and
           chain successes.
+        * preds: any predicates that can be used to refine elements of the
+          optional chain based on whether a ?. operator short-circuits. If any
+          predicates exist, this will be a Key_map.t of positive refinements
+          (the chain didn't short circuit), a Key_map.t of negative refinements
+          (the chain did short-circuit), and a Key_map.t of the original types
+          of refined expressions. See predicates_of_condition for how these
+          are used.
+        * sentinel_refinement: optional additional predicate obtained by applying
+          sentinel_refine to the top of the chain
 
       So, if `a: ?{b?: {c: number}}`, and the checked expression is `a?.b?.c`,
         then the output would be (T1, T2, T3, exp), where:
         * T1 = number
         * T2 = void, both from `a: ?{...}` and from `a: {b? : {...}}`
         * exp = ast for `a?.b?.c` with type T1 U T2
+        * preds = assuming the overall function was called with ~is_cond,
+              "a exists and has non-nullish property b", "a.b exists and has
+              truthy property c", and "a.b.c is truthy", as well as the the
+              types of a, a.b, and a.b.c
+        * possibly an additional refinement based on the sentinel_refine function,
+          passed in by the caller.
 
      Below are several helper functions for setting up this tuple in the
      presence of chaining.
@@ -3988,10 +4121,15 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           Flow.flow_t cx (void, t))
   in
   let noop _ = None in
+  let in_env preds f =
+    match preds with
+    | Some (preds, _, xtypes) -> Env.in_refined_env cx loc preds xtypes f
+    | None -> f ()
+  in
   let handle_new_chain
       lhs_reason
       loc
-      (chain_t, voided_t, object_ast)
+      (chain_t, voided_t, object_ast, preds, _)
       ~this_reason
       ~subexpressions
       ~get_reason
@@ -4027,7 +4165,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
            essentially the successfully filtered receiver of the function call
            is flowed into it, and it is used as the `this`-parameter of the
            calltype that the method call will flow into. *)
-    let (subexpression_types, subexpression_asts) = subexpressions () in
+    let (subexpression_types, subexpression_asts) = subexpressions preds in
     let reason = get_reason chain_t in
     let chain_reason = mk_reason ROptionalChain loc in
     let mem_t =
@@ -4051,10 +4189,10 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           Flow.flow_t cx (mem_t, t);
           Flow.flow_t cx (voided_out, t))
     in
-    (mem_t, Some voided_out, lhs_t, object_ast, subexpression_asts)
+    (mem_t, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts, preds)
   in
   let handle_continue_chain
-      (chain_t, voided_t, object_ast)
+      (chain_t, voided_t, object_ast, preds, _)
       ~refine
       ~refinement_action
       ~subexpressions
@@ -4068,7 +4206,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
          voided_t parameter. We'll flow that type into the type of the overall
          expression to account for that possibility.
       *)
-    let (subexpression_types, subexpression_asts) = subexpressions () in
+    let (subexpression_types, subexpression_asts) = subexpressions preds in
     let reason = get_reason chain_t in
     let res_t =
       match (test_hooks chain_t, refine ()) with
@@ -4081,7 +4219,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       | (None, None) -> get_result subexpression_types reason chain_t
     in
     let lhs_t = join_optional_branches voided_t res_t in
-    (res_t, voided_t, lhs_t, object_ast, subexpression_asts)
+    (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts, preds)
   in
   let handle_chaining
       ?refinement_action
@@ -4101,7 +4239,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           above is None. We don't need to consider optional short-circuiting, so
           we can call expression_ rather than optional_chain. *)
       let (((_, obj_t), _) as object_ast) = expression cx object_ in
-      let (subexpression_types, subexpression_asts) = subexpressions () in
+      let (subexpression_types, subexpression_asts) = subexpressions None in
       let reason = get_reason obj_t in
       let lhs_t =
         match (test_hooks obj_t, refine ()) with
@@ -4113,24 +4251,30 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             refinement_action
         | (None, None) -> get_result subexpression_types reason obj_t
       in
-      (lhs_t, None, lhs_t, object_ast, subexpression_asts)
+      (lhs_t, None, lhs_t, obj_t, object_ast, subexpression_asts, None)
     | NewChain ->
       let lhs_reason = mk_expression_reason object_ in
-      let ((filtered_t, voided_t, object_ast) as object_data) =
-        optional_chain ~is_cond:false cx object_
+      let ((filtered_t, voided_t, object_ast, preds, _) as object_data) =
+        optional_chain ~is_cond:false ~is_existence_check:true cx object_
       in
       begin
         match refine () with
         | Some t ->
           Context.mark_optional_chain cx loc lhs_reason ~useful:false;
-          let (subexpression_types, subexpression_asts) = subexpressions () in
+          let (subexpression_types, subexpression_asts) = subexpressions preds in
           let tout =
             Option.value_map
               ~f:(fun refinement_action -> refinement_action subexpression_types filtered_t t)
               ~default:t
               refinement_action
           in
-          (tout, voided_t, join_optional_branches voided_t tout, object_ast, subexpression_asts)
+          ( tout,
+            voided_t,
+            join_optional_branches voided_t tout,
+            filtered_t,
+            object_ast,
+            subexpression_asts,
+            preds )
         | _ ->
           handle_new_chain
             lhs_reason
@@ -4144,7 +4288,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
       end
     | ContinueChain ->
       handle_continue_chain
-        (optional_chain ~is_cond cx object_)
+        (optional_chain ~is_cond:false ~is_existence_check:false cx object_)
         ~refine
         ~refinement_action
         ~subexpressions
@@ -4153,10 +4297,10 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
         ~get_reason
   in
   match try_non_chain cx loc e' ~call_ast ~member_ast with
-  | Some (((_, lhs_t), _) as res) ->
+  | Some ((((_, lhs_t), _) as res), preds, sentinel_refinement) ->
     (* Nothing to do with respect to optional chaining, because we're in a
          case where chaining isn't allowed. *)
-    (lhs_t, None, res)
+    (lhs_t, None, res, preds, sentinel_refinement)
   | None ->
     let (e', method_receiver_and_state) =
       (* If we're looking at a call, look "one level deeper" to see if the
@@ -4229,11 +4373,12 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             let use = apply_opt_use (get_opt_use tind reason obj_t) t in
             Flow.flow cx (obj_t, use))
       in
-      let eval_index () =
-        let (((_, tind), _) as index) = expression cx index in
-        (tind, index)
+      let eval_index preds =
+        in_env preds (fun () ->
+            let (((_, tind), _) as index) = expression cx index in
+            (tind, index))
       in
-      let (filtered_out, voided_out, lhs_t, object_ast, index) =
+      let (filtered_out, voided_out, lhs_t, obj_t, object_ast, index, preds) =
         handle_chaining
           opt_state
           _object
@@ -4246,11 +4391,17 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
           ~get_reason:(Fn.const reason)
       in
+      let sentinel_refinement =
+        Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+      in
+      let new_pred_list = exists_pred (loc, e') lhs_t in
+      let preds = combine_preds preds new_pred_list in
       ( filtered_out,
         voided_out,
         ( (loc, lhs_t),
-          member_ast { Member._object = object_ast; property = Member.PropertyExpression index } )
-      )
+          member_ast { Member._object = object_ast; property = Member.PropertyExpression index } ),
+        preds,
+        sentinel_refinement )
     (* e.l *)
     | ( Member
           {
@@ -4274,7 +4425,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             let use = apply_opt_use opt_use t in
             Flow.flow cx (obj_t, use))
       in
-      let (filtered_out, voided_out, lhs_t, object_ast, _) =
+      let (filtered_out, voided_out, lhs_t, obj_t, object_ast, _, preds) =
         handle_chaining
           opt_state
           _object
@@ -4287,10 +4438,19 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~get_opt_use:(fun _ _ _ -> opt_use)
           ~get_reason:(Fn.const expr_reason)
       in
+      let sentinel_refinement =
+        Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+      in
+      let new_pred_list =
+        exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t prop_reason
+      in
+      let preds = combine_preds preds new_pred_list in
       let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
       ( filtered_out,
         voided_out,
-        ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
+        ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
+        preds,
+        sentinel_refinement )
     (* e.#l *)
     | ( Member
           {
@@ -4314,7 +4474,7 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             let use = apply_opt_use opt_use t in
             Flow.flow cx (obj_t, use))
       in
-      let (filtered_out, voided_out, lhs_t, object_ast, _) =
+      let (filtered_out, voided_out, lhs_t, _, object_ast, _, preds) =
         handle_chaining
           opt_state
           _object
@@ -4327,9 +4487,13 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~get_opt_use:(fun _ _ _ -> opt_use)
           ~get_reason:(Fn.const expr_reason)
       in
+      let new_pred_list = exists_pred (loc, e') lhs_t in
+      let preds = combine_preds preds new_pred_list in
       ( filtered_out,
         voided_out,
-        ((loc, lhs_t), member_ast { Member._object = object_ast; property }) )
+        ((loc, lhs_t), member_ast { Member._object = object_ast; property }),
+        preds,
+        None )
     (* Method calls: e.l(), e.#l(), and e1[e2]() *)
     | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments },
         Some (member_opt, ({ Member._object; property } as receiver), receiver_ast) ) ->
@@ -4406,10 +4570,11 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
                 let use = apply_opt_use (get_opt_use argts reason obj_t) t in
                 Flow.flow cx (obj_t, use))
           in
-          let eval_args () =
-            arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+          let eval_args preds =
+            in_env preds (fun () ->
+                arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split)
           in
-          let (filtered_out, lookup_voided_out, member_lhs_t, object_ast, argument_asts) =
+          let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, _) =
             handle_chaining
               member_opt
               _object
@@ -4463,16 +4628,22 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
                 Flow.flow cx (obj_t, use);
                 Flow.flow_t cx (obj_t, prop_t))
           in
-          let eval_args_and_expr () =
-            let (((_, elem_t), _) as expr) = expression cx expr in
-            let (argts, argument_asts) =
-              arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
-            in
-            ((argts, elem_t), (argument_asts, expr))
+          let eval_args_and_expr preds =
+            in_env preds (fun () ->
+                let (((_, elem_t), _) as expr) = expression cx expr in
+                let (argts, argument_asts) =
+                  arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split
+                in
+                ((argts, elem_t), (argument_asts, expr)))
           in
           let this_reason = mk_expression_reason callee in
-          let (filtered_out, lookup_voided_out, member_lhs_t, object_ast, (argument_asts, expr_ast))
-              =
+          let ( filtered_out,
+                lookup_voided_out,
+                member_lhs_t,
+                _,
+                object_ast,
+                (argument_asts, expr_ast),
+                _ ) =
             handle_chaining
               member_opt
               _object
@@ -4509,7 +4680,9 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
                 ((lookup_loc, prop_t), receiver_ast { Member._object = object_ast; property });
               targs;
               arguments = argument_asts;
-            } ) )
+            } ),
+        None,
+        None )
     (* e1(e2...) *)
     | (Call { Call.callee; targs; arguments }, None) ->
       let (targts, targs) = convert_call_targs_opt cx targs in
@@ -4530,8 +4703,11 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
             let use = apply_opt_use (get_opt_use argts reason f) t in
             Flow.flow cx (f, use))
       in
-      let eval_args () = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
-      let (filtered_out, voided_out, lhs_t, object_ast, argument_asts) =
+      let eval_args preds =
+        in_env preds (fun () ->
+            arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split)
+      in
+      let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, _) =
         handle_chaining
           opt_state
           callee
@@ -4545,13 +4721,24 @@ and optional_chain ~is_cond cx ((loc, e) as ex) =
           ~get_reason
       in
       let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
-      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
+      (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
+    | (This, _)
+    | (Identifier _, _)
+      when is_existence_check ->
+      (* if optional_chain is called from a conditional position and we're generating
+         predicates, we might recursively reach an identifier, and if the level "above"
+         it in the chain was a "?." operator, we'll need to add the predicate that the
+         property exists, so that e.g. "a?.b" generates the predicates "a.b exists",
+         "a has prop b", and "a exists". *)
+      let (((_, t), _) as res) = expression ~is_cond cx ex in
+      let preds = mk_preds @@ exists_pred (loc, e') t in
+      (t, None, res, preds, None)
     | _ ->
-      let (((_, t), _) as res) = expression cx ex in
-      (t, None, res))
+      let (((_, t), _) as res) = expression ~is_cond cx ex in
+      (t, None, res, None, None))
 
 and subscript ~is_cond cx ex =
-  let (_, _, ast) = optional_chain ~is_cond cx ex in
+  let (_, _, ast, _, _) = optional_chain ~is_cond ~is_existence_check:false cx ex in
   ast
 
 (* Handles function calls that appear in conditional contexts. The main
@@ -5104,7 +5291,9 @@ and assign_member
        Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as property;
     } ->
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object) = optional_chain ~is_cond:false cx _object in
+      let (o, _, _object, _, _) =
+        optional_chain ~is_cond:false ~is_existence_check:false cx _object
+      in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5139,7 +5328,9 @@ and assign_member
         | _ -> Normal
       in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object) = optional_chain ~is_cond:false cx _object in
+      let (o, _, _object, _, _) =
+        optional_chain ~is_cond:false ~is_existence_check:false cx _object
+      in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5167,8 +5358,15 @@ and assign_member
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index) } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object) = optional_chain ~is_cond:false cx _object in
-      let (((_, i), _) as index) = expression cx index in
+      let (o, _, _object, preds, _) =
+        optional_chain ~is_cond:false ~is_existence_check:false cx _object
+      in
+      let (((_, i), _) as index) =
+        match preds with
+        | None -> expression cx index
+        | Some (preds, _, xtypes) ->
+          Env.in_refined_env cx lhs_loc preds xtypes (fun () -> expression cx index)
+      in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
       let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
       Flow.flow cx (o, upper);
@@ -5384,9 +5582,8 @@ and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
       | Some _ -> (expr_loc, open_, children_loc)
       | _ -> (open_, open_, open_)
     in
-    let (unresolved_params, children) = collapse_children cx children in
-    let (t, openingElement, closingElement) =
-      jsx_title cx openingElement closingElement unresolved_params locs
+    let (t, openingElement, children, closingElement) =
+      jsx_title cx openingElement children closingElement locs
     in
     (t, { openingElement; children; closingElement }))
 
@@ -5395,13 +5592,13 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
     let { frag_openingElement; frag_children; frag_closingElement } = fragment in
     let (children_loc, _) = frag_children in
     let loc_opening = frag_openingElement in
-    let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let fragment_t =
       let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
       let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
       let use_op = Op (GetProperty reason) in
       get_prop ~is_cond:false cx reason ~use_op react (reason, "Fragment")
     in
+    let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_openingElement, children_loc) in
     let t =
       jsx_desugar
@@ -5415,7 +5612,7 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
     in
     (t, { frag_openingElement; frag_children; frag_closingElement }))
 
-and jsx_title cx openingElement closingElement children locs =
+and jsx_title cx openingElement children closingElement locs =
   Ast.JSX.(
     let make_trust = Context.trust_constructor cx in
     let (loc_element, _, _) = locs in
@@ -5423,7 +5620,7 @@ and jsx_title cx openingElement closingElement children locs =
     let facebook_fbs = Context.facebook_fbs cx in
     let facebook_fbt = Context.facebook_fbt cx in
     let jsx_mode = Context.jsx cx in
-    let (t, name, attributes) =
+    let (t, name, attributes, children) =
       match (name, jsx_mode, (facebook_fbs, facebook_fbt)) with
       | (Identifier (loc_id, ({ Identifier.name = "fbs" } as id)), _, (Some custom_jsx_type, _))
       | (Identifier (loc_id, ({ Identifier.name = "fbt" } as id)), _, (_, Some custom_jsx_type)) ->
@@ -5431,13 +5628,15 @@ and jsx_title cx openingElement closingElement children locs =
         let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
         let name = Identifier ((loc_id, t), id) in
         let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-        (t, name, attributes)
+        let (_, children) = collapse_children cx children in
+        (t, name, attributes, children)
       | (Identifier (loc, { Identifier.name }), Options.Jsx_react, _) ->
         if Type_inference_hooks_js.dispatch_id_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc_element in
           let name = Identifier ((loc, t), { Identifier.name }) in
           let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-          (t, name, attributes)
+          let (_, children) = collapse_children cx children in
+          (t, name, attributes, children)
         else
           let reason = mk_reason (RReactElement (Some name)) loc_element in
           let c =
@@ -5446,16 +5645,19 @@ and jsx_title cx openingElement closingElement children locs =
             else
               DefT (mk_reason (RIdentifier name) loc, make_trust (), SingletonStrT name)
           in
-          let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-          let t = jsx_desugar cx name c o attributes children locs in
+          let (o, attributes', unresolved_params, children) =
+            jsx_mk_props cx reason c name attributes children
+          in
+          let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name }) in
-          (t, name, attributes')
+          (t, name, attributes', children)
       | (Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _) ->
         if Type_inference_hooks_js.dispatch_id_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc_element in
           let name = Identifier ((loc, t), { Identifier.name }) in
           let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-          (t, name, attributes)
+          let (_, children) = collapse_children cx children in
+          (t, name, attributes, children)
         else
           let reason = mk_reason (RJSXElement (Some name)) loc_element in
           let c =
@@ -5464,10 +5666,12 @@ and jsx_title cx openingElement closingElement children locs =
             else
               DefT (mk_reason (RIdentifier name) loc, make_trust (), StrT (Literal (None, name)))
           in
-          let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-          let t = jsx_desugar cx name c o attributes children locs in
+          let (o, attributes', unresolved_params, children) =
+            jsx_mk_props cx reason c name attributes children
+          in
+          let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name }) in
-          (t, name, attributes')
+          (t, name, attributes', children)
       | (Identifier (loc, { Identifier.name }), Options.Jsx_csx, _) ->
         (*
          * It's a bummer to duplicate this case, but CSX does not want the
@@ -5477,14 +5681,17 @@ and jsx_title cx openingElement closingElement children locs =
           let t = Unsoundness.at InferenceHooks loc_element in
           let name = Identifier ((loc, t), { Identifier.name }) in
           let attributes' = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
-          (t, name, attributes')
+          let (_, children) = collapse_children cx children in
+          (t, name, attributes', children)
         else
           let reason = mk_reason (RJSXElement (Some name)) loc_element in
           let c = identifier cx (mk_ident ~comments:None name) loc in
-          let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-          let t = jsx_desugar cx name c o attributes children locs in
+          let (o, attributes', unresolved_params, children) =
+            jsx_mk_props cx reason c name attributes children
+          in
+          let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name }) in
-          (t, name, attributes')
+          (t, name, attributes', children)
       | (MemberExpression member, Options.Jsx_react, _) ->
         let name = jsx_title_member_to_string member in
         let el = RReactElement (Some name) in
@@ -5492,22 +5699,24 @@ and jsx_title cx openingElement closingElement children locs =
         let m_expr = jsx_title_member_to_expression member in
         let ((m_loc, t), m_expr') = expression cx m_expr in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier name)) t in
-        let (o, attributes') = jsx_mk_props cx reason c name attributes children in
-        let t = jsx_desugar cx name c o attributes children locs in
+        let (o, attributes', unresolved_params, children) =
+          jsx_mk_props cx reason c name attributes children
+        in
+        let t = jsx_desugar cx name c o attributes unresolved_params locs in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
           | None -> Tast_utils.error_mapper#jsx_member_expression member
         in
-        (t, MemberExpression member', attributes')
+        (t, MemberExpression member', attributes', children)
       | (MemberExpression member, Options.(Jsx_csx | Jsx_pragma _), _) ->
         let t = Unsoundness.at InferenceHooks loc_element in
         let name' = Tast_utils.error_mapper#jsx_name name in
         let el_name = jsx_title_member_to_string member in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier el_name)) t in
-        let (_o, attributes') = jsx_mk_props cx reason c el_name attributes children in
-        (t, name', attributes')
+        let (_o, attributes', _, children) = jsx_mk_props cx reason c el_name attributes children in
+        (t, name', attributes', children)
       | (NamespacedName namespace, _, _) ->
         (* TODO? covers namespaced names as element names *)
         let t = Unsoundness.at InferenceHooks loc_element in
@@ -5515,8 +5724,8 @@ and jsx_title cx openingElement closingElement children locs =
         let el_name = jsx_title_namespaced_name_to_string namespace in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier el_name)) t in
-        let (_o, attributes') = jsx_mk_props cx reason c el_name attributes children in
-        (t, name', attributes')
+        let (_o, attributes', _, children) = jsx_mk_props cx reason c el_name attributes children in
+        (t, name', attributes', children)
     in
     let closingElement =
       match closingElement with
@@ -5524,7 +5733,7 @@ and jsx_title cx openingElement closingElement children locs =
         Some (c_loc, { Closing.name = jsx_match_closing_element name cname })
       | None -> None
     in
-    (t, (loc, { Opening.name; selfClosing; attributes }), closingElement))
+    (t, (loc, { Opening.name; selfClosing; attributes }), children, closingElement))
 
 and jsx_match_closing_element =
   let match_identifiers o_id c_id =
@@ -5652,8 +5861,9 @@ and jsx_mk_props cx reason c name attributes children =
         attributes
     in
     let attributes = List.rev atts in
+    let (unresolved_params, children) = collapse_children cx children in
     let acc =
-      match children with
+      match unresolved_params with
       | [] -> acc
       (* We add children to the React.createElement() call for React. Not to the
        * props as other JSX users may support. *)
@@ -5670,7 +5880,7 @@ and jsx_mk_props cx reason c name attributes children =
                 cx
                 ~use_op:unknown_use
                 ~reason_op:reason
-                children
+                unresolved_params
                 (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)))
         in
         ObjectExpressionAcc.add_prop (Properties.add_field "children" Polarity.Neutral None arr) acc
@@ -5683,7 +5893,7 @@ and jsx_mk_props cx reason c name attributes children =
         ~default_proto:proto
         ~empty_unsealed:false
     in
-    (t, attributes))
+    (t, attributes, unresolved_params, children))
 
 and jsx_desugar cx name component_t props attributes children locs =
   let (loc_element, loc_opening, loc_children) = locs in
@@ -5891,6 +6101,30 @@ and expression_to_jsx_title_member loc member =
     Option.map _object ~f:(fun _object -> (loc, Ast.JSX.MemberExpression.{ _object; property }))
   | _ -> None
 
+and mk_and map1 map2 =
+  Key_map.merge
+    (fun _ p1 p2 ->
+      match (p1, p2) with
+      | (None, None) -> None
+      | (Some p, None)
+      | (None, Some p) ->
+        Some p
+      | (Some p1, Some p2) -> Some (AndP (p1, p2)))
+    map1
+    map2
+
+and mk_or map1 map2 =
+  Key_map.merge
+    (fun _ p1 p2 ->
+      match (p1, p2) with
+      | (None, None) -> None
+      | (Some _, None)
+      | (None, Some _) ->
+        None
+      | (Some p1, Some p2) -> Some (OrP (p1, p2)))
+    map1
+    map2
+
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
    and returns a 5-tuple:
@@ -5905,19 +6139,23 @@ and predicates_of_condition cx e =
   Ast.(
     Expression.(
       (* refinement key if expr is eligible, along with unrefined type *)
-      let refinable_lvalue e = (Refinement.key ~allow_optional:false e, condition cx e) in
+      let refinable_lvalue ~allow_optional e = (Refinement.key ~allow_optional e, condition cx e) in
       (* package empty result (no refinements derived) from test type *)
       let empty_result test_tast = (test_tast, Key_map.empty, Key_map.empty, Key_map.empty) in
       let add_predicate key unrefined_t pred sense (test_tast, ps, notps, tmap) =
-        let (p, notp) =
+        (* if two predicates are applied to the same key, in the positive branch (which depends on
+           sense) the predicates are conjuncted, and in the negative branch they are disjuncted *)
+        let and_ p1 p2 = AndP (p1, p2) in
+        let or_ p1 p2 = OrP (p1, p2) in
+        let (p, notp, combine, not_combine) =
           if sense then
-            (pred, NotP pred)
+            (pred, NotP pred, and_, or_)
           else
-            (NotP pred, pred)
+            (NotP pred, pred, or_, and_)
         in
         ( test_tast,
-          Key_map.add key p ps,
-          Key_map.add key notp notps,
+          Key_map.add ~combine key p ps,
+          Key_map.add ~combine:not_combine key notp notps,
           Key_map.add key unrefined_t tmap )
       in
       let flow_eqt ~strict loc (t1, t2) =
@@ -5940,65 +6178,82 @@ and predicates_of_condition cx e =
      `foo.bar === false`, `foo.bar` is refined to be `false` (by `bool_test`)
      and `foo` is refined to eliminate branches that don't have a `false` bar
      property (by this function). *)
-      let condition_of_maybe_sentinel cx ~sense ~strict expr val_t =
-        match (strict, expr) with
-        | ( true,
-            ( expr_loc,
+      let condition_of_maybe_sentinel cx ~allow_optional ~sense ~strict expr val_t =
+        let expr' =
+          match expr with
+          | (loc, OptionalMember { OptionalMember.member; _ }) -> (loc, Member member)
+          | _ -> expr
+        in
+        match (Refinement.key ~allow_optional expr, expr') with
+        | ( Some _,
+            ( _,
               Member
                 {
                   Member._object;
                   property =
                     ( Member.PropertyIdentifier
-                        (prop_loc, { Ast.Identifier.name = prop_name; comments = _ })
+                        (_, { Ast.Identifier.name = prop_name; comments = _ })
                     | Member.PropertyExpression
-                        ( prop_loc,
+                        ( _,
                           Ast.Expression.Literal
-                            { Ast.Literal.value = Ast.Literal.String prop_name; _ } ) ) as property;
+                            { Ast.Literal.value = Ast.Literal.String prop_name; _ } ) );
                 } ) ) ->
-          (* use `expression` instead of `condition` because `_object` is the object
-         in a member expression; if it itself is a member expression, it must
-         exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
-         `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
-          let (((_, obj_t), _) as _object_ast) = expression cx _object in
-          let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-          let expr_reason = mk_expression_reason expr in
-          let prop_t =
-            match Refinement.get ~allow_optional:true cx expr expr_loc with
-            | Some t -> t
-            | None ->
-              if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t then
-                Unsoundness.at InferenceHooks prop_loc
-              else
-                let use_op = Op (GetProperty prop_reason) in
-                get_prop ~is_cond:true cx expr_reason ~use_op obj_t (prop_reason, prop_name)
-          in
-          (* refine the object (`foo.bar` in the example) based on the prop. *)
-          let refinement =
-            match Refinement.key ~allow_optional:false _object with
-            | None -> None
-            | Some name ->
+          let sentinel_refine obj_t =
+            (* Generate a refinement on the object that contains a sentinel property.
+               We need to pass this into optional_chain, rather than locally generating a
+               refinement on the type of _object, because the type getting refined is
+               the non-short-circuited, non-nullable branch of any optional chains. *)
+            match (strict, Refinement.key ~allow_optional:true _object) with
+            | (false, _)
+            | (_, None) ->
+              None
+            | (true, Some name) ->
               let pred = LeftP (SentinelProp prop_name, val_t) in
               Some (name, obj_t, pred, sense)
           in
-          (* since we never called `expression cx expr`, we have to add to the
-         type table ourselves *)
-          let m = new loc_mapper prop_t in
-          let property = m#member_property property in
-          (((expr_loc, prop_t), Member { Member._object = _object_ast; property }), refinement)
-        | _ -> (condition cx expr, None)
+          (* Note here we're calling optional_chain on the whole expression, not on _object.
+             We could "look down" one level and call it on _object and wouldn't need the
+             sentinel_refine function above, but then we'd need to duplicate a lot of the
+             functionality of optional_chain here. *)
+          let (_, _, ast, preds, sentinel_refinement) =
+            optional_chain
+              ~is_cond:true (* We do want to allow possibly absent properties... *)
+              ~is_existence_check:
+                false
+                (* ...but we don't generate predicates about
+                their existence at the top level: "a.b === undefined" must not generate the
+                predicate "a.b exists". *)
+              ~sentinel_refine
+              cx
+              expr
+          in
+          (ast, preds, sentinel_refinement)
+        | _ -> (condition cx expr, None, None)
+      in
+      let extend_with_chain_preds ((ast, preds, not_preds, xts1) as out) chain_preds sense =
+        let out =
+          match chain_preds with
+          | None -> out
+          | Some (chain_preds, chain_not_preds, xts2) ->
+            let xts = Key_map.union xts1 xts2 in
+            if sense then
+              (ast, mk_and preds chain_preds, mk_or not_preds chain_not_preds, xts)
+            else
+              (ast, mk_or preds chain_not_preds, mk_and not_preds chain_preds, xts)
+        in
+        out
       in
       (* inspect a null equality test *)
       let null_test loc ~sense ~strict e null_t reconstruct_ast =
-        let ((((_, t), _) as e_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict e null_t
+        let ((((_, t), _) as e_ast), chain_preds, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict e null_t
         in
         let ast = reconstruct_ast e_ast in
         flow_eqt ~strict loc (t, null_t);
+        let t_out = BoolT.at loc |> with_trust literal_trust in
         let out =
-          match Refinement.key ~allow_optional:false e with
-          | None ->
-            let t_out = BoolT.at loc |> with_trust bogus_trust in
-            empty_result ((loc, t_out), ast)
+          match Refinement.key ~allow_optional:true e with
+          | None -> empty_result ((loc, t_out), ast)
           | Some name ->
             let pred =
               if strict then
@@ -6006,12 +6261,40 @@ and predicates_of_condition cx e =
               else
                 MaybeP
             in
-            let t_out = BoolT.at loc |> with_trust bogus_trust in
             result ((loc, t_out), ast) name t pred sense
         in
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
+        let out =
+          match sentinel_refinement with
+          | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+          | None -> out
+        in
+
+        (*
+           This is a little tricky in the presence of optional chains, because
+           non-strict "== null" is true if the LHS is undefined, and a short-circuting
+           optional chain always returns "undefined". OTOH, strict "=== null" is false
+           if the LHS is a short-circuiting optional chain, so in the truthy
+           branch of an if we can refine the LHS with the knowledge that all
+           optional chain operators did not short circuit.
+
+           For example,
+           declare var a: ?{b: (null | number)}
+           if (a?.b === null) {
+             // here "a" must not be null or undefined, because the optional chain
+             // operator would have short circuited and produced undefined, which !== null
+           } else {
+             // "a" could be null or undefined, or "a.b" could be number.
+           }
+           but on the other hand,
+           if (a?.b == null) {
+             // here "a" might be null or undefined, because the optional chain short-
+             // circuiting would produce undefined, which == null
+           } else {
+             // and here, "a" must not be null or undefined, *and* "a.b" must be a number
+           }
+           *)
+        let chain_sense = (sense && strict) || ((not sense) && not strict) in
+        extend_with_chain_preds out chain_preds chain_sense
       in
       let void_test loc ~sense ~strict e void_t reconstruct_ast =
         (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
@@ -6022,13 +6305,13 @@ and predicates_of_condition cx e =
           | DefT (_, _, VoidT) -> void_t
           | _ -> VoidT.why (reason_of_t void_t) |> with_trust bogus_trust
         in
-        let ((((_, t), _) as e_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict e void_t
+        let ((((_, t), _) as e_ast), chain_preds, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict e void_t
         in
         let ast = reconstruct_ast e_ast in
         flow_eqt ~strict loc (t, void_t);
         let out =
-          match Refinement.key ~allow_optional:false e with
+          match Refinement.key ~allow_optional:true e with
           | None ->
             let t_out = BoolT.at loc |> with_trust bogus_trust in
             empty_result ((loc, t_out), ast)
@@ -6042,9 +6325,15 @@ and predicates_of_condition cx e =
             let t_out = BoolT.at loc |> with_trust bogus_trust in
             result ((loc, t_out), ast) name t pred sense
         in
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
+        let out =
+          match sentinel_refinement with
+          | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+          | None -> out
+        in
+        (* We flip the sense here for reasons similar to the discussion in null_test,
+           except that optional chain short-circuiting *always* reaches the true case,
+           since it produces undefined. *)
+        extend_with_chain_preds out chain_preds (not sense)
       in
       (* inspect an undefined equality test *)
       let undef_test loc ~sense ~strict e void_t reconstruct_ast =
@@ -6056,14 +6345,14 @@ and predicates_of_condition cx e =
           empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), reconstruct_ast e_ast)
       in
       let literal_test loc ~strict ~sense expr val_t pred reconstruct_ast =
-        let ((((_, t), _) as expr_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict expr val_t
+        let ((((_, t), _) as expr_ast), chain_preds, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:true ~sense ~strict expr val_t
         in
         let ast = reconstruct_ast expr_ast in
         flow_eqt ~strict loc (t, val_t);
         let refinement =
           if strict then
-            Refinement.key ~allow_optional:false expr
+            Refinement.key ~allow_optional:true expr
           else
             None
         in
@@ -6076,38 +6365,60 @@ and predicates_of_condition cx e =
             let t = BoolT.at loc |> with_trust bogus_trust in
             empty_result ((loc, t), ast)
         in
-        match sentinel_refinement with
-        | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
-        | None -> out
+        let out =
+          match sentinel_refinement with
+          | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+          | None -> out
+        in
+        extend_with_chain_preds out chain_preds sense
+      in
+      (* generalizes typeof, instanceof, and Array.isArray() *)
+      let instance_test loc target make_ast_and_pred sense chain_sense =
+        let bool = BoolT.at loc |> with_trust bogus_trust in
+        match Refinement.key ~allow_optional:true target with
+        | Some name ->
+          let (filtered_out, _, targ_ast, chain_preds, _) =
+            optional_chain ~is_cond:true ~is_existence_check:false cx target
+          in
+          let (ast, pred) = make_ast_and_pred targ_ast bool in
+          let out = result ast name filtered_out pred sense in
+          extend_with_chain_preds out chain_preds chain_sense
+        | None ->
+          let targ_ast = condition cx target in
+          let (ast, _) = make_ast_and_pred targ_ast bool in
+          empty_result ast
       in
       (* inspect a typeof equality test *)
       let typeof_test loc sense arg typename str_loc reconstruct_ast =
         let bool = BoolT.at loc |> with_trust bogus_trust in
-        match refinable_lvalue arg with
-        | (Some name, (((_, t), _) as arg)) ->
-          let pred =
-            match typename with
-            | "boolean" -> Some BoolP
-            | "function" -> Some FunP
-            | "number" -> Some NumP
-            | "object" -> Some ObjP
-            | "string" -> Some StrP
-            | "symbol" -> Some SymbolP
-            | "undefined" -> Some VoidP
-            | _ -> None
-          in
-          begin
-            match pred with
-            | Some pred -> result ((loc, bool), reconstruct_ast arg) name t pred sense
-            | None ->
-              Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
-              empty_result ((loc, bool), reconstruct_ast arg)
-          end
-        | (None, arg) -> empty_result ((loc, bool), reconstruct_ast arg)
+        let pred_and_not_undef =
+          match typename with
+          | "boolean" -> Some (BoolP, true)
+          | "function" -> Some (FunP, true)
+          | "number" -> Some (NumP, true)
+          | "object" -> Some (ObjP, true)
+          | "string" -> Some (StrP, true)
+          | "symbol" -> Some (SymbolP, true)
+          | "undefined" -> Some (VoidP, false)
+          | _ -> None
+        in
+        match pred_and_not_undef with
+        | Some (pred, not_undef) ->
+          let make_ast_and_pred ast _ = (((loc, bool), reconstruct_ast ast), pred) in
+          instance_test
+            loc
+            arg
+            make_ast_and_pred
+            sense
+            ((sense && not_undef) || ((not sense) && not not_undef))
+        | None ->
+          let arg = condition cx arg in
+          Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
+          empty_result ((loc, bool), reconstruct_ast arg)
       in
       let sentinel_prop_test loc ~sense ~strict expr val_t reconstruct_ast =
-        let ((((_, t), _) as expr_ast), sentinel_refinement) =
-          condition_of_maybe_sentinel cx ~sense ~strict expr val_t
+        let ((((_, t), _) as expr_ast), _, sentinel_refinement) =
+          condition_of_maybe_sentinel cx ~allow_optional:false ~sense ~strict expr val_t
         in
         let ast = reconstruct_ast expr_ast in
         flow_eqt ~strict loc (t, val_t);
@@ -6360,101 +6671,33 @@ and predicates_of_condition cx e =
           let t_out = BoolT.at loc |> with_trust bogus_trust in
           empty_result ((loc, t_out), ast)
       in
-      let mk_and map1 map2 =
-        Key_map.merge
-          (fun _ p1 p2 ->
-            match (p1, p2) with
-            | (None, None) -> None
-            | (Some p, None)
-            | (None, Some p) ->
-              Some p
-            | (Some p1, Some p2) -> Some (AndP (p1, p2)))
-          map1
-          map2
-      in
-      let mk_or map1 map2 =
-        Key_map.merge
-          (fun _ p1 p2 ->
-            match (p1, p2) with
-            | (None, None) -> None
-            | (Some _, None)
-            | (None, Some _) ->
-              None
-            | (Some p1, Some p2) -> Some (OrP (p1, p2)))
-          map1
-          map2
-      in
       (* main *)
       match e with
       (* member expressions *)
-      | ( loc,
-          Member
-            {
-              Member._object;
-              property =
-                Member.PropertyIdentifier
-                  (prop_loc, ({ Ast.Identifier.name = prop_name; comments = _ } as id));
-            } ) ->
-        let (((_, obj_t), _) as _object_ast) =
-          match _object with
-          | (super_loc, Super) ->
-            let t = super_ cx super_loc in
-            ((super_loc, t), Super)
-          | _ ->
-            (* use `expression` instead of `condition` because `_object` is the
-             object in a member expression; if it itself is a member expression,
-             it must exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here
-             as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
-            expression cx _object
-        in
-        let expr_reason = mk_expression_reason e in
-        let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-        let t =
-          match Refinement.get ~allow_optional:true cx e loc with
-          | Some t -> t
-          | None ->
-            if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t then
-              Unsoundness.at InferenceHooks prop_loc
-            else
-              let use_op = Op (GetProperty (mk_expression_reason e)) in
-              get_prop ~is_cond:true cx expr_reason ~use_op obj_t (prop_reason, prop_name)
-        in
-        let property = Member.PropertyIdentifier ((prop_loc, t), id) in
-        let ast = ((loc, t), Member { Member._object = _object_ast; property }) in
-        let out =
-          match Refinement.key ~allow_optional:false e with
-          | Some name -> result ast name t (ExistsP (Some loc)) true
-          | None -> empty_result ast
-        in
-        (* refine the object (`foo.bar` in the example) based on the prop. *)
+      | (_, Member _)
+      | (_, OptionalMember _) ->
+        let (_, _, ast, preds, _) = optional_chain ~is_cond:true ~is_existence_check:true cx e in
         begin
-          match Refinement.key ~allow_optional:false _object with
-          | Some name ->
-            let predicate = PropExistsP prop_name in
-            out |> add_predicate name obj_t predicate true
-          | None -> out
+          match preds with
+          | None -> empty_result ast
+          | Some (preds, not_preds, xts) -> (ast, preds, not_preds, xts)
         end
       (* assignments *)
       | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
         let (((_, expr), _) as tast) = expression cx e in
         let id = id.Ast.Pattern.Identifier.name in
-        (match refinable_lvalue (loc, Ast.Expression.Identifier id) with
+        (match refinable_lvalue ~allow_optional:true (loc, Ast.Expression.Identifier id) with
         | (Some name, _) -> result tast name expr (ExistsP (Some loc)) true
         | (None, _) -> empty_result tast)
       (* expr instanceof t *)
       | (loc, Binary { Binary.operator = Binary.Instanceof; left; right }) ->
-        let bool = BoolT.at loc |> with_trust bogus_trust in
-        let (name_opt, (((_, left_t), _) as left_ast)) = refinable_lvalue left in
-        let (((_, right_t), _) as right_ast) = expression cx right in
-        let ast =
-          ( (loc, bool),
-            Binary { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast } )
+        let make_ast_and_pred left_ast bool =
+          let (((_, right_t), _) as right_ast) = expression cx right in
+          ( ( (loc, bool),
+              Binary { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast } ),
+            LeftP (InstanceofTest, right_t) )
         in
-        (match name_opt with
-        | Some name ->
-          let pred = LeftP (InstanceofTest, right_t) in
-          result ast name left_t pred true
-        | None -> empty_result ast)
+        instance_test loc left make_ast_and_pred true true
       (* expr op expr *)
       | (loc, Binary { Binary.operator = Binary.Equal; left; right }) ->
         eq_test loc ~sense:true ~strict:false left right (fun left right ->
@@ -6510,21 +6753,18 @@ and predicates_of_condition cx e =
               let use_op = Op (GetProperty (mk_expression_reason e)) in
               Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t)))
         in
-        let bool = BoolT.at loc |> with_trust bogus_trust in
-        let (name_opt, (((_, t), _) as arg)) = refinable_lvalue arg in
-        let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
-        let ast =
-          ( (loc, bool),
-            Call
-              {
-                Call.callee = ((callee_loc, fn_t), Member { Member._object; property });
-                targs = None;
-                arguments = [Expression arg];
-              } )
+        let make_ast_and_pred arg bool =
+          let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
+          ( ( (loc, bool),
+              Call
+                {
+                  Call.callee = ((callee_loc, fn_t), Member { Member._object; property });
+                  targs = None;
+                  arguments = [Expression arg];
+                } ),
+            ArrP )
         in
-        (match name_opt with
-        | Some name -> result ast name t ArrP true
-        | None -> empty_result ast)
+        instance_test loc arg make_ast_and_pred true true
       (* test1 && test2 *)
       | (loc, Logical { Logical.operator = Logical.And; left; right }) ->
         let ((((_, t1), _) as left_ast), map1, not_map1, xts1) = predicates_of_condition cx left in
@@ -6561,14 +6801,14 @@ and predicates_of_condition cx e =
         (ast, not_map, map, xts)
       (* ids *)
       | (loc, This)
-      | (loc, Identifier _)
-      | (loc, Member _) ->
-        (match refinable_lvalue e with
+      | (loc, Identifier _) ->
+        (match refinable_lvalue ~allow_optional:true e with
         | (Some name, (((_, t), _) as e)) -> result e name t (ExistsP (Some loc)) true
         | (None, e) -> empty_result e)
       (* e.m(...) *)
       (* TODO: Don't trap method calls for now *)
-      | (_, Call { Call.callee = (_, Member _); _ }) -> empty_result (expression cx e)
+      | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) ->
+        empty_result (expression cx e)
       (* f(...) *)
       (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
@@ -7682,27 +7922,110 @@ and warn_or_ignore_optional_chaining optional cx loc =
   else
     ()
 
-and mk_enum cx ~loc enum =
+and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
-  let { id = (_, { Ast.Identifier.name; _ }); body } = enum in
-  let name_of_initialized_member (type t) (member : (t, ALoc.t) InitializedMember.t) =
-    let (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); _ }) = member in
-    name
-  in
+  let { id = (name_loc, { Ast.Identifier.name; _ }); body } = enum in
   let name_of_defaulted_member (_, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) =
     name
   in
-  let enum_id = Context.make_aloc_id cx loc in
-  let member_names =
+  let enum_id = Context.make_aloc_id cx name_loc in
+  let (representation_t, members) =
     match body with
     | (_, BooleanBody { BooleanBody.members; _ }) ->
-      Base.List.map ~f:name_of_initialized_member members
+      let reason = mk_reason (REnumRepresentation RBoolean) (aloc_of_reason enum_reason) in
+      let (members, bool_type, _) =
+        Base.List.fold_left
+          ~f:
+            (fun (names, bool_type, seen_values)
+                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+            let (init_loc, init_value) = init in
+            let bool_type =
+              match bool_type with
+              (* we have seen one value *)
+              | None -> Some init_value
+              (* we have now seen both values *)
+              | Some _ -> None
+            in
+            let seen_values =
+              match BoolMap.find_opt init_value seen_values with
+              | Some prev_use_loc ->
+                Flow.add_output
+                  cx
+                  (Error_message.EEnumMemberDuplicateValue
+                     { loc = init_loc; prev_use_loc; enum_reason });
+                seen_values
+              | None -> BoolMap.add init_value init_loc seen_values
+            in
+            (SSet.add name names, bool_type, seen_values))
+          ~init:(SSet.empty, None, BoolMap.empty)
+          members
+      in
+      (DefT (reason, literal_trust (), BoolT bool_type), members)
     | (_, NumberBody { NumberBody.members; _ }) ->
-      Base.List.map ~f:name_of_initialized_member members
+      let reason = mk_reason (REnumRepresentation RNumber) (aloc_of_reason enum_reason) in
+      let (members, num_type, _) =
+        Base.List.fold_left
+          ~f:
+            (fun (names, num_type, seen_values)
+                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+            let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
+            let num_type =
+              if init_value = 0.0 then
+                AnyLiteral
+              else
+                num_type
+            in
+            let seen_values =
+              match NumberMap.find_opt init_value seen_values with
+              | Some prev_use_loc ->
+                Flow.add_output
+                  cx
+                  (Error_message.EEnumMemberDuplicateValue
+                     { loc = init_loc; prev_use_loc; enum_reason });
+                seen_values
+              | None -> NumberMap.add init_value init_loc seen_values
+            in
+            (SSet.add name names, num_type, seen_values))
+          ~init:(SSet.empty, Truthy, NumberMap.empty)
+          members
+      in
+      (DefT (reason, literal_trust (), NumT num_type), members)
     | (_, StringBody { StringBody.members = StringBody.Initialized members; _ }) ->
-      Base.List.map ~f:name_of_initialized_member members
+      let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
+      let (members, str_type, _) =
+        Base.List.fold_left
+          ~f:
+            (fun (names, str_type, seen_values)
+                 (_, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+            let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
+            let str_type =
+              if init_value = "" then
+                AnyLiteral
+              else
+                str_type
+            in
+            let seen_values =
+              match SMap.find_opt init_value seen_values with
+              | Some prev_use_loc ->
+                Flow.add_output
+                  cx
+                  (Error_message.EEnumMemberDuplicateValue
+                     { loc = init_loc; prev_use_loc; enum_reason });
+                seen_values
+              | None -> SMap.add init_value init_loc seen_values
+            in
+            (SSet.add name names, str_type, seen_values))
+          ~init:(SSet.empty, Truthy, SMap.empty)
+          members
+      in
+      (DefT (reason, literal_trust (), StrT str_type), members)
     | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
-      Base.List.map ~f:name_of_defaulted_member members
-    | (_, SymbolBody { SymbolBody.members }) -> Base.List.map ~f:name_of_defaulted_member members
+      let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
+      ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
+        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
+    | (_, SymbolBody { SymbolBody.members }) ->
+      let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
+      ( Flow.get_builtin_type cx reason ~use_desc:true "Symbol",
+        SSet.of_list @@ Base.List.map ~f:name_of_defaulted_member members )
   in
-  { enum_id; enum_name = name; members = SSet.of_list member_names }
+  { enum_id; enum_name = name; members; representation_t }

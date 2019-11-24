@@ -49,7 +49,6 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
-    cache_direct_dependents: bool;
     disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
@@ -80,6 +79,7 @@ module Opts = struct
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
+    max_rss_bytes_for_check_per_worker: int;
     max_seconds_for_check_per_worker: float;
     max_workers: int;
     merge_timeout: int option;
@@ -91,6 +91,7 @@ module Opts = struct
     modules_are_use_strict: bool;
     munge_underscores: bool;
     no_flowlib: bool;
+    node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
@@ -147,7 +148,6 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
-      cache_direct_dependents = true;
       disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
@@ -176,9 +176,11 @@ module Opts = struct
       lazy_mode = None;
       log_file = None;
       lsp_code_actions = false;
-      max_header_tokens = 10;
       max_files_checked_per_worker = 100;
+      max_header_tokens = 10;
       max_literal_length = 100;
+      max_rss_bytes_for_check_per_worker = 200 * 1024 * 1024;
+      (* 200MB *)
       max_seconds_for_check_per_worker = 5.0;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
@@ -190,6 +192,7 @@ module Opts = struct
       modules_are_use_strict = false;
       munge_underscores = false;
       no_flowlib = false;
+      node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
@@ -451,6 +454,13 @@ module Opts = struct
       ( "module.system",
         enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
             Ok { opts with module_system = v }) );
+      ( "module.system.node.main_field",
+        string
+          ~init:(fun opts -> { opts with node_main_fields = [] })
+          ~multiple:true
+          (fun opts v ->
+            let node_main_fields = v :: opts.node_main_fields in
+            Ok { opts with node_main_fields }) );
       ( "module.system.node.allow_root_relative",
         boolean (fun opts v -> Ok { opts with node_resolver_allow_root_relative = v }) );
       ( "module.system.node.resolve_dirname",
@@ -550,8 +560,6 @@ module Opts = struct
       ("experimental.types_first", boolean (fun opts v -> Ok { opts with types_first = v }));
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
-      ( "experimental.cache_direct_dependents",
-        boolean (fun opts v -> Ok { opts with cache_direct_dependents = v }) );
       ( "experimental.disable_live_non_parse_errors",
         boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v }) );
       ("experimental.minimal_merge", boolean (fun opts v -> Ok { opts with minimal_merge = v }));
@@ -567,6 +575,8 @@ module Opts = struct
         uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v }) );
       ( "experimental.types_first.max_seconds_for_check_per_worker",
         uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v }) );
+      ( "experimental.types_first.max_rss_bytes_for_check_per_worker",
+        uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v }) );
     ]
 
   let parse =
@@ -1093,8 +1103,6 @@ let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
 
-let cache_direct_dependents c = c.options.Opts.cache_direct_dependents
-
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
 let emoji c = c.options.Opts.emoji
@@ -1155,6 +1163,8 @@ let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
 let max_header_tokens c = c.options.Opts.max_header_tokens
 
+let max_rss_bytes_for_check_per_worker c = c.options.Opts.max_rss_bytes_for_check_per_worker
+
 let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_per_worker
 
 let max_workers c = c.options.Opts.max_workers
@@ -1176,6 +1186,8 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 
 let no_flowlib c = c.options.Opts.no_flowlib
+
+let node_main_fields c = c.options.Opts.node_main_fields
 
 let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_root_relative
 

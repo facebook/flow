@@ -54,8 +54,6 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
-val cache_direct_dependents : config -> bool
-
 val disable_live_non_parse_errors : config -> bool
 
 val emoji : config -> bool
@@ -116,6 +114,8 @@ val max_header_tokens : config -> int
 
 val max_literal_length : config -> int
 
+val max_rss_bytes_for_check_per_worker : config -> int
+
 val max_seconds_for_check_per_worker : config -> float
 
 val max_workers : config -> int
@@ -137,6 +137,8 @@ val modules_are_use_strict : config -> bool
 val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool
+
+val node_main_fields : config -> string list
 
 val node_resolver_allow_root_relative : config -> bool
 

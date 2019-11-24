@@ -7,19 +7,21 @@
 
 (* Contains pure functions which perform calculations on the dependency graph *)
 
-type dependency_graph = Utils_js.FilenameSet.t Utils_js.FilenameMap.t
+val calc_direct_dependencies :
+  Utils_js.FilenameGraph.t -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
 
-val calc_direct_dependencies : dependency_graph -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
-
-val calc_all_dependencies : dependency_graph -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
+val calc_all_dependencies :
+  Utils_js.FilenameGraph.t -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
 
 val calc_all_dependents :
-  sig_dependency_graph:dependency_graph ->
-  implementation_dependency_graph:dependency_graph ->
+  sig_dependency_graph:Utils_js.FilenameGraph.t ->
+  implementation_dependency_graph:Utils_js.FilenameGraph.t ->
   Utils_js.FilenameSet.t ->
   (* sig dependents, all dependents *)
   Utils_js.FilenameSet.t * Utils_js.FilenameSet.t
 
 val filter_dependency_graph :
-  dependency_graph -> Utils_js.FilenameSet.t -> (* files *)
-                                                dependency_graph
+  Utils_js.FilenameGraph.t ->
+  (* files *)
+  Utils_js.FilenameSet.t ->
+  Utils_js.FilenameSet.t Utils_js.FilenameMap.t

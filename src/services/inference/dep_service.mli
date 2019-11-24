@@ -25,7 +25,7 @@ val calc_dependency_info :
          FilenameSet.t ->
   Dependency_info.t Lwt.t
 
-val calc_partial_dependency_info :
+val calc_partial_dependency_graph :
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   MultiWorkerLwt.worker list option ->
@@ -33,4 +33,4 @@ val calc_partial_dependency_info :
   FilenameSet.t ->
   parsed:(* files *)
          FilenameSet.t ->
-  Dependency_info.t Lwt.t
+  Partial_dependency_graph.t Lwt.t

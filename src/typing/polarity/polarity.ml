@@ -9,6 +9,7 @@ type t =
   | Negative
   | Neutral
   | Positive
+[@@deriving show]
 
 (* Subtype relation for polarities, interpreting neutral as positive &
    negative: whenever compat(p1,p2) holds, things that have polarity p1 can

@@ -489,12 +489,26 @@ Cannot assign `headers.get(...)` to `b` because null [1] is incompatible with st
                            ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1365:24
-   1365|     get(name: string): null | string;
+   <BUILTINS>/bom.js:1376:24
+   1376|     get(name: string): null | string;
                                 ^^^^ [1]
    Headers.js:8:10
       8| const b: string = headers.get('foo'); // incorrect
                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- MediaDevices.js:11:1
+
+Cannot call `navigator.mediaDevices.getUserMedia` because property `getUserMedia` is missing in undefined [1].
+
+   MediaDevices.js:11:1
+    11| navigator.mediaDevices.getUserMedia({ audio: true }); // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:275:20
+   275|     mediaDevices?: MediaDevices;
+                           ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:10:1
@@ -672,8 +686,8 @@ Cannot assign `params.get(...)` to `b` because null [1] is incompatible with str
                            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1379:24
-   1379|     get(name: string): null | string;
+   <BUILTINS>/bom.js:1390:24
+   1390|     get(name: string): null | string;
                                 ^^^^ [1]
    URLSearchParams.js:8:10
       8| const b: string = params.get('foo'); // incorrect

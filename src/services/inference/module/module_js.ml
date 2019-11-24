@@ -97,8 +97,8 @@ let add_package filename = function
   | Ok package -> Module_heaps.Package_heap_mutator.add_package_json filename package
   | Error _ -> Module_heaps.Package_heap_mutator.add_error filename
 
-let package_incompatible ~reader filename ast =
-  let new_package = Package_json.parse ast in
+let package_incompatible ~options ~reader filename ast =
+  let new_package = Package_json.parse ~options ast in
   let old_package = Module_heaps.Reader.get_package ~reader filename in
   match (old_package, new_package) with
   | (None, Ok _) -> true (* didn't exist before, found a new one *)

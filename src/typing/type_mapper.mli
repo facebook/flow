@@ -20,7 +20,7 @@ class virtual ['a] t :
 
     method dict_type : Context.t -> 'a -> Type.dicttype -> Type.dicttype
 
-    method virtual enum : Type.enum_t -> Type.enum_t
+    method enum : Context.t -> 'a -> Type.enum_t -> Type.enum_t
 
     method virtual eval_id : Context.t -> 'a -> Type.Eval.id -> Type.Eval.id
 

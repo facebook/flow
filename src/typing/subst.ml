@@ -22,8 +22,6 @@ let substituter =
 
     method tvar _cx _map_cx _r id = id
 
-    method enum e = e
-
     method call_prop cx map_cx id =
       let t = Context.find_call cx id in
       let t' = self#type_ cx map_cx t in

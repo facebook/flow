@@ -277,7 +277,13 @@ class virtual ['a] t =
         else
           ExplicitArg t''
 
-    method virtual enum : enum_t -> enum_t
+    method enum cx map_cx e =
+      let { enum_id; enum_name; members; representation_t } = e in
+      let representation_t' = self#type_ cx map_cx representation_t in
+      if representation_t' = representation_t then
+        e
+      else
+        { enum_id; enum_name; members; representation_t = representation_t' }
 
     method def_type cx map_cx t =
       match t with
@@ -317,13 +323,13 @@ class virtual ['a] t =
         else
           ClassT t''
       | EnumT enum ->
-        let enum' = self#enum enum in
+        let enum' = self#enum cx map_cx enum in
         if enum' == enum then
           t
         else
           EnumT enum'
       | EnumObjectT enum ->
-        let enum' = self#enum enum in
+        let enum' = self#enum cx map_cx enum in
         if enum' == enum then
           t
         else
@@ -722,6 +728,7 @@ class virtual ['a] t =
       | SymbolP
       | VoidP
       | ArrP
+      | PropNonMaybeP _
       | PropExistsP _ ->
         p
       | LatentP (t, i) ->
@@ -1064,6 +1071,18 @@ class virtual ['a] t_with_uses =
           t
         else
           TypeAppVarianceCheckT (use_op, r1, r2, tpairlist')
+      | TypeCastT (use_op, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then
+          t
+        else
+          TypeCastT (use_op, t'')
+      | EnumCastT { use_op; enum = (reason, trust, enum) } ->
+        let enum' = self#enum cx map_cx enum in
+        if enum' == enum then
+          t
+        else
+          EnumCastT { use_op; enum = (reason, trust, enum') }
       | ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (t2, ts2, op2, r2), flip) ->
         let ts1' = ListUtils.ident_map (self#type_ cx map_cx) ts1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -1938,13 +1957,15 @@ class virtual ['a] t_with_uses =
           t
         else
           SentinelPropTest (b, s, t1', t2', t3')
-      | PropExistsTest (b, s, t1, t2) ->
+      | PropExistsTest (b, s, r, t1, t2, (pred, not_pred)) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
-        if t1' == t2 && t2' == t2 then
+        let pred' = self#predicate cx map_cx pred in
+        let not_pred' = self#predicate cx map_cx not_pred in
+        if t1' == t2 && t2' == t2 && pred' == pred && not_pred' == not_pred then
           t
         else
-          PropExistsTest (b, s, t1', t2')
+          PropExistsTest (b, s, r, t1', t2', (pred', not_pred'))
 
     method simplify_prop_type_tool cx map_cx tool =
       React.SimplifyPropType.(

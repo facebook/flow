@@ -8,6 +8,7 @@ not <src/parser/**>: package(base), package(core_kernel), package(ppx_deriving),
 <src/flowlib/flowlib.ml>: ppx(scripts/ppx_gen_flowlibs.exe --as-ppx -flowlib lib/ -prelude prelude/)
 <src/common/ty/*.ml*>: package(visitors.ppx), package(ppx_deriving.show)
 <src/common/utils/*.ml*>: package(ppx_deriving.show)
+<src/typing/polarity/*.ml*>: package(ppx_deriving.show)
 <**/node_modules/**>: -traverse
 <_obuild>: -traverse
 <packages>: -traverse

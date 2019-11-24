@@ -17,6 +17,7 @@ let exe_name = Filename.basename Sys.executable_name
 
 module FilenameSet = Set.Make (File_key)
 module FilenameMap = WrappedMap.Make (File_key)
+module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap)
 
 let debug_string_of_filename_set set =
   set |> FilenameSet.elements |> List.map File_key.to_string |> String.concat ", " |> spf "[%s]"
@@ -361,3 +362,17 @@ let debug_time_lwt name x =
   let end_time = Unix.gettimeofday () in
   Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
   Lwt.return result
+
+module BoolMap = Map.Make (struct
+  type t = bool
+
+  (* TODO: Switch to Bool.compare when we upgrade to OCaml 4.08 *)
+  let compare = Pervasives.compare
+end)
+
+module NumberMap = Map.Make (struct
+  type t = float
+
+  (* TODO: Switch to Float.compare when we upgrade to OCaml 4.08 *)
+  let compare = Pervasives.compare
+end)

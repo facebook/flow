@@ -431,7 +431,7 @@ let covered_types ~should_check ~check_trust cx tast =
   let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t) :: acc in
   coverage_fold_tast ~f:step ~init:[] tast |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
 
-let component_coverage :
+let file_coverage :
     full_cx:Context.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
     Coverage_response.file_coverage =

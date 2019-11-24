@@ -327,14 +327,17 @@ end
 
 exception Not_expect_bound of string
 
+exception Attempted_operation_on_bound of string
+
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
    been substituted away. *)
-let not_expect_bound t =
+let not_expect_bound cx t =
   match t with
-  | BoundT _ -> raise (Not_expect_bound (spf "Did not expect %s" (string_of_ctor t)))
+  | BoundT _ when not (Context.in_normalizer_mode cx) ->
+    raise (Not_expect_bound (spf "Did not expect %s" (string_of_ctor t)))
   | _ -> ()
 
-let not_expect_bound_use t = lift_to_use not_expect_bound t
+let not_expect_bound_use cx t = lift_to_use (not_expect_bound cx) t
 
 (* Sometimes we expect to see only proper def types. Proper def types make sense
    as use types. *)
@@ -771,10 +774,15 @@ struct
        def type: the latter typically when we have annotations. *)
 
       (* Type parameters should always be substituted out, and as such they should
-       never appear "exposed" in flows. (They can still appear bound inside
-       polymorphic definitions.) *)
-      not_expect_bound l;
-      not_expect_bound_use u;
+         never appear "exposed" in flows. (They can still appear bound inside
+         polymorphic definitions.)
+
+         An exception to this is when calling Flow_js from the normalizer. There,
+         BoundTs have not been substituted with their bounds. Doing so typically
+         leads to poor quality of normalized types when the BoundTs appear under
+         EvalT. The following checks take this into account in banning BoundTs. *)
+      not_expect_bound cx l;
+      not_expect_bound_use cx u;
 
       (* Types that are classified as def types but don't make sense as use types
        should not appear as use types. *)
@@ -872,6 +880,18 @@ struct
           | FullyResolved (use_op', t2) ->
             let t2_use = flow_use_op use_op' (UseT (use_op, t2)) in
             rec_flow cx trace (t1, t2_use))
+        (*****************************************)
+        (* BoundTs - only used for normalization *)
+        (*****************************************)
+        | (BoundT (_, lname), UseT (_, BoundT (_, uname))) when lname = uname ->
+          assert (Context.in_normalizer_mode cx);
+          ()
+        | (BoundT (_, _), ReposLowerT (reason, use_desc, u)) ->
+          assert (Context.in_normalizer_mode cx);
+          rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+        | (BoundT (_, name), _) ->
+          assert (Context.in_normalizer_mode cx);
+          raise (Attempted_operation_on_bound name)
         (*****************)
         (* any with uses *)
         (*****************)
@@ -885,7 +905,6 @@ struct
         (***************************)
         (* type destructor trigger *)
         (***************************)
-
         (* For evaluating type destructors we add a trigger, TypeDestructorTriggerT,
          * to both sides of a type. When TypeDestructorTriggerT sees a new upper or
          * lower bound we destruct that bound and flow the result in the same
@@ -1128,6 +1147,25 @@ struct
         are processed only when the corresponding triggers fire. *)
         | (_, UnifyT (t, t_other)) ->
           rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_other
+        (***************************)
+        (* type cast e.g. `(x: T)` *)
+        (***************************)
+        | (DefT (reason, trust, EnumT enum), TypeCastT (use_op, cast_to_t)) ->
+          rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) })
+        | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
+        (**********************************************************************)
+        (* enum cast e.g. `(x: T)` where `x` is an `EnumT`                    *)
+        (* We allow enums to be explicitly cast to their representation type. *)
+        (* When we specialize `TypeCastT` when the LHS is an `EnumT`, the     *)
+        (* `cast_to_t` of `TypeCastT` must then be resolved. So we call flow  *)
+        (* with it on the LHS, and `EnumCastT` on the RHS. When we actually   *)
+        (* turn this into a `UseT`, it must placed back on the RHS.           *)
+        (**********************************************************************)
+        | (cast_to_t, EnumCastT { use_op; enum = (_, _, { representation_t; _ }) })
+          when TypeUtil.quick_subtype (Context.trust_errors cx) representation_t cast_to_t ->
+          rec_flow cx trace (representation_t, UseT (use_op, cast_to_t))
+        | (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) }) ->
+          rec_flow cx trace (DefT (reason, trust, EnumT enum), UseT (use_op, cast_to_t))
         (*********************************************************************)
         (* `import type` creates a properly-parameterized type alias for the *)
         (* remote type -- but only for particular, valid remote types.       *)
@@ -2345,8 +2383,10 @@ struct
        concatenate those object types explicitly. *)
         | (_, IntersectionPreprocessKitT (_, SentinelPropTest (sense, key, t, inter, tvar))) ->
           sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
-        | (_, IntersectionPreprocessKitT (_, PropExistsTest (sense, key, inter, tvar))) ->
-          prop_exists_test_generic key cx trace tvar inter sense l
+        | ( _,
+            IntersectionPreprocessKitT (_, PropExistsTest (sense, key, reason, inter, tvar, preds))
+          ) ->
+          prop_exists_test_generic key reason cx trace tvar inter sense preds l
         (***********************)
         (* Singletons and keys *)
         (***********************)
@@ -2540,7 +2580,7 @@ struct
             | None -> ts
           in
           (* Create a union type from all our selected types. *)
-          let values_l = union_of_ts reason ts in
+          let values_l = Type_mapper.union_flatten cx ts |> union_of_ts reason in
           rec_flow_t cx trace (values_l, values)
         | (DefT (_, _, InstanceT (_, _, _, { own_props; _ })), GetValuesT (reason, values)) ->
           (* Find all of the props. *)
@@ -2559,7 +2599,7 @@ struct
               []
           in
           (* Create a union type from all our selected types. *)
-          let values_l = union_of_ts reason ts in
+          let values_l = Type_mapper.union_flatten cx ts |> union_of_ts reason in
           rec_flow_t cx trace (values_l, values)
         (* Any will always be ok *)
         | (AnyT (_, src), GetValuesT (reason, values)) ->
@@ -2634,7 +2674,8 @@ struct
             (Error_message.EComputedPropertyWithUnion
                { computed_property_reason = reason; union_reason = r })
         (* cases where there is no loss of precision *)
-        | (UnionT _, UseT (_, (UnionT _ as u))) when union_optimization_guard cx l u -> ()
+        | (UnionT _, UseT (_, (UnionT _ as u))) when union_optimization_guard cx l u ->
+          if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path"
         (* Optimization to treat maybe and optional types as special unions for subset comparision *)
         | (UnionT (reason, rep), UseT (use_op, MaybeT (r, maybe))) ->
           let checked_trust = Context.trust_errors cx in
@@ -2850,6 +2891,12 @@ struct
             (List.hd ts, LookupT (reason, strict, List.tl ts @ try_ts_on_failure, s, t))
         | (IntersectionT _, TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
+        | ( IntersectionT _,
+            OptionalChainT (r1, r2, this, TestPropT (reason, _, prop, tout), void_out) ) ->
+          rec_flow
+            cx
+            trace
+            (l, OptionalChainT (r1, r2, this, GetPropT (unknown_use, reason, prop, tout), void_out))
         (* extends **)
         | (IntersectionT (_, rep), ExtendsUseT (use_op, reason, try_ts_on_failure, l, u)) ->
           let (t, ts) = InterRep.members_nel rep in
@@ -7071,6 +7118,8 @@ struct
     | (_, ThisSpecializeT _)
     | (_, ToStringT _)
     | (_, TypeAppVarianceCheckT _)
+    | (_, TypeCastT _)
+    | (_, EnumCastT _)
     | (_, UnaryMinusT _)
     | (_, VarianceCheckT _)
     | (_, ModuleExportsAssignT _) ->
@@ -7278,6 +7327,8 @@ struct
     | SetProtoT _
     | SuperT _
     | TypeAppVarianceCheckT _
+    | TypeCastT _
+    | EnumCastT _
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ExtendsUseT _
@@ -9081,6 +9132,19 @@ struct
         | DefT (_, _, EmptyT _) -> ()
         | _ -> rec_flow_t cx trace (result, sink)
       end
+    | MaybeP ->
+      begin
+        match Type_filter.maybe source with
+        | DefT (_, _, EmptyT _) -> ()
+        | _ -> rec_flow_t cx trace (result, sink)
+      end
+    | NotP MaybeP ->
+      begin
+        match Type_filter.not_maybe source with
+        | DefT (_, _, EmptyT _) -> ()
+        | _ -> rec_flow_t cx trace (result, sink)
+      end
+    | NotP (NotP p) -> guard cx trace source p result sink
     | _ ->
       let loc = aloc_of_reason (reason_of_t sink) in
       let pred_str = string_of_predicate pred in
@@ -9235,13 +9299,14 @@ struct
       update_sketchy_null cx loc l;
       let filtered = Type_filter.not_exists l in
       rec_flow_t cx trace (filtered, t)
-    | PropExistsP key -> prop_exists_test cx trace key true l t
-    | NotP (PropExistsP key) -> prop_exists_test cx trace key false l t
-    (* unreachable *)
-    | NotP (NotP _)
-    | NotP (AndP _)
-    | NotP (OrP _) ->
-      assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
+    | PropExistsP (key, r) -> prop_exists_test cx trace key r true l t
+    | NotP (PropExistsP (key, r)) -> prop_exists_test cx trace key r false l t
+    | PropNonMaybeP (key, r) -> prop_non_maybe_test cx trace key r true l t
+    | NotP (PropNonMaybeP (key, r)) -> prop_non_maybe_test cx trace key r false l t
+    (* classical logic i guess *)
+    | NotP (NotP p) -> predicate cx trace t l p
+    | NotP (AndP (p1, p2)) -> predicate cx trace t l (OrP (NotP p1, NotP p2))
+    | NotP (OrP (p1, p2)) -> predicate cx trace t l (AndP (NotP p1, NotP p2))
     (********************)
     (* Latent predicate *)
     (********************)
@@ -9254,11 +9319,23 @@ struct
       in
       rec_flow cx trace (fun_t, CallLatentPredT (neg_reason, false, idx, l, t))
 
-  and prop_exists_test cx trace key sense obj result =
-    prop_exists_test_generic key cx trace result obj sense obj
+  and prop_exists_test cx trace key reason sense obj result =
+    prop_exists_test_generic
+      key
+      reason
+      cx
+      trace
+      result
+      obj
+      sense
+      (ExistsP None, NotP (ExistsP None))
+      obj
 
-  and prop_exists_test_generic key cx trace result orig_obj sense = function
-    | DefT (lreason, _, ObjT { flags; props_tmap; _ }) as obj ->
+  and prop_non_maybe_test cx trace key reason sense obj result =
+    prop_exists_test_generic key reason cx trace result obj sense (NotP MaybeP, MaybeP) obj
+
+  and prop_exists_test_generic key reason cx trace result orig_obj sense (pred, not_pred) = function
+    | DefT (_, _, ObjT { flags; props_tmap; _ }) as obj ->
       (match Context.get_prop cx props_tmap key with
       | Some p ->
         (match Property.read_t p with
@@ -9266,9 +9343,9 @@ struct
           (* prop is present on object type *)
           let pred =
             if sense then
-              ExistsP None
+              pred
             else
-              NotP (ExistsP None)
+              not_pred
           in
           rec_flow cx trace (t, GuardT (pred, orig_obj, result))
         | None ->
@@ -9277,7 +9354,7 @@ struct
             cx
             ~trace
             (Error_message.EPropNotReadable
-               { reason_prop = lreason; prop_name = Some key; use_op = unknown_use }))
+               { reason_prop = reason; prop_name = Some key; use_op = unknown_use }))
       | None when flags.exact && Obj_type.sealed_in_op (reason_of_t result) flags.sealed ->
         (* prop is absent from exact object type *)
         if sense then
@@ -9306,8 +9383,9 @@ struct
                cx
                trace
                ( obj,
-                 intersection_preprocess_kit reason (PropExistsTest (sense, key, orig_obj, result))
-               ))
+                 intersection_preprocess_kit
+                   reason
+                   (PropExistsTest (sense, key, reason, orig_obj, result, (pred, not_pred))) ))
     | _ -> rec_flow_t cx trace (orig_obj, result)
 
   and binary_predicate cx trace sense test left right result =
@@ -9952,8 +10030,8 @@ struct
      flows should also be enforced here. In particular, we don't expect t1 or t2
      to be type parameters, and we don't expect t1 or t2 to be def types that
      don't make sense as use types. See __flow for more details. *)
-      not_expect_bound t1;
-      not_expect_bound t2;
+      not_expect_bound cx t1;
+      not_expect_bound cx t1;
       expect_proper_def t1;
       expect_proper_def t2;
 
@@ -10957,9 +11035,9 @@ struct
   and union_optimization_guard =
     (* Check if l is a subset of u. Flatten both unions and then check that each element
      of l appears somewhere in u *)
-    let union_subtype cx rep1 rep2 =
-      let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
-      Type_mapper.union_flatten cx @@ UnionRep.members rep1
+    let union_subtype cx lts uts =
+      let ts2 = Type_mapper.union_flatten cx uts in
+      Type_mapper.union_flatten cx lts
       |> Base.List.for_all ~f:(fun t1 ->
              Base.List.exists ~f:(TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2)
     in
@@ -10968,20 +11046,32 @@ struct
       | (UnionT (_, rep1), UnionT (_, rep2)) ->
         rep1 = rep2
         ||
-        (* Try n log n check before n^2 check *)
+        (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
         begin
           match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
           | (Some enums1, Some enums2) -> UnionEnumSet.subset enums1 enums2
           | (_, _) ->
-            (* Check if u contains l after unwrapping annots, tvars and repos types.
-           This is faster than the n^2 case below because it avoids flattening both
-           unions *)
-            UnionRep.members rep2
-            |> Base.List.map ~f:(Type_mapper.unwrap_type cx)
-            |> Base.List.exists ~f:(fun u ->
-                   (not (TypeSet.mem u seen))
-                   && union_optimization_guard_impl (TypeSet.add u seen) cx l u)
-            || union_subtype cx rep1 rep2
+            let unwrap rep =
+              UnionRep.members rep |> Base.List.map ~f:(Type_mapper.unwrap_type cx)
+            in
+            let lts = unwrap rep1 in
+            let uts = unwrap rep2 in
+            (* Pointwise subtyping check: O(N) *)
+            if List.length lts = List.length uts && Base.List.for_all2_exn ~f:( = ) lts uts then
+              true
+            else if
+              (* Check if u contains l after unwrapping annots, tvars and repos types.
+                This is faster than the n^2 case below because it avoids flattening both
+                unions *)
+              Base.List.exists
+                ~f:(fun u ->
+                  (not (TypeSet.mem u seen))
+                  && union_optimization_guard_impl (TypeSet.add u seen) cx l u)
+                uts
+            then
+              true
+            else
+              union_subtype cx lts uts
         end
       | _ -> false
     in

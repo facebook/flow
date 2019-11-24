@@ -1,0 +1,6 @@
+[libs]
+libs/
+
+[options]
+experimental.well_formed_exports=true
+experimental.types_first=true
