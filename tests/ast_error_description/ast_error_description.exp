@@ -535,9 +535,9 @@ Cannot cast `f()` to empty because mixed [1] is incompatible with empty [2].
           ^^^
 
 References:
-   expression.js:9:23
-    9| const f = (x: mixed): mixed => x;
-                             ^^^^^ [1]
+   expression.js:9:24
+    9| const f = (x?: mixed): mixed => x;
+                              ^^^^^ [1]
    expression.js:31:9
    31| (((f(): empty): T).p: empty);
                ^^^^^ [2]
@@ -569,9 +569,9 @@ Cannot cast `f(...)` to empty because mixed [1] is incompatible with empty [2].
           ^^^^^
 
 References:
-   expression.js:9:23
-    9| const f = (x: mixed): mixed => x;
-                             ^^^^^ [1]
+   expression.js:9:24
+    9| const f = (x?: mixed): mixed => x;
+                              ^^^^^ [1]
    expression.js:32:11
    32| (((f(42): empty): T).p: empty);
                  ^^^^^ [2]
@@ -1304,9 +1304,9 @@ Cannot cast template string to empty because mixed [1] is incompatible with empt
           ^^^^^^^^^
 
 References:
-   expression.js:9:23
-    9| const f = (x: mixed): mixed => x;
-                             ^^^^^ [1]
+   expression.js:9:24
+    9| const f = (x?: mixed): mixed => x;
+                              ^^^^^ [1]
    expression.js:59:15
    59| (((f`foobar`: empty): T).p: empty);
                      ^^^^^ [2]
