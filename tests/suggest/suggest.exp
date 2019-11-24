@@ -274,7 +274,7 @@ declare var class_of_C_number: Class<C<number>>;
 union-0.js
 // @flow
 
-function foo(x: void | number | string | (() => void)): void { }
+function foo(x?: number | string | (() => void)): void { }
 
 foo(1);
 foo("1");
