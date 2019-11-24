@@ -31,9 +31,9 @@ References:
    map.js:23:22
     23|     let x = new Map(['foo', 123]); // error
                              ^^^^^ [1]
-   <BUILTINS>/core.js:594:37
-   594|     constructor(iterable: ?Iterable<[K, V]>): void;
-                                            ^^^^^^ [2]
+   <BUILTINS>/core.js:594:38
+   594|     constructor(iterable?: ?Iterable<[K, V]>): void;
+                                             ^^^^^^ [2]
    <BUILTINS>/core.js:537:22
    537| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
