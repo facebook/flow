@@ -10321,8 +10321,15 @@ struct
       List.fold_left
         (fun n (_, param) ->
           let use_op = Frame (FunMissingArg { n; op = reason_op; def = def_reason }, use_op) in
-          rec_flow cx trace (VoidT.why reason_op |> with_trust bogus_trust, UseT (use_op, param));
-          n + 1)
+          match (param) with
+          | OptionalT _ -> n + 1
+          | _ ->
+            add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithUseOp (def_reason, reason_op, use_op));
+            n + 1;
+        )
         (List.length parlist - List.length unused_parameters + 1)
         unused_parameters
     in
