@@ -662,7 +662,7 @@ class E75 {
   f;
   constructor() {
     this.f = x => this.p += x;
-    this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
+    this.f(this.f(1)); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
   }
 }
@@ -762,7 +762,7 @@ class E87 {
   p: number;
   f = x => this.p += x;
   constructor() {
-    this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
+    this.f(this.f(1)); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
   }
 }
