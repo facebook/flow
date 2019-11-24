@@ -77,16 +77,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:24:1
 
-Cannot call `Promise.all` because property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+Cannot call `Promise.all` because function [1] requires another argument.
 
    all.js:24:1
     24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
-        ^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:689:19
-   689|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                          ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:690:5
+   690|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- all.js:27:13
@@ -99,8 +99,8 @@ in `$Iterable` [2].
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:689:19
-   689|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:690:19
+   690|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                           ^^^^^^^^^^^^^^^ [2]
 
 
@@ -399,9 +399,12 @@ Cannot cast `Promise.resolve()` to `Promise` because undefined [1] is incompatib
 
    resolve_void.js:3:2
      3| (Promise.resolve(): Promise<number>); // error
-         ^^^^^^^^^^^^^^^^^ [1]
+         ^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:688:31
+   688|     static resolve(): Promise<void>;
+                                      ^^^^ [1]
    resolve_void.js:3:29
      3| (Promise.resolve(): Promise<number>); // error
                                     ^^^^^^ [2]
