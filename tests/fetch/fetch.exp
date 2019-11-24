@@ -239,8 +239,8 @@ Cannot call `Request` because function [1] requires another argument.
                             ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1453:5
-   1453|     constructor(input: RequestInfo, init?: RequestOptions): void;
+   <BUILTINS>/bom.js:1464:5
+   1464|     constructor(input: RequestInfo, init?: RequestOptions): void;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
