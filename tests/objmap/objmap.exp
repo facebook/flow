@@ -297,9 +297,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity3.js:8:10
 
-Cannot call `g` because `$TupleMap` [1] expects the provided function type to take only one argument, the value type
-number [2], but function type [3] takes more than one argument. See
-https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+Cannot call `g` because:
+ - `$TupleMap` [1] expects the provided function type to take only one argument, the value type number [2], but function
+   type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
+ - `$TupleMap` [1] expects the provided function type to take only one argument, the value type number [4], but function
+   type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-tuplemap for documentation.
 
    arity3.js:8:10
     8|   return g(o);
@@ -319,6 +321,9 @@ References:
    23|   b: string,
    24| ): number;
        --------^ [3]
+   arity3.js:19:22
+   19| type Columns = Array<number>;
+                            ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- arity3.js:12:10
@@ -824,4 +829,4 @@ References:
 
 
 
-Found 42 errors
+Found 43 errors
