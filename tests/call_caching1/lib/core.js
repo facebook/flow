@@ -20,6 +20,6 @@ type Iterable<+T> = $Iterable<T,void,void>;
 
 declare class Map<K, V> {
     @@iterator(): Iterator<[K, V]>;
-    constructor(iterable: ?Iterable<[K, V]>): void;
+    constructor(iterable?: ?Iterable<[K, V]>): void;
     set(key: K, value: V): Map<K, V>;
 }
