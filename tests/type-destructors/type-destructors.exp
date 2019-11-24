@@ -92,30 +92,30 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:21:1
 
-Cannot call `fn2` because property `p` is missing in object literal [1].
+Cannot call `fn2(...)` because function [1] requires another argument.
 
    errors.js:21:1
    21| fn2({x: 42})(); // We should get an error on this line.
-       ^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^
 
 References:
-   errors.js:21:5
-   21| fn2({x: 42})(); // We should get an error on this line.
-           ^^^^^^^ [1]
+   errors.js:8:32
+    8| declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- errors.js:22:1
 
-Cannot call `fn2` because an index signature declaring the expected key / value type is missing in null [1].
+Cannot call `fn2(...)` because function [1] requires another argument.
 
    errors.js:22:1
    22| fn2(null)(); // We should get an error on this line.
-       ^^^^^^^^^
+       ^^^^^^^^^^^
 
 References:
-   errors.js:22:5
-   22| fn2(null)(); // We should get an error on this line.
-           ^^^^ [1]
+   errors.js:8:32
+    8| declare function fn2<O>(l: O): ($ElementType<O, 'p'>) => void;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- errors.js:24:1
@@ -148,30 +148,30 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:27:1
 
-Cannot call `fn4` because property `p` is missing in object literal [1].
+Cannot call `fn4(...)` because function [1] requires another argument.
 
    errors.js:27:1
    27| fn4({x: 42})(); // We should get an error on this line.
-       ^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^
 
 References:
-   errors.js:27:5
-   27| fn4({x: 42})(); // We should get an error on this line.
-           ^^^^^^^ [1]
+   errors.js:10:32
+   10| declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- errors.js:28:1
 
-Cannot call `fn4` because property `p` is missing in null [1].
+Cannot call `fn4(...)` because function [1] requires another argument.
 
    errors.js:28:1
    28| fn4(null)(); // We should get an error on this line.
-       ^^^^^^^^^
+       ^^^^^^^^^^^
 
 References:
-   errors.js:28:5
-   28| fn4(null)(); // We should get an error on this line.
-           ^^^^ [1]
+   errors.js:10:32
+   10| declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- errors2.js:6:8
