@@ -7,9 +7,9 @@ Cannot assign `Object.is(...)` to `b` because boolean [1] is incompatible with s
                        ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:69:31
-   69|     static is<T>(a: T, b: T): boolean;
-                                     ^^^^^^^ [1]
+   <BUILTINS>/core.js:69:32
+   69|     static is<T>(a: T, b?: T): boolean;
+                                      ^^^^^^^ [1]
    object_is.js:20:8
    20| var b: string = Object.is('a', 'a');
               ^^^^^^ [2]
@@ -25,8 +25,8 @@ Cannot call method `is` because no more than 2 arguments are expected by functio
 
 References:
    <BUILTINS>/core.js:69:5
-   69|     static is<T>(a: T, b: T): boolean;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   69|     static is<T>(a: T, b?: T): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 
