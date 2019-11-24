@@ -232,25 +232,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:2:20
 
-Cannot call `Request` because:
- - Either undefined [1] is incompatible with `Request` [2].
- - Or undefined [1] is incompatible with `URL` [3].
- - Or undefined [1] is incompatible with string [4].
+Cannot call `Request` because function [1] requires another argument.
 
    request.js:2:20
       2| const a: Request = new Request(); // incorrect
-                            ^^^^^^^^^^^^^ [1]
+                            ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1400:20
-   1400| type RequestInfo = Request | URL | string;
-                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:1400:30
-   1400| type RequestInfo = Request | URL | string;
-                                      ^^^ [3]
-   <BUILTINS>/bom.js:1400:36
-   1400| type RequestInfo = Request | URL | string;
-                                            ^^^^^^ [4]
+   <BUILTINS>/bom.js:1453:5
+   1453|     constructor(input: RequestInfo, init?: RequestOptions): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
