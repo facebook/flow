@@ -194,8 +194,8 @@ Cannot assign `this.props.x` to `_` because number [1] is incompatible with stri
                             ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    classes.js:57:12
     57|     var _: string = this.props.x;
@@ -397,8 +397,8 @@ Cannot assign `this.props.z` to `qux` because:
                                   ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    new_react.js:19:18
     19|         var qux: string = this.props.z;
@@ -414,8 +414,8 @@ Cannot assign `this.props.x` to `w` because string [1] is incompatible with numb
                                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    new_react.js:20:15
     20|         var w:number = this.props.x;
@@ -449,8 +449,8 @@ References:
    new_react.js:29:23
     29| var element = <C x = {0}/>;
                               ^ [1]
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
 
 
@@ -579,8 +579,8 @@ Cannot assign `this.props.x` to `a` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [1]
    props.js:14:16
     14|         var a: number = this.props.x; // error
@@ -616,8 +616,8 @@ Cannot assign `this.props.z` to `c` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [1]
    props.js:16:16
     16|         var c: string = this.props.z; // error
@@ -638,14 +638,14 @@ References:
    props.js:20:29
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                     ^^^^^ [1]
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props.js:20:49
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                         ^^^^^ [3]
-   <BUILTINS>/react.js:486:36
-   486|   number: React$PropType$Primitive<number>,
+   <BUILTINS>/react.js:488:36
+   488|   number: React$PropType$Primitive<number>,
                                            ^^^^^^ [4]
 
 
@@ -702,8 +702,8 @@ References:
    props2.js:9:41
      9|     getInitialState: function(): { bar: number } {
                                                 ^^^^^^ [1]
-   <BUILTINS>/react.js:488:36
-   488|   string: React$PropType$Primitive<string>,
+   <BUILTINS>/react.js:490:36
+   490|   string: React$PropType$Primitive<string>,
                                            ^^^^^^ [2]
    props2.js:15:42
     15|         return <C {...this.state} foo = {0} />;
@@ -734,13 +734,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` is 
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:461:39
+   <BUILTINS>/react.js:463:39
                                               v
-   461| type ReactPropsChainableTypeChecker = {
-   462|   (props: any, propName: string, componentName: string, href?: string): ?Error,
-   463|   isRequired: ReactPropsCheckType,
-   464|   ...
-   465| };
+   463| type ReactPropsChainableTypeChecker = {
+   464|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   465|   isRequired: ReactPropsCheckType,
+   466|   ...
+   467| };
         ^ [1]
 
 
