@@ -248,15 +248,15 @@ Error --------------------------------------------------------------------------
 Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
 
    F.js:6:34
-   6| var b: { (x: number): number } = (x) => "hi"
-                                       ^^^^^^^^^^^
+   6| var b: { (x: number): number } = (x?) => "hi"
+                                       ^^^^^^^^^^^^
 
 References:
-   F.js:6:41
-   6| var b: { (x: number): number } = (x) => "hi"
-                                              ^^^^ [1]
+   F.js:6:42
+   6| var b: { (x: number): number } = (x?) => "hi"
+                                               ^^^^ [1]
    F.js:6:23
-   6| var b: { (x: number): number } = (x) => "hi"
+   6| var b: { (x: number): number } = (x?) => "hi"
                             ^^^^^^ [2]
 
 
