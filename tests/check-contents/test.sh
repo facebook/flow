@@ -27,3 +27,7 @@ assert_errors \
 printf "\n\nunsaved_foo.js depends on bar.js which is still checked against foo.js\n\n"
 assert_ok \
   $FLOW check-contents --strip-root foo.js < unsaved_foo.js
+
+printf "\n\nbad_exports.js\n\n"
+assert_ok \
+  $FLOW check-contents --strip-root bad_exports.js < bad_exports.js
