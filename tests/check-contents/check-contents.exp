@@ -72,3 +72,8 @@ Found 1 error
 unsaved_foo.js depends on bar.js which is still checked against foo.js
 
 No errors!
+
+
+bad_exports.js
+
+No errors!
