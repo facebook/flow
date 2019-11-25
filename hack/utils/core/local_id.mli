@@ -10,16 +10,20 @@
 (** Used to represent local variables in the named AST. *)
 
 module S : sig
-  type t [@@deriving eq]
+  type t
 
   val compare : t -> t -> int
 end
 
-type t = S.t [@@deriving eq]
+type t = S.t
 
 val pp : Format.formatter -> t -> unit
 
 val pp_ref : (Format.formatter -> t -> unit) ref
+
+val equal : t -> t -> bool
+
+val equal_ref : (t -> t -> bool) ref
 
 val compare : t -> t -> int
 
