@@ -1292,14 +1292,13 @@ let typecheck_contents ~options ~env ~profiling contents filename =
       merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
     in
     let errors = Context.errors cx in
-    let errors =
+    let local_errors =
       if Inference_utils.well_formed_exports_enabled options filename then
         File_sig.With_Loc.(file_sig.tolerable_errors)
         |> File_sig.abstractify_tolerable_errors
         |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
-        |> Flow_error.ErrorSet.union errors
       else
-        errors
+        Flow_error.ErrorSet.empty
     in
     (* Suppressions for errors in this file can come from dependencies *)
     let suppressions =
@@ -1320,7 +1319,10 @@ let typecheck_contents ~options ~env ~profiling contents filename =
         severity_cover
     in
     let errors =
-      errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+      errors
+      |> Flow_error.ErrorSet.union local_errors
+      |> Flow_error.concretize_errors lazy_table_of_aloc
+      |> Flow_error.make_errors_printable
     in
     let warnings =
       warnings
