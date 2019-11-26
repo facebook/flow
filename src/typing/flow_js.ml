@@ -504,6 +504,7 @@ let ground_subtype = function
   | (DefT (_, _, NumT _), UseT (_, DefT (_, _, NumT _)))
   | (DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _)))
   | (DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _)))
+  | (DefT (_, _, SymbolT), UseT (_, DefT (_, _, SymbolT)))
   | (DefT (_, _, NullT), UseT (_, DefT (_, _, NullT)))
   | (DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))) ->
     true
@@ -6529,6 +6530,11 @@ struct
         (***********************)
         | (DefT (reason, _, BoolT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean", u)
+        (***********************)
+        (* Symbol library call *)
+        (***********************)
+        | (DefT (reason, _, SymbolT), u) when primitive_promoting_use_t u ->
+          rec_flow cx trace (get_builtin_type cx ~trace reason "Symbol", u)
         (*****************************************************)
         (* Nice error messages for mixed function refinement *)
         (*****************************************************)

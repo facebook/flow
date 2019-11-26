@@ -292,6 +292,7 @@ class virtual ['a] t =
       | BoolT _
       | EmptyT _
       | MixedT _
+      | SymbolT
       | NullT
       | VoidT ->
         t

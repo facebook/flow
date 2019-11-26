@@ -39,6 +39,7 @@ type hash =
   | NumH
   | StrH
   | BoolH
+  | SymbolH
   | EmptyH
   | MixedH
   | AnyH
@@ -234,6 +235,7 @@ let hash_of_def_ctor =
     | MixedT _ -> MixedH
     | NullT -> NullH
     | NumT _ -> NumH
+    | SymbolT -> SymbolH
     | ObjT { flags = { frozen; sealed; exact }; _ } ->
       begin
         match (frozen, sealed, exact) with

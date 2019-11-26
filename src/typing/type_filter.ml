@@ -314,15 +314,16 @@ let not_string t =
 
 let symbol t =
   match t with
-  | DefT (r, trust, MixedT _) -> DefT (replace_desc_new_reason RSymbol r, trust, MixedT Mixed_symbol)
-  | _ ->
-    (* TODO: since symbols aren't supported, `t` is never a symbol so always empty *)
-    let reason = reason_of_t t in
-    DefT (replace_desc_new_reason RSymbol reason, bogus_trust (), EmptyT Bottom)
+  | DefT (_, _, SymbolT) -> t
+  | DefT (r, trust, MixedT _) -> SymbolT.why r trust
+  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_symbol t =
-  (* TODO: since symbols aren't supported, `t` is never a symbol so always pass it through *)
-  t
+  match t with
+  (* TODO: this is wrong, AnyT can be a symbol *)
+  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
+  | DefT (_, _, SymbolT) -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
+  | _ -> t
 
 let number t =
   match t with
@@ -363,7 +364,6 @@ let object_ cx t =
     let obj = Obj_type.mk_with_proto cx reason ?dict proto in
     begin
       match flavor with
-      | Mixed_symbol
       | Mixed_truthy
       | Mixed_non_maybe
       | Mixed_non_null ->

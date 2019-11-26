@@ -52,6 +52,7 @@ let rec type_ t =
   | Bot _ -> just T.Empty
   | Void -> just T.Void
   | Null -> just T.Null
+  | Symbol -> just T.Symbol
   | Num (Some lit) ->
     return
       (builtin_from_string

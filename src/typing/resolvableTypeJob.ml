@@ -205,6 +205,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, NumT _)
   | DefT (_, _, StrT _)
   | DefT (_, _, BoolT _)
+  | DefT (_, _, SymbolT)
   | DefT (_, _, VoidT)
   | DefT (_, _, NullT)
   | DefT (_, _, EmptyT _)

@@ -51,6 +51,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | DefT (_, _, SingletonStrT _)
     | DefT (_, _, StrT _)
     | DefT (_, _, VoidT)
+    | DefT (_, _, SymbolT)
     | FunProtoApplyT _
     | FunProtoBindT _
     | FunProtoCallT _

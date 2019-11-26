@@ -20,6 +20,7 @@ type t =
   | Bot of bot_kind
   | Void
   | Null
+  | Symbol
   | Num of string option
   | Str of string option
   | Bool of bool option
@@ -366,23 +367,24 @@ class ['A] comparator_ty =
       | Num _ -> 8
       | StrLit _ -> 9
       | Str _ -> 10
-      | TVar _ -> 11
-      | Bound _ -> 12
-      | Generic _ -> 13
-      | TypeAlias _ -> 14
-      | TypeOf _ -> 15
-      | ClassDecl _ -> 16
-      | Utility _ -> 17
-      | Tup _ -> 18
-      | Arr _ -> 19
-      | Fun _ -> 20
-      | Obj _ -> 21
-      | Inter _ -> 22
-      | Union _ -> 23
-      | InterfaceDecl _ -> 24
-      | Module _ -> 25
-      | Mu _ -> 26
-      | InlineInterface _ -> 27
+      | Symbol -> 11
+      | TVar _ -> 12
+      | Bound _ -> 13
+      | Generic _ -> 14
+      | TypeAlias _ -> 15
+      | TypeOf _ -> 16
+      | ClassDecl _ -> 17
+      | Utility _ -> 18
+      | Tup _ -> 19
+      | Arr _ -> 20
+      | Fun _ -> 21
+      | Obj _ -> 22
+      | Inter _ -> 23
+      | Union _ -> 24
+      | InterfaceDecl _ -> 25
+      | Module _ -> 26
+      | Mu _ -> 27
+      | InlineInterface _ -> 28
 
     method tag_of_gen_kind _ =
       function
@@ -534,6 +536,7 @@ let rec mk_exact ty =
   | Bot _
   | Void
   | Null
+  | Symbol
   | Num _
   | Str _
   | Bool _

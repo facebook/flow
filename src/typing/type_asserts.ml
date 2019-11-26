@@ -44,6 +44,7 @@ let check_type_visitor wrap =
         | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
         | Void
         | Null
+        | Symbol
         | Num _
         | Str _
         | Bool _

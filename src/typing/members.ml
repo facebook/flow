@@ -437,6 +437,7 @@ let rec extract_type cx this_t =
   | DefT (reason, _, SingletonBoolT _)
   | DefT (reason, _, BoolT _) ->
     get_builtin_type cx reason "Boolean" |> extract_type cx
+  | DefT (reason, _, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
   | DefT (reason, _, CharSetT _) -> get_builtin_type cx reason "String" |> extract_type cx
   | DefT (_, _, IdxWrapper t) -> extract_type cx t
   | DefT (_, _, ReactAbstractComponentT _) as t -> Success t

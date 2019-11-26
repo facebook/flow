@@ -215,6 +215,7 @@ class visitor =
       | DefT (_, t, MixedT _)
       | DefT (_, t, NumT _)
       | DefT (_, t, NullT)
+      | DefT (_, t, SymbolT)
       | DefT (_, t, ObjT _)
       | DefT (_, t, ReactAbstractComponentT _)
       | DefT (_, t, SingletonNumT _)

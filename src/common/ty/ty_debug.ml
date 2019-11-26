@@ -192,6 +192,7 @@ and dump_t ?(depth = 10) t =
     | Bot k -> spf "Bot (%s)" (dump_bot_kind k)
     | Void -> "Void"
     | Null -> "Null"
+    | Symbol -> "Symbol"
     | Num (Some x) -> spf "Num (%s)" x
     | Num None -> "Num"
     | NumLit s -> spf "\"%s\"" s
@@ -256,6 +257,7 @@ let string_of_ctor = function
   | Bot _ -> "Bot"
   | Void -> "Void"
   | Null -> "Null"
+  | Symbol -> "Symbol"
   | Num _ -> "Num"
   | Str _ -> "Str"
   | Bool _ -> "Bool"
@@ -306,6 +308,7 @@ let json_of_t ~strip_root =
         | Bot _
         | Void
         | Null
+        | Symbol
         | Num _
         | Str _
         | Bool _ ->

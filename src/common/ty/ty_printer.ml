@@ -83,6 +83,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | Num _ -> Atom "number"
     | Str _ -> Atom "string"
     | Bool _ -> Atom "boolean"
+    | Symbol -> Atom "symbol"
     | Fun func -> type_function ~depth ~sep:(fuse [pretty_space; Atom "=>"]) func
     | Obj obj -> type_object ~depth obj
     | Arr arr -> type_array ~depth arr

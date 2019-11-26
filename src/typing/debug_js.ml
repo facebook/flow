@@ -173,6 +173,7 @@ and _json_of_t_impl json_cx t =
       | DefT (_, _, EmptyT _)
       | DefT (_, _, MixedT _)
       | AnyT _
+      | DefT (_, _, SymbolT)
       | DefT (_, _, NullT)
       | DefT (_, _, VoidT) ->
         []
@@ -1563,7 +1564,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | Mixed_non_maybe -> "Mixed_non_maybe"
     | Mixed_non_null -> "Mixed_non_null"
     | Mixed_non_void -> "Mixed_non_void"
-    | Mixed_symbol -> "Mixed_symbol"
   in
   let string_of_any_source = function
     | Annotated -> "Annotated"
@@ -1650,6 +1650,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, MixedT flavor) ->
       p ~trust:(Some trust) ~extra:(string_of_mixed_flavor flavor) t
     | DefT (_, trust, EmptyT _)
+    | DefT (_, trust, SymbolT)
     | DefT (_, trust, NullT)
     | DefT (_, trust, VoidT) ->
       p ~trust:(Some trust) t

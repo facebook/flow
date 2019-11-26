@@ -112,6 +112,7 @@ let lsp_completion_of_type =
     | Any _
     | Top
     | Void
+    | Symbol
     | Num _
     | Str _
     | Bool _

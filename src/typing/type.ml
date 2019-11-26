@@ -196,6 +196,7 @@ module rec TypeTerm : sig
     | MixedT of mixed_flavor
     | NullT
     | VoidT
+    | SymbolT
     | FunT of static * prototype * funtype
     | ObjT of objtype
     | ArrT of arrtype
@@ -837,7 +838,6 @@ module rec TypeTerm : sig
     | Mixed_non_null
     | Mixed_non_void
     | Mixed_function
-    | Mixed_symbol
 
   and empty_flavor =
     | Bottom
@@ -3101,6 +3101,7 @@ end = struct
       | (DefT (_, ltrust, SingletonBoolT _), DefT (_, rtrust, BoolT _))
       | (DefT (_, ltrust, NullT), DefT (_, rtrust, NullT))
       | (DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT))
+      | (DefT (_, ltrust, SymbolT), DefT (_, rtrust, SymbolT))
       | (DefT (_, ltrust, EmptyT _), DefT (_, rtrust, _))
       | (DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)) ->
         (not trust_checked) || trust_subtype_fixed ltrust rtrust
@@ -3187,6 +3188,12 @@ module BoolT = Primitive (struct
   let desc = RBoolean
 
   let make r trust = DefT (r, trust, BoolT None)
+end)
+
+module SymbolT = Primitive (struct
+  let desc = RSymbol
+
+  let make r trust = DefT (r, trust, SymbolT)
 end)
 
 module MixedT = Primitive (struct
@@ -3504,6 +3511,7 @@ let string_of_def_ctor = function
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonStrT _ -> "SingletonStrT"
   | StrT _ -> "StrT"
+  | SymbolT -> "SymbolT"
   | TypeT _ -> "TypeT"
   | VoidT -> "VoidT"
 
