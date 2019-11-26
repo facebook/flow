@@ -151,7 +151,7 @@ let code_actions_at_loc ~options ~env ~profiling ~params ~file_key ~file_content
       CodeActionRequest.(
         CodeActionKind.(
           let { textDocument; range = _; context } = params in
-          let uri = TextDocumentIdentifier.(textDocument.uri) in
+          let uri = TextDocumentIdentifier.(textDocument.uri) |> Lsp.string_of_uri in
           Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key >|= function
           | (Some (full_cx, ast, file_sig, typed_ast), _, _) ->
             Autofix_exports.(

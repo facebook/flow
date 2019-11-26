@@ -13,7 +13,8 @@ let url_scheme_regex = Str.regexp "^\\([a-zA-Z][a-zA-Z0-9+.-]+\\):"
 
 (* this requires schemes with 2+ characters, so "c:\path" isn't considered a scheme *)
 
-let lsp_uri_to_path (uri : string) : string =
+let lsp_uri_to_path (uri : documentUri) : string =
+  let uri = string_of_uri uri in
   if Str.string_match url_scheme_regex uri 0 then
     let scheme = Str.matched_group 1 uri in
     if scheme = "file" then
@@ -24,11 +25,11 @@ let lsp_uri_to_path (uri : string) : string =
   else
     uri
 
-let path_to_lsp_uri (path : string) ~(default_path : string) : string =
+let path_to_lsp_uri (path : string) ~(default_path : string) : Lsp.documentUri =
   if path = "" then
-    File_url.create default_path
+    File_url.create default_path |> uri_of_string
   else
-    File_url.create path
+    File_url.create path |> uri_of_string
 
 let lsp_textDocumentIdentifier_to_filename
     (identifier : Lsp.TextDocumentIdentifier.t) : string =
@@ -313,16 +314,16 @@ let log_warning (writer : Jsonrpc.writer) =
 
 let log_info (writer : Jsonrpc.writer) = log writer MessageType.InfoMessage
 
-let dismiss_diagnostics (writer : Jsonrpc.writer) (diagnostic_uris : SSet.t) :
-    SSet.t =
-  let dismiss_one (uri : string) : unit =
+let dismiss_diagnostics (writer : Jsonrpc.writer) (diagnostic_uris : UriSet.t) :
+    UriSet.t =
+  let dismiss_one (uri : documentUri) : unit =
     let message = { Lsp.PublishDiagnostics.uri; diagnostics = [] } in
     message
     |> print_diagnostics
     |> Jsonrpc.notify writer "textDocument/publishDiagnostics"
   in
-  SSet.iter dismiss_one diagnostic_uris;
-  SSet.empty
+  UriSet.iter dismiss_one diagnostic_uris;
+  UriSet.empty
 
 let notify_connectionStatus
     (p : Lsp.Initialize.params)

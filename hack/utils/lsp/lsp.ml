@@ -44,7 +44,11 @@ type lsp_id =
   | NumberId of int
   | StringId of string
 
-type documentUri = string
+type documentUri = DocumentUri of string
+
+let uri_of_string (s : string) : documentUri = DocumentUri s
+
+let string_of_uri (DocumentUri s) : string = s
 
 (* A position is between two characters like an 'insert' cursor in a editor *)
 type position = {
@@ -1311,3 +1315,12 @@ end
 
 module IdSet = Set.Make (IdKey)
 module IdMap = WrappedMap.Make (IdKey)
+
+module UriKey = struct
+  type t = documentUri
+
+  let compare (DocumentUri x) (DocumentUri y) = String.compare x y
+end
+
+module UriSet = Set.Make (UriKey)
+module UriMap = WrappedMap.Make (UriKey)

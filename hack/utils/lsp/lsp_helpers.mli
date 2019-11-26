@@ -23,9 +23,9 @@ val progress_and_actionRequired_counter : int ref
 
 val url_scheme_regex : Str.regexp
 
-val lsp_uri_to_path : string -> string
+val lsp_uri_to_path : Lsp.documentUri -> string
 
-val path_to_lsp_uri : string -> default_path:string -> string
+val path_to_lsp_uri : string -> default_path:string -> Lsp.documentUri
 
 val lsp_textDocumentIdentifier_to_filename :
   Lsp.TextDocumentIdentifier.t -> string
@@ -95,7 +95,7 @@ val log_warning : Jsonrpc.writer -> string -> unit
 
 val log_info : Jsonrpc.writer -> string -> unit
 
-val dismiss_diagnostics : Jsonrpc.writer -> SSet.t -> SSet.t
+val dismiss_diagnostics : Jsonrpc.writer -> Lsp.UriSet.t -> Lsp.UriSet.t
 
 val notify_connectionStatus :
   Lsp.Initialize.params -> Jsonrpc.writer -> bool -> bool -> bool

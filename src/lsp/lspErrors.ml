@@ -163,6 +163,7 @@ let send_errors_for_file state (send_json : Hh_json.json -> unit) uri =
   in
   let errors = parse_errors @ non_parse_errors in
   let diagnostics = limit_errors errors in
+  let uri = Lsp.uri_of_string uri in
   PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics }
   |> Lsp_fmt.print_lsp_notification
   |> send_json
@@ -307,6 +308,7 @@ let clear_all_errors_and_send send_json state =
 (* Basically a best-effort attempt to update the locations of errors after a didChange *)
 let update_errors_due_to_change_and_send send_json params state =
   let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
+  let uri = Lsp.string_of_uri uri in
   modify_per_file_errors uri state (fun per_file_errors ->
       let { live_parse_errors; live_non_parse_errors; server_errors } = per_file_errors in
       let live_parse_errors =

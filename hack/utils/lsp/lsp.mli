@@ -11,7 +11,12 @@ type lsp_id =
   | NumberId of int
   | StringId of string
 
-type documentUri = string
+(* Note: this datatype provides no invariants that the string is well-formed. *)
+type documentUri = DocumentUri of string
+
+val uri_of_string : string -> documentUri
+
+val string_of_uri : documentUri -> string
 
 type position = {
   line: int;
@@ -1011,4 +1016,18 @@ end
 
 module IdMap : sig
   include module type of WrappedMap.Make (IdKey)
+end
+
+module UriKey : sig
+  type t = documentUri
+
+  val compare : t -> t -> int
+end
+
+module UriSet : sig
+  include module type of Set.Make (UriKey)
+end
+
+module UriMap : sig
+  include module type of WrappedMap.Make (UriKey)
 end
