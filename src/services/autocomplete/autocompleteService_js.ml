@@ -85,15 +85,6 @@ let autocomplete_response_to_json ~strip_root response =
       let results = List.map (autocomplete_result_to_json ~strip_root) completions in
       JSON_Object [("result", JSON_Array results)])
 
-let parameter_name is_opt name =
-  let opt =
-    if is_opt then
-      "?"
-    else
-      ""
-  in
-  Option.value name ~default:"_" ^ opt
-
 let lsp_completion_of_type =
   Ty.(
     function
@@ -133,43 +124,13 @@ let lsp_completion_of_type =
 let autocomplete_create_result ?(show_func_details = true) ?insert_text (name, loc) (ty, ty_loc) =
   let res_ty = (ty_loc, Ty_printer.string_of_t ~with_comments:false ty) in
   let res_kind = lsp_completion_of_type ty in
-  Ty.(
+  let func_details =
     match ty with
-    | Fun { fun_params; fun_rest_param; fun_return; _ } when show_func_details ->
-      let param_tys =
-        Base.List.map
-          ~f:(fun (n, t, fp) ->
-            let param_name = parameter_name fp.prm_optional n in
-            let param_ty = Ty_printer.string_of_t ~with_comments:false t in
-            { param_name; param_ty })
-          fun_params
-      in
-      let param_tys =
-        match fun_rest_param with
-        | None -> param_tys
-        | Some (name, t) ->
-          let param_name = "..." ^ parameter_name false name in
-          let param_ty = Ty_printer.string_of_t ~with_comments:false t in
-          param_tys @ [{ param_name; param_ty }]
-      in
-      let return = Ty_printer.string_of_t ~with_comments:false fun_return in
-      {
-        res_loc = loc;
-        res_kind;
-        res_name = name;
-        res_insert_text = insert_text;
-        res_ty;
-        func_details = Some { param_tys; return_ty = return };
-      }
-    | _ ->
-      {
-        res_loc = loc;
-        res_kind;
-        res_name = name;
-        res_insert_text = insert_text;
-        res_ty;
-        func_details = None;
-      })
+    | Ty.(Fun { fun_params; fun_rest_param; fun_return; _ }) when show_func_details ->
+      Some (Signature_help.func_details fun_params fun_rest_param fun_return)
+    | _ -> None
+  in
+  { res_loc = loc; res_kind; res_name = name; res_insert_text = insert_text; res_ty; func_details }
 
 let autocomplete_is_valid_member key =
   (* This is really for being better safe than sorry. It shouldn't happen. *)
