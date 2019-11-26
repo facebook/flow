@@ -1,3 +1,20 @@
+### 0.113.0
+Bug fixes:
+* Fixed autocomplete when at the end of file
+* Stopped filtering lints (e.g. `signature-verification-failure`) out when running `flow check-contents`
+
+Parser:
+* Added support for `export default class implements Foo {}` [[example]](https://flow.org/try/#0JYOwLgpgTgZghgYwgAgJIDED2nkG8C+AUIRAB4AOmUYyAJhPAK4A2NCzcAzp8sALblmEPhHA8M2PESA)
+* Added support for type parameters in anonymous class expressions [[example]](https://flow.org/try/#0BQYwNghgzlAEA8ANAfLA3gXwJQG4g) (thanks @nicolo-ribaudo)
+
+Library definitions:
+* Fixed type of `navigator.mediaDevices.getUserMedia` (thanks @thecotne)
+* Added missing `InputEvent` to `removeEventListener`
+* Updated type of `ServiceWorkerContainer.getRegistration`
+
+Misc:
+* Added `module.system.node.main_field` option (see #8128 for more details)
+
 ### 0.112.0
 
 Likely to cause new Flow errors:
