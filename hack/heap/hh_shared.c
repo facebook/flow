@@ -2421,8 +2421,14 @@ static void verify_sqlite_header(sqlite3 *db, int ignore_hh_version) {
       // Columns are 0 indexed
       assert(sqlite3_column_int64(select_stmt, 0) == MAGIC_CONSTANT);
       if (!ignore_hh_version) {
-        assert(strcmp((char *)sqlite3_column_text(select_stmt, 1),
-                      BuildInfo_kRevision) == 0);
+        if (strcmp((char *)sqlite3_column_text(select_stmt, 1),
+            BuildInfo_kRevision) != 0) {
+          caml_failwith(
+            "There was a build version mismatch when loading "
+            "dep table SQLite database (and `ignore_hh_version` is not set). "
+            "Not continuing with loading. "
+          );
+        }
       }
   }
   assert_sql(db, sqlite3_finalize(select_stmt), SQLITE_OK);
