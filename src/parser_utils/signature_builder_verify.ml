@@ -138,6 +138,7 @@ module Eval (Env : EvalEnv) = struct
       | (_, Empty)
       | (_, Void)
       | (_, Null)
+      | (_, Symbol)
       | (_, Number)
       | (_, BigInt)
       | (_, String)

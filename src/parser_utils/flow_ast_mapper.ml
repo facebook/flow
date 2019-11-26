@@ -903,6 +903,7 @@ class ['loc] mapper =
         | (_, Empty)
         | (_, Void)
         | (_, Null)
+        | (_, Symbol)
         | (_, Number)
         | (_, BigInt)
         | (_, String)

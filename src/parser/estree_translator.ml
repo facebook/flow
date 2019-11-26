@@ -1156,6 +1156,7 @@ with type t = Impl.t = struct
         | Empty -> empty_type loc
         | Void -> void_type loc
         | Null -> null_type loc
+        | Symbol -> symbol_type loc
         | Number -> number_type loc
         | BigInt -> bigint_type loc
         | String -> string_type loc
@@ -1180,6 +1181,7 @@ with type t = Impl.t = struct
     and empty_type loc = node "EmptyTypeAnnotation" loc []
     and void_type loc = node "VoidTypeAnnotation" loc []
     and null_type loc = node "NullLiteralTypeAnnotation" loc []
+    and symbol_type loc = node "SymbolTypeAnnotation" loc []
     and number_type loc = node "NumberTypeAnnotation" loc []
     and bigint_type loc = node "BigIntTypeAnnotation" loc []
     and string_type loc = node "StringTypeAnnotation" loc []

@@ -212,6 +212,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_NUMBER_TYPE -> Some Type.Number
     | T_BIGINT_TYPE -> Some Type.BigInt
     | T_STRING_TYPE -> Some Type.String
+    | T_SYMBOL_TYPE -> Some Type.Symbol
     | T_VOID_TYPE -> Some Type.Void
     | T_NULL -> Some Type.Null
     | _ -> None

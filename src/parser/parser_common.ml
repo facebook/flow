@@ -144,6 +144,7 @@ let identifier_name env =
       | T_BIGINT_TYPE -> "bigint"
       | T_STRING_TYPE -> "string"
       | T_VOID_TYPE -> "void"
+      | T_SYMBOL_TYPE -> "symbol"
       (* Contextual stuff *)
       | T_OF -> "of"
       | T_ASYNC -> "async"

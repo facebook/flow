@@ -694,6 +694,7 @@ module Peek = struct
         | T_BIGINT_TYPE
         | T_STRING_TYPE
         | T_VOID_TYPE
+        | T_SYMBOL_TYPE
         | T_BOOLEAN_TYPE _
         | T_NUMBER_SINGLETON_TYPE _
         | T_BIGINT_SINGLETON_TYPE _

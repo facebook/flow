@@ -204,7 +204,7 @@ end = struct
         | T_BOOLEAN_TYPE BOOLEAN -> Some Enum_common.Boolean
         | T_NUMBER_TYPE -> Some Enum_common.Number
         | T_STRING_TYPE -> Some Enum_common.String
-        | T_IDENTIFIER { value = "symbol"; _ } -> Some Enum_common.Symbol
+        | T_SYMBOL_TYPE -> Some Enum_common.Symbol
         | T_IDENTIFIER { value; _ } ->
           let supplied_type = Some value in
           error env (Parse_error.EnumInvalidExplicitType { enum_name; supplied_type });

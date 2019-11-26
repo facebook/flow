@@ -267,6 +267,7 @@ and Type : sig
     | BigInt
     | String
     | Boolean
+    | Symbol
     | Nullable of ('M, 'T) t
     | Function of ('M, 'T) Function.t
     | Object of ('M, 'T) Object.t

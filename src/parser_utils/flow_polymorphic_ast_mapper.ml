@@ -766,7 +766,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       Ast.Type.
         ( this#on_type_annot annot,
           match t with
-          | ( Any | Mixed | Empty | Void | Null | Number | BigInt | String | Boolean
+          | ( Any | Mixed | Empty | Void | Null | Symbol | Number | BigInt | String | Boolean
             | StringLiteral _ | NumberLiteral _ | BigIntLiteral _ | BooleanLiteral _ | Exists ) as t
             ->
             t

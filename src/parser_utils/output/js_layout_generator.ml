@@ -2676,6 +2676,7 @@ and type_ ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Empty -> Atom "empty"
       | T.Void -> Atom "void"
       | T.Null -> Atom "null"
+      | T.Symbol -> Atom "symbol"
       | T.Number -> Atom "number"
       | T.BigInt -> Atom "bigint"
       | T.String -> Atom "string"

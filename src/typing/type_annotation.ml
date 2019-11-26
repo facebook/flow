@@ -156,6 +156,8 @@ let rec convert cx tparams_map =
     | (loc, (Empty as t_ast)) -> ((loc, EmptyT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Void as t_ast)) -> ((loc, VoidT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Null as t_ast)) -> ((loc, NullT.at loc |> with_trust_inference cx), t_ast)
+    | (loc, (Symbol as t_ast)) ->
+      ((loc, AnyT.why Untyped (mk_reason (RCustom "SymbolT is added in the next diff") loc)), t_ast)
     | (loc, (Number as t_ast)) -> ((loc, NumT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (BigInt as t_ast)) ->
       let reason = mk_annot_reason RBigInt loc in

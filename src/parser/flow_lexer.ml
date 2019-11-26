@@ -1680,6 +1680,7 @@ let type_token env lexbuf =
   | "true" -> Token (env, T_TRUE)
   | "typeof" -> Token (env, T_TYPEOF)
   | "void" -> Token (env, T_VOID_TYPE)
+  | "symbol" -> Token (env, T_SYMBOL_TYPE)
   (* Identifiers *)
   | (js_id_start, Star js_id_continue) ->
     let loc = loc_of_lexbuf env lexbuf in
