@@ -9109,6 +9109,12 @@ struct
             | DefT (_, _, StrT _) -> { exists_check with string_loc = t_loc }
             | DefT (_, _, NumT _) -> { exists_check with number_loc = t_loc }
             | DefT (_, _, MixedT _) -> { exists_check with mixed_loc = t_loc }
+            | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ }) ->
+              { exists_check with enum_bool_loc = t_loc }
+            | DefT (_, _, EnumT { representation_t = DefT (_, _, StrT _); _ }) ->
+              { exists_check with enum_string_loc = t_loc }
+            | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ }) ->
+              { exists_check with enum_number_loc = t_loc }
             | _ -> exists_check
           in
           let exists_checks =

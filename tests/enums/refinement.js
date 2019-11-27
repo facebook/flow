@@ -299,3 +299,28 @@ if (typeof bn == "number") {
   (bn: B); // Error
   (bn: N); // Valid
 }
+
+//////////////////
+// sketchy-null //
+//////////////////
+// flowlint sketchy-null:error
+
+if (bMaybe) { } // Error
+if (!bMaybe) { } // Error
+
+if (nMaybe) { } // Error
+if (!nMaybe) { } // Error
+
+if (sMaybe) { } // Error
+if (!sMaybe) { } // Error
+
+if (bTrue) { } // Valid
+if (!bTrue) { } // Valid
+
+if (nTruthy) { } // Valid
+if (!nTruthy) { } // Valid
+
+if (sTruthy) { } // Valid
+if (!sTruthy) { } // Valid
+
+// flowlint sketchy-null:off

@@ -1679,5 +1679,113 @@ References:
                ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- refinement.js:308:5
 
-Found 96 errors
+Sketchy null check on boolean enum [1] which is potentially false at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-bool`)
+
+   refinement.js:308:5
+   308| if (bMaybe) { } // Error
+            ^^^^^^
+
+References:
+   refinement.js:33:22
+    33| declare var bMaybe: ?B;
+                             ^ [1]
+   refinement.js:33:21
+    33| declare var bMaybe: ?B;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:309:6
+
+Sketchy null check on boolean enum [1] which is potentially false at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-bool`)
+
+   refinement.js:309:6
+   309| if (!bMaybe) { } // Error
+             ^^^^^^
+
+References:
+   refinement.js:33:22
+    33| declare var bMaybe: ?B;
+                             ^ [1]
+   refinement.js:33:21
+    33| declare var bMaybe: ?B;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:311:5
+
+Sketchy null check on number enum [1] which is potentially 0 at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-number`)
+
+   refinement.js:311:5
+   311| if (nMaybe) { } // Error
+            ^^^^^^
+
+References:
+   refinement.js:146:22
+   146| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:146:21
+   146| declare var nMaybe: ?N;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:312:6
+
+Sketchy null check on number enum [1] which is potentially 0 at runtime. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-number`)
+
+   refinement.js:312:6
+   312| if (!nMaybe) { } // Error
+             ^^^^^^
+
+References:
+   refinement.js:146:22
+   146| declare var nMaybe: ?N;
+                             ^ [1]
+   refinement.js:146:21
+   146| declare var nMaybe: ?N;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:314:5
+
+Sketchy null check on string enum [1] which is potentially an empty string at runtime. Perhaps you meant to check for
+null or undefined [2]? (`sketchy-null-string`)
+
+   refinement.js:314:5
+   314| if (sMaybe) { } // Error
+            ^^^^^^
+
+References:
+   refinement.js:232:22
+   232| declare var sMaybe: ?S;
+                             ^ [1]
+   refinement.js:232:21
+   232| declare var sMaybe: ?S;
+                            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:315:6
+
+Sketchy null check on string enum [1] which is potentially an empty string at runtime. Perhaps you meant to check for
+null or undefined [2]? (`sketchy-null-string`)
+
+   refinement.js:315:6
+   315| if (!sMaybe) { } // Error
+             ^^^^^^
+
+References:
+   refinement.js:232:22
+   232| declare var sMaybe: ?S;
+                             ^ [1]
+   refinement.js:232:21
+   232| declare var sMaybe: ?S;
+                            ^^ [2]
+
+
+
+Found 102 errors

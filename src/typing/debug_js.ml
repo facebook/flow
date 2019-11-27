@@ -2886,6 +2886,9 @@ let dump_error_message =
           | SketchyNullString -> "SketchyNullString"
           | SketchyNullNumber -> "SketchyNullNumber"
           | SketchyNullMixed -> "SketchyNullMixed"
+          | SketchyNullEnumBool -> "SketchyNullEnumBool"
+          | SketchyNullEnumString -> "SketchyNullEnumString"
+          | SketchyNullEnumNumber -> "SketchyNullEnumNumber"
         in
         spf
           "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"

@@ -10,6 +10,9 @@ type sketchy_null_kind =
   | SketchyNullString
   | SketchyNullNumber
   | SketchyNullMixed
+  | SketchyNullEnumBool
+  | SketchyNullEnumString
+  | SketchyNullEnumNumber
 
 type sketchy_number_kind = SketchyNumberAnd
 
@@ -41,9 +44,15 @@ type lint_kind =
   | AmbiguousObjectType
 
 let string_of_sketchy_null_kind = function
-  | SketchyNullBool -> "sketchy-null-bool"
-  | SketchyNullString -> "sketchy-null-string"
-  | SketchyNullNumber -> "sketchy-null-number"
+  | SketchyNullBool
+  | SketchyNullEnumBool ->
+    "sketchy-null-bool"
+  | SketchyNullString
+  | SketchyNullEnumString ->
+    "sketchy-null-string"
+  | SketchyNullNumber
+  | SketchyNullEnumNumber ->
+    "sketchy-null-number"
   | SketchyNullMixed -> "sketchy-null-mixed"
 
 let string_of_sketchy_number_kind = function
@@ -77,10 +86,13 @@ let kinds_of_string = function
         SketchyNull SketchyNullString;
         SketchyNull SketchyNullNumber;
         SketchyNull SketchyNullMixed;
+        SketchyNull SketchyNullEnumBool;
+        SketchyNull SketchyNullEnumString;
+        SketchyNull SketchyNullEnumNumber;
       ]
-  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
-  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
-  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
+  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool; SketchyNull SketchyNullEnumBool]
+  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString; SketchyNull SketchyNullEnumString]
+  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber; SketchyNull SketchyNullEnumNumber]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
   | "sketchy-number" -> Some [SketchyNumber SketchyNumberAnd]
   | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]

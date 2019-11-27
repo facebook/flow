@@ -2568,6 +2568,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | Lints.SketchyNullNumber -> ("number", "0")
       | Lints.SketchyNullString -> ("string", "an empty string")
       | Lints.SketchyNullMixed -> ("mixed", "false")
+      | Lints.SketchyNullEnumBool -> ("boolean enum", "false at runtime")
+      | Lints.SketchyNullEnumNumber -> ("number enum", "0 at runtime")
+      | Lints.SketchyNullEnumString -> ("string enum", "an empty string at runtime")
     in
     let features =
       [

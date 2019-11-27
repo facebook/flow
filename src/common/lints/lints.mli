@@ -10,6 +10,9 @@ type sketchy_null_kind =
   | SketchyNullString
   | SketchyNullNumber
   | SketchyNullMixed
+  | SketchyNullEnumBool
+  | SketchyNullEnumString
+  | SketchyNullEnumNumber
 
 type sketchy_number_kind = SketchyNumberAnd
 

@@ -164,6 +164,12 @@ let detect_sketchy_null_checks cx =
           Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
         if Option.is_none exists_excuse.mixed_loc then
           Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyNullMixed);
+        if Option.is_none exists_excuse.enum_bool_loc then
+          Option.iter exists_check.enum_bool_loc ~f:(add_error Lints.SketchyNullEnumBool);
+        if Option.is_none exists_excuse.enum_number_loc then
+          Option.iter exists_check.enum_number_loc ~f:(add_error Lints.SketchyNullEnumNumber);
+        if Option.is_none exists_excuse.enum_string_loc then
+          Option.iter exists_check.enum_string_loc ~f:(add_error Lints.SketchyNullEnumString);
         ())
   in
   Loc_collections.ALocMap.iter
