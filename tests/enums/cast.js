@@ -15,6 +15,11 @@ enum S of string {
   B,
 }
 
+enum Y of symbol {
+  A,
+  B,
+}
+
 enum B2 of boolean {
   A = true,
   B = false,
@@ -24,6 +29,7 @@ enum B2 of boolean {
 const s: string = (S.A: string); // OK
 const b: boolean = (B.A: boolean); // OK
 const n: number = (N.A: number); // OK
+const y: symbol = (Y.A: symbol); // OK
 
 const X = B; // Renaming
 (X.A: boolean); // OK
@@ -33,6 +39,7 @@ const X = B; // Renaming
 const ss: S = (S.A: S); // OK
 const bb: B = (B.A: B); // OK
 const nn: N = (N.A: N); // OK
+const yy: Y = (Y.A: Y); // OK
 
 (S.A: ?S); // OK
 (S.A: S | B); // OK
@@ -44,6 +51,7 @@ type T = string;
 (B.A: number); // Error
 (S.A: boolean); // Error
 (N.A: boolean); // Error
+(Y.A: boolean); // Error
 (X.A: string); // Error
 
 declare var BB: typeof B | typeof B2;
