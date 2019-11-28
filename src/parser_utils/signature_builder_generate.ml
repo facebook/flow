@@ -42,6 +42,7 @@ module T = struct
       }
     (* declarations and outlined expressions *)
     | ClassDecl of class_t
+    | EnumDecl of { body: Loc.t Ast.Statement.EnumDeclaration.body }
     | FunctionDecl of {
         annot: little_annotation;
         predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
@@ -696,6 +697,9 @@ module T = struct
       ( decl_loc,
         Ast.Statement.DeclareClass
           { Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body } )
+    | EnumDecl { body } ->
+      let open Ast.Statement.EnumDeclaration in
+      (decl_loc, Ast.Statement.EnumDeclaration { id; body })
     | FunctionDecl { annot = little_annotation; predicate } ->
       ( decl_loc,
         Ast.Statement.DeclareFunction
@@ -1584,6 +1588,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       let implements = Base.List.map ~f:Eval.class_implement implements in
       T.ClassDecl
         (T.DECLARE_CLASS { tparams; extends; mixins; implements; body = (body_loc, body) })
+    | Kind.EnumDef { body } -> T.EnumDecl { body }
     | Kind.TypeDef { tparams; right } ->
       let tparams = Eval.type_params tparams in
       let right = Eval.type_ right in
@@ -1774,6 +1779,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         in
         `Expr
           (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
+      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> `Decl (Entry.enum loc enum)
       | Declaration _stmt -> assert false
       | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
         `Decl (Entry.function_declaration loc function_)

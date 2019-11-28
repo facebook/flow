@@ -2210,6 +2210,12 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                   { Ast.Class.id = Some (id_loc, { Ast.Identifier.name; comments = _ }); _ } ) ->
               Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
               [(spf "class %s {}" name, id_loc, name, None)]
+            | ( _,
+                EnumDeclaration
+                  { Ast.Statement.EnumDeclaration.id = (id_loc, { Ast.Identifier.name; _ }); _ } )
+              ->
+              Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
+              [(spf "enum %s {}" name, id_loc, name, None)]
             | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
               Flow_ast_utils.fold_bindings_of_variable_declarations
                 (fun acc (loc, { Ast.Identifier.name; comments = _ }) ->
@@ -2251,6 +2257,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             | (_, ClassDeclaration { Ast.Class.id = Some ident; _ }) ->
               let name = ident_name ident in
               [(spf "class %s {}" name, fst ident, name, None)]
+            | (_, EnumDeclaration { Ast.Statement.EnumDeclaration.id = ident; _ }) ->
+              let name = ident_name ident in
+              [(spf "enum %s {}" name, fst ident, name, None)]
             | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
               Flow_ast_utils.fold_bindings_of_variable_declarations
                 (fun acc (loc, { Ast.Identifier.name; comments = _ }) ->

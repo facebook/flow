@@ -670,6 +670,9 @@ struct
             match declaration with
             | Declaration (_, Ast.Statement.FunctionDeclaration { Ast.Function.id; _ }) -> id
             | Declaration (_, Ast.Statement.ClassDeclaration { Ast.Class.id; _ }) -> id
+            | Declaration (_, Ast.Statement.EnumDeclaration { Ast.Statement.EnumDeclaration.id; _ })
+              ->
+              Some id
             | Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
             | _ -> None
           in
@@ -705,7 +708,9 @@ struct
                 | FunctionDeclaration
                     { Ast.Function.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
                 | ClassDeclaration
-                    { Ast.Class.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ } ->
+                    { Ast.Class.id = Some (loc, { Ast.Identifier.name; comments = _ }); _ }
+                | EnumDeclaration
+                    { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ } ->
                   let export = (stmt_loc, ExportNamed { loc; kind }) in
                   this#add_exports stmt_loc ExportValue [(name, export)] [export_info] None
                 | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->

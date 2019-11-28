@@ -6,4 +6,5 @@
 
 [options]
 experimental.enums=true
-no_flowlib=false
+experimental.well_formed_exports=true
+experimental.types_first=true

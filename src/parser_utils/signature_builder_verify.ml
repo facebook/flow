@@ -826,6 +826,7 @@ module Verifier (Env : EvalEnv) = struct
       in
       let deps = List.fold_left (Deps.reduce_join (Eval.value_ref tps)) deps mixins in
       List.fold_left (Deps.reduce_join (Eval.implement tps)) deps implements
+    | Kind.EnumDef _ -> Deps.bot
     | Kind.TypeDef { tparams; right } ->
       let (tps, deps) = Eval.type_params SSet.empty tparams in
       Deps.join (deps, Eval.type_ tps right)
@@ -904,6 +905,7 @@ module Verifier (Env : EvalEnv) = struct
       | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
         ->
         eval_class loc class_
+      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> eval_entry (Entry.enum loc enum)
       | Declaration
           ( _,
             Ast.Statement.ClassDeclaration

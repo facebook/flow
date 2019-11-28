@@ -88,6 +88,11 @@ let class_ loc class_ =
     in
     (Option.value_exn id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements })))
 
+let enum loc enum =
+  let open Ast.Statement.EnumDeclaration in
+  let { id; body } = enum in
+  (id, (loc, Kind.EnumDef { body }))
+
 let declare_variable loc declare_variable =
   Ast.Statement.DeclareVariable.(
     let { id; annot } = declare_variable in

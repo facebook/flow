@@ -111,6 +111,7 @@ type t =
       mixins: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
       implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
     }
+  | EnumDef of { body: Loc.t Ast.Statement.EnumDeclaration.body }
   | TypeDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
       right: (Loc.t, Loc.t) Ast.Type.t;
@@ -146,6 +147,7 @@ type ctor =
   | DeclareFunctionDefKind
   | ClassDefKind
   | DeclareClassDefKind
+  | EnumDefKind
   | TypeDefKind
   | OpaqueTypeDefKind
   | InterfaceDefKind
@@ -161,6 +163,7 @@ let rec kind_to_ctor = function
   | DeclareFunctionDef _ -> DeclareFunctionDefKind
   | ClassDef _ -> ClassDefKind
   | DeclareClassDef _ -> DeclareClassDefKind
+  | EnumDef _ -> EnumDefKind
   | TypeDef _ -> TypeDefKind
   | OpaqueTypeDef _ -> OpaqueTypeDefKind
   | InterfaceDef _ -> InterfaceDefKind
@@ -176,6 +179,7 @@ let rec to_string = function
   | DeclareFunctionDef _ -> "DeclareFunctionDef"
   | ClassDef _ -> "ClassDef"
   | DeclareClassDef _ -> "DeclareClassDef"
+  | EnumDef _ -> "EnumDef"
   | TypeDef _ -> "TypeDef"
   | OpaqueTypeDef _ -> "OpaqueTypeDef"
   | InterfaceDef _ -> "InterfaceDef"
@@ -191,6 +195,7 @@ let rec is_type = function
   | DeclareFunctionDef _ -> true
   | ClassDef _ -> true
   | DeclareClassDef _ -> true
+  | EnumDef _ -> true
   | TypeDef _ -> true
   | OpaqueTypeDef _ -> true
   | InterfaceDef _ -> true
@@ -208,6 +213,7 @@ let rec is_value = function
   | DeclareFunctionDef _ -> true
   | ClassDef _ -> true
   | DeclareClassDef _ -> true
+  | EnumDef _ -> true
   | TypeDef _ -> false
   | OpaqueTypeDef _ -> false
   | InterfaceDef _ -> false

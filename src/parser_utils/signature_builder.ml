@@ -46,6 +46,8 @@ module Signature = struct
 
   let add_interface env loc interface = add_env env (Entry.interface loc interface)
 
+  let add_enum env loc enum = add_env env (Entry.enum loc enum)
+
   let add_declare_export_declaration env =
     Ast.Statement.DeclareExportDeclaration.(
       function
@@ -68,6 +70,7 @@ module Signature = struct
       | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
         ->
         add_class env loc class_
+      | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> add_enum env loc enum
       | Declaration _ -> assert false
       | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
         add_function_expression env loc function_
@@ -91,6 +94,7 @@ module Signature = struct
       | (loc, DeclareOpaqueType opaque_type) -> add_opaque_type env loc opaque_type
       | (loc, InterfaceDeclaration interface) -> add_interface env loc interface
       | (loc, DeclareInterface interface) -> add_interface env loc interface
+      | (loc, EnumDeclaration enum) -> add_enum env loc enum
       | (_, Block _)
       | (_, DoWhile _)
       | (_, For _)
@@ -108,8 +112,6 @@ module Signature = struct
       | (_, DeclareModule _)
       | (_, DeclareModuleExports _)
       | (_, Empty)
-      | (_, EnumDeclaration _)
-      (* TODO(T44736715) Support enums in signature builder/verifier/etc. *)
       | (_, Expression _)
       | (_, Break _)
       | (_, Continue _)
@@ -560,6 +562,10 @@ class type_hoister =
     method! declare_class loc (decl : (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =
       this#add_binding (Entry.declare_class loc decl);
       decl
+
+    method! enum_declaration loc (enum : (Loc.t, Loc.t) Ast.Statement.EnumDeclaration.t) =
+      this#add_binding (Entry.enum loc enum);
+      enum
 
     method! type_alias loc (stuff : (Loc.t, Loc.t) Ast.Statement.TypeAlias.t) =
       this#add_binding (Entry.type_alias loc stuff);
