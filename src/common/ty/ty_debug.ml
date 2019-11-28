@@ -235,6 +235,7 @@ and dump_t ?(depth = 10) t =
       spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
     | InterfaceDecl (name, ps) ->
       spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
+    | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
     | Utility u -> dump_utility ~depth u
     | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
 
@@ -275,6 +276,7 @@ let string_of_ctor = function
   | TypeOf _ -> "Typeof"
   | ClassDecl _ -> "ClassDecl"
   | InterfaceDecl _ -> "InterfaceDecl"
+  | EnumDecl _ -> "EnumDecl"
   | Utility _ -> "Utility"
   | Module _ -> "Module"
   | Mu _ -> "Mu"
@@ -346,6 +348,7 @@ let json_of_t ~strip_root =
           [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
         | InterfaceDecl (name, tparams) ->
           [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
+        | EnumDecl name -> [("name", json_of_symbol name)]
         | Utility u -> json_of_utility u
         | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)] ))
   and json_of_tvar (RVar i) = Hh_json.[("id", int_ i)]

@@ -98,6 +98,7 @@ let lsp_completion_of_type =
       Some Lsp.Completion.Value
     | Fun _ -> Some Lsp.Completion.Function
     | TypeAlias _
+    | EnumDecl _
     | Union _ ->
       Some Lsp.Completion.Enum
     | Module _ -> Some Lsp.Completion.Module

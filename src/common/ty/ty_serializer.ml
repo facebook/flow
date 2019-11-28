@@ -81,6 +81,7 @@ let rec type_ t =
   | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
   | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
   | ClassDecl (s, _) -> class_decl s
+  | EnumDecl s -> enum_decl s
   | Utility s -> utility s
   | InlineInterface i -> inline_interface i
   | InterfaceDecl _
@@ -259,6 +260,8 @@ and setter t =
     }
 
 and class_decl name = generic_type name None >>| fun name -> (Loc.none, T.Typeof name)
+
+and enum_decl name = generic_type name None >>| fun name -> (Loc.none, T.Typeof name)
 
 and interface_extends e =
   let (x, _, ts) = e in

@@ -38,6 +38,7 @@ type t =
   | TypeOf of builtin_value
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
+  | EnumDecl of symbol
   | Utility of utility
   | Module of symbol option * export_t
   | Mu of int * t
@@ -99,6 +100,7 @@ and gen_kind =
   | ClassKind
   | InterfaceKind
   | TypeAliasKind
+  | EnumKind
 
 and export_t = {
   exports: (string * t) list;
@@ -374,23 +376,25 @@ class ['A] comparator_ty =
       | TypeAlias _ -> 15
       | TypeOf _ -> 16
       | ClassDecl _ -> 17
-      | Utility _ -> 18
-      | Tup _ -> 19
-      | Arr _ -> 20
-      | Fun _ -> 21
-      | Obj _ -> 22
-      | Inter _ -> 23
-      | Union _ -> 24
-      | InterfaceDecl _ -> 25
-      | Module _ -> 26
-      | Mu _ -> 27
-      | InlineInterface _ -> 28
+      | EnumDecl _ -> 18
+      | Utility _ -> 19
+      | Tup _ -> 20
+      | Arr _ -> 21
+      | Fun _ -> 22
+      | Obj _ -> 23
+      | Inter _ -> 24
+      | Union _ -> 25
+      | InterfaceDecl _ -> 26
+      | Module _ -> 27
+      | Mu _ -> 28
+      | InlineInterface _ -> 29
 
     method tag_of_gen_kind _ =
       function
       | ClassKind -> 0
       | InterfaceKind -> 1
       | TypeAliasKind -> 2
+      | EnumKind -> 3
 
     method tag_of_any_kind _ =
       function
@@ -546,7 +550,8 @@ let rec mk_exact ty =
   | Fun _
   | Arr _
   | Tup _
-  | InlineInterface _ ->
+  | InlineInterface _
+  | EnumDecl _ ->
     ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
@@ -586,6 +591,7 @@ let debug_string_of_generic_kind = function
   | ClassKind -> "class"
   | InterfaceKind -> "interface"
   | TypeAliasKind -> "type alias"
+  | EnumKind -> "enum"
 
 let string_of_utility_ctor = function
   | Keys _ -> "$Keys"

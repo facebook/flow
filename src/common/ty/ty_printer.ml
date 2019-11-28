@@ -92,6 +92,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     | Inter (t1, t2, ts) -> type_intersection ~depth (t1 :: t2 :: ts)
     | ClassDecl (n, ps) -> class_decl ~depth n ps
     | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
+    | EnumDecl n -> enum_decl n
     | Utility s -> utility ~depth s
     | Tup ts ->
       list
@@ -346,6 +347,7 @@ let type_ ?(size = 5000) ?(with_comments = true) t =
     fuse [Atom "class"; space; identifier name; option (type_parameter ~depth) typeParameters]
   and interface_decl ~depth { name; _ } typeParameters =
     fuse [Atom "interface"; space; identifier name; option (type_parameter ~depth) typeParameters]
+  and enum_decl { name; _ } = fuse [Atom "enum"; space; identifier name]
   and utility ~depth u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in
