@@ -38,8 +38,6 @@ module type S = sig
   val eval_selector :
     Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
 
-  val filter_maybe : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
-
   val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
   val flow : Context.t -> Type.t * Type.use_t -> unit

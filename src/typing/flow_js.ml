@@ -9075,10 +9075,6 @@ struct
     Tvar.mk_where cx reason (fun t ->
         flow_opt_t cx ?trace (opt_t, OptionalT { reason; type_ = t; use_desc = false }))
 
-  (* filter out undefined and null from a type *)
-  and filter_maybe cx ?trace reason maybe_t =
-    Tvar.mk_where cx reason (fun t -> flow_opt_t cx ?trace (maybe_t, MaybeT (reason, t)))
-
   and update_sketchy_null cx opt_loc t =
     ExistsCheck.(
       match t with
