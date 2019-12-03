@@ -97,12 +97,11 @@ let rec shm_dir_init config ~num_workers = function
                 ~shm_dir
                 ~shm_min_avail
                 ~avail));
-        if !Utils.debug then
-          Hh_logger.log
-            "Filesystem %s only has %d bytes available, which is less than the minimum %d bytes"
-            shm_dir
-            avail
-            config.shm_min_avail;
+        Hh_logger.log
+          "Filesystem %s only has %d bytes available, which is less than the minimum %d bytes"
+          shm_dir
+          avail
+          config.shm_min_avail;
         shm_dir_init config ~num_workers shm_dirs
       | Unix.Unix_error (e, fn, arg) ->
         let fn_string =
@@ -117,15 +116,13 @@ let rec shm_dir_init config ~num_workers = function
         EventLogger.(
           log_if_initialized (fun () ->
               sharedmem_failed_to_use_shm_dir ~shm_dir ~reason));
-        if !Utils.debug then
-          Hh_logger.log "Failed to use shm dir `%s`: %s" shm_dir reason;
+        Hh_logger.log "Failed to use shm dir `%s`: %s" shm_dir reason;
         shm_dir_init config ~num_workers shm_dirs
       | Failed_to_use_shm_dir reason ->
         EventLogger.(
           log_if_initialized (fun () ->
               sharedmem_failed_to_use_shm_dir ~shm_dir ~reason));
-        if !Utils.debug then
-          Hh_logger.log "Failed to use shm dir `%s`: %s" shm_dir reason;
+        Hh_logger.log "Failed to use shm dir `%s`: %s" shm_dir reason;
         shm_dir_init config ~num_workers shm_dirs
     end
 
@@ -134,7 +131,7 @@ let init config ~num_workers =
   with Failed_anonymous_memfd_init ->
     EventLogger.(
       log_if_initialized (fun () -> sharedmem_failed_anonymous_memfd_init ()));
-    if !Utils.debug then Hh_logger.log "Failed to use anonymous memfd init";
+    Hh_logger.log "Failed to use anonymous memfd init";
     shm_dir_init config ~num_workers config.shm_dirs
 
 external allow_removes : bool -> unit = "hh_allow_removes"
