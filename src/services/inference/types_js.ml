@@ -2454,7 +2454,7 @@ let recheck
   let {
     Recheck.new_or_changed = modified;
     deleted;
-    all_dependent_files = dependent_files;
+    all_dependent_files;
     top_cycle;
     merge_skip_count;
     check_skip_count;
@@ -2494,7 +2494,7 @@ let recheck
     ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
     ~modified
     ~deleted
-    ~dependent_files
+    ~all_dependent_files
     ~profiling
     ~merge_skip_count
     ~check_skip_count
@@ -2511,13 +2511,18 @@ let recheck
     ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase;
 
   let duration = Profiling_js.get_profiling_duration profiling in
-  let dependent_file_count = Utils_js.FilenameSet.cardinal dependent_files in
+  let all_dependent_file_count = Utils_js.FilenameSet.cardinal all_dependent_files in
   let changed_file_count =
     Utils_js.FilenameSet.cardinal modified + Utils_js.FilenameSet.cardinal deleted
   in
   let summary =
     ServerStatus.
-      { duration; info = RecheckSummary { dependent_file_count; changed_file_count; top_cycle } }
+      {
+        duration;
+        info =
+          RecheckSummary
+            { dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle };
+      }
   in
   Lwt.return (profiling, summary, env)
 

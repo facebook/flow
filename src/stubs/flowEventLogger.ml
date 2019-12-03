@@ -86,7 +86,7 @@ let recheck
     ~recheck_reasons:_
     ~modified:_
     ~deleted:_
-    ~dependent_files:_
+    ~all_dependent_files:_
     ~merge_skip_count:_
     ~check_skip_count:_
     ~profiling:_
