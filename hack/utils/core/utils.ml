@@ -16,8 +16,6 @@ let () = Random.self_init ()
 
 let profile_log = ref false
 
-let log = ref (fun (_ : string) -> ())
-
 module Map = struct end
 
 let spf = Printf.sprintf

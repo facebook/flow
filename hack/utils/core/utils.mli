@@ -17,8 +17,6 @@ type callstack = Callstack of string
 
 val profile_log : bool ref
 
-val log : (string -> unit) ref
-
 module Map : sig end
 
 val spf : ('a, unit, string) format -> 'a
