@@ -21,6 +21,8 @@ type init_mode =
 
 let init ?exit_on_parent_exit:_ ?log_pid:_ ?init_id:_ _ _ = ()
 
+let init_fake () = ()
+
 let disable_logging _ = ()
 
 let log _ = ()
