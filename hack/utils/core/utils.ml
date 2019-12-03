@@ -14,24 +14,9 @@ type callstack = Callstack of string
 
 let () = Random.self_init ()
 
-let debug = ref false
-
 let profile_log = ref false
 
 let log = ref (fun (_ : string) -> ())
-
-let d s =
-  if !debug then (
-    print_string s;
-    flush stdout
-  )
-
-let dn s =
-  if !debug then (
-    print_string s;
-    print_newline ();
-    flush stdout
-  )
 
 module Map = struct end
 

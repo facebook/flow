@@ -15,15 +15,9 @@ shape. *)
 
 type callstack = Callstack of string
 
-val debug : bool ref
-
 val profile_log : bool ref
 
 val log : (string -> unit) ref
-
-val d : string -> unit
-
-val dn : string -> unit
 
 module Map : sig end
 
