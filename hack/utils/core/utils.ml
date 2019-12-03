@@ -14,8 +14,6 @@ type callstack = Callstack of string
 
 let () = Random.self_init ()
 
-let profile_log = ref false
-
 module Map = struct end
 
 let spf = Printf.sprintf
