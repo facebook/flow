@@ -1645,6 +1645,7 @@ module Recheck : sig
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
     deleted: Utils_js.FilenameSet.t;
+    sig_dependent_files: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
@@ -1696,19 +1697,21 @@ module Recheck : sig
     files_to_force:CheckedSet.t ->
     unchanged_files_to_force:CheckedSet.t ->
     direct_dependent_files:FilenameSet.t ->
-    (* to_merge, to_check, to_merge_or_check (union of to_merge and to_check), components,
-     * recheck_set, all_dependent_files *)
-    ( CheckedSet.t
-    * CheckedSet.t
-    * CheckedSet.t
+    ( CheckedSet.t (* to_merge *)
+    * CheckedSet.t (* to_check *)
+    * CheckedSet.t (* to_merge_or_check (union of to_merge and to_check) *)
     * File_key.t Nel.t list
-    * FilenameSet.t
+    (* components *)
+    * FilenameSet.t (* recheck_set *)
+    * FilenameSet.t (* sig_dependent_files *)
     * FilenameSet.t )
+    (* all_dependent_files *)
     Lwt.t
 end = struct
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
     deleted: Utils_js.FilenameSet.t;
+    sig_dependent_files: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
@@ -2209,7 +2212,14 @@ end = struct
         ~sig_dependent_files
         ~all_dependent_files
     in
-    Lwt.return (to_merge, to_check, to_merge_or_check, components, recheck_set, all_dependent_files)
+    Lwt.return
+      ( to_merge,
+        to_check,
+        to_merge_or_check,
+        components,
+        recheck_set,
+        sig_dependent_files,
+        all_dependent_files )
 
   (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
    * of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
@@ -2245,7 +2255,13 @@ end = struct
     let is_file_checked =
       is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
     in
-    let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set, all_dependent_files) =
+    let%lwt ( to_merge,
+              to_check,
+              to_merge_or_check,
+              components,
+              recheck_set,
+              sig_dependent_files,
+              all_dependent_files ) =
       determine_what_to_recheck
         ~profiling
         ~options
@@ -2340,6 +2356,7 @@ end = struct
         {
           new_or_changed;
           deleted;
+          sig_dependent_files;
           all_dependent_files;
           top_cycle;
           merge_skip_count;
@@ -2454,6 +2471,7 @@ let recheck
   let {
     Recheck.new_or_changed = modified;
     deleted;
+    sig_dependent_files;
     all_dependent_files;
     top_cycle;
     merge_skip_count;
@@ -2494,6 +2512,7 @@ let recheck
     ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
     ~modified
     ~deleted
+    ~sig_dependent_files
     ~all_dependent_files
     ~profiling
     ~merge_skip_count

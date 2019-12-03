@@ -234,6 +234,7 @@ let tests =
                                    to_merge_or_check,
                                    _components,
                                    _recheck_set,
+                                   _sig_dependent_files,
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
@@ -268,6 +269,7 @@ let tests =
                                    to_merge_or_check,
                                    _components,
                                    _recheck_set,
+                                   _sig_dependent_files,
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
@@ -308,6 +310,7 @@ let tests =
                                    to_merge_or_check,
                                    _components,
                                    _recheck_set,
+                                   _sig_dependent_files,
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
@@ -344,6 +347,7 @@ let tests =
                                    to_merge_or_check,
                                    _components,
                                    _recheck_set,
+                                   _sig_dependent_files,
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
@@ -384,6 +388,7 @@ let tests =
                                    to_merge_or_check,
                                    _components,
                                    _recheck_set,
+                                   _sig_dependent_files,
                                    _all_dependent_files ) =
                            determine_what_to_recheck
                              ~profiling
