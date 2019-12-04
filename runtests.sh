@@ -410,26 +410,20 @@ runtest() {
         # get config flags.
         # for now this is kind of ad-hoc:
         #
-        # 1. The default flow command is check with the --all flag. This flag
-        # can be overridden here with the line "all: false". Anything besides
-        # "false" is ignored, and the setting itself is ignored if a command
-        # besides check is run.
-        #
-        # 2. The default flow command can be overridden here by supplying the
+        # 1. The default flow command can be overridden here by supplying the
         # entire command on a line that begins with "cmd:". (Note: for writing
         # incremental tests, use the option below). A line beginning with
         # "stdin:" can additionally supply arguments to pass to the command via
         # standard input. We start the server before running the command and
         # stop the server after we get a result.
         #
-        # 3. Integration tests that interleave flow commands with file system
+        # 2. Integration tests that interleave flow commands with file system
         # commands (for testing incremental checks, e.g.) are written by
         # supplying the name of a shell script on a line that begins with
         # "shell:". The shell script is passed the location of the flow binary
         # as argument ($1). We start the server before running the script and
         # stop the server after the script exits.
         #
-        all=" --all"
         auto_start=true
         flowlib=" --no-flowlib"
         shell=""
@@ -443,11 +437,6 @@ runtest() {
         wait_for_recheck="true"
         if [ -e ".testconfig" ]
         then
-            # all
-            if [ "$(awk '$1=="all:"{print $2}' .testconfig)" == "false" ]
-            then
-                all=""
-            fi
             # auto_start
             if [ "$(awk '$1=="auto_start:"{print $2}' .testconfig)" == "false" ]
             then
@@ -527,7 +516,7 @@ runtest() {
             set -e
             # start lazy server and wait
             "$FLOW" start "$root" \
-              $all $flowlib --wait \
+              $flowlib --wait \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy \
               --file-watcher "$file_watcher" \
@@ -553,9 +542,9 @@ runtest() {
         then
             if [[ "$saved_state" -eq 1 ]]; then
               if create_saved_state . ".flowconfig"; then
-                # default command is check with configurable --all and --no-flowlib
+                # default command is check with configurable --no-flowlib
                 "$FLOW" check . \
-                  $all $flowlib --strip-root --show-all-errors \
+                  $flowlib --strip-root --show-all-errors \
                   --saved-state-fetcher "local" \
                   --saved-state-no-fallback \
                    1>> "$abs_out_file" 2>> "$stderr_dest"
@@ -565,9 +554,9 @@ runtest() {
                 return_status=$RUNTEST_ERROR
               fi
             else
-              # default command is check with configurable --all and --no-flowlib
+              # default command is check with configurable --no-flowlib
               "$FLOW" check . \
-                $all $flowlib --strip-root --show-all-errors \
+                $flowlib --strip-root --show-all-errors \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -602,7 +591,7 @@ runtest() {
                 then
                   PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                   "$FLOW" start "$root" \
-                    $all $flowlib --wait \
+                    $flowlib --wait \
                     --wait-for-recheck "$wait_for_recheck" \
                     --saved-state-fetcher "local" \
                     --saved-state-no-fallback \
@@ -619,7 +608,7 @@ runtest() {
                 # start server and wait
                 PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                 "$FLOW" start "$root" \
-                  $all $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
+                  $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
                   --file-watcher "$file_watcher" \
                   --log-file "$abs_log_file" \
                   --monitor-log-file "$abs_monitor_log_file" \

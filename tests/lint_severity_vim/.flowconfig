@@ -1,9 +1,2 @@
-[ignore]
-
-[include]
-
-[libs]
-
 [options]
-
-[lints]
+all=true

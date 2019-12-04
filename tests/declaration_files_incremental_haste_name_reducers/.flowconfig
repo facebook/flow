@@ -4,3 +4,4 @@ module.system.haste.use_name_reducers=true
 module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\)\.js\(\.flow\)?$' -> '\1'
 module.system.haste.paths.whitelist=<PROJECT_ROOT>/.*
 module.system.haste.paths.blacklist=.*/node_modules/.*
+all=true

@@ -1,5 +1,6 @@
 [options]
 no_flowlib=false
+all=true
 
 [lints]
 inexact-spread=error

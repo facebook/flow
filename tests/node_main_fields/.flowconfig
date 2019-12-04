@@ -1,13 +1,4 @@
-[ignore]
-
-[include]
-
-[libs]
-
-[lints]
-
 [options]
 module.system.node.main_field=foo
 module.system.node.main_field=bar
-
-[strict]
+all=true

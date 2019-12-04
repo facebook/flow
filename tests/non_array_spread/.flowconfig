@@ -1,11 +1,6 @@
-[ignore]
-
-[include]
-
-[libs]
-
 [options]
 no_flowlib=false
+all=true
 
 [lints]
 non-array-spread=error
