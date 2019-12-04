@@ -15,8 +15,8 @@ Cannot cast `docblock.fun()` to string because number [1] is incompatible with s
         ^^^^^^^^^^^^^^
 
 References:
-   node_modules/qux/docblock.js.flow:1:32
-    1| declare export function fun(): number;
+   node_modules/qux/docblock.js.flow:2:32
+    2| declare export function fun(): number;
                                       ^^^^^^ [1]
    foo/bar/nested_test.js:12:18
    12| (docblock.fun(): string);
@@ -32,8 +32,8 @@ Cannot cast `min.fun()` to string because number [1] is incompatible with string
         ^^^^^^^^^
 
 References:
-   external/_d3/min.js.flow:1:32
-    1| declare export function fun(): number;
+   external/_d3/min.js.flow:2:32
+    2| declare export function fun(): number;
                                       ^^^^^^ [1]
    foo/bar/nested_test.js:13:13
    13| (min.fun(): string);
@@ -49,8 +49,8 @@ Cannot cast `corge.fun()` to string because number [1] is incompatible with stri
         ^^^^^^^^^^^
 
 References:
-   node_modules/qux/corge/lib/index.js.flow:1:32
-    1| declare export function fun(): number;
+   node_modules/qux/corge/lib/index.js.flow:2:32
+    2| declare export function fun(): number;
                                       ^^^^^^ [1]
    foo/bar/nested_test.js:14:15
    14| (corge.fun(): string);
@@ -66,8 +66,8 @@ Cannot cast `SomeOtherModule.fun()` to string because number [1] is incompatible
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   node_modules/qux/corge2/lib/foo.js.flow:2:32
-    2| declare export function fun(): number;
+   node_modules/qux/corge2/lib/foo.js.flow:5:32
+    5| declare export function fun(): number;
                                       ^^^^^^ [1]
    foo/bar/nested_test.js:15:25
    15| (SomeOtherModule.fun(): string);
@@ -83,8 +83,8 @@ Cannot cast `Implicit.fun()` to string because number [1] is incompatible with s
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:2:32
-   2| declare export function fun(): number;
+   ImplicitProvidesModule.js.flow:3:32
+   3| declare export function fun(): number;
                                      ^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): string);
@@ -117,13 +117,47 @@ Cannot cast `ExplicitDifferentName.fun()` to string because number [1] is incomp
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ExplicitProvidesModuleDifferentNameDefinitions.js.flow:5:32
-    5| declare export function fun(): number;
+   ExplicitProvidesModuleDifferentNameDefinitions.js.flow:6:32
+    6| declare export function fun(): number;
                                       ^^^^^^ [1]
    test.js:10:31
    10| (ExplicitDifferentName.fun(): string);
                                      ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:14:2
 
-Found 8 errors
+Cannot cast `Flow.x` to empty because number [1] is incompatible with empty [2].
+
+   test.js:14:2
+   14| (Flow.x: empty); // error: should be number
+        ^^^^^^
+
+References:
+   pragmas/Flow.js.flow:10:17
+   10| export const x: number = 123;
+                       ^^^^^^ [1]
+   test.js:14:10
+   14| (Flow.x: empty); // error: should be number
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:26:2
+
+Cannot cast `NotFlowShadowed.x` to empty because number [1] is incompatible with empty [2].
+
+   test.js:26:2
+   26| (NotFlowShadowed.x: empty); // error: should be number
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   pragmas/NotFlowShadowed.js.flow:9:17
+    9| export const x: number = 123;
+                       ^^^^^^ [1]
+   test.js:26:21
+   26| (NotFlowShadowed.x: empty); // error: should be number
+                           ^^^^^ [2]
+
+
+
+Found 10 errors
