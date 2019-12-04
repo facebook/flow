@@ -9,7 +9,6 @@ EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
 EXTRA_LIBS=
 INTERNAL_MODULES=\
-	hack/stubs/logging\
 	hack/stubs/logging/common\
 	src/stubs
 INTERNAL_NATIVE_C_FILES=
