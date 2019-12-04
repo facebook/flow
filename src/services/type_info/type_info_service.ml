@@ -113,17 +113,18 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
             abs_file_sig
             tast)
 
-let coverage ~options ~env ~profiling ~force ~trust file content =
+let coverage ~cx ~typed_ast ~force ~trust file content =
   let should_check =
     if force then
       true
     else
+      (* We can't just use the docblock that type_contents returns because type_contents modifies
+      * it and we want the original docblock. Fortunately this is a pure function, and pretty fast,
+      * so recomputing it isn't a problem. *)
       let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in
-  Types_js.type_contents ~options ~env ~profiling content file
-  >|= map ~f:(fun (cx, _, _, tast, _parse_errors) ->
-          Coverage.covered_types cx ~should_check ~check_trust:trust tast)
+  Coverage.covered_types cx ~should_check ~check_trust:trust typed_ast
 
 let suggest ~options ~env ~profiling file_name file_content =
   let file_key = File_key.SourceFile file_name in

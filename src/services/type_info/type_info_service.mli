@@ -28,14 +28,13 @@ val dump_types :
   ((Loc.t * string) list, string) result Lwt.t
 
 val coverage :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
+  cx:Context.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   force:bool ->
   trust:bool ->
   File_key.t ->
   string ->
-  ((Loc.t * Coverage_response.expression_coverage) list, string) result Lwt.t
+  (Loc.t * Coverage_response.expression_coverage) list
 
 val suggest :
   options:Options.t ->
