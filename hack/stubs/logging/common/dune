@@ -1,3 +1,5 @@
 (library
   (name logging_common_stubs)
-  (wrapped false))
+  (wrapped false)
+  (libraries
+    lwt))
