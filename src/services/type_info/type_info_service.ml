@@ -10,55 +10,51 @@ open Base.Result
 let ( >|= ) = Lwt.( >|= )
 
 let type_at_pos
-    ~options
-    ~env
-    ~profiling
+    ~cx
+    ~file_sig
+    ~typed_ast
     ~expand_aliases
     ~omit_targ_defaults
     ~evaluate_type_destructors
     file
-    content
     line
     col =
-  Types_js.type_contents ~options ~env ~profiling content file >|= function
-  | Error str -> Error (str, None)
-  | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
-    let loc = Loc.make file line col in
-    let (json_data, loc, ty) =
-      let mk_data result_str loc ty_json =
-        Hh_json.JSON_Object
-          [
-            ("result", Hh_json.JSON_String result_str);
-            ("loc", Reason.json_of_loc ~offset_table:None loc);
-            ("type", ty_json);
-          ]
-      in
-      Query_types.(
-        let file = Context.file cx in
-        let result =
-          type_at_pos_type
-            ~full_cx:cx
-            ~file
-            ~file_sig:(File_sig.abstractify_locs file_sig)
-            ~expand_aliases
-            ~omit_targ_defaults
-            ~evaluate_type_destructors
-            ~typed_ast
-            loc
-        in
-        match result with
-        | FailureNoMatch ->
-          (Hh_json.JSON_Object [("result", Hh_json.JSON_String "FAILURE_NO_MATCH")], Loc.none, None)
-        | FailureUnparseable (loc, gt, _) ->
-          let json = Hh_json.JSON_String (Type.string_of_ctor gt) in
-          (mk_data "FAILURE_UNPARSEABLE" loc json, loc, None)
-        | Success (loc, ty) ->
-          (* TODO use Ty_debug.json_of_t after making it faster using
-             count_calls *)
-          let json = Hh_json.JSON_String (Ty_printer.string_of_t ty) in
-          (mk_data "SUCCESS" loc json, loc, Some ty))
+  let loc = Loc.make file line col in
+  let (json_data, loc, ty) =
+    let mk_data result_str loc ty_json =
+      Hh_json.JSON_Object
+        [
+          ("result", Hh_json.JSON_String result_str);
+          ("loc", Reason.json_of_loc ~offset_table:None loc);
+          ("type", ty_json);
+        ]
     in
-    Ok ((loc, ty), Some json_data)
+    Query_types.(
+      let file = Context.file cx in
+      let result =
+        type_at_pos_type
+          ~full_cx:cx
+          ~file
+          ~file_sig:(File_sig.abstractify_locs file_sig)
+          ~expand_aliases
+          ~omit_targ_defaults
+          ~evaluate_type_destructors
+          ~typed_ast
+          loc
+      in
+      match result with
+      | FailureNoMatch ->
+        (Hh_json.JSON_Object [("result", Hh_json.JSON_String "FAILURE_NO_MATCH")], Loc.none, None)
+      | FailureUnparseable (loc, gt, _) ->
+        let json = Hh_json.JSON_String (Type.string_of_ctor gt) in
+        (mk_data "FAILURE_UNPARSEABLE" loc json, loc, None)
+      | Success (loc, ty) ->
+        (* TODO use Ty_debug.json_of_t after making it faster using
+             count_calls *)
+        let json = Hh_json.JSON_String (Ty_printer.string_of_t ty) in
+        (mk_data "SUCCESS" loc json, loc, Some ty))
+  in
+  ((loc, ty), Some json_data)
 
 let insert_type
     ~options

@@ -10,6 +10,8 @@ open ServerEnv
 open Utils_js
 open Lsp
 
+let ( >|= ) = Lwt.( >|= )
+
 let status_log errors =
   if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
     Hh_logger.info "Status: OK"
@@ -192,17 +194,20 @@ let infer_type
   | Ok content ->
     let%lwt result =
       try_with_json (fun () ->
-          Type_info_service.type_at_pos
-            ~options
-            ~env
-            ~profiling
-            ~expand_aliases
-            ~omit_targ_defaults
-            ~evaluate_type_destructors
-            file
-            content
-            line
-            col)
+          Types_js.type_contents ~options ~env ~profiling content file >|= function
+          | Error str -> Error (str, None)
+          | Ok (cx, _info, file_sig, typed_ast, _parse_errors) ->
+            Ok
+              (Type_info_service.type_at_pos
+                 ~cx
+                 ~file_sig
+                 ~typed_ast
+                 ~expand_aliases
+                 ~omit_targ_defaults
+                 ~evaluate_type_destructors
+                 file
+                 line
+                 col))
     in
     Lwt.return (split_result result)
 

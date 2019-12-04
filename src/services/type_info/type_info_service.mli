@@ -6,17 +6,16 @@
  *)
 
 val type_at_pos :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
+  cx:Context.t ->
+  file_sig:File_sig.With_Loc.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   expand_aliases:bool ->
   omit_targ_defaults:bool ->
   evaluate_type_destructors:bool ->
   File_key.t ->
-  string ->
   int ->
   int ->
-  ((Loc.t * Ty.t option) * Hh_json.json option, string * Hh_json.json option) result Lwt.t
+  (Loc.t * Ty.t option) * Hh_json.json option
 
 val dump_types :
   options:Options.t ->
