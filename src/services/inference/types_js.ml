@@ -76,7 +76,6 @@ module MemorySamplingLoop = LwtLoop.Make (struct
     Lwt.return callback
 
   let catch _ exn =
-    let exn = Exception.wrap exn in
     Hh_logger.error "Exception in MemorySamplingLoop: %s" (Exception.to_string exn);
     Lwt.return_unit
 end)

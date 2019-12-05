@@ -44,9 +44,7 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
     let%lwt () = workload env in
     Lwt.return (wait_for_cancel, env)
 
-  let catch _ exn =
-    let exn = Exception.wrap exn in
-    Exception.reraise exn
+  let catch _ exn = Exception.reraise exn
 end)
 
 let start_parallelizable_workloads env =

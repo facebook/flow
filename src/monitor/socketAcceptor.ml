@@ -39,10 +39,10 @@ module StatusLoop (Writer : STATUS_WRITER) = LwtLoop.Make (struct
 
   let catch _ exn =
     begin
-      match exn with
+      match Exception.unwrap exn with
       (* The connection closed its write stream, likely it is closed or closing *)
       | Lwt_stream.Closed -> ()
-      | exn -> Logger.error ~exn "StatusLoop threw an exception"
+      | _ -> Logger.error ~exn:(Exception.to_exn exn) "StatusLoop threw an exception"
     end;
     Lwt.return_unit
 end)
@@ -284,8 +284,8 @@ module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
     Lwt.return (autostop, socket_fd)
 
   let catch _ exn =
-    Logger.fatal ~exn "Uncaught exception in the socket acceptor";
-    raise exn
+    Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in the socket acceptor";
+    Exception.reraise exn
 end)
 
 module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct

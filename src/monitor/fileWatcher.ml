@@ -308,6 +308,7 @@ end = struct
         Lwt.return env
 
     let catch _ exn =
+      let exn = Exception.to_exn exn in
       Logger.error ~exn "Uncaught exception in Watchman listening loop";
 
       (* By exiting this loop we'll let the server know that something went wrong with Watchman *)

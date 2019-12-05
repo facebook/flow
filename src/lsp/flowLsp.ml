@@ -1237,7 +1237,7 @@ module LogFlusher = LwtLoop.Make (struct
     let%lwt () = Lwt_unix.sleep 5.0 in
     Lwt.join [EventLoggerLwt.flush (); FlowInteractionLogger.flush ()]
 
-  let catch () exn = Exception.(reraise (wrap exn))
+  let catch () exn = Exception.reraise exn
 end)
 
 (* Our interaction logging logs a snapshot of the state of the world at the start of an

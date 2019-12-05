@@ -210,6 +210,7 @@ end = struct
       Lwt.return (watcher, conn)
 
     let catch _ exn =
+      let exn = Exception.to_exn exn in
       Logger.fatal ~exn "Uncaught exception in Server command loop";
       raise exn
   end)
@@ -224,14 +225,14 @@ end = struct
       Lwt.return watcher
 
     let catch watcher exn =
-      match exn with
+      match Exception.unwrap exn with
       | FileWatcher.FileWatcherDied exn ->
         let msg = spf "File watcher (%s) died" watcher#name in
         Logger.fatal ~exn "%s" msg;
         exit ~msg FlowExitStatus.Dfind_died
       | _ ->
-        Logger.fatal ~exn "Uncaught exception in Server file watcher loop";
-        raise exn
+        Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in Server file watcher loop";
+        Exception.reraise exn
   end)
 
   (* The monitor is exiting. Let's try and shut down the server gracefully *)
@@ -610,14 +611,13 @@ module KeepAliveLoop = LwtLoop.Make (struct
     Lwt.return (monitor_options, restart_reason)
 
   let catch _ exn =
-    let e = Exception.wrap exn in
-    match exn with
+    match Exception.unwrap exn with
     | Watchman_lwt.Timeout ->
-      let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string e) in
+      let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string exn) in
       FlowExitStatus.(exit ~msg Watchman_error)
     | _ ->
-      Logger.error ~exn "Exception in KeepAliveLoop";
-      Exception.reraise e
+      Logger.error ~exn:(Exception.to_exn exn) "Exception in KeepAliveLoop";
+      Exception.reraise exn
 end)
 
 let setup_signal_handlers =

@@ -51,8 +51,8 @@ module LogFlusher = LwtLoop.Make (struct
     EventLoggerLwt.flush ()
 
   let catch () exn =
-    Logger.fatal ~exn "LogFlusher somehow hit an exception";
-    raise exn
+    Logger.fatal ~exn:(Exception.to_exn exn) "LogFlusher somehow hit an exception";
+    Exception.reraise exn
 end)
 
 (* This is the common entry point for both daemonize and start. *)

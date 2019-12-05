@@ -75,9 +75,10 @@ module UpdateLoop = LwtLoop.Make (struct
     process_update t new_status
 
   let catch _ exn =
-    match exn with
+    match Exception.unwrap exn with
     | Lwt_stream.Empty -> Lwt.return_unit (* This is the signal to stop *)
-    | exn ->
+    | _ ->
+      let exn = Exception.to_exn exn in
       Logger.error ~exn "ServerStatus update loop hit an unexpected exception";
       Lwt.return_unit
 end)
