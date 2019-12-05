@@ -3015,6 +3015,8 @@ let dump_error_message =
         "EEnumExhaustiveCheckOfUnion (%s) (%s)"
         (dump_reason cx reason)
         (dump_reason cx union_reason)
+    | EEnumMemberUsedAsType { reason; enum_name } ->
+      spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

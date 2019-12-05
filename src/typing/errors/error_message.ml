@@ -349,6 +349,10 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       union_reason: 'loc virtual_reason;
     }
+  | EEnumMemberUsedAsType of {
+      reason: 'loc virtual_reason;
+      enum_name: string;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -820,6 +824,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
     EEnumExhaustiveCheckOfUnion
       { reason = map_reason reason; union_reason = map_reason union_reason }
+  | EEnumMemberUsedAsType { reason; enum_name } ->
+    EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -990,7 +996,8 @@ let util_use_op_of_msg nope util = function
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
   | EEnumInvalidCheck _
-  | EEnumExhaustiveCheckOfUnion _ ->
+  | EEnumExhaustiveCheckOfUnion _
+  | EEnumMemberUsedAsType _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1045,7 +1052,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumAllMembersAlreadyChecked { reason; _ }
   | EEnumNotAllChecked { reason; _ }
   | EEnumInvalidCheck { reason; _ }
-  | EEnumExhaustiveCheckOfUnion { reason; _ } ->
+  | EEnumExhaustiveCheckOfUnion { reason; _ }
+  | EEnumMemberUsedAsType { reason; _ } ->
     Some (poly_loc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
@@ -2987,6 +2995,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ref union_reason;
         text ", which is a union. ";
         text "Before you exhaustively check an enum, refine away other members of the union.";
+      ]
+    in
+    Normal { features }
+  | EEnumMemberUsedAsType { reason; enum_name } ->
+    let features =
+      [
+        text "Cannot use ";
+        desc reason;
+        text " as a type. ";
+        text "Enum members are not separate types. ";
+        text "Only the enum itself, ";
+        code enum_name;
+        text ", is a type.";
       ]
     in
     Normal { features }

@@ -955,6 +955,22 @@ References:
                  ^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- member-as-type.js:8:16
+
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E`, is a type.
+
+   8| declare var x: E.A;
+                     ^^^
+
+
+Error ------------------------------------------------------------------------------------------ member-as-type.js:10:15
+
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E`, is a type.
+
+   10| function f(x: E.A) {
+                     ^^^
+
+
 Error -------------------------------------------------------------------------------------------------- methods.js:23:1
 
 Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1].
@@ -2326,4 +2342,4 @@ References:
 
 
 
-Found 131 errors
+Found 133 errors
