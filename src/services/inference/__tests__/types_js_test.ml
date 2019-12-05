@@ -229,13 +229,16 @@ let tests =
                            [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
                          in
                          let freshparsed = ["b"] in
-                         let%lwt ( to_merge,
-                                   to_check,
-                                   to_merge_or_check,
-                                   _components,
-                                   _recheck_set,
-                                   _sig_dependent_files,
-                                   _all_dependent_files ) =
+                         let%lwt (Types_js.Determine_what_to_recheck_result
+                                   {
+                                     to_merge;
+                                     to_check;
+                                     to_merge_or_check;
+                                     components = _;
+                                     recheck_set = _;
+                                     sig_dependent_files = _;
+                                     all_dependent_files = _;
+                                   }) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -264,13 +267,16 @@ let tests =
                            [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
-                         let%lwt ( to_merge,
-                                   to_check,
-                                   to_merge_or_check,
-                                   _components,
-                                   _recheck_set,
-                                   _sig_dependent_files,
-                                   _all_dependent_files ) =
+                         let%lwt (Types_js.Determine_what_to_recheck_result
+                                   {
+                                     to_merge;
+                                     to_check;
+                                     to_merge_or_check;
+                                     components = _;
+                                     recheck_set = _;
+                                     sig_dependent_files = _;
+                                     all_dependent_files = _;
+                                   }) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -305,13 +311,16 @@ let tests =
                            [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
-                         let%lwt ( to_merge,
-                                   to_check,
-                                   to_merge_or_check,
-                                   _components,
-                                   _recheck_set,
-                                   _sig_dependent_files,
-                                   _all_dependent_files ) =
+                         let%lwt (Types_js.Determine_what_to_recheck_result
+                                   {
+                                     to_merge;
+                                     to_check;
+                                     to_merge_or_check;
+                                     components = _;
+                                     recheck_set = _;
+                                     sig_dependent_files = _;
+                                     all_dependent_files = _;
+                                   }) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -342,13 +351,16 @@ let tests =
                            [("a", ["e"]); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
-                         let%lwt ( to_merge,
-                                   to_check,
-                                   to_merge_or_check,
-                                   _components,
-                                   _recheck_set,
-                                   _sig_dependent_files,
-                                   _all_dependent_files ) =
+                         let%lwt (Types_js.Determine_what_to_recheck_result
+                                   {
+                                     to_merge;
+                                     to_check;
+                                     to_merge_or_check;
+                                     components = _;
+                                     recheck_set = _;
+                                     sig_dependent_files = _;
+                                     all_dependent_files = _;
+                                   }) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -383,13 +395,16 @@ let tests =
                            [("a", ["e"]); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
                          let freshparsed = ["a"] in
-                         let%lwt ( to_merge,
-                                   to_check,
-                                   to_merge_or_check,
-                                   _components,
-                                   _recheck_set,
-                                   _sig_dependent_files,
-                                   _all_dependent_files ) =
+                         let%lwt (Types_js.Determine_what_to_recheck_result
+                                   {
+                                     to_merge;
+                                     to_check;
+                                     to_merge_or_check;
+                                     components = _;
+                                     recheck_set = _;
+                                     sig_dependent_files = _;
+                                     all_dependent_files = _;
+                                   }) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph

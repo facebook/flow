@@ -1593,6 +1593,18 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
     ) else
       Lwt.return_none
 
+type determine_what_to_recheck_result =
+  | Determine_what_to_recheck_result of {
+      to_merge: CheckedSet.t;
+      to_check: CheckedSet.t;
+      (* union of to_merge and to_check *)
+      to_merge_or_check: CheckedSet.t;
+      components: File_key.t Nel.t list;
+      recheck_set: FilenameSet.t;
+      sig_dependent_files: FilenameSet.t;
+      all_dependent_files: FilenameSet.t;
+    }
+
 module Recheck : sig
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
@@ -1649,16 +1661,7 @@ module Recheck : sig
     files_to_force:CheckedSet.t ->
     unchanged_files_to_force:CheckedSet.t ->
     direct_dependent_files:FilenameSet.t ->
-    ( CheckedSet.t (* to_merge *)
-    * CheckedSet.t (* to_check *)
-    * CheckedSet.t (* to_merge_or_check (union of to_merge and to_check) *)
-    * File_key.t Nel.t list
-    (* components *)
-    * FilenameSet.t (* recheck_set *)
-    * FilenameSet.t (* sig_dependent_files *)
-    * FilenameSet.t )
-    (* all_dependent_files *)
-    Lwt.t
+    determine_what_to_recheck_result Lwt.t
 end = struct
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
@@ -2168,13 +2171,16 @@ end = struct
         ~all_dependent_files
     in
     Lwt.return
-      ( to_merge,
-        to_check,
-        to_merge_or_check,
-        components,
-        recheck_set,
-        sig_dependent_files,
-        all_dependent_files )
+      (Determine_what_to_recheck_result
+         {
+           to_merge;
+           to_check;
+           to_merge_or_check;
+           components;
+           recheck_set;
+           sig_dependent_files;
+           all_dependent_files;
+         })
 
   (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
    * of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
@@ -2210,13 +2216,16 @@ end = struct
     let is_file_checked =
       is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
     in
-    let%lwt ( to_merge,
-              to_check,
-              to_merge_or_check,
-              components,
-              recheck_set,
-              sig_dependent_files,
-              all_dependent_files ) =
+    let%lwt (Determine_what_to_recheck_result
+              {
+                to_merge;
+                to_check;
+                to_merge_or_check;
+                components;
+                recheck_set;
+                sig_dependent_files;
+                all_dependent_files;
+              }) =
       determine_what_to_recheck
         ~profiling
         ~options

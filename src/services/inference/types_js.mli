@@ -89,6 +89,18 @@ val ensure_checked_dependencies :
 
 (* The following are exposed only for testing purposes. Not meant for general consumption. *)
 
+type determine_what_to_recheck_result =
+  | Determine_what_to_recheck_result of {
+      to_merge: CheckedSet.t;
+      to_check: CheckedSet.t;
+      (* union of to_merge and to_check *)
+      to_merge_or_check: CheckedSet.t;
+      components: File_key.t Nel.t list;
+      recheck_set: FilenameSet.t;
+      sig_dependent_files: FilenameSet.t;
+      all_dependent_files: FilenameSet.t;
+    }
+
 val debug_determine_what_to_recheck :
   profiling:Profiling_js.running ->
   options:Options.t ->
@@ -104,14 +116,7 @@ val debug_determine_what_to_recheck :
   files_to_force:CheckedSet.t ->
   unchanged_files_to_force:CheckedSet.t ->
   direct_dependent_files:FilenameSet.t ->
-  ( CheckedSet.t
-  * CheckedSet.t
-  * CheckedSet.t
-  * File_key.t Nel.t list
-  * FilenameSet.t
-  * FilenameSet.t
-  * FilenameSet.t )
-  Lwt.t
+  determine_what_to_recheck_result Lwt.t
 
 val debug_include_dependencies_and_dependents :
   options:Options.t ->
