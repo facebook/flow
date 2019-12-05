@@ -366,69 +366,22 @@ module DirectDependentFilesCache : sig
   val clear : unit -> unit
 
   val with_cache :
-    root_files:FilenameSet.t -> on_miss:(unit -> FilenameSet.t Lwt.t) -> FilenameSet.t Lwt.t
+    root_files:FilenameSet.t -> on_miss:FilenameSet.t Lwt.t Lazy.t -> FilenameSet.t Lwt.t
 end = struct
-  type entry = {
-    direct_dependents: FilenameSet.t;
-    last_hit: float;
-  }
-
-  type cache = {
-    entries: entry FilenameMap.t;
-    size: int;
-  }
-
-  let empty_cache = { entries = FilenameMap.empty; size = 0 }
-
   let max_size = 100
 
-  let cache = ref empty_cache
+  (* I've written out the type here so that it's clear that we are caching the `Lwt.t`s, and not
+   * the results that they resolve to. *)
+  let cache : FilenameSet.t Lwt.t FilenameCache.t = FilenameCache.make ~max_size
 
-  let clear () = cache := empty_cache
-
-  let remove_oldest () =
-    let { entries; size } = !cache in
-    let oldest =
-      FilenameMap.fold
-        (fun key { last_hit; _ } acc ->
-          match acc with
-          | Some (_, oldest_hit) when oldest_hit <= last_hit -> acc
-          | _ -> Some (key, last_hit))
-        entries
-        None
-    in
-    Option.iter oldest ~f:(fun (oldest_key, _) ->
-        cache := { entries = FilenameMap.remove oldest_key entries; size = size - 1 })
-
-  let add_after_miss ~root_file ~direct_dependents =
-    let entry = { direct_dependents; last_hit = Unix.gettimeofday () } in
-    let { entries; size } = !cache in
-    cache := { entries = FilenameMap.add root_file entry entries; size = size + 1 };
-    if size > max_size then remove_oldest ()
-
-  let get_from_cache ~root_file =
-    let { entries; size } = !cache in
-    match FilenameMap.find_opt root_file entries with
-    | None -> None
-    | Some entry ->
-      let entry = { entry with last_hit = Unix.gettimeofday () } in
-      cache := { entries = FilenameMap.add root_file entry entries; size };
-      Some entry
+  let clear () = FilenameCache.clear cache
 
   let with_cache ~root_files ~on_miss =
     match FilenameSet.elements root_files with
-    | [root_file] ->
-      begin
-        match get_from_cache ~root_file with
-        | None ->
-          let%lwt direct_dependents = on_miss () in
-          add_after_miss ~root_file ~direct_dependents;
-          Lwt.return direct_dependents
-        | Some { direct_dependents; last_hit = _ } -> Lwt.return direct_dependents
-      end
+    | [root_file] -> FilenameCache.with_cache root_file on_miss cache
     | _ ->
       (* Cache is only for when there is a single root file *)
-      on_miss ()
+      Lazy.force on_miss
 end
 
 let clear_cache_if_resolved_requires_changed resolved_requires_changed =
@@ -2003,13 +1956,16 @@ end = struct
     let%lwt direct_dependent_files =
       with_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
           let root_files = FilenameSet.union new_or_changed unchanged_files_with_dependents in
-          DirectDependentFilesCache.with_cache ~root_files ~on_miss:(fun () ->
-              Dep_service.calc_direct_dependents
-                ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-                workers
-                ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
-                ~root_files
-                ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)))
+          DirectDependentFilesCache.with_cache
+            ~root_files
+            ~on_miss:
+              ( lazy
+                (Dep_service.calc_direct_dependents
+                   ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+                   workers
+                   ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
+                   ~root_files
+                   ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)) ))
     in
     Hh_logger.info "Re-resolving directly dependent files";
 
