@@ -1,0 +1,6 @@
+(library
+  (name file_url)
+  (wrapped false)
+  (libraries
+    string
+    utils_core))

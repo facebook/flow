@@ -1,0 +1,15 @@
+(library
+  (name stack_utils)
+  (wrapped false)
+  (preprocess (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)) ; See T41851208
+  (modules
+    stack_utils))
+
+(library
+  (name utils_ocaml_overrides)
+  (wrapped false)
+  (modules
+    ocaml_overrides)
+  (preprocess (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)) ; See T41851208
+  (libraries
+    disk))
