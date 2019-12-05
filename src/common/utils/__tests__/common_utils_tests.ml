@@ -15,6 +15,7 @@ let tests =
          ResizableArray_test.tests;
          UnionFind_test.tests;
          Graph_test.tests;
+         Cache_test.tests;
        ]
 
 let () = run_test_tt_main tests
