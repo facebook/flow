@@ -89,6 +89,7 @@ MODULES=\
   src/common/transaction\
   src/common/ty\
   src/common/utils\
+  src/common/utils/filename_cache\
   src/common/utils/loc_utils\
   src/common/xx\
   src/flowlib\
