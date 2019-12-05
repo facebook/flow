@@ -188,6 +188,10 @@ type RecursiveTypeDestructorPoly<X> = {|
   f: {| h: $PropertyType<RecursiveTypeDestructorPoly<X>, "f"> |} | X // TODO
 |};
 
+// Nested
+type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>;
+//   ^
+
 // TODO
 // React.ElementPropsType
 // React.ElementConfigType

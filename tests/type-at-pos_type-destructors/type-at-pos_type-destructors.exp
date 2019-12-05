@@ -418,6 +418,11 @@ Flags:
 type RecursiveTypeDestructorPoly<X> = {|f: ({|h: $PropertyType<RecursiveTypeDestructorPoly<X>, "f">|} | X)|}
 type-destructor.js:186:6,186:32
 
+type-destructor.js:192:6
+Flags:
+type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
+type-destructor.js:192:6,192:10
+
 type-destructor.js:20:6
 Flags: --evaluate-type-destructors
 type Country = $Keys<{|FR: string, IT: string, US: string|}>
@@ -629,4 +634,9 @@ Flags: --evaluate-type-destructors
 type V$0 = X | {|h: V$0|};
 type RecursiveTypeDestructorPoly<X> = {|f: ({|h: V$0|} | X)|}
 type-destructor.js:186:6,186:32
+
+type-destructor.js:192:6
+Flags: --evaluate-type-destructors
+type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
+type-destructor.js:192:6,192:10
 

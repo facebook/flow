@@ -329,6 +329,19 @@ exception Not_expect_bound of string
 
 exception Attempted_operation_on_bound of string
 
+let with_evaluated_cache cx id evaluated f tvar =
+  Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
+  try f tvar
+  with Attempted_operation_on_bound _ as exn when Context.in_normalizer_mode cx ->
+    let e = Exception.wrap exn in
+    (* Raised exceptions are not recorded on the constraint graph or the eval-cache.
+       If this exception is hit during normalization, then `tvar` will likely not
+       have the expected lower-bounds. To avoid reusing this spurious result the
+       next time we evaluate the same EvalT, we need to restore the evaluation
+       cache. *)
+    Context.set_evaluated cx evaluated;
+    Exception.reraise e
+
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
    been substituted away. *)
 let not_expect_bound cx t =
@@ -7570,9 +7583,11 @@ struct
     let evaluated = Context.evaluated cx in
     match Eval.Map.find_opt i evaluated with
     | None ->
-      Tvar.mk_where cx reason (fun tvar ->
-          Context.set_evaluated cx (Eval.Map.add i tvar evaluated);
-          flow_opt cx ?trace (curr_t, RefineT (reason, p, tvar)))
+      Tvar.mk_where
+        cx
+        reason
+        (with_evaluated_cache cx i evaluated (fun tvar ->
+             flow_opt cx ?trace (curr_t, RefineT (reason, p, tvar))))
     | Some it -> it
 
   and eval_evalt cx ?trace t evaluator id =
@@ -7679,9 +7694,7 @@ struct
             rec_flow_t cx trace (t, x)
           | _ -> eval_destructor cx ~trace use_op reason t d tvar
         in
-        Tvar.mk_where cx reason (fun tvar ->
-            Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
-            f tvar)
+        Tvar.mk_where cx reason (with_evaluated_cache cx id evaluated f)
     in
     (slingshot, result)
 
