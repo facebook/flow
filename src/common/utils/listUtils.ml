@@ -113,10 +113,10 @@ let first_upto_n n f lst =
   Base.List.rev r
 
 (* truncate a list to first 0 < n <= len items *)
-let first_n n lst = fold_left_for n (Fn.flip Base.List.cons) [] lst |> Base.List.rev
+let first_n n lst = fold_left_for n (Base.Fn.flip Base.List.cons) [] lst |> Base.List.rev
 
 (* truncate a list to last 0 < n <= len items *)
-let last_n n lst = Base.List.rev lst |> fold_left_for n (Fn.flip Base.List.cons) []
+let last_n n lst = Base.List.rev lst |> fold_left_for n (Base.Fn.flip Base.List.cons) []
 
 (* split a list into a list of lists, each of length n except the last whose length is in [0, n) *)
 let bucket_n n lst =
@@ -282,7 +282,7 @@ let last_opt l =
     | [] -> v
     | x :: xs -> last xs x
   in
-  Base.List.nth l 0 |> Option.map ~f:(last l)
+  Base.List.nth l 0 |> Base.Option.map ~f:(last l)
 
 let is_empty = function
   | [] -> true
