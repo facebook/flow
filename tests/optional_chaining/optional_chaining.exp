@@ -769,6 +769,34 @@ References:
                       ^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- deletion.js:23:1
+
+Cannot assign `42` to `w?.g.e` because property `e` is missing in null or undefined [1].
+
+   deletion.js:23:1
+   23| (w?.g).e = 42; // should fail
+       ^^^^^^^^
+
+References:
+   deletion.js:6:16
+    6| declare var w: ?{g: {e: ?number}};
+                      ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:24:8
+
+Cannot delete `w?.g.e` because property `e` is missing in null or undefined [1].
+
+   deletion.js:24:8
+   24| delete (w?.g).e; // should fail
+              ^^^^^^^^
+
+References:
+   deletion.js:6:16
+    6| declare var w: ?{g: {e: ?number}};
+                      ^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
 
 Cannot cast `x1?.()` to empty because:
@@ -3100,7 +3128,7 @@ References:
 
 
 
-Found 227 errors
+Found 229 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

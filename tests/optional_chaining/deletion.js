@@ -18,3 +18,7 @@ delete w2?.g?.e; // two unnecessary chains
 declare var a: ?{a: ?number}
 delete a?.a;
 (a.a: empty); // don't refine a.a to definitely exist
+
+// optional chain in parens doesn't short-circuit
+(w?.g).e = 42; // should fail
+delete (w?.g).e; // should fail
