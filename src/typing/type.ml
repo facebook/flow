@@ -745,6 +745,13 @@ module rec TypeTerm : sig
         enum: reason * Trust.trust_rep * enum_t;
       }
 
+  and exhaustive_check_t =
+    | ExhaustiveCheckPossiblyValid of {
+        checks: (reason * name * t) list;
+        default_case: reason option;
+      }
+    | ExhaustiveCheckInvalid of reason list
+
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
    * because `p` should behave like a `string` annotation.

@@ -324,6 +324,31 @@ and 'loc t' =
       prev_use_loc: 'loc;
       enum_reason: 'loc virtual_reason;
     }
+  | EEnumMemberAlreadyChecked of {
+      reason: 'loc virtual_reason;
+      prev_check_reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+  | EEnumAllMembersAlreadyChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EEnumNotAllChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+      remaining_member_to_check: string;
+      number_remaining_members_to_check: int;
+    }
+  | EEnumInvalidCheck of {
+      reason: 'loc virtual_reason;
+      enum_name: string;
+      members: SSet.t;
+    }
+  | EEnumExhaustiveCheckOfUnion of {
+      reason: 'loc virtual_reason;
+      union_reason: 'loc virtual_reason;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -770,6 +795,31 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
     EEnumMemberDuplicateValue
       { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
+  | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+    EEnumMemberAlreadyChecked
+      {
+        reason = map_reason reason;
+        prev_check_reason = map_reason prev_check_reason;
+        enum_reason = map_reason enum_reason;
+        member_name;
+      }
+  | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
+    EEnumAllMembersAlreadyChecked
+      { reason = map_reason reason; enum_reason = map_reason enum_reason }
+  | EEnumNotAllChecked
+      { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+    EEnumNotAllChecked
+      {
+        reason = map_reason reason;
+        enum_reason = map_reason enum_reason;
+        remaining_member_to_check;
+        number_remaining_members_to_check;
+      }
+  | EEnumInvalidCheck { reason; enum_name; members } ->
+    EEnumInvalidCheck { reason = map_reason reason; enum_name; members }
+  | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
+    EEnumExhaustiveCheckOfUnion
+      { reason = map_reason reason; union_reason = map_reason union_reason }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -935,7 +985,12 @@ let util_use_op_of_msg nope util = function
   | EComputedPropertyWithUnion _
   | EEnumInvalidMemberAccess _
   | EEnumModification _
-  | EEnumMemberDuplicateValue _ ->
+  | EEnumMemberDuplicateValue _
+  | EEnumMemberAlreadyChecked _
+  | EEnumAllMembersAlreadyChecked _
+  | EEnumNotAllChecked _
+  | EEnumInvalidCheck _
+  | EEnumExhaustiveCheckOfUnion _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -985,6 +1040,12 @@ let loc_of_msg : 'loc t' -> 'loc option = function
         existing_lower_bound_reason = _;
       }
   | EComputedPropertyWithUnion { computed_property_reason = reason; union_reason = _ } ->
+    Some (poly_loc_of_reason reason)
+  | EEnumMemberAlreadyChecked { reason; _ }
+  | EEnumAllMembersAlreadyChecked { reason; _ }
+  | EEnumNotAllChecked { reason; _ }
+  | EEnumInvalidCheck { reason; _ }
+  | EEnumExhaustiveCheckOfUnion { reason; _ } ->
     Some (poly_loc_of_reason reason)
   (* We position around the use of the object instead of the spread because the
    * spread may be part of a polymorphic type signature. If we add a suppression there,
@@ -2844,6 +2905,88 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ref (mk_reason (RCustom "previous initializer") prev_use_loc);
         text " in ";
         ref enum_reason;
+      ]
+    in
+    Normal { features }
+  | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+    let features =
+      [
+        text "The ";
+        ref reason;
+        text " checks for enum member ";
+        code member_name;
+        text " of ";
+        ref enum_reason;
+        text ", but member ";
+        code member_name;
+        text " was already checked at ";
+        ref prev_check_reason;
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
+    let features =
+      [
+        text "The ";
+        ref reason;
+        text " checks for additional enum members of ";
+        ref enum_reason;
+        text ", but all of its members have already been checked.";
+      ]
+    in
+    Normal { features }
+  | EEnumNotAllChecked
+      { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+    let features =
+      if number_remaining_members_to_check > 1 then
+        [
+          text (string_of_int number_remaining_members_to_check);
+          text " members of ";
+          ref enum_reason;
+          text " have not been checked in ";
+          ref reason;
+          text ". For example, the member ";
+          code remaining_member_to_check;
+          text ".";
+        ]
+      else
+        [
+          text "The member ";
+          code remaining_member_to_check;
+          text " of ";
+          ref enum_reason;
+          text " has not been checked in ";
+          ref reason;
+          text ".";
+        ]
+    in
+    Normal { features }
+  | EEnumInvalidCheck { reason; enum_name; members } ->
+    let example_member =
+      match SSet.choose_opt members with
+      | Some name -> name
+      | None -> "A"
+    in
+    let features =
+      [
+        text "Invalid enum member check at ";
+        ref reason;
+        text ". Check must be in the form ";
+        code (spf "case %s.%s" enum_name example_member);
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
+    let features =
+      [
+        text "Cannot exhaustively check enum at ";
+        ref reason;
+        text " because we are switching on ";
+        ref union_reason;
+        text ", which is a union. ";
+        text "Before you exhaustively check an enum, refine away other members of the union.";
       ]
     in
     Normal { features }

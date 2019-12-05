@@ -145,6 +145,7 @@ type sig_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
+  mutable possible_exhaustive_checks: (Type.t * (Reason.t * Type.exhaustive_check_t)) list;
 }
 
 type phase =
@@ -242,6 +243,7 @@ let make_sig () =
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
+    possible_exhaustive_checks = [];
   }
 
 (* create a new context structure.
@@ -576,6 +578,7 @@ let clear_intermediates cx =
   cx.sig_cx.invariants_useful <- ALocMap.empty;
   cx.sig_cx.type_asserts_map <- ALocMap.empty;
   cx.sig_cx.goal_map <- IMap.empty;
+  cx.sig_cx.possible_exhaustive_checks <- [];
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -669,6 +672,11 @@ let unnecessary_invariants cx =
         (loc, r) :: acc)
     cx.sig_cx.invariants_useful
     []
+
+let add_possible_exhaustive_check cx t check =
+  cx.sig_cx.possible_exhaustive_checks <- (t, check) :: cx.sig_cx.possible_exhaustive_checks
+
+let possible_exhaustive_checks cx = cx.sig_cx.possible_exhaustive_checks
 
 (* utils *)
 let find_real_props cx id =

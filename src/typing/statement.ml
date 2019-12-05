@@ -1265,6 +1265,43 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             in
             loop (None, false, case_exits)
           in
+          let ((_, discriminant_t), _) = discriminant_ast in
+          let (invalid_checks, checks, default_case) =
+            List.fold_left
+              (fun (invalid_checks, checks, default_case) -> function
+                | ( case_loc,
+                    {
+                      Switch.Case.test =
+                        Some
+                          ( (_, t),
+                            Ast.Expression.Member
+                              Ast.Expression.Member.
+                                {
+                                  _object;
+                                  property = PropertyIdentifier (_, { Ast.Identifier.name; _ });
+                                } );
+                      _;
+                    } ) ->
+                  let case_reason = mk_reason (RCustom "case") case_loc in
+                  (invalid_checks, (case_reason, name, t) :: checks, default_case)
+                | (default_case_loc, { Switch.Case.test = None; _ }) ->
+                  let default_case_reason = mk_reason (RCustom "default case") default_case_loc in
+                  (invalid_checks, checks, Some default_case_reason)
+                | (case_loc, _) ->
+                  let case_reason = mk_reason (RCustom "case") case_loc in
+                  (case_reason :: invalid_checks, checks, default_case))
+              ([], [], None)
+              cases_ast
+          in
+          let switch_reason = mk_reason (RCustom "switch") switch_loc in
+          Context.add_possible_exhaustive_check
+            cx
+            discriminant_t
+            ( switch_reason,
+              if List.length invalid_checks = 0 then
+                ExhaustiveCheckPossiblyValid { checks = List.rev checks; default_case }
+              else
+                ExhaustiveCheckInvalid (List.rev invalid_checks) );
           let ast =
             (switch_loc, Switch { Switch.discriminant = discriminant_ast; cases = cases_ast })
           in

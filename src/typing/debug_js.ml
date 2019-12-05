@@ -2984,6 +2984,37 @@ let dump_error_message =
         (string_of_aloc loc)
         (string_of_aloc prev_use_loc)
         (dump_reason cx enum_reason)
+    | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+      spf
+        "EEnumMemberAlreadyChecked (%s) (%s) (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx prev_check_reason)
+        (dump_reason cx enum_reason)
+        member_name
+    | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
+      spf
+        "EEnumAllMembersAlreadyChecked (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx enum_reason)
+    | EEnumNotAllChecked
+        { reason; enum_reason; remaining_member_to_check; number_remaining_members_to_check } ->
+      spf
+        "EEnumNotAllChecked (%s) (%s) (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx enum_reason)
+        remaining_member_to_check
+        (string_of_int number_remaining_members_to_check)
+    | EEnumInvalidCheck { reason; enum_name; members } ->
+      spf
+        "EEnumInvalidCheck (%s) (%s) (%s)"
+        (dump_reason cx reason)
+        enum_name
+        (SSet.elements members |> String.concat ", ")
+    | EEnumExhaustiveCheckOfUnion { reason; union_reason } ->
+      spf
+        "EEnumExhaustiveCheckOfUnion (%s) (%s)"
+        (dump_reason cx reason)
+        (dump_reason cx union_reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

@@ -6113,6 +6113,8 @@ struct
                  { member_name = Some member_name; access_reason; enum_reason });
             rec_flow_t cx trace (AnyT.error access_reason, tout)
           )
+        | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
+          rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
         | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, access_reason, _, _)) ->
           add_output
             cx

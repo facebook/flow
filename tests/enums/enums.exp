@@ -680,6 +680,230 @@ References:
            ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:1
+
+The member `B` of `E` [1] has not been checked in switch [2].
+
+   exhaustive-check.js:51:1
+       v---------------------
+   51| switch (x)  { // Error
+   52|   case E.A:
+   53|     'A';
+   54| }
+       ^ [2]
+
+References:
+   exhaustive-check.js:13:10
+   13| const x: E = E.A;
+                ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:58:3
+
+Invalid enum member check at case [1]. Check must be in the form `case E.A`.
+
+         v---------------
+   58|   case x: // Error
+   59|     'A';
+           ---^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:65:5
+
+Invalid enum member check at case [1]. Check must be in the form `case G.A`.
+
+   65|     case g:; // Error
+           ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:77:3
+
+The case [1] checks for enum member `A` of `E` [2], but member `A` was already checked at case [3].
+
+   exhaustive-check.js:77:3
+         v-----------------
+   77|   case E.A: // Error
+   78|     'A2';
+   79|     break;
+           -----^ [1]
+
+References:
+   exhaustive-check.js:13:10
+   13| const x: E = E.A;
+                ^ [2]
+   exhaustive-check.js:71:3
+         v--------
+   71|   case E.A:
+   72|     'A1';
+   73|     break;
+           -----^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:89:3
+
+The default case [1] checks for additional enum members of `E` [2], but all of its members have already been checked.
+
+   exhaustive-check.js:89:3
+         v----------------
+   89|   default: // Error
+   90|     'default';
+           ---------^ [1]
+
+References:
+   exhaustive-check.js:13:10
+   13| const x: E = E.A;
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:94:1
+
+2 members of `E` [1] have not been checked in switch [2]. For example, the member `A`.
+
+   exhaustive-check.js:94:1
+        v------------
+    94| switch (x)  {
+    95|   case F.A:
+    96|     'A';
+    97|     break;
+    98|   case F.B:
+    99|     'B';
+   100|     break;
+   101| }
+        ^ [2]
+
+References:
+   exhaustive-check.js:13:10
+    13| const x: E = E.A;
+                 ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:95:8
+
+`F.A` [1] is incompatible with `E` [2].
+
+   exhaustive-check.js:95:8
+   95|   case F.A:
+              ^^^ [1]
+
+References:
+   exhaustive-check.js:13:10
+   13| const x: E = E.A;
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:8
+
+`F.B` [1] is incompatible with `E` [2].
+
+   exhaustive-check.js:98:8
+   98|   case F.B:
+              ^^^ [1]
+
+References:
+   exhaustive-check.js:13:10
+   13| const x: E = E.A;
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:105:3
+
+Cannot exhaustively check enum at switch [1] because we are switching on nullable `E` [2], which is a union. Before you
+exhaustively check an enum, refine away other members of the union.
+
+   exhaustive-check.js:105:3
+          v---------------------
+   105|   switch (x)  { // Error
+   106|     case E.A:
+   107|       'A';
+   108|     case E.B:
+   109|       'B';
+   110|   }
+          ^ [1]
+
+References:
+   exhaustive-check.js:104:15
+   104| function a(x: ?E) {
+                      ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:114:3
+
+Cannot exhaustively check enum at switch [1] because we are switching on union type [2], which is a union. Before you
+exhaustively check an enum, refine away other members of the union.
+
+   exhaustive-check.js:114:3
+          v---------------------
+   114|   switch (x)  { // Error
+   115|     case E.A:
+   116|       'A';
+   117|     case E.B:
+   118|       'B';
+   119|   }
+          ^ [1]
+
+References:
+   exhaustive-check.js:113:15
+   113| function b(x: E | F) {
+                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:123:3
+
+Cannot exhaustively check enum at switch [1] because we are switching on union type [2], which is a union. Before you
+exhaustively check an enum, refine away other members of the union.
+
+   exhaustive-check.js:123:3
+          v---------------------
+   123|   switch (x)  { // Error
+   124|     case E.A:
+   125|       'A';
+   126|     case E.B:
+   127|       'B';
+   128|   }
+          ^ [1]
+
+References:
+   exhaustive-check.js:122:15
+   122| function c(x: E | string) {
+                      ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:131:1
+
+The member `B` of `E` [1] has not been checked in switch [2].
+
+   exhaustive-check.js:131:1
+        v-----------
+   131| switch (x) {
+   132|   case E.A:
+   133|     'E.A';
+   134|     break;
+   135|   case F.A:
+   136|     'F.A';
+   137|     break;
+   138| }
+        ^ [2]
+
+References:
+   exhaustive-check.js:13:10
+    13| const x: E = E.A;
+                 ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:135:8
+
+`F.A` [1] is incompatible with `E` [2].
+
+   exhaustive-check.js:135:8
+   135|   case F.A:
+               ^^^ [1]
+
+References:
+   exhaustive-check.js:13:10
+    13| const x: E = E.A;
+                 ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- refinement.js:15:4
 
 Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2].
@@ -1788,4 +2012,4 @@ References:
 
 
 
-Found 102 errors
+Found 115 errors
