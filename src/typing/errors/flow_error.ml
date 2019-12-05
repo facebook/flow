@@ -479,6 +479,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
               `Root (lhs, None, [text "Cannot update "; desc prop])
             | Op (DeleteProperty { prop; lhs }) ->
               `Root (lhs, None, [text "Cannot delete "; desc prop])
+            | Op (ExhaustiveCheck { switch; case }) ->
+              `Root (case, None, [text "Invalid check at "; desc case; text " in "; ref switch])
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; _ }, use_op) ->

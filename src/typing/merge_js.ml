@@ -221,12 +221,12 @@ let detect_invalid_exhaustive_check cx (t, (check_reason, check)) =
                    });
             (SSet.remove member_name members_remaining, SMap.add member_name case_reason seen)
           | _ ->
+            let use_op =
+              Type.Op (Type.ExhaustiveCheck { case = case_reason; switch = check_reason })
+            in
             Flow_js.add_output
               cx
-              (Error_message.EIncompatibleWithUseOp
-                 ( Type.reason_of_t check_t,
-                   enum_reason,
-                   Type.unknown_use (* TODO: add new use op for this *) ));
+              (Error_message.EIncompatibleWithUseOp (Type.reason_of_t check_t, enum_reason, use_op));
             (members_remaining, seen)
         in
         let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in

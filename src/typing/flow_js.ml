@@ -9720,6 +9720,7 @@ struct
                   | InitField _ ->
                     true
                   | Cast _
+                  | ExhaustiveCheck _
                   | ClassExtendsCheck _
                   | ClassImplementsCheck _
                   | ClassOwnProtoCheck _

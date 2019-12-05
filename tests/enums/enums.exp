@@ -777,32 +777,66 @@ References:
                  ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:95:8
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:95:3
 
-`F.A` [1] is incompatible with `E` [2].
+Invalid check at case in switch [1] because `F.A` [2] is incompatible with `E` [3].
 
+   exhaustive-check.js:95:3
+          v--------
+    95|   case F.A:
+    96|     'A';
+    97|     break;
+            -----^
+
+References:
+   exhaustive-check.js:94:1
+        v------------
+    94| switch (x)  {
+    95|   case F.A:
+    96|     'A';
+    97|     break;
+    98|   case F.B:
+    99|     'B';
+   100|     break;
+   101| }
+        ^ [1]
    exhaustive-check.js:95:8
-   95|   case F.A:
-              ^^^ [1]
+    95|   case F.A:
+               ^^^ [2]
+   exhaustive-check.js:13:10
+    13| const x: E = E.A;
+                 ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:3
+
+Invalid check at case in switch [1] because `F.B` [2] is incompatible with `E` [3].
+
+   exhaustive-check.js:98:3
+          v--------
+    98|   case F.B:
+    99|     'B';
+   100|     break;
+            -----^
 
 References:
-   exhaustive-check.js:13:10
-   13| const x: E = E.A;
-                ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:8
-
-`F.B` [1] is incompatible with `E` [2].
-
+   exhaustive-check.js:94:1
+        v------------
+    94| switch (x)  {
+    95|   case F.A:
+    96|     'A';
+    97|     break;
+    98|   case F.B:
+    99|     'B';
+   100|     break;
+   101| }
+        ^ [1]
    exhaustive-check.js:98:8
-   98|   case F.B:
-              ^^^ [1]
-
-References:
+    98|   case F.B:
+               ^^^ [2]
    exhaustive-check.js:13:10
-   13| const x: E = E.A;
-                ^ [2]
+    13| const x: E = E.A;
+                 ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:105:3
@@ -890,18 +924,35 @@ References:
                  ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- exhaustive-check.js:135:8
+Error ---------------------------------------------------------------------------------------- exhaustive-check.js:135:3
 
-`F.A` [1] is incompatible with `E` [2].
+Invalid check at case in switch [1] because `F.A` [2] is incompatible with `E` [3].
 
-   exhaustive-check.js:135:8
+   exhaustive-check.js:135:3
+          v--------
    135|   case F.A:
-               ^^^ [1]
+   136|     'F.A';
+   137|     break;
+            -----^
 
 References:
+   exhaustive-check.js:131:1
+        v-----------
+   131| switch (x) {
+   132|   case E.A:
+   133|     'E.A';
+   134|     break;
+   135|   case F.A:
+   136|     'F.A';
+   137|     break;
+   138| }
+        ^ [1]
+   exhaustive-check.js:135:8
+   135|   case F.A:
+               ^^^ [2]
    exhaustive-check.js:13:10
     13| const x: E = E.A;
-                 ^ [2]
+                 ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:15:4
