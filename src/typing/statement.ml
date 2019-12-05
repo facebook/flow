@@ -5263,10 +5263,13 @@ and assignment_lhs cx patt =
     Flow.add_output cx (Error_message.EInvalidLHSInAssignment lhs_loc);
     Tast_utils.error_mapper#pattern patt
 
-(* write a type t into a member *)
+(* write a type t into a member.
+   - the `optional` parameter should be set to NewChain when the member access
+     is optional (a?.b) and should be ContinueChain when it is not itself
+     optional but is part of an optional chain (a?.b.c). *)
 and assign_member
     cx
-    ?(optional = false)
+    ?(optional = NonOptional)
     ~make_op
     ~t
     ~lhs_loc
@@ -5278,7 +5281,7 @@ and assign_member
   Ast.Expression.(
     let maybe_chain lhs_reason use_t =
       match (optional, mode) with
-      | (true, Delete) ->
+      | (NewChain, Delete) ->
         let chain_reason = mk_reason ROptionalChain lhs_loc in
 
         (* When deleting an optional chain, we only really care about the case
@@ -5293,6 +5296,26 @@ and assign_member
         let mixed = MixedT.at lhs_loc (literal_trust ()) in
         OptionalChainT (chain_reason, lhs_reason, mixed, use_t, mixed)
       | _ -> use_t
+    in
+    let typecheck_object obj =
+      (* If we're deleting a member expression, it's allowed to be an optional chain, and we
+         need to respect short-circuiting, which means the type that's flowed into the
+         SetPropT (or similar) upper bound must be the "filtered," non-nullish type.
+         However, syntactically `a?.x = e` is banned, so if this is an assignment expression,
+         we should just use `expression` to evaluate the object. It still might contain
+         an optional chain, but if so the chain is in parentheses (like `(a?.b).x = e`),
+         which means that the type that flows into SetPropT should include the nullish
+         case.
+      *)
+      match (optional, mode) with
+      | ((NewChain | ContinueChain), Delete) ->
+        let (o, _, _object, preds, _) =
+          optional_chain ~is_cond:false ~is_existence_check:false cx obj
+        in
+        (o, _object, preds)
+      | _ ->
+        let (((_, o), _) as _object) = expression cx obj in
+        (o, _object, None)
     in
     match lhs with
     (* module.exports = e *)
@@ -5337,9 +5360,7 @@ and assign_member
        Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments = _ })) as property;
     } ->
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object, _, _) =
-        optional_chain ~is_cond:false ~is_existence_check:false cx _object
-      in
+      let (o, _object, _) = typecheck_object _object in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5374,9 +5395,7 @@ and assign_member
         | _ -> Normal
       in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object, _, _) =
-        optional_chain ~is_cond:false ~is_existence_check:false cx _object
-      in
+      let (o, _object, _) = typecheck_object _object in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -5404,9 +5423,7 @@ and assign_member
     | { Member._object; property = Member.PropertyExpression ((iloc, _) as index) } ->
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
-      let (o, _, _object, preds, _) =
-        optional_chain ~is_cond:false ~is_existence_check:false cx _object
-      in
+      let (o, _object, preds) = typecheck_object _object in
       let (((_, i), _) as index) =
         match preds with
         | None -> expression cx index
@@ -5578,9 +5595,15 @@ and delete cx loc target =
       let lhs_prop_reason = mk_expression_reason target in
       let make_op ~lhs ~prop = Op (DeleteProperty { lhs; prop }) in
       let reconstruct_ast mem = OptionalMember { OptionalMember.member = mem; optional } in
+      let opt_state =
+        if optional then
+          NewChain
+        else
+          ContinueChain
+      in
       assign_member
         cx
-        ~optional
+        ~optional:opt_state
         ~make_op
         ~t:void
         ~lhs_loc
