@@ -6102,7 +6102,14 @@ struct
           ()
         | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
             GetPropT (_, access_reason, Named (_, member_name), tout) ) ->
-          if SSet.mem member_name members then
+          (* We guarantee in the parser that enum member names won't start with lowercase
+           * "a" through "z", these are reserved for methods. *)
+          if Base.Char.is_lowercase member_name.[0] then
+            rec_flow
+              cx
+              trace
+              (enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum), u)
+          else if SSet.mem member_name members then
             let enum_type = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
             rec_flow_t cx trace (enum_type, tout)
           else (
@@ -6115,6 +6122,9 @@ struct
           )
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
+        | (DefT (enum_reason, trust, EnumObjectT enum), MethodT (_, _, lookup_reason, Named _, _, _))
+          ->
+          rec_flow cx trace (enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum), u)
         | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, access_reason, _, _)) ->
           add_output
             cx
@@ -8035,6 +8045,14 @@ struct
         those
     in
     reposition cx ?trace (aloc_of_reason reason) result
+
+  (***************)
+  (* enums utils *)
+  (***************)
+  and enum_proto cx trace ~reason (enum_reason, trust, enum) =
+    let enum_t = DefT (enum_reason, trust, EnumT enum) in
+    let { representation_t; _ } = enum in
+    get_builtin_typeapp cx ~trace reason "$EnumProto" [enum_t; representation_t]
     (*******************************************************)
     (* Entry points into the process of trying different   *)
     (* branches of union and intersection types.           *)

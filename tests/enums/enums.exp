@@ -955,6 +955,104 @@ References:
                  ^ [3]
 
 
+Error -------------------------------------------------------------------------------------------------- methods.js:23:1
+
+Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1].
+
+   methods.js:23:1
+    23| E.nonExistent; // Error
+        ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:925:43
+                                                  v-
+   925| type $EnumProto<TEnum, TRepresentation> = {|
+   926|   cast(TRepresentation): void | TEnum,
+   927|   isValid(TRepresentation): boolean,
+   928|   members(): Iterable<TEnum>,
+   929|   __proto__: null,
+   930| |}
+        -^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:26:1
+
+Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1].
+
+   methods.js:26:1
+    26| E.nonExistent(); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:925:43
+                                                  v-
+   925| type $EnumProto<TEnum, TRepresentation> = {|
+   926|   cast(TRepresentation): void | TEnum,
+   927|   isValid(TRepresentation): boolean,
+   928|   members(): Iterable<TEnum>,
+   929|   __proto__: null,
+   930| |}
+        -^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:29:3
+
+An index signature declaring the expected key / value type is missing in enum `E` [1].
+
+   methods.js:29:3
+   29| E['members'](); // Error
+         ^^^^^^^^^
+
+References:
+   methods.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:32:1
+
+Cannot call `E.A` because property `A` is missing in `$EnumProto` [1].
+
+   methods.js:32:1
+    32| E.A(); // Error
+        ^^^^^
+
+References:
+   <BUILTINS>/core.js:925:43
+                                                  v-
+   925| type $EnumProto<TEnum, TRepresentation> = {|
+   926|   cast(TRepresentation): void | TEnum,
+   927|   isValid(TRepresentation): boolean,
+   928|   members(): Iterable<TEnum>,
+   929|   __proto__: null,
+   930| |}
+        -^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:35:1
+
+Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1].
+
+   methods.js:35:1
+    35| E.toString(); // Error
+        ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:925:43
+                                                  v-
+   925| type $EnumProto<TEnum, TRepresentation> = {|
+   926|   cast(TRepresentation): void | TEnum,
+   927|   isValid(TRepresentation): boolean,
+   928|   members(): Iterable<TEnum>,
+   929|   __proto__: null,
+   930| |}
+        -^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- refinement.js:15:4
 
 Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2].
@@ -2063,4 +2161,4 @@ References:
 
 
 
-Found 115 errors
+Found 120 errors
