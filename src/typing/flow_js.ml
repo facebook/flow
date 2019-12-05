@@ -7645,38 +7645,45 @@ struct
         | Unresolved _ -> t)
       | _ -> t
     in
-    match (t, Eval.Map.find_opt id evaluated) with
-    (* The OpenT branch is a correct implementation of type destructors for all
-     * types. However, because it adds a constraint to both sides of a type we may
-     * end up doing some work twice. So as an optimization for concrete types
-     * we have a fall-through branch that only evaluates our type destructor once.
-     * The second branch then uses AnnotT to both concretize the result for use
-     * as a lower or upper bound and prevent new bounds from being added to
-     * the result.
-     *
-     * MergedT should also get this treatment as it is a merged "description" of
-     * an OpenT. *)
-    | ((OpenT _ | MergedT _), Some t) -> (false, t)
-    | ((OpenT _ | MergedT _), None) ->
-      ( false,
-        Tvar.mk_where cx reason (fun tvar ->
-            Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
+    let slingshot =
+      match t with
+      | OpenT _
+      | MergedT _ ->
+        false
+      | _ -> true
+    in
+    let result =
+      match Eval.Map.find_opt id evaluated with
+      | Some cached_t -> cached_t
+      | None ->
+        (* The OpenT branch is a correct implementation of type destructors for all
+         * types. However, because it adds a constraint to both sides of a type we may
+         * end up doing some work twice. So as an optimization for concrete types
+         * we have a fall-through branch that only evaluates our type destructor once.
+         * The second branch then uses AnnotT to both concretize the result for use
+         * as a lower or upper bound and prevent new bounds from being added to
+         * the result.
+         *
+         * MergedT should also get this treatment as it is a merged "description" of
+         * an OpenT. *)
+        let f tvar =
+          match t with
+          | OpenT _
+          | MergedT _ ->
             let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
             rec_flow_t cx trace (t, x);
-            rec_flow_t cx trace (x, t)) )
-    | (_, Some t) -> (true, t)
-    | (AnnotT (r, t, use_desc), None) ->
-      ( true,
-        Tvar.mk_where cx reason (fun tvar ->
-            Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
+            rec_flow_t cx trace (x, t)
+          | AnnotT (r, t, use_desc) ->
             let repos = Some (r, use_desc) in
             let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
-            rec_flow_t cx trace (t, x)) )
-    | (_, None) ->
-      ( true,
+            rec_flow_t cx trace (t, x)
+          | _ -> eval_destructor cx ~trace use_op reason t d tvar
+        in
         Tvar.mk_where cx reason (fun tvar ->
             Context.set_evaluated cx (Eval.Map.add id tvar evaluated);
-            eval_destructor cx ~trace use_op reason t d tvar) )
+            f tvar)
+    in
+    (slingshot, result)
 
   and eval_destructor cx ~trace use_op reason t d tout =
     match t with
