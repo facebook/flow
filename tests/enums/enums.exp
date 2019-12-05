@@ -2160,5 +2160,170 @@ References:
                             ^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- spread.js:8:11
 
-Found 120 errors
+Cannot spread object literal because enum `E` [1] is not an object.
+
+   spread.js:8:11
+   8| const x = {...E}; // Error
+                ^^^^^^
+
+References:
+   spread.js:3:1
+      v-------
+   3| enum E {
+   4|   A,
+   5|   B,
+   6| }
+      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
+
+Cannot access `$PropertyType` [1] because `X` is not a member of enum `E` [2]
+
+   utility-types.js:12:11
+   12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   utility-types.js:12:25
+   12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
+                               ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:15:11
+
+Cannot access `$ElementType` [1] on enum `E` [2] because computed access is not allowed on enums.
+
+   utility-types.js:15:11
+   15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   utility-types.js:15:24
+   15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
+                              ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:18:11
+
+Cannot instantiate `$Diff` because enum `E` [1] is not an object.
+
+   utility-types.js:18:11
+   18| (trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:18:17
+   18| (trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                       ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:21:11
+
+Cannot instantiate `$ReadOnly` because enum `E` [1] is not an object.
+
+   utility-types.js:21:11
+   21| (trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
+                 ^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:21:21
+   21| (trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
+                           ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- utility-types.js:24:2
+
+Cannot cast `"A"` to key set because property `A` is missing in enum `E` [1].
+
+   utility-types.js:24:2
+   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
+        ^^^
+
+References:
+   utility-types.js:24:13
+   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
+                   ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:27:11
+
+enum `E` [1] is not an object.
+
+   utility-types.js:27:11
+   27| (trigger: $Values<typeof E>); // Error: enum `E` is not an object
+                 ^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:27:19
+   27| (trigger: $Values<typeof E>); // Error: enum `E` is not an object
+                         ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- utility-types.js:30:2
+
+Cannot cast `E` to `typeof E` because inexact enum `E` [1] is incompatible with exact `typeof E` [2].
+
+   utility-types.js:30:2
+   30| (E: $Exact<typeof E>); // Error: TODO: improve error
+        ^
+
+References:
+   utility-types.js:3:1
+       v-------
+    3| enum E {
+    4|   A,
+    5|   B,
+    6| }
+       ^ [1]
+   utility-types.js:30:5
+   30| (E: $Exact<typeof E>); // Error: TODO: improve error
+           ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:33:11
+
+Cannot instantiate `$Rest` because enum `E` [1] is not an object.
+
+   utility-types.js:33:11
+   33| (trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:33:17
+   33| (trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
+                       ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:36:11
+
+Cannot instantiate `$ObjMap` because enum `E` [1] is not a valid argument of `$ObjMap` [2].
+
+   utility-types.js:36:11
+   36| (trigger: $ObjMap<typeof E, <T>(T) => [T]>); // Error: enum `E` is not a valid arg to $ObjMap
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   utility-types.js:36:19
+   36| (trigger: $ObjMap<typeof E, <T>(T) => [T]>); // Error: enum `E` is not a valid arg to $ObjMap
+                         ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- utility-types.js:39:11
+
+Cannot instantiate `$ObjMapi` because enum `E` [1] is not a valid argument of `$ObjMapi` [2].
+
+   utility-types.js:39:11
+   39| (trigger: $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>); // Error: enum `E` is not a valid arg to $ObjMapi
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   utility-types.js:39:20
+   39| (trigger: $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>); // Error: enum `E` is not a valid arg to $ObjMapi
+                          ^^^^^^^^ [1]
+
+
+
+Found 131 errors
