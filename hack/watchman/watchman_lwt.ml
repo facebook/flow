@@ -22,13 +22,12 @@ module Lwt_watchman_process :
 
   let return = Lwt.return
 
-  external reraise : exn -> 'a = "%reraise"
-
   let catch ~f ~catch =
-    Lwt.catch f (fun e ->
-        match e with
-        | Lwt.Canceled -> reraise e
-        | e -> catch ~stack:(Printexc.get_backtrace ()) e)
+    Lwt.catch f (fun exn ->
+        let e = Exception.wrap exn in
+        match exn with
+        | Lwt.Canceled -> Exception.reraise e
+        | _ -> catch e)
 
   let list_fold_values l ~init ~f = Lwt_list.fold_left_s f init l
 
