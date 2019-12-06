@@ -446,7 +446,7 @@ let do_parse ~parse_options ~info content file =
           match exports_info with
           | Ok exports_info ->
             let signature = Signature_builder.program ast ~exports_info ~toplevel_names in
-            let (errors, sig_ast) =
+            let (errors, env, sig_ast) =
               Signature_builder.Signature.verify_and_generate
                 ~prevent_munge
                 ~facebook_fbt
@@ -463,7 +463,20 @@ let do_parse ~parse_options ~info content file =
               else
                 (None, sig_ast)
             in
-            let file_sig = File_sig.With_Loc.verified errors (snd signature) in
+            let env =
+              match arch with
+              | Options.Classic -> None
+              | Options.TypesFirst ->
+                Some
+                  (SMap.map
+                     (fun lmap ->
+                       Loc_collections.LocMap.fold
+                         (fun loc _ acc -> Loc_collections.LocSet.add loc acc)
+                         lmap
+                         Loc_collections.LocSet.empty)
+                     env)
+            in
+            let file_sig = File_sig.With_Loc.verified errors env (snd signature) in
             let sig_file_sig =
               match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs

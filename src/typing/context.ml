@@ -173,6 +173,7 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable use_def: Scope_api.info * Ssa_api.With_ALoc.values;
+  mutable exported_locals: Loc_collections.ALocSet.t SMap.t option;
 }
 
 let metadata_of_options options =
@@ -264,6 +265,7 @@ let make sig_cx metadata file aloc_tables rev_aloc_table module_ref phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     use_def = empty_use_def;
+    exported_locals = None;
   }
 
 let sig_cx cx = cx.sig_cx
@@ -450,6 +452,8 @@ let voidable_checks cx = cx.sig_cx.voidable_checks
 
 let use_def cx = cx.use_def
 
+let exported_locals cx = cx.exported_locals
+
 let trust_tracking cx =
   match cx.metadata.trust_mode with
   | Options.CheckTrust
@@ -558,6 +562,8 @@ let set_exists_checks cx exists_checks = cx.sig_cx.exists_checks <- exists_check
 let set_exists_excuses cx exists_excuses = cx.sig_cx.exists_excuses <- exists_excuses
 
 let set_use_def cx use_def = cx.use_def <- use_def
+
+let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
 let set_module_map cx module_map = cx.sig_cx.module_map <- module_map
 

@@ -3023,6 +3023,12 @@ let dump_error_message =
         (dump_reason cx union_reason)
     | EEnumMemberUsedAsType { reason; enum_name } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
+    | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
+      spf
+        "EAssignExportedConstLikeBinding (%s) (%s) (%s)"
+        (string_of_aloc loc)
+        (dump_reason cx definition)
+        (Scope.Entry.string_of_let_binding_kind binding_kind)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =

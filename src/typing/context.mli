@@ -196,6 +196,8 @@ val require_map : t -> Type.t ALocMap.t
 
 val module_map : t -> Type.t SMap.t
 
+val exported_locals : t -> ALocSet.t SMap.t option
+
 val module_ref : t -> string
 
 val property_maps : t -> Type.Properties.map
@@ -333,6 +335,8 @@ val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 val set_use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values -> unit
 
 val set_module_map : t -> Type.t SMap.t -> unit
+
+val set_local_env : t -> ALocSet.t SMap.t option -> unit
 
 val clear_intermediates : t -> unit
 

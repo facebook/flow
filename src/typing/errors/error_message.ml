@@ -353,6 +353,11 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_name: string;
     }
+  | EAssignExportedConstLikeBinding of {
+      loc: 'loc;
+      definition: 'loc virtual_reason;
+      binding_kind: Scope.Entry.let_binding_kind;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -826,6 +831,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { reason = map_reason reason; union_reason = map_reason union_reason }
   | EEnumMemberUsedAsType { reason; enum_name } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
+  | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
+    EAssignExportedConstLikeBinding
+      { loc = f loc; definition = map_reason definition; binding_kind }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -997,7 +1005,8 @@ let util_use_op_of_msg nope util = function
   | EEnumNotAllChecked _
   | EEnumInvalidCheck _
   | EEnumExhaustiveCheckOfUnion _
-  | EEnumMemberUsedAsType _ ->
+  | EEnumMemberUsedAsType _
+  | EAssignExportedConstLikeBinding _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1143,7 +1152,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportsAnnot loc
   | EPropertyTypeAnnot loc
   | EUnexpectedThisType loc
-  | ETypeParamMinArity (loc, _) ->
+  | ETypeParamMinArity (loc, _)
+  | EAssignExportedConstLikeBinding { loc; _ } ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -3008,6 +3018,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Only the enum itself, ";
         code enum_name;
         text ", is a type.";
+      ]
+    in
+    Normal { features }
+  | EAssignExportedConstLikeBinding { definition; binding_kind; _ } ->
+    let features =
+      [
+        text "Cannot reassign exported ";
+        text (Scope.Entry.string_of_let_binding_kind binding_kind);
+        text " binding ";
+        ref definition;
+        text ".";
       ]
     in
     Normal { features }

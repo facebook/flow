@@ -887,9 +887,39 @@ let get_refinement cx key loc =
   | Some (_, { refined; _ }) -> Some (Flow.reposition cx loc refined)
   | _ -> None
 
+(* Types-First signature extraction only inspects the initial binding for let-like
+   definitions. Any subsequent assignment is ignored. This would cause a discrepancy
+   between what classic mode views as the exported value, and what types-first does.
+   To avoid this, we disallow updates on classes and functions. Let-bound variables
+   would follow the same rule, but Types-First requires an annotation on their
+   definition. This mitigates the problem, since in case of a reassigment the updated
+   value needs to respect the annotation type, so we would only miss a potential
+   refinement rather a strong type update.
+*)
+let check_exported_let_bound_reassignment op cx name entry loc =
+  let open Entry in
+  match (op, entry, Context.exported_locals cx) with
+  | ( Changeset.Write,
+      Value
+        {
+          Entry.kind = Let Entry.((ClassNameBinding | FunctionBinding) as binding_kind);
+          value_declare_loc;
+          _;
+        },
+      Some exported_locals ) ->
+    (match SMap.find_opt name exported_locals with
+    | Some loc_set when ALocSet.mem value_declare_loc loc_set ->
+      let reason = mk_reason (RType name) value_declare_loc in
+      Flow.add_output
+        cx
+        Error_message.(EAssignExportedConstLikeBinding { loc; definition = reason; binding_kind })
+    | _ -> ())
+  | _ -> ()
+
 (* helper: update let or var entry *)
 let update_var op cx ~use_op name specific loc =
   let (scope, entry) = find_entry cx name loc in
+  check_exported_let_bound_reassignment op cx name entry loc;
   Entry.(
     match entry with
     | Value ({ Entry.kind = Let _ as kind; value_state = State.Undeclared; _ } as v)

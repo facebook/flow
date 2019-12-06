@@ -70,18 +70,21 @@ module Entry = struct
     | VarBinding
     | ConstlikeVarBinding
 
+  let string_of_let_binding_kind = function
+    | LetVarBinding -> "let"
+    | ConstlikeLetVarBinding -> "let"
+    | ClassNameBinding -> "class"
+    | CatchParamBinding -> "catch"
+    | FunctionBinding -> "function"
+    | ParamBinding -> "param"
+    | ConstlikeParamBinding -> "param"
+
   let string_of_value_kind = function
     | Const ConstImportBinding -> "import"
     | Const ConstParamBinding -> "const param"
     | Const ConstVarBinding -> "const"
     | Const EnumNameBinding -> "enum"
-    | Let LetVarBinding -> "let"
-    | Let ConstlikeLetVarBinding -> "let"
-    | Let ClassNameBinding -> "class"
-    | Let CatchParamBinding -> "catch"
-    | Let FunctionBinding -> "function"
-    | Let ParamBinding -> "param"
-    | Let ConstlikeParamBinding -> "param"
+    | Let kind -> string_of_let_binding_kind kind
     | Var VarBinding -> "var"
     | Var ConstlikeVarBinding -> "var"
 

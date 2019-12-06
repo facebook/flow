@@ -23,6 +23,7 @@ module type S = sig
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
     tolerable_errors: tolerable_error list;
+    exported_locals: L.LSet.t SMap.t option;
   }
 
   (* We can extract the observable interface of a module by extracting information
@@ -218,7 +219,8 @@ module type S = sig
   val program :
     ast:(L.t, L.t) Flow_ast.program -> module_ref_prefix:string option -> (t, error) result
 
-  val verified : Signature_builder_deps.PrintableErrorSet.t -> exports_info t' -> t
+  val verified :
+    Signature_builder_deps.PrintableErrorSet.t -> L.LSet.t SMap.t option -> exports_info t' -> t
 
   (* Use for debugging; not for exposing info the the end user *)
   val to_string : t -> string

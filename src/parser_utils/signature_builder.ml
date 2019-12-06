@@ -317,6 +317,11 @@ module Signature = struct
     end) in
     Generate.make env file_sig program
 
+  (* Returns a triplet containing
+     - a set of signature verification errors
+     - an environment of local bindings reachable from the exports
+     - a signature AST
+  *)
   let verify_and_generate
       ?(prevent_munge = false)
       ?(facebook_fbt = None)
@@ -332,23 +337,21 @@ module Signature = struct
         ~facebook_keyMirror
         (env, file_sig)
     in
-    ( errors,
+    let env =
       if Signature_builder_deps.PrintableErrorSet.is_empty errors then
-        generate
-          ~prevent_munge
-          ~facebook_fbt
-          ~ignore_static_propTypes
-          ~facebook_keyMirror
-          (pruned_env, file_sig)
-          program
+        pruned_env
       else
-        generate
-          ~prevent_munge
-          ~facebook_fbt
-          ~ignore_static_propTypes
-          ~facebook_keyMirror
-          (env, file_sig)
-          program )
+        env
+    in
+    ( errors,
+      pruned_env,
+      generate
+        ~prevent_munge
+        ~facebook_fbt
+        ~ignore_static_propTypes
+        ~facebook_keyMirror
+        (env, file_sig)
+        program )
 end
 
 class type_hoister =

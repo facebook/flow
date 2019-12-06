@@ -19,6 +19,31 @@ module type S = sig
   module LMap : WrappedMap.S with type key = t
 
   module LSet : Set.S with type elt = t
+
+  module LSetUtils : sig
+    val ident_map : (LSet.elt -> LSet.elt) -> LSet.t -> LSet.t
+  end
+end
+
+module LSetUtils (S : Set.S) = struct
+  let ident_map f map =
+    let changed = ref false in
+    let map' =
+      S.map
+        (fun elem ->
+          let elem' = f elem in
+          if elem == elem' then
+            elem
+          else (
+            changed := true;
+            elem'
+          ))
+        map
+    in
+    if !changed then
+      map'
+    else
+      map
 end
 
 module LocS : S with type t = Loc.t = struct
@@ -32,6 +57,7 @@ module LocS : S with type t = Loc.t = struct
 
   module LMap = WrappedMap.Make (Loc)
   module LSet = Set.Make (Loc)
+  module LSetUtils = LSetUtils (LSet)
 end
 
 module ALocS : S with type t = ALoc.t = struct
@@ -45,4 +71,5 @@ module ALocS : S with type t = ALoc.t = struct
 
   module LMap = WrappedMap.Make (ALoc)
   module LSet = Set.Make (ALoc)
+  module LSetUtils = LSetUtils (LSet)
 end

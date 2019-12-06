@@ -42,6 +42,8 @@ module Entry : sig
     | VarBinding
     | ConstlikeVarBinding
 
+  val string_of_let_binding_kind : let_binding_kind -> string
+
   val string_of_value_kind : value_kind -> string
 
   type value_binding = {

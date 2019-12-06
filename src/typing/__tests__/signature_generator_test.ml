@@ -55,7 +55,7 @@ let mk_signature_generator_test
     expected_msgs
     ctxt =
   let msgs =
-    let (_errors, program) =
+    let (_errors, _env, program) =
       verify_and_generate
         ?prevent_munge
         ?facebook_fbt
@@ -83,7 +83,7 @@ let mk_generated_signature_file_sig_test
     expected_msgs
     ctxt =
   let msgs =
-    let (_errors, program) =
+    let (_errors, _env, program) =
       verify_and_generate
         ?prevent_munge
         ?facebook_fbt
@@ -107,7 +107,7 @@ let mk_generated_signature_file_sig_test
 let mk_verified_signature_generator_test
     ?prevent_munge ?facebook_fbt ?ignore_static_propTypes ?facebook_keyMirror contents ctxt =
   let msgs =
-    let (_errors, _program) =
+    let (_errors, _env, _program) =
       verify_and_generate
         ?prevent_munge
         ?facebook_fbt

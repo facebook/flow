@@ -23,6 +23,8 @@ struct
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
     tolerable_errors: tolerable_error list;
+    (* Some map in types-first, None in classic *)
+    exported_locals: L.LSet.t SMap.t option;
   }
 
   and 'info module_sig' = {
@@ -142,7 +144,12 @@ struct
     }
 
   let mk_file_sig info =
-    { module_sig = mk_module_sig info; declare_modules = SMap.empty; tolerable_errors = [] }
+    {
+      module_sig = mk_module_sig info;
+      declare_modules = SMap.empty;
+      tolerable_errors = [];
+      exported_locals = None;
+    }
 
   let init_exports_info = { module_kind_info = CommonJSInfo []; type_exports_named_info = [] }
 
@@ -1144,7 +1151,7 @@ struct
     | { exports_info = Ok file_sig; _ } -> Ok (map_unit_file_sig file_sig)
     | { exports_info = Error e; _ } -> Error e
 
-  let verified errors file_sig =
+  let verified errors env file_sig =
     let file_sig = map_unit_file_sig file_sig in
     {
       file_sig with
@@ -1153,12 +1160,13 @@ struct
           (fun error acc -> SignatureVerificationError error :: acc)
           errors
           file_sig.tolerable_errors;
+      exported_locals = env;
     }
 
   class mapper =
     object (this)
       method file_sig (file_sig : t) =
-        let { module_sig; declare_modules; tolerable_errors } = file_sig in
+        let { module_sig; declare_modules; tolerable_errors; exported_locals } = file_sig in
         let module_sig' = this#module_sig module_sig in
         let declare_modules' =
           SMapUtils.ident_map
@@ -1169,6 +1177,11 @@ struct
             declare_modules
         in
         let tolerable_errors' = ListUtils.ident_map this#tolerable_error tolerable_errors in
+        let exported_locals' =
+          OptionUtils.ident_map
+            (SMapUtils.ident_map (L.LSetUtils.ident_map this#loc))
+            exported_locals
+        in
         if
           module_sig == module_sig'
           && declare_modules == declare_modules'
@@ -1180,6 +1193,7 @@ struct
             module_sig = module_sig';
             declare_modules = declare_modules';
             tolerable_errors = tolerable_errors';
+            exported_locals = exported_locals';
           }
 
       method module_sig (module_sig : module_sig) =
@@ -1622,9 +1636,22 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   let abstractify_declare_modules =
     SMap.map (fun (loc, module_sig) -> (ALoc.of_loc loc, abstractify_module_sig module_sig))
   in
-  fun { WL.module_sig; declare_modules; tolerable_errors } ->
+  let abstractify_local_env = function
+    | Some exported_locals ->
+      Some
+        (SMap.map
+           (fun loc_set ->
+             Loc_collections.LocSet.fold
+               (fun loc acc -> Loc_collections.ALocSet.add (ALoc.of_loc loc) acc)
+               loc_set
+               Loc_collections.ALocSet.empty)
+           exported_locals)
+    | None -> None
+  in
+  fun { WL.module_sig; declare_modules; tolerable_errors; exported_locals } ->
     {
       WA.module_sig = abstractify_module_sig module_sig;
       declare_modules = abstractify_declare_modules declare_modules;
       tolerable_errors = abstractify_tolerable_errors tolerable_errors;
+      exported_locals = abstractify_local_env exported_locals;
     }
