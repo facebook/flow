@@ -1619,7 +1619,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         desc reason_use;
         text " as a type. ";
         text "A name can be used as a type only if it refers to ";
-        text "a type definition, an interface definition, or a class definition. ";
+        text "a type, interface, class, or enum definition. ";
         text "To get the type of a non-class value, use ";
         code "typeof";
         text ".";

@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- test1.js:16:27
 
-Cannot use `HocChild` as a type. A name can be used as a type only if it refers to a type definition, an interface
-definition, or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use `HocChild` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    16|   _handleChild = (child: ?HocChild) => {};
                                  ^^^^^^^^
@@ -9,8 +9,8 @@ definition, or a class definition. To get the type of a non-class value, use `ty
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:4:5
 
-Cannot use `n` as a type. A name can be used as a type only if it refers to a type definition, an interface definition,
-or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    4| (0: n);
           ^
@@ -18,8 +18,8 @@ or a class definition. To get the type of a non-class value, use `typeof`.
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:5:13
 
-Cannot use `n` as a type. A name can be used as a type only if it refers to a type definition, an interface definition,
-or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    5| ([0]: Array<n>);
                   ^
@@ -27,8 +27,8 @@ or a class definition. To get the type of a non-class value, use `typeof`.
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:4:10
 
-Cannot use `n` as a type. A name can be used as a type only if it refers to a type definition, an interface definition,
-or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    4| type T = n;
                ^
@@ -36,8 +36,8 @@ or a class definition. To get the type of a non-class value, use `typeof`.
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:5:19
 
-Cannot use `n` as a type. A name can be used as a type only if it refers to a type definition, an interface definition,
-or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    5| opaque type OT1 = n;
                         ^
@@ -45,8 +45,8 @@ or a class definition. To get the type of a non-class value, use `typeof`.
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:6:18
 
-Cannot use `n` as a type. A name can be used as a type only if it refers to a type definition, an interface definition,
-or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    6| opaque type OT2: n = 0;
                        ^
@@ -54,8 +54,8 @@ or a class definition. To get the type of a non-class value, use `typeof`.
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:7:21
 
-Cannot use number as a type. A name can be used as a type only if it refers to a type definition, an interface
-definition, or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use number as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    7| interface I extends n { }
                           ^
@@ -63,8 +63,8 @@ definition, or a class definition. To get the type of a non-class value, use `ty
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:8:20
 
-Cannot use number as a type. A name can be used as a type only if it refers to a type definition, an interface
-definition, or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use number as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    8| class C implements n { }
                          ^
@@ -72,8 +72,8 @@ definition, or a class definition. To get the type of a non-class value, use `ty
 
 Error ---------------------------------------------------------------------------------------------------- test4.js:7:12
 
-Cannot use function as a type. A name can be used as a type only if it refers to a type definition, an interface
-definition, or a class definition. To get the type of a non-class value, use `typeof`.
+Cannot use function as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`.
 
    7| type Foo = connect<number>;
                  ^^^^^^^
