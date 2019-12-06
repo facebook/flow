@@ -1,7 +1,0 @@
-(library
-  (name procfs)
-  (wrapped false)
-  (libraries
-    collections
-    sys_utils
-    utils_core))
