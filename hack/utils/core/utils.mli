@@ -57,8 +57,6 @@ val try_with_channel : out_channel -> (out_channel -> 'a) -> (exn -> 'a) -> 'a
 
 val try_with_stack : (unit -> 'a) -> ('a, exn * callstack) result
 
-val iter_n_acc : int -> ('a -> 'a * 'b) -> 'a -> 'a * 'b
-
 val map_of_list : (SMap.key * 'a) list -> 'a SMap.t
 
 val set_of_list : SSet.elt list -> SSet.t

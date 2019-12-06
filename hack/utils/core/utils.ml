@@ -121,13 +121,6 @@ let try_with_stack (f : unit -> 'a) : ('a, exn * callstack) result =
     let stack = Callstack (Printexc.get_backtrace ()) in
     Error (exn, stack)
 
-let iter_n_acc n f acc =
-  let acc = ref acc in
-  for i = 1 to n - 1 do
-    acc := fst (f !acc)
-  done;
-  f !acc
-
 let map_of_list list =
   List.fold_left ~f:(fun m (k, v) -> SMap.add k v m) ~init:SMap.empty list
 
