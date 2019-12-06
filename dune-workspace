@@ -6,10 +6,10 @@
 (env
   (_
     (env-vars
-      (EXTRA_INCLUDE_PATHS src/third-party/lz4)
-      (EXTRA_LIB_PATHS "")
-      (EXTRA_NATIVE_LIBRARIES "")
-      (EXTRA_LINK_OPTS "")
+      (HACK_EXTRA_INCLUDE_PATHS src/third-party/lz4)
+      (HACK_EXTRA_LIB_PATHS "")
+      (HACK_EXTRA_NATIVE_LIBRARIES "")
+      (HACK_EXTRA_LINK_OPTS "")
     )
   )
 )
