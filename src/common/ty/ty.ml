@@ -577,7 +577,8 @@ let debug_string_of_provenance_ctor = function
   | Local -> "Local"
   | Remote { imported_as = Some _ } -> "Imported"
   | Remote { imported_as = None } -> "Remote"
-  | Library -> "Library"
+  | Library { imported_as = Some _ } -> "Library (Imported)"
+  | Library { imported_as = None } -> "Library (Remote)"
   | Builtin -> "Builtin"
 
 let debug_string_of_symbol { provenance; def_loc; name; _ } =

@@ -515,7 +515,12 @@ end = struct
       let symbol_source = ALoc.source def_loc in
       let provenance =
         match symbol_source with
-        | Some (LibFile _) -> Ty.Library
+        | Some (LibFile def_source) ->
+          let current_source = Env.(env.genv.file) in
+          if File_key.to_string current_source = def_source then
+            Ty.Local
+          else
+            Ty.Library { Ty.imported_as = ALocMap.find_opt def_loc env.Env.imported_names }
         | Some (SourceFile def_source) ->
           let current_source = Env.(env.genv.file) in
           if File_key.to_string current_source = def_source then

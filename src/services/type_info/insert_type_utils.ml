@@ -181,7 +181,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
                   ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config" | "Context"
                   | "Element" | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType"
                   | "Key" | "Node" | "Portal" | "Ref" | "StatelessFunctionalComponent" ) as name;
-                provenance = Ty_symbol.Library;
+                provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
                 def_loc;
                 _;
               } as symbol ),
