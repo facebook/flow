@@ -581,18 +581,18 @@ References:
               ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:167:5
+Error ---------------------------------------------------------------------------------------------- rebinding.js:167:14
 
 Cannot declare `a` [1] because the name is already bound.
 
-   rebinding.js:167:5
+   rebinding.js:167:14
    167|     function a() {}; // error: name already bound
-            ^^^^^^^^^^^^^^^
+                     ^
 
 References:
-   rebinding.js:166:5
+   rebinding.js:166:14
    166|     function a() {};
-            ^^^^^^^^^^^^^^^ [1]
+                     ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- rebinding.js:177:11

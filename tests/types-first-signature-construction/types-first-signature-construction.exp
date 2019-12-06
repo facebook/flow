@@ -32,9 +32,9 @@ Cannot declare `bar` [1] because the name is already bound.
                        ^^^
 
 References:
-   file1.js:4:1
+   file1.js:4:10
    4| function bar(x: string): string { return ""; }
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+               ^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- file4.js:5:7

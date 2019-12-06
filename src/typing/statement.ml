@@ -508,12 +508,12 @@ and statement_decl cx =
           | _ -> ());
           statement_decl cx body)
     | (_, Debugger) -> ()
-    | (loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
+    | (_, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
       (match id with
-      | Some (_, { Ast.Identifier.name; comments = _ }) ->
-        let r = func_reason ~async ~generator loc in
+      | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+        let r = func_reason ~async ~generator name_loc in
         let tvar = Tvar.mk cx r in
-        Env.bind_fun cx name tvar loc
+        Env.bind_fun cx name tvar name_loc
       | None ->
         failwith
           ( "Flow Error: Nameless function declarations should always be given "
