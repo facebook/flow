@@ -15,3 +15,17 @@ function foo(x: ?string): $NonMaybeType<?string> {
 (0: $NonMaybeType<mixed>);
 (null: $NonMaybeType<mixed>);
 (undefined: $NonMaybeType<mixed>);
+
+type Foo = $NonMaybeType<$PropertyType<Obj, 'foo'>>;
+
+type Enum =
+| 'A'
+| 'B'
+| 'C';
+
+type Obj =  {foo: ?Enum};
+
+class A {
+    type: Foo = 'A';
+}
+

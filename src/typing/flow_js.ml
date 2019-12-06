@@ -2046,10 +2046,15 @@ struct
         (***************)
 
         (* The type maybe(T) is the same as null | undefined | UseT *)
-        | (DefT (r, trust, MixedT Mixed_everything), UseT (use_op, MaybeT (_, tout))) ->
-          rec_flow cx trace (DefT (r, trust, MixedT Mixed_non_maybe), UseT (use_op, tout))
-        | (DefT (r, trust, (NullT | VoidT)), UseT (use_op, MaybeT (_, tout))) ->
-          rec_flow cx trace (EmptyT.why r trust, UseT (use_op, tout))
+        | (DefT (r, trust, (NullT | VoidT)), UseT (use_op, MaybeT (_, tout)))
+        | (DefT (r, trust, (NullT | VoidT)), FilterMaybeT (use_op, tout)) ->
+          rec_flow_t cx trace ~use_op (EmptyT.why r trust, tout)
+        | (DefT (r, trust, MixedT Mixed_everything), UseT (use_op, MaybeT (_, tout)))
+        | (DefT (r, trust, MixedT Mixed_everything), FilterMaybeT (use_op, tout)) ->
+          rec_flow_t cx trace ~use_op (DefT (r, trust, MixedT Mixed_non_maybe), tout)
+        | (OptionalT { reason = _; type_ = tout; use_desc = _ }, FilterMaybeT _)
+        | (MaybeT (_, tout), FilterMaybeT _) ->
+          rec_flow cx trace (tout, u)
         | (MaybeT _, ReposLowerT (reason_op, use_desc, u)) ->
           (* Don't split the maybe type into its constituent members. Instead,
          reposition the entire maybe type. *)
@@ -2647,6 +2652,23 @@ struct
               (* Unions are idempotent, so we can just skip any duplicated elements *)
               | 1 -> continue resolved
               | _ -> ())
+        | (UnionT (reason, rep), FilterMaybeT (use_op, tout)) ->
+          let checked_trust = Context.trust_errors cx in
+          let void = VoidT.why reason |> with_trust bogus_trust in
+          let null = NullT.why reason |> with_trust bogus_trust in
+          let filter_void t = TypeUtil.quick_subtype checked_trust t void in
+          let filter_null t = TypeUtil.quick_subtype checked_trust t null in
+          let filter_null_and_void t = filter_void t || filter_null t in
+          begin
+            match UnionRep.check_enum rep with
+            | Some _ ->
+              rec_flow_t
+                ~use_op
+                cx
+                trace
+                (remove_predicate_from_union reason cx filter_null_and_void rep, tout)
+            | None -> flow_all_in_union cx trace rep u
+          end
         | (UnionT (reason, rep), upper) when UnionRep.members rep |> List.exists is_union_resolvable
           ->
           (* We can't guarantee that  tvars or typeapps get resolved, even though we'd like to believe they will. Instead,
@@ -2701,12 +2723,6 @@ struct
           let filter_void t = TypeUtil.quick_subtype checked_trust t void in
           let filter_null t = TypeUtil.quick_subtype checked_trust t null in
           let filter_null_and_void t = filter_void t || filter_null t in
-          let remove_predicate predicate =
-            UnionRep.members
-            %> Type_mapper.union_flatten cx
-            %> Base.List.rev_filter ~f:(predicate %> not)
-            %> union_of_ts reason
-          in
           (* if the union doesn't contain void or null,
          then everything in it must be upper-bounded by maybe *)
           begin
@@ -2716,27 +2732,39 @@ struct
             with
             | (UnionRep.No, UnionRep.No) -> rec_flow_t ~use_op cx trace (l, maybe)
             | (UnionRep.Yes, UnionRep.No) ->
-              rec_flow_t ~use_op cx trace (remove_predicate filter_void rep, maybe)
+              rec_flow_t
+                ~use_op
+                cx
+                trace
+                (remove_predicate_from_union reason cx filter_void rep, maybe)
             | (UnionRep.No, UnionRep.Yes) ->
-              rec_flow_t ~use_op cx trace (remove_predicate filter_null rep, maybe)
+              rec_flow_t
+                ~use_op
+                cx
+                trace
+                (remove_predicate_from_union reason cx filter_null rep, maybe)
             | (UnionRep.Yes, UnionRep.Yes) ->
-              rec_flow_t ~use_op cx trace (remove_predicate filter_null_and_void rep, maybe)
+              rec_flow_t
+                ~use_op
+                cx
+                trace
+                (remove_predicate_from_union reason cx filter_null_and_void rep, maybe)
             | _ -> flow_all_in_union cx trace rep u
           end
         | (UnionT (reason, rep), UseT (use_op, OptionalT { reason = r; type_ = opt; use_desc })) ->
           let checked_trust = Context.trust_errors cx in
           let void = VoidT.why_with_use_desc ~use_desc r |> with_trust bogus_trust in
-          let remove_void =
-            UnionRep.members
-            %> Type_mapper.union_flatten cx
-            %> Base.List.rev_filter ~f:(fun t -> TypeUtil.quick_subtype checked_trust t void |> not)
-            %> union_of_ts reason
-          in
+          let filter_void t = TypeUtil.quick_subtype checked_trust t void in
           (* if the union doesn't contain void, then everything in it must be upper-bounded by u *)
           begin
             match UnionRep.quick_mem_enum checked_trust void rep with
             | UnionRep.No -> rec_flow_t ~use_op cx trace (l, opt)
-            | UnionRep.Yes -> rec_flow_t ~use_op cx trace (remove_void rep, opt)
+            | UnionRep.Yes ->
+              rec_flow_t
+                ~use_op
+                cx
+                trace
+                (remove_predicate_from_union reason cx filter_void rep, opt)
             | _ -> flow_all_in_union cx trace rep u
           end
         | (UnionT (_, rep1), EqT (_, _, UnionT (_, rep2))) ->
@@ -2885,6 +2913,7 @@ struct
          try_intersection. *)
           try_union cx trace use_op l r rep
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
+        | (_, FilterMaybeT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         (* maybe and optional types are just special union types *)
         | (t1, UseT (use_op, MaybeT (_, t2))) -> rec_flow cx trace (t1, UseT (use_op, t2))
         | (t1, UseT (use_op, OptionalT { reason = _; type_ = t2; use_desc = _ })) ->
@@ -7160,7 +7189,8 @@ struct
     | (_, UnaryMinusT _)
     | (_, VarianceCheckT _)
     | (_, ModuleExportsAssignT _)
-    | (_, FilterOptionalT _) ->
+    | (_, FilterOptionalT _)
+    | (_, FilterMaybeT _) ->
       true
 
   (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
@@ -7368,6 +7398,7 @@ struct
     | TypeCastT _
     | EnumCastT _
     | FilterOptionalT _
+    | FilterMaybeT _
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ExtendsUseT _
@@ -7763,11 +7794,10 @@ struct
         ( t,
           match d with
           | NonMaybeType ->
-            let maybe_r = update_desc_reason (fun desc -> RMaybe desc) reason in
             (* We intentionally use `unknown_use` here! When we flow to a tout we never
              * want to carry a `use_op`. We want whatever `use_op` the tout is used with
              * to win. *)
-            UseT (unknown_use, MaybeT (maybe_r, tout))
+            FilterMaybeT (unknown_use, tout)
           | PropertyType x ->
             let reason_op = replace_desc_reason (RProperty (Some x)) reason in
             GetPropT (use_op, reason, Named (reason_op, x), tout)
@@ -11125,6 +11155,12 @@ struct
       | _ -> false
     in
     union_optimization_guard_impl TypeSet.empty
+
+  and remove_predicate_from_union reason cx predicate =
+    UnionRep.members
+    %> Type_mapper.union_flatten cx
+    %> Base.List.rev_filter ~f:(predicate %> not)
+    %> union_of_ts reason
 
   and reposition_reason cx ?trace reason ?(use_desc = false) t =
     reposition

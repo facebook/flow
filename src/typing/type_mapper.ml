@@ -1090,6 +1090,12 @@ class virtual ['a] t_with_uses =
           t
         else
           FilterOptionalT (use_op, t'')
+      | FilterMaybeT (use_op, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then
+          t
+        else
+          FilterMaybeT (use_op, t'')
       | ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (t2, ts2, op2, r2), flip) ->
         let ts1' = ListUtils.ident_map (self#type_ cx map_cx) ts1 in
         let t2' = self#type_ cx map_cx t2 in
