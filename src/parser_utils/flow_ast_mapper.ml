@@ -666,9 +666,32 @@ class ['loc] mapper =
         else
           { exportKind; source; specifiers = specifiers'; declaration = declaration' })
 
-    (* TODO *)
+    method export_named_declaration_specifier
+        (spec : 'loc Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+      let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+      let (loc, { local; exported }) = spec in
+      let local' = this#identifier local in
+      let exported' = map_opt this#identifier exported in
+      if local == local' && exported == exported' then
+        spec
+      else
+        (loc, { local = local'; exported = exported' })
+
     method export_named_specifier (spec : 'loc Ast.Statement.ExportNamedDeclaration.specifier) =
-      spec
+      let open Ast.Statement.ExportNamedDeclaration in
+      match spec with
+      | ExportSpecifiers spec_list ->
+        let spec_list' = ListUtils.ident_map this#export_named_declaration_specifier spec_list in
+        if spec_list == spec_list' then
+          spec
+        else
+          ExportSpecifiers spec_list'
+      | ExportBatchSpecifier (loc, id_opt) ->
+        let id_opt' = map_opt this#identifier id_opt in
+        if id_opt == id_opt' then
+          spec
+        else
+          ExportBatchSpecifier (loc, id_opt')
 
     method expression_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Expression.t) =
       Ast.Statement.Expression.(
