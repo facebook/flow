@@ -350,6 +350,7 @@ class ['a] t =
       | TypeCastT (_, t) -> self#type_ cx pole_TODO acc t
       | EnumCastT { enum = (_, _, { representation_t; _ }); _ } ->
         self#type_ cx pole_TODO acc representation_t
+      | FilterOptionalT (_, t) -> self#type_ cx pole_TODO acc t
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->
         let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in
         let acc = self#type_ cx pole_TODO acc t2 in

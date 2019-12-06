@@ -748,6 +748,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         enum: reason * Trust.trust_rep * enum_t;
       }
+    | FilterOptionalT of use_op * t
 
   and exhaustive_check_t =
     | ExhaustiveCheckPossiblyValid of {
@@ -2626,6 +2627,7 @@ end = struct
     | VarianceCheckT (reason, _, _, _) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
     | TypeCastT (_, t) -> reason_of_t t
+    | FilterOptionalT (_, t) -> reason_of_t t
     | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
     | CondT (reason, _, _, _) -> reason
     | MatchPropT (_, reason, _, _) -> reason
@@ -2806,6 +2808,7 @@ end = struct
     | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
     | TypeCastT (use_op, t) -> TypeCastT (use_op, mod_reason_of_t f t)
+    | FilterOptionalT (use_op, t) -> FilterOptionalT (use_op, mod_reason_of_t f t)
     | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
       ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
     | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
@@ -2865,6 +2868,7 @@ end = struct
       util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
     | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
     | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
+    | FilterOptionalT (op, t) -> util op (fun op -> FilterOptionalT (op, t))
     | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
       util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
     | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
@@ -3763,6 +3767,7 @@ let string_of_use_ctor = function
   | CreateObjWithComputedPropT _ -> "CreateObjWithComputedPropT"
   | ResolveUnionT _ -> "ResolveUnionT"
   | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
+  | FilterOptionalT _ -> "FilterOptionalT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

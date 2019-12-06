@@ -2091,8 +2091,11 @@ struct
 
         (* The type optional(T) is the same as undefined | UseT *)
         | ( DefT (r, trust, VoidT),
-            UseT (use_op, OptionalT { reason = _; type_ = tout; use_desc = _ }) ) ->
-          rec_flow cx trace (EmptyT.why r trust, UseT (use_op, tout))
+            UseT (use_op, OptionalT { reason = _; type_ = tout; use_desc = _ }) )
+        | (DefT (r, trust, VoidT), FilterOptionalT (use_op, tout)) ->
+          rec_flow_t cx trace ~use_op (EmptyT.why r trust, tout)
+        | (OptionalT { reason = _; type_ = tout; use_desc = _ }, FilterOptionalT _) ->
+          rec_flow cx trace (tout, u)
         | (OptionalT _, ReposLowerT (reason, use_desc, u)) ->
           (* Don't split the optional type into its constituent members. Instead,
          reposition the entire optional type. *)
@@ -2881,6 +2884,7 @@ struct
          process is reused for intersections as well. See comments on try_union and
          try_intersection. *)
           try_union cx trace use_op l r rep
+        | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         (* maybe and optional types are just special union types *)
         | (t1, UseT (use_op, MaybeT (_, t2))) -> rec_flow cx trace (t1, UseT (use_op, t2))
         | (t1, UseT (use_op, OptionalT { reason = _; type_ = t2; use_desc = _ })) ->
@@ -7155,7 +7159,8 @@ struct
     | (_, EnumCastT _)
     | (_, UnaryMinusT _)
     | (_, VarianceCheckT _)
-    | (_, ModuleExportsAssignT _) ->
+    | (_, ModuleExportsAssignT _)
+    | (_, FilterOptionalT _) ->
       true
 
   (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
@@ -7362,6 +7367,7 @@ struct
     | TypeAppVarianceCheckT _
     | TypeCastT _
     | EnumCastT _
+    | FilterOptionalT _
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ExtendsUseT _
@@ -9114,8 +9120,7 @@ struct
 
   (* filter out undefined from a type *)
   and filter_optional cx ?trace reason opt_t =
-    Tvar.mk_where cx reason (fun t ->
-        flow_opt_t cx ?trace (opt_t, OptionalT { reason; type_ = t; use_desc = false }))
+    Tvar.mk_where cx reason (fun t -> flow_opt cx ?trace (opt_t, FilterOptionalT (unknown_use, t)))
 
   and update_sketchy_null cx opt_loc t =
     ExistsCheck.(

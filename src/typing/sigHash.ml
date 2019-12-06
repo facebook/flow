@@ -215,6 +215,7 @@ type hash =
   | CreateObjWithComputedPropH
   | ResolveUnionH
   | ModuleExportsAssignH
+  | FilterOptionalH
 
 let hash_of_def_ctor =
   Type.(
@@ -421,7 +422,8 @@ let hash_of_use_ctor =
     | DestructuringT _ -> DestructuringH
     | CreateObjWithComputedPropT _ -> CreateObjWithComputedPropH
     | ResolveUnionT _ -> ResolveUnionH
-    | ModuleExportsAssignT _ -> ModuleExportsAssignH)
+    | ModuleExportsAssignT _ -> ModuleExportsAssignH
+    | FilterOptionalT _ -> FilterOptionalH)
 
 let add = Xx.update
 

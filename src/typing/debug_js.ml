@@ -504,6 +504,8 @@ and _json_of_use_t_impl json_cx t =
         ]
       | TypeCastT (op, t) ->
         [("use", JSON_String (string_of_use_op op)); ("arg", _json_of_t json_cx t)]
+      | FilterOptionalT (op, t) ->
+        [("use", JSON_String (string_of_use_op op)); ("arg", _json_of_t json_cx t)]
       | EnumCastT { use_op; enum = (reason, trust, enum) } ->
         [
           ("use", JSON_String (string_of_use_op use_op));
@@ -2226,6 +2228,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | EnumCastT { use_op = _; enum = (reason, trust, enum) } ->
       p ~reason:false ~extra:(kid (DefT (reason, trust, EnumT enum))) t
+    | FilterOptionalT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | CondT (_, then_t, else_t, tout) ->
       p
         t
